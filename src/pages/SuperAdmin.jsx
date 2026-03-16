@@ -139,7 +139,7 @@ const CSS = `
 .sa .cdn{background:rgba(212,80,106,.14);color:var(--ro)}
 .sa .chart-box{position:relative}
   const deactivatedSchoolsLog = Array.isArray(schools) ? schools.filter(s => {
-    const pStatus = (s.school_profiles?.[0]?.subscription_status || s.status || 'Active').toLowerCase();
+    const pStatus = (s.school_profiles?.[0]?.subscription_status || s.status || 'Inactive').toLowerCase();
     return !['active', 'suspended', 'expired'].includes(pStatus);
   }).length : 0;
 /* bot grid */
@@ -1087,7 +1087,7 @@ export default function SuperAdmin({ currentUser, onSignOut }) {
                             {filteredSchools.map(s=>{
                               const p=s.school_profiles?.[0]||{};
                               const curPlan = s.plan || p.subscription_plan || 'Fala';
-                              const pStatus = p.subscription_status || s.status || 'Active';
+                              const pStatus = p.subscription_status || s.status || 'Inactive';
                               const isActive  = pStatus.toLowerCase() === 'active';
                               const curState = pStatus.toLowerCase();
                               const isRestricted = ['deactivated', 'suspended', 'expired', 'inactive'].includes(curState);
