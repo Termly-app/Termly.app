@@ -528,7 +528,7 @@ export default function SuperAdmin({ currentUser, onSignOut }) {
       return schools.filter(s => {
         const d = new Date(s.created_at || s.school_profiles?.[0]?.created_at || 0);
         return d >= dStart && d < dEnd && s.school_profiles?.[0]?.subscription_status==='Active';
-      }).reduce((sum,s) => sum + planAmt(s.school_profiles[0].subscription_plan, settings), 0);
+      }).reduce((sum,s) => sum + planAmt(s.school_profiles?.[0]?.subscription_plan, settings), 0);
     });
     const pending = pendingPayments.filter(p => new Date(p.created_at) > sevenDaysAgo);
     const pendData = days.map((_,di) => {
@@ -548,7 +548,7 @@ export default function SuperAdmin({ currentUser, onSignOut }) {
         const p = s.school_profiles?.[0];
         const d = new Date(p?.created_at || s.created_at || 0);
         return d.getFullYear()===now.getFullYear() && d.getMonth()===mi;
-      }).reduce((sum,s)=>sum+planAmt(s.school_profiles[0].subscription_plan, settings),0)
+      }).reduce((sum,s)=>sum+planAmt(s.school_profiles?.[0]?.subscription_plan, settings),0)
     );
     return new window.Chart(ctx, { type:'line', data:{ labels, datasets:[{ data, borderColor:'#D4506A', backgroundColor:g, borderWidth:1.5, fill:true, tension:0.4, pointRadius:0 }] }, options:{ responsive:true, maintainAspectRatio:false, plugins:{ legend:{display:false}, tooltip:{...TIP,callbacks:{label:c=>' KSh '+c.raw.toLocaleString()}} }, scales:{ x:{grid:{color:GC},ticks:{color:TC}}, y:{grid:{color:GC},ticks:{color:TC,callback:v=>v>0?'KSh '+v/1000+'K':0}} } } });
   }, [activeTab, schools]);
@@ -838,7 +838,7 @@ export default function SuperAdmin({ currentUser, onSignOut }) {
 
   /* ── Revenue panel label ── */
   const revPeriodLabel = {day:'Last 30 Days', month:'Last 4 Weeks', year:`Year ${now.getFullYear()}`}[revPeriod];
-  const weeklyRevenue  = schools.filter(s => { const d=new Date(s.created_at||s.school_profiles?.[0]?.created_at||0); return d>sevenDaysAgo && s.school_profiles?.[0]?.subscription_status==='Active'; }).reduce((sum,s)=>sum+planAmt(s.school_profiles[0].subscription_plan, settings),0);
+  const weeklyRevenue  = schools.filter(s => { const d=new Date(s.created_at||s.school_profiles?.[0]?.created_at||0); return d>sevenDaysAgo && s.school_profiles?.[0]?.subscription_status==='Active'; }).reduce((sum,s)=>sum+planAmt(s.school_profiles?.[0]?.subscription_plan, settings),0);
 
   return (
     <div className="sa-root">
