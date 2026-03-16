@@ -1,0 +1,60 @@
+/* ══ CUSTOM CURSOR Styles ══ */
+.cursor {
+  position: fixed;
+  width: 10px;
+  height: 10px;
+  background: #FFFFFF;
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 9999;
+  mix-blend-mode: difference;
+  transform: translate(-50%, -50%);
+  transition: transform .08s, width .25s, height .25s, background .25s;
+}
+
+.cursor-ring {
+  position: fixed;
+  width: 36px;
+  height: 36px;
+  border: 1.5px solid rgba(255, 255, 255, 0.4);
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 9998;
+  mix-blend-mode: difference;
+  transform: translate(-50%, -50%);
+  transition: transform .18s cubic-bezier(.16, 1, .3, 1), width .3s, height .3s, border-color .3s;
+}
+
+body.cursor-hover .cursor {
+  width: 6px;
+  height: 6px;
+  background: #FFFFFF;
+}
+
+body.cursor-hover .cursor-ring {
+  width: 52px;
+  height: 52px;
+  border-color: rgba(255, 255, 255, 0.8);
+}
+
+/* Ensure body hides default cursor when custom one is active */
+.custom-cursor-active {
+  cursor: none !important;
+}
+
+.custom-cursor-active a, 
+.custom-cursor-active button, 
+.custom-cursor-active input, 
+.custom-cursor-active select, 
+.custom-cursor-active textarea {
+  cursor: none !important;
+}
+
+@media (max-width: 960px) {
+  .cursor, .cursor-ring {
+    display: none !important;
+  }
+  .custom-cursor-active {
+    cursor: auto !important;
+  }
+}

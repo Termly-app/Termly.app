@@ -1,0 +1,326 @@
+import { useState, useEffect } from 'react';
+import { getStudents, getAttendance, markAttendance, getAttendanceSummary, getTodayStr, getSchoolProfile, getSubjectAssignments } from '../data/store';
+import { CBC_STRUCTURE } from '../data/seedData';
+
+export default function Attendance({ currentUser }) {
+  const [selectedClass, setSelectedClass] = useState('All');
+  const [streamFilter, setStreamFilter] = useState('All');
+  const [selectedDate, setSelectedDate] = useState(getTodayStr());
+  const [showPrintOptions, setShowPrintOptions] = useState(false);
+  const [reportType, setReportType] = useState('day');
+  const [students, setStudents] = useState([]);
+  const [attendance, setAttendance] = useState({});
+  const [summary, setSummary] = useState({ present: 0, late: 0, absent: 0, total: 0, percentage: 0 });
+  const [profile, setProfile] = useState({ streams: [], activeClasses: [] });
+  const [assignments, setAssignments] = useState({});
+  const [loading, setLoading] = useState(true);
+
+  const userRole = currentUser?.role?.toLowerCase() || 'teacher';
+  const isTeacher = userRole === 'teacher';
+
+  useEffect(() => { 
+    const init = async () => {
+      setLoading(true);
+      try {
+        const [p, a] = await Promise.all([getSchoolProfile(), getSubjectAssignments()]);
+        setProfile(p);
+        setAssignments(a);
+        await refresh();
+      } catch (err) { console.error(err); }
+      finally { setLoading(false); }
+    };
+    init();
+  }, [selectedClass, streamFilter, selectedDate]);
+
+  const refresh = async () => {
+    try {
+      const [allStudents, att] = await Promise.all([getStudents(), getAttendance()]);
+      let filtered = selectedClass === 'All' ? allStudents : allStudents.filter(s => s.class === selectedClass);
+      if (streamFilter !== 'All') {
+        filtered = filtered.filter(s => s.stream === streamFilter);
+      }
+      setStudents(filtered);
+      setAttendance(att[selectedDate] || {});
+      // Calculate summary for filtered students
+      const dayData = att[selectedDate] || {};
+      let present = 0, late = 0, absent = 0;
+      filtered.forEach(s => {
+        const status = dayData[s.id];
+        if (status === 'present') present++;
+        else if (status === 'late') late++;
+        else if (status === 'absent') absent++;
+      });
+      const total = filtered.length;
+      const pct = total > 0 ? (((present + late) / total) * 100).toFixed(1) : 0;
+      setSummary({ present, late, absent, total, percentage: Number(pct) });
+    } catch(err) { console.error(err); }
+  };
+
+  const handleMark = async (studentId, status) => {
+    try {
+      await markAttendance(selectedDate, studentId, status);
+      await refresh();
+    } catch(err) { alert(err.message); }
+  };
+
+  const markAllPresent = async () => {
+    setLoading(true);
+    try {
+      await Promise.all(students.map(s => markAttendance(selectedDate, s.id, 'present')));
+      await refresh();
+    } catch(err) { alert(err.message); }
+    finally { setLoading(false); }
+  };
+
+  const handlePrint = async () => {
+    setLoading(true);
+    try {
+      const allAtt = await getAttendance();
+      const students = await getStudents();
+      const profile = await getSchoolProfile();
+      const header = await getPrintHeader();
+
+      let dates = [];
+      const cur = new Date(selectedDate);
+
+      if (reportType === 'day') {
+        dates = [selectedDate];
+      } else if (reportType === 'week') {
+        // Get Mon-Fri of the week containing selectedDate
+        const day = cur.getDay();
+        const diff = cur.getDate() - day + (day === 0 ? -6 : 1);
+        const mon = new Date(cur.setDate(diff));
+        for(let i=0; i<5; i++) {
+          const d = new Date(mon);
+          d.setDate(mon.getDate() + i);
+          dates.push(d.toISOString().split('T')[0]);
+        }
+      } else if (reportType === 'month') {
+        const year = cur.getFullYear();
+        const month = cur.getMonth();
+        const lastDay = new Date(year, month + 1, 0).getDate();
+        for(let i=1; i<=lastDay; i++) {
+          const d = new Date(year, month, i);
+          if (d.getDay() !== 0 && d.getDay() !== 6) {
+            dates.push(d.toISOString().split('T')[0]);
+          }
+        }
+      }
+
+      const filteredStudents = selectedClass === 'All' ? students : students.filter(s => s.class === selectedClass);
+      const finalStudents = streamFilter === 'All' ? filteredStudents : filteredStudents.filter(s => s.stream === streamFilter);
+
+      const printWin = window.open('', '_blank');
+      printWin.document.write(`<html><head><title>Attendance Report</title>
+        <style>
+          body { font-family: sans-serif; padding: 20px; color: #333; }
+          .header { text-align: center; margin-bottom: 20px; border-bottom: 2px solid #eee; padding-bottom: 15px; }
+          table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 0.85rem; }
+          th, td { border: 1px solid #ddd; padding: 8px; text-align: center; }
+          th { background: #f9f9f9; }
+          .student-name { text-align: left; }
+          .present { color: #10b981; font-weight: bold; }
+          .absent { color: #ef4444; font-weight: bold; }
+          .late { color: #f59e0b; font-weight: bold; }
+          .footer { margin-top: 30px; font-size: 0.8rem; color: #777; border-top: 1px solid #eee; padding-top: 10px; }
+        </style>
+      </head><body>`);
+      
+      printWin.document.write(header);
+      printWin.document.write(`
+        <div class="header">
+          <h2>Attendance Report (${reportType.toUpperCase()})</h2>
+          <p><strong>Class:</strong> ${selectedClass} | <strong>Stream:</strong> ${streamFilter}</p>
+          <p><strong>Date:</strong> ${dates[0]} ${dates.length > 1 ? ' to ' + dates[dates.length-1] : ''}</p>
+        </div>
+        <table>
+          <thead>
+            <tr>
+              <th rowspan="2">#</th>
+              <th rowspan="2" class="student-name">Student Name</th>
+              ${dates.map(d => `<th>${new Date(d).toLocaleDateString(undefined, {weekday:'short', day:'numeric'})}</th>`).join('')}
+              <th rowspan="2">Rate</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${finalStudents.map((s, idx) => {
+              let presentCount = 0;
+              let trackedDays = 0;
+              const row = dates.map(d => {
+                const status = allAtt[d]?.[s.id];
+                if (status) trackedDays++;
+                if (status === 'present' || status === 'late') presentCount++;
+                const char = status === 'present' ? '✅' : status === 'late' ? '⏰' : status === 'absent' ? '❌' : '—';
+                const cls = status || '';
+                return `<td class="${cls}">${char}</td>`;
+              }).join('');
+              const rate = trackedDays > 0 ? ((presentCount / trackedDays) * 100).toFixed(0) : '0';
+              return `<tr>
+                <td>${idx+1}</td>
+                <td class="student-name">${s.name}</td>
+                ${row}
+                <td><strong>${rate}%</strong></td>
+              </tr>`;
+            }).join('')}
+          </tbody>
+        </table>
+        <div class="footer">
+          ShuleSoft Portal — High Performance School Management — Generated on ${new Date().toLocaleString()}
+        </div>
+      </body></html>`);
+      printWin.document.close();
+      printWin.print();
+    } catch(err) { alert(err.message); }
+    finally { setLoading(false); setShowPrintOptions(false); }
+  };
+
+  return (
+    <div className="animate-in">
+      <div className="page-header">
+        <div className="page-header-actions" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 16 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            <div>
+              <h2 style={{ fontFamily: 'var(--font-display)', fontWeight: 700, letterSpacing: '-0.5px' }}>Attendance</h2>
+              <p className="text-muted">Mark and track daily attendance</p>
+            </div>
+            {loading && <span className="text-muted" style={{ fontSize: '0.85rem' }}>Loading...</span>}
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            <button className="btn btn-ghost" onClick={() => setShowPrintOptions(true)}>🖨️ Print Report</button>
+            <button className="btn btn-success" onClick={markAllPresent}>✅ Mark All Present</button>
+          </div>
+        </div>
+      </div>
+
+      {/* Summary Cards */}
+      <div className="kpi-grid">
+        <div className="kpi-card green">
+          <div className="kpi-icon green">✅</div>
+          <div className="kpi-value">{summary.present}</div>
+          <div className="kpi-label">Present</div>
+        </div>
+        <div className="kpi-card orange">
+          <div className="kpi-icon orange">⏰</div>
+          <div className="kpi-value">{summary.late}</div>
+          <div className="kpi-label">Late</div>
+        </div>
+        <div className="kpi-card red">
+          <div className="kpi-icon red">❌</div>
+          <div className="kpi-value">{summary.absent}</div>
+          <div className="kpi-label">Absent</div>
+        </div>
+        <div className="kpi-card purple">
+          <div className="kpi-icon purple">📊</div>
+          <div className="kpi-value">{summary.percentage}%</div>
+          <div className="kpi-label">Attendance Rate</div>
+        </div>
+      </div>
+
+      {/* Filters */}
+      <div className="filter-bar">
+        <select className="form-select" value={selectedClass} onChange={e => { setSelectedClass(e.target.value); setStreamFilter('All'); }}>
+          <option value="All">All Classes</option>
+          {Object.entries(CBC_STRUCTURE).map(([levelName, levelData]) => {
+            const activeInLevel = levelData.grades.filter(g => profile.activeClasses?.includes(g));
+            if (activeInLevel.length === 0) return null;
+            return (
+              <optgroup key={levelName} label={levelName}>
+                {activeInLevel.map(g => {
+                  const isMyClass = assignments[g] && Object.values(assignments[g]).some(streams => 
+                    typeof streams === 'string' ? streams === currentUser?.id :
+                    Object.values(streams).some(tid => tid === currentUser?.id)
+                  );
+                  return <option key={g} value={g}>{isMyClass && isTeacher ? `⭐ ${g}` : g}</option>;
+                })}
+              </optgroup>
+            )
+          })}
+        </select>
+        <select className="form-select" value={streamFilter} onChange={(e) => setStreamFilter(e.target.value)}>
+          <option value="All">All Streams</option>
+          {selectedClass !== 'All' 
+             ? (profile.streamsPerClass?.[selectedClass] || []).map(stream => <option key={stream} value={stream}>{stream}</option>)
+             : Object.values(profile.streamsPerClass || {}).flat().filter((v,i,a) => a.indexOf(v)===i).map((stream, idx) => <option key={idx} value={stream}>{stream}</option>)
+          }
+        </select>
+        <input type="date" className="form-input" style={{ width: 'auto' }} value={selectedDate} onChange={e => setSelectedDate(e.target.value)} />
+        <span className="text-muted" style={{ fontSize: '0.85rem' }}>{students.length} students</span>
+      </div>
+
+      {/* Attendance Table */}
+      <div className="card">
+        <div className="card-body" style={{ padding: 0 }}>
+          <table className="data-table">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Name</th>
+                <th>Class</th>
+                <th>Stream</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              {students.length === 0 ? (
+                <tr><td colSpan="4" className="text-center text-muted" style={{ padding: '40px' }}>No students found</td></tr>
+              ) : (
+                students.map((s, i) => {
+                  const status = attendance[s.id] || '';
+                  return (
+                    <tr key={s.id}>
+                      <td className="text-muted">{i + 1}</td>
+                      <td><strong>{s.name}</strong></td>
+                      <td><span className="badge badge-info">{s.class}</span></td>
+                      <td>{s.stream || '—'}</td>
+                      <td>
+                        <div className="attendance-toggle">
+                          <button className={status === 'present' ? 'present' : ''} onClick={() => handleMark(s.id, 'present')}>
+                            Present
+                          </button>
+                          <button className={status === 'late' ? 'late' : ''} onClick={() => handleMark(s.id, 'late')}>
+                            Late
+                          </button>
+                          <button className={status === 'absent' ? 'absent' : ''} onClick={() => handleMark(s.id, 'absent')}>
+                            Absent
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
+      {/* Modal for Print Options */}
+      {showPrintOptions && (
+        <div className="modal-overlay">
+          <div className="modal-content" style={{ maxWidth: 400 }}>
+            <div className="modal-header" style={{ padding: '16px 20px', borderBottom: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <h3 style={{ margin: 0, fontSize: '1.1rem' }}>🖨️ Print Attendance Report</h3>
+              <button className="btn-close" style={{ background: 'none', border: 'none', fontSize: '1.2rem', cursor: 'pointer' }} onClick={() => setShowPrintOptions(false)}>✕</button>
+            </div>
+            <div className="modal-body" style={{ padding: 20 }}>
+              <div className="form-group" style={{ marginBottom: 15 }}>
+                <label className="form-label" style={{ display: 'block', marginBottom: 8, fontSize: '0.85rem', fontWeight: 600 }}>Report Type</label>
+                <select className="form-select" style={{ width: '100%' }} value={reportType} onChange={e => setReportType(e.target.value)}>
+                  <option value="day">Daily Report (Single Day)</option>
+                  <option value="week">Weekly Report (Mon - Fri)</option>
+                  <option value="month">Monthly Report (Whole Month)</option>
+                </select>
+                <p style={{ fontSize: '0.75rem', color: 'var(--text-light)', marginTop: 8, lineHeight: 1.4 }}>
+                  The report will be based on the week or month containing the currently selected date: <strong>{selectedDate}</strong>
+                </p>
+              </div>
+              <div style={{ display: 'flex', gap: 10, marginTop: 24 }}>
+                <button className="btn btn-primary" style={{ flex: 1, justifyContent: 'center' }} onClick={handlePrint}>Generate Printout</button>
+                <button className="btn btn-ghost" style={{ flex: 1, justifyContent: 'center' }} onClick={() => setShowPrintOptions(false)}>Cancel</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
