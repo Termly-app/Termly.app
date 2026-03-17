@@ -283,6 +283,7 @@ function App() {
   const [subscriptionActive, setSubscriptionActive] = useState(true);
   const [currentPeriodId, setPeriodId] = useState(getCurrentPeriodId());
   const [periods, setPeriods] = useState([]);
+  const location = useLocation();
 
   useEffect(() => {
     const handlePeriodChange = () => setPeriodId(getCurrentPeriodId());
@@ -362,7 +363,7 @@ function App() {
 
   return (
     <>
-      <CustomCursor disabled={!!currentUser} />
+      <CustomCursor disabled={location.pathname === '/billing'} />
       {authLoading ? (
         <Loader />
       ) : !currentUser ? (

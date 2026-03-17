@@ -88,13 +88,7 @@ export default function Billing() {
     }
   };
 
-  if (loading) return (
-    <div className="flex-center" style={{ minHeight: 400 }}>
-      <div className="spinner"></div>
-    </div>
-  );
-
-  // Moved to loadData for async handling
+  // Move hooks to top to avoid Error #310
   const [isActive, setIsActive] = useState(false);
 
   useEffect(() => {
@@ -106,6 +100,12 @@ export default function Billing() {
     };
     checkActive();
   }, [profile]);
+
+  if (loading) return (
+    <div className="flex-center" style={{ minHeight: 400 }}>
+      <div className="spinner"></div>
+    </div>
+  );
 
   return (
     <div className="animate-in">
