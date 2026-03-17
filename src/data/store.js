@@ -63,7 +63,7 @@ export function getCurrentAuthUser() {
 
 // ============= SCHOOLS =============
 export async function getRegisteredSchools() {
-  const { data, error } = await supabase.from('schools').select('*');
+  const { data, error } = await supabase.from('schools').select('id, name, email, owner_id, created_at');
   if (error) throw error;
   return data || [];
 }
@@ -73,7 +73,7 @@ export async function registerSchool(name, email, plan, authUserId, adminName, a
   const { data: school, error: schoolErr } = await supabase
     .from('schools')
     .insert({ name, email, plan, owner_id: authUserId, phone, location })
-    .select()
+    .select('id, name, email, plan, owner_id, created_at')
     .single();
   if (schoolErr) throw schoolErr;
 
@@ -127,13 +127,26 @@ export async function registerSchool(name, email, plan, authUserId, adminName, a
 }
 
 /**
+ * Find a school workspace by user provided email
+ */
+export async function findSchool(schoolEmail) {
+  const { data, error } = await supabase
+    .from('schools')
+    .select('id, name, email, owner_id, created_at, school_profiles(*)')
+    .eq('email', schoolEmail)
+    .maybeSingle();
+  if (error) throw error;
+  return data;
+}
+
+/**
  * Repair a school that is missing its profile
  */
 export async function repairSchoolProfile(schoolId) {
   // 1. Get school info
   const { data: school, error: sErr } = await supabase
     .from('schools')
-    .select('*')
+    .select('id, name, email, owner_id, created_at')
     .eq('id', schoolId)
     .single();
   if (sErr) throw sErr;
@@ -1161,6 +1174,7 @@ export async function getTeachersBySchool(schoolId) {
   return data || [];
 }
 
+
 export async function addTeacher(teacher) {
   // Check seat limit
   const profile = await getSchoolProfile();
@@ -1547,7 +1561,7 @@ export async function getAllSchools() {
   // 1. Fetch schools and profiles
   const { data: schools, error: sErr } = await supabase
     .from('schools')
-    .select('*, school_profiles(*)');
+    .select('id, name, email, owner_id, created_at, school_profiles(*)');
   
   if (sErr) {
     console.error('Error fetching all schools:', sErr);
@@ -1586,8 +1600,6 @@ export async function getAllSchools() {
  * Deactivate a school — sets status to 'Deactivated' on both schools and school_profiles
  */
 export async function deactivateSchool(schoolId) {
-  const { error: e1 } = await supabase.from('schools').update({ status: 'Deactivated' }).eq('id', schoolId);
-  if (e1) throw e1;
   const { error: e2 } = await supabase.from('school_profiles').update({ subscription_status: 'Deactivated' }).eq('school_id', schoolId);
   if (e2) throw e2;
   await logPlatformActivity('DEACTIVATION', `School ${schoolId} deactivated by admin`, schoolId);
@@ -1613,8 +1625,6 @@ export async function restoreSchool(schoolId, monthsToAdd = 4) {
   }
   expiry.setMonth(expiry.getMonth() + monthsToAdd);
 
-  const { error: e1 } = await supabase.from('schools').update({ status: 'Active' }).eq('id', schoolId);
-  if (e1) throw e1;
   const { error: e2 } = await supabase
     .from('school_profiles')
     .update({ 
@@ -1630,8 +1640,6 @@ export async function restoreSchool(schoolId, monthsToAdd = 4) {
  * Suspend a school
  */
 export async function suspendSchool(schoolId) {
-  const { error: e1 } = await supabase.from('schools').update({ status: 'Suspended' }).eq('id', schoolId);
-  if (e1) throw e1;
   const { error: e2 } = await supabase.from('school_profiles').update({ subscription_status: 'Suspended' }).eq('school_id', schoolId);
   if (e2) throw e2;
   await logPlatformActivity('SUSPENSION', `School ${schoolId} suspended by admin`, schoolId);
