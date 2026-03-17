@@ -182,7 +182,7 @@ export default function Landing() {
             ShuleSoft
                 <a href="mailto:shulesoft@gmail.com" className="contact-link">shulesoft@gmail.com</a>
           <a href="#pricing" className="nlink">Pricing</a>
-          <a href="#" className="nlink">Docs</a>
+          <Link to="/docs" className="nlink">Docs</Link>
           <div className="nsep"></div>
           <Link to="/login" className="nlink">Sign in</Link>
           <Link to="/register" className="ncta">

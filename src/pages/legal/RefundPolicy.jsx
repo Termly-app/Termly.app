@@ -21,7 +21,7 @@ export default function RefundPolicy() {
 
       <section>
         <h3>3. Request Process</h3>
-        <p>To request a review of your subscription, please submit a written request to <a href="mailto:support@kaulanicorp.com" style={{ color: 'inherit' }}>support@kaulanicorp.com</a> within 14 days of the payment date. Please include your school name and proof of payment.</p>
+        <p>To request a review of your subscription, please submit a written request to <a href="mailto:shulesoft@gmail.com" style={{ color: 'inherit', fontWeight: 600 }}>shulesoft@gmail.com</a> within 14 days of the payment date. Please include your school name and proof of payment.</p>
       </section>
     </LegalLayout>
   );

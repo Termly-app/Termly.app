@@ -33,6 +33,7 @@ import ContactSupport from './pages/ContactSupport';
 import AboutUs from './pages/AboutUs';
 import FAQ from './pages/FAQ';
 import SecurityTrust from './pages/SecurityTrust';
+import Docs from './pages/Docs';
 import CustomCursor from './components/Common/CustomCursor';
 import Loader from './components/Common/Loader';
 
@@ -216,6 +217,9 @@ function Sidebar({ isOpen, onClose, onLogout, currentUser, subscriptionActive })
             <span className="nav-icon">⚙️</span> Settings
           </NavLink>
         )}
+        <NavLink to="/docs" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`} onClick={onClose}>
+          <span className="nav-icon">📚</span> Documentation
+        </NavLink>
       </nav>
 
       <div className="sidebar-bottom">
@@ -377,6 +381,7 @@ function App() {
           <Route path="/support" element={<ContactSupport />} />
           <Route path="/about" element={<AboutUs />} />
           <Route path="/faq" element={<FAQ />} />
+          <Route path="/docs" element={<Docs />} />
           <Route path="/security-trust" element={<SecurityTrust />} />
           <Route path="*" element={<Landing />} />
         </Routes>
@@ -451,6 +456,7 @@ function App() {
                 <Route path="/settings" element={<Settings currentUser={currentUser} />} />
                 <Route path="/super-admin" element={<SuperAdmin currentUser={currentUser} />} />
                 <Route path="/billing" element={<Billing />} />
+                <Route path="/docs" element={<Docs />} />
                 <Route path="/" element={<Navigate to={isPlatformAdmin ? "/super-admin" : "/dashboard"} replace />} />
                 <Route path="*" element={<Navigate to={isPlatformAdmin ? "/super-admin" : "/dashboard"} replace />} />
               </Routes>

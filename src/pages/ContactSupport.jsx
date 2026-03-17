@@ -35,7 +35,7 @@ export default function ContactSupport() {
             <div className="fc-title">Direct Contact</div>
             <p className="fc-desc">
               <strong>Phone:</strong> <a href={`tel:${settings?.support?.phone || '+254712260057'}`} style={{ color: 'inherit' }}>{settings?.support?.phone || '+254712260057'}</a><br/>
-              <strong>Email:</strong> <a href={`mailto:${settings?.support?.email || 'contact@kaulanicorp.com'}`} style={{ color: 'inherit' }}>{settings?.support?.email || 'contact@kaulanicorp.com'}</a>
+              <strong>Email:</strong> <a href={`mailto:${settings?.support?.email || 'shulesoft@gmail.com'}`} style={{ color: 'inherit' }}>{settings?.support?.email || 'shulesoft@gmail.com'}</a>
             </p>
           </div>
         </div>
