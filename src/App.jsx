@@ -365,10 +365,11 @@ function App() {
     return <Loader />;
   }
 
-  if (!currentUser) {
-    return (
-      <BrowserRouter>
-        <ScrollToTop />
+  const isPlatformAdmin = currentUser?.email && ['admin@shulesoft.com', 'shulesoft8@gmail.com'].includes(currentUser.email);
+
+  return (
+    <div className={`app-layout ${isPlatformAdmin ? 'theme-onyx' : 'app-shell'}`}>
+      {!currentUser ? (
         <Routes>
           <Route path="/" element={<Landing />} />
           <Route path="/login" element={<Login onLogin={setCurrentUser} />} />
@@ -385,86 +386,78 @@ function App() {
           <Route path="/security-trust" element={<SecurityTrust />} />
           <Route path="*" element={<Landing />} />
         </Routes>
-      </BrowserRouter>
-    );
-  }
-
-  const isPlatformAdmin = currentUser?.email === 'admin@shulesoft.com' || currentUser?.email === 'shulesoft8@gmail.com';
-
-  return (
-    <BrowserRouter>
-      <ScrollToTop />
-      <div className={`app-layout ${isPlatformAdmin ? 'theme-onyx' : 'app-shell'}`}>
-        {isPlatformAdmin && <CustomCursor />}
-        {!isPlatformAdmin && (
-          <>
-            <button className="mobile-toggle" onClick={() => setSidebarOpen(!sidebarOpen)}>
-              {sidebarOpen ? '✕' : '☰'}
-            </button>
-            {sidebarOpen && <div className="sidebar-overlay" onClick={() => setSidebarOpen(false)} />}
-          </>
-        )}
-        
-        <Sidebar 
-          isOpen={sidebarOpen} 
-          onClose={() => setSidebarOpen(false)} 
-          onLogout={handleLogout} 
-          currentUser={currentUser} 
-          subscriptionActive={subscriptionActive} 
-        />
-
-        <main className="main-content" key={currentPeriodId}>
+      ) : (
+        <>
           {!isPlatformAdmin && (
-            <div className="topbar">
-              <div className="topbar-title desktop-only">School Control Center</div>
-              <div className="topbar-title mobile-only">ShuleSoft</div>
-              <div className="topbar-actions">
-                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                  <span style={{ fontSize: '0.7rem', fontWeight: 700, color: 'var(--text-muted)' }}>PERIOD:</span>
-                  <select 
-                    className="topbar-program-select" 
-                    value={currentPeriodId || ''} 
-                    onChange={async (e) => {
-                      await setActivePeriod(e.target.value);
-                    }}
-                  >
-                    <option value="">Select Period</option>
-                    {periods.map(p => (
-                      <option key={p.id} value={p.id}>
-                        {p.year} {p.term} {p.is_active ? '(Active)' : ''}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                <div className="topbar-avatar" style={{ border: '2px solid var(--primary-light)' }}>
-                  {currentUser?.name?.charAt(0) || 'U'}
+            <>
+              <button className="mobile-toggle" onClick={() => setSidebarOpen(!sidebarOpen)}>
+                {sidebarOpen ? '✕' : '☰'}
+              </button>
+              {sidebarOpen && <div className="sidebar-overlay" onClick={() => setSidebarOpen(false)} />}
+            </>
+          )}
+          
+          <Sidebar 
+            isOpen={sidebarOpen} 
+            onClose={() => setSidebarOpen(false)} 
+            onLogout={handleLogout} 
+            currentUser={currentUser} 
+            subscriptionActive={subscriptionActive} 
+          />
+
+          <main className="main-content">
+            {!isPlatformAdmin && (
+              <div className="topbar">
+                <div className="topbar-title desktop-only">School Control Center</div>
+                <div className="topbar-title mobile-only">ShuleSoft</div>
+                <div className="topbar-actions">
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                    <span style={{ fontSize: '0.7rem', fontWeight: 700, color: 'var(--text-muted)' }}>PERIOD:</span>
+                    <select 
+                      className="topbar-program-select" 
+                      value={currentPeriodId || ''} 
+                      onChange={async (e) => {
+                        await setActivePeriod(e.target.value);
+                      }}
+                    >
+                      <option value="">Select Period</option>
+                      {periods.map(p => (
+                        <option key={p.id} value={p.id}>
+                          {p.year} {p.term} {p.is_active ? '(Active)' : ''}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="topbar-avatar" style={{ border: '2px solid var(--primary-light)' }}>
+                    {currentUser?.name?.charAt(0) || 'U'}
+                  </div>
                 </div>
               </div>
-            </div>
-          )}
+            )}
 
-          <div className={!isPlatformAdmin ? "page-content" : ""}>
-            <ErrorBoundary>
-              <Routes>
-                <Route path="/dashboard" element={<Dashboard currentUser={currentUser} onLogout={handleLogout} />} />
-                <Route path="/students" element={subscriptionActive ? <Students currentUser={currentUser} /> : <Navigate to="/billing" />} />
-                <Route path="/teachers" element={subscriptionActive ? <Teachers currentUser={currentUser} /> : <Navigate to="/billing" />} />
-                <Route path="/grading" element={subscriptionActive ? <Grading currentUser={currentUser} /> : <Navigate to="/billing" />} />
-                <Route path="/fees" element={subscriptionActive ? <Fees currentUser={currentUser} /> : <Navigate to="/billing" />} />
-                <Route path="/attendance" element={subscriptionActive ? <Attendance currentUser={currentUser} /> : <Navigate to="/billing" />} />
-                <Route path="/security" element={<Security currentUser={currentUser} />} />
-                <Route path="/settings" element={<Settings currentUser={currentUser} />} />
-                <Route path="/super-admin" element={<SuperAdmin currentUser={currentUser} />} />
-                <Route path="/billing" element={<Billing />} />
-                <Route path="/docs" element={<Docs />} />
-                <Route path="/" element={<Navigate to={isPlatformAdmin ? "/super-admin" : "/dashboard"} replace />} />
-                <Route path="*" element={<Navigate to={isPlatformAdmin ? "/super-admin" : "/dashboard"} replace />} />
-              </Routes>
-            </ErrorBoundary>
-          </div>
-        </main>
-      </div>
-    </BrowserRouter>
+            <div className={!isPlatformAdmin ? "page-content" : ""}>
+              <ErrorBoundary>
+                <Routes>
+                  <Route path="/dashboard" element={<Dashboard currentUser={currentUser} onLogout={handleLogout} />} />
+                  <Route path="/students" element={subscriptionActive ? <Students currentUser={currentUser} /> : <Navigate to="/billing" />} />
+                  <Route path="/teachers" element={subscriptionActive ? <Teachers currentUser={currentUser} /> : <Navigate to="/billing" />} />
+                  <Route path="/grading" element={subscriptionActive ? <Grading currentUser={currentUser} /> : <Navigate to="/billing" />} />
+                  <Route path="/fees" element={subscriptionActive ? <Fees currentUser={currentUser} /> : <Navigate to="/billing" />} />
+                  <Route path="/attendance" element={subscriptionActive ? <Attendance currentUser={currentUser} /> : <Navigate to="/billing" />} />
+                  <Route path="/security" element={<Security currentUser={currentUser} />} />
+                  <Route path="/settings" element={<Settings currentUser={currentUser} />} />
+                  <Route path="/super-admin" element={<SuperAdmin currentUser={currentUser} />} />
+                  <Route path="/billing" element={<Billing />} />
+                  <Route path="/docs" element={<Docs />} />
+                  <Route path="/" element={<Navigate to={isPlatformAdmin ? "/super-admin" : "/dashboard"} replace />} />
+                  <Route path="*" element={<Navigate to={isPlatformAdmin ? "/super-admin" : "/dashboard"} replace />} />
+                </Routes>
+              </ErrorBoundary>
+            </div>
+          </main>
+        </>
+      )}
+    </div>
   );
 }
 

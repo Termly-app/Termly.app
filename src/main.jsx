@@ -4,6 +4,9 @@ import App from './App'
 import './pages/App.css'
 import './index.css'
 import { initStore } from './data/store'
+import { BrowserRouter } from 'react-router-dom';
+import ScrollToTop from './components/ScrollToTop';
+import CustomCursor from './components/Common/CustomCursor';
 
 console.log(">>> BOOTING SHULESOFT MAIN.JSX");
 
@@ -13,7 +16,11 @@ const rootElement = document.getElementById('root');
 if (rootElement) {
   ReactDOM.createRoot(rootElement).render(
     <React.StrictMode>
-      <App />
+      <BrowserRouter>
+        <ScrollToTop />
+        <CustomCursor />
+        <App />
+      </BrowserRouter>
     </React.StrictMode>
   );
 } else {
