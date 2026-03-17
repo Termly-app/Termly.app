@@ -4,8 +4,6 @@ import { getPlatformSettings } from '../data/store';
 import '../pages/Landing.css';
 
 export default function PremiumLayout({ children }) {
-  const cursorRef = useRef(null);
-  const ringRef = useRef(null);
   const [settings, setSettings] = useState(null);
 
   useEffect(() => {
@@ -15,6 +13,15 @@ export default function PremiumLayout({ children }) {
     }
     load();
   }, []);
+
+  useEffect(() => {
+    document.body.classList.add('landing-body');
+    
+    // ── SCROLL REVEAL ──
+    const revealObs = new IntersectionObserver((entries) => {
+      entries.forEach(e => { if(e.isIntersecting) { e.target.classList.add('visible'); }});
+    }, { threshold: 0.12 });
+    document.querySelectorAll('.reveal').forEach(el => revealObs.observe(el));
 
     return () => {
       document.body.classList.remove('landing-body');
