@@ -10,6 +10,7 @@ export { CBC_STRUCTURE, CBC_CORE_COMPETENCIES, TERM_FEE, getLevelForGrade, getSu
 
 // ============= CURRENT SCHOOL CONTEXT =============
 // Stored in-memory during session (set after login)
+// Triggering fresh build on Vercel...
 let _currentSchoolId = null;
 let _currentAuthUser = null;
 let _currentPeriodId = null;
