@@ -1,6 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
-import CustomCursor from '../components/Common/CustomCursor';
 import { getPlatformSettings } from '../data/store';
 import './Landing.css';
 

@@ -448,7 +448,6 @@ function App() {
                 <Route path="/settings" element={<Settings currentUser={currentUser} />} />
                 <Route path="/super-admin" element={<SuperAdmin currentUser={currentUser} />} />
                 <Route path="/billing" element={<Billing />} />
-                <Route path="/docs" element={<Docs />} />
                 <Route path="/" element={<Navigate to={isPlatformAdmin ? "/super-admin" : "/dashboard"} replace />} />
                 <Route path="*" element={<Navigate to={isPlatformAdmin ? "/super-admin" : "/dashboard"} replace />} />
               </Routes>

@@ -38,28 +38,24 @@ export default function CustomCursor() {
     
     // Select all interactive elements
     const updateHoverListeners = () => {
-      const hoverElements = document.querySelectorAll('a, button, input, select, textarea, .fc, .pc, .pbtn, .nlink, .ncta');
+      const hoverElements = document.querySelectorAll('a, button, input, select, textarea, .fc, .pc, .pbtn, .nlink, .ncta, .news-btn, [role="button"]');
       hoverElements.forEach(el => {
+        el.removeEventListener('mouseenter', onMouseEnter);
+        el.removeEventListener('mouseleave', onMouseLeave);
         el.addEventListener('mouseenter', onMouseEnter);
         el.addEventListener('mouseleave', onMouseLeave);
       });
-      return hoverElements;
     };
 
-    let hoverElements = updateHoverListeners();
+    updateHoverListeners();
 
-    // Use a small interval to catch dynamic elements if needed, 
-    // or just rely on the fact that most are present on mount.
-    const interval = setInterval(updateHoverListeners, 2000);
+    const observer = new MutationObserver(updateHoverListeners);
+    observer.observe(document.body, { childList: true, subtree: true });
 
     return () => {
       document.removeEventListener('mousemove', onMouseMove);
       cancelAnimationFrame(ringAnimId);
-      clearInterval(interval);
-      hoverElements.forEach(el => {
-        el.removeEventListener('mouseenter', onMouseEnter);
-        el.removeEventListener('mouseleave', onMouseLeave);
-      });
+      observer.disconnect();
       document.body.classList.remove('cursor-hover');
       document.body.classList.remove('custom-cursor-active');
     };
