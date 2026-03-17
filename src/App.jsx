@@ -307,8 +307,10 @@ function App() {
             });
 
             const profileData = await getSchoolProfile();
-            const isPlatAdmin = session.user.email === 'admin@shulesoft.com' || session.user.email === 'shulesoft8@gmail.com';
-            setSubscriptionActive(isPlatAdmin || isSubscriptionActive(profileData));
+            const PLATFORM_ADMINS = ['admin@shulesoft.com', 'shulesoft8@gmail.com'];
+            const isPlatAdmin = session.user.email && PLATFORM_ADMINS.includes(session.user.email);
+            const isSubActive = await isSubscriptionActive(profileData);
+            setSubscriptionActive(isPlatAdmin || isSubActive);
           }
         }
       } catch (err) {

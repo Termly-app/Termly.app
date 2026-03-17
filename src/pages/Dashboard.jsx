@@ -3,21 +3,33 @@ import { Link, Navigate } from 'react-router-dom';
 import {
   getStudents, getFeeSummary, getAttendanceSummary, getTodayStr,
   getFees, getSchoolStructure, getTeachers, getSchoolProfile,
-  getMarks, getAttendance, subscribeToChanges, getUsers, getPlatformSettings
+  getMarks, getAttendance, subscribeToChanges, getUsers, getPlatformSettings,
+  getPeriods, setActivePeriod, isSubscriptionActive
 } from '../data/store';
 import Loader from '../components/Common/Loader';
 
 export default function Dashboard({ currentUser, onLogout }) {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [periods, setPeriods] = useState([]);
   const [currentPeriodId, setPeriodId] = useState(null);
+  const [isAccountActive, setIsAccountActive] = useState(true);
 
   useEffect(() => {
     const loadData = async () => {
       try {
-        const [students, fees, marks, teachers, profile, attendance, adminUsers, platformSettings] = await Promise.all([
-          getStudents(), getFees(), getMarks(), getTeachers(), getSchoolProfile(), getAttendance(), getUsers(), getPlatformSettings()
+        const [students, fees, marks, teachers, profile, attendance, adminUsers, platformSettings, allPeriods] = await Promise.all([
+          getStudents(), getFees(), getMarks(), getTeachers(), getSchoolProfile(), getAttendance(), getUsers(), getPlatformSettings(), getPeriods()
         ]);
+        
+        // Check activation
+        const active = await isSubscriptionActive(profile);
+        setIsAccountActive(active);
+
+        const activePeriod = allPeriods.find(p => p.is_active);
+        setPeriods(allPeriods);
+        setPeriodId(activePeriod?.id);
+
         const todayStr = getTodayStr();
         const [feeSummary, todayAtt, schoolStructure] = await Promise.all([
           getFeeSummary(fees, students, profile),
@@ -65,7 +77,8 @@ export default function Dashboard({ currentUser, onLogout }) {
     };
   }, []);
 
-  const isPlatformAdmin = currentUser?.email === 'admin@shulesoft.com' || currentUser?.email === 'shulesoft8@gmail.com';
+  const PLATFORM_ADMINS = ['admin@shulesoft.com', 'shulesoft8@gmail.com'];
+  const isPlatformAdmin = currentUser?.email && PLATFORM_ADMINS.includes(currentUser.email);
   if (isPlatformAdmin) return <Navigate to="/super-admin" />;
 
   if (loading || !data) {
@@ -127,10 +140,27 @@ export default function Dashboard({ currentUser, onLogout }) {
       <div className="page-header">
         <div className="page-header-actions">
           <div>
-            <h2>{data.profile?.schoolName || 'Dashboard'}</h2>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+              <h2>{data.profile?.schoolName || 'Dashboard'}</h2>
+              <select 
+                className="form-input" 
+                style={{ width: 'auto', height: 32, fontSize: '0.75rem', padding: '0 10px', background: 'var(--bg-card)', border: '1px solid var(--border)' }}
+                value={currentPeriodId || ''}
+                onChange={(e) => setActivePeriod(e.target.value)}
+              >
+                {periods.map(p => (
+                  <option key={p.id} value={p.id}>{p.year} {p.term} {p.is_active ? '(Active)' : ''}</option>
+                ))}
+              </select>
+            </div>
             <p>Welcome back, <strong>{currentUser?.name || 'User'}</strong> — here's what's happening at your school today.</p>
           </div>
           <div className="inline-flex" style={{ gap: 10 }}>
+            {!isAccountActive && (
+              <div style={{ background: 'rgba(239,68,68,0.1)', color: 'var(--danger)', padding: '6px 14px', borderRadius: 8, fontSize: '0.75rem', fontWeight: 700, border: '1px solid var(--danger)' }}>
+                ⚠️ Subscription Expired
+              </div>
+            )}
             {onLogout && (
               <button onClick={onLogout} className="btn btn-ghost btn-sm">
                 🚪 Sign Out
@@ -181,7 +211,7 @@ export default function Dashboard({ currentUser, onLogout }) {
       )}
 
       {/* Main Grid — Recent Activity + Quick Actions */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 18, marginBottom: 24 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: 18, marginBottom: 24 }}>
 
         {/* Recent Activity / Payments */}
         <div className="card">

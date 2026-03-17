@@ -367,6 +367,7 @@ body {
   
   .kpi-grid { grid-template-columns: repeat(2, 1fr) !important; gap: 12px !important; }
   .grid-2, .grid-3 { grid-template-columns: 1fr !important; }
+  .dashboard-main-grid { grid-template-columns: 1fr !important; }
   
   .filter-bar { flex-direction: column; align-items: stretch; width: 100%; }
   .filter-bar > * { width: 100% !important; max-width: none !important; }
@@ -377,6 +378,8 @@ body {
 
 @media (max-width: 480px) {
   .kpi-grid { grid-template-columns: 1fr !important; }
+  .topbar-actions { gap: 4px !important; }
+  .topbar-program-select { width: 100px !important; font-size: 0.65rem !important; }
 }
 
 .kpi-grid {

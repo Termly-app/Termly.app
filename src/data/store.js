@@ -5,11 +5,8 @@ export { CBC_STRUCTURE, CBC_CORE_COMPETENCIES, TERM_FEE, getLevelForGrade, getSu
 
 
 // ============= SaaS Subscription Tiers =============
-export const SUBSCRIPTION_PLANS = {
-  Basic: { maxStudents: 150, maxAdmins: 5, price: 3000 },
-  Standard: { maxStudents: 300, maxAdmins: 10, price: 6000 },
-  Premium: { maxStudents: 400, maxAdmins: 20, price: 9000 },
-};
+// Consolidated into SEAT_LIMITS below
+
 
 // ============= CURRENT SCHOOL CONTEXT =============
 // Stored in-memory during session (set after login)
@@ -18,14 +15,14 @@ let _currentAuthUser = null;
 let _currentPeriodId = null;
 
 export const SEAT_LIMITS = {
-  Basic: 10,
-  Standard: 25,
-  Premium: 50,
-  Starter: 150, // Legacy support
-  Champe: 250,  // Modern plans
-  Fala: 150,
-  School: 500,
-  "Super Admin": 9999
+  Basic:   { students: 150, admins: 5,   price: 5999 },
+  Standard: { students: 300, admins: 10,  price: 15000 },
+  Premium: { students: 1000, admins: 30, price: 50000 },
+  Starter: { students: 150, admins: 5,   price: 5999 }, // Legacy
+  Fala:    { students: 150, admins: 5,   price: 5999 }, // Kenyan branding
+  Champe:  { students: 1000, admins: 30, price: 50000 },
+  School:  { students: 500, admins: 15,  price: 25000 },
+  "Super Admin": { students: 9999, admins: 999, price: 0 }
 };
 
 export function setCurrentSchoolContext(schoolId, authUser) {
@@ -56,9 +53,8 @@ export function getCurrentAuthUser() {
   return _currentAuthUser;
 }
 
-export function getCurrentPeriodId() {
-  return _currentPeriodId;
-}
+// Redundant period functions removed (consolidated below)
+
 
 // ============= SCHOOLS =============
 export async function getRegisteredSchools() {
@@ -308,12 +304,23 @@ function mapProfileData(data) {
 }
 
 // ============= SUBSCRIPTIONS & PAYMENTS =============
-export function isSubscriptionActive(profile) {
+export async function isSubscriptionActive(profile) {
+  if (profile.subscriptionStatus === 'Deactivated' || profile.subscriptionStatus === 'Suspended') return false;
+
+  // GLOBAL TERM EXPIRY CHECK
+  const globalExpiry = await getGlobalTermExpiry();
+  if (globalExpiry) {
+    if (new Date(globalExpiry) < new Date()) return false;
+  }
+
   if (profile.subscriptionStatus === 'Active') return true;
   if (profile.subscriptionStatus === 'Trial') {
     if (!profile.subscriptionExpiry) return true; // Default trial
     return new Date(profile.subscriptionExpiry) > new Date();
   }
+  // Also check if expiry is in the future (payment approved)
+  if (profile.subscriptionExpiry && new Date(profile.subscriptionExpiry) > new Date()) return true;
+
   return false;
 }
 
@@ -692,9 +699,13 @@ export async function addStudent(student) {
   const all = await getStudents();
   const p = await getSchoolProfile();
   const planName = p.subscriptionPlan || 'Basic';
-  const planLimits = SUBSCRIPTION_PLANS[planName] || SUBSCRIPTION_PLANS.Basic;
-  if (all.length >= planLimits.maxStudents) {
-    throw new Error(`Student limit reached for your ${planName} plan (${planLimits.maxStudents} students). Please upgrade your plan in Settings.`);
+  
+  // Robust plan lookup matching other components
+  const planLimits = SEAT_LIMITS[planName] || SEAT_LIMITS.Basic;
+  const maxStudents = planLimits.students || planLimits.maxStudents || 150;
+  
+  if (all.length >= maxStudents) {
+    throw new Error(`Student limit reached for your ${planName} plan (${maxStudents} students). Please upgrade your plan in Settings.`);
   }
 
   const count = all.length + 1;
@@ -1491,6 +1502,14 @@ export async function getPlanPrice(planName) {
 }
 
 /**
+ * Get the global term expiry date from platform settings
+ */
+export async function getGlobalTermExpiry() {
+  const settings = await getPlatformSettings();
+  return settings?.billing?.term_expiry || null;
+}
+
+/**
  * Update platform setting
  */
 export async function updatePlatformSetting(key, value) {
@@ -1516,15 +1535,46 @@ export async function deleteSchool(schoolId) {
 /**
  * Get all schools with their profiles
  */
+/**
+ * Get all schools with their profiles and real usage counts
+ */
 export async function getAllSchools() {
-  const { data, error } = await supabase
+  // 1. Fetch schools and profiles
+  const { data: schools, error: sErr } = await supabase
     .from('schools')
-    .select('*');
-  if (error) {
-    console.error('Error fetching all schools:', error);
+    .select('*, school_profiles(*)');
+  
+  if (sErr) {
+    console.error('Error fetching all schools:', sErr);
     return [];
   }
-  return data || [];
+
+  // 2. Fetch all student counts
+  const { data: students, error: stErr } = await supabase
+    .from('students')
+    .select('school_id');
+  
+  // 3. Fetch all staff counts
+  const { data: staff, error: sfErr } = await supabase
+    .from('users')
+    .select('school_id')
+    .neq('role', 'Super Admin'); // Exclude system wide admins
+
+  const studentCounts = (students || []).reduce((acc, curr) => {
+    acc[curr.school_id] = (acc[curr.school_id] || 0) + 1;
+    return acc;
+  }, {});
+
+  const staffCounts = (staff || []).reduce((acc, curr) => {
+    acc[curr.school_id] = (acc[curr.school_id] || 0) + 1;
+    return acc;
+  }, {});
+
+  return (schools || []).map(s => ({
+    ...s,
+    _studentCount: studentCounts[s.id] || 0,
+    _staffCount: staffCounts[s.id] || 0
+  }));
 }
 
 /**
@@ -1532,21 +1582,43 @@ export async function getAllSchools() {
  */
 export async function deactivateSchool(schoolId) {
   const { error: e1 } = await supabase.from('schools').update({ status: 'Deactivated' }).eq('id', schoolId);
-  if (e1) console.error('Failed to deactivate school:', e1);
+  if (e1) throw e1;
   const { error: e2 } = await supabase.from('school_profiles').update({ subscription_status: 'Deactivated' }).eq('school_id', schoolId);
-  if (e2) console.error('Failed to update profile status:', e2);
+  if (e2) throw e2;
   await logPlatformActivity('DEACTIVATION', `School ${schoolId} deactivated by admin`, schoolId);
 }
 
 /**
- * Restore / Activate a school — sets status to 'Active'
+ * Restore / Activate a school — sets status to 'Active' and extends expiry
  */
-export async function restoreSchool(schoolId) {
+export async function restoreSchool(schoolId, monthsToAdd = 4) {
+  // 1. Calculate new expiry
+  const { data: profileData, error: getProfileError } = await supabase
+    .from('school_profiles')
+    .select('subscription_expiry')
+    .eq('school_id', schoolId)
+    .single();
+
+  if (getProfileError) throw getProfileError; // Throw if fetching profile fails
+
+  let expiry = new Date();
+  if (profileData && profileData.subscription_expiry) {
+    const currentExpiry = new Date(profileData.subscription_expiry);
+    if (currentExpiry > expiry) expiry = currentExpiry;
+  }
+  expiry.setMonth(expiry.getMonth() + monthsToAdd);
+
   const { error: e1 } = await supabase.from('schools').update({ status: 'Active' }).eq('id', schoolId);
-  if (e1) console.error('Failed to restore school:', e1);
-  const { error: e2 } = await supabase.from('school_profiles').update({ subscription_status: 'Active' }).eq('school_id', schoolId);
-  if (e2) console.error('Failed to update profile status:', e2);
-  await logPlatformActivity('ACTIVATION', `School ${schoolId} activated by admin`, schoolId);
+  if (e1) throw e1;
+  const { error: e2 } = await supabase
+    .from('school_profiles')
+    .update({ 
+      subscription_status: 'Active',
+      subscription_expiry: expiry.toISOString()
+    })
+    .eq('school_id', schoolId);
+  if (e2) throw e2;
+  await logPlatformActivity('ACTIVATION', `School ${schoolId} activated by admin (+${monthsToAdd} months)`, schoolId);
 }
 
 /**
@@ -1554,9 +1626,9 @@ export async function restoreSchool(schoolId) {
  */
 export async function suspendSchool(schoolId) {
   const { error: e1 } = await supabase.from('schools').update({ status: 'Suspended' }).eq('id', schoolId);
-  if (e1) console.error('Failed to suspend school:', e1);
+  if (e1) throw e1;
   const { error: e2 } = await supabase.from('school_profiles').update({ subscription_status: 'Suspended' }).eq('school_id', schoolId);
-  if (e2) console.error('Failed to update profile status:', e2);
+  if (e2) throw e2;
   await logPlatformActivity('SUSPENSION', `School ${schoolId} suspended by admin`, schoolId);
 }
 

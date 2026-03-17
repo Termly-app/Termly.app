@@ -180,7 +180,7 @@ export default function Landing() {
       <div className="nav-wrap">
         <nav className="landing-nav">
             ShuleSoft
-          <a href="#features" className="nlink">Features</a>
+                <a href="mailto:shulesoft@gmail.com" className="contact-link">shulesoft@gmail.com</a>
           <a href="#pricing" className="nlink">Pricing</a>
           <a href="#" className="nlink">Docs</a>
           <div className="nsep"></div>
@@ -506,7 +506,7 @@ export default function Landing() {
           <div className="ft-col">
             <h4 className="ft-h">Support</h4>
             <ul className="ft-links">
-              <li><Link to="/support">Contact Support</Link></li>
+              <li><a href="mailto:shulesoft@gmail.com">Email: shulesoft@gmail.com</a></li>
               <li><a href={`tel:${settings?.support?.phone || '+254712260057'}`}>Call: {settings?.support?.phone || '+254712260057'}</a></li>
               <li><Link to="/faq">FAQ</Link></li>
               <li><Link to="/legal/service-level">Service Level (SLA)</Link></li>

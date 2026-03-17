@@ -94,7 +94,18 @@ export default function Billing() {
     </div>
   );
 
-  const isActive = profile ? isSubscriptionActive(profile) : false;
+  // Moved to loadData for async handling
+  const [isActive, setIsActive] = useState(false);
+
+  useEffect(() => {
+    const checkActive = async () => {
+      if (profile) {
+        const active = await isSubscriptionActive(profile);
+        setIsActive(active);
+      }
+    };
+    checkActive();
+  }, [profile]);
 
   return (
     <div className="animate-in">
@@ -177,7 +188,7 @@ export default function Billing() {
             <div style={{ paddingTop: 20, borderTop: '1px solid rgba(255,255,255,0.05)' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 12 }}>
                 <span style={{ opacity: 0.6 }}>School Identity:</span>
-                <span style={{ fontWeight: 600 }}>{profile.school_name}</span>
+                <span style={{ fontWeight: 600 }}>{profile?.school_name}</span>
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                 <span style={{ opacity: 0.6 }}>Billing Cycle:</span>
@@ -335,8 +346,8 @@ export default function Billing() {
             .filter(([_, p]) => p.active !== false)
             .map(([id, p]) => (
             <div key={id} style={{ 
-              background: profile.subscriptionPlan === id ? 'rgba(79, 70, 229, 0.1)' : 'rgba(255, 255, 255, 0.03)',
-              border: `1px solid ${profile.subscriptionPlan === id ? 'var(--primary)' : 'rgba(255, 255, 255, 0.1)'}`,
+              background: profile?.subscriptionPlan === id ? 'rgba(79, 70, 229, 0.1)' : 'rgba(255, 255, 255, 0.03)',
+              border: `1px solid ${profile?.subscriptionPlan === id ? 'var(--primary)' : 'rgba(255, 255, 255, 0.1)'}`,
               borderRadius: '24px',
               padding: '32px',
               transition: 'all 0.3s ease',
@@ -344,7 +355,7 @@ export default function Billing() {
               display: 'flex',
               flexDirection: 'column'
             }}>
-              {profile.subscriptionPlan === id && (
+              {profile?.subscriptionPlan === id && (
                 <div style={{ position: 'absolute', top: 12, right: 12, background: 'var(--primary)', color: 'white', padding: '4px 12px', borderRadius: '100px', fontSize: '0.65rem', fontWeight: 800 }}>CURRENT</div>
               )}
               <h4 style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--text)', margin: '0 0 4px 0' }}>{id}</h4>
@@ -362,24 +373,24 @@ export default function Billing() {
                 ))}
               </ul>
               <button 
-                disabled={profile.subscriptionPlan === id || switching}
+                disabled={profile?.subscriptionPlan === id || switching}
                 onClick={() => handleSwitchPlan(id)}
                 style={{ 
                   width: '100%', 
                   padding: '14px', 
                   borderRadius: '12px', 
-                  background: profile.subscriptionPlan === id ? 'rgba(79, 70, 229, 0.1)' : 'var(--primary)',
-                  color: profile.subscriptionPlan === id ? 'var(--primary)' : 'white',
+                  background: profile?.subscriptionPlan === id ? 'rgba(79, 70, 229, 0.1)' : 'var(--primary)',
+                  color: profile?.subscriptionPlan === id ? 'var(--primary)' : 'white',
                   fontWeight: 800,
-                  border: profile.subscriptionPlan === id ? '1px solid var(--primary)' : 'none',
-                  cursor: profile.subscriptionPlan === id ? 'default' : 'pointer',
+                  border: profile?.subscriptionPlan === id ? '1px solid var(--primary)' : 'none',
+                  cursor: profile?.subscriptionPlan === id ? 'default' : 'pointer',
                   transition: 'all 0.2s',
                   fontSize: '0.85rem',
                   textTransform: 'uppercase',
                   letterSpacing: '0.5px'
                 }}
               >
-                {switching ? 'Updating Plan...' : profile.subscriptionPlan === id ? '✓ Active Selection' : 'Choose Plan'}
+                {switching ? 'Updating Plan...' : profile?.subscriptionPlan === id ? '✓ Active Selection' : 'Choose Plan'}
               </button>
             </div>
           ))}

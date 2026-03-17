@@ -253,8 +253,8 @@ const CSS = `
   .sa-sidebar.open{transform:translateX(0)}
   .sa-menu-btn{display:flex !important}
   .sa-close-btn{display:flex !important}
-  .sa .kpi-grid{grid-template-columns:repeat(2,1fr);gap:8px}
-  .sa .charts-grid,.sa .charts-grid-3,.sa .bot-grid{grid-template-columns:1fr;gap:8px}
+  .sa .kpi-grid{grid-template-columns:repeat(2,1fr);gap:12px}
+  .sa .charts-grid,.sa .charts-grid-3,.sa .bot-grid{grid-template-columns:1fr;gap:12px}
   .sa .ph-right{display:none}
   .sa .tbl-w{overflow-x:auto;-webkit-overflow-scrolling:touch}
   .sa table{min-width:600px}
@@ -262,18 +262,17 @@ const CSS = `
 @media(max-width:480px){
   .sa-content{padding:12px}
   .sa-topbar{height:48px;padding:0 12px;gap:8px}
-  .sa .kpi-grid{grid-template-columns:repeat(2,1fr);gap:8px}
-  .sa .kpi-val{font-size:1.15rem}
-  .sa .charts-grid,.sa .charts-grid-3,.sa .bot-grid{grid-template-columns:1fr;gap:8px}
+  .sa .kpi-grid{grid-template-columns:1fr;gap:10px}
+  .sa .kpi-val{font-size:1.4rem}
+  .sa .charts-grid,.sa .charts-grid-3,.sa .bot-grid{grid-template-columns:1fr;gap:10px}
   .sa .cp,.sa .lp{padding:11px}
   .sa .ph-ico{width:34px;height:34px;font-size:14px}
   .sa .ph-title{font-size:.95rem}
   .sa .save-btn{width:100%;padding:10px}
   .sa .bot-grid>*{width:100%}
-  .sa-tb-badge{padding:4px 8px}
+  .sa-tb-badge{display:none}
 }
 @media(max-width:360px){
-  .sa .kpi-grid{grid-template-columns:1fr}
   .sa-search-wrap{display:none}
 }
 `;
@@ -357,7 +356,8 @@ export default function SuperAdmin({ currentUser, onSignOut }) {
   const subBreakRef  = useRef(null);
   const revBigRef    = useRef(null);
 
-  const isSuperOwner = currentUser?.email?.endsWith('@shulesoft.com') || currentUser?.email === 'shulesoft8@gmail.com';
+  const PLATFORM_ADMINS = ['admin@shulesoft.com', 'shulesoft8@gmail.com'];
+  const isSuperOwner = currentUser?.email && PLATFORM_ADMINS.includes(currentUser.email);
 
   useEffect(() => {
     const id = 'sa-styles';
@@ -372,9 +372,7 @@ export default function SuperAdmin({ currentUser, onSignOut }) {
     return () => clearTimeout(t);
   }, [message]);
 
-  // Consolidating all loading logic into the main setup effect below
-
-  /* ══ REAL DATA COMPUTATIONS ══ */
+   /* ── REAL DATA COMPUTATIONS ── */
   const now              = new Date();
   const thirtyDaysAgo   = new Date(now.getTime() - 30*24*60*60*1000);
   const sevenDaysAgo    = new Date(now.getTime() -  7*24*60*60*1000);
@@ -384,6 +382,13 @@ export default function SuperAdmin({ currentUser, onSignOut }) {
   const isSchoolActive = (s) => {
     const p = s.school_profiles?.[0];
     if (!p) return false;
+
+    // GLOBAL TERM EXPIRY CHECK
+    if (subEndDate) {
+      const termExpiry = new Date(subEndDate);
+      if (termExpiry < now) return false; // Term expired for everyone
+    }
+
     if (p.subscription_status === 'Active') return true;
     if (p.subscription_status === 'Trial') {
       if (!p.subscription_expiry) return true;
@@ -412,16 +417,24 @@ export default function SuperAdmin({ currentUser, onSignOut }) {
     const d = p?.subscription_start || p?.created_at || s.created_at;
     return d && new Date(d) > thirtyDaysAgo;
   });
-  const computedRevenue = activeSchools.reduce((sum,s) => sum + planAmt(s.plan || s.school_profiles?.[0]?.subscription_plan, settings), 0);
-  const lastMonthRevenue = schools.filter(s => {
-    const d = s.created_at || s.school_profiles?.[0]?.created_at;
-    return d && new Date(d) > sixtyDaysAgo && new Date(d) <= thirtyDaysAgo && s.school_profiles?.[0]?.subscription_status === 'Active';
-  }).reduce((sum,s) => sum + planAmt(s.plan || s.school_profiles?.[0]?.subscription_plan, settings), 0);
+
+  const approvedPayments = allPayments.filter(p => p.status === 'Approved');
+  
+  const computedRevenue = approvedPayments
+    .filter(p => new Date(p.created_at) > thirtyDaysAgo)
+    .reduce((sum, p) => sum + (p.amount || 0), 0);
+
+  const lastMonthRevenue = approvedPayments
+    .filter(p => {
+      const d = new Date(p.created_at);
+      return d > sixtyDaysAgo && d <= thirtyDaysAgo;
+    })
+    .reduce((sum, p) => sum + (p.amount || 0), 0);
 
   const totalSchools    = pStats?.totalSchools     ?? schools.length;
   const activeCount     = pStats?.activeSubscribers ?? activeSchools.length;
   const expiredCount    = pStats?.expiredSubscribers ?? expiredSchools.length;
-  const totalRevenue    = pStats?.revenue           ?? computedRevenue;
+  const totalRevenue    = approvedPayments.reduce((sum, p) => sum + (p.amount || 0), 0);
   const newSchoolsCount = pStats?.newSchools        ?? newThisMonth.length;
 
   /* revenue % change — real */
@@ -445,12 +458,10 @@ export default function SuperAdmin({ currentUser, onSignOut }) {
     if (period === 'year') {
       const labels = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
       const data = labels.map((_,mi) =>
-        schools.filter(s => {
-          const p = s.school_profiles?.[0];
-          if (p?.subscription_status !== 'Active') return false;
-          const d = new Date(p.created_at || s.created_at || 0);
+        approvedPayments.filter(p => {
+          const d = new Date(p.created_at);
           return d.getFullYear() === now.getFullYear() && d.getMonth() === mi;
-        }).reduce((sum,s) => sum + planAmt(s.plan || s.school_profiles?.[0]?.subscription_plan, settings), 0)
+        }).reduce((sum,p) => sum + (p.amount || 0), 0)
       );
       return { labels, data };
     }
@@ -459,12 +470,10 @@ export default function SuperAdmin({ currentUser, onSignOut }) {
       const data = labels.map((_,wi) => {
         const wEnd   = new Date(now.getTime() - (3-wi)*7*24*60*60*1000);
         const wStart = new Date(now.getTime() - (4-wi)*7*24*60*60*1000);
-        return schools.filter(s => {
-          const p = s.school_profiles?.[0];
-          if (p?.subscription_status !== 'Active') return false;
-          const d = new Date(p.created_at || s.created_at || 0);
+        return approvedPayments.filter(p => {
+          const d = new Date(p.created_at);
           return d >= wStart && d < wEnd;
-        }).reduce((sum,s) => sum + planAmt(s.plan || s.school_profiles?.[0]?.subscription_plan, settings), 0);
+        }).reduce((sum,p) => sum + (p.amount || 0), 0);
       });
       return { labels, data };
     }
@@ -474,12 +483,10 @@ export default function SuperAdmin({ currentUser, onSignOut }) {
       const dStart = new Date(now); dStart.setDate(now.getDate()-i); dStart.setHours(0,0,0,0);
       const dEnd   = new Date(dStart.getTime() + 86400000);
       labels.push(dStart.toLocaleDateString('en-KE',{day:'numeric',month:'short'}));
-      data.push(schools.filter(s => {
-        const p = s.school_profiles?.[0];
-        if (p?.subscription_status !== 'Active') return false;
-        const d = new Date(p.created_at || s.created_at || 0);
+      data.push(approvedPayments.filter(p => {
+        const d = new Date(p.created_at);
         return d >= dStart && d < dEnd;
-      }).reduce((sum,s) => sum + planAmt(s.plan || s.school_profiles?.[0]?.subscription_plan, settings), 0));
+      }).reduce((sum,p) => sum + (p.amount || 0), 0));
     }
     return { labels, data };
   };
@@ -539,10 +546,10 @@ export default function SuperAdmin({ currentUser, onSignOut }) {
     const data = days.map((_,di) => {
       const dStart = new Date(sevenDaysAgo.getTime() + di*86400000);
       const dEnd   = new Date(dStart.getTime() + 86400000);
-      return schools.filter(s => {
-        const d = new Date(s.created_at || s.school_profiles?.[0]?.created_at || 0);
-        return d >= dStart && d < dEnd && s.school_profiles?.[0]?.subscription_status==='Active';
-      }).reduce((sum,s) => sum + planAmt(s.school_profiles?.[0]?.subscription_plan, settings), 0);
+      return approvedPayments.filter(p => {
+        const d = new Date(p.created_at);
+        return d >= dStart && d < dEnd;
+      }).reduce((sum,p) => sum + (p.amount || 0), 0);
     });
     const pending = pendingPayments.filter(p => new Date(p.created_at) > sevenDaysAgo);
     const pendData = days.map((_,di) => {
@@ -551,21 +558,20 @@ export default function SuperAdmin({ currentUser, onSignOut }) {
       return pending.filter(p => { const d = new Date(p.created_at); return d >= dStart && d < dEnd; }).reduce((s,p) => s + (p.amount||0), 0);
     });
     return new window.Chart(ctx, { type:'bar', data:{ labels:days, datasets:[ {label:'Collected',data,backgroundColor:'#7C5CFC'}, {label:'Pending',data:pendData,backgroundColor:'#E8A020'} ] }, options:{ responsive:true, maintainAspectRatio:false, plugins:{ legend:{display:false}, tooltip:{...TIP,callbacks:{label:c=>' KSh '+c.raw.toLocaleString()}} }, scales:{ x:{stacked:true,grid:{display:false},ticks:{color:TC}}, y:{stacked:true,grid:{color:GC},ticks:{color:TC,callback:v=>v>0?'KSh '+v/1000+'K':0}} } } });
-  }, [activeTab, schools, pendingPayments]);
+  }, [activeTab, schools, pendingPayments, allPayments]);
 
   useChart(payChartRef, (ctx) => {
     const g = ctx.createLinearGradient(0,0,0,200);
     g.addColorStop(0,'rgba(212,80,106,0.35)'); g.addColorStop(1,'rgba(212,80,106,0)');
     const labels = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'].slice(0,now.getMonth()+1);
     const data = labels.map((_,mi) =>
-      schools.filter(s => {
-        const p = s.school_profiles?.[0];
-        const d = new Date(p?.created_at || s.created_at || 0);
+      approvedPayments.filter(p => {
+        const d = new Date(p.created_at);
         return d.getFullYear()===now.getFullYear() && d.getMonth()===mi;
-      }).reduce((sum,s)=>sum+planAmt(s.school_profiles?.[0]?.subscription_plan, settings),0)
+      }).reduce((sum,p)=>sum+(p.amount||0),0)
     );
     return new window.Chart(ctx, { type:'line', data:{ labels, datasets:[{ data, borderColor:'#D4506A', backgroundColor:g, borderWidth:1.5, fill:true, tension:0.4, pointRadius:0 }] }, options:{ responsive:true, maintainAspectRatio:false, plugins:{ legend:{display:false}, tooltip:{...TIP,callbacks:{label:c=>' KSh '+c.raw.toLocaleString()}} }, scales:{ x:{grid:{color:GC},ticks:{color:TC}}, y:{grid:{color:GC},ticks:{color:TC,callback:v=>v>0?'KSh '+v/1000+'K':0}} } } });
-  }, [activeTab, schools]);
+  }, [activeTab, schools, allPayments]);
 
   useChart(subBreakRef, (ctx) => {
     const susp = schools.filter(s=>s.school_profiles?.[0]?.subscription_status==='Suspended').length;
@@ -727,22 +733,46 @@ export default function SuperAdmin({ currentUser, onSignOut }) {
       await deactivateSchool(id); 
       setMessage({type:'success',text:`${name} deactivated.`}); 
       loadData(); 
-    } catch (err) { setMessage({type:'error',text:err.message}); }
+    } catch (err) { 
+      console.error('Deactivation error:', err);
+      setMessage({type:'error',text:err.message || 'Failed to deactivate school'}); 
+    }
   };
   const handleSuspend = async (id, name) => {
     if (!window.confirm(`Suspend ${name}?`)) return;
-    try { await suspendSchool(id); setMessage({type:'success',text:`${name} suspended.`}); loadData(); }
-    catch (err) { setMessage({type:'error',text:err.message}); }
+    try { 
+      await suspendSchool(id); 
+      setMessage({type:'success',text:`${name} suspended.`}); 
+      loadData(); 
+    } catch (err) { 
+      console.error('Suspension error:', err);
+      setMessage({type:'error',text:err.message || 'Failed to suspend school'}); 
+    }
   };
   const handleUpdateSetting = async (key, value) => {
     try { await updatePlatformSetting(key,{...(settings[key]||{}),...value}); setMessage({type:'success',text:'Settings saved.'}); loadData(); }
     catch (err) { setMessage({type:'error',text:err.message}); }
   };
   const handleConfirmActivate = async () => {
-    if (!activateModal) return; setActivating(true);
-    try { await restoreSchool(activateModal.id); setActivateSuccess(true); loadData(); setTimeout(()=>{setActivateModal(null);setActivateSuccess(false);setPayRef('');},2800); }
-    catch (err) { setMessage({type:'error',text:err.message}); setActivateModal(null); }
-    finally { setActivating(false); }
+    if (!activateModal) return; 
+    setActivating(true);
+    try { 
+      await restoreSchool(activateModal.id); 
+      setActivateSuccess(true); 
+      setMessage({type:'success', text: `Successfully activated ${activateModal.name}`});
+      loadData(); 
+      setTimeout(() => {
+        setActivateModal(null);
+        setActivateSuccess(false);
+        setPayRef('');
+      }, 2800); 
+    } catch (err) { 
+      console.error('Activation error:', err);
+      setMessage({type:'error', text: err.message || 'Failed to activate school'}); 
+      setActivateModal(null); 
+    } finally { 
+      setActivating(false); 
+    }
   };
   const handleChangePlan = async () => {
     if (!chosenPlan||!planModal) return; setPlanSaving(true);
@@ -854,7 +884,9 @@ export default function SuperAdmin({ currentUser, onSignOut }) {
 
   /* ── Revenue panel label ── */
   const revPeriodLabel = {day:'Last 30 Days', month:'Last 4 Weeks', year:`Year ${now.getFullYear()}`}[revPeriod];
-  const weeklyRevenue  = schools.filter(s => { const d=new Date(s.created_at||s.school_profiles?.[0]?.created_at||0); return d>sevenDaysAgo && s.school_profiles?.[0]?.subscription_status==='Active'; }).reduce((sum,s)=>sum+planAmt(s.school_profiles?.[0]?.subscription_plan, settings),0);
+  const weeklyRevenue  = approvedPayments
+    .filter(p => new Date(p.created_at) > sevenDaysAgo)
+    .reduce((sum, p) => sum + (p.amount || 0), 0);
 
   return (
     <div className="sa-root">
@@ -1103,12 +1135,16 @@ export default function SuperAdmin({ currentUser, onSignOut }) {
                             {filteredSchools.map(s=>{
                               const p=s.school_profiles?.[0]||{};
                               const curPlan = s.plan || p.subscription_plan || 'Fala';
+                              const pData = p; // Alias for clarity
                               const isActive  = isSchoolActive(s);
-                              const curState = (p.subscription_status || s.status || 'Inactive').toLowerCase();
-                              const isRestricted = !isActive;
-                              const amt       = planAmt(curPlan, settings);
-                              const staffCount = s._staffCount || p.staff_count || 0;
-                              const seatLimit  = settings?.pricing?.[curPlan]?.limit || SEAT_LIMITS[curPlan] || 150;
+                              
+                              // Use more robust plan lookup matching Security.jsx
+                              const pricing = settings?.pricing || {};
+                              const activePlanKey = Object.keys(pricing).find(k => k.toLowerCase() === curPlan.toLowerCase());
+                              const planInfo = activePlanKey ? pricing[activePlanKey] : { price: 5999, limit: 150 };
+                              const amt = planInfo.price || 0;
+                              const studentLimit = planInfo.limit || 150;
+                              const adminLimit = planInfo.admins || 5;
                               return (
                                 <tr key={s.id}>
                                   <td className="td-b">
@@ -1123,21 +1159,22 @@ export default function SuperAdmin({ currentUser, onSignOut }) {
                                       color: settings?.pricing?.[curPlan] ? 'var(--vi)' : 'var(--sub)',
                                       fontSize: '.68rem',
                                       fontWeight: 600,
-                                      border: settings?.pricing?.[curPlan] ? '1px solid rgba(124,92,252,0.2)' : '1px dashed rgba(255,255,255,0.2)'
-                                    }}>
-                                      {curPlan}
-                                    </span>
+                                      display: 'inline-block'
+                                    }}>{curPlan}</span>
                                   </td>
                                   <td>
                                     <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                                      <div className="td-m" style={{ color: staffCount > seatLimit ? 'var(--ro)' : 'var(--txt)', fontWeight: staffCount > seatLimit ? 700 : 400 }}>
-                                        {staffCount} / {seatLimit}
+                                      <div className="td-m" style={{ color: (s._staffCount||0) > adminLimit ? 'var(--er)' : 'var(--txt)', fontWeight: (s._staffCount||0) > adminLimit ? 700 : 400 }}>
+                                        {s._staffCount || 0} / {adminLimit}
                                       </div>
-                                      {staffCount > seatLimit && <span title="Seat limit exceeded" style={{ cursor: 'help' }}>⚠️</span>}
+                                      {(s._staffCount||0) > adminLimit && <span title="Seat limit exceeded" style={{ cursor: 'help' }}>⚠️</span>}
                                     </div>
                                   </td>
                                   <td>{s.location || p.location || 'Kenya'}</td>
-                                  <td className="td-m">{p.student_count||'—'}</td>
+                                  <td className="td-m">
+                                    <div style={{fontWeight:600}}>{s._studentCount || 0}</div>
+                                    <div style={{fontSize:'.6rem',color:'var(--sub)'}}>Limit: {studentLimit}</div>
+                                  </td>
                                   <td>{fmtDate(p.created_at||s.created_at)}</td>
                                   <td><span className={sPill(isActive ? 'Active' : 'Deactivated')}>{isActive ? 'Active' : 'Deactivated'}</span></td>
                                   <td className="td-m" style={{color:isActive?'var(--te)':'var(--sub)'}}>{isActive?fmtMoney(amt):'—'}</td>

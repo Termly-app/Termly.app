@@ -1,0 +1,18 @@
+{
+  "name": "ShuleSoft",
+  "short_name": "ShuleSoft",
+  "description": "The School Management System for modern Kenya.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0C0E0D",
+  "theme_color": "#4f46e5",
+  "icons": [
+    {
+      "src": "/assets/icon.svg",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "orientation": "portrait"
+}
