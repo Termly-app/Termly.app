@@ -4,7 +4,7 @@ import {
   getStudents, getFeeSummary, getAttendanceSummary, getTodayStr,
   getFees, getSchoolStructure, getTeachers, getSchoolProfile,
   getMarks, getAttendance, subscribeToChanges, getUsers, getPlatformSettings,
-  getPeriods, setActivePeriod, isSubscriptionActive
+  getPeriods, setActivePeriod, checkIsSubscriptionActive
 } from '../data/store';
 import Loader from '../components/Common/Loader';
 
@@ -23,7 +23,7 @@ export default function Dashboard({ currentUser, onLogout }) {
         ]);
         
         // Check activation
-        const active = await isSubscriptionActive(profile);
+        const active = await checkIsSubscriptionActive(profile);
         setIsAccountActive(active);
 
         const activePeriod = allPeriods.find(p => p.is_active);
