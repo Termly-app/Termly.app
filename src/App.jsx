@@ -363,7 +363,7 @@ function App() {
 
   return (
     <>
-      <CustomCursor disabled={location.pathname === '/billing'} />
+      <CustomCursor disabled={!location.pathname.startsWith('/super-admin')} />
       {authLoading ? (
         <Loader />
       ) : !currentUser ? (

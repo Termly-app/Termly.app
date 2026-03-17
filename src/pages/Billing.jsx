@@ -157,8 +157,8 @@ export default function Billing() {
                 </h4>
                 <div style={{ display: 'flex', gap: 8, marginTop: 4 }}>
                   <p style={{ margin: 0, opacity: 0.7, fontSize: '0.9rem', fontWeight: 500 }}>
-                    {profile.subscriptionExpiry 
-                      ? `Valid until ${new Date(profile.subscriptionExpiry).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}`
+                    {(settings?.billing?.expiry_date || profile.subscriptionExpiry) 
+                      ? `Valid until ${new Date(settings?.billing?.expiry_date || profile.subscriptionExpiry).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}`
                       : 'No active subscription'}
                   </p>
                 </div>
