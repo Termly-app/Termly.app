@@ -9,7 +9,7 @@ import {
   setActivePeriod, 
   initActivePeriod,
   getCurrentPeriodId,
-  isSubscriptionActive
+  checkIsSubscriptionActive
 } from './data/store';
 import Dashboard from './pages/Dashboard';
 import Students from './pages/Students';
@@ -313,7 +313,7 @@ function App() {
             const profileData = await getSchoolProfile();
             const PLATFORM_ADMINS = ['admin@shulesoft.com', 'shulesoft8@gmail.com'];
             const isPlatAdmin = session.user.email && PLATFORM_ADMINS.includes(session.user.email);
-            const isSubActive = await isSubscriptionActive(profileData);
+            const isSubActive = await checkIsSubscriptionActive(profileData);
             setSubscriptionActive(isPlatAdmin || isSubActive);
           }
         }

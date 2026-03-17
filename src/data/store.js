@@ -304,7 +304,7 @@ function mapProfileData(data) {
 }
 
 // ============= SUBSCRIPTIONS & PAYMENTS =============
-export async function isSubscriptionActive(profile) {
+export async function checkIsSubscriptionActive(profile) {
   if (profile.subscriptionStatus === 'Deactivated' || profile.subscriptionStatus === 'Suspended') return false;
 
   // GLOBAL TERM EXPIRY CHECK

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { getSchoolProfile, submitPayment, getPayments, isSubscriptionActive, getPlatformSettings, updateSchoolPlan, cancelSubscription } from '../data/store';
+import { getSchoolProfile, submitPayment, getPayments, checkIsSubscriptionActive, getPlatformSettings, updateSchoolPlan, cancelSubscription } from '../data/store';
 
 export default function Billing() {
   const [profile, setProfile] = useState(null);
@@ -100,7 +100,7 @@ export default function Billing() {
   useEffect(() => {
     const checkActive = async () => {
       if (profile) {
-        const active = await isSubscriptionActive(profile);
+        const active = await checkIsSubscriptionActive(profile);
         setIsActive(active);
       }
     };
