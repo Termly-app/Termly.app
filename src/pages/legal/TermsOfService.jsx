@@ -59,10 +59,7 @@ export default function TermsOfService() {
 
       <section>
         <h3>8. Contact Information</h3>
-        <p>For technical support or questions regarding these terms:</p>
-        <p>
-          Email: <a href="mailto:shulesoft@gmail.com" style={{ color: 'inherit', fontWeight: 600 }}>shulesoft@gmail.com</a>
-        </p>
+        <p>For technical support or questions regarding these terms, please visit our <a href="/support" style={{ color: 'var(--primary)', fontWeight: 600 }}>Support Page</a> for direct contact options.</p>
       </section>
 
       <section>

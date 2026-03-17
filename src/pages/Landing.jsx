@@ -179,8 +179,17 @@ export default function Landing() {
 
       <div className="nav-wrap">
         <nav className="landing-nav">
+          <Link to="/" className="brand">
+            <div className="brand-sq">
+              <svg viewBox="0 0 13 13" fill="none">
+                <rect x="1" y="1" width="4.5" height="4.5" rx="1" fill="white"/>
+                <rect x="7.5" y="1" width="4.5" height="4.5" rx="1" fill="rgba(255,255,255,.55)"/>
+                <rect x="1" y="7.5" width="4.5" height="4.5" rx="1" fill="rgba(255,255,255,.55)"/>
+                <rect x="7.5" y="7.5" width="4.5" height="4.5" rx="1" fill="rgba(255,255,255,.25)"/>
+              </svg>
+            </div>
             ShuleSoft
-                <a href="mailto:shulesoft@gmail.com" className="contact-link">shulesoft@gmail.com</a>
+          </Link>
           <a href="#pricing" className="nlink">Pricing</a>
           <Link to="/docs" className="nlink">Docs</Link>
           <div className="nsep"></div>
@@ -506,7 +515,7 @@ export default function Landing() {
           <div className="ft-col">
             <h4 className="ft-h">Support</h4>
             <ul className="ft-links">
-              <li><a href="mailto:shulesoft@gmail.com">Email: shulesoft@gmail.com</a></li>
+              <li><Link to="/support">Contact Support</Link></li>
               <li><a href={`tel:${settings?.support?.phone || '+254712260057'}`}>Call: {settings?.support?.phone || '+254712260057'}</a></li>
               <li><Link to="/faq">FAQ</Link></li>
               <li><Link to="/legal/service-level">Service Level (SLA)</Link></li>

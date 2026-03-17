@@ -48,10 +48,7 @@ export default function PrivacyPolicy() {
 
       <section>
         <h3>5. Contact Us</h3>
-        <p>If you have questions about our privacy practices or your data, please contact us at:</p>
-        <p>
-          Email: <a href="mailto:shulesoft@gmail.com" style={{ color: 'inherit', fontWeight: 600 }}>shulesoft@gmail.com</a>
-        </p>
+        <p>If you have questions about our privacy practices or your data, please visit our <a href="/support" style={{ color: 'var(--primary)', fontWeight: 600 }}>Support Page</a> for direct contact assistance.</p>
       </section>
     </LegalLayout>
   );
