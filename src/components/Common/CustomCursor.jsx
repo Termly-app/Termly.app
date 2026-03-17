@@ -1,32 +1,41 @@
 import { useEffect, useRef } from 'react';
 import './CustomCursor.css';
 
-export default function CustomCursor() {
+export default function CustomCursor({ disabled }) {
   const cursorRef = useRef(null);
   const ringRef = useRef(null);
 
   useEffect(() => {
+    if (disabled) {
+      document.body.classList.remove('custom-cursor-active');
+      return;
+    }
+
     // ── CUSTOM CURSOR LOGIC ──
     document.body.classList.add('custom-cursor-active');
     let mx = 0, my = 0, rx = 0, ry = 0;
     
+    const cursor = cursorRef.current;
+    const ring = ringRef.current;
+
     const onMouseMove = (e) => {
-      mx = e.clientX; 
-      my = e.clientY;
-      if (cursorRef.current) {
-        cursorRef.current.style.left = mx + 'px';
-        cursorRef.current.style.top = my + 'px';
+      const { clientX: x, clientY: y } = e;
+      mx = x;
+      my = y;
+      if (cursor) {
+        cursor.style.transform = `translate(${x}px, ${y}px)`;
       }
     };
     
-    const animRing = () => {
+    let ringAnimId;
+    const animateRing = () => {
       rx += (mx - rx) * 0.14;
       ry += (my - ry) * 0.14;
-      if (ringRef.current) {
-        ringRef.current.style.left = rx + 'px';
-        ringRef.current.style.top = ry + 'px';
+      if (ring) {
+        ring.style.left = rx + 'px';
+        ring.style.top = ry + 'px';
       }
-      requestAnimationFrame(animRing);
+      ringAnimId = requestAnimationFrame(animateRing);
     };
     
     const onMouseEnter = () => document.body.classList.add('cursor-hover');
@@ -34,7 +43,7 @@ export default function CustomCursor() {
 
     // Add listeners
     document.addEventListener('mousemove', onMouseMove);
-    const ringAnimId = requestAnimationFrame(animRing);
+    animateRing(); // Start the animation loop
     
     // Select all interactive elements
     const updateHoverListeners = () => {
@@ -59,7 +68,9 @@ export default function CustomCursor() {
       document.body.classList.remove('cursor-hover');
       document.body.classList.remove('custom-cursor-active');
     };
-  }, []);
+  }, [disabled]);
+
+  if (disabled) return null;
 
   return (
     <>
