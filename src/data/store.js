@@ -36,6 +36,10 @@ export function setCurrentPeriodId(periodId) {
   window.dispatchEvent(new Event('periodChanged'));
 }
 
+export function getCurrentPeriodId() {
+  return _currentPeriodId;
+}
+
 let _currentExamType = 'End Term';
 export function setCurrentExamType(type) {
   _currentExamType = type;
