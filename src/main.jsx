@@ -18,7 +18,6 @@ if (rootElement) {
     <React.StrictMode>
       <BrowserRouter>
         <ScrollToTop />
-        <CustomCursor />
         <App />
       </BrowserRouter>
     </React.StrictMode>

@@ -363,7 +363,7 @@ function App() {
 
   return (
     <>
-      <CustomCursor disabled={!location.pathname.startsWith('/super-admin')} />
+      <CustomCursor disabled={!isPlatformAdmin && currentUser} />
       {authLoading ? (
         <Loader />
       ) : !currentUser ? (
