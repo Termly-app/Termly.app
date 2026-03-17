@@ -360,6 +360,15 @@ export async function getAllPendingPayments() {
   return data || [];
 }
 
+export async function getAllPayments() {
+  const { data, error } = await supabase
+    .from('payments')
+    .select('*, school_profiles(school_name, subscription_plan)')
+    .order('created_at', { ascending: false });
+  if (error) throw error;
+  return data || [];
+}
+
 export async function approvePayment(paymentId, schoolId, monthsToAdd = 4) {
   // 1. Update payment status
   const { error: pError } = await supabase

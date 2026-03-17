@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import {
-  getAllPendingPayments, approvePayment, rejectPayment,
+  getAllPendingPayments, getAllPayments, approvePayment, rejectPayment,
   getAllSchools, getPlatformActivities, getPlatformSettings,
   getPlatformStats, updatePlatformSetting, manualExtendSubscription,
   suspendSchool, restoreSchool, updateSchoolPlan, subscribeToPlatformChanges,
@@ -138,10 +138,7 @@ const CSS = `
 .sa .cup{background:rgba(13,216,138,.14);color:var(--te)}
 .sa .cdn{background:rgba(212,80,106,.14);color:var(--ro)}
 .sa .chart-box{position:relative}
-  const deactivatedSchoolsLog = Array.isArray(schools) ? schools.filter(s => {
-    const pStatus = (s.school_profiles?.[0]?.subscription_status || s.status || 'Inactive').toLowerCase();
-    return !['active', 'suspended', 'expired'].includes(pStatus);
-  }).length : 0;
+  /* deactivatedSchoolsLog is computed dynamically in the render using isSchoolActive */
 /* bot grid */
 .sa .bot-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;min-width:0}
 .sa .lp{background:var(--panel);border:1px solid var(--edge);border-radius:10px;padding:13px;min-width:0}
@@ -309,6 +306,7 @@ export default function SuperAdmin({ currentUser, onSignOut }) {
   const activeTab = searchParams.get('tab') || 'overview';
 
   const [pendingPayments, setPendingPayments] = useState([]);
+  const [allPayments, setAllPayments]         = useState([]);
   const [schools, setSchools]                 = useState([]);
   const [activity, setActivity]               = useState([]);
   const [settings, setSettings]               = useState({});
@@ -324,6 +322,8 @@ export default function SuperAdmin({ currentUser, onSignOut }) {
   const [filterStatus, setFilterStatus] = useState('all');      // all|active|expired|deactivated
   const [showFilter, setShowFilter]     = useState(false);
   const [revPeriod, setRevPeriod]       = useState('year');     // day|month|year
+  const [historyStatusFilter, setHistoryStatusFilter] = useState('all'); // all|Pending|Approved|Rejected
+  const [historySchoolFilter, setHistorySchoolFilter] = useState('all');
 
   /* ── modals ── */
   const [activateModal, setActivateModal]     = useState(null);
@@ -380,10 +380,24 @@ export default function SuperAdmin({ currentUser, onSignOut }) {
   const sevenDaysAgo    = new Date(now.getTime() -  7*24*60*60*1000);
   const sixtyDaysAgo    = new Date(now.getTime() - 60*24*60*60*1000);
 
-  const activeSchools   = schools.filter(s => s.school_profiles?.[0]?.subscription_status === 'Active');
+  /* ── helper: is a school "Active"? Matches Billing page logic ── */
+  const isSchoolActive = (s) => {
+    const p = s.school_profiles?.[0];
+    if (!p) return false;
+    if (p.subscription_status === 'Active') return true;
+    if (p.subscription_status === 'Trial') {
+      if (!p.subscription_expiry) return true;
+      return new Date(p.subscription_expiry) > now;
+    }
+    // Also treat as active if expiry is in the future (payment was approved)
+    if (p.subscription_expiry && new Date(p.subscription_expiry) > now) return true;
+    return false;
+  };
+
+  const activeSchools   = schools.filter(isSchoolActive);
   const expiredSchools  = schools.filter(s => {
     const p = s.school_profiles?.[0];
-    return p?.subscription_expiry && new Date(p.subscription_expiry) < now;
+    return p?.subscription_expiry && new Date(p.subscription_expiry) < now && !isSchoolActive(s);
   });
   const newThisMonth    = schools.filter(s => {
     const d = s.created_at || s.school_profiles?.[0]?.created_at;
@@ -610,6 +624,7 @@ export default function SuperAdmin({ currentUser, onSignOut }) {
 
       await Promise.all([
         fetchData(getAllPendingPayments, setPendingPayments, []),
+        fetchData(getAllPayments, setAllPayments, []),
         (async () => {
           // Step 1: Fetch schools — no joins
           const rawSchools = await getAllSchools();
@@ -812,6 +827,7 @@ export default function SuperAdmin({ currentUser, onSignOut }) {
     {id:'overview',      ico:'◈',  cls:'ni-v', label:'Overview'},
     {id:'schools',       ico:'🏫', cls:'ni-t', label:'Schools'},
     {id:'payments',      ico:'💳', cls:'ni-a', label:'Payments'},
+    {id:'history',       ico:'📋', cls:'ni-s', label:'Payment History'},
     {id:'subscriptions', ico:'📅', cls:'ni-s', label:'Subscriptions'},
     {id:'revenue',       ico:'📈', cls:'ni-v', label:'Revenue'},
     {id:'activity',      ico:'⚡', cls:'ni-t', label:'Activity'},
@@ -1087,10 +1103,9 @@ export default function SuperAdmin({ currentUser, onSignOut }) {
                             {filteredSchools.map(s=>{
                               const p=s.school_profiles?.[0]||{};
                               const curPlan = s.plan || p.subscription_plan || 'Fala';
-                              const pStatus = p.subscription_status || s.status || 'Inactive';
-                              const isActive  = pStatus.toLowerCase() === 'active';
-                              const curState = pStatus.toLowerCase();
-                              const isRestricted = ['deactivated', 'suspended', 'expired', 'inactive'].includes(curState);
+                              const isActive  = isSchoolActive(s);
+                              const curState = (p.subscription_status || s.status || 'Inactive').toLowerCase();
+                              const isRestricted = !isActive;
                               const amt       = planAmt(curPlan, settings);
                               const staffCount = s._staffCount || p.staff_count || 0;
                               const seatLimit  = settings?.pricing?.[curPlan]?.limit || SEAT_LIMITS[curPlan] || 150;
@@ -1202,12 +1217,70 @@ export default function SuperAdmin({ currentUser, onSignOut }) {
                 </div>
               </div>}
 
+              {/* ════ PAYMENT HISTORY ════ */}
+              {activeTab==='history' && <div className="tv">
+                <div className="lp">
+                  <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:14,flexWrap:'wrap',gap:8}}>
+                    <div className="lp-t" style={{margin:0}}>All Payment Records ({allPayments.length})</div>
+                  </div>
+                  <div style={{display:'flex',gap:8,marginBottom:14,flexWrap:'wrap',alignItems:'center'}}>
+                    <span style={{fontSize:'.6rem',color:'var(--sub)',textTransform:'uppercase',letterSpacing:'.08em'}}>Status:</span>
+                    {['all','Pending','Approved','Rejected'].map(st=>(
+                      <button key={st} className={`fbtn${historyStatusFilter===st?' on':''}`}
+                        onClick={()=>setHistoryStatusFilter(st)}>
+                        {st==='all'?'All':st}
+                      </button>
+                    ))}
+                    <span style={{fontSize:'.6rem',color:'var(--sub)',textTransform:'uppercase',letterSpacing:'.08em',marginLeft:12}}>School:</span>
+                    <select className="act-sel" value={historySchoolFilter}
+                      onChange={e=>setHistorySchoolFilter(e.target.value)}>
+                      <option value="all">All Schools</option>
+                      {[...new Set(allPayments.map(p=>p.school_profiles?.school_name).filter(Boolean))].sort().map(nm=>(
+                        <option key={nm} value={nm}>{nm}</option>
+                      ))}
+                    </select>
+                  </div>
+                  {(()=>{
+                    const filtered = allPayments
+                      .filter(p => historyStatusFilter==='all' || p.status===historyStatusFilter)
+                      .filter(p => historySchoolFilter==='all' || p.school_profiles?.school_name===historySchoolFilter);
+                    if (filtered.length===0) return <div className="empty"><div className="empty-ico">📋</div>No payment records found.</div>;
+                    return (
+                      <div className="tbl-w">
+                        <table>
+                          <thead>
+                            <tr><th>School</th><th>Amount</th><th>Code</th><th>Status</th><th>Plan</th><th>Date</th><th>Time</th></tr>
+                          </thead>
+                          <tbody>
+                            {filtered.map(p=>{
+                              const d = new Date(p.created_at);
+                              const statusCls = p.status==='Approved'?'pill pill-g':p.status==='Rejected'?'pill pill-r':'pill pill-y';
+                              return (
+                                <tr key={p.id}>
+                                  <td className="td-b">{p.school_profiles?.school_name||'Unknown'}</td>
+                                  <td className="td-m" style={{color:'var(--te)',fontWeight:700}}>{fmtMoney(p.amount)}</td>
+                                  <td style={{fontSize:'.7rem',fontFamily:'var(--fh)'}}>{p.transaction_code||'—'}</td>
+                                  <td><span className={statusCls}>{p.status}</span></td>
+                                  <td style={{textTransform:'capitalize'}}>{p.school_profiles?.subscription_plan||'—'}</td>
+                                  <td>{d.toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'})}</td>
+                                  <td style={{fontSize:'.68rem',color:'var(--sub)'}}>{d.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'})}</td>
+                                </tr>
+                              );
+                            })}
+                          </tbody>
+                        </table>
+                      </div>
+                    );
+                  })()}
+                </div>
+              </div>}
+
               {/* ════ SUBSCRIPTIONS ════ */}
               {activeTab==='subscriptions' && <div className="tv">
                 <div className="kpi-grid" style={{marginBottom:14}}>
                   {[
                     {a:'var(--te)', c:'ni-t',l:'Active',      i:'✅',v:pStats?.activeSchools || activeCount,  ch:`${totalSchools?Math.round((pStats?.activeSchools || activeCount)/totalSchools*100):0}% of total`, up:true },
-                    {a:'var(--sub)',c:'ni-d',l:'Deactivated',  i:'🔒',v:pStats?.deactivatedSchools || deactivatedSchoolsLog, ch:'Awaiting payment', up:false},
+                    {a:'var(--sub)',c:'ni-d',l:'Deactivated',  i:'🔒',v:pStats?.deactivatedSchools || schools.filter(s=>!isSchoolActive(s)).length, ch:'Awaiting payment', up:false},
                     {a:'var(--am)', c:'ni-a',l:'Suspended',    i:'⏸',v:pStats?.suspendedSchools || 0, ch:'Admin action', up:false},
                     {a:'var(--ro)', c:'ni-r',l:'Expired',      i:'⚠', v:pStats?.expiredSchools || expiredCount, ch:'Needs renewal', up:false},
                   ].map((k,i)=>(
