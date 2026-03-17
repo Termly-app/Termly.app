@@ -217,9 +217,6 @@ function Sidebar({ isOpen, onClose, onLogout, currentUser, subscriptionActive })
             <span className="nav-icon">⚙️</span> Settings
           </NavLink>
         )}
-        <NavLink to="/docs" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`} onClick={onClose}>
-          <span className="nav-icon">📚</span> Documentation
-        </NavLink>
       </nav>
 
       <div className="sidebar-bottom">

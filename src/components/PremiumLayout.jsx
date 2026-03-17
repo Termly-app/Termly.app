@@ -16,63 +16,14 @@ export default function PremiumLayout({ children }) {
     load();
   }, []);
 
-  useEffect(() => {
-    document.body.classList.add('landing-body');
-
-    // ── CUSTOM CURSOR ──
-    let mx = 0, my = 0, rx = 0, ry = 0;
-    const onMouseMove = (e) => {
-      mx = e.clientX; 
-      my = e.clientY;
-      if (cursorRef.current) {
-        cursorRef.current.style.left = mx + 'px';
-        cursorRef.current.style.top = my + 'px';
-      }
-    };
-    document.addEventListener('mousemove', onMouseMove);
-
-    const animRing = () => {
-      rx += (mx - rx) * 0.14;
-      ry += (my - ry) * 0.14;
-      if (ringRef.current) {
-        ringRef.current.style.left = rx + 'px';
-        ringRef.current.style.top = ry + 'px';
-      }
-      requestAnimationFrame(animRing);
-    };
-    const ringAnimId = requestAnimationFrame(animRing);
-
-    const onMouseEnter = () => document.body.classList.add('cursor-hover');
-    const onMouseLeave = () => document.body.classList.remove('cursor-hover');
-    
-    // Use a mutation observer or just re-run this on children change if needed
-    const setupHovers = () => {
-      const hoverElements = document.querySelectorAll('a, button, .fc, .pc, .pbtn, .nlink, .ncta, .news-btn');
-      hoverElements.forEach(el => {
-        el.addEventListener('mouseenter', onMouseEnter);
-        el.addEventListener('mouseleave', onMouseLeave);
-      });
-    };
-    setupHovers();
-
-    // ── SCROLL REVEAL ──
-    const revealObs = new IntersectionObserver((entries) => {
-      entries.forEach(e => { if(e.isIntersecting) { e.target.classList.add('visible'); }});
-    }, { threshold: 0.12 });
-    document.querySelectorAll('.reveal').forEach(el => revealObs.observe(el));
-
     return () => {
       document.body.classList.remove('landing-body');
-      document.removeEventListener('mousemove', onMouseMove);
-      cancelAnimationFrame(ringAnimId);
       revealObs.disconnect();
     };
   }, [children]);
 
   return (
     <>
-      <div className="cursor" ref={cursorRef}></div>
-      <div className="cursor-ring" ref={ringRef}></div>
 
       <div className="nav-wrap">
         <nav className="landing-nav">
@@ -120,6 +71,7 @@ export default function PremiumLayout({ children }) {
           <div className="ft-col">
             <h4 className="ft-h">System</h4>
             <ul className="ft-links">
+              <li><Link to="/docs">Documentation</Link></li>
               <li><Link to="/legal/terms">Terms of Service</Link></li>
               <li><Link to="/legal/privacy">Privacy Policy</Link></li>
               <li><Link to="/legal/acceptable-use">Acceptable Use</Link></li>

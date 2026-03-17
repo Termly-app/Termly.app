@@ -504,6 +504,7 @@ export default function Landing() {
           <div className="ft-col">
             <h4 className="ft-h">System</h4>
             <ul className="ft-links">
+              <li><Link to="/docs">Documentation</Link></li>
               <li><Link to="/legal/terms">Terms of Service</Link></li>
               <li><Link to="/legal/privacy">Privacy Policy</Link></li>
               <li><Link to="/legal/acceptable-use">Acceptable Use</Link></li>
