@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import CustomCursor from '../components/Common/CustomCursor';
 import { supabase } from '../lib/supabase';
 import {
   findSchool,
@@ -174,7 +173,6 @@ export default function Login({ onLogin }) {
 
   return (
     <div className="login-res-page">
-      <CustomCursor />
       <div className="card">
         {/* ... existing decorative panel ... */}
         <div className="right-panel">

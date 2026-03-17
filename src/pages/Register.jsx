@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
-import CustomCursor from '../components/Common/CustomCursor';
 import { supabase } from '../lib/supabase';
 import { registerSchool, getPlatformSettings } from '../data/store';
 
@@ -124,7 +123,6 @@ export default function Register() {
 
   return (
     <div className="res-page">
-      <CustomCursor />
       <div className="card">
         {/* RIGHT PANEL - DECORATIVE */}
         <div className="right-panel">
