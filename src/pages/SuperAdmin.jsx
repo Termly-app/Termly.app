@@ -378,24 +378,32 @@ export default function SuperAdmin({ currentUser, onSignOut }) {
   const sevenDaysAgo    = new Date(now.getTime() -  7*24*60*60*1000);
   const sixtyDaysAgo    = new Date(now.getTime() - 60*24*60*60*1000);
 
-  /* ── helper: is a school "Active"? Matches Billing page logic ── */
+  /* ── helper: is a school "Active"? More granular matching Billing page logic ── */
   const isSchoolActive = (s) => {
     const p = s.school_profiles?.[0];
     if (!p) return false;
 
-    // GLOBAL TERM EXPIRY CHECK
-    if (subEndDate) {
-      const termExpiry = new Date(subEndDate);
-      if (termExpiry < now) return false; // Term expired for everyone
-    }
+    // 1. Explicit Deactivation / Suspension overrides everything
+    if (['Deactivated', 'Suspended', 'Terminated'].includes(p.subscription_status)) return false;
 
-    if (p.subscription_status === 'Active') return true;
+    // 2. TRIAL Check
     if (p.subscription_status === 'Trial') {
       if (!p.subscription_expiry) return true;
       return new Date(p.subscription_expiry) > now;
     }
-    // Also treat as active if expiry is in the future (payment was approved)
+
+    // 3. GLOBAL TERM EXPIRY CHECK (Only if not explicitly 'Trial')
+    if (subEndDate && p.subscription_status !== 'Trial') {
+      const termExpiry = new Date(subEndDate);
+      if (termExpiry < now) return false; // Term expired for everyone on regular plans
+    }
+
+    // 4. ACTIVE Status (Explicitly set after payment)
+    if (p.subscription_status === 'Active') return true;
+
+    // 5. Individual EXPIRY fallback
     if (p.subscription_expiry && new Date(p.subscription_expiry) > now) return true;
+    
     return false;
   };
 
@@ -700,7 +708,12 @@ export default function SuperAdmin({ currentUser, onSignOut }) {
   const setTab = (tab) => { setSearchParams({ tab }); setSidebarOpen(false); setSearchQuery(''); };
 
   const statusLabel = (s) => s==='Active'?'Active':s==='Suspended'?'Suspended':'Deactivated';
-  const sPill       = (s) => s==='Active'?'pill pill-g':'pill';
+  const sPill       = (s) => {
+    if (s === 'Active') return 'pill pill-g';
+    if (s === 'Trial') return 'pill pill-v';
+    if (s === 'Expired' || s === 'Deactivated') return 'pill pill-r';
+    return 'pill';
+  };
   const fmtDate     = (d) => d ? new Date(d).toLocaleDateString('en-KE',{day:'numeric',month:'short',year:'numeric'}) : '—';
   const fmtMoney    = (n) => `KSh ${Number(n||0).toLocaleString()}`;
   const calcExpiry  = (ds) => {
@@ -736,6 +749,49 @@ export default function SuperAdmin({ currentUser, onSignOut }) {
     } catch (err) { 
       console.error('Deactivation error:', err);
       setMessage({type:'error',text:err.message || 'Failed to deactivate school'}); 
+    }
+  };
+
+  const handleBulkDeactivate = async () => {
+    if (!filteredSchools.length) return;
+    if (!window.confirm(`WARNING: Deactivate ALL ${filteredSchools.length} schools currently in view?`)) return;
+    try {
+      setMessage({type:'info', text: 'Processing bulk deactivation...'});
+      for (const s of filteredSchools) {
+        await deactivateSchool(s.id);
+      }
+      setMessage({type:'success', text: `Successfully deactivated ${filteredSchools.length} schools.`});
+      loadData();
+    } catch (err) {
+      setMessage({type:'error', text: err.message});
+    }
+  };
+
+  const handleBulkActivate = async () => {
+    if (!filteredSchools.length) return;
+    if (!window.confirm(`WARNING: Activate ALL ${filteredSchools.length} schools currently in view (+4 months)?`)) return;
+    try {
+      setMessage({type:'info', text: 'Processing bulk activation...'});
+      for (const s of filteredSchools) {
+        await restoreSchool(s.id);
+      }
+      setMessage({type:'success', text: `Successfully activated ${filteredSchools.length} schools.`});
+      loadData();
+    } catch (err) {
+      setMessage({type:'error', text: err.message});
+    }
+  };
+
+  const handleRowDeleteSchool = async (id, name) => {
+    if (!window.confirm(`STRICT WARNING: Terminate ${name}? This will DELETE all their data permanently.`)) return;
+    if (!window.confirm(`Are you absolutely sure? This cannot be undone.`)) return;
+    try {
+      await deleteSchool(id);
+      setMessage({type:'success',text:`${name} terminated and deleted.`});
+      loadData();
+    } catch (err) {
+      console.error('Termination error:', err);
+      setMessage({type:'error',text:err.message || 'Failed to terminate school'});
     }
   };
   const handleSuspend = async (id, name) => {
@@ -1107,9 +1163,13 @@ export default function SuperAdmin({ currentUser, onSignOut }) {
                 <div className="lp">
                   <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:14,flexWrap:'wrap',gap:8}}>
                     <div className="lp-t" style={{margin:0}}>All Schools ({filteredSchools.length}/{totalSchools})</div>
-                    <button className={`act-btn${showFilter?' active':''}`} onClick={()=>setShowFilter(f=>!f)}>
-                      {showFilter?'✕ Close':'⚙ Filter'}
-                    </button>
+                    <div style={{display:'flex',gap:8}}>
+                      <button className="act-btn" onClick={handleBulkActivate} style={{color:'var(--te)',borderColor:'rgba(13,216,138,.2)'}}>Activate All</button>
+                      <button className="act-btn" onClick={handleBulkDeactivate} style={{color:'var(--ro)',borderColor:'rgba(212,80,106,.2)'}}>Deactivate All</button>
+                      <button className={`act-btn${showFilter?' active':''}`} onClick={()=>setShowFilter(f=>!f)}>
+                        {showFilter?'✕ Close':'⚙ Filter'}
+                      </button>
+                    </div>
                   </div>
                   {showFilter && (
                     <div className="filter-bar" style={{marginBottom:12}}>
@@ -1176,19 +1236,27 @@ export default function SuperAdmin({ currentUser, onSignOut }) {
                                     <div style={{fontSize:'.6rem',color:'var(--sub)'}}>Limit: {studentLimit}</div>
                                   </td>
                                   <td>{fmtDate(p.created_at||s.created_at)}</td>
-                                  <td><span className={sPill(isActive ? 'Active' : 'Deactivated')}>{isActive ? 'Active' : 'Deactivated'}</span></td>
+                                  <td>
+                                    <span className={sPill(p.subscription_status || (isActive ? 'Active' : 'Deactivated'))}>
+                                      {p.subscription_status || (isActive ? 'Active' : 'Deactivated')}
+                                    </span>
+                                  </td>
                                   <td className="td-m" style={{color:isActive?'var(--te)':'var(--sub)'}}>{isActive?fmtMoney(amt):'—'}</td>
                                   <td>
                                     <button className="act-btn" style={{fontSize:'.63rem',padding:'3px 10px',color:'var(--sk)',borderColor:'rgba(74,158,232,.25)'}}
                                       onClick={()=>{setPlanModal({schoolId:s.id,schoolName:s.name,currentPlan:curPlan});setChosenPlan('');}}>Change Plan</button>
                                   </td>
                                   <td>
-                                    {isActive
-                                      ? <button className="act-btn" style={{fontSize:'.63rem',padding:'3px 10px',color:'var(--ro)',borderColor:'rgba(212,80,106,.25)',background:'rgba(212,80,106,.06)'}} onClick={()=>handleDeactivate(s.id,s.name)}>Deactivate</button>
-                                      : <button className="act-btn" style={{fontSize:'.63rem',padding:'3px 10px',color:'var(--te)',borderColor:'rgba(13,216,138,.25)',background:'rgba(13,216,138,.05)'}} 
-                                          onClick={()=>{setActivateModal(s);setPayMethod('mpesa');setPayRef('');setActivateSuccess(false);}}>Activate</button>
-                                    }
-                                    <button className="act-btn" style={{fontSize:'.63rem',padding:'3px 10px',marginLeft:6,color:'var(--ro)',borderColor:'var(--ro)',opacity:.3}} onClick={()=>setDeleteModal(s)}>Terminate</button>
+                                    <div style={{display:'flex', gap:6, flexWrap:'wrap'}}>
+                                      <button className="act-btn" style={{fontSize:'.63rem',padding:'3px 8px',color:'var(--te)',borderColor:'rgba(13,216,138,.25)',background:'rgba(13,216,138,.05)'}} 
+                                        onClick={()=>{setActivateModal(s);setPayMethod('mpesa');setPayRef('');setActivateSuccess(false);}}>Activate</button>
+                                      
+                                      <button className="act-btn" style={{fontSize:'.63rem',padding:'3px 8px',color:'var(--ro)',borderColor:'rgba(212,80,106,.25)',background:'rgba(212,80,106,.06)'}} 
+                                        onClick={()=>handleDeactivate(s.id,s.name)}>Deactivate</button>
+                                      
+                                      <button className="act-btn" style={{fontSize:'.63rem',padding:'3px 8px',color:'var(--sub)',borderColor:'var(--edge2)',background:'rgba(255,255,255,.05)'}} 
+                                        onClick={()=>handleRowDeleteSchool(s.id, s.name)}>Terminate</button>
+                                    </div>
                                   </td>
                                 </tr>
                               );
