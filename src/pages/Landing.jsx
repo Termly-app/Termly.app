@@ -175,12 +175,10 @@ export default function Landing() {
 
   return (
     <>
-      <CustomCursor />
-
       <div className="nav-wrap">
         <nav className="landing-nav">
-          <Link to="/" className="brand">
-            <div className="brand-sq">
+          <Link to="/" className="nav-logo">
+            <div className="nav-sq">
               <svg viewBox="0 0 13 13" fill="none">
                 <rect x="1" y="1" width="4.5" height="4.5" rx="1" fill="white"/>
                 <rect x="7.5" y="1" width="4.5" height="4.5" rx="1" fill="rgba(255,255,255,.55)"/>

@@ -367,96 +367,98 @@ function App() {
 
   const isPlatformAdmin = currentUser?.email && ['admin@shulesoft.com', 'shulesoft8@gmail.com'].includes(currentUser.email);
 
+  if (!currentUser) {
+    return (
+      <Routes>
+        <Route path="/" element={<Landing />} />
+        <Route path="/login" element={<Login onLogin={setCurrentUser} />} />
+        <Route path="/register" element={<Register />} />
+        <Route path="/legal/terms" element={<TermsOfService />} />
+        <Route path="/legal/privacy" element={<PrivacyPolicy />} />
+        <Route path="/legal/acceptable-use" element={<AcceptableUse />} />
+        <Route path="/legal/refunds" element={<RefundPolicy />} />
+        <Route path="/legal/service-level" element={<ServiceLevel />} />
+        <Route path="/support" element={<ContactSupport />} />
+        <Route path="/about" element={<AboutUs />} />
+        <Route path="/faq" element={<FAQ />} />
+        <Route path="/docs" element={<Docs />} />
+        <Route path="/security-trust" element={<SecurityTrust />} />
+        <Route path="*" element={<Landing />} />
+      </Routes>
+    );
+  }
+
   return (
     <div className={`app-layout ${isPlatformAdmin ? 'theme-onyx' : 'app-shell'}`}>
-      {!currentUser ? (
-        <Routes>
-          <Route path="/" element={<Landing />} />
-          <Route path="/login" element={<Login onLogin={setCurrentUser} />} />
-          <Route path="/register" element={<Register />} />
-          <Route path="/legal/terms" element={<TermsOfService />} />
-          <Route path="/legal/privacy" element={<PrivacyPolicy />} />
-          <Route path="/legal/acceptable-use" element={<AcceptableUse />} />
-          <Route path="/legal/refunds" element={<RefundPolicy />} />
-          <Route path="/legal/service-level" element={<ServiceLevel />} />
-          <Route path="/support" element={<ContactSupport />} />
-          <Route path="/about" element={<AboutUs />} />
-          <Route path="/faq" element={<FAQ />} />
-          <Route path="/docs" element={<Docs />} />
-          <Route path="/security-trust" element={<SecurityTrust />} />
-          <Route path="*" element={<Landing />} />
-        </Routes>
-      ) : (
-        <>
-          {!isPlatformAdmin && (
-            <>
-              <button className="mobile-toggle" onClick={() => setSidebarOpen(!sidebarOpen)}>
-                {sidebarOpen ? '✕' : '☰'}
-              </button>
-              {sidebarOpen && <div className="sidebar-overlay" onClick={() => setSidebarOpen(false)} />}
-            </>
-          )}
-          
-          <Sidebar 
-            isOpen={sidebarOpen} 
-            onClose={() => setSidebarOpen(false)} 
-            onLogout={handleLogout} 
-            currentUser={currentUser} 
-            subscriptionActive={subscriptionActive} 
-          />
+      <>
+        {!isPlatformAdmin && (
+          <>
+            <button className="mobile-toggle" onClick={() => setSidebarOpen(!sidebarOpen)}>
+              {sidebarOpen ? '✕' : '☰'}
+            </button>
+            {sidebarOpen && <div className="sidebar-overlay" onClick={() => setSidebarOpen(false)} />}
+          </>
+        )}
+        
+        <Sidebar 
+          isOpen={sidebarOpen} 
+          onClose={() => setSidebarOpen(false)} 
+          onLogout={handleLogout} 
+          currentUser={currentUser} 
+          subscriptionActive={subscriptionActive} 
+        />
 
-          <main className="main-content">
-            {!isPlatformAdmin && (
-              <div className="topbar">
-                <div className="topbar-title desktop-only">School Control Center</div>
-                <div className="topbar-title mobile-only">ShuleSoft</div>
-                <div className="topbar-actions">
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                    <span style={{ fontSize: '0.7rem', fontWeight: 700, color: 'var(--text-muted)' }}>PERIOD:</span>
-                    <select 
-                      className="topbar-program-select" 
-                      value={currentPeriodId || ''} 
-                      onChange={async (e) => {
-                        await setActivePeriod(e.target.value);
-                      }}
-                    >
-                      <option value="">Select Period</option>
-                      {periods.map(p => (
-                        <option key={p.id} value={p.id}>
-                          {p.year} {p.term} {p.is_active ? '(Active)' : ''}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                  <div className="topbar-avatar" style={{ border: '2px solid var(--primary-light)' }}>
-                    {currentUser?.name?.charAt(0) || 'U'}
-                  </div>
+        <main className="main-content">
+          {!isPlatformAdmin && (
+            <div className="topbar">
+              <div className="topbar-title desktop-only">School Control Center</div>
+              <div className="topbar-title mobile-only">ShuleSoft</div>
+              <div className="topbar-actions">
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                  <span style={{ fontSize: '0.7rem', fontWeight: 700, color: 'var(--text-muted)' }}>PERIOD:</span>
+                  <select 
+                    className="topbar-program-select" 
+                    value={currentPeriodId || ''} 
+                    onChange={async (e) => {
+                      await setActivePeriod(e.target.value);
+                    }}
+                  >
+                    <option value="">Select Period</option>
+                    {periods.map(p => (
+                      <option key={p.id} value={p.id}>
+                        {p.year} {p.term} {p.is_active ? '(Active)' : ''}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div className="topbar-avatar" style={{ border: '2px solid var(--primary-light)' }}>
+                  {currentUser?.name?.charAt(0) || 'U'}
                 </div>
               </div>
-            )}
-
-            <div className={!isPlatformAdmin ? "page-content" : ""}>
-              <ErrorBoundary>
-                <Routes>
-                  <Route path="/dashboard" element={<Dashboard currentUser={currentUser} onLogout={handleLogout} />} />
-                  <Route path="/students" element={subscriptionActive ? <Students currentUser={currentUser} /> : <Navigate to="/billing" />} />
-                  <Route path="/teachers" element={subscriptionActive ? <Teachers currentUser={currentUser} /> : <Navigate to="/billing" />} />
-                  <Route path="/grading" element={subscriptionActive ? <Grading currentUser={currentUser} /> : <Navigate to="/billing" />} />
-                  <Route path="/fees" element={subscriptionActive ? <Fees currentUser={currentUser} /> : <Navigate to="/billing" />} />
-                  <Route path="/attendance" element={subscriptionActive ? <Attendance currentUser={currentUser} /> : <Navigate to="/billing" />} />
-                  <Route path="/security" element={<Security currentUser={currentUser} />} />
-                  <Route path="/settings" element={<Settings currentUser={currentUser} />} />
-                  <Route path="/super-admin" element={<SuperAdmin currentUser={currentUser} />} />
-                  <Route path="/billing" element={<Billing />} />
-                  <Route path="/docs" element={<Docs />} />
-                  <Route path="/" element={<Navigate to={isPlatformAdmin ? "/super-admin" : "/dashboard"} replace />} />
-                  <Route path="*" element={<Navigate to={isPlatformAdmin ? "/super-admin" : "/dashboard"} replace />} />
-                </Routes>
-              </ErrorBoundary>
             </div>
-          </main>
-        </>
-      )}
+          )}
+
+          <div className={!isPlatformAdmin ? "page-content" : ""}>
+            <ErrorBoundary>
+              <Routes>
+                <Route path="/dashboard" element={<Dashboard currentUser={currentUser} onLogout={handleLogout} />} />
+                <Route path="/students" element={subscriptionActive ? <Students currentUser={currentUser} /> : <Navigate to="/billing" />} />
+                <Route path="/teachers" element={subscriptionActive ? <Teachers currentUser={currentUser} /> : <Navigate to="/billing" />} />
+                <Route path="/grading" element={subscriptionActive ? <Grading currentUser={currentUser} /> : <Navigate to="/billing" />} />
+                <Route path="/fees" element={subscriptionActive ? <Fees currentUser={currentUser} /> : <Navigate to="/billing" />} />
+                <Route path="/attendance" element={subscriptionActive ? <Attendance currentUser={currentUser} /> : <Navigate to="/billing" />} />
+                <Route path="/security" element={<Security currentUser={currentUser} />} />
+                <Route path="/settings" element={<Settings currentUser={currentUser} />} />
+                <Route path="/super-admin" element={<SuperAdmin currentUser={currentUser} />} />
+                <Route path="/billing" element={<Billing />} />
+                <Route path="/docs" element={<Docs />} />
+                <Route path="/" element={<Navigate to={isPlatformAdmin ? "/super-admin" : "/dashboard"} replace />} />
+                <Route path="*" element={<Navigate to={isPlatformAdmin ? "/super-admin" : "/dashboard"} replace />} />
+              </Routes>
+            </ErrorBoundary>
+          </div>
+        </main>
+      </>
     </div>
   );
 }
