@@ -1060,7 +1060,7 @@ export default function SuperAdmin({ currentUser, sidebarOpen, setSidebarOpen, o
 
                 <div className="kpi-grid">
                   {[
-                    {a:'var(--vi)',c:'ni-v',l:'Total Schools',        i:'🏛️',v:totalSchools,           ch:newSchoolsTxt,            n:'Across Kenya',     up:newThisMonth.length>0},
+                    {a:'var(--vi)',c:'ni-v',l:'Total Schools',        i:'🏫',v:totalSchools,           ch:newSchoolsTxt,            n:'Across Kenya',     up:newThisMonth.length>0},
                     {a:'var(--te)',c:'ni-t',l:'Active Subscriptions', i:'⚡',v:activeCount,            ch:activeChangeTxt,          n:'Paid & running',   up:newActiveThisMonth.length>0},
                     {a:'var(--ro)',c:'ni-r',l:'Expired',              i:'⚠️', v:expiredCount,           ch:expiredCount>0?'Follow-up needed':'All good',n:'SMS sent',up:false},
                     {a:'var(--am)',c:'ni-a',l:'Revenue This Term',    i:'📈',v:fmtMoney(totalRevenue), ch:revChangeTxt,             n:'M-PESA',           up:revChangeUp},
@@ -1192,9 +1192,9 @@ export default function SuperAdmin({ currentUser, sidebarOpen, setSidebarOpen, o
                     </div>
                   )}
                   {filteredSchools.length===0
-                    ? <div className="empty"><div className="empty-ico">≡ƒÅ½</div>{q?'No schools match your search.':'No schools registered yet.'}</div>
+                    ? <div className="empty"><div className="empty-ico">🏛️</div>{q?'No schools match your search.':'No schools registered yet.'}</div>
                     : <div className="tbl-w">
-                        <table className="data-table responsive-table">
+                        <table className="data-table responsive-table sa-table">
                           <thead>
                             <tr><th>School</th><th>Plan</th><th>Staff Usage</th><th>Location</th><th>Students</th><th>Joined</th><th>Status</th><th>Revenue</th><th>Sub</th><th>Action</th></tr>
                           </thead>
@@ -1249,7 +1249,7 @@ export default function SuperAdmin({ currentUser, sidebarOpen, setSidebarOpen, o
                                     </span>
                                   </td>
                                   <td data-label="Revenue" className="td-m" style={{color:isActive?'var(--te)':'var(--sub)'}}>{isActive?fmtMoney(amt):'—'}</td>
-                                  <td data-label="Sub">
+                                  <td data-label="Subscription">
                                     <button className="act-btn" style={{fontSize:'.63rem',padding:'3px 10px',color:'var(--sk)',borderColor:'rgba(74,158,232,.25)'}}
                                       onClick={()=>{setPlanModal({schoolId:s.id,schoolName:s.name,currentPlan:curPlan});setChosenPlan('');}}>Change Plan</button>
                                   </td>
@@ -1359,7 +1359,7 @@ export default function SuperAdmin({ currentUser, sidebarOpen, setSidebarOpen, o
                      if (filtered.length===0) return <div className="empty"><div className="empty-ico">📋</div>No payment records found.</div>;
                     return (
                       <div className="tbl-w">
-                        <table className="data-table responsive-table">
+                        <table className="data-table responsive-table sa-table">
                           <thead>
                             <tr><th>School</th><th>Amount</th><th>Code</th><th>Status</th><th>Plan</th><th>Date</th><th>Time</th></tr>
                           </thead>

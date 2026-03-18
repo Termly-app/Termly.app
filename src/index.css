@@ -518,3 +518,27 @@ body {
     padding-top: 60px !important;
   }
 }
+
+/* Super Admin Table Mobile Optimizations */
+@media (max-width: 768px) {
+  .sa-table tr {
+    padding: 12px !important;
+    margin-bottom: 20px !important;
+    border-color: var(--edge) !important;
+    background: var(--panel) !important;
+  }
+  .sa-table td {
+    padding: 12px 0 !important;
+    border-bottom: 1px solid var(--edge) !important;
+    color: var(--txt) !important;
+    justify-content: flex-end !important;
+  }
+  .sa-table td::before {
+    color: var(--sub) !important;
+    font-size: .62rem !important;
+  }
+  .sa-table .act-btn {
+    padding: 6px 12px !important;
+    font-size: .7rem !important;
+  }
+}
