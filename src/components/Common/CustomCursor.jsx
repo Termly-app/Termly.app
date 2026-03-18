@@ -28,8 +28,8 @@ export default function CustomCursor({ disabled }) {
       // Instant Dot (using left/top for maximum browser compatibility)
       const cursor = cursorRef.current;
       if (cursor) {
-        cursor.style.left = (mx - 6) + 'px';
-        cursor.style.top = (my - 6) + 'px';
+        cursor.style.left = (mx - 4) + 'px';
+        cursor.style.top = (my - 4) + 'px';
         cursor.style.opacity = '1';
         cursor.style.visibility = 'visible';
       }
