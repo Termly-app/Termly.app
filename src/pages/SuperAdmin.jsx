@@ -31,7 +31,7 @@ const CSS = `
 .sa-root ::-webkit-scrollbar-track{background:transparent}
 .sa-root ::-webkit-scrollbar-thumb{background:var(--dim);border-radius:2px}
 
-/* ΓòÉΓòÉ SIDEBAR ΓòÉΓòÉ */
+/* ══ SIDEBAR ══ */
 .sa-sidebar{width:var(--sb);min-width:var(--sb);height:100%;background:var(--bg2);border-right:1px solid var(--edge);display:flex;flex-direction:column;overflow-y:auto;transition:transform .25s ease;z-index:200;flex-shrink:0}
 .sb-brand{padding:18px 18px 14px;border-bottom:1px solid var(--edge);display:flex;align-items:center;gap:10px;flex-shrink:0}
 .sb-logo{width:34px;height:34px;border-radius:8px;background:linear-gradient(135deg,var(--vi),#5B3ED4);display:flex;align-items:center;justify-content:center;font-family:var(--fh);font-weight:700;font-size:.8rem;color:#fff;box-shadow:0 0 14px rgba(124,92,252,.3);flex-shrink:0}
@@ -56,11 +56,11 @@ const CSS = `
 .sb-signout{display:flex;align-items:center;gap:8px;padding:7px 11px;margin:4px 8px 10px;border-radius:6px;font-size:.75rem;color:var(--ro);cursor:pointer;background:rgba(212,80,106,.07);border:1px solid rgba(212,80,106,.14);transition:all .2s;flex-shrink:0}
 .sb-signout:hover{background:rgba(212,80,106,.14)}
 
-/* ΓòÉΓòÉ OVERLAY ΓòÉΓòÉ */
+/* ══ OVERLAY ══ */
 .sa-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:1150}
 .sa-overlay.show{display:block}
 
-/* ΓòÉΓòÉ MAIN ΓòÉΓòÉ */
+/* ══ MAIN ══ */
 .sa-main{flex:1;display:flex;flex-direction:column;overflow:hidden;min-width:0;background:#0C0E0D}
 .sa-topbar{height:52px;flex-shrink:0;background:#111411;border-bottom:1px solid var(--edge);display:flex;align-items:center;gap:12px;padding:0 20px}
 .sa-menu-btn{display:none;width:34px;height:34px;border-radius:8px;background:var(--panel2);border:1px solid var(--vi);align-items:center;justify-content:center;cursor:pointer;font-size:16px;flex-shrink:0;color:var(--vi);box-shadow:0 0 10px rgba(124,92,252,.15)}
@@ -914,18 +914,18 @@ export default function SuperAdmin({ currentUser, sidebarOpen, setSidebarOpen, o
 
   const expiryInfo = calcExpiry(subEndDate);
   const navItems = [
-    {id:'overview',      ico:'Γùê',  cls:'ni-v', label:'Overview'},
-    {id:'schools',       ico:'≡ƒÅ½', cls:'ni-t', label:'Schools'},
-    {id:'payments',      ico:'≡ƒÆ│', cls:'ni-a', label:'Payments'},
-    {id:'history',       ico:'≡ƒôï', cls:'ni-s', label:'Payment History'},
-    {id:'subscriptions', ico:'≡ƒôà', cls:'ni-s', label:'Subscriptions'},
-    {id:'revenue',       ico:'≡ƒôê', cls:'ni-v', label:'Revenue'},
-    {id:'activity',      ico:'ΓÜí', cls:'ni-t', label:'Activity'},
-    {id:'config',        ico:'ΓÜÖ',  cls:'ni-d', label:'Settings'},
-    {id:'recovery',      ico:'≡ƒ⌐║', cls:'ni-r', label:'Recovery'},
+    {id:'overview',      ico:'📊',  cls:'ni-v', label:'Overview'},
+    {id:'schools',       ico:'🏛️', cls:'ni-t', label:'Schools'},
+    {id:'payments',      ico:'💳', cls:'ni-a', label:'Payments'},
+    {id:'history',       ico:'📋', cls:'ni-s', label:'Payment History'},
+    {id:'subscriptions', ico:'📅', cls:'ni-s', label:'Subscriptions'},
+    {id:'revenue',       ico:'📈', cls:'ni-v', label:'Revenue'},
+    {id:'activity',      ico:'⚡', cls:'ni-t', label:'Activity'},
+    {id:'config',        ico:'⚙️',  cls:'ni-d', label:'Settings'},
+    {id:'recovery',      ico:'🩺', cls:'ni-r', label:'Recovery'},
   ];
 
-  /* ΓöÇΓöÇ Search-filtered data ΓöÇΓöÇ */
+  /* ── Search-filtered data ── */
   const q = searchQuery.toLowerCase();
   const filteredSchools = schools.filter(s => {
     const p = s.school_profiles?.[0]||{};
@@ -942,7 +942,7 @@ export default function SuperAdmin({ currentUser, sidebarOpen, setSidebarOpen, o
   const filteredActivity = activity.filter(a => !q || a.description?.toLowerCase().includes(q) || a.school_name?.toLowerCase().includes(q));
   const filteredPayments = pendingPayments.filter(p => !q || p.school_profiles?.school_name?.toLowerCase().includes(q) || p.transaction_code?.toLowerCase().includes(q));
 
-  /* ΓöÇΓöÇ Revenue panel label ΓöÇΓöÇ */
+  /* -- Revenue panel label -- */
   const revPeriodLabel = {day:'Last 30 Days', month:'Last 4 Weeks', year:`Year ${now.getFullYear()}`}[revPeriod];
   const weeklyRevenue  = approvedPayments
     .filter(p => new Date(p.created_at) > sevenDaysAgo)
@@ -953,10 +953,10 @@ export default function SuperAdmin({ currentUser, sidebarOpen, setSidebarOpen, o
       {/* ══ SIDEBAR ══ */}
       <aside className={`sa-sidebar${sidebarOpen ? ' open' : ''}`}>
         <div className="sb-brand">
-          <div className="sb-logo">SS</div>
+          <div className="sb-logo">⌬</div>
           <div>
             <div className="sb-name">ShuleSoft</div>
-            <div className="sb-tag">PLATFORM ENGINE</div>
+            <div className="sb-tag">COMMAND CENTER</div>
           </div>
         </div>
 
@@ -1044,7 +1044,7 @@ export default function SuperAdmin({ currentUser, sidebarOpen, setSidebarOpen, o
                   </div>
                 </div>
 
-                {/* ════ OVERVIEW ════ */}
+                {/* ══ OVERVIEW ══ */}
                 {activeTab === 'overview' && <div className="tv">
 
                 {showFilter && (
@@ -1060,12 +1060,12 @@ export default function SuperAdmin({ currentUser, sidebarOpen, setSidebarOpen, o
 
                 <div className="kpi-grid">
                   {[
-                    {a:'var(--vi)',c:'ni-v',l:'Total Schools',        i:'≡ƒÅ½',v:totalSchools,           ch:newSchoolsTxt,            n:'Across Kenya',     up:newThisMonth.length>0},
-                    {a:'var(--te)',c:'ni-t',l:'Active Subscriptions', i:'Γ£à',v:activeCount,            ch:activeChangeTxt,          n:'Paid & running',   up:newActiveThisMonth.length>0},
-                    {a:'var(--ro)',c:'ni-r',l:'Expired',              i:'ΓÜá', v:expiredCount,           ch:expiredCount>0?'Follow-up needed':'All good',n:'SMS sent',up:false},
-                    {a:'var(--am)',c:'ni-a',l:'Revenue This Term',    i:'≡ƒÆ░',v:fmtMoney(totalRevenue), ch:revChangeTxt,             n:'M-PESA',           up:revChangeUp},
-                    {a:'var(--sk)',c:'ni-s',l:'New Schools',          i:'≡ƒÜÇ',v:newSchoolsCount,        ch:newSchoolsCount>0?`Γåæ ${newSchoolsCount} registered`:'No new schools',n:'This month',up:newSchoolsCount>0},
-                    {a:'rgba(212,80,106,.5)',c:'ni-r',l:'Pending Payments',i:'ΓÅ│',v:pendingPayments.length,ch:pendingPayments.length>0?'Awaiting confirmation':'All clear',n:'M-PESA queue',up:false},
+                    {a:'var(--vi)',c:'ni-v',l:'Total Schools',        i:'🏛️',v:totalSchools,           ch:newSchoolsTxt,            n:'Across Kenya',     up:newThisMonth.length>0},
+                    {a:'var(--te)',c:'ni-t',l:'Active Subscriptions', i:'⚡',v:activeCount,            ch:activeChangeTxt,          n:'Paid & running',   up:newActiveThisMonth.length>0},
+                    {a:'var(--ro)',c:'ni-r',l:'Expired',              i:'⚠️', v:expiredCount,           ch:expiredCount>0?'Follow-up needed':'All good',n:'SMS sent',up:false},
+                    {a:'var(--am)',c:'ni-a',l:'Revenue This Term',    i:'📈',v:fmtMoney(totalRevenue), ch:revChangeTxt,             n:'M-PESA',           up:revChangeUp},
+                    {a:'var(--sk)',c:'ni-s',l:'New Schools',          i:'✨',v:newSchoolsCount,        ch:newSchoolsCount>0?`↑ ${newSchoolsCount} registered`:'No new schools',n:'This month',up:newSchoolsCount>0},
+                    {a:'rgba(212,80,106,.5)',c:'ni-r',l:'Pending Payments',i:'⏳',v:pendingPayments.length,ch:pendingPayments.length>0?'Awaiting confirmation':'All clear',n:'M-PESA queue',up:false},
                   ].map((k,i)=>(
                     <div className="kpi" key={i}>
                       <div className="kpi-accent" style={{background:k.a}}/>
@@ -1083,7 +1083,7 @@ export default function SuperAdmin({ currentUser, sidebarOpen, setSidebarOpen, o
                         <div className="cp-lbl">Revenue This Year</div>
                         <div className="cp-val">{fmtMoney(totalRevenue)} {revChange!==null&&<span className={`cbadge ${revChangeUp?'cup':'cdn'}`}>{revChange>=0?'+':''}{revChange}%</span>}</div>
                       </div>
-                      <div className="cp-per">THIS YEAR Γû╛</div>
+                      <div className="cp-per">THIS YEAR →</div>
                     </div>
                     <div className="chart-box"><canvas ref={revChartRef} height="100"/></div>
                   </div>
@@ -1093,7 +1093,7 @@ export default function SuperAdmin({ currentUser, sidebarOpen, setSidebarOpen, o
                         <div className="cp-lbl">School Growth</div>
                         <div className="cp-val">{totalSchools} <span className="cbadge cup">+{newSchoolsCount} new</span></div>
                       </div>
-                      <div className="cp-per">THIS YEAR Γû╛</div>
+                      <div className="cp-per">THIS YEAR →</div>
                     </div>
                     <div className="chart-box"><canvas ref={growChartRef} height="100"/></div>
                   </div>
@@ -1110,7 +1110,7 @@ export default function SuperAdmin({ currentUser, sidebarOpen, setSidebarOpen, o
                         <div className="cp-lbl">Weekly Payments</div>
                         <div className="cp-val">{fmtMoney(weeklyRevenue)} {weeklyRevenue>0?<span className="cbadge cup">this week</span>:null}</div>
                       </div>
-                      <div className="cp-per">THIS WEEK Γû╛</div>
+                      <div className="cp-per">THIS WEEK →</div>
                     </div>
                     <div className="chart-box"><canvas ref={weekChartRef} height="100"/></div>
                   </div>
@@ -1120,13 +1120,13 @@ export default function SuperAdmin({ currentUser, sidebarOpen, setSidebarOpen, o
                   <div className="lp">
                     <div className="lp-t">Recent Schools</div>
                     {(q ? filteredSchools : recentSchools).length===0
-                      ? <div className="empty"><div className="empty-ico">≡ƒÅ½</div>No schools found.</div>
+                      ? <div className="empty"><div className="empty-ico">🏛️</div>No schools found.</div>
                       : (q ? filteredSchools : recentSchools).slice(0,5).map((s,i)=>{
                           const p=s.school_profiles?.[0]||{};
                           const cls=['ni-v','ni-t','ni-a','ni-s','ni-r'][i%5];
                           return (
                             <div className="li" key={s.id}>
-                              <div className="li-l"><div className={`li-ico ${cls}`}>≡ƒÅ½</div><div><div className="li-name">{s.name}</div><div className="li-sub">{p.subscription_plan||'Starter'} ┬╖ {p.location||'Kenya'}</div></div></div>
+                              <div className="li-l"><div className={`li-ico ${cls}`}>🏛️</div><div><div className="li-name">{s.name}</div><div className="li-sub">{p.subscription_plan||'Starter'} • {p.location||'Kenya'}</div></div></div>
                               <div><span className={sPill(p.subscription_status)}>{statusLabel(p.subscription_status)}</span><div className="li-date">{fmtDate(p.created_at||s.created_at)}</div></div>
                             </div>
                           );
@@ -1137,10 +1137,10 @@ export default function SuperAdmin({ currentUser, sidebarOpen, setSidebarOpen, o
                     <div className="lp" style={{flex:1}}>
                       <div className="lp-t">Recent Activity</div>
                       {filteredActivity.length===0
-                        ? <div className="empty"><div className="empty-ico">ΓÜí</div>No activity yet.</div>
+                        ? <div className="empty"><div className="empty-ico">⚡</div>No activity yet.</div>
                         : filteredActivity.slice(0,4).map(a=>(
                             <div className="ai" key={a.id}>
-                              <div className="li-ico ni-t">Γ£à</div>
+                              <div className="li-ico ni-t">⚡</div>
                               <div className="ai-body"><div className="ai-t">{a.description}</div><div className="ai-s">{a.school_name||'System'}</div></div>
                               <div className="ai-time">{fmtDate(a.created_at)}</div>
                             </div>
@@ -1148,12 +1148,12 @@ export default function SuperAdmin({ currentUser, sidebarOpen, setSidebarOpen, o
                       }
                     </div>
                     <div className="lp">
-                      <div className="lp-t">≡ƒæÑ Student Overview</div>
+                      <div className="lp-t">🧑‍🎓 Student Overview</div>
                       {[
-                        {c:'ni-v',e:'≡ƒÅ½',n:'Total Students',  s:'Across all active schools', v:pStats?.totalStudents?pStats.totalStudents.toLocaleString():'ΓÇö',st:''},
-                        {c:'ni-t',e:'≡ƒôï',n:'CBC Portfolios',  s:'Generated this term',       v:pStats?.cbcPortfolios?pStats.cbcPortfolios.toLocaleString():'ΓÇö',st:'is-ok'},
-                        {c:'ni-a',e:'≡ƒôè',n:'Exams Recorded',  s:'Results entered',           v:pStats?.examsRecorded?pStats.examsRecorded.toLocaleString():'ΓÇö',st:'is-ok'},
-                        {c:'ni-s',e:'Γ£à',n:'Attendance Rate', s:'Platform-wide average',     v:pStats?.attendanceRate?`${pStats.attendanceRate}%`:'ΓÇö',st:'is-ok'},
+                        {c:'ni-v',e:'🏛️',n:'Total Students',  s:'Across all active schools', v:pStats?.totalStudents?pStats.totalStudents.toLocaleString():'—',st:''},
+                        {c:'ni-t',e:'📚',n:'CBC Portfolios',  s:'Generated this term',       v:pStats?.cbcPortfolios?pStats.cbcPortfolios.toLocaleString():'—',st:'is-ok'},
+                        {c:'ni-a',e:'📝',n:'Exams Recorded',  s:'Results entered',           v:pStats?.examsRecorded?pStats.examsRecorded.toLocaleString():'—',st:'is-ok'},
+                        {c:'ni-s',e:'⚡',n:'Attendance Rate', s:'Platform-wide average',     v:pStats?.attendanceRate?`${pStats.attendanceRate}%`:'—',st:'is-ok'},
                       ].map((r,i)=>(
                         <div className="ig" key={i}>
                           <div className="ig-l"><div className={`li-ico ${r.c}`}>{r.e}</div><div><div className="ig-nm">{r.n}</div><div style={{fontSize:'.58rem',color:'var(--sub)'}}>{r.s}</div></div></div>
@@ -1165,7 +1165,7 @@ export default function SuperAdmin({ currentUser, sidebarOpen, setSidebarOpen, o
                 </div>
               </div>}
 
-              {/* ΓòÉΓòÉΓòÉΓòÉ SCHOOLS ΓòÉΓòÉΓòÉΓòÉ */}
+              {/* ==== SCHOOLS ==== */}
               {activeTab==='schools' && <div className="tv">
                 <div className="lp">
                   <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:14,flexWrap:'wrap',gap:8}}>
@@ -1174,7 +1174,7 @@ export default function SuperAdmin({ currentUser, sidebarOpen, setSidebarOpen, o
                       <button className="act-btn" onClick={handleBulkActivate} style={{color:'var(--te)',borderColor:'rgba(13,216,138,.2)'}}>Activate All</button>
                       <button className="act-btn" onClick={handleBulkDeactivate} style={{color:'var(--ro)',borderColor:'rgba(212,80,106,.2)'}}>Deactivate All</button>
                       <button className={`act-btn${showFilter?' active':''}`} onClick={()=>setShowFilter(f=>!f)}>
-                        {showFilter?'Γ£ò Close':'ΓÜÖ Filter'}
+                        {showFilter?'✕ Close':'⚙ Filter'}
                       </button>
                     </div>
                   </div>
@@ -1234,7 +1234,7 @@ export default function SuperAdmin({ currentUser, sidebarOpen, setSidebarOpen, o
                                       <div className="td-m" style={{ color: (s._staffCount||0) > adminLimit ? 'var(--er)' : 'var(--txt)', fontWeight: (s._staffCount||0) > adminLimit ? 700 : 400 }}>
                                         {s._staffCount || 0} / {adminLimit}
                                       </div>
-                                      {(s._staffCount||0) > adminLimit && <span title="Seat limit exceeded" style={{ cursor: 'help' }}>ΓÜá∩╕Å</span>}
+                                      {(s._staffCount||0) > adminLimit && <span title="Seat limit exceeded" style={{ cursor: 'help' }}>⚠️</span>}
                                     </div>
                                   </td>
                                   <td data-label="Location">{s.location || pData.location || 'Kenya'}</td>
@@ -1248,7 +1248,7 @@ export default function SuperAdmin({ currentUser, sidebarOpen, setSidebarOpen, o
                                       {pData.subscription_status || (isActive ? 'Active' : 'Inactive')}
                                     </span>
                                   </td>
-                                  <td data-label="Revenue" className="td-m" style={{color:isActive?'var(--te)':'var(--sub)'}}>{isActive?fmtMoney(amt):'ΓÇö'}</td>
+                                  <td data-label="Revenue" className="td-m" style={{color:isActive?'var(--te)':'var(--sub)'}}>{isActive?fmtMoney(amt):'—'}</td>
                                   <td data-label="Sub">
                                     <button className="act-btn" style={{fontSize:'.63rem',padding:'3px 10px',color:'var(--sk)',borderColor:'rgba(74,158,232,.25)'}}
                                       onClick={()=>{setPlanModal({schoolId:s.id,schoolName:s.name,currentPlan:curPlan});setChosenPlan('');}}>Change Plan</button>
@@ -1275,7 +1275,7 @@ export default function SuperAdmin({ currentUser, sidebarOpen, setSidebarOpen, o
                 </div>
               </div>}
 
-              {/* ΓòÉΓòÉΓòÉΓòÉ PAYMENTS ΓòÉΓòÉΓòÉΓòÉ */}
+              {/* #### PAYMENTS #### */}
               {activeTab==='payments' && <div className="tv">
                 <div className="bot-grid">
                   <div className="lp">
@@ -1288,34 +1288,34 @@ export default function SuperAdmin({ currentUser, sidebarOpen, setSidebarOpen, o
                           return (
                             <div className="pay" key={p.id} style={{ flexWrap: 'wrap', gap: 12 }}>
                               <div className="pay-l" style={{flex: 1, minWidth: '200px'}}>
-                                <div className={`li-ico ${cls}`}>≡ƒÆ│</div>
+                                 <div className={`li-ico ${cls}`}>💳</div>
                                 <div>
-                                  <div className="pay-nm">{p.school_profiles?.school_name||'ΓÇö'}</div>
-                                  <div className="pay-dt">{fmtDate(p.created_at)} ┬╖ {p.transaction_code}</div>
+                                  <div className="pay-nm">{p.school_profiles?.school_name||'—'}</div>
+                                  <div className="pay-dt">{fmtDate(p.created_at)} · {p.transaction_code}</div>
                                 </div>
                               </div>
                               <div style={{textAlign:'right', minWidth: '100px'}}>
                                 <div className="pay-v pos">+{fmtMoney(p.amount)}</div>
-                                <div className="pay-tp">Pending ┬╖ M-PESA</div>
+                                 <div className="pay-tp">Pending · M-PESA</div>
                               </div>
                               <div style={{display:'flex',gap:8, width: '100%', justifyContent:'flex-end'}}>
                                 <button className="btn" style={{color:'var(--te)',borderColor:'rgba(13,216,138,.3)',background:'rgba(13,216,138,.05)'}} onClick={()=>handleApprove(p)}>Approve</button>
-                                <button className="btn" style={{color:'var(--ro)',borderColor:'rgba(212,80,106,.3)',background:'rgba(212,80,106,.05)'}} onClick={()=>handleReject(p)}>Reject</button>
+                                <button className="btn" style={{color:'var(--ro)',borderColor:'rgba(212,80,106,.3)',background:'rgba(212,80,106,.05)'} } onClick={()=>handleReject(p)}>Reject</button>
                               </div>
                             </div>
                           );
                         })
                       : activeSchools.length===0
-                        ? <div className="empty"><div className="empty-ico">Γ£à</div>No payments yet.</div>
+                         ? <div className="empty"><div className="empty-ico">✅</div>No payments yet.</div>
                         : (q ? filteredSchools.filter(s=>s.school_profiles?.[0]?.subscription_status==='Active') : activeSchools).slice(0,6).map((s,i)=>{
                             const p=s.school_profiles?.[0]||{};
                             const cls=['ni-t','ni-v','ni-a','ni-r','ni-s'][i%5];
                             return (
                               <div className="pay" key={s.id}>
-                                <div className="pay-l"><div className={`li-ico ${cls}`}>≡ƒÆ│</div><div><div className="pay-nm">{s.name}</div><div className="pay-dt">{fmtDate(p.created_at||s.created_at)}</div></div></div>
+                                <div className="pay-l"><div className={`li-ico ${cls}`}>💳</div><div><div className="pay-nm">{s.name}</div><div className="pay-dt">{fmtDate(p.created_at||s.created_at)}</div></div></div>
                                 <div style={{textAlign:'right'}}>
                                   <div className="pay-v pos">+{fmtMoney(planAmt(p.subscription_plan, settings))}</div>
-                                  <div className="pay-tp" style={{textTransform:'capitalize'}}>M-PESA ┬╖ {p.subscription_plan || 'Starter'}</div>
+                                   <div className="pay-tp" style={{textTransform:'capitalize'}}>M-PESA · {p.subscription_plan || 'Starter'}</div>
                                 </div>
                               </div>
                             );
@@ -1329,7 +1329,7 @@ export default function SuperAdmin({ currentUser, sidebarOpen, setSidebarOpen, o
                 </div>
               </div>}
 
-              {/* ΓòÉΓòÉΓòÉΓòÉ PAYMENT HISTORY ΓòÉΓòÉΓòÉΓòÉ */}
+              {/* #### PAYMENT HISTORY #### */}
               {activeTab==='history' && <div className="tv">
                 <div className="lp">
                   <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:14,flexWrap:'wrap',gap:8}}>
@@ -1356,7 +1356,7 @@ export default function SuperAdmin({ currentUser, sidebarOpen, setSidebarOpen, o
                     const filtered = allPayments
                       .filter(p => historyStatusFilter==='all' || p.status===historyStatusFilter)
                       .filter(p => historySchoolFilter==='all' || p.school_profiles?.school_name===historySchoolFilter);
-                    if (filtered.length===0) return <div className="empty"><div className="empty-ico">≡ƒôï</div>No payment records found.</div>;
+                     if (filtered.length===0) return <div className="empty"><div className="empty-ico">📋</div>No payment records found.</div>;
                     return (
                       <div className="tbl-w">
                         <table className="data-table responsive-table">
@@ -1371,9 +1371,9 @@ export default function SuperAdmin({ currentUser, sidebarOpen, setSidebarOpen, o
                                   <tr key={p.id}>
                                     <td data-label="School" className="td-b">{p.school_profiles?.school_name||'Unknown'}</td>
                                     <td data-label="Amount" className="td-m" style={{color:'var(--te)',fontWeight:700}}>{fmtMoney(p.amount)}</td>
-                                    <td data-label="Code" style={{fontSize:'.7rem',fontFamily:'var(--fh)'}}>{p.transaction_code||'ΓÇö'}</td>
+                                    <td data-label="Code" style={{fontSize:'.7rem',fontFamily:'var(--fh)'}}>{p.transaction_code||'—'}</td>
                                     <td data-label="Status"><span className={statusCls}>{p.status}</span></td>
-                                    <td data-label="Plan" style={{textTransform:'capitalize'}}>{p.school_profiles?.subscription_plan||'ΓÇö'}</td>
+                                    <td data-label="Plan" style={{textTransform:'capitalize'}}>{p.school_profiles?.subscription_plan||'—'}</td>
                                     <td data-label="Date">{d.toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'})}</td>
                                     <td data-label="Time" style={{fontSize:'.68rem',color:'var(--sub)'}}>{d.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'})}</td>
                                   </tr>
@@ -1391,10 +1391,10 @@ export default function SuperAdmin({ currentUser, sidebarOpen, setSidebarOpen, o
               {activeTab==='subscriptions' && <div className="tv">
                 <div className="kpi-grid" style={{marginBottom:14}}>
                   {[
-                    {a:'var(--te)', c:'ni-t',l:'Active',      i:'Γ£à',v:pStats?.activeSchools || activeCount,  ch:`${totalSchools?Math.round((pStats?.activeSchools || activeCount)/totalSchools*100):0}% of total`, up:true },
-                    {a:'var(--sub)',c:'ni-d',l:'Deactivated',  i:'≡ƒöÆ',v:pStats?.deactivatedSchools || schools.filter(s=>!isSchoolActive(s)).length, ch:'Awaiting payment', up:false},
-                    {a:'var(--am)', c:'ni-a',l:'Suspended',    i:'ΓÅ╕',v:pStats?.suspendedSchools || 0, ch:'Admin action', up:false},
-                    {a:'var(--ro)', c:'ni-r',l:'Expired',      i:'ΓÜá', v:pStats?.expiredSchools || expiredCount, ch:'Needs renewal', up:false},
+                    {a:'var(--te)', c:'ni-t',l:'Active',      i:'✅',v:pStats?.activeSchools || activeCount,  ch:`${totalSchools?Math.round((pStats?.activeSchools || activeCount)/totalSchools*100):0}% of total`, up:true },
+                    {a:'var(--sub)',c:'ni-d',l:'Deactivated',  i:'🔒',v:pStats?.deactivatedSchools || schools.filter(s=>!isSchoolActive(s)).length, ch:'Awaiting payment', up:false},
+                    {a:'var(--am)', c:'ni-a',l:'Suspended',    i:'⏸️',v:pStats?.suspendedSchools || 0, ch:'Admin action', up:false},
+                    {a:'var(--ro)', c:'ni-r',l:'Expired',      i:'⚠️', v:pStats?.expiredSchools || expiredCount, ch:'Needs renewal', up:false},
                   ].map((k,i)=>(
                     <div className="kpi" key={i}>
                       <div className="kpi-accent" style={{background:k.a}}/>
@@ -1415,7 +1415,7 @@ export default function SuperAdmin({ currentUser, sidebarOpen, setSidebarOpen, o
                 <div className="cp">
                   <div className="cp-hd">
                     <div>
-                      <div className="cp-lbl">Total Revenue ΓÇö {revPeriodLabel}</div>
+                      <div className="cp-lbl">Total Revenue — {revPeriodLabel}</div>
                       <div className="cp-val">{fmtMoney(totalRevenue)} {revChange!==null&&<span className={`cbadge ${revChangeUp?'cup':'cdn'}`}>{revChange>=0?'+':''}{revChange}% YoY</span>}</div>
                     </div>
                     <div style={{display:'flex',gap:5}}>
@@ -1456,13 +1456,13 @@ export default function SuperAdmin({ currentUser, sidebarOpen, setSidebarOpen, o
                     This log tracks all critical platform actions (registrations, plan changes, manual extensions, terminations) across all schools for security and audit purposes.
                   </p>
                   {filteredActivity.length===0
-                    ? <div className="empty"><div className="empty-ico">ΓÜí</div>No activity found.</div>
+                    ? <div className="empty"><div className="empty-ico">⚡</div>No activity found.</div>
                     : filteredActivity.map(a=>(
                         <div className="ai" key={a.id}>
-                          <div className="li-ico ni-v">ΓÜí</div>
+                          <div className="li-ico ni-v">⚡</div>
                           <div className="ai-body">
                             <div className="ai-t">{a.description}</div>
-                            <div className="ai-s">{a.school_name||'System'} ┬╖ {a.type?.split('_').join(' ')||'event'}</div>
+                            <div className="ai-s">{a.school_name||'System'} · {a.type?.split('_').join(' ')||'event'}</div>
                           </div>
                           <div className="ai-time">{new Date(a.created_at).toLocaleString('en-KE',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'})}</div>
                         </div>
@@ -1475,7 +1475,7 @@ export default function SuperAdmin({ currentUser, sidebarOpen, setSidebarOpen, o
               {activeTab==='recovery' && <div className="tv">
                 <div className="page-hd">
                   <div className="ph-left">
-                    <div className="ph-ico">≡ƒ⌐║</div>
+                    <div className="ph-ico">🩺</div>
                     <div>
                       <div className="ph-title">Data Discovery &amp; Recovery</div>
                       <div className="ph-sub">Integrity Audit &amp; Legacy Import</div>
@@ -1491,14 +1491,14 @@ export default function SuperAdmin({ currentUser, sidebarOpen, setSidebarOpen, o
                     </div>
                     {discoveryMeta.orphans.length === 0 ? (
                       <div className="empty">
-                        <div className="empty-ico">Γ£à</div>
+                        <div className="empty-ico">✅</div>
                         No orphaned accounts found.
                       </div>
                     ) : (
                       discoveryMeta.orphans.map(s => (
                         <div className="li" key={s.id} style={{background:'rgba(255,255,255,0.02)',padding:12,borderRadius:8,marginBottom:8}}>
                           <div className="li-l">
-                            <div className="li-ico ni-r">≡ƒÅ½</div>
+                            <div className="li-ico ni-r">🏛️</div>
                             <div>
                               <div className="li-name">{s.name}</div>
                               <div className="li-sub">Created: {fmtDate(s.created_at)}</div>
@@ -1524,14 +1524,14 @@ export default function SuperAdmin({ currentUser, sidebarOpen, setSidebarOpen, o
                     </div>
                     {discoveryMeta.legacy.length === 0 ? (
                       <div className="empty" style={{opacity:.4}}>
-                        <div className="empty-ico">≡ƒöì</div>
+                        <div className="empty-ico">🔍</div>
                         No legacy tables detected in primary schema.
                       </div>
                     ) : (
                       discoveryMeta.legacy.map(l => (
                         <div className="ig" key={l.table} style={{marginBottom:10,opacity:l.count>0?1:.5}}>
                           <div className="ig-l">
-                            <div className="li-ico ni-s">≡ƒôª</div>
+                            <div className="li-ico ni-s">📦</div>
                             <div>
                               <div className="ig-nm">Table: {l.table}</div>
                               <div style={{fontSize:'.55rem',color:'var(--sub)'}}>Found {l.count} records</div>
@@ -1542,7 +1542,7 @@ export default function SuperAdmin({ currentUser, sidebarOpen, setSidebarOpen, o
                       ))
                     )}
                     <div style={{marginTop:20,padding:12,background:'rgba(74,158,232,0.05)',borderRadius:8,border:'1px dashed rgba(74,158,232,0.2)'}}>
-                      <div style={{fontSize:'.65rem',color:'var(--sk)',fontWeight:700,marginBottom:4}}>≡ƒÆí Pro Tip</div>
+                      <div style={{fontSize:'.65rem',color:'var(--sk)',fontWeight:700,marginBottom:4}}>💡 Pro Tip</div>
                       <div style={{fontSize:'.6rem',color:'var(--sub)',lineHeight:1.4}}>
                         If common legacy tables match your previous platform versions, we can implement custom import scripts to pull that data into your modern Command Tower.
                       </div>
@@ -1555,7 +1555,7 @@ export default function SuperAdmin({ currentUser, sidebarOpen, setSidebarOpen, o
               {activeTab==='config' && <div className="tv">
                 <div className="bot-grid" style={{marginBottom:12}}>
                   <div className="lp">
-                    <div className="lp-t">ΓÜÖ Global Settings</div>
+                    <div className="lp-t">⚙️ Global Settings</div>
                     <div style={{marginBottom:14}}>
                       <div className="sb-lbl" style={{marginBottom:6}}>Gateway Instructions</div>
                       <textarea rows={4} placeholder="Enter M-PESA gateway instructions..." value={gwInstructions} onChange={e=>setGwInstructions(e.target.value)}/>
@@ -1587,7 +1587,7 @@ export default function SuperAdmin({ currentUser, sidebarOpen, setSidebarOpen, o
                   </div>
                   <div className="lp">
                     <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:12}}>
-                      <div className="lp-t" style={{marginBottom:0}}>≡ƒÆ░ Pricing Control</div>
+                      <div className="lp-t" style={{marginBottom:0}}>💰 Pricing Control</div>
                       <button onClick={()=>setPlans(p=>[...p,{id:'new_'+Date.now(),name:'New Plan',price:5000,limit:500,active:true,features:[]}])} 
                         style={{padding:'4px 10px',borderRadius:6,background:'rgba(124,92,252,.1)',border:'1px solid rgba(124,92,252,.2)',color:'var(--vi)',fontSize:'.65rem',fontWeight:700,cursor:'pointer'}}>+ Add Plan</button>
                     </div>
@@ -1605,7 +1605,7 @@ export default function SuperAdmin({ currentUser, sidebarOpen, setSidebarOpen, o
                               <input type="checkbox" checked={p.active} onChange={e=>{const n=[...plans];n[idx].active=e.target.checked;setPlans(n);}} style={{accentColor:'var(--te)'}}/>
                               <span style={{fontSize:'.6rem',color:p.active?'var(--te)':'var(--sub)',fontWeight:600}}>{p.active?'Public':'Hidden'}</span>
                             </label>
-                            <button onClick={()=>setPlans(plans.filter((_,i)=>i!==idx))} style={{background:'transparent',border:'none',color:'var(--ro)',fontSize:'11px',cursor:'pointer',padding:4}}>Γ£ò</button>
+                            <button onClick={()=>setPlans(plans.filter((_,i)=>i!==idx))} style={{background:'transparent',border:'none',color:'var(--ro)',fontSize:'11px',cursor:'pointer',padding:4}}>✕</button>
                           </div>
                         </div>
                         
@@ -1649,7 +1649,7 @@ export default function SuperAdmin({ currentUser, sidebarOpen, setSidebarOpen, o
                       }}>Save Pricing</button>
                       <button onClick={()=>loadData()} style={{padding:'9px 14px',borderRadius:7,background:'transparent',border:'1px solid var(--edge2)',color:'var(--sub)',fontFamily:'var(--fb)',fontSize:'.76rem',cursor:'pointer'}}>Reset</button>
                     </div>
-                    {priceSaved && <div style={{marginTop:10,padding:'8px 12px',borderRadius:7,background:'rgba(13,216,138,.1)',border:'1px solid rgba(13,216,138,.2)',fontSize:'.72rem',color:'var(--te)'}}>Γ£ô Pricing updated successfully</div>}
+                    {priceSaved && <div style={{marginTop:10,padding:'8px 12px',borderRadius:7,background:'rgba(13,216,138,.1)',border:'1px solid rgba(13,216,138,.2)',fontSize:'.72rem',color:'var(--te)'}}>✓ Pricing updated successfully</div>}
                   </div>
                 </div>
               </div>}
@@ -1657,16 +1657,16 @@ export default function SuperAdmin({ currentUser, sidebarOpen, setSidebarOpen, o
 
 
             <div style={{padding:'24px 0 6px',textAlign:'center',opacity:.2,borderTop:'1px solid var(--edge)',marginTop:20}}>
-              <div style={{fontFamily:'var(--fh)',fontSize:'.65rem',color:'var(--sub)'}}>ShuleSoft Platform Engine ┬╖ {now.getFullYear()}</div>
+              <div style={{fontFamily:'var(--fh)',fontSize:'.65rem',color:'var(--sub)'}}>ShuleSoft Platform Engine · {now.getFullYear()}</div>
             </div>
 
             {/* ΓòÉΓòÉ ACTIVATE MODAL ΓòÉΓòÉ */}
             <div className={`mo${activateModal?' open':''}`} onClick={e=>{if(e.target===e.currentTarget)setActivateModal(null)}}>
               {activateModal && (
                 <div className="mb">
-                  <button className="mc" onClick={()=>setActivateModal(null)}>Γ£ò</button>
+                  <button className="mc" onClick={()=>setActivateModal(null)}>✕</button>
                   <div style={{display:'flex',alignItems:'center',gap:10,marginBottom:20}}>
-                    <div className="li-ico ni-t" style={{width:36,height:36,borderRadius:9,fontSize:16}}>Γ£à</div>
+                    <div className="li-ico ni-t" style={{width:36,height:36,borderRadius:9,fontSize:16}}>✅</div>
                     <div>
                       <div style={{fontFamily:'var(--fh)',fontSize:'.9rem',fontWeight:700,color:'#fff'}}>Confirm Payment &amp; Activate</div>
                       <div style={{fontSize:'.68rem',color:'var(--sub)',marginTop:2}}>School account will be activated immediately</div>
@@ -1698,7 +1698,7 @@ export default function SuperAdmin({ currentUser, sidebarOpen, setSidebarOpen, o
                         {activating?'Activating...':'Confirm Payment & Activate Account'}
                       </button>
                     : <div style={{textAlign:'center',marginTop:16}}>
-                        <div style={{fontSize:'1.8rem',marginBottom:8}}>Γ£à</div>
+                        <div style={{fontSize:'1.8rem',marginBottom:8}}>✅</div>
                         <div style={{fontFamily:'var(--fh)',fontSize:'.88rem',fontWeight:700,color:'var(--te)',marginBottom:4}}>Account Activated!</div>
                         <div style={{fontSize:'.72rem',color:'var(--sub)'}}>{activateModal.name} is now active.{payRef?` Ref: ${payRef}`:''}</div>
                       </div>
@@ -1707,13 +1707,13 @@ export default function SuperAdmin({ currentUser, sidebarOpen, setSidebarOpen, o
               )}
             </div>
 
-            {/* ΓòÉΓòÉ CHANGE PLAN MODAL ΓòÉΓòÉ */}
+            {/* 🔄🔄 CHANGE PLAN MODAL 🔄🔄 */}
             <div className={`mo${planModal?' open':''}`} onClick={e=>{if(e.target===e.currentTarget){setPlanModal(null);setChosenPlan('');}}}>
               {planModal && (
                 <div className="mb" style={{maxWidth:400}}>
-                  <button className="mc" onClick={()=>{setPlanModal(null);setChosenPlan('');}}>Γ£ò</button>
+                  <button className="mc" onClick={()=>{setPlanModal(null);setChosenPlan('');}}>✕</button>
                   <div style={{display:'flex',alignItems:'center',gap:10,marginBottom:20}}>
-                    <div className="li-ico ni-s" style={{width:36,height:36,borderRadius:9,fontSize:16}}>≡ƒöä</div>
+                    <div className="li-ico ni-s" style={{width:36,height:36,borderRadius:9,fontSize:16}}>🔄</div>
                     <div>
                       <div style={{fontFamily:'var(--fh)',fontSize:'.9rem',fontWeight:700,color:'#fff'}}>Change Subscription</div>
                       <div style={{fontSize:'.68rem',color:'var(--sub)',marginTop:2}}>{planModal.schoolName}</div>
@@ -1736,7 +1736,7 @@ export default function SuperAdmin({ currentUser, sidebarOpen, setSidebarOpen, o
                           </div>
                           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                             {isCur && <span style={{ fontSize: '.6rem', color: 'var(--sub)' }}>Current</span>}
-                            {isSel && !isCur && <span style={{ fontSize: '.7rem', color: 'var(--sk)' }}>Γ£ô</span>}
+                            {isSel && !isCur && <span style={{ fontSize: '.7rem', color: 'var(--sk)' }}>✓</span>}
                             <span style={{ fontFamily: 'var(--fh)', fontSize: '.72rem', color: 'var(--sub)' }}>KSh {p.price?.toLocaleString()}</span>
                           </div>
                         </div>
@@ -1745,19 +1745,19 @@ export default function SuperAdmin({ currentUser, sidebarOpen, setSidebarOpen, o
                   </div>
                   <button onClick={handleChangePlan} disabled={!chosenPlan||planSaving}
                     style={{width:'100%',padding:12,borderRadius:9,background:chosenPlan?'linear-gradient(135deg,var(--sk),#2B7FD4)':'var(--dim)',color:chosenPlan?'#fff':'var(--sub)',fontFamily:'var(--fb)',fontSize:'.88rem',fontWeight:600,border:'none',cursor:chosenPlan?'pointer':'not-allowed',opacity:planSaving?.7:1,transition:'all .25s'}}>
-                    {planSaving?'Updating...':chosenPlan?`Confirm ΓÇö Switch to ${chosenPlan} Plan`:'Select a plan above'}
+                    {planSaving?'Updating...':chosenPlan?`Confirm — Switch to ${chosenPlan} Plan`:'Select a plan above'}
                   </button>
                 </div>
               )}
             </div>
 
-            {/* ΓòÉΓòÉ DELETE CONFIRMATION MODAL ΓòÉΓòÉ */}
+            {/* ☠️☠️ DELETE CONFIRMATION MODAL ☠️☠️ */}
             <div className={`mo${deleteModal?' open':''}`} onClick={e=>{if(e.target===e.currentTarget)setDeleteModal(null)}}>
               {deleteModal && (
                 <div className="mb" style={{borderColor:'var(--ro)'}}>
-                  <button className="mc" onClick={()=>setDeleteModal(null)}>Γ£ò</button>
+                  <button className="mc" onClick={()=>setDeleteModal(null)}>✕</button>
                   <div style={{display:'flex',alignItems:'center',gap:12,marginBottom:20}}>
-                    <div className="li-ico ni-r" style={{width:42,height:42,borderRadius:10,fontSize:20}}>Γÿá</div>
+                    <div className="li-ico ni-r" style={{width:42,height:42,borderRadius:10,fontSize:20}}>☠️</div>
                     <div>
                       <div style={{fontFamily:'var(--fh)',fontSize:'1rem',fontWeight:700,color:'var(--ro)'}}>Terminate School</div>
                       <div style={{fontSize:'.72rem',color:'var(--sub)',marginTop:2}}>Irreversible administrative action</div>
@@ -1782,13 +1782,13 @@ export default function SuperAdmin({ currentUser, sidebarOpen, setSidebarOpen, o
               )}
             </div>
 
-            {/* ΓòÉΓòÉ STAFF MANAGEMENT MODAL ΓòÉΓòÉ */}
+            {/* 👩‍🏫👩‍🏫 STAFF MANAGEMENT MODAL 👩‍🏫👩‍🏫 */}
             <div className={`mo${staffModal ? ' open' : ''}`} onClick={e => { if (e.target === e.currentTarget) setStaffModal(null) }}>
               {staffModal && (
                 <div className="mb" style={{ maxWidth: 500 }}>
-                  <button className="mc" onClick={() => setStaffModal(null)}>Γ£ò</button>
+                  <button className="mc" onClick={() => setStaffModal(null)}>✕</button>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 20 }}>
-                    <div className="li-ico ni-v" style={{ width: 36, height: 36, borderRadius: 9, fontSize: 16 }}>≡ƒæ⌐ΓÇì≡ƒÅ½</div>
+                    <div className="li-ico ni-v" style={{ width: 36, height: 36, borderRadius: 9, fontSize: 16 }}>👩‍🏫</div>
                     <div>
                       <div style={{ fontFamily: 'var(--fh)', fontSize: '.9rem', fontWeight: 700, color: '#fff' }}>Manage Staff</div>
                       <div style={{ fontSize: '.68rem', color: 'var(--sub)', marginTop: 2 }}>{staffModal.name}</div>
@@ -1813,7 +1813,7 @@ export default function SuperAdmin({ currentUser, sidebarOpen, setSidebarOpen, o
                                 <div style={{ fontSize: '.6rem', color: 'var(--sub)' }}>{t.id.slice(0, 8)}</div>
                               </td>
                               <td>
-                                <div style={{ fontSize: '.7rem' }}>{t.phone || 'ΓÇö'}</div>
+                                <div style={{ fontSize: '.7rem' }}>{t.phone || '—'}</div>
                                 <span className={sPill(t.status)} style={{ fontSize: '9px' }}>{t.status}</span>
                               </td>
                               <td style={{ textAlign: 'right' }}>
