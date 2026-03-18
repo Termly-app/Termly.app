@@ -243,35 +243,36 @@ const CSS = `
 .sa .sa-hide-mobile{display:table-cell !important}
 @media(max-width:900px){
   .sa .sa-hide-mobile{display:none !important}
-  .sa th,.sa td{padding:8px 9px}
+  .sa th,.sa td{padding:10px 12px}
 }
 @media(max-width:768px){
-  .sa-sidebar{position:fixed;top:0;left:0;bottom:0;transform:translateX(-100%);z-index:1500;width:260px;min-width:260px;height:100vh}
+  .sa-root{--sb:240px}
+  .sa-sidebar{position:fixed;top:0;left:0;bottom:0;transform:translateX(-100%);z-index:2147483647;width:var(--sb);min-width:var(--sb);height:100vh;box-shadow:20px 0 50px rgba(0,0,0,0.5)}
   .sa-sidebar.open{transform:translateX(0)}
-  .sa-menu-btn{display:flex !important}
-  .sa-close-btn{display:flex !important}
+  .sa-menu-btn{display:flex !important;width:44px;height:44px;font-size:20px}
+  .sa-close-btn{display:flex !important;width:44px;height:44px;top:15px;right:15px}
   .sa .kpi-grid{grid-template-columns:repeat(2,1fr);gap:12px}
-  .sa .charts-grid,.sa .charts-grid-3,.sa .bot-grid{grid-template-columns:1fr;gap:12px}
   .sa .ph-right{display:none}
-  .sa .tbl-w{overflow-x:auto !important;margin:0 -10px;padding:0 10px}
+  .sa .tbl-w{overflow-x:auto !important; -webkit-overflow-scrolling:touch; margin:0 -10px; padding:0 10px; border-radius:0; position:relative}
   .sa table{min-width:1100px !important}
   
   /* Sticky First Column for mobile readability */
-  .sa-table th:first-child,
-  .sa-table td:first-child {
+  .sa .sa-table th:first-child,
+  .sa .sa-table td:first-child {
     position: sticky;
     left: 0;
     z-index: 10;
-    background: #0C0E0D;
-    border-right: 1px solid var(--edge);
+    background: #0C0E0D !important;
+    box-shadow: 4px 0 10px rgba(0,0,0,0.5);
   }
-  .sa-table th:first-child { z-index: 11; }
-  
-  /* Hide low-priority columns on small mobile */
-  .hide-mobile { display: none !important; }
-  
-  /* Stack action buttons vertically on mobile for better touch targets */
-  .sa .act-btn-group { display: flex; flex-direction: column; gap: 4px; }
+  .sa .sa-table th:first-child { z-index: 20; background: #111411 !important; }
+
+  .sa .act-btn{padding:10px 16px !important; font-size:.8rem !important; min-height:40px}
+  .sa .act-btn-group{display:flex; flex-direction:row; gap:12px; justify-content: flex-start !important}
+}
+@media(max-width:480px){
+  .sa .act-btn-group{flex-direction:column; gap:8px}
+  .sa .kpi-grid{grid-template-columns:1fr}
 }
 @media(max-width:480px){
   .sa-content{padding:12px}
