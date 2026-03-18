@@ -63,8 +63,8 @@ const CSS = `
 /* ══ MAIN ══ */
 .sa-main{flex:1;display:flex;flex-direction:column;overflow:hidden;min-width:0;background:#0C0E0D}
 .sa-topbar{height:52px;flex-shrink:0;background:#111411;border-bottom:1px solid var(--edge);display:flex;align-items:center;gap:12px;padding:0 20px}
-.sa-menu-btn{display:none;width:34px;height:34px;border-radius:8px;background:var(--panel2);border:1px solid var(--vi);align-items:center;justify-content:center;cursor:pointer;font-size:16px;flex-shrink:0;color:var(--vi);box-shadow:0 0 10px rgba(124,92,252,.15)}
-.sa-close-btn{display:none;position:absolute;top:18px;right:16px;width:30px;height:30px;border-radius:6px;background:var(--panel2);border:1px solid var(--edge2);align-items:center;justify-content:center;cursor:pointer;font-size:12px;color:var(--sub);z-index:210}
+.sa-menu-btn{display:none;width:40px;height:40px;border-radius:10px;background:var(--panel2);border:1px solid var(--vi);align-items:center;justify-content:center;cursor:pointer;font-size:18px;flex-shrink:0;color:var(--vi);box-shadow:0 0 12px rgba(124,92,252,.2);margin-right:4px}
+.sa-close-btn{display:none;position:absolute;top:20px;right:18px;width:34px;height:34px;border-radius:8px;background:var(--panel2);border:1px solid var(--edge2);align-items:center;justify-content:center;cursor:pointer;font-size:14px;color:var(--sub);z-index:1600;box-shadow:0 4px 10px rgba(0,0,0,0.3)}
 .sa-search-wrap{flex:1;max-width:360px;background:var(--panel);border:1px solid var(--edge);border-radius:7px;padding:6px 11px;display:flex;align-items:center;gap:7px;transition:border-color .18s}
 .sa-search-wrap:focus-within{border-color:var(--edge2)}
 .sa-search-wrap svg{width:12px;height:12px;flex-shrink:0;color:var(--sub)}
@@ -249,15 +249,32 @@ const CSS = `
   .sa th,.sa td{padding:8px 9px}
 }
 @media(max-width:768px){
-  .sa-sidebar{position:fixed;top:0;left:0;bottom:0;transform:translateX(-100%);z-index:1200;width:260px;min-width:260px;height:100vh}
+  .sa-sidebar{position:fixed;top:0;left:0;bottom:0;transform:translateX(-100%);z-index:1500;width:260px;min-width:260px;height:100vh}
   .sa-sidebar.open{transform:translateX(0)}
   .sa-menu-btn{display:flex !important}
   .sa-close-btn{display:flex !important}
   .sa .kpi-grid{grid-template-columns:repeat(2,1fr);gap:12px}
   .sa .charts-grid,.sa .charts-grid-3,.sa .bot-grid{grid-template-columns:1fr;gap:12px}
   .sa .ph-right{display:none}
-  .sa .tbl-w{overflow-x:auto;-webkit-overflow-scrolling:touch}
-  .sa table{min-width:600px}
+  .sa .tbl-w{overflow-x:auto;-webkit-overflow-scrolling:touch;margin:0 -10px;padding:0 10px}
+  .sa table{min-width:700px}
+  
+  /* Sticky First Column for mobile readability */
+  .sa-table th:first-child,
+  .sa-table td:first-child {
+    position: sticky;
+    left: 0;
+    z-index: 10;
+    background: #0C0E0D;
+    border-right: 1px solid var(--edge);
+  }
+  .sa-table th:first-child { z-index: 11; }
+  
+  /* Hide low-priority columns on small mobile */
+  .hide-mobile { display: none !important; }
+  
+  /* Stack action buttons vertically on mobile for better touch targets */
+  .sa .act-btn-group { display: flex; flex-direction: column; gap: 4px; }
 }
 @media(max-width:480px){
   .sa-content{padding:12px}
@@ -271,6 +288,7 @@ const CSS = `
   .sa .save-btn{width:100%;padding:10px}
   .sa .bot-grid>*{width:100%}
   .sa-tb-badge{display:none}
+  .sa table{min-width:650px}
 }
 @media(max-width:360px){
   .sa-search-wrap{display:none}
@@ -958,6 +976,7 @@ export default function SuperAdmin({ currentUser, sidebarOpen, setSidebarOpen, o
             <div className="sb-name">ShuleSoft</div>
             <div className="sb-tag" style={{lineHeight:1.1,fontSize:'.55rem'}}>PLATFORM<br/>ENGINE</div>
           </div>
+          <button className="sa-close-btn" onClick={() => setSidebarOpen(false)}>✕</button>
         </div>
 
         <div className="sb-sec">Main Controls</div>
@@ -1196,7 +1215,7 @@ export default function SuperAdmin({ currentUser, sidebarOpen, setSidebarOpen, o
                     : <div className="tbl-w">
                         <table className="data-table sa-table">
                           <thead>
-                            <tr><th>School</th><th>Plan</th><th>Staff Usage</th><th>Location</th><th>Students</th><th>Joined</th><th>Status</th><th>Revenue</th><th>Sub</th><th>Action</th></tr>
+                            <tr><th>School</th><th>Plan</th><th>Staff Usage</th><th className="hide-mobile">Location</th><th>Students</th><th>Joined</th><th>Status</th><th>Revenue</th><th>Sub</th><th>Action</th></tr>
                           </thead>
                           <tbody>
                             {filteredSchools.map(s=>{
@@ -1237,7 +1256,7 @@ export default function SuperAdmin({ currentUser, sidebarOpen, setSidebarOpen, o
                                       {(s._staffCount||0) > adminLimit && <span title="Seat limit exceeded" style={{ cursor: 'help' }}>⚠️</span>}
                                     </div>
                                   </td>
-                                  <td data-label="Location">{s.location || pData.location || 'Kenya'}</td>
+                                  <td data-label="Location" className="hide-mobile">{s.location || pData.location || 'Kenya'}</td>
                                   <td data-label="Students" className="td-m">
                                     <div style={{fontWeight:600}}>{s._studentCount || 0}</div>
                                     <div style={{fontSize:'.6rem',color:'var(--sub)'}}>Limit: {studentLimit}</div>
@@ -1254,7 +1273,7 @@ export default function SuperAdmin({ currentUser, sidebarOpen, setSidebarOpen, o
                                       onClick={()=>{setPlanModal({schoolId:s.id,schoolName:s.name,currentPlan:curPlan});setChosenPlan('');}}>Change Plan</button>
                                   </td>
                                   <td data-label="Action">
-                                    <div style={{display:'flex', gap:6, flexWrap:'wrap', justifyContent: 'inherit'}}>
+                                    <div className="act-btn-group" style={{justifyContent: 'inherit'}}>
                                       <button className="act-btn" style={{fontSize:'.63rem',padding:'3px 8px',color:'var(--te)',borderColor:'rgba(13,216,138,.25)',background:'rgba(13,216,138,.05)'}} 
                                         onClick={()=>{setActivateModal(s);setPayMethod('mpesa');setPayRef('');setActivateSuccess(false);}}>Activate</button>
                                       
@@ -1361,7 +1380,7 @@ export default function SuperAdmin({ currentUser, sidebarOpen, setSidebarOpen, o
                       <div className="tbl-w">
                         <table className="data-table sa-table">
                           <thead>
-                            <tr><th>School</th><th>Amount</th><th>Code</th><th>Status</th><th>Plan</th><th>Date</th><th>Time</th></tr>
+                            <tr><th>School</th><th>Amount</th><th>Code</th><th>Status</th><th className="hide-mobile">Plan</th><th>Date</th><th className="hide-mobile">Time</th></tr>
                           </thead>
                           <tbody>
                             {filtered.map(p=>{
@@ -1373,9 +1392,9 @@ export default function SuperAdmin({ currentUser, sidebarOpen, setSidebarOpen, o
                                     <td data-label="Amount" className="td-m" style={{color:'var(--te)',fontWeight:700}}>{fmtMoney(p.amount)}</td>
                                     <td data-label="Code" style={{fontSize:'.7rem',fontFamily:'var(--fh)'}}>{p.transaction_code||'—'}</td>
                                     <td data-label="Status"><span className={statusCls}>{p.status}</span></td>
-                                    <td data-label="Plan" style={{textTransform:'capitalize'}}>{p.school_profiles?.subscription_plan||'—'}</td>
+                                    <td data-label="Plan" className="hide-mobile" style={{textTransform:'capitalize'}}>{p.school_profiles?.subscription_plan||'—'}</td>
                                     <td data-label="Date">{d.toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'})}</td>
-                                    <td data-label="Time" style={{fontSize:'.68rem',color:'var(--sub)'}}>{d.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'})}</td>
+                                    <td data-label="Time" className="hide-mobile" style={{fontSize:'.68rem',color:'var(--sub)'}}>{d.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'})}</td>
                                   </tr>
                               );
                             })}
