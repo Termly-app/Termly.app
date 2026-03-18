@@ -19,29 +19,30 @@ export default function CustomCursor({ disabled }) {
     const ring = ringRef.current;
 
     const onMouseMove = (e) => {
-      const { clientX: x, clientY: y } = e;
-      mx = x;
-      my = y;
-      if (cursor) {
-        // Use translate3d for hardware acceleration and one-stop positioning
-        cursor.style.transform = `translate3d(${x}px, ${y}px, 0) translate(-50%, -50%)`;
-        cursor.style.opacity = '1';
-        cursor.style.visibility = 'visible'; // Explicitly force visibility
-      }
-      if (ring) {
-        ring.style.opacity = '1';
-      }
+      mx = e.clientX;
+      my = e.clientY;
     };
     
     let ringAnimId;
-    const animateRing = () => {
+    const animateCursor = () => {
+      // Instant Dot
+      const cursor = cursorRef.current;
+      if (cursor) {
+        cursor.style.transform = `translate3d(${mx}px, ${my}px, 0) translate(-50%, -50%)`;
+        cursor.style.opacity = '1';
+        cursor.style.visibility = 'visible';
+      }
+
+      // Eased Ring
       rx += (mx - rx) * 0.14;
       ry += (my - ry) * 0.14;
+      const ring = ringRef.current;
       if (ring) {
         ring.style.left = rx + 'px';
         ring.style.top = ry + 'px';
+        ring.style.opacity = '1';
       }
-      ringAnimId = requestAnimationFrame(animateRing);
+      ringAnimId = requestAnimationFrame(animateCursor);
     };
     
     const onMouseEnter = () => document.body.classList.add('cursor-hover');
@@ -49,7 +50,7 @@ export default function CustomCursor({ disabled }) {
 
     // Add listeners
     document.addEventListener('mousemove', onMouseMove);
-    animateRing(); // Start the animation loop
+    animateCursor(); // Start the unified animation loop
     
     // Select all interactive elements
     const updateHoverListeners = () => {

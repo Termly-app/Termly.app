@@ -1,9 +1,9 @@
 /* ══ CUSTOM CURSOR Styles ══ */
 .cursor {
   position: fixed;
-  width: 8px;
-  height: 8px;
-  background: #6B4EFF !important; /* Force purple visibility */
+  width: 10px;
+  height: 10px;
+  background: #7B61FF !important; /* Brighter, more visible purple */
   border-radius: 50%;
   pointer-events: none;
   z-index: 2000000000; /* Super high z-index */
