@@ -23,8 +23,10 @@ export default function CustomCursor({ disabled }) {
       mx = x;
       my = y;
       if (cursor) {
-        cursor.style.transform = `translate(${x}px, ${y}px) translate(-50%, -50%)`;
+        // Use translate3d for hardware acceleration and one-stop positioning
+        cursor.style.transform = `translate3d(${x}px, ${y}px, 0) translate(-50%, -50%)`;
         cursor.style.opacity = '1';
+        cursor.style.visibility = 'visible'; // Explicitly force visibility
       }
       if (ring) {
         ring.style.opacity = '1';

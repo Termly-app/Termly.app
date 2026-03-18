@@ -3,13 +3,14 @@
   position: fixed;
   width: 8px;
   height: 8px;
-  background: #6B4EFF; /* Primary brand color for visibility */
+  background: #6B4EFF !important; /* Force purple visibility */
   border-radius: 50%;
   pointer-events: none;
-  z-index: 1000000;
-  box-shadow: 0 0 10px rgba(107, 78, 255, 0.3);
+  z-index: 2000000000; /* Super high z-index */
+  box-shadow: 0 0 10px rgba(107, 78, 255, 0.4);
   transform: translate(-50%, -50%);
-  transition: transform .08s, width .25s, height .25s, background .25s, opacity .3s;
+  /* Removed transitions that cause lag or invisibility during move */
+  transition: width .25s, height .25s, background .25s;
   opacity: 0;
 }
 .cursor-ring {
