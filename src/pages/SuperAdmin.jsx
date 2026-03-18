@@ -172,10 +172,11 @@ const CSS = `
 .sa .ig-nm{font-size:.73rem;font-weight:500;color:var(--txt)}
 .sa .ig-st{font-size:.62rem;font-weight:600}
 .sa .is-ok{color:var(--te)}.sa .is-w{color:var(--am)}.sa .is-e{color:var(--ro)}
+.sa .sa-content{flex:1;padding:24px;overflow-y:auto;overflow-x:hidden;background:var(--bg);min-width:0;position:relative}
 
 /* tables */
-.sa .tbl-w{overflow-x:auto !important;-webkit-overflow-scrolling:touch;width:100%;display:block;background:#0C0E0D}
-.sa table{width:100%;border-collapse:collapse;font-size:0.75rem;background:#0C0E0D !important}
+.sa .tbl-w{overflow-x:auto !important;-webkit-overflow-scrolling:touch;width:100%;display:block;background:#0C0E0D;min-width:0}
+.sa table{width:100%;border-collapse:separate;border-spacing:0;font-size:0.75rem;background:#0C0E0D !important}
 .sa th{text-align:left;padding:12px 14px;font-size:0.6rem;letter-spacing:0.08em;text-transform:uppercase;color:var(--sub) !important;font-weight:600;border-bottom:1px solid var(--edge) !important;background:#111411 !important;white-space:nowrap}
 .sa td{padding:12px 14px;border-bottom:1px solid var(--edge) !important;color:var(--txt) !important;background:transparent !important}
 .sa tr:last-child td{border:none}
@@ -253,10 +254,9 @@ const CSS = `
   .sa-close-btn{display:flex !important;width:44px;height:44px;top:15px;right:15px}
   .sa .kpi-grid{grid-template-columns:repeat(2,1fr);gap:12px}
   .sa .ph-right{display:none}
-  .sa .tbl-w{overflow-x:auto !important; -webkit-overflow-scrolling:touch; margin:0 -10px; padding:0 10px; border-radius:0; position:relative}
-  .sa table{min-width:1100px !important}
+  .sa .tbl-w{overflow-x:auto !important; -webkit-overflow-scrolling:touch; margin:0 -10px; padding:0 10px; border-radius:0; position:relative; min-width:0}
+  .sa table{min-width:1000px !important}
   
-  /* Sticky First Column for mobile readability */
   .sa .sa-table th:first-child,
   .sa .sa-table td:first-child {
     position: sticky;
@@ -264,6 +264,7 @@ const CSS = `
     z-index: 10;
     background: #0C0E0D !important;
     box-shadow: 4px 0 10px rgba(0,0,0,0.5);
+    border-right: 1px solid var(--edge);
   }
   .sa .sa-table th:first-child { z-index: 20; background: #111411 !important; }
 
@@ -272,12 +273,12 @@ const CSS = `
 }
 @media(max-width:480px){
   .sa .act-btn-group{flex-direction:column; gap:8px}
-  .sa .kpi-grid{grid-template-columns:1fr}
-}
-@media(max-width:480px){
+  .sa .kpi-grid{grid-template-columns:1fr; gap:12px}
   .sa-content{padding:12px}
   .sa-topbar{height:48px;padding:0 12px;gap:8px}
-  .sa .kpi-grid{grid-template-columns:1fr;gap:10px}
+  .sa .ph-title{font-size:1rem}
+  .sa .sb-logo{width:40px;height:40px}
+}
   .sa .kpi-val{font-size:1.4rem}
   .sa .charts-grid,.sa .charts-grid-3,.sa .bot-grid{grid-template-columns:1fr;gap:10px}
   .sa .cp,.sa .lp{padding:11px}
@@ -1222,7 +1223,7 @@ export default function SuperAdmin({ currentUser, sidebarOpen, setSidebarOpen, o
                     : <div className="tbl-w">
                         <table className="sa-table">
                           <thead>
-                            <tr><th>School</th><th>Plan</th><th>Staff Usage</th><th className="sa-hide-mobile">Location</th><th>Students</th><th>Joined</th><th>Status</th><th>Revenue</th><th>Sub</th><th>Action</th></tr>
+                            <tr><th>School</th><th>Plan</th><th>Staff Usage</th><th className="sa-hide-mobile">Location</th><th>Students</th><th>Joined</th><th>Status</th><th className="sa-hide-mobile">Revenue</th><th className="sa-hide-mobile">Sub</th><th>Action</th></tr>
                           </thead>
                           <tbody>
                             {filteredSchools.map(s=>{
@@ -1274,8 +1275,8 @@ export default function SuperAdmin({ currentUser, sidebarOpen, setSidebarOpen, o
                                       {pData.subscription_status || (isActive ? 'Active' : 'Inactive')}
                                     </span>
                                   </td>
-                                  <td data-label="Revenue" className="td-m" style={{color:isActive?'var(--te)':'var(--sub)'}}>{isActive?fmtMoney(amt):'—'}</td>
-                                  <td data-label="Subscription">
+                                  <td data-label="Revenue" className="sa-hide-mobile td-m" style={{color:isActive?'var(--te)':'var(--sub)'}}>{isActive?fmtMoney(amt):'—'}</td>
+                                  <td data-label="Subscription" className="sa-hide-mobile">
                                     <button className="act-btn" style={{fontSize:'.63rem',padding:'3px 10px',color:'var(--sk)',borderColor:'rgba(74,158,232,.25)'}}
                                       onClick={()=>{setPlanModal({schoolId:s.id,schoolName:s.name,currentPlan:curPlan});setChosenPlan('');}}>Change Plan</button>
                                   </td>
