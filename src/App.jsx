@@ -382,8 +382,17 @@ function App() {
           <Route path="/security-trust" element={<SecurityTrust />} />
           <Route path="*" element={<Landing />} />
         </Routes>
+      ) : isPlatformAdmin ? (
+        <Routes>
+          <Route path="/super-admin" element={
+            <ErrorBoundary>
+              <SuperAdmin currentUser={currentUser} sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onSignOut={handleLogout} />
+            </ErrorBoundary>
+          } />
+          <Route path="*" element={<Navigate to="/super-admin" replace />} />
+        </Routes>
       ) : (
-        <div className={`app-layout ${isPlatformAdmin ? 'theme-onyx' : 'app-shell'}`}>
+        <div className="app-layout app-shell">
           <>
             <button className="mobile-toggle" onClick={() => setSidebarOpen(!sidebarOpen)}>
               {sidebarOpen ? '✕' : '☰'}
@@ -399,36 +408,34 @@ function App() {
             />
 
             <main className="main-content">
-              {!isPlatformAdmin && (
-                <div className="topbar">
-                  <div className="topbar-title desktop-only">School Control Center</div>
-                  <div className="topbar-title mobile-only">ShuleSoft</div>
-                  <div className="topbar-actions">
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                      <span style={{ fontSize: '0.7rem', fontWeight: 700, color: 'var(--text-muted)' }}>PERIOD:</span>
-                      <select 
-                        className="topbar-program-select" 
-                        value={currentPeriodId || ''} 
-                        onChange={async (e) => {
-                          await setActivePeriod(e.target.value);
-                        }}
-                      >
-                        <option value="">Select Period</option>
-                        {periods.map(p => (
-                          <option key={p.id} value={p.id}>
-                            {p.year} {p.term} {p.is_active ? '(Active)' : ''}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                    <div className="topbar-avatar" style={{ border: '2px solid var(--primary-light)' }}>
-                      {currentUser?.name?.charAt(0) || 'U'}
-                    </div>
+              <div className="topbar">
+                <div className="topbar-title desktop-only">School Control Center</div>
+                <div className="topbar-title mobile-only">ShuleSoft</div>
+                <div className="topbar-actions">
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                    <span style={{ fontSize: '0.7rem', fontWeight: 700, color: 'var(--text-muted)' }}>PERIOD:</span>
+                    <select 
+                      className="topbar-program-select" 
+                      value={currentPeriodId || ''} 
+                      onChange={async (e) => {
+                        await setActivePeriod(e.target.value);
+                      }}
+                    >
+                      <option value="">Select Period</option>
+                      {periods.map(p => (
+                        <option key={p.id} value={p.id}>
+                          {p.year} {p.term} {p.is_active ? '(Active)' : ''}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="topbar-avatar" style={{ border: '2px solid var(--primary-light)' }}>
+                    {currentUser?.name?.charAt(0) || 'U'}
                   </div>
                 </div>
-              )}
+              </div>
 
-              <div className={!isPlatformAdmin ? "page-content" : ""}>
+              <div className="page-content">
                 <ErrorBoundary>
                   <Routes>
                     <Route path="/dashboard" element={<Dashboard currentUser={currentUser} onLogout={handleLogout} currentPeriodId={currentPeriodId} />} />
@@ -439,10 +446,9 @@ function App() {
                     <Route path="/attendance" element={subscriptionActive ? <Attendance currentUser={currentUser} currentPeriodId={currentPeriodId} /> : <Navigate to="/billing" />} />
                     <Route path="/security" element={<Security currentUser={currentUser} />} />
                     <Route path="/settings" element={<Settings currentUser={currentUser} />} />
-                    <Route path="/super-admin" element={<SuperAdmin currentUser={currentUser} sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />} />
                     <Route path="/billing" element={<Billing />} />
-                    <Route path="/" element={<Navigate to={isPlatformAdmin ? "/super-admin" : "/dashboard"} replace />} />
-                    <Route path="*" element={<Navigate to={isPlatformAdmin ? "/super-admin" : "/dashboard"} replace />} />
+                    <Route path="/" element={<Navigate to="/dashboard" replace />} />
+                    <Route path="*" element={<Navigate to="/dashboard" replace />} />
                   </Routes>
                 </ErrorBoundary>
               </div>

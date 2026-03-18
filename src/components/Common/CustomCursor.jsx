@@ -24,6 +24,10 @@ export default function CustomCursor({ disabled }) {
       my = y;
       if (cursor) {
         cursor.style.transform = `translate(${x}px, ${y}px)`;
+        cursor.style.opacity = '1';
+      }
+      if (ring) {
+        ring.style.opacity = '1';
       }
     };
     

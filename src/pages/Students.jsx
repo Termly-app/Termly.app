@@ -14,7 +14,7 @@ function getCurrentTermLabel() {
   return `Term ${term}, ${y}  ·  ${range}`;
 }
 
-export default function Students({ currentUser }) {
+export default function Students({ currentUser, currentPeriodId }) {
   const [students, setStudents]       = useState([]);
   const [search, setSearch]           = useState('');
   const [classFilter, setClassFilter] = useState('All');

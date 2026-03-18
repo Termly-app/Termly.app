@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+﻿import { useState, useEffect, useRef } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import {
   getAllPendingPayments, getAllPayments, approvePayment, rejectPayment,
@@ -949,103 +949,61 @@ export default function SuperAdmin({ currentUser, sidebarOpen, setSidebarOpen, o
     .reduce((sum, p) => sum + (p.amount || 0), 0);
 
   return (
-    <div className="sa-root">
-      {/* ══ SIDEBAR ══ */}
-      <aside className={`sa-sidebar${sidebarOpen ? ' open' : ''}`}>
-        <div className="sb-brand">
-          <div className="sb-logo">SS</div>
-          <div>
-            <div className="sb-name">ShuleSoft</div>
-            <div className="sb-tag">PLATFORM ENGINE</div>
+    <div className="sa" style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+      {/* ΓòÉΓòÉ MAIN ΓòÉΓòÉ */}
+      <div className="sa-main">
+        <div className="sa-topbar">
+          <div className="sa-menu-btn" style={{display:'none'}} onClick={()=>setSidebarOpen(o=>!o)}>Γÿ░</div>
+          <div className="sa-search-wrap">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+            <input
+              type="text"
+              placeholder="Search schools, payments, activity..."
+              value={searchQuery}
+              onChange={e=>setSearchQuery(e.target.value)}
+            />
+            {searchQuery && <span className="sa-search-clear" onClick={()=>setSearchQuery('')}>Γ£ò</span>}
+          </div>
+          <div className="sa-tb-right">
+            <div className="sa-tb-badge">
+              <div className="sa-tb-badge-dot">SA</div>Super Admin
+            </div>
           </div>
         </div>
 
-        <div className="sb-sec">Main Controls</div>
-        <div className="sb-nav-list">
-          {navItems.map(item => (
-            <div key={item.id} className={`sb-nav${activeTab === item.id ? ' on' : ''}`} onClick={() => setTab(item.id)}>
-              <div className={`nav-ico ${item.cls}`}>{item.ico}</div>
-              {item.label}
-            </div>
-          ))}
-        </div>
+        <div className="sa-content">
+          <div className="sa">
 
-        <div className="sb-spacer" />
-
-        <div className="sb-status">
-          <div className="ss-row">
-            <span className="ss-lbl">System Status</span>
-            <div className="ss-dot"><span className="sa-dot" /> Operational</div>
-          </div>
-          <div className="ss-name">Cloud Nexus v2.0</div>
-        </div>
-
-        <div className="sb-signout" onClick={handleSignOut}>
-          <span>👋</span> Sign Out
-        </div>
-      </aside>
-
-      {/* ══ MOBILE OVERLAY ══ */}
-      {sidebarOpen && <div className="sa-overlay show" onClick={() => setSidebarOpen(false)} />}
-
-      <div className="sa" style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
-        {/* ══ MAIN ══ */}
-        <div className="sa-main">
-          <div className="sa-topbar">
-            {/* MOBILE MENU TOGGLE */}
-            <button className="sa-menu-btn" onClick={() => setSidebarOpen(o => !o)}>☰</button>
-            <div className="sa-search-wrap">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="8" /><path d="m21 21-4.35-4.35" /></svg>
-              <input
-                type="text"
-                placeholder="Search schools, payments, activity..."
-                value={searchQuery}
-                onChange={e => setSearchQuery(e.target.value)}
-              />
-              {searchQuery && <span className="sa-search-clear" onClick={() => setSearchQuery('')}>✕</span>}
-            </div>
-            <div className="sa-tb-right">
-              <div className="sa-tb-badge">
-                <div className="sa-tb-badge-dot">SA</div>Super Admin
+            {message && (
+              <div className={`toast ${message.type==='success'?'toast-ok':'toast-err'}`}>
+                <span>{message.type==='success'?'Γ£ô':'Γ£ò'}</span> {message.text}
               </div>
-            </div>
-          </div>
+            )}
 
-          <div className="sa-content">
-            <div className="sa">
+            {loading ? <SuperAdminLoader /> : <>
 
-              {message && (
-                <div className={`toast ${message.type === 'success' ? 'toast-ok' : 'toast-err'}`}>
-                  <span>{message.type === 'success' ? '✓' : '✕'}</span> {message.text}
-                </div>
-              )}
-
-              {loading ? <SuperAdminLoader /> : <div className="sa-inner">
-
-                {/* ══ PERSISTENT HEADER ══ */}
-                <div className="page-hd" style={{ background: 'transparent' }}>
+              {/* ΓòÉΓòÉΓòÉΓòÉ OVERVIEW ΓòÉΓòÉΓòÉΓòÉ */}
+              {activeTab==='overview' && <div className="tv">
+                <div className="page-hd">
                   <div className="ph-left">
-                    <div className="ph-ico">🌐</div>
+                    <div className="ph-ico">≡ƒÅ¢</div>
                     <div>
-                      <div className="ph-title">System Observatory</div>
-                      <div className="ph-sub">Real-time Platform Management</div>
-                      <div className="ph-badge"><span className="sa-dot" /> High-Availability Cluster</div>
+                      <div className="ph-title">Platform Command Tower</div>
+                      <div className="ph-sub">Unified SaaS Oversight</div>
+                      <div className="ph-badge"><span className="sa-dot"/> System Secure &amp; Active</div>
                     </div>
                   </div>
                   <div className="ph-right">
-                    <select className="act-sel" value={periodFilter} onChange={e => setPeriodFilter(e.target.value)}>
+                    <select className="act-sel" value={periodFilter} onChange={e=>setPeriodFilter(e.target.value)}>
                       <option value="weekly">This Week</option>
                       <option value="monthly">This Month</option>
                       <option value="yearly">This Year</option>
                     </select>
-                    <button className={`act-btn${showFilter ? ' active' : ''}`} onClick={() => setShowFilter(f => !f)}>
-                      {showFilter ? '✕ Close' : '⚙ Filter'}
+                    <button className={`act-btn${showFilter?' active':''}`} onClick={()=>setShowFilter(f=>!f)}>
+                      {showFilter ? 'Γ£ò Close' : 'ΓÜÖ Filter'}
                     </button>
                   </div>
                 </div>
-
-                {/* ════ OVERVIEW ════ */}
-                {activeTab === 'overview' && <div className="tv">
 
                 {showFilter && (
                   <div className="filter-bar">
@@ -1654,7 +1612,7 @@ export default function SuperAdmin({ currentUser, sidebarOpen, setSidebarOpen, o
                 </div>
               </div>}
 
-
+            </>}
 
             <div style={{padding:'24px 0 6px',textAlign:'center',opacity:.2,borderTop:'1px solid var(--edge)',marginTop:20}}>
               <div style={{fontFamily:'var(--fh)',fontSize:'.65rem',color:'var(--sub)'}}>ShuleSoft Platform Engine ┬╖ {now.getFullYear()}</div>
@@ -1834,9 +1792,6 @@ export default function SuperAdmin({ currentUser, sidebarOpen, setSidebarOpen, o
               )}
             </div>
 
-                </div>
-              }
-            </div>
           </div>
         </div>
       </div>

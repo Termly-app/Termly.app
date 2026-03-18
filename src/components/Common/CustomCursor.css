@@ -9,9 +9,9 @@
   z-index: 1000000;
   mix-blend-mode: difference;
   transform: translate(-50%, -50%);
-  transition: transform .08s, width .25s, height .25s, background .25s;
+  transition: transform .08s, width .25s, height .25s, background .25s, opacity .3s;
+  opacity: 0;
 }
-
 .cursor-ring {
   position: fixed;
   width: 36px;
@@ -22,7 +22,8 @@
   z-index: 999999;
   mix-blend-mode: difference;
   transform: translate(-50%, -50%);
-  transition: transform .18s cubic-bezier(.16, 1, .3, 1), width .3s, height .3s, border-color .3s;
+  transition: transform .18s cubic-bezier(.16, 1, .3, 1), width .3s, height .3s, border-color .3s, opacity .3s;
+  opacity: 0;
 }
 
 body.cursor-hover .cursor {

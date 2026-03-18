@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { getClassResults, setStudentAllMarks, getSubjectRankings, getClassList, getCBC, setCBC, getTeacherPerformance, getCoreCompetencies, getPrintHeader, getSchoolProfile, subscribeToChanges, getGradeForScore } from '../data/store';
 import { CBC_STRUCTURE, CBC_LEVELS, CBC_CORE_COMPETENCIES, STREAMS, getSubjectsForGrade, getLevelForGrade } from '../data/seedData';
 
-export default function Grading({ currentUser }) {
+export default function Grading({ currentUser, currentPeriodId }) {
   const allGrades = Object.values(CBC_STRUCTURE).flatMap(l => l.grades);
   const [selectedClass, setSelectedClass] = useState('');
   const [streamFilter, setStreamFilter] = useState('All');

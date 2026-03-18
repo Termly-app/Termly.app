@@ -3,7 +3,7 @@ import { getTeachers, addTeacher, updateTeacher, deleteTeacher, getSubjectAssign
 import Loader from '../components/Common/Loader';
 import { CBC_STRUCTURE, getSubjectsForGrade, getLevelForGrade } from '../data/seedData';
 
-export default function Teachers() {
+export default function Teachers({ currentPeriodId }) {
   const [activeTab, setActiveTab] = useState('records');
   const [teachers, setTeachers] = useState([]);
   const [assignments, setAssignments] = useState({});
