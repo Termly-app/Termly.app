@@ -54,7 +54,7 @@ body.cursor-hover .cursor-ring {
 }
 
 @media (max-width: 960px) {
-  .cursor, .cursor-ring {
+  .sh-cursor-dot, .cursor-ring {
     display: none !important;
   }
   .custom-cursor-active {

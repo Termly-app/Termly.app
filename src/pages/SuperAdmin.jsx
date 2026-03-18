@@ -268,7 +268,12 @@ const CSS = `
   }
   .sa .sa-table th:first-child { z-index: 20; background: #111411 !important; }
 
-  .sa .act-btn{padding:10px 16px !important; font-size:.8rem !important; min-height:40px}
+  @media(max-width:500px){
+     .sa .sa-table th:first-child, .sa .sa-table td:first-child { position: static !important; box-shadow: none !important; border-right: none !important; }
+     .sa td{padding:16px 12px; min-height:180px}
+  }
+
+  .sa .act-btn{padding:10px 16px !important; font-size:.8rem !important; min-height:44px !important}
   .sa .act-btn-group{display:flex; flex-direction:row; gap:12px; justify-content: flex-start !important}
 }
 @media(max-width:480px){
@@ -342,6 +347,8 @@ export default function SuperAdmin({ currentUser, sidebarOpen, setSidebarOpen, o
 
   /* ΓöÇΓöÇ modals ΓöÇΓöÇ */
   const [activateModal, setActivateModal]     = useState(null);
+  const [deactivateModal, setDeactivateModal] = useState(null);
+  const [terminateModal, setTerminateModal]   = useState(null);
   const [payMethod, setPayMethod]             = useState('mpesa');
   const [payRef, setPayRef]                   = useState('');
   const [activating, setActivating]           = useState(false);
@@ -762,7 +769,6 @@ export default function SuperAdmin({ currentUser, sidebarOpen, setSidebarOpen, o
     catch (err) { setMessage({type:'error',text:err.message}); }
   };
   const handleDeactivate = async (id, name) => {
-    if (!window.confirm(`Deactivate ${name}? This will restrict their access.`)) return;
     try { 
       await deactivateSchool(id); 
       setMessage({type:'success',text:`${name} deactivated.`}); 
@@ -804,8 +810,6 @@ export default function SuperAdmin({ currentUser, sidebarOpen, setSidebarOpen, o
   };
 
   const handleRowDeleteSchool = async (id, name) => {
-    if (!window.confirm(`STRICT WARNING: Terminate ${name}? This will DELETE all their data permanently.`)) return;
-    if (!window.confirm(`Are you absolutely sure? This cannot be undone.`)) return;
     try {
       await deleteSchool(id);
       setMessage({type:'success',text:`${name} terminated and deleted.`});
@@ -1277,19 +1281,19 @@ export default function SuperAdmin({ currentUser, sidebarOpen, setSidebarOpen, o
                                   </td>
                                   <td data-label="Revenue" className="sa-hide-mobile td-m" style={{color:isActive?'var(--te)':'var(--sub)'}}>{isActive?fmtMoney(amt):'—'}</td>
                                   <td data-label="Subscription" className="sa-hide-mobile">
-                                    <button className="act-btn" style={{fontSize:'.63rem',padding:'3px 10px',color:'var(--sk)',borderColor:'rgba(74,158,232,.25)'}}
+                                    <button className="act-btn" style={{color:'var(--sk)',borderColor:'rgba(74,158,232,.25)'}}
                                       onClick={()=>{setPlanModal({schoolId:s.id,schoolName:s.name,currentPlan:curPlan});setChosenPlan('');}}>Change Plan</button>
                                   </td>
                                   <td data-label="Action">
                                     <div className="act-btn-group" style={{justifyContent: 'inherit'}}>
-                                      <button className="act-btn" style={{fontSize:'.63rem',padding:'3px 8px',color:'var(--te)',borderColor:'rgba(13,216,138,.25)',background:'rgba(13,216,138,.05)'}} 
+                                      <button className="act-btn" style={{color:'var(--te)',borderColor:'rgba(13,216,138,.25)',background:'rgba(13,216,138,.05)'}} 
                                         onClick={()=>{setActivateModal(s);setPayMethod('mpesa');setPayRef('');setActivateSuccess(false);}}>Activate</button>
                                       
-                                      <button className="act-btn" style={{fontSize:'.63rem',padding:'3px 8px',color:'var(--ro)',borderColor:'rgba(212,80,106,.25)',background:'rgba(212,80,106,.06)'}} 
-                                        onClick={()=>handleDeactivate(s.id,s.name)}>Deactivate</button>
+                                      <button className="act-btn" style={{color:'var(--ro)',borderColor:'rgba(212,80,106,.25)',background:'rgba(212,80,106,.06)'}} 
+                                        onClick={()=>setDeactivateModal(s)}>Deactivate</button>
                                       
-                                      <button className="act-btn" style={{fontSize:'.63rem',padding:'3px 8px',color:'var(--sub)',borderColor:'var(--edge2)',background:'rgba(255,255,255,.05)'}} 
-                                        onClick={()=>handleRowDeleteSchool(s.id, s.name)}>Terminate</button>
+                                      <button className="act-btn" style={{color:'var(--sub)',borderColor:'var(--edge2)',background:'rgba(255,255,255,.05)'}} 
+                                        onClick={()=>setTerminateModal(s)}>Terminate</button>
                                     </div>
                                   </td>
                                 </tr>
@@ -1861,6 +1865,46 @@ export default function SuperAdmin({ currentUser, sidebarOpen, setSidebarOpen, o
 
                 </div>
               }
+            </div>
+
+            {/* ▬▬ DEACTIVATE MODAL ▬▬ */}
+            <div className={`sa mo ${deactivateModal ? 'open' : ''}`}>
+              <div className="mb" style={{textAlign:'center', padding:'40px 30px'}}>
+                <div className="mc" onClick={()=>setDeactivateModal(null)}>✕</div>
+                <div style={{fontSize:'2.5rem', marginBottom:20}}>🛡️</div>
+                <h2 style={{fontSize:'1.2rem', marginBottom:12, color:'var(--ro)'}}>Deactivate {deactivateModal?.name}?</h2>
+                <p style={{fontSize:'.85rem', color:'var(--sub)', lineHeight:1.5, marginBottom:24}}>
+                  This will immediately restrict access for all staff and students at this school. 
+                  You can restore access later by clicking "Activate".
+                </p>
+                <div style={{display:'flex', gap:10}}>
+                  <button className="btn" onClick={()=>setDeactivateModal(null)} style={{borderColor:'var(--edge2)'}}>Cancel</button>
+                  <button className="save-btn" style={{flex:1, background:'var(--ro)'}} onClick={async ()=>{
+                    const s = deactivateModal; setDeactivateModal(null);
+                    await handleDeactivate(s.id, s.name);
+                  }}>Confirm Deactivation</button>
+                </div>
+              </div>
+            </div>
+
+            {/* ▬▬ TERMINATE MODAL ▬▬ */}
+            <div className={`sa mo ${terminateModal ? 'open' : ''}`}>
+              <div className="mb" style={{textAlign:'center', padding:'30px', borderColor:'var(--ro)'}}>
+                <div className="mc" onClick={()=>setTerminateModal(null)}>✕</div>
+                <div style={{fontSize:'2.5rem', marginBottom:20}}>⚠️</div>
+                <h2 style={{fontSize:'1.2rem', marginBottom:12, color:'var(--ro)'}}>Terminate {terminateModal?.name}?</h2>
+                <p style={{fontSize:'.85rem', color:'var(--sub)', lineHeight:1.5, marginBottom:24}}>
+                  <b style={{color:'var(--ro)'}}>STRICT WARNING:</b> This will permanently DELETE all school data. 
+                  This action <br/><b>cannot be undone</b>.
+                </p>
+                <div style={{display:'flex', gap:10}}>
+                  <button className="btn" onClick={()=>setTerminateModal(null)} style={{borderColor:'var(--edge2)'}}>Cancel</button>
+                  <button className="save-btn" style={{flex:1, background:'var(--ro)', boxShadow:'0 4px 14px rgba(212,80,106,.4)'}} onClick={async ()=>{
+                    const s = terminateModal; setTerminateModal(null);
+                    await handleRowDeleteSchool(s.id, s.name);
+                  }}>Delete Permanently</button>
+                </div>
+              </div>
             </div>
           </div>
         </div>
