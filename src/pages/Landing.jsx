@@ -224,8 +224,8 @@ export default function Landing() {
             <span className="bdot"></span>
             Built for Kenyan Schools · CBC Ready
           </div>
-          <h1 className="hero-h1">The School Management<br/><span className="h1-dim">System for modern</span><br/>Kenya.</h1>
-          <p className="hero-sub">ShuleSoft replaces spreadsheets, paper registers, and group chats with one intelligent platform — built for CBC and M-PESA.</p>
+          <h1 className="hero-h1">Manage your entire school easily<br/><span className="h1-dim">— students, fees, results —</span><br/>all in one system.</h1>
+          <p className="hero-sub">Built for Kenyan schools. Stop juggling bank slips and paper registers. Automate your M-PESA fee collection, secondary school grading, and CBC portfolios with ShuleSoft.</p>
           <div className="hero-btns">
             <Link to="/register" className="btn-p">
               Get access

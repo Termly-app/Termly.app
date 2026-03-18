@@ -375,7 +375,7 @@ body {
   .dashboard-main-grid, .theme-onyx .dashboard-main-grid { grid-template-columns: 1fr !important; }
   
   .filter-bar { flex-direction: column; align-items: stretch; width: 100%; }
-  .filter-bar > * { width: 100% !important; max-width: none !important; }
+  .filter-bar \> * { width: 100% !important; max-width: none !important; }
   
   .card-header { flex-direction: column; align-items: flex-start; gap: 12px; }
   .card-header .btn-group, .card-header .btn { width: 100%; }
@@ -524,26 +524,17 @@ body {
   }
 }
 
-/* Super Admin Table Mobile Optimizations */
-@media (max-width: 768px) {
-  .sa-table tr {
-    padding: 12px !important;
-    margin-bottom: 20px !important;
-    border-color: var(--edge) !important;
-    background: var(--panel) !important;
-  }
-  .sa-table td {
-    padding: 12px 0 !important;
-    border-bottom: 1px solid var(--edge) !important;
-    color: var(--txt) !important;
-    justify-content: flex-end !important;
-  }
-  .sa-table td::before {
-    color: var(--sub) !important;
-    font-size: .62rem !important;
-  }
-  .sa-table .act-btn {
-    padding: 6px 12px !important;
-    font-size: .7rem !important;
-  }
+/* 🏁 Guided Setup Styles */
+.guided-step-box:hover {
+  background: rgba(255,255,255,0.14) !important;
+  transform: translateY(-3px);
+  box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+}
+.guided-step-box.done {
+  opacity: 0.85;
+}
+.guided-step-box.done:hover {
+  transform: translateY(-2px);
+  background: rgba(34,197,94,0.1) !important;
+  opacity: 1;
 }

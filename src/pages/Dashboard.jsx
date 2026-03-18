@@ -181,28 +181,74 @@ export default function Dashboard({ currentUser, onLogout, currentPeriodId }) {
         ))}
       </div>
 
-      {/* Onboarding for new schools */}
-      {data.totalStudents === 0 && (
-        <div className="onboarding-card card-premium" style={{ marginBottom: 24 }}>
-          <div className="onboarding-content">
-            <h2 className="hero-title white">Get Started 🚀</h2>
-            <p className="hero-subtitle white">Your school platform is ready. Let's set up your data.</p>
-            <div className="onboarding-steps-grid">
+      {/* 🧭 GUIDED SETUP (ONBOARDING) 🧭 */}
+      {(data.totalStudents < 5 || !data.profile?.phone) && (
+        <div className="card-premium animate-fade-up" style={{ marginBottom: 24, padding: '24px 30px', position: 'relative', overflow: 'hidden' }}>
+          <div style={{ position: 'relative', zIndex: 2 }}>
+            <h2 className="hero-title white" style={{ fontSize: '1.5rem', marginBottom: 8 }}>Start Here 🏁</h2>
+            <p className="hero-subtitle white" style={{ opacity: 0.9, marginBottom: 24, maxWidth: 600 }}>Welcome to ShuleSoft! Let's get your school system ready in 4 easy steps. Follow this guide to go live today.</p>
+            
+            <div className="guided-steps" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 16 }}>
               {[
-                { n:1, title:'Add Teachers',  desc:'Register teaching staff first.',  to:'/teachers'  },
-                { n:2, title:'Add Students',  desc:'Import learners into the system.', to:'/students'  },
-                { n:3, title:'Setup Fees',    desc:'Configure fee structures.',        to:'/fees'      },
-              ].map(s => (
-                <div className="onboarding-step-glass" key={s.n}>
-                  <div className="step-num-glow">{s.n}</div>
-                  <h4>{s.title}</h4>
-                  <p>{s.desc}</p>
-                  <Link to={s.to} className="btn-white-sm" style={{ marginTop: 'auto' }}>Go →</Link>
-                </div>
+                { 
+                  id: 'profile', 
+                  icon: '🏫', 
+                  title: 'Complete School Info', 
+                  desc: 'Add your logo, motto, and contact details for official reports.',
+                  to: '/settings', 
+                  done: !!(data.profile?.phone && data.profile?.address)
+                },
+                { 
+                  id: 'classes', 
+                  icon: '📚', 
+                  title: 'Setup Classes', 
+                  desc: 'Configure which grades and streams are active in your school.',
+                  to: '/settings?tab=classes', 
+                  done: !!(data.profile?.activeClasses?.length < 15) // If they modified the default 15
+                },
+                { 
+                  id: 'students', 
+                  icon: '👨‍🎓', 
+                  title: 'Add Your Students', 
+                  desc: 'Import or manually add students to their respective classes.',
+                  to: '/students', 
+                  done: data.totalStudents > 0
+                },
+                { 
+                  id: 'finance', 
+                  icon: '💰', 
+                  title: 'Setup Fee Structure', 
+                  desc: 'Define how much each class pays per term.',
+                  to: '/fees', 
+                  done: Object.keys(data.profile?.gradeFees || {}).length > 0
+                }
+              ].map((step, idx) => (
+                <Link to={step.to} key={step.id} className={`guided-step-box ${step.done ? 'done' : ''}`} style={{ 
+                  background: 'rgba(255,255,255,0.08)',
+                  backdropFilter: 'blur(10px)',
+                  border: `1px solid ${step.done ? 'rgba(34,197,94,0.4)' : 'rgba(255,255,255,0.1)'}`,
+                  padding: 18,
+                  borderRadius: 12,
+                  textDecoration: 'none',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  transition: 'all 0.2s',
+                  position: 'relative'
+                }}>
+                  {step.done && (
+                    <div style={{ position: 'absolute', top: 12, right: 12, color: '#22c55e', fontSize: '1.2rem' }}>✓</div>
+                  )}
+                  <div style={{ fontSize: '1.8rem', marginBottom: 12 }}>{step.icon}</div>
+                  <h4 style={{ color: '#fff', fontSize: '0.95rem', fontWeight: 700, margin: '0 0 6px 0' }}>{idx + 1}. {step.title}</h4>
+                  <p style={{ color: 'rgba(255,255,255,0.7)', fontSize: '0.75rem', margin: 0, lineHeight: 1.4 }}>{step.desc}</p>
+                  {!step.done && <div style={{ marginTop: 'auto', paddingTop: 14, color: '#fff', fontSize: '0.7rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: 4 }}>
+                    Start Setup <span style={{ fontSize: '1rem' }}>→</span>
+                  </div>}
+                </Link>
               ))}
             </div>
           </div>
-          <div className="onboarding-bg-icon">📚</div>
+          <div style={{ position: 'absolute', top: -20, right: -20, fontSize: '12rem', opacity: 0.05, pointerEvents: 'none' }}>🏫</div>
         </div>
       )}
 

@@ -174,10 +174,10 @@ const CSS = `
 .sa .is-ok{color:var(--te)}.sa .is-w{color:var(--am)}.sa .is-e{color:var(--ro)}
 
 /* tables */
-.sa .tbl-w{overflow-x:auto;-webkit-overflow-scrolling:touch}
-.sa table{width:100%;border-collapse:collapse;font-size:.73rem}
-.sa th{text-align:left;padding:9px 11px;font-size:.55rem;letter-spacing:.07em;text-transform:uppercase;color:var(--sub);font-weight:500;border-bottom:1px solid var(--edge)}
-.sa td{padding:10px 11px;border-bottom:1px solid var(--edge);color:var(--txt)}
+.sa .tbl-w{overflow-x:auto !important;-webkit-overflow-scrolling:touch;width:100%;display:block;background:#0C0E0D}
+.sa table{width:100%;border-collapse:collapse;font-size:0.75rem;background:#0C0E0D !important}
+.sa th{text-align:left;padding:12px 14px;font-size:0.6rem;letter-spacing:0.08em;text-transform:uppercase;color:var(--sub) !important;font-weight:600;border-bottom:1px solid var(--edge) !important;background:#111411 !important;white-space:nowrap}
+.sa td{padding:12px 14px;border-bottom:1px solid var(--edge) !important;color:var(--txt) !important;background:transparent !important}
 .sa tr:last-child td{border:none}
 .sa tr:hover td{background:rgba(255,255,255,.015)}
 .sa .td-b{font-weight:500}
@@ -256,8 +256,8 @@ const CSS = `
   .sa .kpi-grid{grid-template-columns:repeat(2,1fr);gap:12px}
   .sa .charts-grid,.sa .charts-grid-3,.sa .bot-grid{grid-template-columns:1fr;gap:12px}
   .sa .ph-right{display:none}
-  .sa .tbl-w{overflow-x:auto;-webkit-overflow-scrolling:touch;margin:0 -10px;padding:0 10px}
-  .sa table{min-width:700px}
+  .sa .tbl-w{overflow-x:auto !important;margin:0 -10px;padding:0 10px}
+  .sa table{min-width:1100px !important}
   
   /* Sticky First Column for mobile readability */
   .sa-table th:first-child,
@@ -1213,7 +1213,7 @@ export default function SuperAdmin({ currentUser, sidebarOpen, setSidebarOpen, o
                   {filteredSchools.length===0
                     ? <div className="empty"><div className="empty-ico">🏛️</div>{q?'No schools match your search.':'No schools registered yet.'}</div>
                     : <div className="tbl-w">
-                        <table className="data-table sa-table">
+                        <table className="sa-table">
                           <thead>
                             <tr><th>School</th><th>Plan</th><th>Staff Usage</th><th className="hide-mobile">Location</th><th>Students</th><th>Joined</th><th>Status</th><th>Revenue</th><th>Sub</th><th>Action</th></tr>
                           </thead>
@@ -1378,7 +1378,7 @@ export default function SuperAdmin({ currentUser, sidebarOpen, setSidebarOpen, o
                      if (filtered.length===0) return <div className="empty"><div className="empty-ico">📋</div>No payment records found.</div>;
                     return (
                       <div className="tbl-w">
-                        <table className="data-table sa-table">
+                        <table className="sa-table">
                           <thead>
                             <tr><th>School</th><th>Amount</th><th>Code</th><th>Status</th><th className="hide-mobile">Plan</th><th>Date</th><th className="hide-mobile">Time</th></tr>
                           </thead>
@@ -1818,7 +1818,7 @@ export default function SuperAdmin({ currentUser, sidebarOpen, setSidebarOpen, o
                     ) : staffModal.staff.length === 0 ? (
                       <div className="empty" style={{ padding: 30 }}>No staff accounts found.</div>
                     ) : (
-                      <table>
+                      <table className="sa-table">
                         <thead>
                           <tr><th>Name</th><th>Phone/Status</th><th>Action</th></tr>
                         </thead>
