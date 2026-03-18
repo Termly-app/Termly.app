@@ -47,7 +47,7 @@ export default function CustomCursor({ disabled }) {
     
     // Select all interactive elements
     const updateHoverListeners = () => {
-      const hoverElements = document.querySelectorAll('a, button, input, select, textarea, .fc, .pc, .pbtn, .nlink, .ncta, .news-btn, [role="button"]');
+      const hoverElements = document.querySelectorAll('a, button, input, select, textarea, .fc, .pc, .pbtn, .nlink, .ncta, .news-btn, [role="button"], .pm, .po, [onclick]');
       hoverElements.forEach(el => {
         el.removeEventListener('mouseenter', onMouseEnter);
         el.removeEventListener('mouseleave', onMouseLeave);

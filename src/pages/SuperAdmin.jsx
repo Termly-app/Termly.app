@@ -953,7 +953,7 @@ export default function SuperAdmin({ currentUser, sidebarOpen, setSidebarOpen, o
       {/* ══ MAIN ══ */}
       <div className="sa-main">
         <div className="sa-topbar">
-          <div className="sa-menu-btn" style={{display:'none'}} onClick={()=>setSidebarOpen(o=>!o)}>☰</div>
+          <div className="sa-menu-btn" onClick={()=>setSidebarOpen(o=>!o)}>☰</div>
           <div className="sa-search-wrap">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
             <input

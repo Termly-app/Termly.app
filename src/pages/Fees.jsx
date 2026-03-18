@@ -64,7 +64,7 @@ function ReceiptModal({ receipt, onClose, profile }) {
   );
 }
 
-export default function Fees() {
+export default function Fees({ currentPeriodId }) {
   const [students, setStudents] = useState([]);
   const [fees, setFees] = useState({});
   const [summary, setSummary] = useState({});
@@ -96,7 +96,7 @@ export default function Fees() {
       unsubFees();
       unsubPayments();
     };
-  }, []);
+  }, [currentPeriodId]);
 
   const refresh = async () => {
     try {

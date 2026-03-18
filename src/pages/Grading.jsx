@@ -87,7 +87,7 @@ export default function Grading({ currentUser }) {
       unsubMarks();
       unsubCBC();
     };
-  }, [selectedClass, streamFilter, selectedPathway, examType]);
+  }, [selectedClass, streamFilter, selectedPathway, examType, currentUser, currentPeriodId]);
 
   const loadResults = async () => {
     let r = await getClassResults(selectedClass, examType);

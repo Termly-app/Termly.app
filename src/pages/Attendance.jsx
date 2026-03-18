@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { getStudents, getAttendance, markAttendance, getAttendanceSummary, getTodayStr, getSchoolProfile, getSubjectAssignments } from '../data/store';
 import { CBC_STRUCTURE } from '../data/seedData';
 
-export default function Attendance({ currentUser }) {
+export default function Attendance({ currentUser, currentPeriodId }) {
   const [selectedClass, setSelectedClass] = useState('All');
   const [streamFilter, setStreamFilter] = useState('All');
   const [selectedDate, setSelectedDate] = useState(getTodayStr());
@@ -30,7 +30,7 @@ export default function Attendance({ currentUser }) {
       finally { setLoading(false); }
     };
     init();
-  }, [selectedClass, streamFilter, selectedDate]);
+  }, [selectedClass, streamFilter, selectedDate, currentPeriodId]);
 
   const refresh = async () => {
     try {

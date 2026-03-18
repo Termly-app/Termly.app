@@ -8,11 +8,10 @@ import {
 } from '../data/store';
 import Loader from '../components/Common/Loader';
 
-export default function Dashboard({ currentUser, onLogout }) {
+export default function Dashboard({ currentUser, onLogout, currentPeriodId }) {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [periods, setPeriods] = useState([]);
-  const [currentPeriodId, setPeriodId] = useState(null);
   const [isAccountActive, setIsAccountActive] = useState(true);
 
   useEffect(() => {
@@ -26,9 +25,7 @@ export default function Dashboard({ currentUser, onLogout }) {
         const active = await checkIsSubscriptionActive(profile);
         setIsAccountActive(active);
 
-        const activePeriod = allPeriods.find(p => p.is_active);
         setPeriods(allPeriods);
-        setPeriodId(activePeriod?.id);
 
         const todayStr = getTodayStr();
         const [feeSummary, todayAtt, schoolStructure] = await Promise.all([
@@ -72,10 +69,9 @@ export default function Dashboard({ currentUser, onLogout }) {
       subscribeToChanges('marks', loadData)
     ];
     return () => {
-      window.removeEventListener('periodChanged', handlePeriodChange);
       unsubs.forEach(u => u());
     };
-  }, []);
+  }, [currentPeriodId]);
 
   const PLATFORM_ADMINS = ['admin@shulesoft.com', 'shulesoft8@gmail.com'];
   const isPlatformAdmin = currentUser?.email && PLATFORM_ADMINS.includes(currentUser.email);

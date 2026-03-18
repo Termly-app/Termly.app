@@ -363,7 +363,6 @@ function App() {
 
   return (
     <>
-      <CustomCursor disabled={!isPlatformAdmin && currentUser} />
       {authLoading ? (
         <Loader />
       ) : !currentUser ? (
@@ -432,12 +431,12 @@ function App() {
               <div className={!isPlatformAdmin ? "page-content" : ""}>
                 <ErrorBoundary>
                   <Routes>
-                    <Route path="/dashboard" element={<Dashboard currentUser={currentUser} onLogout={handleLogout} />} />
-                    <Route path="/students" element={subscriptionActive ? <Students currentUser={currentUser} /> : <Navigate to="/billing" />} />
-                    <Route path="/teachers" element={subscriptionActive ? <Teachers currentUser={currentUser} /> : <Navigate to="/billing" />} />
-                    <Route path="/grading" element={subscriptionActive ? <Grading currentUser={currentUser} /> : <Navigate to="/billing" />} />
-                    <Route path="/fees" element={subscriptionActive ? <Fees currentUser={currentUser} /> : <Navigate to="/billing" />} />
-                    <Route path="/attendance" element={subscriptionActive ? <Attendance currentUser={currentUser} /> : <Navigate to="/billing" />} />
+                    <Route path="/dashboard" element={<Dashboard currentUser={currentUser} onLogout={handleLogout} currentPeriodId={currentPeriodId} />} />
+                    <Route path="/students" element={subscriptionActive ? <Students currentUser={currentUser} currentPeriodId={currentPeriodId} /> : <Navigate to="/billing" />} />
+                    <Route path="/teachers" element={subscriptionActive ? <Teachers currentUser={currentUser} currentPeriodId={currentPeriodId} /> : <Navigate to="/billing" />} />
+                    <Route path="/grading" element={subscriptionActive ? <Grading currentUser={currentUser} currentPeriodId={currentPeriodId} /> : <Navigate to="/billing" />} />
+                    <Route path="/fees" element={subscriptionActive ? <Fees currentUser={currentUser} currentPeriodId={currentPeriodId} /> : <Navigate to="/billing" />} />
+                    <Route path="/attendance" element={subscriptionActive ? <Attendance currentUser={currentUser} currentPeriodId={currentPeriodId} /> : <Navigate to="/billing" />} />
                     <Route path="/security" element={<Security currentUser={currentUser} />} />
                     <Route path="/settings" element={<Settings currentUser={currentUser} />} />
                     <Route path="/super-admin" element={<SuperAdmin currentUser={currentUser} sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />} />
@@ -451,6 +450,7 @@ function App() {
           </>
         </div>
       )}
+      <CustomCursor disabled={!isPlatformAdmin && currentUser} />
     </>
   );
 }
