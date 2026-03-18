@@ -300,7 +300,7 @@ const planAmt = (plan, settings) => {
   return { champe: 50000, fala: 5999, starter: 5999 }[p] || 5999;
 };
 
-export default function SuperAdmin({ currentUser, onSignOut }) {
+export default function SuperAdmin({ currentUser, sidebarOpen, setSidebarOpen, onSignOut }) {
   const [searchParams, setSearchParams] = useSearchParams();
   const activeTab = searchParams.get('tab') || 'overview';
 
@@ -313,7 +313,6 @@ export default function SuperAdmin({ currentUser, onSignOut }) {
   const [loading, setLoading]                 = useState(true);
   const [error, setError]                     = useState(null);
   const [message, setMessage]                 = useState(null);
-  const [sidebarOpen, setSidebarOpen]         = useState(false);
 
   /* ── new functional state ── */
   const [searchQuery, setSearchQuery]   = useState('');
@@ -655,27 +654,30 @@ export default function SuperAdmin({ currentUser, onSignOut }) {
             }
           } catch (e) { console.warn('Could not fetch user counts', e); }
 
-          // Step 3: Attach user counts and empty profiles
+          // Step 3: Attach user counts
           const enriched = rawSchools.map(s => ({
             ...s,
-            _staffCount: userCounts[s.id] || 0,
-            school_profiles: []
+            _staffCount: userCounts[s.id] || 0
           }));
           setSchools(enriched);
 
-          // Step 4: Try to enrich with profiles (may fail due to RLS)
+          // Step 4: Optional extra profiles fetch (if joins missed anything)
           try {
             const { data: profiles } = await supabase.from('school_profiles').select('*');
             if (profiles && profiles.length > 0) {
-              console.log('SuperAdmin: profiles fetched =', profiles.length);
-              setSchools(rawSchools.map(s => ({
-                ...s,
-                _staffCount: userCounts[s.id] || 0,
-                school_profiles: profiles.filter(p => p.school_id === s.id)
-              })));
+              setSchools(enriched.map(s => {
+                const existingProfiles = s.school_profiles || [];
+                const extraProfiles = profiles.filter(p => p.school_id === s.id);
+                // Merge and deduplicate
+                const allProfiles = [...existingProfiles, ...extraProfiles].reduce((acc, curr) => {
+                  if (!acc.find(p => p.id === curr.id)) acc.push(curr);
+                  return acc;
+                }, []);
+                return { ...s, school_profiles: allProfiles };
+              }));
             }
           } catch (pErr) {
-            console.warn('SuperAdmin: Could not fetch profiles — showing schools without profile data', pErr);
+            console.warn('SuperAdmin: Could not fetch profiles', pErr);
           }
         })(),
         fetchData(getPlatformActivities, setActivity, []),
@@ -707,12 +709,14 @@ export default function SuperAdmin({ currentUser, onSignOut }) {
 
   const setTab = (tab) => { setSearchParams({ tab }); setSidebarOpen(false); setSearchQuery(''); };
 
-  const statusLabel = (s) => s==='Active'?'Active':s==='Suspended'?'Suspended':'Deactivated';
+  const statusLabel = (s) => (s === 'Active' ? 'Active' : s === 'Trial' ? 'Trial' : s === 'Suspended' ? 'Suspended' : s === 'Expired' ? 'Expired' : s === 'Inactive' ? 'Inactive' : s === 'Pending' ? 'Pending' : 'Deactivated');
   const sPill       = (s) => {
     if (s === 'Active') return 'pill pill-g';
     if (s === 'Trial') return 'pill pill-v';
-    if (s === 'Expired' || s === 'Deactivated') return 'pill pill-r';
-    return 'pill';
+    if (s === 'Suspended') return 'pill pill-y';
+    if (s === 'Expired') return 'pill pill-r';
+    if (s === 'Inactive' || s === 'Pending') return 'pill pill-s';
+    return 'pill pill-r';
   };
   const fmtDate     = (d) => d ? new Date(d).toLocaleDateString('en-KE',{day:'numeric',month:'short',year:'numeric'}) : '—';
   const fmtMoney    = (n) => `KSh ${Number(n||0).toLocaleString()}`;
@@ -945,50 +949,11 @@ export default function SuperAdmin({ currentUser, onSignOut }) {
     .reduce((sum, p) => sum + (p.amount || 0), 0);
 
   return (
-    <div className="sa-root">
-      <div className={`sa-overlay${sidebarOpen?' show':''}`} onClick={()=>setSidebarOpen(false)}/>
-
-      {/* ══ SIDEBAR ══ */}
-      <div className={`sa-sidebar${sidebarOpen?' open':''}`}>
-        <div className="sa-close-btn" onClick={()=>setSidebarOpen(false)}>✕</div>
-        <div className="sb-brand">
-          <div className="sb-logo" style={{ background: 'var(--primary)', padding: 4, borderRadius: 6, display: 'flex' }}>
-            <svg viewBox="0 0 13 13" fill="none" width="16" height="16">
-              <rect x="1" y="1" width="4.5" height="4.5" rx="1" fill="white"/>
-              <rect x="7.5" y="1" width="4.5" height="4.5" rx="1" fill="rgba(255,255,255,.5)"/>
-              <rect x="1" y="7.5" width="4.5" height="4.5" rx="1" fill="rgba(255,255,255,.5)"/>
-              <rect x="7.5" y="7.5" width="4.5" height="4.5" rx="1" fill="rgba(255,255,255,.2)"/>
-            </svg>
-          </div>
-          <div><div className="sb-name">ShuleSoft</div><div className="sb-tag">Platform Engine</div></div>
-        </div>
-        <div className="sb-period">
-          <div className="sb-lbl">Academic Period</div>
-          <select><option>2026 — Term 1 (Active)</option><option>2025 — Term 3</option><option>2025 — Term 2</option></select>
-        </div>
-        <div className="sb-sec">General</div>
-        {navItems.map(n => (
-          <div key={n.id} className={`sb-nav${activeTab===n.id?' on':''}`} onClick={()=>setTab(n.id)}>
-            <div className={`nav-ico ${n.cls}`}>{n.ico}</div>{n.label}
-            {n.id==='payments' && pendingPayments.length>0 && (
-              <span style={{marginLeft:'auto',background:'var(--ro)',color:'#fff',borderRadius:10,fontSize:'.52rem',fontWeight:700,padding:'1px 6px',minWidth:18,textAlign:'center'}}>{pendingPayments.length}</span>
-            )}
-          </div>
-        ))}
-        <div className="sb-spacer"/>
-        <div className="sb-status">
-          <div className="ss-row"><span className="ss-lbl">Status</span><span className="ss-dot"><span className="sa-dot"/>Active</span></div>
-          <div className="ss-name">ShuleSoft</div>
-        </div>
-        <div className="sb-signout" onClick={handleSignOut}>
-          <span>⬡</span> Sign Out
-        </div>
-      </div>
-
+    <div className="sa" style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
       {/* ══ MAIN ══ */}
       <div className="sa-main">
         <div className="sa-topbar">
-          <div className="sa-menu-btn" onClick={()=>setSidebarOpen(o=>!o)}>☰</div>
+          <div className="sa-menu-btn" style={{display:'none'}} onClick={()=>setSidebarOpen(o=>!o)}>☰</div>
           <div className="sa-search-wrap">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
             <input
@@ -1187,7 +1152,7 @@ export default function SuperAdmin({ currentUser, onSignOut }) {
                   {filteredSchools.length===0
                     ? <div className="empty"><div className="empty-ico">🏫</div>{q?'No schools match your search.':'No schools registered yet.'}</div>
                     : <div className="tbl-w">
-                        <table>
+                        <table className="data-table responsive-table">
                           <thead>
                             <tr><th>School</th><th>Plan</th><th>Staff Usage</th><th>Location</th><th>Students</th><th>Joined</th><th>Status</th><th>Revenue</th><th>Sub</th><th>Action</th></tr>
                           </thead>
@@ -1207,11 +1172,11 @@ export default function SuperAdmin({ currentUser, onSignOut }) {
                               const adminLimit = planInfo.admins || 5;
                               return (
                                 <tr key={s.id}>
-                                  <td className="td-b">
+                                  <td data-label="School" className="td-b">
                                     <div style={{fontWeight:600}}>{s.name}</div>
                                     {s.phone && <div style={{fontSize:'.65rem',color:'var(--sub)',fontWeight:400}}>{s.phone}</div>}
                                   </td>
-                                  <td style={{textTransform:'capitalize'}}>
+                                  <td data-label="Plan" style={{textTransform:'capitalize'}}>
                                     <span style={{
                                       padding: '2px 8px',
                                       borderRadius: 12,
@@ -1222,32 +1187,32 @@ export default function SuperAdmin({ currentUser, onSignOut }) {
                                       display: 'inline-block'
                                     }}>{curPlan}</span>
                                   </td>
-                                  <td>
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                                  <td data-label="Staff Usage">
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: 6, justifyContent: 'inherit' }}>
                                       <div className="td-m" style={{ color: (s._staffCount||0) > adminLimit ? 'var(--er)' : 'var(--txt)', fontWeight: (s._staffCount||0) > adminLimit ? 700 : 400 }}>
                                         {s._staffCount || 0} / {adminLimit}
                                       </div>
                                       {(s._staffCount||0) > adminLimit && <span title="Seat limit exceeded" style={{ cursor: 'help' }}>⚠️</span>}
                                     </div>
                                   </td>
-                                  <td>{s.location || p.location || 'Kenya'}</td>
-                                  <td className="td-m">
+                                  <td data-label="Location">{s.location || pData.location || 'Kenya'}</td>
+                                  <td data-label="Students" className="td-m">
                                     <div style={{fontWeight:600}}>{s._studentCount || 0}</div>
                                     <div style={{fontSize:'.6rem',color:'var(--sub)'}}>Limit: {studentLimit}</div>
                                   </td>
-                                  <td>{fmtDate(p.created_at||s.created_at)}</td>
-                                  <td>
-                                    <span className={sPill(p.subscription_status || (isActive ? 'Active' : 'Deactivated'))}>
-                                      {p.subscription_status || (isActive ? 'Active' : 'Deactivated')}
+                                  <td data-label="Joined">{fmtDate(pData.created_at||s.created_at)}</td>
+                                  <td data-label="Status">
+                                    <span className={sPill(pData.subscription_status || (isActive ? 'Active' : 'Inactive'))}>
+                                      {pData.subscription_status || (isActive ? 'Active' : 'Inactive')}
                                     </span>
                                   </td>
-                                  <td className="td-m" style={{color:isActive?'var(--te)':'var(--sub)'}}>{isActive?fmtMoney(amt):'—'}</td>
-                                  <td>
+                                  <td data-label="Revenue" className="td-m" style={{color:isActive?'var(--te)':'var(--sub)'}}>{isActive?fmtMoney(amt):'—'}</td>
+                                  <td data-label="Sub">
                                     <button className="act-btn" style={{fontSize:'.63rem',padding:'3px 10px',color:'var(--sk)',borderColor:'rgba(74,158,232,.25)'}}
                                       onClick={()=>{setPlanModal({schoolId:s.id,schoolName:s.name,currentPlan:curPlan});setChosenPlan('');}}>Change Plan</button>
                                   </td>
-                                  <td>
-                                    <div style={{display:'flex', gap:6, flexWrap:'wrap'}}>
+                                  <td data-label="Action">
+                                    <div style={{display:'flex', gap:6, flexWrap:'wrap', justifyContent: 'inherit'}}>
                                       <button className="act-btn" style={{fontSize:'.63rem',padding:'3px 8px',color:'var(--te)',borderColor:'rgba(13,216,138,.25)',background:'rgba(13,216,138,.05)'}} 
                                         onClick={()=>{setActivateModal(s);setPayMethod('mpesa');setPayRef('');setActivateSuccess(false);}}>Activate</button>
                                       
@@ -1352,7 +1317,7 @@ export default function SuperAdmin({ currentUser, onSignOut }) {
                     if (filtered.length===0) return <div className="empty"><div className="empty-ico">📋</div>No payment records found.</div>;
                     return (
                       <div className="tbl-w">
-                        <table>
+                        <table className="data-table responsive-table">
                           <thead>
                             <tr><th>School</th><th>Amount</th><th>Code</th><th>Status</th><th>Plan</th><th>Date</th><th>Time</th></tr>
                           </thead>
@@ -1361,15 +1326,15 @@ export default function SuperAdmin({ currentUser, onSignOut }) {
                               const d = new Date(p.created_at);
                               const statusCls = p.status==='Approved'?'pill pill-g':p.status==='Rejected'?'pill pill-r':'pill pill-y';
                               return (
-                                <tr key={p.id}>
-                                  <td className="td-b">{p.school_profiles?.school_name||'Unknown'}</td>
-                                  <td className="td-m" style={{color:'var(--te)',fontWeight:700}}>{fmtMoney(p.amount)}</td>
-                                  <td style={{fontSize:'.7rem',fontFamily:'var(--fh)'}}>{p.transaction_code||'—'}</td>
-                                  <td><span className={statusCls}>{p.status}</span></td>
-                                  <td style={{textTransform:'capitalize'}}>{p.school_profiles?.subscription_plan||'—'}</td>
-                                  <td>{d.toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'})}</td>
-                                  <td style={{fontSize:'.68rem',color:'var(--sub)'}}>{d.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'})}</td>
-                                </tr>
+                                  <tr key={p.id}>
+                                    <td data-label="School" className="td-b">{p.school_profiles?.school_name||'Unknown'}</td>
+                                    <td data-label="Amount" className="td-m" style={{color:'var(--te)',fontWeight:700}}>{fmtMoney(p.amount)}</td>
+                                    <td data-label="Code" style={{fontSize:'.7rem',fontFamily:'var(--fh)'}}>{p.transaction_code||'—'}</td>
+                                    <td data-label="Status"><span className={statusCls}>{p.status}</span></td>
+                                    <td data-label="Plan" style={{textTransform:'capitalize'}}>{p.school_profiles?.subscription_plan||'—'}</td>
+                                    <td data-label="Date">{d.toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'})}</td>
+                                    <td data-label="Time" style={{fontSize:'.68rem',color:'var(--sub)'}}>{d.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'})}</td>
+                                  </tr>
                               );
                             })}
                           </tbody>

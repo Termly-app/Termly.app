@@ -386,14 +386,10 @@ function App() {
       ) : (
         <div className={`app-layout ${isPlatformAdmin ? 'theme-onyx' : 'app-shell'}`}>
           <>
-            {!isPlatformAdmin && (
-              <>
-                <button className="mobile-toggle" onClick={() => setSidebarOpen(!sidebarOpen)}>
-                  {sidebarOpen ? '✕' : '☰'}
-                </button>
-                {sidebarOpen && <div className="sidebar-overlay" onClick={() => setSidebarOpen(false)} />}
-              </>
-            )}
+            <button className="mobile-toggle" onClick={() => setSidebarOpen(!sidebarOpen)}>
+              {sidebarOpen ? '✕' : '☰'}
+            </button>
+            {sidebarOpen && <div className="sidebar-overlay" onClick={() => setSidebarOpen(false)} />}
             
             <Sidebar 
               isOpen={sidebarOpen} 
@@ -444,7 +440,7 @@ function App() {
                     <Route path="/attendance" element={subscriptionActive ? <Attendance currentUser={currentUser} /> : <Navigate to="/billing" />} />
                     <Route path="/security" element={<Security currentUser={currentUser} />} />
                     <Route path="/settings" element={<Settings currentUser={currentUser} />} />
-                    <Route path="/super-admin" element={<SuperAdmin currentUser={currentUser} />} />
+                    <Route path="/super-admin" element={<SuperAdmin currentUser={currentUser} sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />} />
                     <Route path="/billing" element={<Billing />} />
                     <Route path="/" element={<Navigate to={isPlatformAdmin ? "/super-admin" : "/dashboard"} replace />} />
                     <Route path="*" element={<Navigate to={isPlatformAdmin ? "/super-admin" : "/dashboard"} replace />} />

@@ -222,10 +222,10 @@ function RecordsTab({ teachers, search, setSearch, total, getTeacherSubjects, ge
         </span>
       </div>
 
-      {/* Desktop Table */}
-      <div className="card hide-mobile">
+      {/* Table Card */}
+      <div className="card">
         <div className="card-body" style={{ padding: 0 }}>
-          <table className="data-table">
+          <table className="data-table responsive-table">
             <thead>
               <tr><th>Name</th><th>Phone</th><th>Subjects</th><th>Classes</th><th>Status</th><th>Actions</th></tr>
             </thead>
@@ -237,10 +237,10 @@ function RecordsTab({ teachers, search, setSearch, total, getTeacherSubjects, ge
                 const cls = getTeacherClasses(t.id);
                 return (
                   <tr key={t.id}>
-                    <td><strong>{t.name}</strong></td>
-                    <td>{t.phone}</td>
-                    <td>
-                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
+                    <td data-label="Name"><strong>{t.name}</strong></td>
+                    <td data-label="Phone">{t.phone}</td>
+                    <td data-label="Subjects">
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, justifyContent:'inherit' }}>
                         {subs.length > 0 ? subs.map(s => (
                           <span key={s} className="badge badge-info" style={{ fontSize: '0.68rem' }}>
                             {s.length > 12 ? s.substring(0, 10) + '..' : s}
@@ -248,20 +248,20 @@ function RecordsTab({ teachers, search, setSearch, total, getTeacherSubjects, ge
                         )) : <span className="text-muted" style={{ fontSize: '0.8rem' }}>None</span>}
                       </div>
                     </td>
-                    <td>
-                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
+                    <td data-label="Classes">
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, justifyContent:'inherit' }}>
                         {cls.length > 0 ? cls.map(c => (
                           <span key={c} className="badge badge-ghost" style={{ fontSize: '0.68rem' }}>{c}</span>
                         )) : <span className="text-muted" style={{ fontSize: '0.8rem' }}>None</span>}
                       </div>
                     </td>
-                    <td>
+                    <td data-label="Status">
                       <span className={`badge ${t.status === 'Active' ? 'badge-success' : 'badge-ghost'}`}>
                         {t.status === 'Active' ? '● Active' : '○ Left'}
                       </span>
                     </td>
-                    <td>
-                      <div className="inline-flex">
+                    <td data-label="Actions">
+                      <div className="inline-flex" style={{justifyContent:'inherit'}}>
                         <button className="btn btn-ghost btn-sm" onClick={() => onEdit(t)}>✏️</button>
                         <button className="btn btn-ghost btn-sm" onClick={() => onDelete(t.id)}>🗑️</button>
                       </div>
@@ -274,42 +274,6 @@ function RecordsTab({ teachers, search, setSearch, total, getTeacherSubjects, ge
         </div>
       </div>
 
-      {/* Mobile Cards */}
-      <div className="show-mobile-only" style={{ display: 'none' }}>
-        {teachers.map(t => {
-          const subs = getTeacherSubjects(t.id);
-          const cls = getTeacherClasses(t.id);
-          return (
-            <div key={t.id} className="card" style={{ marginBottom: 12 }}>
-              <div className="card-body" style={{ padding: 16 }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                  <div>
-                    <strong style={{ fontSize: '1rem' }}>{t.name}</strong>
-                    <div className="text-muted" style={{ fontSize: '0.82rem', marginTop: 2 }}>📞 {t.phone}</div>
-                  </div>
-                  <span className={`badge ${t.status === 'Active' ? 'badge-success' : 'badge-ghost'}`} style={{ fontSize: '0.7rem' }}>
-                    {t.status === 'Active' ? '● Active' : '○ Left'}
-                  </span>
-                </div>
-                {subs.length > 0 && (
-                  <div style={{ marginTop: 10, display: 'flex', flexWrap: 'wrap', gap: 4 }}>
-                    {subs.map(s => <span key={s} className="badge badge-info" style={{ fontSize: '0.68rem' }}>{s.length > 15 ? s.substring(0, 13) + '..' : s}</span>)}
-                  </div>
-                )}
-                {cls.length > 0 && (
-                  <div style={{ marginTop: 6, display: 'flex', flexWrap: 'wrap', gap: 4 }}>
-                    {cls.map(c => <span key={c} className="badge badge-ghost" style={{ fontSize: '0.68rem' }}>{c}</span>)}
-                  </div>
-                )}
-                <div style={{ marginTop: 10, display: 'flex', gap: 8 }}>
-                  <button className="btn btn-ghost btn-sm" onClick={() => onEdit(t)}>✏️ Edit</button>
-                  <button className="btn btn-ghost btn-sm" onClick={() => onDelete(t.id)}>🗑️ Delete</button>
-                </div>
-              </div>
-            </div>
-          );
-        })}
-      </div>
     </>
   );
 }

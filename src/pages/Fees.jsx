@@ -198,12 +198,26 @@ export default function Fees() {
         <select className="form-select" value={statusFilter} onChange={e=>setStatusFilter(e.target.value)}><option value="All">All Status</option><option value="Paid">Fully Paid</option><option value="Partial">Partial</option><option value="Unpaid">Unpaid</option></select>
       </div>
       <div className="card"><div className="card-body" style={{padding:0}}>
-        <table className="data-table"><thead><tr><th>Student</th><th>Class</th><th>Total Fee</th><th>Paid</th><th>Balance</th><th>Status</th><th>Action</th></tr></thead>
+        <table className="data-table responsive-table"><thead><tr><th>Student</th><th>Class</th><th>Total Fee</th><th>Paid</th><th>Balance</th><th>Status</th><th>Action</th></tr></thead>
           <tbody>{filtered.map(s=>{
             const f=fees[s.id]||{totalFee:(profile.gradeFees?.[s.class]||TERM_FEE),paid:0,balance:(profile.gradeFees?.[s.class]||TERM_FEE)};
             const st=f.balance<=0?'Paid':f.paid>0?'Partial':'Unpaid';
-            return(<tr key={s.id}><td><strong>{s.name}</strong><br/><span className="text-muted" style={{fontSize:'0.78rem'}}>{s.admNo}</span></td><td>{s.class}</td><td>{formatKSh(f.totalFee)}</td><td className="text-success font-bold">{formatKSh(f.paid)}</td><td className={f.balance>0?'text-danger font-bold':'text-success font-bold'}>{formatKSh(f.balance)}</td><td><span className={`badge ${st==='Paid'?'badge-success':st==='Partial'?'badge-warning':'badge-danger'}`}>{st}</span></td>
-              <td><div className="inline-flex">{f.balance>0&&<button className="btn btn-primary btn-sm" onClick={()=>setShowPayment(s)}>💳 Pay</button>}{f.payments&&f.payments.length>0&&<button className="btn btn-ghost btn-sm" onClick={()=>setShowReceipt({...f.payments[f.payments.length-1],studentName:s.name,studentClass:s.class,admNo:s.admNo})}>🧾</button>}</div></td></tr>);
+            return(
+              <tr key={s.id}>
+                <td data-label="Student"><strong>{s.name}</strong><br/><span className="text-muted" style={{fontSize:'0.78rem'}}>{s.admNo}</span></td>
+                <td data-label="Class">{s.class}</td>
+                <td data-label="Total Fee">{formatKSh(f.totalFee)}</td>
+                <td data-label="Paid" className="text-success font-bold">{formatKSh(f.paid)}</td>
+                <td data-label="Balance" className={f.balance>0?'text-danger font-bold':'text-success font-bold'}>{formatKSh(f.balance)}</td>
+                <td data-label="Status"><span className={`badge ${st==='Paid'?'badge-success':st==='Partial'?'badge-warning':'badge-danger'}`}>{st}</span></td>
+                <td data-label="Action">
+                  <div className="inline-flex" style={{justifyContent:'inherit'}}>
+                    {f.balance>0&&<button className="btn btn-primary btn-sm" onClick={()=>setShowPayment(s)}>💳 Pay</button>}
+                    {f.payments&&f.payments.length>0&&<button className="btn btn-ghost btn-sm" onClick={()=>setShowReceipt({...f.payments[f.payments.length-1],studentName:s.name,studentClass:s.class,admNo:s.admNo})}>🧾</button>}
+                  </div>
+                </td>
+              </tr>
+            );
           })}</tbody></table>
       </div></div>
       {showPayment&&<PaymentModal student={showPayment} fee={fees[showPayment.id] || {totalFee:(profile.gradeFees?.[showPayment.class]||TERM_FEE),paid:0,balance:(profile.gradeFees?.[showPayment.class]||TERM_FEE)}} onPay={handlePayment} onClose={()=>setShowPayment(null)}/>}

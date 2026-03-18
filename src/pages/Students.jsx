@@ -146,7 +146,7 @@ export default function Students({ currentUser }) {
           </div>
         </div>
         <div style={{opacity:loading?0.6:1}}>
-          <table className="data-table">
+          <table className="data-table responsive-table">
             <thead>
               <tr>
                 <th>Full Name</th><th>Adm No</th><th>Class</th><th>Level</th><th>Stream</th>
@@ -165,26 +165,26 @@ export default function Students({ currentUser }) {
                 const lb=getLb(s.class);
                 return(
                   <tr key={s.id}>
-                    <td>
-                      <div style={{display:'flex',alignItems:'center',gap:10}}>
+                    <td data-label="Full Name">
+                      <div style={{display:'flex',alignItems:'center',gap:10,justifyContent:'inherit'}}>
                         <div style={{width:32,height:32,borderRadius:'50%',background:avBg(s.name),color:'#fff',display:'flex',alignItems:'center',justifyContent:'center',fontSize:'0.72rem',fontWeight:700,flexShrink:0}}>{initials(s.name)}</div>
-                        <div>
+                        <div style={{textAlign:'left'}}>
                           <div style={{fontWeight:600,color:'var(--primary)',cursor:'pointer'}} onClick={()=>setSelectedStudent(s)}>{s.name}</div>
                           <div style={{fontSize:'0.7rem',color:'var(--text-muted)'}}>{s.gender}</div>
                         </div>
                       </div>
                     </td>
-                    <td><code style={{fontSize:'0.78rem',color:'var(--text-light)'}}>{s.admNo}</code></td>
-                    <td><span className="badge badge-info">{s.class}</span></td>
-                    <td><span className={`level-badge ${lb.cls}`}>{lb.ico} {getLevelForGrade(s.class)}</span></td>
-                    <td>{s.stream||<span className="text-muted">—</span>}</td>
-                    <td>{s.parent}</td>
-                    <td style={{color:'var(--text-light)',fontSize:'0.85rem'}}>{s.parentPhone}</td>
+                    <td data-label="Adm No"><code style={{fontSize:'0.78rem',color:'var(--text-light)'}}>{s.admNo}</code></td>
+                    <td data-label="Class"><span className="badge badge-info">{s.class}</span></td>
+                    <td data-label="Level"><span className={`level-badge ${lb.cls}`}>{lb.ico} {getLevelForGrade(s.class)}</span></td>
+                    <td data-label="Stream">{s.stream||<span className="text-muted">—</span>}</td>
+                    <td data-label="Parent">{s.parent}</td>
+                    <td data-label="Phone" style={{color:'var(--text-light)',fontSize:'0.85rem'}}>{s.parentPhone}</td>
                     {!isTeacher&&(
-                      <td>{(()=>{const b=fd.balance!==undefined?fd.balance:(profile.gradeFees?.[s.class]||TERM_FEE);return<span style={{fontWeight:700,color:b>0?'var(--danger)':'var(--success)'}}>{fmtKSh(b)}</span>;})()}</td>
+                      <td data-label="Fee Balance">{(()=>{const b=fd.balance!==undefined?fd.balance:(profile.gradeFees?.[s.class]||TERM_FEE);return<span style={{fontWeight:700,color:b>0?'var(--danger)':'var(--success)'}}>{fmtKSh(b)}</span>;})()}</td>
                     )}
                     {isAdmin&&(
-                      <td style={{textAlign:'center'}}>
+                      <td data-label="Actions" style={{textAlign:'center'}}>
                         <div style={{display:'inline-flex',gap:4}}>
                           <button className="btn btn-ghost btn-sm" onClick={()=>{setEditingStudent(s);setShowModal(true);}}>✏️</button>
                           <button className="btn btn-ghost btn-sm" onClick={()=>handleDelete(s.id)}>🗑️</button>

@@ -63,7 +63,7 @@ export function getCurrentAuthUser() {
 
 // ============= SCHOOLS =============
 export async function getRegisteredSchools() {
-  const { data, error } = await supabase.from('schools').select('id, name, email, owner_id, created_at');
+  const { data, error } = await supabase.from('schools').select('id, name, email, plan, owner_id, phone, location, created_at');
   if (error) throw error;
   return data || [];
 }
@@ -73,7 +73,7 @@ export async function registerSchool(name, email, plan, authUserId, adminName, a
   const { data: school, error: schoolErr } = await supabase
     .from('schools')
     .insert({ name, email, plan, owner_id: authUserId, phone, location })
-    .select('id, name, email, plan, owner_id, created_at')
+    .select('id, name, email, plan, owner_id, phone, location, created_at')
     .single();
   if (schoolErr) throw schoolErr;
 
@@ -132,7 +132,7 @@ export async function registerSchool(name, email, plan, authUserId, adminName, a
 export async function findSchool(schoolEmail) {
   const { data, error } = await supabase
     .from('schools')
-    .select('id, name, email, owner_id, created_at, school_profiles(*)')
+    .select('id, name, email, plan, owner_id, phone, location, created_at, school_profiles(*)')
     .eq('email', schoolEmail)
     .maybeSingle();
   if (error) throw error;
@@ -146,7 +146,7 @@ export async function repairSchoolProfile(schoolId) {
   // 1. Get school info
   const { data: school, error: sErr } = await supabase
     .from('schools')
-    .select('id, name, email, owner_id, created_at')
+    .select('id, name, email, plan, owner_id, phone, location, created_at')
     .eq('id', schoolId)
     .single();
   if (sErr) throw sErr;
@@ -1561,7 +1561,7 @@ export async function getAllSchools() {
   // 1. Fetch schools and profiles
   const { data: schools, error: sErr } = await supabase
     .from('schools')
-    .select('id, name, email, owner_id, created_at, school_profiles(*)');
+    .select('id, name, email, plan, owner_id, phone, location, created_at, school_profiles(*)');
   
   if (sErr) {
     console.error('Error fetching all schools:', sErr);
