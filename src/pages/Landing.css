@@ -402,7 +402,11 @@ h2.landing-h2{
 
 /* ══ PRICING ══ */
 .pricing{padding:100px 5%;background:var(--off);border-top:1px solid var(--border)}
-.p-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;max-width:760px;margin:0 auto}
+.p-grid{
+  display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));
+  gap:24px;max-width:1100px;margin:0 auto;
+  padding:0 20px;
+}
 .pc{
   background:#fff;border:1px solid var(--border);
   border-radius:24px;padding:40px 36px;
@@ -536,7 +540,9 @@ footer.landing-footer{
   .feat-grid-2{grid-template-columns:1fr}
   .stats-row{grid-template-columns:1fr 1fr}
   .sc{border-right:none;border-bottom:1px solid var(--border);padding:40px 24px}
-  .p-grid{grid-template-columns:1fr;max-width:440px}
+  .p-grid{grid-template-columns:1fr;max-width:440px;gap:16px}
+  .pc,.pbtn{cursor:auto}
+  .pc{padding:32px 24px}
   .fl-1,.fl-2,.fl-3,.fl-4,.fl-5,.fl-6{display:none}
   .nlink,.nsep{display:none}
   .ft-grid-w{grid-template-columns:1fr 1fr}

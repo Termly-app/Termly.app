@@ -432,18 +432,13 @@ export default function Landing() {
           <h2 className="landing-h2">Simple, transparent pricing.</h2>
           <p className="sec-p">All plans include M-PESA integration and digital attendance. Billed per term — no lock-in.</p>
         </div>
-        <div className="p-grid" style={{
-          display: 'grid', 
-          gridTemplateColumns: `repeat(${Math.max(1, Object.entries(settings?.pricing || {}).filter(([_, p]) => p.active !== false).length)}, 1fr)`,
-          gap: '24px',
-          maxWidth: '1100px',
-          margin: '0 auto'
-        }}>
+        <div className="p-grid">
           {Object.entries(settings?.pricing || {})
             .filter(([_, p]) => p.active !== false)
+            .sort((a, b) => (a[1].price || 0) - (b[1].price || 0))
             .map(([name, p], idx) => (
               <div key={name} className={`pc reveal ${idx === 1 ? 'pc-pop' : ''}`}>
-                {idx === 1 && <div className="pop-tag">Best Value</div>}
+                {idx === 1 && <div className="pop-tag">Most Common</div>}
                 <div className="pplan">{name}</div>
                 <div className="pprice"><sup>KSh</sup> {p.price?.toLocaleString() || '0'}</div>
                 <div className="pp">per term · up to {p.limit?.toLocaleString() || '0'} students</div>
