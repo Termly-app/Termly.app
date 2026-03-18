@@ -25,10 +25,11 @@ export default function CustomCursor({ disabled }) {
     
     let ringAnimId;
     const animateCursor = () => {
-      // Instant Dot
+      // Instant Dot (using left/top for maximum browser compatibility)
       const cursor = cursorRef.current;
       if (cursor) {
-        cursor.style.transform = `translate3d(${mx}px, ${my}px, 0) translate(-50%, -50%)`;
+        cursor.style.left = (mx - 6) + 'px';
+        cursor.style.top = (my - 6) + 'px';
         cursor.style.opacity = '1';
         cursor.style.visibility = 'visible';
       }
@@ -81,7 +82,7 @@ export default function CustomCursor({ disabled }) {
 
   return (
     <>
-      <div className="cursor" ref={cursorRef} id="cursor"></div>
+      <div className="sh-cursor-dot" ref={cursorRef} id="cursor"></div>
       <div className="cursor-ring" ref={ringRef} id="cursorRing"></div>
     </>
   );

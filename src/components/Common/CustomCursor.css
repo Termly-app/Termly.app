@@ -1,17 +1,19 @@
 /* ══ CUSTOM CURSOR Styles ══ */
-.cursor {
+.sh-cursor-dot {
   position: fixed;
-  width: 10px;
-  height: 10px;
-  background: #7B61FF !important; /* Brighter, more visible purple */
+  width: 12px;
+  height: 12px;
+  background: #FF00FF !important; /* Hyper-visible Magenta */
+  border: 2px solid #FFFFFF;
   border-radius: 50%;
   pointer-events: none;
-  z-index: 2000000000; /* Super high z-index */
-  box-shadow: 0 0 10px rgba(107, 78, 255, 0.4);
-  transform: translate(-50%, -50%);
-  /* Removed transitions that cause lag or invisibility during move */
-  transition: width .25s, height .25s, background .25s;
+  z-index: 2147483647;
+  box-shadow: 0 0 15px rgba(255, 0, 255, 0.6);
+  transform: none !important;
+  transition: width .2s, height .2s, background .2s;
   opacity: 0;
+  top: 0;
+  left: 0;
 }
 .cursor-ring {
   position: fixed;
@@ -27,10 +29,10 @@
   opacity: 0;
 }
 
-body.cursor-hover .cursor {
-  width: 4px;
-  height: 4px;
-  background: #6B4EFF;
+body.cursor-hover .sh-cursor {
+  width: 6px;
+  height: 6px;
+  background: #FF00FF !important;
 }
 
 body.cursor-hover .cursor-ring {
