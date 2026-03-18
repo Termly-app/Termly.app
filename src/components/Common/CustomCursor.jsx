@@ -23,7 +23,7 @@ export default function CustomCursor({ disabled }) {
       mx = x;
       my = y;
       if (cursor) {
-        cursor.style.transform = `translate(${x}px, ${y}px)`;
+        cursor.style.transform = `translate(${x}px, ${y}px) translate(-50%, -50%)`;
         cursor.style.opacity = '1';
       }
       if (ring) {

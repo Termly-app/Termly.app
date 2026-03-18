@@ -7,8 +7,9 @@
   border-radius: 50%;
   pointer-events: none;
   z-index: 1000000;
-  mix-blend-mode: difference;
-  transform: translate(-50%, -50%);
+  /* Removed mix-blend-mode: difference to ensure dot is always visible */
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.4), 0 0 2px rgba(255, 255, 255, 0.8);
+  transform: translate(-50%, -50%); /* Consistent centering with JS */
   transition: transform .08s, width .25s, height .25s, background .25s, opacity .3s;
   opacity: 0;
 }
