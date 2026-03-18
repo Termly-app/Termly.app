@@ -953,10 +953,10 @@ export default function SuperAdmin({ currentUser, sidebarOpen, setSidebarOpen, o
       {/* ══ SIDEBAR ══ */}
       <aside className={`sa-sidebar${sidebarOpen ? ' open' : ''}`}>
         <div className="sb-brand">
-          <div className="sb-logo">⌬</div>
-          <div>
+          <div className="sb-logo"><div className="sb-logo-grid"><span/><span/><span/><span/></div></div>
+          <div className="sb-brand-txt">
             <div className="sb-name">ShuleSoft</div>
-            <div className="sb-tag">COMMAND CENTER</div>
+            <div className="sb-tag" style={{lineHeight:1.1,fontSize:'.55rem'}}>PLATFORM<br/>ENGINE</div>
           </div>
         </div>
 
@@ -977,7 +977,7 @@ export default function SuperAdmin({ currentUser, sidebarOpen, setSidebarOpen, o
             <span className="ss-lbl">System Status</span>
             <div className="ss-dot"><span className="sa-dot" /> Operational</div>
           </div>
-          <div className="ss-name">Cloud Nexus v2.0</div>
+          <div className="ss-name">ShuleSoft Core v2.0</div>
         </div>
 
         <div className="sb-signout" onClick={handleSignOut}>
@@ -1194,7 +1194,7 @@ export default function SuperAdmin({ currentUser, sidebarOpen, setSidebarOpen, o
                   {filteredSchools.length===0
                     ? <div className="empty"><div className="empty-ico">🏛️</div>{q?'No schools match your search.':'No schools registered yet.'}</div>
                     : <div className="tbl-w">
-                        <table className="data-table responsive-table sa-table">
+                        <table className="data-table sa-table">
                           <thead>
                             <tr><th>School</th><th>Plan</th><th>Staff Usage</th><th>Location</th><th>Students</th><th>Joined</th><th>Status</th><th>Revenue</th><th>Sub</th><th>Action</th></tr>
                           </thead>
@@ -1359,7 +1359,7 @@ export default function SuperAdmin({ currentUser, sidebarOpen, setSidebarOpen, o
                      if (filtered.length===0) return <div className="empty"><div className="empty-ico">📋</div>No payment records found.</div>;
                     return (
                       <div className="tbl-w">
-                        <table className="data-table responsive-table sa-table">
+                        <table className="data-table sa-table">
                           <thead>
                             <tr><th>School</th><th>Amount</th><th>Code</th><th>Status</th><th>Plan</th><th>Date</th><th>Time</th></tr>
                           </thead>
@@ -1656,9 +1656,7 @@ export default function SuperAdmin({ currentUser, sidebarOpen, setSidebarOpen, o
 
 
 
-            <div style={{padding:'24px 0 6px',textAlign:'center',opacity:.2,borderTop:'1px solid var(--edge)',marginTop:20}}>
-              <div style={{fontFamily:'var(--fh)',fontSize:'.65rem',color:'var(--sub)'}}>ShuleSoft Platform Engine · {now.getFullYear()}</div>
-            </div>
+            <div style={{padding:'24px 0 6px',textAlign:'center',opacity:.2,borderTop:'1px solid var(--edge)',marginTop:20}}/>
 
             {/* ΓòÉΓòÉ ACTIVATE MODAL ΓòÉΓòÉ */}
             <div className={`mo${activateModal?' open':''}`} onClick={e=>{if(e.target===e.currentTarget)setActivateModal(null)}}>

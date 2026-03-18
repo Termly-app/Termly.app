@@ -42,7 +42,7 @@
   --transition: all 0.2s ease;
 }
 
-/* ====== ONYX NEXUS DESIGN SYSTEM (High-Contrast Dark) ====== */
+/* ====== SHULESOFT COMMAND TOWER (High-Contrast Dark) ====== */
 
 .theme-onyx {
   --bg: #0C0E0D;
@@ -198,11 +198,16 @@
 
 .theme-onyx .sb-brand { padding: 32px 24px; display: flex; align-items: center; gap: 15px; border: none !important; }
 .theme-onyx .sb-logo { 
-  width: 48px; height: 48px; border-radius: 12px; 
-  background: var(--vi); 
+  width: 42px; height: 42px; border-radius: 10px; 
+  background: linear-gradient(135deg, #6366f1, #4f46e5);
   display: flex; align-items: center; justify-content: center; 
-  font-family: var(--fh); font-weight: 700; font-size: 1.4rem; color: #fff; 
-  box-shadow: 0 8px 30px rgba(124, 92, 252, .3); flex-shrink: 0; 
+  box-shadow: 0 8px 25px rgba(79, 70, 229, 0.25); flex-shrink: 0; 
+}
+.theme-onyx .sb-logo-grid {
+  display: grid; grid-template-columns: repeat(2, 1fr); gap: 2px;
+}
+.theme-onyx .sb-logo-grid span {
+  width: 7px; height: 7px; background: #fff; border-radius: 1.5px;
 }
 .theme-onyx .sb-brand-txt { display: flex; flex-direction: column; }
 .theme-onyx .sb-name { font-family: var(--fb); font-size: .92rem; font-weight: 700; color: #fff; letter-spacing: -0.01em; }
