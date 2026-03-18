@@ -1,15 +1,14 @@
 /* ══ CUSTOM CURSOR Styles ══ */
 .cursor {
   position: fixed;
-  width: 10px;
-  height: 10px;
-  background: #FFFFFF;
+  width: 8px;
+  height: 8px;
+  background: #6B4EFF; /* Primary brand color for visibility */
   border-radius: 50%;
   pointer-events: none;
   z-index: 1000000;
-  /* Removed mix-blend-mode: difference to ensure dot is always visible */
-  box-shadow: 0 0 10px rgba(0, 0, 0, 0.4), 0 0 2px rgba(255, 255, 255, 0.8);
-  transform: translate(-50%, -50%); /* Consistent centering with JS */
+  box-shadow: 0 0 10px rgba(107, 78, 255, 0.3);
+  transform: translate(-50%, -50%);
   transition: transform .08s, width .25s, height .25s, background .25s, opacity .3s;
   opacity: 0;
 }
@@ -28,9 +27,9 @@
 }
 
 body.cursor-hover .cursor {
-  width: 6px;
-  height: 6px;
-  background: #FFFFFF;
+  width: 4px;
+  height: 4px;
+  background: #6B4EFF;
 }
 
 body.cursor-hover .cursor-ring {
