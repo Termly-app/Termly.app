@@ -239,13 +239,10 @@ const CSS = `
   .sa-root{--sb:190px}
   .sa .kpi-grid{grid-template-columns:repeat(3,1fr)}
   .sa .charts-grid,.sa .charts-grid-3,.sa .bot-grid{grid-template-columns:1fr}
-  .sa .ph-right{display:none}
 }
+.sa .sa-hide-mobile{display:table-cell !important}
 @media(max-width:900px){
-  .sa-root{--sb:180px}
-  .sa .kpi-grid{grid-template-columns:repeat(2,1fr)}
-  .sa .charts-grid,.sa .charts-grid-3,.sa .bot-grid{grid-template-columns:1fr}
-  .sa .ph-right{display:none}
+  .sa .sa-hide-mobile{display:none !important}
   .sa th,.sa td{padding:8px 9px}
 }
 @media(max-width:768px){
@@ -979,7 +976,16 @@ export default function SuperAdmin({ currentUser, sidebarOpen, setSidebarOpen, o
           <button className="sa-close-btn" onClick={() => setSidebarOpen(false)}>✕</button>
         </div>
 
-        <div className="sb-sec">Main Controls</div>
+        <div className="sb-period">
+          <div className="sb-lbl">Academic Period</div>
+          <select value={subEndDate} onChange={(e) => setSubEndDate(e.target.value)}>
+            <option value="2026-04-30">2026 — Term 1 (Active)</option>
+            <option value="2026-08-31">2026 — Term 2</option>
+            <option value="2026-12-31">2026 — Term 3</option>
+          </select>
+        </div>
+
+        <div className="sb-sec">General</div>
         <div className="sb-nav-list">
           {navItems.map(item => (
             <div key={item.id} className={`sb-nav${activeTab === item.id ? ' on' : ''}`} onClick={() => setTab(item.id)}>
@@ -1215,7 +1221,7 @@ export default function SuperAdmin({ currentUser, sidebarOpen, setSidebarOpen, o
                     : <div className="tbl-w">
                         <table className="sa-table">
                           <thead>
-                            <tr><th>School</th><th>Plan</th><th>Staff Usage</th><th className="hide-mobile">Location</th><th>Students</th><th>Joined</th><th>Status</th><th>Revenue</th><th>Sub</th><th>Action</th></tr>
+                            <tr><th>School</th><th>Plan</th><th>Staff Usage</th><th className="sa-hide-mobile">Location</th><th>Students</th><th>Joined</th><th>Status</th><th>Revenue</th><th>Sub</th><th>Action</th></tr>
                           </thead>
                           <tbody>
                             {filteredSchools.map(s=>{
@@ -1256,7 +1262,7 @@ export default function SuperAdmin({ currentUser, sidebarOpen, setSidebarOpen, o
                                       {(s._staffCount||0) > adminLimit && <span title="Seat limit exceeded" style={{ cursor: 'help' }}>⚠️</span>}
                                     </div>
                                   </td>
-                                  <td data-label="Location" className="hide-mobile">{s.location || pData.location || 'Kenya'}</td>
+                                  <td data-label="Location" className="sa-hide-mobile">{s.location || pData.location || 'Kenya'}</td>
                                   <td data-label="Students" className="td-m">
                                     <div style={{fontWeight:600}}>{s._studentCount || 0}</div>
                                     <div style={{fontSize:'.6rem',color:'var(--sub)'}}>Limit: {studentLimit}</div>
@@ -1380,7 +1386,7 @@ export default function SuperAdmin({ currentUser, sidebarOpen, setSidebarOpen, o
                       <div className="tbl-w">
                         <table className="sa-table">
                           <thead>
-                            <tr><th>School</th><th>Amount</th><th>Code</th><th>Status</th><th className="hide-mobile">Plan</th><th>Date</th><th className="hide-mobile">Time</th></tr>
+                            <tr><th>School</th><th>Amount</th><th>Code</th><th>Status</th><th className="sa-hide-mobile">Plan</th><th>Date</th><th className="sa-hide-mobile">Time</th></tr>
                           </thead>
                           <tbody>
                             {filtered.map(p=>{
@@ -1392,9 +1398,9 @@ export default function SuperAdmin({ currentUser, sidebarOpen, setSidebarOpen, o
                                     <td data-label="Amount" className="td-m" style={{color:'var(--te)',fontWeight:700}}>{fmtMoney(p.amount)}</td>
                                     <td data-label="Code" style={{fontSize:'.7rem',fontFamily:'var(--fh)'}}>{p.transaction_code||'—'}</td>
                                     <td data-label="Status"><span className={statusCls}>{p.status}</span></td>
-                                    <td data-label="Plan" className="hide-mobile" style={{textTransform:'capitalize'}}>{p.school_profiles?.subscription_plan||'—'}</td>
+                                    <td data-label="Plan" className="sa-hide-mobile" style={{textTransform:'capitalize'}}>{p.school_profiles?.subscription_plan||'—'}</td>
                                     <td data-label="Date">{d.toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'})}</td>
-                                    <td data-label="Time" className="hide-mobile" style={{fontSize:'.68rem',color:'var(--sub)'}}>{d.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'})}</td>
+                                    <td data-label="Time" className="sa-hide-mobile" style={{fontSize:'.68rem',color:'var(--sub)'}}>{d.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'})}</td>
                                   </tr>
                               );
                             })}
