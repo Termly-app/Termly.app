@@ -71,12 +71,13 @@ export default function Dashboard({ currentUser, onLogout, currentPeriodId }) {
     const unsubs = [
       subscribeToChanges('students', loadData), subscribeToChanges('teachers', loadData),
       subscribeToChanges('payments', loadData), subscribeToChanges('attendance', loadData),
-      subscribeToChanges('marks', loadData)
+      subscribeToChanges('marks', loadData),
+      subscribeToChanges('users', loadData)
     ];
     return () => {
       unsubs.forEach(u => u());
     };
-  }, [currentPeriodId]);
+  }, [currentPeriodId, currentUser]);
 
   const PLATFORM_ADMINS = ['admin@shulesoft.com', 'shulesoft8@gmail.com'];
   const isPlatformAdmin = currentUser?.email && PLATFORM_ADMINS.includes(currentUser.email);

@@ -31,7 +31,7 @@ export const planAmt = (plan, settings) => {
     const key = Object.keys(settings.pricing).find(k => k.toLowerCase() === p);
     if (key) return settings.pricing[key].price;
   }
-  return { champe: 50000, fala: 5999, starter: 5999 }[p] || 5999;
+  return { champe: 50000, starter: 5999 }[p] || 5999;
 };
 
 // ── Get all plans from settings ──────────────────────────────────────────

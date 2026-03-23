@@ -79,7 +79,7 @@ export default function SchoolsTab({
                   const p = s.school_profiles?.[0] || {};
                   const isActive = isSchoolActive(s);
 
-                  const curPlan   = s.plan || p.subscription_plan || 'Fala';
+                  const curPlan   = s.plan || p.subscription_plan || 'Starter';
                   const pricing   = settings?.pricing || {};
                   const planKey   = Object.keys(pricing).find(k => k.toLowerCase() === curPlan.toLowerCase());
                   const planInfo  = planKey ? pricing[planKey] : { price:5999, limit:5 };

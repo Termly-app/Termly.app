@@ -259,7 +259,7 @@ export default function SuperAdmin({ currentUser, sidebarOpen, setSidebarOpen, o
   const q = searchQuery.toLowerCase();
   const filteredSchools = schools.filter(s => {
     const p      = s.school_profiles?.[0] || {};
-    const sPlan  = (s.plan || p.subscription_plan || 'Fala').toLowerCase();
+    const sPlan  = (s.plan || p.subscription_plan || 'Starter').toLowerCase();
     const sStatus = (p.subscription_status || 'Active').toLowerCase();
     const matchQ  = !q || s.name?.toLowerCase().includes(q) || p.location?.toLowerCase().includes(q) || sPlan.includes(q);
     const matchS  = filterStatus === 'all'
@@ -339,26 +339,53 @@ export default function SuperAdmin({ currentUser, sidebarOpen, setSidebarOpen, o
   }, [activeTab, schools]);
 
   useChart(subChartRef, (ctx) => {
-    const planLabels = ['Fala', 'Champe'];
+    // 1. Collect all plan names present in system
+    const activePlanNames = plans.map(p => p.name);
+    const inUsePlanNames  = schools.map(s => s.plan || s.school_profiles?.[0]?.subscription_plan).filter(Boolean);
+    
+    // 2. Unique list, prioritizing active plans
+    const planLabels = [...new Set([...activePlanNames, ...inUsePlanNames])];
+    if (planLabels.length === 0) planLabels.push('Starter', 'Pro', 'Enterprise');
+
     const active = planLabels.map(p => schools.filter(s => {
       const d = s.school_profiles?.[0] || {};
-      return d.subscription_status?.toLowerCase() === 'active' && (s.plan || d.subscription_plan || 'Fala').toLowerCase() === p.toLowerCase();
+      const sPlan = (s.plan || d.subscription_plan || 'Starter').toLowerCase();
+      return d.subscription_status?.toLowerCase() === 'active' && sPlan === p.toLowerCase();
     }).length);
+
     const deact = planLabels.map(p => schools.filter(s => {
       const d = s.school_profiles?.[0] || {};
       const st = d.subscription_status?.toLowerCase();
-      return st !== 'active' && !expiredSchools.some(ex => ex.id === s.id) && (s.plan || d.subscription_plan || 'Fala').toLowerCase() === p.toLowerCase();
+      const sPlan = (s.plan || d.subscription_plan || 'Starter').toLowerCase();
+      return st !== 'active' && !expiredSchools.some(ex => ex.id === s.id) && sPlan === p.toLowerCase();
     }).length);
+
     const expd = planLabels.map(p => expiredSchools.filter(s => {
       const d = s.school_profiles?.[0] || {};
-      return (s.plan || d.subscription_plan || 'Fala').toLowerCase() === p.toLowerCase();
+      const sPlan = (s.plan || d.subscription_plan || 'Starter').toLowerCase();
+      return sPlan === p.toLowerCase();
     }).length);
+
     return new window.Chart(ctx, {
       type: 'bar',
-      data: { labels: planLabels, datasets: [{ label:'Active', data:active, backgroundColor:'#ffffff' }, { label:'Deactivated', data:deact, backgroundColor:'#a1a1aa' }, { label:'Expired', data:expd, backgroundColor:'#3f3f46' }] },
-      options: { responsive:true, maintainAspectRatio:false, plugins:{ legend:{display:false}, tooltip:TIP }, scales:{ x:{stacked:true,grid:{display:false},ticks:{color:TC}}, y:{stacked:true,grid:{color:GC},ticks:{color:TC}} } },
+      data: { 
+        labels: planLabels, 
+        datasets: [
+          { label:'Active',      data:active, backgroundColor:'#ffffff' }, 
+          { label:'Deactivated', data:deact,  backgroundColor:'#a1a1aa' }, 
+          { label:'Expired',     data:expd,   backgroundColor:'#3f3f46' }
+        ] 
+      },
+      options: { 
+        responsive:true, maintainAspectRatio:false, 
+        plugins:{ legend:{display:false}, tooltip:TIP }, 
+        scales:{ 
+          x:{stacked:true, grid:{display:false}, ticks:{color:TC}}, 
+          y:{stacked:true, grid:{color:GC}, ticks:{color:TC, stepSize: 1}} 
+        } 
+      },
     });
-  }, [activeTab, schools]);
+  }, [activeTab, schools, plans, settings]);
 
   useChart(weekChartRef, (ctx) => {
     const days = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
