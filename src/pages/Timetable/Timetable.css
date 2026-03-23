@@ -14,8 +14,8 @@
   display:flex; align-items:center; justify-content:center; flex-shrink:0;
   color:rgba(111,82,232,.8);
 }
-.tt-title { font-family:'Inter',sans-serif; font-size:1.1rem; font-weight:700; color:#fff; letter-spacing: -0.01em; }
-.tt-sub   { font-size:.7rem; color:var(--text-muted,#556558); margin-top:2px; }
+.tt-title { font-family:'Inter',sans-serif; font-size:1.1rem; font-weight:700; color:var(--text,#fff); letter-spacing: -0.01em; }
+.tt-sub   { font-size:.7rem; color:var(--text-muted,#556558); margin-top:2px; font-weight:500; }
 .tt-header-actions { display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
 
 /* ─── Panel tabs ────────────────────────────────────────────────────────── */

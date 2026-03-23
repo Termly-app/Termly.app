@@ -145,50 +145,57 @@ export default function Dashboard({ currentUser, onLogout, currentPeriodId }) {
       {/* Page Header */}
       <div className="page-header">
         <div className="page-header-actions">
-          <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-              <h2>{data.profile?.schoolName || 'Dashboard'}</h2>
-            <div style={{ position: 'relative', display: 'inline-flex', alignItems: 'center' }}>
-              <select 
-                className="form-input" 
-                style={{ 
-                  width: 'auto', 
-                  height: 32, 
-                  fontSize: '0.75rem', 
-                  padding: '0 30px 0 12px', 
-                  background: 'rgba(255,255,255,0.05)', 
-                  border: '1px solid rgba(255,255,255,0.1)',
-                  borderRadius: '8px',
-                  color: 'var(--text)',
-                  appearance: 'none',
-                  cursor: 'pointer',
-                  fontWeight: 600
-                }}
-                value={currentPeriodId || ''}
-                onChange={(e) => setActivePeriod(e.target.value)}
-              >
-                {periods.map(p => (
-                  <option key={p.id} value={p.id}>{p.year} {p.term} {p.is_active ? '(Active)' : ''}</option>
-                ))}
-              </select>
-              <div style={{ position: 'absolute', right: 8, pointerEvents: 'none', opacity: 0.5 }}>
-                <ChevronDownIcon size={12} />
+          <div style={{ flex: 1 }}>
+            <div className="flex-center-between mobile-wrap" style={{ gap: 16 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+                <h2 style={{ fontSize: '1.5rem', fontWeight: 800, margin: 0, color: 'var(--text)' }}>
+                  {data.profile?.schoolName || 'Dashboard'}
+                </h2>
+                <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '4px 12px', background: 'rgba(0,0,0,0.03)', borderRadius: 10, border: '1px solid var(--border)' }}>
+                  <span style={{ fontSize: '0.65rem', fontWeight: 700, textTransform: 'uppercase', color: 'var(--text-muted)', letterSpacing: '0.05em' }}>Period:</span>
+                  <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+                    <select 
+                      className="form-input" 
+                      style={{ 
+                        width: 'auto', 
+                        height: 28, 
+                        fontSize: '0.75rem', 
+                        padding: '0 24px 0 0', 
+                        background: 'transparent', 
+                        border: 'none',
+                        color: 'var(--primary)',
+                        appearance: 'none',
+                        cursor: 'pointer',
+                        fontWeight: 700,
+                        outline: 'none'
+                      }}
+                      value={currentPeriodId || ''}
+                      onChange={(e) => setActivePeriod(e.target.value)}
+                    >
+                      {periods.map(p => (
+                        <option key={p.id} value={p.id}>{p.year} — {p.term} {p.is_active ? '(Active)' : ''}</option>
+                      ))}
+                    </select>
+                    <div style={{ position: 'absolute', right: 0, pointerEvents: 'none', color: 'var(--primary)' }}>
+                      <ChevronDownIcon size={12} />
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div className="inline-flex" style={{ gap: 10 }}>
+                {!isAccountActive && (
+                  <div style={{ background: 'rgba(239,68,68,0.1)', color: 'var(--danger)', padding: '6px 14px', borderRadius: 8, fontSize: '0.75rem', fontWeight: 700, border: '1px solid var(--danger)', display:'flex', alignItems:'center', gap:5 }}>
+                    <AlertIcon size={14} /> Subscription Expired
+                  </div>
+                )}
+                {onLogout && (
+                  <button onClick={onLogout} className="btn btn-ghost btn-sm">
+                    <LogoutIcon size={14} /> Sign Out
+                  </button>
+                )}
               </div>
             </div>
-          </div>
-            <p>Welcome back, <strong>{currentUser?.name || 'User'}</strong> — here's what's happening at your school today.</p>
-          </div>
-          <div className="inline-flex" style={{ gap: 10 }}>
-            {!isAccountActive && (
-              <div style={{ background: 'rgba(239,68,68,0.1)', color: 'var(--danger)', padding: '6px 14px', borderRadius: 8, fontSize: '0.75rem', fontWeight: 700, border: '1px solid var(--danger)', display:'flex', alignItems:'center', gap:5 }}>
-                <AlertIcon size={14} /> Subscription Expired
-              </div>
-            )}
-            {onLogout && (
-              <button onClick={onLogout} className="btn btn-ghost btn-sm">
-                <LogoutIcon size={14} /> Sign Out
-              </button>
-            )}
+            <p style={{ marginTop: 8, color: 'var(--text-secondary)' }}>Welcome back, <strong>{currentUser?.name || 'User'}</strong> — here's what's happening today.</p>
           </div>
         </div>
       </div>

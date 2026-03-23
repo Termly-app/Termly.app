@@ -18,7 +18,7 @@
   display:flex; align-items:center; justify-content:center;
   flex-shrink:0; color:rgba(11,201,126,.8);
 }
-.fs-title { font-family:'Space Mono',monospace; font-size:1rem; font-weight:700; color:#fff; }
+.fs-title { font-family:'Space Mono',monospace; font-size:1rem; font-weight:700; color:var(--text, #fff); }
 .fs-sub   { font-size:.7rem; color:var(--text-muted,#556558); margin-top:2px; }
 .fs-header-actions { display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
 
@@ -80,7 +80,7 @@
 }
 .fs-sum-val {
   font-family:'Space Mono',monospace;
-  font-size:1.2rem; font-weight:700; color:#fff;
+  font-size:1.2rem; font-weight:700; color:var(--text, #fff);
 }
 
 /* ─── Body / Table ───────────────────────────────────────────────────────── */

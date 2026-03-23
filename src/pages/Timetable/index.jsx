@@ -647,7 +647,7 @@ export default function Timetable({ currentUser, currentPeriodId, periods = [] }
           {/* Period selector always visible */}
           <select className="tt-select" value={periodId} onChange={e => setPeriodId(e.target.value)}>
             {periods.map(p => (
-              <option key={p.id} value={p.id}>{p.year} — Term {p.term}{p.is_active ? ' (Active)' : ''}</option>
+              <option key={p.id} value={p.id}>{p.year} — {p.term}{p.is_active ? ' (Active)' : ''}</option>
             ))}
           </select>
         </div>

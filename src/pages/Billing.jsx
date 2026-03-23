@@ -113,13 +113,21 @@ export default function Billing() {
   return (
     <div className="animate-in">
       <div className="page-header">
-        <div className="page-header-actions">
-          <div>
+        <div className="page-header-content">
+          <div className="page-header-title-area">
             <h2>Subscription & Billing</h2>
-            <p>Manage your school's platform access and payments</p>
+            <p className="text-muted">Manage your school's platform access and payments</p>
           </div>
-          <div className={`badge ${isActive ? 'badge-success' : 'badge-danger'}`} style={{ fontSize: '0.85rem', padding: '10px 18px', animation: !isActive ? 'pulse 2s infinite' : 'none' }}>
-            {isActive ? '● ACTIVE SUBSCRIPTION' : '● ACCESS RESTRICTED'}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
+            <div className={`badge ${isActive ? 'badge-success' : 'badge-danger'}`} style={{ 
+              fontSize: '0.75rem', 
+              padding: '8px 16px', 
+              fontWeight: 700,
+              letterSpacing: '0.05em',
+              animation: !isActive ? 'pulse 2s infinite' : 'none' 
+            }}>
+              {isActive ? '● ACTIVE SUBSCRIPTION' : '● ACCESS RESTRICTED'}
+            </div>
           </div>
         </div>
       </div>
@@ -197,8 +205,21 @@ export default function Billing() {
                 <span style={{ opacity: 0.6 }}>Billing Cycle:</span>
                 <span className="badge badge-info">TERMLY</span>
               </div>
-              <div style={{ marginTop: 16, textAlign: 'center' }}>
-                <button onClick={handleCancel} style={{ background: 'none', border: 'none', color: '#ef4444', fontSize: '0.75rem', fontWeight: 600, opacity: 1, cursor: 'pointer', textDecoration: 'underline' }}>
+              <div style={{ marginTop: 20, textAlign: 'center' }}>
+                <button onClick={handleCancel} style={{ 
+                  background: 'none', 
+                  border: 'none', 
+                  color: '#ff5c5c', 
+                  fontSize: '0.8rem', 
+                  fontWeight: 700, 
+                  opacity: 1, 
+                  cursor: 'pointer', 
+                  textDecoration: 'underline',
+                  transition: 'all 0.2s',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: 4
+                }}>
                   Cancel subscription
                 </button>
               </div>
