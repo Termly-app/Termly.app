@@ -3,8 +3,8 @@ import { getTeachers, addTeacher, updateTeacher, deleteTeacher, getSubjectAssign
 import Loader from '../components/Common/Loader';
 import { CBC_STRUCTURE, getSubjectsForGrade, getLevelForGrade } from '../data/seedData';
 import { 
-  TeacherIcon,  RocketIcon, AlertIcon, LogoutIcon, ClockIcon, SearchIcon, DashboardIcon,
-  LeafIcon, GraduationIcon
+  TeacherIcon, RocketIcon, AlertIcon, LogoutIcon, ClockIcon, SearchIcon, DashboardIcon,
+  LeafIcon, GraduationIcon, PlusIcon, EditIcon, DeleteIcon, SchoolIcon, PrintIcon, PhoneIcon, BookIcon
 } from '../components/CommonIcons';
 
 export default function Teachers({ currentPeriodId }) {

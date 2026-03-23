@@ -3,7 +3,7 @@ import { getStudents, getFees, recordPayment, getFeeSummary, getPrintHeader, get
 import Loader from '../components/Common/Loader';
 import { CLASSES, CBC_STRUCTURE } from '../data/seedData';
 import { 
-  CardIcon, RocketIcon, UserIcon, InfoIcon, SearchIcon
+  CardIcon, RocketIcon, UserIcon, InfoIcon, SearchIcon, CheckIcon, ReceiptIcon, PrintIcon, AlertIcon, DashboardIcon
 } from '../components/CommonIcons';
 
 function PaymentModal({ student, fee, onPay, onClose }) {
