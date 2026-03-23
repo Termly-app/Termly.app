@@ -16,6 +16,7 @@ export default function SchoolsTab({
   setPlanModal, setChosenPlan,
   handleOpenStaffModal,
   onNEMISExport,          // ← new: opens NEMIS export modal for a school
+  approvedPayments,
 }) {
   return (
     <div className="tv">
@@ -74,15 +75,19 @@ export default function SchoolsTab({
               </thead>
               <tbody>
                 {filteredSchools.map(s => {
-                  const p         = s.school_profiles?.[0] || {};
+                  const p = s.school_profiles?.[0] || {};
+                  const isActive = isSchoolActive(s) || p.is_active === true || p.subscription_status === 'Active';
+
                   const curPlan   = s.plan || p.subscription_plan || 'Fala';
-                  const isActive  = isSchoolActive(s);
                   const pricing   = settings?.pricing || {};
                   const planKey   = Object.keys(pricing).find(k => k.toLowerCase() === curPlan.toLowerCase());
                   const planInfo  = planKey ? pricing[planKey] : { price:5999, limit:150 };
-                  const amt          = planInfo.price || 0;
                   const studentLimit = planInfo.limit || 150;
                   const adminLimit   = planInfo.admins || 5;
+
+                  const schoolRevenue = (approvedPayments || [])
+                    .filter(ap => ap.school_id === s.id)
+                    .reduce((sum, ap) => sum + (ap.amount || 0), 0);
 
                   return (
                     <tr key={s.id}>
@@ -120,8 +125,8 @@ export default function SchoolsTab({
                       </td>
 
                       <td data-label="Revenue" className="col-rev">
-                        <div className="td-m" style={{ color: 'var(--txt)', opacity: isActive ? 1 : 0.4 }}>
-                          {isActive ? fmtMoney(amt) : '—'}
+                        <div className="td-m" style={{ color: 'var(--txt)', opacity: schoolRevenue > 0 ? 1 : 0.4 }}>
+                          {schoolRevenue > 0 ? fmtMoney(schoolRevenue) : '—'}
                         </div>
                       </td>
 
@@ -133,7 +138,11 @@ export default function SchoolsTab({
 
                       <td data-label="Action" className="col-act">
                         <div className="act-group">
-                          <button className="act-btn g" onClick={() => { setActivateModal(s); setPayMethod('mpesa'); setPayRef(''); setActivateSuccess(false); }}>Activate</button>
+                          {!isActive ? (
+                            <button className="act-btn g" onClick={() => { setActivateModal(s); setPayMethod('mpesa'); setPayRef(''); setActivateSuccess(false); }}>Activate</button>
+                          ) : (
+                            <button className="act-btn" onClick={() => handleDeactivate(s.id, s.name)}>Deactivate</button>
+                          )}
                           <button className="act-btn r" onClick={() => handleRowDeleteSchool(s.id, s.name)}>Terminate</button>
                         </div>
                       </td>

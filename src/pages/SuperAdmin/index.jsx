@@ -152,15 +152,21 @@ export default function SuperAdmin({ currentUser, sidebarOpen, setSidebarOpen, o
   // ══ isSchoolActive — mirrors Billing page logic ════════════════════════
   const isSchoolActive = (s) => {
     const p = s.school_profiles?.[0];
-    if (!p) return false;
+    if (!p) {
+      // Fallback: If no profile yet but created in last 14 days, assume active trial
+      const d = s.created_at;
+      if (d && new Date(d) > new Date(now.getTime() - 14 * 24 * 60 * 60 * 1000)) return true;
+      return false;
+    }
     if (['Deactivated', 'Suspended', 'Terminated'].includes(p.subscription_status)) return false;
+    if (p.is_active === true) return true;
+    if (p.subscription_status === 'Active') return true;
     if (p.subscription_status === 'Trial') {
       return !p.subscription_expiry || new Date(p.subscription_expiry) > now;
     }
     if (subEndDate && p.subscription_status !== 'Trial') {
       if (new Date(subEndDate) < now) return false;
     }
-    if (p.subscription_status === 'Active') return true;
     if (p.subscription_expiry && new Date(p.subscription_expiry) > now) return true;
     return false;
   };

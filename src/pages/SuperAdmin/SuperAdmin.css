@@ -130,7 +130,7 @@
   margin: 0 0 2px 0; border-radius: 0;
 }
 .sb-nav:hover { color: var(--txt); background: rgba(255,255,255,0.02) !important; }
-.sb-nav.on    { background: rgba(99,102,241,0.06) !important; color: #fff; border-left-color: var(--vi) !important; }
+.sb-nav.on    { background: rgba(255,255,255,0.05) !important; color: #fff; border-left-color: var(--vi) !important; }
 
 .nav-ico {
   width:18px; height:18px;
@@ -207,12 +207,25 @@
 .sa-content .sa { background:var(--bg) !important; min-height:100%; position: relative; z-index: 1; }
 
 /* ─── Status variants ────────────────────────────────────────────────────── */
-.sa .ni-v { background:rgba(255,255,255,.05); color:var(--txt); }
+.sa .ni-v { background:rgba(255,255,255,.05); color:#fff; }
 .sa .ni-t { background:rgba(255,255,255,.04); color:var(--sub); }
 .sa .ni-a { background:rgba(255,255,255,.03); color:var(--sub); }
 .sa .ni-r { background:rgba(255,255,255,.02); color:var(--sub); }
 .sa .ni-s { background:rgba(255,255,255,.04); color:var(--sub); }
 .sa .ni-d { background:rgba(255,255,255,.02); color:var(--dim); }
+
+/* --- Student Overview Items --- */
+.sa .ig { display: flex; align-items: center; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid var(--edge); }
+.sa .ig:last-child { border: none; }
+.sa .ig-l { display: flex; align-items: center; gap: 12px; }
+.sa .ig-nm { font-size: 0.82rem; font-weight: 600; color: #fff; }
+.sa .ig-st { font-size: 0.85rem; font-weight: 700; color: #fff !important; }
+.sa .ig-st.is-ok { color: var(--te) !important; }
+
+/* KILL TR:HOVER LEAK FROM APP.CSS */
+.theme-onyx .sa table tr:hover td { background: rgba(255,255,255,0.03) !important; }
+.theme-onyx .sa .li:hover { background: rgba(255,255,255,0.02); }
+
 
 /* ─── Toast ──────────────────────────────────────────────────────────────── */
 .sa .toast {
