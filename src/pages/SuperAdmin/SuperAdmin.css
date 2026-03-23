@@ -345,6 +345,7 @@
 .sa .lp {
   background:var(--panel); border:1px solid var(--edge);
   border-radius:10px; padding:14px; min-width:0;
+}
 /* ─── Lists & Simple rows ────────────────────────────────────────────────── */
 .sa .li { display:flex; align-items:center; justify-content:space-between; padding:10px 0; border-bottom:1px solid var(--edge); }
 .sa .li:last-child { border:none; }
