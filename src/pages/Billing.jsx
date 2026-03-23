@@ -390,6 +390,9 @@ export default function Billing() {
                 <li style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8, fontSize: '0.9rem', opacity: 0.8 }}>
                   <CheckIcon size={14} color="var(--primary)" /> Up to {p.limit?.toLocaleString()} students
                 </li>
+                <li style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8, fontSize: '0.9rem', opacity: 0.8 }}>
+                  <CheckIcon size={14} color="var(--primary)" /> Max {(id.toLowerCase().includes('starter') || id.toLowerCase().includes('fala')) ? 5 : (p.limit || 150)} staff seats
+                </li>
                 {p.features?.map((f, i) => (
                   <li key={i} style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8, fontSize: '0.9rem', opacity: 0.8 }}>
                     <CheckIcon size={14} color="var(--primary)" /> {f}

@@ -56,7 +56,13 @@ export default function Security({ currentUser }) {
   };
   
   const planDetails = activePlanKey ? pricing[activePlanKey] : (fallbackPlans[planName] || fallbackPlans["Fala"]);
-  const seatLimit = activePlanKey ? (pricing[activePlanKey].limit || 5) : (fallbackPlans[planName]?.limit || 5);
+  let seatLimit = activePlanKey ? (pricing[activePlanKey].limit || 5) : (fallbackPlans[planName]?.limit || 5);
+  
+  // Strict override for Starter/Fala plans as requested (2/5 seats)
+  if (planName.toLowerCase().includes('starter') || planName.toLowerCase().includes('fala')) {
+    seatLimit = 5;
+  }
+
   const actualStaffCount = users.length;
   const isAtLimit = actualStaffCount >= seatLimit;
 
