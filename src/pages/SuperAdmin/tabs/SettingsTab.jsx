@@ -5,7 +5,7 @@
  * {
  *   "PlanName": {
  *     price        : 5999,       // KSh per term
- *     limit        : 150,        // student seats
+ *     limit        : 5,        // student seats
  *     admins       : 5,          // staff accounts
  *     active       : true,       // visible on registration/landing
  *     trial_days   : 14,         // free trial period
@@ -69,7 +69,7 @@ const EMPTY_PLAN = {
   id          : '',
   name        : '',
   price       : 0,
-  limit       : 150,
+  limit       : 5,
   admins      : 5,
   active      : true,
   trial_days  : 14,
@@ -149,7 +149,7 @@ export default function SettingsTab({
         const key = p.name.trim();
         newPricing[key] = {
           price       : Number(p.price) || 0,
-          limit       : Number(p.limit) || 150,
+          limit       : Number(p.limit) || 5,
           admins      : Number(p.admins) || 5,
           active      : p.active !== false,
           trial_days  : Number(p.trial_days) || 0,

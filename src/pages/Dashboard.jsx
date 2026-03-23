@@ -121,7 +121,7 @@ export default function Dashboard({ currentUser, onLogout, currentPeriodId }) {
   const plan = data.profile?.subscription_plan || data.profile?.subscriptionPlan || 'Fala';
   const pricing = data.platformSettings?.pricing || {};
   const planKey = Object.keys(pricing).find(k => k.toLowerCase() === plan.toLowerCase());
-  const seatLimit = planKey ? (pricing[planKey].limit || 150) : 150;
+  const seatLimit = planKey ? (pricing[planKey].limit || 5) : 5;
   const totalStaff = data.adminUsers?.length || 0;
   
   const kpis = [

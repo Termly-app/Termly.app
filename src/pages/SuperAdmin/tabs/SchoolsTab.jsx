@@ -82,8 +82,8 @@ export default function SchoolsTab({
                   const curPlan   = s.plan || p.subscription_plan || 'Fala';
                   const pricing   = settings?.pricing || {};
                   const planKey   = Object.keys(pricing).find(k => k.toLowerCase() === curPlan.toLowerCase());
-                  const planInfo  = planKey ? pricing[planKey] : { price:5999, limit:150 };
-                  const studentLimit = planInfo.limit || 150;
+                  const planInfo  = planKey ? pricing[planKey] : { price:5999, limit:5 };
+                  const studentLimit = planInfo.limit || 5;
                   const adminLimit   = planInfo.admins || 5;
 
                   const schoolRevenue = (approvedPayments || [])

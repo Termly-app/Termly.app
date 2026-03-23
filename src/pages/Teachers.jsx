@@ -134,7 +134,7 @@ export default function Teachers({ currentUser, currentPeriodId }) {
                 const curPlan = profile.subscription_plan || profile.subscriptionPlan || 'Fala';
                 const pricing = settings?.pricing || {};
                 const planKey = Object.keys(pricing).find(k => k.toLowerCase() === curPlan.toLowerCase());
-                const seatLimit = planKey ? (pricing[planKey].limit || 150) : 150;
+                const seatLimit = planKey ? (pricing[planKey].limit || 5) : 5;
                 return registeredUsers.length >= seatLimit;
               })()}
             >

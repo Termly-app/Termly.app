@@ -16,11 +16,11 @@ let _currentAuthUser = null;
 let _currentPeriodId = null;
 
 export const SEAT_LIMITS = {
-  Basic:   { students: 150, admins: 5,   price: 5999 },
+  Basic:   { students: 5, admins: 5,   price: 5999 },
   Standard: { students: 300, admins: 10,  price: 15000 },
   Premium: { students: 1000, admins: 30, price: 50000 },
-  Starter: { students: 150, admins: 5,   price: 5999 }, // Legacy
-  Fala:    { students: 150, admins: 5,   price: 5999 }, // Kenyan branding
+  Starter: { students: 5, admins: 5,   price: 5999 }, // Legacy
+  Fala:    { students: 5, admins: 5,   price: 5999 }, // Kenyan branding
   Champe:  { students: 1000, admins: 30, price: 50000 },
   School:  { students: 500, admins: 15,  price: 25000 },
   "Super Admin": { students: 9999, admins: 999, price: 0 }
@@ -740,7 +740,7 @@ export async function addStudent(student) {
   
   // Robust plan lookup matching other components
   const planLimits = SEAT_LIMITS[planName] || SEAT_LIMITS.Basic;
-  const maxStudents = planLimits.students || planLimits.maxStudents || 150;
+  const maxStudents = planLimits.students || planLimits.maxStudents || 5;
   
   if (all.length >= maxStudents) {
     throw new Error(`Student limit reached for your ${planName} plan (${maxStudents} students). Please upgrade your plan in Settings.`);
@@ -1514,7 +1514,7 @@ export async function getPlatformSettings() {
       billing: { instructions: 'Pay via Business Till 908070 (ShuleSoft LTD)', term_price: 8400, trial_days: 30 },
       support: { email: "support@shulesoft.com", phone: "+254 700 000000" },
       pricing: { 
-        "Fala":   { "price": 5999,  "active": true, "limit": 150,  "features": ["profiles", "fees", "attendance", "reports"] },
+        "Fala":   { "price": 5999,  "active": true, "limit": 5,  "features": ["profiles", "fees", "attendance", "reports"] },
         "Champe": { "price": 50000, "active": true, "limit": 5000, "features": ["everything_starter", "cbc", "exams", "priority"] }
       },
       platform: { status_message: "", maintenance: false }
