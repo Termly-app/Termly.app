@@ -62,26 +62,27 @@ export const calcExpiry = (ds) => {
 
 // ── Status label / pill helpers ────────────────────────────────────────────
 export const statusLabel = (s) => {
-  const map = { Active:'Active', Trial:'Trial', Suspended:'Suspended', Expired:'Expired', Inactive:'Inactive', Pending:'Pending' };
+  if (!s) return 'Trial'; // Default for new schools (matches School Portal fallback)
+  const map = { Active:'Active', Trial:'Trial', Suspended:'Suspended', Expired: 'Expired', Inactive: 'Inactive', Pending:'Pending' };
   return map[s] ?? 'Deactivated';
 };
 
 export const sPill = (s) => {
+  if (!s || s === 'Trial')               return 'pill pill-v';
   if (s === 'Active')                    return 'pill pill-g';
-  if (s === 'Trial')                     return 'pill pill-v';
   if (s === 'Suspended')                 return 'pill pill-y';
-  if (s === 'Expired')                   return 'pill pill-r';
+  if (s === 'Expired' || s === 'Deactivated') return 'pill pill-r';
   if (s === 'Inactive' || s === 'Pending') return 'pill pill-s';
-  return 'pill pill-r';
+  return 'pill pill-s';
 };
 
 /**
  * Refined status that takes activity (date) into account
  */
 export const getStatusRefined = (p, isActive) => {
-  const s = p.subscription_status || 'Inactive';
+  const s = p.subscription_status || 'Trial';
   if (isActive) return s;
-  // If conceptually active but the date-check failed
+  // If conceptually active/trial but the date-check (isActive) failed
   if (s === 'Active' || s === 'Trial') return 'Expired';
   return s;
 };

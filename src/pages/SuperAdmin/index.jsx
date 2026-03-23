@@ -164,11 +164,16 @@ export default function SuperAdmin({ currentUser, sidebarOpen, setSidebarOpen, o
     const p = s.school_profiles?.[0];
     if (!p) return false;
 
+    // 0. Explicit deactivation/suspension wins
+    if (p.subscription_status === 'Deactivated' || p.subscription_status === 'Suspended') return false;
+
     // 1. INDIVIDUAL EXPIRE OVERRIDE - Future expiry always wins
     if (p.subscription_expiry) {
       const pExp = new Date(p.subscription_expiry);
       if (isNaN(pExp.getTime()) === false && pExp > now) {
-        return ['Active', 'Trial'].includes(p.subscription_status);
+        // Fallback to 'Trial' if null/falsy
+        const st = p.subscription_status || 'Trial';
+        return ['Active', 'Trial'].includes(st);
       }
     }
 
@@ -183,7 +188,8 @@ export default function SuperAdmin({ currentUser, sidebarOpen, setSidebarOpen, o
     }
 
     // 3. Status check for non-expired (or within global term)
-    return ['Active', 'Trial'].includes(p.subscription_status);
+    const finalStatus = p.subscription_status || 'Trial';
+    return ['Active', 'Trial'].includes(finalStatus);
   };
 
   // ══ COMPUTED VALUES ════════════════════════════════════════════════════

@@ -156,7 +156,7 @@ export default function OverviewTab({
                       <div className={`li-ico ${cls}`}><SchoolIcon size={14} /></div>
                       <div>
                         <div className="li-name">{s.name}</div>
-                        <div className="li-sub">{p.subscription_plan || 'Starter'} · {p.location || 'Kenya'}</div>
+                        <div className="li-sub">{((p.subscription_plan || 'Starter').toLowerCase() === 'fala' ? 'Starter' : (p.subscription_plan || 'Starter'))} · {p.location || 'Kenya'}</div>
                       </div>
                     </div>
                     <div>

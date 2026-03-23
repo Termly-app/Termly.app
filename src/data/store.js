@@ -299,6 +299,10 @@ export async function getSchoolProfile() {
 
 // Helper to map DB columns to frontend shape with robust fallbacks
 function mapProfileData(data) {
+  let plan = data.subscription_plan || 'Starter';
+  // Normalize legacy names to Starter
+  if (['fala', 'starter plan', 'basic'].includes(plan.toLowerCase())) plan = 'Starter';
+
   return {
     schoolName: data.school_name || DEFAULT_PROFILE.schoolName,
     motto: data.motto || '',
@@ -306,7 +310,7 @@ function mapProfileData(data) {
     email: data.email || '',
     address: data.address || '',
     logo: data.logo || '',
-    subscriptionPlan: data.subscription_plan || 'Basic',
+    subscriptionPlan: plan,
     streamsPerClass: data.streams_per_class || DEFAULT_PROFILE.streamsPerClass,
     customSubjects: data.custom_subjects || {},
     activeClasses: data.active_classes || DEFAULT_PROFILE.activeClasses,
