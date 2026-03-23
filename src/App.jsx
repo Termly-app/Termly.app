@@ -56,21 +56,26 @@ import {
 } from './components/CommonIcons';
 
 // ── Sidebar nav link helper ───────────────────────────────────────────────
-function SbLink({ to, icon: Icon, label, onClick, exact = false }) {
+function SbLink({ to, icon: Icon, label, onClick, exact = false, locked = false, red = false }) {
   const location = useLocation();
   const isActive = exact
     ? location.pathname === to && location.search === ''
     : location.pathname === to || (to.includes('?') && location.search.includes(to.split('?')[1]));
 
+  const finalClass = `nav-item${isActive ? ' active' : ''}${locked ? ' nav-locked' : ''}${red ? ' nav-red' : ''}`;
+
   return (
     <NavLink
-      to={to}
+      to={locked ? '#' : to}
       end={exact}
-      className={`nav-item${isActive ? ' active' : ''}`}
-      onClick={onClick}
+      className={finalClass}
+      onClick={locked ? (e) => { e.preventDefault(); } : onClick}
     >
-      <span className="nav-icon"><Icon size={16} strokeWidth={1.75} /></span>
+      <span className="nav-icon">
+        {locked ? <SecurityIcon size={16} strokeWidth={1.75} /> : <Icon size={16} strokeWidth={1.75} />}
+      </span>
       <span className="nav-label">{label}</span>
+      {locked && <span className="nav-lock-badge" style={{ fontSize:'0.5rem', background:'var(--danger)', color:'white', padding:'1px 4px', borderRadius:3, marginLeft:'auto' }}>LOCKED</span>}
     </NavLink>
   );
 }
@@ -216,31 +221,31 @@ function Sidebar({ isOpen, onClose, onLogout, currentUser, subscriptionActive })
       {/* Nav */}
       <nav className="sidebar-nav">
         <SbSection label="General" />
-        <SbLink to="/dashboard" icon={DashboardIcon} label="Dashboard" onClick={onClose} />
-        <SbLink to="/students"  icon={StudentsIcon}  label="Students"  onClick={onClose} />
+        <SbLink to="/dashboard" icon={DashboardIcon} label="Dashboard" onClick={onClose} locked={!subscriptionActive} />
+        <SbLink to="/students"  icon={StudentsIcon}  label="Students"  onClick={onClose} locked={!subscriptionActive} />
         {isAdmin && (
-          <SbLink to="/teachers" icon={StaffIcon} label="Staff" onClick={onClose} />
+          <SbLink to="/teachers" icon={StaffIcon} label="Staff" onClick={onClose} locked={!subscriptionActive} />
         )}
 
         <SbSection label="Academics" />
         {(isAdmin || isTeacher) && (
-          <SbLink to="/attendance" icon={AttendanceIcon} label="Attendance" onClick={onClose} />
+          <SbLink to="/attendance" icon={AttendanceIcon} label="Attendance" onClick={onClose} locked={!subscriptionActive} />
         )}
-        <SbLink to="/grading"   icon={GradingIcon}   label="Grading"    onClick={onClose} />
-        <SbLink to="/timetable" icon={TimetableIcon} label="Timetable"  onClick={onClose} />
+        <SbLink to="/grading"   icon={GradingIcon}   label="Grading"    onClick={onClose} locked={!subscriptionActive} />
+        <SbLink to="/timetable" icon={TimetableIcon} label="Timetable"  onClick={onClose} locked={!subscriptionActive} />
 
         <SbSection label="Administration" />
         {!isTeacher && (
-          <SbLink to="/fees"         icon={FeesIcon}         label="Fees & Billing"  onClick={onClose} />
+          <SbLink to="/fees" icon={FeesIcon} label="Fees & Billing" onClick={onClose} locked={!subscriptionActive} />
         )}
         {isAdmin && (
-          <SbLink to="/fee-structure" icon={FeeStructureIcon} label="Fee Structure"  onClick={onClose} />
+          <SbLink to="/fee-structure" icon={FeeStructureIcon} label="Fee Structure" onClick={onClose} locked={!subscriptionActive} />
         )}
         {isAdmin && (
           <SbLink to="/security" icon={SecurityIcon} label="Security" onClick={onClose} />
         )}
         {isAdmin && (
-          <SbLink to="/billing"  icon={SubscriptionIcon}  label="Subscription" onClick={onClose} />
+          <SbLink to="/billing"  icon={SubscriptionIcon}  label="Subscription" onClick={onClose} red={!subscriptionActive} />
         )}
         {isAdmin && (
           <SbLink to="/settings" icon={SettingsIcon} label="Settings" onClick={onClose} />
@@ -514,7 +519,7 @@ function App() {
           <ErrorBoundary>
             <Routes>
               <Route path="/dashboard"
-                element={<Dashboard currentUser={currentUser} onLogout={handleLogout} currentPeriodId={currentPeriodId} />} />
+                element={subscriptionActive ? <Dashboard currentUser={currentUser} onLogout={handleLogout} currentPeriodId={currentPeriodId} /> : <Navigate to="/billing" />} />
               <Route path="/students"
                 element={subscriptionActive ? <Students currentUser={currentUser} currentPeriodId={currentPeriodId} /> : <Navigate to="/billing" />} />
               <Route path="/teachers"

@@ -163,6 +163,19 @@ export default function SuperAdmin({ currentUser, sidebarOpen, setSidebarOpen, o
   const isSchoolActive = (s) => {
     const p = s.school_profiles?.[0];
     if (!p) return false;
+
+    // Check Global Cutoff
+    if (subEndDate) {
+      const gExp = new Date(subEndDate);
+      if (isNaN(gExp.getTime()) === false && gExp < now) return false;
+    }
+
+    // Check Individual Expiry
+    if (p.subscription_expiry) {
+      const pExp = new Date(p.subscription_expiry);
+      if (isNaN(pExp.getTime()) === false && pExp < now) return false;
+    }
+
     return ['Active', 'Trial'].includes(p.subscription_status);
   };
 

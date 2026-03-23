@@ -323,21 +323,36 @@ function mapProfileData(data) {
 
 // ============= SUBSCRIPTIONS & PAYMENTS =============
 export async function checkIsSubscriptionActive(profile) {
+  if (!profile) return false;
   if (profile.subscriptionStatus === 'Deactivated' || profile.subscriptionStatus === 'Suspended') return false;
 
-  // GLOBAL TERM EXPIRY CHECK
+  // 1. GLOBAL TERM EXPIRY - Prioritize platform-wide limits
   const globalExpiry = await getGlobalTermExpiry();
   if (globalExpiry) {
-    if (new Date(globalExpiry) < new Date()) return false;
+    const expDate = new Date(globalExpiry);
+    // Move slightly past midnight if using just date string to avoid premature cutoff
+    if (isNaN(expDate.getTime()) === false) {
+      if (expDate < new Date()) return false;
+    }
   }
 
-  if (profile.subscriptionStatus === 'Active') return true;
-  if (profile.subscriptionStatus === 'Trial') {
-    if (!profile.subscriptionExpiry) return true; // Default trial
-    return new Date(profile.subscriptionExpiry) > new Date();
+  // 2. Individual School Expiry
+  const now = new Date();
+  if (profile.subscriptionStatus === 'Active') {
+    if (profile.subscriptionExpiry && new Date(profile.subscriptionExpiry) < now) return false;
+    return true;
   }
-  // Also check if expiry is in the future (payment approved)
-  if (profile.subscriptionExpiry && new Date(profile.subscriptionExpiry) > new Date()) return true;
+  
+  if (profile.subscriptionStatus === 'Trial') {
+    if (!profile.subscriptionExpiry) return true; // Infinite trial fallback
+    return new Date(profile.subscriptionExpiry) > now;
+  }
+
+  // Final fallback: check for explicit future expiry (payment extended)
+  if (profile.subscriptionExpiry && new Date(profile.subscriptionExpiry) > now) return true;
+  
+  return false;
+}
 
   return false;
 }
@@ -1469,7 +1484,8 @@ export async function getPlatformSettings() {
         mpesa_name: "Peter Kaulani",
         instructions: "Send money to +254712260057 (Peter Kaulani)", 
         term_price: 5000, 
-        trial_days: 30 
+        trial_days: 30,
+        expiry_date: null
       },
       support: settings.support || { 
         email: "shulesoft8@gmail.com", 
@@ -1525,7 +1541,7 @@ export async function getPlanPrice(planName) {
  */
 export async function getGlobalTermExpiry() {
   const settings = await getPlatformSettings();
-  return settings?.billing?.term_expiry || null;
+  return settings?.billing?.expiry_date || settings?.billing?.term_expiry || null;
 }
 
 /**
@@ -1688,12 +1704,27 @@ export async function getPlatformStats() {
     const prData = profilesData || [];
     const pData = paymentsData || [];
 
+    // Global expiry for better stat accuracy
+    const globalExpiryRaw = cf?.billing?.expiry_date || cf?.billing?.term_expiry;
+    const globalExpiry    = globalExpiryRaw ? new Date(globalExpiryRaw) : null;
+    const now             = new Date();
+    const isGloballyExpired = globalExpiry && globalExpiry < now;
+
     const totalSchools = sData.length;
     
-    // Active means explicitly 'Active' or currently in 'Trial'
-    const activeSchools = prData.filter(p => ['Active', 'Trial'].includes(p.subscription_status)).length;
+    // Active means explicitly 'Active' or 'Trial' AND not and reached global/local expiry
+    const activeSchools = prData.filter(p => {
+      if (isGloballyExpired) return false;
+      if (p.subscription_expiry && new Date(p.subscription_expiry) < now) return false;
+      return ['Active', 'Trial'].includes(p.subscription_status);
+    }).length;
+
     const suspendedSchools = prData.filter(p => p.subscription_status === 'Suspended').length;
-    const expiredSchools = prData.filter(p => p.subscription_status === 'Expired').length;
+    const expiredSchools = prData.filter(p => {
+      if (isGloballyExpired) return true;
+      if (p.subscription_expiry && new Date(p.subscription_expiry) < now) return true;
+      return p.subscription_status === 'Expired';
+    }).length;
     
     // Deactivated means anything else (e.g., 'Inactive', 'Deactivated')
     const deactivatedSchools = prData.filter(p => !['Active', 'Trial', 'Suspended', 'Expired'].includes(p.subscription_status)).length;
