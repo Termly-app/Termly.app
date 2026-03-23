@@ -343,8 +343,14 @@ export default function SuperAdmin({ currentUser, sidebarOpen, setSidebarOpen, o
     const activePlanNames = plans.map(p => p.name);
     const inUsePlanNames  = schools.map(s => s.plan || s.school_profiles?.[0]?.subscription_plan).filter(Boolean);
     
-    // 2. Unique list, prioritizing active plans
-    const planLabels = [...new Set([...activePlanNames, ...inUsePlanNames])];
+    // 2. Unique list, prioritizing active plans and normalizing legacy names
+    let planLabels = [...new Set([...activePlanNames, ...inUsePlanNames])].map(n => {
+      if (n?.toLowerCase() === 'fala') return 'Starter';
+      return n;
+    }).filter(Boolean);
+    
+    // De-duplicate after normalization
+    planLabels = [...new Set(planLabels)];
     if (planLabels.length === 0) planLabels.push('Starter', 'Pro', 'Enterprise');
 
     const active = planLabels.map(p => schools.filter(s => {

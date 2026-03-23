@@ -22,21 +22,23 @@ export default function Dashboard({ currentUser, onLogout, currentPeriodId }) {
   useEffect(() => {
     const loadData = async () => {
       try {
+        const wrap = (p, fb = []) => p.catch(e => { console.error(e); return fb; });
         const [students, fees, marks, teachers, profile, attendance, adminUsers, platformSettings, allPeriods] = await Promise.all([
-          getStudents(), getFees(), getMarks(), getTeachers(), getSchoolProfile(), getAttendance(), getUsers(), getPlatformSettings(), getPeriods()
+          wrap(getStudents()), wrap(getFees(), {}), wrap(getMarks(), {}), wrap(getTeachers()), 
+          wrap(getSchoolProfile(), {}), wrap(getAttendance(), {}), wrap(getUsers()), 
+          wrap(getPlatformSettings(), {}), wrap(getPeriods())
         ]);
         
-        // Check activation
-        const active = await checkIsSubscriptionActive(profile);
+        const prof = profile || {};
+        const active = await wrap(checkIsSubscriptionActive(prof), true);
         setIsAccountActive(active);
-
-        setPeriods(allPeriods);
+        setPeriods(allPeriods || []);
 
         const todayStr = getTodayStr();
         const [feeSummary, todayAtt, schoolStructure] = await Promise.all([
-          getFeeSummary(fees, students, profile),
-          getAttendanceSummary(todayStr, attendance),
-          getSchoolStructure(students, marks, profile)
+          wrap(getFeeSummary(fees, students, prof), { totalExpected:0, totalCollected:0, totalOutstanding:0, fullyPaid:0, partialPaid:0, unpaid:0 }),
+          wrap(getAttendanceSummary(todayStr, attendance), { present:0, late:0, absent:0, total:0, percentage:0 }),
+          wrap(getSchoolStructure(students, marks, prof), {})
         ]);
         const allPayments = [];
         students.forEach(s => {
@@ -50,7 +52,7 @@ export default function Dashboard({ currentUser, onLogout, currentPeriodId }) {
           totalStudents: students.length, totalTeachers: teachers.length,
           collectionRate: Number(collectionRate), feeSummary,
           attendance: todayAtt, recentPayments: allPayments.slice(0, 5),
-          schoolStructure, profile, adminUsers, platformSettings,
+          schoolStructure, profile: prof, adminUsers: adminUsers || [], platformSettings: platformSettings || {},
         });
       } catch (err) {
         console.error(err);
@@ -59,6 +61,7 @@ export default function Dashboard({ currentUser, onLogout, currentPeriodId }) {
           feeSummary: { totalExpected:0, totalCollected:0, totalOutstanding:0, fullyPaid:0, partialPaid:0, unpaid:0 },
           attendance: { present:0, late:0, absent:0, total:0, percentage:0 },
           recentPayments: [], schoolStructure: {}, profile: {},
+          adminUsers: [], platformSettings: {}
         });
       } finally { setLoading(false); }
     };
@@ -122,7 +125,7 @@ export default function Dashboard({ currentUser, onLogout, currentPeriodId }) {
   const plan = data.profile?.subscription_plan || data.profile?.subscriptionPlan || 'Fala';
   const pricing = data.platformSettings?.pricing || {};
   const planKey = Object.keys(pricing).find(k => k.toLowerCase() === plan.toLowerCase());
-  const seatLimit = planKey ? (pricing[planKey].limit || 5) : 5;
+  const seatLimit = 5; // Forced 5-seat limit across all plans for consistency
   const totalStaff = data.adminUsers?.length || 0;
   
   const kpis = [

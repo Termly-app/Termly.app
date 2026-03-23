@@ -499,7 +499,7 @@ function App() {
                 <option value="">Select Period</option>
                 {periods.map(p => (
                   <option key={p.id} value={p.id}>
-                    {p.year} — Term {p.term}{p.is_active ? ' (Active)' : ''}
+                    {p.year} — {p.term}{p.is_active ? ' (Active)' : ''}
                   </option>
                 ))}
               </select>
