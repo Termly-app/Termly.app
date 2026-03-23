@@ -14,7 +14,7 @@
   --txt      : #e4e4e7;
   --sub      : #71717a;
   --dim      : #3f3f46;
-  --vi       : #10b981; /* Brand Green formerly indigo/purple/silver */
+  --vi       : #71717a; /* Neutral Gray (Monochrome) */
   --te       : #10b981;
   --am       : #f59e0b;
   --ro       : #ef4444;
@@ -34,7 +34,7 @@
   display    : flex;
   overflow   : hidden;
 }
-.sa-root, .sa-root div, .sa-root section, .sa-root main, .sa-root aside {
+.sa-root, .sa-root section, .sa-root main {
   background-color: transparent;
 }
 
@@ -155,7 +155,7 @@
 }
 .sb-status-row  { display:flex; align-items:center; justify-content:space-between; margin-bottom:4px; }
 .sb-status-label { font-size: 0.6rem; color: var(--sub); font-weight: 700; text-transform: uppercase; letter-spacing: 0.12em; }
-.sb-status-live  { display:flex; align-items:center; gap:6px; font-size: 0.7rem; color: var(--te); font-weight: 700; }
+.sb-status-live  { display:flex; align-items:center; gap:6px; font-size: 0.7rem; color: #fff; font-weight: 700; }
 .sa-dot  { width:6px; height:6px; border-radius:50%; background:var(--te); box-shadow:0 0 8px var(--te); display:inline-block; flex-shrink:0; }
 .sb-status-name { font-size: 0.95rem; color: #fff; font-weight: 400; font-family: var(--fh); }
 .sb-signout-btn {
@@ -207,7 +207,7 @@
 }
 .sa-tb-badge-dot {
   width:22px; height:22px; border-radius:6px;
-  background:linear-gradient(135deg,var(--vi),#4F3DB8);
+  background:linear-gradient(135deg,var(--vi),var(--dim));
   display:flex; align-items:center; justify-content:center;
   font-family:var(--fh); font-size:.52rem; font-weight:700; color:#fff;
 }
@@ -261,8 +261,8 @@
 .sa .ph-badge  {
   display:inline-flex; align-items:center; gap:5px;
   padding:2px 9px; border-radius:100px;
-  background:rgba(11,201,126,.09); border:1px solid rgba(11,201,126,.2);
-  font-size:.57rem; font-weight:600; color:var(--te); margin-top:6px;
+  background:rgba(255,255,255,.05); border:1px solid var(--edge2);
+  font-size:.57rem; font-weight:600; color:#fff; margin-top:6px;
 }
 .sa .ph-right  { display:flex; align-items:center; gap:7px; flex-wrap:wrap; }
 
@@ -334,8 +334,8 @@
 .sa .kpi-val    { font-family:var(--fh); font-size:2rem; font-weight:400; color:#fff; line-height:1; margin-bottom:8px; }
 .sa .kpi-ft     { display:flex; align-items:center; justify-content:space-between; margin-top: auto; }
 .sa .kpi-ch     { font-size:.7rem; font-weight:700; display: flex; align-items: center; gap: 4px; }
-.sa .kup        { color:var(--te); }
-.sa .kdn        { color:var(--ro); }
+.sa .kup        { color:#fff; }
+.sa .kdn        { color:var(--sub); }
 .sa .kpi-note   { font-size:.62rem; color:var(--dim); }
 
 /* ─── Chart panels (Consolidated) ────────────────────────────────────────── */
@@ -369,7 +369,7 @@
 .sa .li-sub { font-size:.7rem; color:var(--sub); margin-top:1px; }
 
 .sa .pill { padding:2px 8px; border-radius:100px; font-size:.62rem; font-weight:700; text-transform:uppercase; background:var(--panel2); color:var(--sub); border: 1px solid var(--edge2); }
-.sa .pill-g { background:rgba(255,255,255,.03); color:var(--txt); border-color:var(--edge); }
+.sa .pill-g { background:rgba(255,255,255,.05); color:#fff; border-color:var(--edge2); }
 .sa .pill-r { background:rgba(255,255,255,.02); color:var(--sub); border-color:var(--edge); }
 
 /* ─── Table Column Proportions (Platform Engine) ─────────────────────────── */
@@ -411,8 +411,8 @@
   border-radius: 8px; border: 1px solid var(--edge); cursor: pointer; transition: all var(--trans);
   color: var(--sub); background: transparent;
 }
-.sa .act-btn.g:hover { color: var(--te); border-color: var(--te); background: rgba(16,185,129,0.03); }
-.sa .act-btn.r:hover { color: var(--ro); border-color: var(--ro); background: rgba(239,68,68,0.03); }
+.sa .act-btn.g:hover { color: #fff; border-color: #fff; background: rgba(255,255,255,0.05); }
+.sa .act-btn.r:hover { color: var(--sub); border-color: var(--edge2); background: transparent; }
 .sa .act-btn:hover { background: rgba(255,255,255,0.02); color: var(--txt); }
 
 /* ─── End of specialized components ─── */
@@ -423,7 +423,7 @@
 .sa .panel-hd { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 20px; }
 .sa .panel-lbl { font-size: 0.62rem; color: var(--sub); font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 6px; }
 .sa .panel-val { font-family: var(--fh); font-size: 1.6rem; color: #fff; display: flex; align-items: baseline; gap: 10px; }
-.sa .panel-val .change { font-family: var(--fb); font-size: 0.7rem; color: var(--te); background: rgba(16,185,129,0.1); padding: 2px 8px; border-radius: 100px; }
+.sa .panel-val .change { font-family: var(--fb); font-size: 0.7rem; color: #fff; background: rgba(255,255,255,0.08); padding: 2px 8px; border-radius: 100px; }
 
 /* ─── Responsive (Consolidated) ──────────────────────────────────────────── */
 @media (max-width: 1024px) {

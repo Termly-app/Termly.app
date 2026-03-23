@@ -1,4 +1,4 @@
-import { RefreshIcon, CheckIcon } from '../../../components/CommonIcons';
+import { RefreshIcon, CheckIcon, CrossIcon } from '../../../components/CommonIcons';
 
 export default function PlanModal({
   planModal, setPlanModal,

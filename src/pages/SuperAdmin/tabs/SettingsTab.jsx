@@ -62,7 +62,7 @@ const FEATURE_SUGGESTIONS = [
 ];
 
 const PLAN_COLORS = [
-  '#10B981','#0DD88A','#4A9EE8','#E8A020','#D4506A','#7C5CFC','#F97316',
+  '#ffffff','#f4f4f5','#e1eed1','#e8A020','#D4506A','#71717a','#F97316',
 ];
 
 const EMPTY_PLAN = {
@@ -451,7 +451,7 @@ export default function SettingsTab({
               features:['Student Management','Attendance Tracking','CBC Grading (PP1–Grade 6)','M-PESA Fee Tracking','Basic Report Cards','Email Support'],
             },
             {
-              name:'School', price:'KSh 9,999', color:'#7C5CFC',
+              name:'School', price:'KSh 9,999', color:'#e4e4e7',
               limit:'Up to 300 students · 10 staff',
               trial:'14-day free trial',
               popular:true,

@@ -1,5 +1,5 @@
 import { fmtMoney, planAmt } from '../superAdminUtils';
-import { CheckIcon } from '../../../components/CommonIcons';
+import { CheckIcon, CrossIcon } from '../../../components/CommonIcons';
 
 export default function ActivateModal({
   activateModal, setActivateModal,

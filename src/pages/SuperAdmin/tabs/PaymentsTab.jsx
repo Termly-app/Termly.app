@@ -36,12 +36,12 @@ export default function PaymentsTab({
                     </div>
                     <div style={{ display:'flex', gap:8, width:'100%', justifyContent:'flex-end' }}>
                       <button className="btn"
-                        style={{ color:'var(--te)', borderColor:'rgba(13,216,138,.3)', background:'rgba(13,216,138,.05)' }}
+                        style={{ color:'#fff', borderColor:'rgba(255,255,255,.2)', background:'rgba(255,255,255,.05)' }}
                         onClick={() => handleApprove(p)}>
                         Approve
                       </button>
                       <button className="btn"
-                        style={{ color:'var(--ro)', borderColor:'rgba(212,80,106,.3)', background:'rgba(212,80,106,.05)' }}
+                        style={{ color:'var(--sub)', borderColor:'var(--edge2)', background:'transparent' }}
                         onClick={() => handleReject(p)}>
                         Reject
                       </button>

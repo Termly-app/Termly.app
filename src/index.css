@@ -1,4 +1,7 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Iosevka+Charon+Mono:wght@300;400;500;600;700&display=swap');
+
 
 /* ====== SHULESOFT DESIGN SYSTEM (Unified Theme Architecture) ====== */
 
@@ -31,8 +34,8 @@
   --border: #e2e8f0;
   --border-light: #f1f5f9;
 
-  --font: 'Inter', sans-serif;
-  --font-display: 'Inter', sans-serif;
+  --font: 'Plus Jakarta Sans', 'Inter', sans-serif;
+  --font-display: 'Plus Jakarta Sans', 'Inter', sans-serif;
   --radius: 12px;
   --radius-sm: 8px;
   --shadow-sm: 0 1px 2px rgba(0,0,0,0.05);
@@ -54,13 +57,18 @@
   --txt: #e4e4e7; 
   --sub: #71717a; 
   --dim: #3f3f46;
-  --vi: #d4d4d8; 
+  --vi: #71717a; /* Neutral gray */
   --te: #10b981; 
   --am: #f59e0b; 
   --ro: #ef4444; 
   --sk: #3b82f6;
-  --fh: 'Inter', sans-serif; 
-  --fb: 'Inter', sans-serif;
+  --primary: #ffffff;
+  --primary-light: #f4f4f5;
+  --primary-dark: #a1a1aa;
+  --font: 'Iosevka Charon Mono', 'Plus Jakarta Sans', 'Inter', monospace;
+  --font-display: 'Iosevka Charon Mono', 'Plus Jakarta Sans', 'Inter', monospace;
+  --fh: 'Iosevka Charon Mono', monospace; 
+  --fb: 'Iosevka Charon Mono', monospace;
   --sb: 250px;
 }
 
@@ -246,11 +254,11 @@
 .theme-onyx .btn-signout:hover { background: rgba(212,80,106,0.05); border-color: var(--ro); }
 
 /* Global Utilities */
-.theme-onyx .ni-v { color: var(--vi); }
-.theme-onyx .ni-t { color: var(--te); }
-.theme-onyx .ni-a { color: var(--am); }
-.theme-onyx .ni-r { color: var(--ro); }
-.theme-onyx .ni-s { color: var(--sk); }
+.theme-onyx .ni-v { color: #fff; background: rgba(255,255,255,0.05); }
+.theme-onyx .ni-t { color: #fff; background: rgba(255,255,255,0.06); }
+.theme-onyx .ni-a { color: #fff; background: rgba(255,255,255,0.04); }
+.theme-onyx .ni-r { color: #fff; background: rgba(255,255,255,0.03); }
+.theme-onyx .ni-s { color: #fff; background: rgba(255,255,255,0.05); }
 
 .theme-onyx .animate { animation: onyxSlideUp .5s cubic-bezier(0.2, 0.8, 0.2, 1) forwards; }
 

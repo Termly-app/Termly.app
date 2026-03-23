@@ -245,7 +245,7 @@ export const LogoMark = ({ size = 28 }) => (
     <rect x="15" y="15" width="6" height="6" rx="1.5" fill="rgba(255,255,255,0.25)"/>
     <defs>
       <linearGradient id="logoGrad" x1="0" y1="0" x2="28" y2="28" gradientUnits="userSpaceOnUse">
-        <stop stopColor="#7C5CFC"/><stop offset="1" stopColor="#4F3DB8"/>
+        <stop stopColor="#f4f4f5"/><stop offset="1" stopColor="#71717a"/>
       </linearGradient>
     </defs>
   </svg>

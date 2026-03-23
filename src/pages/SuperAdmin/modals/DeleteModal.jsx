@@ -1,4 +1,4 @@
-import { DeleteIcon } from '../../../components/CommonIcons';
+import { DeleteIcon, CrossIcon } from '../../../components/CommonIcons';
 
 export default function DeleteModal({ deleteModal, setDeleteModal, deleting, handleDeleteSchool }) {
   if (!deleteModal) return null;

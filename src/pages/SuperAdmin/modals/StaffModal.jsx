@@ -1,5 +1,5 @@
 import { sPill } from '../superAdminUtils';
-import { TeacherIcon } from '../../../components/CommonIcons';
+import { TeacherIcon, CrossIcon } from '../../../components/CommonIcons';
 
 export default function StaffModal({
   staffModal, setStaffModal,
