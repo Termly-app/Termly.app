@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { getSchoolProfile, submitPayment, getPayments, checkIsSubscriptionActive, getPlatformSettings, updateSchoolPlan, cancelSubscription } from '../data/store';
 import { 
-  RocketIcon, ShieldIcon, AlertIcon, CheckIcon, CrossIcon, FolderIcon, DiamondIcon, TargetIcon, HistoryIcon
+  RocketIcon, ShieldIcon, AlertIcon, CheckIcon, CrossIcon, FolderIcon, DiamondIcon, TargetIcon, HistoryIcon, SubscriptionIcon
 } from '../components/CommonIcons';
 
 export default function Billing() {
@@ -128,7 +128,7 @@ export default function Billing() {
         {/* Status Card */}
         <div className="card glass-premium">
           <div className="card-header">
-            <h3><DiamondIcon size={18} /> Plan Overview</h3>
+            <h3><SubscriptionIcon size={18} /> Plan Overview</h3>
           </div>
           <div className="card-body">
             <div style={{ 
@@ -198,7 +198,7 @@ export default function Billing() {
                 <span className="badge badge-info">TERMLY</span>
               </div>
               <div style={{ marginTop: 16, textAlign: 'center' }}>
-                <button onClick={handleCancel} style={{ background: 'none', border: 'none', color: '#D4506A', fontSize: '0.75rem', fontWeight: 500, opacity: 0.6, cursor: 'pointer' }}>
+                <button onClick={handleCancel} style={{ background: 'none', border: 'none', color: '#ef4444', fontSize: '0.75rem', fontWeight: 600, opacity: 1, cursor: 'pointer', textDecoration: 'underline' }}>
                   Cancel subscription
                 </button>
               </div>

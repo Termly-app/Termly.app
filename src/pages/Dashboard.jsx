@@ -10,7 +10,7 @@ import Loader from '../components/Common/Loader';
 import {
   StudentIcon, TeacherIcon, CardIcon, BookIcon, UserIcon, SchoolIcon,
   RocketIcon, AlertIcon, LogoutIcon, ClockIcon, SearchIcon, DashboardIcon,
-  LeafIcon, GraduationIcon
+  LeafIcon, GraduationIcon, ChevronDownIcon
 } from '../components/CommonIcons';
 
 export default function Dashboard({ currentUser, onLogout, currentPeriodId }) {
@@ -148,9 +148,22 @@ export default function Dashboard({ currentUser, onLogout, currentPeriodId }) {
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
               <h2>{data.profile?.schoolName || 'Dashboard'}</h2>
+            <div style={{ position: 'relative', display: 'inline-flex', alignItems: 'center' }}>
               <select 
                 className="form-input" 
-                style={{ width: 'auto', height: 32, fontSize: '0.75rem', padding: '0 10px', background: 'var(--bg-card)', border: '1px solid var(--border)' }}
+                style={{ 
+                  width: 'auto', 
+                  height: 32, 
+                  fontSize: '0.75rem', 
+                  padding: '0 30px 0 12px', 
+                  background: 'rgba(255,255,255,0.05)', 
+                  border: '1px solid rgba(255,255,255,0.1)',
+                  borderRadius: '8px',
+                  color: 'var(--text)',
+                  appearance: 'none',
+                  cursor: 'pointer',
+                  fontWeight: 600
+                }}
                 value={currentPeriodId || ''}
                 onChange={(e) => setActivePeriod(e.target.value)}
               >
@@ -158,7 +171,11 @@ export default function Dashboard({ currentUser, onLogout, currentPeriodId }) {
                   <option key={p.id} value={p.id}>{p.year} {p.term} {p.is_active ? '(Active)' : ''}</option>
                 ))}
               </select>
+              <div style={{ position: 'absolute', right: 8, pointerEvents: 'none', opacity: 0.5 }}>
+                <ChevronDownIcon size={12} />
+              </div>
             </div>
+          </div>
             <p>Welcome back, <strong>{currentUser?.name || 'User'}</strong> — here's what's happening at your school today.</p>
           </div>
           <div className="inline-flex" style={{ gap: 10 }}>

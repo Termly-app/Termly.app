@@ -52,8 +52,8 @@ import {
   TimetableIcon, FeesIcon, FeeStructureIcon, SecurityIcon, SettingsIcon,
   BillingIcon, SignOutIcon, MenuIcon, CloseIcon, ChevronDownIcon,
   OverviewIcon, SchoolsIcon, PaymentsIcon, HistoryIcon, RevenueIcon,
-  ActivityIcon, RecoveryIcon, StatusDotIcon, ZapIcon,
-} from './components/Common/Icons';
+  ActivityIcon, RecoveryIcon, StatusDotIcon, ZapIcon, SubscriptionIcon
+} from './components/CommonIcons';
 
 // ── Sidebar nav link helper ───────────────────────────────────────────────
 function SbLink({ to, icon: Icon, label, onClick, exact = false }) {
@@ -240,7 +240,7 @@ function Sidebar({ isOpen, onClose, onLogout, currentUser, subscriptionActive })
           <SbLink to="/security" icon={SecurityIcon} label="Security" onClick={onClose} />
         )}
         {isAdmin && (
-          <SbLink to="/billing"  icon={BillingIcon}  label="Subscription" onClick={onClose} />
+          <SbLink to="/billing"  icon={SubscriptionIcon}  label="Subscription" onClick={onClose} />
         )}
         {isAdmin && (
           <SbLink to="/settings" icon={SettingsIcon} label="Settings" onClick={onClose} />

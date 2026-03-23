@@ -3,7 +3,7 @@ import { getStudents, getFees, recordPayment, getFeeSummary, getPrintHeader, get
 import Loader from '../components/Common/Loader';
 import { CLASSES, CBC_STRUCTURE } from '../data/seedData';
 import { 
-  CardIcon, CheckIcon, ReceiptIcon, PrintIcon, AlertIcon, DashboardIcon 
+  CardIcon, RocketIcon, UserIcon, InfoIcon, SearchIcon
 } from '../components/CommonIcons';
 
 function PaymentModal({ student, fee, onPay, onClose }) {
@@ -178,7 +178,7 @@ export default function Fees({ currentPeriodId }) {
         <div className="kpi-card purple"><div className="kpi-icon purple"><CheckIcon size={20} /></div><div className="kpi-value">{summary.fullyPaid||0}</div><div className="kpi-label">Fully Paid</div></div>
       </div>
       <div className="filter-bar">
-        <div className="search-bar"><span className="search-icon">🔍</span><input type="text" placeholder="Search student..." value={search} onChange={e=>setSearch(e.target.value)}/></div>
+        <div className="search-bar"><span className="search-icon"><SearchIcon size={16} /></span><input type="text" placeholder="Search student..." value={search} onChange={e=>setSearch(e.target.value)}/></div>
         <select className="form-select" value={classFilter} onChange={e=>{setClassFilter(e.target.value); setStreamFilter('All');}}>
           <option value="All">All Classes</option>
           {Object.entries(CBC_STRUCTURE).map(([levelName, levelData]) => {

@@ -5,7 +5,7 @@ import { CBC_STRUCTURE, CBC_CORE_COMPETENCIES, getLevelForGrade } from '../data/
 import {
   LeafIcon, BookIcon, GraduationIcon, RocketIcon, CalendarIcon,
   PrintIcon, RefreshIcon, SearchIcon, StudentIcon, EditIcon, 
-  DeleteIcon, PlusIcon, FlagIcon
+  DeleteIcon, PlusIcon,  GraduationIcon, SearchIcon
 } from '../components/CommonIcons';
 
 function getCurrentTermLabel() {
@@ -132,7 +132,7 @@ export default function Students({ currentUser, currentPeriodId }) {
           </div>
           <div style={{display:'flex',gap:8,flexWrap:'wrap',alignItems:'center'}}>
             <div className="search-bar" style={{maxWidth:240}}>
-              <span className="search-icon">🔍</span>
+              <span className="search-icon"><SearchIcon size={16} /></span>
               <input type="text" placeholder="Search students..." value={search} onChange={e=>setSearch(e.target.value)}/>
             </div>
             <select className="form-select" style={{width:'auto'}} value={classFilter}

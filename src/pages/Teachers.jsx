@@ -3,8 +3,8 @@ import { getTeachers, addTeacher, updateTeacher, deleteTeacher, getSubjectAssign
 import Loader from '../components/Common/Loader';
 import { CBC_STRUCTURE, getSubjectsForGrade, getLevelForGrade } from '../data/seedData';
 import { 
-  TeacherIcon, BookIcon, DashboardIcon, PlusIcon, EditIcon, 
-  DeleteIcon, SchoolIcon, PrintIcon, PhoneIcon 
+  TeacherIcon,  RocketIcon, AlertIcon, LogoutIcon, ClockIcon, SearchIcon, DashboardIcon,
+  LeafIcon, GraduationIcon
 } from '../components/CommonIcons';
 
 export default function Teachers({ currentPeriodId }) {
@@ -218,7 +218,7 @@ function RecordsTab({ teachers, search, setSearch, total, getTeacherSubjects, ge
     <>
       <div className="filter-bar">
         <div className="search-bar">
-          <span className="search-icon">🔍</span>
+          <span className="search-icon"><SearchIcon size={16} /></span>
           <input type="text" placeholder="Search teachers..." value={search} onChange={e => setSearch(e.target.value)} />
         </div>
         <span className="text-muted" style={{ fontSize: '0.85rem' }}>
