@@ -518,46 +518,43 @@ function App() {
         <div className="page-content">
           <ErrorBoundary>
             <Routes>
-              <Route path="/dashboard"
-                element={subscriptionActive ? <Dashboard currentUser={currentUser} onLogout={handleLogout} currentPeriodId={currentPeriodId} /> : <Navigate to="/billing" />} />
-              <Route path="/students"
-                element={subscriptionActive ? <Students currentUser={currentUser} currentPeriodId={currentPeriodId} /> : <Navigate to="/billing" />} />
-              <Route path="/teachers"
-                element={subscriptionActive ? <Teachers currentUser={currentUser} currentPeriodId={currentPeriodId} /> : <Navigate to="/billing" />} />
-              <Route path="/grading"
-                element={subscriptionActive ? <Grading currentUser={currentUser} currentPeriodId={currentPeriodId} /> : <Navigate to="/billing" />} />
-              <Route path="/fees"
-                element={subscriptionActive ? <Fees currentUser={currentUser} currentPeriodId={currentPeriodId} /> : <Navigate to="/billing" />} />
-              <Route path="/attendance"
-                element={subscriptionActive ? <Attendance currentUser={currentUser} currentPeriodId={currentPeriodId} /> : <Navigate to="/billing" />} />
-
-              <Route path="/fee-structure" element={
-                subscriptionActive ? (
-                  <FeeStructure
-                    schoolId={currentUser?.school_id}
-                    schoolName={currentUser?.schoolName}
-                    getFeeStructure={getFeeStructure}
-                    saveFeeStructure={saveFeeStructure}
-                    deleteFeeItem={deleteFeeItem}
-                  />
-                ) : <Navigate to="/billing" />
-              } />
-
-              <Route path="/timetable" element={
-                subscriptionActive ? (
-                  <Timetable
-                    currentUser={currentUser}
-                    currentPeriodId={currentPeriodId}
-                    periods={periods}
-                  />
-                ) : <Navigate to="/billing" />
-              } />
-
-              <Route path="/security" element={<Security currentUser={currentUser} />} />
-              <Route path="/settings" element={<Settings currentUser={currentUser} />} />
-              <Route path="/billing"  element={<Billing />} />
-              <Route path="/"         element={<Navigate to="/dashboard" replace />} />
-              <Route path="*"         element={<Navigate to="/dashboard" replace />} />
+              {!subscriptionActive ? (
+                <>
+                  <Route path="/billing"  element={<Billing />} />
+                  <Route path="/support"  element={<ContactSupport />} />
+                  <Route path="*"         element={<Navigate to="/billing" replace />} />
+                </>
+              ) : (
+                <>
+                  <Route path="/dashboard" element={<Dashboard currentUser={currentUser} onLogout={handleLogout} currentPeriodId={currentPeriodId} />} />
+                  <Route path="/students"  element={<Students currentUser={currentUser} currentPeriodId={currentPeriodId} />} />
+                  <Route path="/teachers"  element={<Teachers currentUser={currentUser} currentPeriodId={currentPeriodId} />} />
+                  <Route path="/grading"   element={<Grading currentUser={currentUser} currentPeriodId={currentPeriodId} />} />
+                  <Route path="/fees"      element={<Fees currentUser={currentUser} currentPeriodId={currentPeriodId} />} />
+                  <Route path="/attendance" element={<Attendance currentUser={currentUser} currentPeriodId={currentPeriodId} />} />
+                  <Route path="/fee-structure" element={
+                    <FeeStructure
+                      schoolId={currentUser?.school_id}
+                      schoolName={currentUser?.schoolName}
+                      getFeeStructure={getFeeStructure}
+                      saveFeeStructure={saveFeeStructure}
+                      deleteFeeItem={deleteFeeItem}
+                    />
+                  } />
+                  <Route path="/timetable" element={
+                    <Timetable
+                      currentUser={currentUser}
+                      currentPeriodId={currentPeriodId}
+                      periods={periods}
+                    />
+                  } />
+                  <Route path="/security" element={<Security currentUser={currentUser} />} />
+                  <Route path="/settings" element={<Settings currentUser={currentUser} />} />
+                  <Route path="/billing"  element={<Billing />} />
+                  <Route path="/"         element={<Navigate to="/dashboard" replace />} />
+                  <Route path="*"         element={<Navigate to="/dashboard" replace />} />
+                </>
+              )}
             </Routes>
           </ErrorBoundary>
         </div>
