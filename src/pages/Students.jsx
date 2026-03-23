@@ -5,7 +5,7 @@ import { CBC_STRUCTURE, CBC_CORE_COMPETENCIES, getLevelForGrade } from '../data/
 import {
   LeafIcon, BookIcon, GraduationIcon, RocketIcon, CalendarIcon,
   PrintIcon, RefreshIcon, SearchIcon, StudentIcon, EditIcon, 
-  DeleteIcon, PlusIcon,  GraduationIcon, SearchIcon
+  DeleteIcon, PlusIcon, FlagIcon
 } from '../components/CommonIcons';
 
 function getCurrentTermLabel() {
