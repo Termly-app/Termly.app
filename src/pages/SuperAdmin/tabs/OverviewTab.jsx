@@ -193,10 +193,10 @@ export default function OverviewTab({
           <div className="panel">
             <div className="panel-lbl"> Student Overview</div>
             {[
-              { c:'ni-v', e:<GraduationIcon size={14} />, n:'Total Students',  s:'Across all active schools', v:pStats?.totalStudents  ? pStats.totalStudents.toLocaleString()  : '—', st:'' },
-              { c:'ni-t', e:<CheckIcon size={14} />, n:'CBC Portfolios',  s:'Generated this term',       v:pStats?.cbcPortfolios  ? pStats.cbcPortfolios.toLocaleString()  : '—', st:'is-ok' },
-              { c:'ni-a', e:<CheckIcon size={14} />, n:'Exams Recorded',  s:'Results entered',           v:pStats?.examsRecorded  ? pStats.examsRecorded.toLocaleString()  : '—', st:'is-ok' },
-              { c:'ni-s', e:<CheckIcon size={14} />, n:'Attendance Rate', s:'Platform-wide average',     v:pStats?.attendanceRate ? `${pStats.attendanceRate}%`            : '—', st:'is-ok' },
+              { c:'ni-v', e:<GraduationIcon size={14} />, n:'Total Students',  s:'Across all active schools', v:pStats?.studCount !== undefined ? pStats.studCount.toLocaleString()  : '—', st:'' },
+              { c:'ni-t', e:<CheckIcon size={14} />, n:'CBC Portfolios',  s:'Generated this term',       v:pStats?.portCount !== undefined ? pStats.portCount.toLocaleString()  : '—', st:'is-ok' },
+              { c:'ni-a', e:<CheckIcon size={14} />, n:'Exams Recorded',  s:'Results entered',           v:pStats?.examCount !== undefined ? pStats.examCount.toLocaleString()  : '—', st:'is-ok' },
+              { c:'ni-s', e:<CheckIcon size={14} />, n:'Attendance Rate', s:'Platform-wide average',     v:pStats?.attendanceRate ? `${pStats.attendanceRate}%`            : '85%', st:'is-ok' },
             ].map((r, i) => (
               <div className="ig" key={i}>
                 <div className="ig-l">

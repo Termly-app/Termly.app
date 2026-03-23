@@ -436,14 +436,23 @@ export default function SuperAdmin({ currentUser, sidebarOpen, setSidebarOpen, o
         (async () => {
           const rawSchools = await getAllSchools();
 
-          // Per-school user counts
+          // Per-school stats aggregation
           let userCounts = {};
+          let studentCounts = {};
           try {
-            const { data: allUsers } = await supabase.from('users').select('school_id');
+            const [{ data: allUsers }, { data: allStudents }] = await Promise.all([
+              supabase.from('users').select('school_id'),
+              supabase.from('students').select('school_id')
+            ]);
             if (allUsers) allUsers.forEach(u => { if (u.school_id) userCounts[u.school_id] = (userCounts[u.school_id] || 0) + 1; });
-          } catch (e) { console.warn('Could not fetch user counts', e); }
+            if (allStudents) allStudents.forEach(s => { if (s.school_id) studentCounts[s.school_id] = (studentCounts[s.school_id] || 0) + 1; });
+          } catch (e) { console.warn('Could not fetch usage counts', e); }
 
-          const enriched = rawSchools.map(s => ({ ...s, _staffCount: userCounts[s.id] || 0 }));
+          const enriched = rawSchools.map(s => ({
+            ...s,
+            _staffCount: userCounts[s.id] || 0,
+            _studentCount: studentCounts[s.id] || 0
+          }));
           setSchools(enriched);
 
           // Optional profile merge (catches anything the join missed)

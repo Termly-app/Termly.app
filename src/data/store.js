@@ -1665,6 +1665,17 @@ export async function getPlatformStats() {
       .from('payments')
       .select('amount, status, created_at');
 
+    // 4. Global usage metrics
+    const [
+      { count: studCount },
+      { count: examCount },
+      { count: portCount }
+    ] = await Promise.all([
+      supabase.from('students').select('*', { count: 'exact', head: true }),
+      supabase.from('exam_results').select('*', { count: 'exact', head: true }),
+      supabase.from('student_portfolios').select('*', { count: 'exact', head: true })
+    ]);
+
     if (sErr || prErr || pErr) throw (sErr || prErr || pErr);
 
     const sData = schoolsData || [];
@@ -1720,7 +1731,10 @@ export async function getPlatformStats() {
       pendingPayments: pData.filter(p => p.status === 'Pending').length,
       revenueHistory,
       labels,
-      health: activeSchools > expiredSchools ? 'Healthy' : 'Critical'
+      health: activeSchools > expiredSchools ? 'Healthy' : 'Critical',
+      studCount: studCount || 0,
+      examCount: examCount || 0,
+      portCount: portCount || 0
     };
   } catch (err) {
     console.error('getPlatformStats error:', err);

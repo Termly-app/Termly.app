@@ -77,7 +77,7 @@ export default function SchoolsTab({
               <tbody>
                 {filteredSchools.map(s => {
                   const p = s.school_profiles?.[0] || {};
-                  const isActive = isSchoolActive(s) || p.is_active === true || p.subscription_status === 'Active';
+                  const isActive = isSchoolActive(s);
 
                   const curPlan   = s.plan || p.subscription_plan || 'Fala';
                   const pricing   = settings?.pricing || {};
