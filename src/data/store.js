@@ -1669,12 +1669,18 @@ export async function getPlatformStats() {
     const [
       { count: studCount },
       { count: examCount },
-      { count: portCount }
+      { count: portCount },
+      { count: attTotal },
+      { count: attPresent }
     ] = await Promise.all([
       supabase.from('students').select('*', { count: 'exact', head: true }),
       supabase.from('exam_results').select('*', { count: 'exact', head: true }),
-      supabase.from('student_portfolios').select('*', { count: 'exact', head: true })
+      supabase.from('student_portfolios').select('*', { count: 'exact', head: true }),
+      supabase.from('attendance').select('*', { count: 'exact', head: true }),
+      supabase.from('attendance').select('*', { count: 'exact', head: true }).eq('status', 'Present')
     ]);
+
+    const attendanceRate = attTotal > 0 ? Math.round((attPresent / attTotal) * 100) : 0;
 
     if (sErr || prErr || pErr) throw (sErr || prErr || pErr);
 
@@ -1734,7 +1740,8 @@ export async function getPlatformStats() {
       health: activeSchools > expiredSchools ? 'Healthy' : 'Critical',
       studCount: studCount || 0,
       examCount: examCount || 0,
-      portCount: portCount || 0
+      portCount: portCount || 0,
+      attendanceRate: attendanceRate || 0
     };
   } catch (err) {
     console.error('getPlatformStats error:', err);
