@@ -24,6 +24,10 @@ import {
   getRequirements, getAllRequirements, saveRequirement, deleteRequirement,
   getSubjectAssignments, getTeachers, checkTeacherConflict, getSchoolProfile,
 } from '../../data/store';
+import { 
+  CalendarIcon, PrintIcon, BookIcon, SettingsIcon, CheckIcon, CrossIcon, 
+  RocketIcon, SaveIcon, AlertIcon, UserIcon, HomeIcon, TeacherIcon, PlusIcon
+} from '../../components/CommonIcons';
 
 // ── Colour palette for subjects ──────────────────────────────────────────
 const COLORS = [
@@ -617,7 +621,7 @@ export default function Timetable({ currentUser, currentPeriodId, periods = [] }
       {/* ── Header ── */}
       <div className="tt-header">
         <div className="tt-title-group">
-          <div className="tt-icon">📅</div>
+          <div className="tt-icon"><CalendarIcon size={24} /></div>
           <div>
             <div className="tt-title">Timetable</div>
             <div className="tt-sub">
@@ -631,19 +635,19 @@ export default function Timetable({ currentUser, currentPeriodId, periods = [] }
             <button className="tt-btn" onClick={() => printClassTimetable({
               school: { name: currentUser?.schoolName }, classGrade: selClass,
               stream: selStream, period: activePeriod, config, slots, activeDays,
-            })}>🖨️ Print</button>
+            })}><PrintIcon size={14} /> Print</button>
           )}
           {panel === 'grid' && view === 'teacher' && selTeacher && (
             <button className="tt-btn" onClick={() => printTeacherTimetable({
               school: { name: currentUser?.schoolName },
               teacher: teachers.find(t => t.id === selTeacher),
               period: activePeriod, config, slots: teacherSlots, activeDays,
-            })}>🖨️ Print</button>
+            })}><PrintIcon size={14} /> Print</button>
           )}
           {/* Period selector always visible */}
           <select className="tt-select" value={periodId} onChange={e => setPeriodId(e.target.value)}>
             {periods.map(p => (
-              <option key={p.id} value={p.id}>{p.year} — Term {p.term}{p.is_active ? ' ✓' : ''}</option>
+              <option key={p.id} value={p.id}>{p.year} — Term {p.term}{p.is_active ? ' (Active)' : ''}</option>
             ))}
           </select>
         </div>
@@ -651,7 +655,7 @@ export default function Timetable({ currentUser, currentPeriodId, periods = [] }
 
       {/* ── Panel tabs ── */}
       <div className="tt-panel-tabs">
-        {[['grid','📅 Timetable'],['req','📚 Requirements'],['config','⚙️ Slot Config']].map(([k, label]) => (
+        {[['grid',<><CalendarIcon size={14} /> Timetable</>],['req',<><BookIcon size={14} /> Requirements</>],['config',<><SettingsIcon size={14} /> Slot Config</>]].map(([k, label]) => (
           <button key={k} className={`tt-panel-tab ${panel === k ? 'active' : ''}`}
             onClick={() => setPanel(k)}>{label}</button>
         ))}
@@ -660,7 +664,7 @@ export default function Timetable({ currentUser, currentPeriodId, periods = [] }
       {/* ── Toast ── */}
       {message && (
         <div className={`tt-toast ${message.type === 'ok' ? 'tt-toast-ok' : 'tt-toast-err'}`}>
-          {message.type === 'ok' ? '✓' : '✕'} {message.text}
+          {message.type === 'ok' ? <CheckIcon size={14} /> : <CrossIcon size={14} />} {message.text}
         </div>
       )}
 
@@ -673,14 +677,14 @@ export default function Timetable({ currentUser, currentPeriodId, periods = [] }
           {preview && (
             <div className="tt-preview-banner">
               <div className="tt-preview-banner-text">
-                ⚡ Preview — {preview.slots.length} slots generated. Not saved yet.
+                <RocketIcon size={16} /> Preview — {preview.slots.length} slots generated. Not saved yet.
               </div>
               <div className="tt-preview-actions">
                 <button className="tt-btn tt-btn-sm" onClick={() => { setPreview(null); setMessage(null); }}>
                   Discard
                 </button>
                 <button className="tt-btn tt-btn-success tt-btn-sm" disabled={savingGen} onClick={handleSaveGenerated}>
-                  {savingGen ? 'Saving...' : '💾 Save Timetable'}
+                  {savingGen ? 'Saving...' : <><SaveIcon size={14} /> Save Timetable</>}
                 </button>
               </div>
             </div>
@@ -690,7 +694,7 @@ export default function Timetable({ currentUser, currentPeriodId, periods = [] }
           {preview?.unplaced?.length > 0 && (
             <div className="tt-unplaced">
               <div className="tt-unplaced-title">
-                ⚠️ {preview.unplaced.length} lesson{preview.unplaced.length !== 1 ? 's' : ''} could not be placed
+                <AlertIcon size={16} /> {preview.unplaced.length} lesson{preview.unplaced.length !== 1 ? 's' : ''} could not be placed
                 — not enough free slots. Reduce periods/week or add more time slots.
               </div>
               {preview.unplaced.map((u, i) => (
@@ -705,8 +709,8 @@ export default function Timetable({ currentUser, currentPeriodId, periods = [] }
           {/* Controls */}
           <div className="tt-controls">
             <div className="tt-view-toggle">
-              <button className={`tt-view-btn ${view === 'class' ? 'active' : ''}`}   onClick={() => setView('class')}>📚 Class</button>
-              <button className={`tt-view-btn ${view === 'teacher' ? 'active' : ''}`} onClick={() => setView('teacher')}>👩‍🏫 Teacher</button>
+              <button className={`tt-view-btn ${view === 'class' ? 'active' : ''}`}   onClick={() => setView('class')}><BookIcon size={14} /> Class</button>
+              <button className={`tt-view-btn ${view === 'teacher' ? 'active' : ''}`} onClick={() => setView('teacher')}><TeacherIcon size={14} /> Teacher</button>
             </div>
             <div className="tt-divider" />
             {view === 'class' && (
@@ -738,10 +742,10 @@ export default function Timetable({ currentUser, currentPeriodId, periods = [] }
             </div>
           ) : config.filter(c => !c.is_break).length === 0 ? (
             <div className="tt-empty">
-              <div className="tt-empty-ico">⚙️</div>
+              <div className="tt-empty-ico"><SettingsIcon size={48} /></div>
               <div className="tt-empty-title">No time slots configured</div>
               <div className="tt-empty-sub">Set up your school day structure in the Slot Config panel first.</div>
-              {isAdmin && <button className="tt-btn tt-btn-primary" onClick={() => setPanel('config')}>⚙️ Configure Slots</button>}
+              {isAdmin && <button className="tt-btn tt-btn-primary" onClick={() => setPanel('config')}><SettingsIcon size={14} /> Configure Slots</button>}
             </div>
           ) : (
             <div className="tt-grid-wrap">
@@ -791,7 +795,7 @@ export default function Timetable({ currentUser, currentPeriodId, periods = [] }
                               onClick={() => openEdit(d, cfg.slot_index)}>
                               {hasData && isAdmin && view === 'class' && !preview && (
                                 <button className="tt-cell-clear"
-                                  onClick={e => handleClearCell(d, cfg.slot_index, e)}>✕</button>
+                                  onClick={e => handleClearCell(d, cfg.slot_index, e)}><CrossIcon size={12} /></button>
                               )}
                               <div className="tt-cell-inner" style={hasData ? {
                                 background: `${bg}22`, border: `1px solid ${bg}55`,
@@ -805,7 +809,7 @@ export default function Timetable({ currentUser, currentPeriodId, periods = [] }
                                     {isDoubleSecond && <div className="tt-double-cont">↑ continued</div>}
                                     {view === 'class' && (cell.teachers?.name || teacherName(cell.teacher_id)) && !isDoubleSecond && (
                                       <div className="tt-cell-teacher">
-                                        👤 {cell.teachers?.name || teacherName(cell.teacher_id)}
+                                      <UserIcon size={12} /> {cell.teachers?.name || teacherName(cell.teacher_id)}
                                       </div>
                                     )}
                                     {view === 'teacher' && cell.class_grade && (
@@ -814,7 +818,7 @@ export default function Timetable({ currentUser, currentPeriodId, periods = [] }
                                       </div>
                                     )}
                                     {cell.room && !isDoubleSecond && (
-                                      <div className="tt-cell-room">🚪 {cell.room}</div>
+                                      <div className="tt-cell-room">{cell.room && `Room: ${cell.room}`}</div>
                                     )}
                                   </>
                                 ) : (
@@ -875,12 +879,12 @@ export default function Timetable({ currentUser, currentPeriodId, periods = [] }
                 <span className="tt-req-stat">Lessons/week: <strong>{weeklyRequired}</strong></span>
                 <span className="tt-req-stat">Slots available: <strong>{weeklyCapacity}</strong></span>
                 {weeklyRequired > weeklyCapacity && (
-                  <span style={{ fontSize:'.68rem', color:'#D4506A', fontWeight:600 }}>⚠️ Over capacity</span>
+                  <span style={{ fontSize:'.68rem', color:'#D4506A', fontWeight:600, display:'flex', alignItems:'center', gap:3 }}><AlertIcon size={12} /> Over capacity</span>
                 )}
               </div>
-              <button className="tt-btn tt-btn-sm" onClick={handleAutoImport}>⬇️ Auto-import</button>
+              <button className="tt-btn tt-btn-sm" onClick={handleAutoImport}>Auto-import</button>
               <button className="tt-generate-btn" disabled={generating} onClick={handleGenerate}>
-                {generating ? '⚙️ Generating...' : '⚡ Generate Timetable'}
+                {generating ? <><SettingsIcon size={14} /> Generating...</> : <><RocketIcon size={14} /> Generate Timetable</>}
               </button>
             </div>
           </div>
@@ -932,7 +936,7 @@ export default function Timetable({ currentUser, currentPeriodId, periods = [] }
                     {isAdmin && (
                       <td>
                         <button className="tt-btn tt-btn-sm tt-btn-danger"
-                          onClick={() => handleDeleteReq(r.subject)}>✕</button>
+                          onClick={() => handleDeleteReq(r.subject)}><CrossIcon size={12} /></button>
                       </td>
                     )}
                   </tr>
@@ -944,7 +948,7 @@ export default function Timetable({ currentUser, currentPeriodId, periods = [] }
           {/* Add requirement form */}
           {isAdmin && (
             <div className="tt-add-req">
-              <div className="tt-add-req-title">+ Add Subject Requirement</div>
+              <div className="tt-add-req-title"><PlusIcon size={14} /> Add Subject Requirement</div>
               <div className="tt-add-req-grid">
                 <div>
                   <label className="tt-req-label">Subject *</label>
@@ -1013,7 +1017,7 @@ export default function Timetable({ currentUser, currentPeriodId, periods = [] }
               <div className="tt-config-sub">Set the periods, breaks, and times for your school day. These apply to all classes.</div>
             </div>
             <button className="tt-btn tt-btn-primary" disabled={configSaving} onClick={handleSaveConfig}>
-              {configSaving ? 'Saving...' : '💾 Save Configuration'}
+              {configSaving ? 'Saving...' : <><SaveIcon size={14} /> Save Configuration</>}
             </button>
           </div>
 
@@ -1051,10 +1055,10 @@ export default function Timetable({ currentUser, currentPeriodId, periods = [] }
                 Break / Non-teaching
               </label>
               <button className="tt-btn tt-btn-danger tt-btn-sm" style={{ marginLeft:'auto' }}
-                onClick={() => removeDraft(i)}>✕</button>
+                onClick={() => removeDraft(i)} style={{ display:'flex', alignItems:'center', justifyContent:'center' }}><CrossIcon size={14} /></button>
             </div>
           ))}
-          <button className="tt-add-slot" onClick={addDraftSlot}>+ Add Time Slot</button>
+          <button className="tt-add-slot" onClick={addDraftSlot}><PlusIcon size={14} /> Add Time Slot</button>
 
           {/* Info */}
           <div style={{ marginTop:14, padding:'10px 13px', borderRadius:8, background:'rgba(74,158,232,.07)', border:'1px solid rgba(74,158,232,.15)' }}>
@@ -1073,7 +1077,7 @@ export default function Timetable({ currentUser, currentPeriodId, periods = [] }
       {editCell && (
         <div className="tt-modal-overlay" onClick={e => { if (e.target === e.currentTarget) { setEditCell(null); setConflictWarning(null); }}}>
           <div className="tt-modal">
-            <button className="tt-modal-close" onClick={() => { setEditCell(null); setConflictWarning(null); }}>✕</button>
+            <button className="tt-modal-close" onClick={() => { setEditCell(null); setConflictWarning(null); }}><CrossIcon size={14} /></button>
             <div className="tt-modal-title">
               {editCell.existing?.subject ? 'Edit Slot' : 'Add to Slot'}
             </div>
@@ -1111,7 +1115,7 @@ export default function Timetable({ currentUser, currentPeriodId, periods = [] }
             {/* Conflict warning */}
             {conflictWarning && (
               <div className="tt-conflict-box">
-                <div className="tt-conflict-title">⚠️ Teacher Already Booked</div>
+                <div className="tt-conflict-title"><AlertIcon size={16} /> Teacher Already Booked</div>
                 <div className="tt-conflict-body">
                   <strong style={{ color:'#D4DDD6' }}>{teacherName(editTeacher)}</strong> is already teaching{' '}
                   <strong style={{ color:'#D4DDD6' }}>{conflictWarning.subject}</strong> in{' '}

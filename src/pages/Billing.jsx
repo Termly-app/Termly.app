@@ -1,5 +1,8 @@
 import { useState, useEffect } from 'react';
 import { getSchoolProfile, submitPayment, getPayments, checkIsSubscriptionActive, getPlatformSettings, updateSchoolPlan, cancelSubscription } from '../data/store';
+import { 
+  RocketIcon, ShieldIcon, AlertIcon, CheckIcon, CrossIcon, FolderIcon, DiamondIcon 
+} from '../components/CommonIcons';
 
 export default function Billing() {
   const [profile, setProfile] = useState(null);
@@ -125,7 +128,7 @@ export default function Billing() {
         {/* Status Card */}
         <div className="card glass-premium">
           <div className="card-header">
-            <h3>💎 Plan Overview</h3>
+            <h3><DiamondIcon size={18} /> Plan Overview</h3>
           </div>
           <div className="card-body">
             <div style={{ 
@@ -149,7 +152,7 @@ export default function Billing() {
                 fontSize: '1.75rem',
                 boxShadow: isActive ? '0 10px 20px rgba(79, 70, 229, 0.3)' : 'none'
               }}>
-                {isActive ? '⚡' : '🔒'}
+                {isActive ? <RocketIcon size={28} /> : <ShieldIcon size={28} />}
               </div>
               <div>
                 <h4 style={{ fontSize: '1.5rem', fontWeight: 900, color: 'var(--text)', margin: 0, letterSpacing: '-0.5px' }}>
@@ -177,7 +180,7 @@ export default function Billing() {
                 whiteSpace: 'normal',
                 lineHeight: 1.4
               }}>
-                <span style={{ fontSize: '1.5rem' }}>⚠️</span>
+                <span style={{ fontSize: '1.5rem' }}><AlertIcon size={24} /></span>
                 <div>
                   <div style={{ fontWeight: 700 }}>Access Restricted</div>
                   <div style={{ opacity: 0.9, fontSize: '0.85rem' }}>Your school's access has been limited. Renew your subscription to restore full functionality.</div>
@@ -251,7 +254,7 @@ export default function Billing() {
 
             {message && (
               <div className={`badge ${message.type === 'success' ? 'badge-success' : 'badge-danger'}`} style={{ width: '100%', padding: '12px', marginBottom: '20px', textAlign: 'center' }}>
-                {message.type === 'success' ? '✅ ' : '❌ '}{message.text}
+                {message.type === 'success' ? <CheckIcon size={16} /> : <CrossIcon size={16} />} {message.text}
               </div>
             )}
 
@@ -278,7 +281,7 @@ export default function Billing() {
                 style={{ padding: '18px', fontSize: '1.1rem', fontWeight: 700 }}
                 disabled={submitting || !code}
               >
-                {submitting ? 'PROCESSING...' : 'ACTIVATE MY ACCOUNT 🚀'}
+                {submitting ? 'PROCESSING...' : <span style={{ display: 'flex', alignItems: 'center', gap: '8px', justifyContent: 'center' }}>ACTIVATE MY ACCOUNT <RocketIcon size={20} /></span>}
               </button>
             </form>
           </div>
@@ -303,8 +306,8 @@ export default function Billing() {
               {payments.length === 0 ? (
                 <tr>
                   <td colSpan="4" style={{ textAlign: 'center', padding: '60px', opacity: 0.5 }}>
-                    <span style={{ fontSize: '2rem', display: 'block', marginBottom: 12 }}>📂</span>
-                    No payments found in our records
+                  <span style={{ fontSize: '2rem', display: 'block', marginBottom: 12 }}><FolderIcon size={48} /></span>
+                  No payments found in our records
                   </td>
                 </tr>
               ) : (
@@ -335,7 +338,7 @@ export default function Billing() {
 
       <div style={{ marginTop: 48 }}>
         <h3 style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--text)', marginBottom: 24, display: 'flex', alignItems: 'center', gap: 12 }}>
-          <span>🚀</span> Available Subscription Plans
+          <span><RocketIcon size={24} /></span> Available Subscription Plans
         </h3>
         <div style={{ 
           display: 'grid', 
@@ -364,11 +367,11 @@ export default function Billing() {
               </div>
               <ul style={{ listStyle: 'none', padding: 0, margin: '20px 0', flex: 1 }}>
                 <li style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8, fontSize: '0.9rem', opacity: 0.8 }}>
-                  <span style={{ color: 'var(--primary)', fontWeight: 900 }}>✓</span> Up to {p.limit?.toLocaleString()} students
+                  <CheckIcon size={14} color="var(--primary)" /> Up to {p.limit?.toLocaleString()} students
                 </li>
                 {p.features?.map((f, i) => (
                   <li key={i} style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8, fontSize: '0.9rem', opacity: 0.8 }}>
-                    <span style={{ color: 'var(--primary)', fontWeight: 900 }}>✓</span> {f}
+                    <CheckIcon size={14} color="var(--primary)" /> {f}
                   </li>
                 ))}
               </ul>
@@ -390,7 +393,7 @@ export default function Billing() {
                   letterSpacing: '0.5px'
                 }}
               >
-                {switching ? 'Updating Plan...' : profile?.subscriptionPlan === id ? '✓ Active Selection' : 'Choose Plan'}
+                {switching ? 'Updating Plan...' : profile?.subscriptionPlan === id ? <><CheckIcon size={14} /> Active Selection</> : 'Choose Plan'}
               </button>
             </div>
           ))}

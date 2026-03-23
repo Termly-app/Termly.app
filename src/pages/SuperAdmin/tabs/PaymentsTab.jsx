@@ -1,4 +1,5 @@
 import { fmtDate, fmtMoney, planAmt } from '../superAdminUtils';
+import { CardIcon, CheckIcon } from '../../../components/CommonIcons';
 
 export default function PaymentsTab({
   filteredPayments, activeSchools, filteredSchools,
@@ -23,7 +24,7 @@ export default function PaymentsTab({
                 return (
                   <div className="pay" key={p.id} style={{ flexWrap:'wrap', gap:12 }}>
                     <div className="pay-l" style={{ flex:1, minWidth:'200px' }}>
-                      <div className={`li-ico ${cls}`}>💳</div>
+                      <div className={`li-ico ${cls}`}><CardIcon size={14} /></div>
                       <div>
                         <div className="pay-nm">{p.school_profiles?.school_name || '—'}</div>
                         <div className="pay-dt">{fmtDate(p.created_at)} · {p.transaction_code}</div>
@@ -49,7 +50,7 @@ export default function PaymentsTab({
                 );
               })
             : activeSchools.length === 0
-              ? <div className="empty"><div className="empty-ico">✅</div>No payments yet.</div>
+              ? <div className="empty"><div className="empty-ico"><CheckIcon size={24} /></div>No payments yet.</div>
               : (searchQuery ? filteredSchools.filter(s => s.school_profiles?.[0]?.subscription_status === 'Active') : activeSchools)
                   .slice(0, 6).map((s, i) => {
                     const p   = s.school_profiles?.[0] || {};
@@ -57,7 +58,7 @@ export default function PaymentsTab({
                     return (
                       <div className="pay" key={s.id}>
                         <div className="pay-l">
-                          <div className={`li-ico ${cls}`}>💳</div>
+                          <div className={`li-ico ${cls}`}><CardIcon size={14} /></div>
                           <div>
                             <div className="pay-nm">{s.name}</div>
                             <div className="pay-dt">{fmtDate(p.created_at || s.created_at)}</div>

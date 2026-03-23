@@ -2,6 +2,9 @@ import { useState, useEffect } from 'react';
 import { getStudents, getFees, recordPayment, getFeeSummary, getPrintHeader, getSchoolProfile, TERM_FEE, subscribeToChanges } from '../data/store';
 import Loader from '../components/Common/Loader';
 import { CLASSES, CBC_STRUCTURE } from '../data/seedData';
+import { 
+  CardIcon, CheckIcon, ReceiptIcon, PrintIcon, AlertIcon, DashboardIcon 
+} from '../components/CommonIcons';
 
 function PaymentModal({ student, fee, onPay, onClose }) {
   const [amount, setAmount] = useState('');
@@ -12,7 +15,7 @@ function PaymentModal({ student, fee, onPay, onClose }) {
   return (
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal" onClick={e=>e.stopPropagation()}>
-        <div className="modal-header"><h3>💳 Record Payment</h3><button className="modal-close" onClick={onClose}>×</button></div>
+        <div className="modal-header"><h3><CardIcon size={20} /> Record Payment</h3><button className="modal-close" onClick={onClose}>×</button></div>
         <form onSubmit={handleSubmit}>
           <div className="modal-body">
             <div style={{background:'#f8fafc',borderRadius:8,padding:16,marginBottom:20}}>
@@ -25,7 +28,7 @@ function PaymentModal({ student, fee, onPay, onClose }) {
               <div className="form-group"><label>Reference</label><input className="form-input" value={reference} onChange={e=>setReference(e.target.value)} placeholder="e.g. MPE1234"/></div>
             </div>
           </div>
-          <div className="modal-footer"><button type="button" className="btn btn-ghost" onClick={onClose}>Cancel</button><button type="submit" className="btn btn-success">✅ Record Payment</button></div>
+          <div className="modal-footer"><button type="button" className="btn btn-ghost" onClick={onClose}>Cancel</button><button type="submit" className="btn btn-success"><CheckIcon size={16} /> Record Payment</button></div>
         </form>
       </div>
     </div>
@@ -45,7 +48,7 @@ function ReceiptModal({ receipt, onClose, profile }) {
   return (
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal" onClick={e=>e.stopPropagation()} style={{maxWidth:460}}>
-        <div className="modal-header"><h3>🧾 Receipt</h3><button className="modal-close" onClick={onClose}>×</button></div>
+        <div className="modal-header"><h3><ReceiptIcon size={20} /> Receipt</h3><button className="modal-close" onClick={onClose}>×</button></div>
         <div className="modal-body">
           <div className="receipt">
             <div className="receipt-header"><h2>{profile?.school_name || 'ShuleSoft Academy'}</h2><p className="text-muted" style={{fontSize:'0.82rem'}}>Payment Receipt</p></div>
@@ -58,7 +61,7 @@ function ReceiptModal({ receipt, onClose, profile }) {
             <div className="receipt-row receipt-total"><span>Amount Paid:</span><strong style={{color:'var(--success)'}}>{formatKSh(receipt.amount)}</strong></div>
           </div>
         </div>
-        <div className="modal-footer"><button className="btn btn-ghost" onClick={onClose}>Close</button><button className="btn btn-primary" onClick={handlePrint}>🖨️ Print</button></div>
+        <div className="modal-footer"><button className="btn btn-ghost" onClick={onClose}>Close</button><button className="btn btn-primary" onClick={handlePrint}><PrintIcon size={16} /> Print</button></div>
       </div>
     </div>
   );
@@ -165,14 +168,14 @@ export default function Fees({ currentPeriodId }) {
             </div>
             {loading && <span className="text-muted" style={{ fontSize: '0.85rem' }}>Loading...</span>}
           </div>
-          <button className="btn btn-ghost" onClick={printFeeList}>🖨️ Print Fee List</button>
+          <button className="btn btn-ghost" onClick={printFeeList}><PrintIcon size={16} /> Print Fee List</button>
         </div>
       </div>
       <div className="kpi-grid">
-        <div className="kpi-card green"><div className="kpi-icon green">💰</div><div className="kpi-value">{formatKSh(summary.totalCollected)}</div><div className="kpi-label">Total Collected</div></div>
-        <div className="kpi-card red"><div className="kpi-icon red">⚠️</div><div className="kpi-value">{formatKSh(summary.totalOutstanding)}</div><div className="kpi-label">Outstanding</div></div>
-        <div className="kpi-card blue"><div className="kpi-icon blue">📊</div><div className="kpi-value">{formatKSh(summary.totalExpected)}</div><div className="kpi-label">Expected</div></div>
-        <div className="kpi-card purple"><div className="kpi-icon purple">✅</div><div className="kpi-value">{summary.fullyPaid||0}</div><div className="kpi-label">Fully Paid</div></div>
+        <div className="kpi-card green"><div className="kpi-icon green"><CardIcon size={20} /></div><div className="kpi-value">{formatKSh(summary.totalCollected)}</div><div className="kpi-label">Total Collected</div></div>
+        <div className="kpi-card red"><div className="kpi-icon red"><AlertIcon size={20} /></div><div className="kpi-value">{formatKSh(summary.totalOutstanding)}</div><div className="kpi-label">Outstanding</div></div>
+        <div className="kpi-card blue"><div className="kpi-icon blue"><DashboardIcon size={20} /></div><div className="kpi-value">{formatKSh(summary.totalExpected)}</div><div className="kpi-label">Expected</div></div>
+        <div className="kpi-card purple"><div className="kpi-icon purple"><CheckIcon size={20} /></div><div className="kpi-value">{summary.fullyPaid||0}</div><div className="kpi-label">Fully Paid</div></div>
       </div>
       <div className="filter-bar">
         <div className="search-bar"><span className="search-icon">🔍</span><input type="text" placeholder="Search student..." value={search} onChange={e=>setSearch(e.target.value)}/></div>
@@ -212,8 +215,8 @@ export default function Fees({ currentPeriodId }) {
                 <td data-label="Status"><span className={`badge ${st==='Paid'?'badge-success':st==='Partial'?'badge-warning':'badge-danger'}`}>{st}</span></td>
                 <td data-label="Action">
                   <div className="inline-flex" style={{justifyContent:'inherit'}}>
-                    {f.balance>0&&<button className="btn btn-primary btn-sm" onClick={()=>setShowPayment(s)}>💳 Pay</button>}
-                    {f.payments&&f.payments.length>0&&<button className="btn btn-ghost btn-sm" onClick={()=>setShowReceipt({...f.payments[f.payments.length-1],studentName:s.name,studentClass:s.class,admNo:s.admNo})}>🧾</button>}
+                    {f.balance>0&&<button className="btn btn-primary btn-sm" onClick={()=>setShowPayment(s)}><CardIcon size={14} /> Pay</button>}
+                    {f.payments&&f.payments.length>0&&<button className="btn btn-ghost btn-sm" onClick={()=>setShowReceipt({...f.payments[f.payments.length-1],studentName:s.name,studentClass:s.class,admNo:s.admNo})}><ReceiptIcon size={14} /></button>}
                   </div>
                 </td>
               </tr>

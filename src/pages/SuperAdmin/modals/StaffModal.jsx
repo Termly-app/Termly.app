@@ -1,4 +1,5 @@
 import { sPill } from '../superAdminUtils';
+import { TeacherIcon } from '../../../components/CommonIcons';
 
 export default function StaffModal({
   staffModal, setStaffModal,
@@ -13,11 +14,11 @@ export default function StaffModal({
       onClick={e => { if (e.target === e.currentTarget) setStaffModal(null); }}
     >
       <div className="mb" style={{ maxWidth:500 }}>
-        <button className="mc" onClick={() => setStaffModal(null)}>✕</button>
+        <button className="mc" onClick={() => setStaffModal(null)}><CrossIcon size={18} /></button>
 
         {/* ── Header ── */}
         <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom:20 }}>
-          <div className="li-ico ni-v" style={{ width:36, height:36, borderRadius:9, fontSize:16 }}>👩‍🏫</div>
+          <div className="li-ico ni-v" style={{ width:36, height:36, borderRadius:9 }}><TeacherIcon size={20} /></div>
           <div>
             <div style={{ fontFamily:'var(--fh)', fontSize:'.9rem', fontWeight:700, color:'#fff' }}>
               Manage Staff

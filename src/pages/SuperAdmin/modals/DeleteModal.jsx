@@ -1,3 +1,5 @@
+import { DeleteIcon } from '../../../components/CommonIcons';
+
 export default function DeleteModal({ deleteModal, setDeleteModal, deleting, handleDeleteSchool }) {
   if (!deleteModal) return null;
 
@@ -7,11 +9,11 @@ export default function DeleteModal({ deleteModal, setDeleteModal, deleting, han
       onClick={e => { if (e.target === e.currentTarget) setDeleteModal(null); }}
     >
       <div className="mb" style={{ borderColor:'var(--ro)' }}>
-        <button className="mc" onClick={() => setDeleteModal(null)}>✕</button>
+        <button className="mc" onClick={() => setDeleteModal(null)}><CrossIcon size={18} /></button>
 
         {/* ── Header ── */}
         <div style={{ display:'flex', alignItems:'center', gap:12, marginBottom:20 }}>
-          <div className="li-ico ni-r" style={{ width:42, height:42, borderRadius:10, fontSize:20 }}>🗑️</div>
+          <div className="li-ico ni-r" style={{ width:42, height:42, borderRadius:10, color:'var(--ro)' }}><DeleteIcon size={24} /></div>
           <div>
             <div style={{ fontFamily:'var(--fh)', fontSize:'1rem', fontWeight:700, color:'var(--ro)' }}>
               Terminate School

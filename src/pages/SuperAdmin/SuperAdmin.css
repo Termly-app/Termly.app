@@ -14,7 +14,7 @@
   --txt      : #e4e4e7;
   --sub      : #71717a;
   --dim      : #3f3f46;
-  --vi       : #6366f1;
+  --vi       : #d4d4d8; /* Silver */
   --te       : #10b981;
   --am       : #f59e0b;
   --ro       : #ef4444;
@@ -42,7 +42,7 @@
 .sb-brand { padding: 32px 24px; display: flex; align-items: center; gap: 15px; border: none !important; }
 .sb-logo { 
   width: 42px; height: 42px; border-radius: 10px; 
-  background: linear-gradient(135deg, #6366f1, #4f46e5);
+  background: var(--bg); border: 1px solid var(--edge);
   display: flex; align-items: center; justify-content: center; 
   box-shadow: 0 8px 25px rgba(79, 70, 229, 0.25); flex-shrink: 0; 
 }
@@ -130,7 +130,7 @@
   margin: 0 0 2px 0; border-radius: 0;
 }
 .sb-nav:hover { color: var(--txt); background: rgba(255,255,255,0.02) !important; }
-.sb-nav.on    { background: rgba(255,255,255,0.05) !important; color: #fff; border-left-color: var(--vi) !important; }
+.sb-nav.on    { background: rgba(255,255,255,0.08) !important; color: #fff; border-left-color: var(--vi) !important; }
 
 .nav-ico {
   width:18px; height:18px;
@@ -247,7 +247,8 @@
   background:var(--panel); border:1px solid var(--edge);
   display:flex; align-items:center; justify-content:center; font-size:1.4rem; flex-shrink:0;
 }
-.sa .ph-title  { font-size:1.5rem; font-weight:700; color:#fff; line-height:1.1; letter-spacing: -0.02em; }
+.sa .ph-title  { font-size:1.5rem; font-weight:700; color:#fff; line-height:1.1; letter-spacing: -0.02em; text-transform: uppercase; }
+.sa .ph-ico { z-index: 10; position: relative; } /* Ensure icon stays on top */
 .sa .ph-sub    { font-size:.85rem; color:var(--sub); margin-top:4px; }
 .sa .ph-badge  {
   display:inline-flex; align-items:center; gap:5px;
@@ -315,7 +316,9 @@
   background:var(--panel) !important; border:1px solid var(--edge);
   border-radius:12px; padding:24px; position:relative; overflow:hidden; min-width:0;
   display: flex; flex-direction: column; min-height: 140px;
+  transition: transform 0.2s ease, border-color 0.2s ease;
 }
+.sa .kpi-card:hover { border-color: var(--dim); transform: translateY(-2px); }
 .sa .kpi-accent { position:absolute; top:0; left:0; width:4px; height:100%; border-radius:12px 0 0 12px; background: var(--edge) !important; }
 .sa .kpi-hd     { display:flex; align-items:center; justify-content:space-between; margin-bottom:12px; }
 .sa .kpi-lbl    { font-size:.65rem; color:var(--sub); letter-spacing:.08em; text-transform:uppercase; font-weight:700; }
@@ -429,7 +432,7 @@
   .sa-sidebar.open { transform: translateX(0); }
   .sa-menu-btn, .sa-close-btn { display: flex !important; }
   .sa .tbl-w { overflow-x: auto; -webkit-overflow-scrolling: touch; }
-  .sa table { min-width: 800px; }
+  .sa table { min-width: 1250px; }
 }
 
 @media (max-width: 480px) {

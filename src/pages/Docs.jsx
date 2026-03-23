@@ -1,17 +1,20 @@
 import { useState, useEffect } from 'react';
 import PremiumLayout from '../components/PremiumLayout';
 import { getPlatformSettings } from '../data/store';
+import { 
+  RocketIcon, GraduationIcon, EditIcon, CardIcon, ShieldIcon, SettingsIcon 
+} from '../components/CommonIcons';
 
 export default function Docs() {
   const [activeSec, setActiveSec] = useState('getting-started');
 
   const sections = [
-    { id: 'getting-started', title: 'Getting Started', icon: '🚀' },
-    { id: 'students', title: 'Student Management', icon: '🎓' },
-    { id: 'academics', title: 'Academic Records', icon: '📝' },
-    { id: 'fees', title: 'Fees & Finance', icon: '💰' },
-    { id: 'security', title: 'Security & RLS', icon: '🛡️' },
-    { id: 'super-admin', title: 'Super Admin Guide', icon: '⚙️' }
+    { id: 'getting-started', title: 'Getting Started', icon: <RocketIcon size={18} /> },
+    { id: 'students', title: 'Student Management', icon: <GraduationIcon size={18} /> },
+    { id: 'academics', title: 'Academic Records', icon: <EditIcon size={18} /> },
+    { id: 'fees', title: 'Fees & Finance', icon: <CardIcon size={18} /> },
+    { id: 'security', title: 'Security & RLS', icon: <ShieldIcon size={18} /> },
+    { id: 'super-admin', title: 'Super Admin Guide', icon: <SettingsIcon size={18} /> }
   ];
 
   return (

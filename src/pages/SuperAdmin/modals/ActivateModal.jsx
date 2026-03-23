@@ -1,4 +1,5 @@
 import { fmtMoney, planAmt } from '../superAdminUtils';
+import { CheckIcon } from '../../../components/CommonIcons';
 
 export default function ActivateModal({
   activateModal, setActivateModal,
@@ -16,11 +17,11 @@ export default function ActivateModal({
       onClick={e => { if (e.target === e.currentTarget) setActivateModal(null); }}
     >
       <div className="mb">
-        <button className="mc" onClick={() => setActivateModal(null)}>✕</button>
+        <button className="mc" onClick={() => setActivateModal(null)}><CrossIcon size={18} /></button>
 
         {/* ── Header ── */}
         <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom:20 }}>
-          <div className="li-ico ni-t" style={{ width:36, height:36, borderRadius:9, fontSize:16 }}>✅</div>
+          <div className="li-ico ni-t" style={{ width:36, height:36, borderRadius:9 }}><CheckIcon size={20} /></div>
           <div>
             <div style={{ fontFamily:'var(--fh)', fontSize:'.9rem', fontWeight:700, color:'#fff' }}>
               Confirm Payment &amp; Activate
@@ -86,7 +87,7 @@ export default function ActivateModal({
           </button>
         ) : (
           <div style={{ textAlign:'center', marginTop:16 }}>
-            <div style={{ fontSize:'1.8rem', marginBottom:8 }}>✅</div>
+            <div style={{ marginBottom:8, color:'var(--te)' }}><CheckIcon size={40} /></div>
             <div style={{ fontFamily:'var(--fh)', fontSize:'.88rem', fontWeight:700, color:'var(--te)', marginBottom:4 }}>
               Account Activated!
             </div>

@@ -2,6 +2,11 @@ import { useState, useEffect } from 'react';
 import { getStudents, addStudent, updateStudent, deleteStudent, getFees, transferStudents, getClassList, getCBC, getCoreCompetencies, getPrintHeader, getSchoolProfile, TERM_FEE } from '../data/store';
 import Loader from '../components/Common/Loader';
 import { CBC_STRUCTURE, CBC_CORE_COMPETENCIES, getLevelForGrade } from '../data/seedData';
+import {
+  LeafIcon, BookIcon, GraduationIcon, RocketIcon, CalendarIcon,
+  PrintIcon, RefreshIcon, SearchIcon, StudentIcon, EditIcon, 
+  DeleteIcon, PlusIcon, FlagIcon
+} from '../components/CommonIcons';
 
 function getCurrentTermLabel() {
   const now = new Date();
@@ -83,10 +88,10 @@ export default function Students({ currentUser, currentPeriodId }) {
   const fmtKSh = (n) => `KSh ${Number(n||0).toLocaleString()}`;
   const getLb = (grade) => {
     const lv = getLevelForGrade(grade);
-    if (lv === 'Early Years')      return { cls:'early-years',     ico:'🌱' };
-    if (lv === 'Upper Primary')    return { cls:'upper-primary',   ico:'📚' };
-    if (lv === 'Junior Secondary') return { cls:'junior-secondary',ico:'🎓' };
-    return                                { cls:'senior-secondary',ico:'🚀' };
+    if (lv === 'Early Years')      return { cls:'early-years',     ico:<LeafIcon size={14} /> };
+    if (lv === 'Upper Primary')    return { cls:'upper-primary',   ico:<BookIcon size={14} /> };
+    if (lv === 'Junior Secondary') return { cls:'junior-secondary',ico:<GraduationIcon size={14} /> };
+    return                                { cls:'senior-secondary',ico:<RocketIcon size={14} /> };
   };
   const initials = (n='') => n.split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase();
   const pal = ['#0EA5E9','#8B5CF6','#10B981','#F59E0B','#EF4444','#F97316'];
@@ -106,14 +111,14 @@ export default function Students({ currentUser, currentPeriodId }) {
                 {students.length} students enrolled
               </span>
               <span style={{display:'inline-flex',alignItems:'center',gap:5,padding:'3px 11px',borderRadius:20,background:'var(--primary-light)',color:'var(--primary)',fontSize:'0.75rem',fontWeight:600}}>
-                📅 {getCurrentTermLabel()}
+                <CalendarIcon size={12} /> {getCurrentTermLabel()}
               </span>
             </div>
           </div>
           <div style={{display:'flex',gap:8,flexWrap:'wrap'}}>
-            <button className="btn btn-ghost btn-sm" onClick={printClassList}>🖨️ Print List</button>
-            {isAdmin && <button className="btn btn-ghost btn-sm" onClick={()=>setShowTransitionModal(true)}>🔄 Transitions</button>}
-            {isAdmin && <button className="btn btn-primary btn-sm" onClick={()=>{setEditingStudent(null);setShowModal(true);}}>+ Add Student</button>}
+            <button className="btn btn-ghost btn-sm" onClick={printClassList}><PrintIcon size={14} /> Print List</button>
+            {isAdmin && <button className="btn btn-ghost btn-sm" onClick={()=>setShowTransitionModal(true)}><RefreshIcon size={14} /> Transitions</button>}
+            {isAdmin && <button className="btn btn-primary btn-sm" onClick={()=>{setEditingStudent(null);setShowModal(true);}}><PlusIcon size={14} /> Add Student</button>}
           </div>
         </div>
       </div>
@@ -158,7 +163,7 @@ export default function Students({ currentUser, currentPeriodId }) {
             <tbody>
               {filtered.length===0?(
                 <tr><td colSpan="9" style={{padding:'48px',textAlign:'center',color:'var(--text-muted)'}}>
-                  <div style={{fontSize:'2rem',marginBottom:8}}>👨‍🎓</div>No students found
+                  <div style={{fontSize:'2rem',marginBottom:8}}><StudentIcon size={48} /></div>No students found
                 </td></tr>
               ):filtered.map(s=>{
                 const fd=fees[s.id]||{};
@@ -186,8 +191,8 @@ export default function Students({ currentUser, currentPeriodId }) {
                     {isAdmin&&(
                       <td data-label="Actions" style={{textAlign:'center'}}>
                         <div style={{display:'inline-flex',gap:4}}>
-                          <button className="btn btn-ghost btn-sm" onClick={()=>{setEditingStudent(s);setShowModal(true);}}>✏️</button>
-                          <button className="btn btn-ghost btn-sm" onClick={()=>handleDelete(s.id)}>🗑️</button>
+                          <button className="btn btn-ghost btn-sm" onClick={()=>{setEditingStudent(s);setShowModal(true);}}><EditIcon size={14} /></button>
+                          <button className="btn btn-ghost btn-sm" onClick={()=>handleDelete(s.id)}><DeleteIcon size={14} /></button>
                         </div>
                       </td>
                     )}
@@ -212,7 +217,7 @@ function StudentModal({ student, profile, onSave, onClose }) {
   const hc=(e)=>{const{name,value}=e.target;if(name==='class'){const s=profile.streamsPerClass?.[value]||[];setForm({...form,class:value,stream:s[0]||''});}else setForm({...form,[name]:value});};
   return(
     <div className="modal-overlay" onClick={onClose}><div className="modal" onClick={e=>e.stopPropagation()}>
-      <div className="modal-header"><h3>{student?'✏️ Edit Student':'➕ Add New Student'}</h3><button className="modal-close" onClick={onClose}>×</button></div>
+      <div className="modal-header"><h3>{student ? <><EditIcon size={18} /> Edit Student</> : <><PlusIcon size={18} /> Add New Student</>}</h3><button className="modal-close" onClick={onClose}>×</button></div>
       <form onSubmit={e=>{e.preventDefault();onSave(form);}}>
         <div className="modal-body">
           <div className="form-group"><label>Full Name *</label><input className="form-input" name="name" value={form.name} onChange={hc} required placeholder="e.g. John Kamau"/></div>
@@ -252,7 +257,7 @@ function StudentDetail({ student, feeData, onClose, onEdit, currentUser, profile
   const isTeacher=currentUser?.role?.toLowerCase()==='teacher';
   const fmtKSh=(n)=>`KSh ${Number(n||0).toLocaleString()}`;
   const lv=getLevelForGrade(student.class);
-  const lb=(()=>{if(lv==='Early Years')return{cls:'early-years',ico:'🌱'};if(lv==='Upper Primary')return{cls:'upper-primary',ico:'📚'};if(lv==='Junior Secondary')return{cls:'junior-secondary',ico:'🎓'};return{cls:'senior-secondary',ico:'🚀'};})();
+  const lb=(()=>{if(lv==='Early Years')return{cls:'early-years',ico:<LeafIcon size={14} />};if(lv==='Upper Primary')return{cls:'upper-primary',ico:<BookIcon size={14} />};if(lv==='Junior Secondary')return{cls:'junior-secondary',ico:<GraduationIcon size={14} />};return{cls:'senior-secondary',ico:<RocketIcon size={14} />};})();
   const cc=lv=>({'Exceeding Expectation':'#10B981','Meeting Expectation':'#3B82F6','Approaching Expectation':'#F59E0B','Below Expectation':'#EF4444'}[lv]||'#3B82F6');
   const cs=lv=>({'Exceeding Expectation':'EE','Meeting Expectation':'ME','Approaching Expectation':'AE','Below Expectation':'BE'}[lv]||'ME');
   const pal=['#0EA5E9','#8B5CF6','#10B981','#F59E0B','#EF4444'];
@@ -281,7 +286,7 @@ function StudentDetail({ student, feeData, onClose, onEdit, currentUser, profile
           </div>
           {student.notes&&<div style={{padding:'9px 13px',background:'var(--warning-light)',borderRadius:8,fontSize:'0.85rem',marginBottom:12}}><span style={{color:'var(--warning)',fontWeight:600,marginRight:6}}>Note:</span>{student.notes}</div>}
           <div style={{borderTop:'1px solid var(--border)',paddingTop:12}}>
-            <h4 style={{fontSize:'0.8rem',fontWeight:700,marginBottom:8}}>🎯 CBC Competencies</h4>
+            <h4 style={{fontSize:'0.8rem',fontWeight:700,marginBottom:8}}><FlagIcon size={16} /> CBC Competencies</h4>
             <div style={{display:'flex',flexWrap:'wrap',gap:5}}>
               {Object.keys(data.cbc).length>0?Object.keys(data.cbc).map(sub=>{const lv=data.cbc[sub]||'Meeting Expectation';return(
                 <div key={sub} style={{padding:'3px 8px',borderRadius:6,fontSize:'0.72rem',background:`${cc(lv)}15`,border:`1px solid ${cc(lv)}30`,display:'flex',gap:5,alignItems:'center'}}>
@@ -293,7 +298,7 @@ function StudentDetail({ student, feeData, onClose, onEdit, currentUser, profile
           </div>
         </>}
       </div>
-      <div className="modal-footer"><button className="btn btn-ghost" onClick={onClose}>Close</button>{isAdmin&&<button className="btn btn-primary" onClick={onEdit}>✏️ Edit</button>}</div>
+      <div className="modal-footer"><button className="btn btn-ghost" onClick={onClose}>Close</button>{isAdmin&&<button className="btn btn-primary" onClick={onEdit}><EditIcon size={14} /> Edit</button>}</div>
     </div></div>
   );
 }
@@ -309,7 +314,7 @@ function TransitionModal({ students, profile, onTransfer, onClose }) {
   const toggle=(id)=>setSel(p=>p.includes(id)?p.filter(x=>x!==id):[...p,id]);
   return(
     <div className="modal-overlay" onClick={onClose}><div className="modal" style={{maxWidth:760}} onClick={e=>e.stopPropagation()}>
-      <div className="modal-header"><h3>🔄 Class Transitions</h3><button className="modal-close" onClick={onClose}>×</button></div>
+      <div className="modal-header"><h3><RefreshIcon size={20} /> Class Transitions</h3><button className="modal-close" onClick={onClose}>×</button></div>
       <div className="modal-body" style={{maxHeight:'65vh',overflowY:'auto'}}>
         <div style={{display:'flex',gap:14,marginBottom:18,background:'var(--bg)',padding:14,borderRadius:10,border:'1px solid var(--border)'}}>
           <div style={{flex:1}}>

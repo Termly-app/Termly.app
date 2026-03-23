@@ -1,11 +1,12 @@
 import { fmtDate } from '../superAdminUtils';
+import { ShieldIcon, CheckIcon, SchoolIcon, SearchIcon, BookIcon } from '../../../components/CommonIcons';
 
 export default function RecoveryTab({ discoveryMeta, repairingId, handleRepair }) {
   return (
     <div className="tv">
       <div className="page-hd">
         <div className="ph-left">
-          <div className="ph-ico">🛡️</div>
+          <div className="ph-ico"><ShieldIcon size={24} /></div>
           <div>
             <div className="ph-title">Data Discovery &amp; Recovery</div>
             <div className="ph-sub">Integrity Audit &amp; Legacy Import</div>
@@ -24,14 +25,14 @@ export default function RecoveryTab({ discoveryMeta, repairingId, handleRepair }
 
           {discoveryMeta.orphans.length === 0 ? (
             <div className="empty">
-              <div className="empty-ico">✅</div>No orphaned accounts found.
+              <div className="empty-ico"><CheckIcon size={24} /></div>No orphaned accounts found.
             </div>
           ) : (
             discoveryMeta.orphans.map(s => (
               <div className="li" key={s.id}
                 style={{ background:'rgba(255,255,255,0.02)', padding:12, borderRadius:8, marginBottom:8 }}>
                 <div className="li-l">
-                  <div className="li-ico ni-r">🏫</div>
+                  <div className="li-ico ni-r"><SchoolIcon size={14} /></div>
                   <div>
                     <div className="li-name">{s.name}</div>
                     <div className="li-sub">Created: {fmtDate(s.created_at)}</div>
@@ -57,13 +58,13 @@ export default function RecoveryTab({ discoveryMeta, repairingId, handleRepair }
 
           {discoveryMeta.legacy.length === 0 ? (
             <div className="empty" style={{ opacity:.4 }}>
-              <div className="empty-ico">🔬</div>No legacy tables detected in primary schema.
+              <div className="empty-ico"><SearchIcon size={24} /></div>No legacy tables detected in primary schema.
             </div>
           ) : (
             discoveryMeta.legacy.map(l => (
               <div className="ig" key={l.table} style={{ marginBottom:10, opacity: l.count > 0 ? 1 : .5 }}>
                 <div className="ig-l">
-                  <div className="li-ico ni-s">📚</div>
+                  <div className="li-ico ni-s"><BookIcon size={14} /></div>
                   <div>
                     <div className="ig-nm">Table: {l.table}</div>
                     <div style={{ fontSize:'.55rem', color:'var(--sub)' }}>Found {l.count} records</div>
@@ -75,7 +76,7 @@ export default function RecoveryTab({ discoveryMeta, repairingId, handleRepair }
           )}
 
           <div style={{ marginTop:20, padding:12, background:'rgba(74,158,232,0.05)', borderRadius:8, border:'1px dashed rgba(74,158,232,0.2)' }}>
-            <div style={{ fontSize:'.65rem', color:'var(--sk)', fontWeight:700, marginBottom:4 }}>💡 Pro Tip</div>
+            <div style={{ fontSize:'.65rem', color:'var(--sk)', fontWeight:700, marginBottom:4 }}>Pro Tip</div>
             <div style={{ fontSize:'.6rem', color:'var(--sub)', lineHeight:1.4 }}>
               If legacy tables match your previous platform versions, custom import scripts can pull
               that data into your modern Command Tower.

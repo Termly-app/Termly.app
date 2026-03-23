@@ -1,6 +1,9 @@
 import { useState, useEffect } from 'react';
 import { getStudents, getAttendance, markAttendance, getAttendanceSummary, getTodayStr, getSchoolProfile, getSubjectAssignments } from '../data/store';
 import { CBC_STRUCTURE } from '../data/seedData';
+import { 
+  CheckIcon, ClockIcon, CrossIcon, PrintIcon, DashboardIcon, FlagIcon 
+} from '../components/CommonIcons';
 
 export default function Attendance({ currentUser, currentPeriodId }) {
   const [selectedClass, setSelectedClass] = useState('All');
@@ -150,7 +153,7 @@ export default function Attendance({ currentUser, currentPeriodId }) {
                 const status = allAtt[d]?.[s.id];
                 if (status) trackedDays++;
                 if (status === 'present' || status === 'late') presentCount++;
-                const char = status === 'present' ? '✅' : status === 'late' ? '⏰' : status === 'absent' ? '❌' : '—';
+                const char = status === 'present' ? 'P' : status === 'late' ? 'L' : status === 'absent' ? 'A' : '—';
                 const cls = status || '';
                 return `<td class="${cls}">${char}</td>`;
               }).join('');
@@ -186,8 +189,8 @@ export default function Attendance({ currentUser, currentPeriodId }) {
             {loading && <span className="text-muted" style={{ fontSize: '0.85rem' }}>Loading...</span>}
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-            <button className="btn btn-ghost" onClick={() => setShowPrintOptions(true)}>🖨️ Print Report</button>
-            <button className="btn btn-success" onClick={markAllPresent}>✅ Mark All Present</button>
+            <button className="btn btn-ghost" onClick={() => setShowPrintOptions(true)}><PrintIcon size={16} /> Print Report</button>
+            <button className="btn btn-success" onClick={markAllPresent}><CheckIcon size={16} /> Mark All Present</button>
           </div>
         </div>
       </div>
@@ -195,22 +198,22 @@ export default function Attendance({ currentUser, currentPeriodId }) {
       {/* Summary Cards */}
       <div className="kpi-grid">
         <div className="kpi-card green">
-          <div className="kpi-icon green">✅</div>
+          <div className="kpi-icon green"><CheckIcon size={20} /></div>
           <div className="kpi-value">{summary.present}</div>
           <div className="kpi-label">Present</div>
         </div>
         <div className="kpi-card orange">
-          <div className="kpi-icon orange">⏰</div>
+          <div className="kpi-icon orange"><ClockIcon size={20} /></div>
           <div className="kpi-value">{summary.late}</div>
           <div className="kpi-label">Late</div>
         </div>
         <div className="kpi-card red">
-          <div className="kpi-icon red">❌</div>
+          <div className="kpi-icon red"><CrossIcon size={20} /></div>
           <div className="kpi-value">{summary.absent}</div>
           <div className="kpi-label">Absent</div>
         </div>
         <div className="kpi-card purple">
-          <div className="kpi-icon purple">📊</div>
+          <div className="kpi-icon purple"><DashboardIcon size={20} /></div>
           <div className="kpi-value">{summary.percentage}%</div>
           <div className="kpi-label">Attendance Rate</div>
         </div>
@@ -230,7 +233,7 @@ export default function Attendance({ currentUser, currentPeriodId }) {
                     typeof streams === 'string' ? streams === currentUser?.id :
                     Object.values(streams).some(tid => tid === currentUser?.id)
                   );
-                  return <option key={g} value={g}>{isMyClass && isTeacher ? `⭐ ${g}` : g}</option>;
+                  return <option key={g} value={g}>{isMyClass && isTeacher ? `[My Class] ${g}` : g}</option>;
                 })}
               </optgroup>
             )
@@ -298,8 +301,8 @@ export default function Attendance({ currentUser, currentPeriodId }) {
         <div className="modal-overlay">
           <div className="modal-content" style={{ maxWidth: 400 }}>
             <div className="modal-header" style={{ padding: '16px 20px', borderBottom: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <h3 style={{ margin: 0, fontSize: '1.1rem' }}>🖨️ Print Attendance Report</h3>
-              <button className="btn-close" style={{ background: 'none', border: 'none', fontSize: '1.2rem', cursor: 'pointer' }} onClick={() => setShowPrintOptions(false)}>✕</button>
+              <h3 style={{ margin: 0, fontSize: '1.1rem' }}><PrintIcon size={20} /> Print Attendance Report</h3>
+              <button className="btn-close" style={{ background: 'none', border: 'none', fontSize: '1.2rem', cursor: 'pointer', display: 'flex', alignItems: 'center' }} onClick={() => setShowPrintOptions(false)}><CrossIcon size={20} /></button>
             </div>
             <div className="modal-body" style={{ padding: 20 }}>
               <div className="form-group" style={{ marginBottom: 15 }}>

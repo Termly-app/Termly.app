@@ -30,6 +30,7 @@
 
 import { useState } from 'react';
 import { calcExpiry } from '../superAdminUtils';
+import { CrossIcon, CheckIcon } from '../../../components/CommonIcons';
 
 // ── Suggested features to quickly add ────────────────────────────────────
 const FEATURE_SUGGESTIONS = [
@@ -358,7 +359,7 @@ export default function SettingsTab({
                                 <div key={i} style={{ display:'inline-flex', alignItems:'center', gap:5, padding:'3px 8px', borderRadius:5, background:'rgba(13,216,138,.08)', border:'1px solid rgba(13,216,138,.2)', fontSize:'.65rem', color:'var(--te)' }}>
                                   {f}
                                   <button onClick={() => removeFeature(plan.id, i)}
-                                    style={{ background:'none', border:'none', color:'rgba(13,216,138,.6)', cursor:'pointer', padding:0, fontSize:11, lineHeight:1 }}>✕</button>
+                                    style={{ background:'none', border:'none', color:'rgba(13,216,138,.6)', cursor:'pointer', padding:0, display:'flex', alignItems:'center' }}><CrossIcon size={12} /></button>
                                 </div>
                               ))}
                             </div>
@@ -428,8 +429,8 @@ export default function SettingsTab({
             </button>
           </div>
           {priceSaved && (
-            <div style={{ marginTop:10, padding:'8px 12px', borderRadius:7, background:'rgba(13,216,138,.08)', border:'1px solid rgba(13,216,138,.2)', fontSize:'.72rem', color:'var(--te)' }}>
-              ✓ Plans saved — registration, billing, and admin pages updated.
+            <div style={{ marginTop:10, padding:'8px 12px', borderRadius:7, background:'rgba(13,216,138,.08)', border:'1px solid rgba(13,216,138,.2)', fontSize:'.72rem', color:'var(--te)', display:'flex', alignItems:'center', gap:6 }}>
+              <CheckIcon size={12} /> Plans saved — registration, billing, and admin pages updated.
             </div>
           )}
         </div>
@@ -479,7 +480,7 @@ export default function SettingsTab({
               <div style={{ fontFamily:'var(--fh)', fontSize:'1rem', fontWeight:700, color:tier.color, marginBottom:3 }}>{tier.price}</div>
               <div style={{ fontSize:'.6rem', color:'var(--sub)', marginBottom:3 }}>per term</div>
               <div style={{ fontSize:'.62rem', color:'var(--sub)', marginBottom:10, paddingBottom:10, borderBottom:'1px solid var(--edge)' }}>{tier.limit}</div>
-              <div style={{ fontSize:'.6rem', color:'var(--te)', marginBottom:8 }}>✓ {tier.trial}</div>
+              <div style={{ fontSize:'.6rem', color:'var(--te)', marginBottom:8, display:'flex', alignItems:'center', gap:4 }}><CheckIcon size={10} /> {tier.trial}</div>
               {tier.features.map(f => (
                 <div key={f} style={{ display:'flex', alignItems:'flex-start', gap:6, marginBottom:4 }}>
                   <span style={{ color:'var(--sub)', fontSize:'.6rem', flexShrink:0, marginTop:1 }}>–</span>

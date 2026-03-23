@@ -2,6 +2,9 @@ import { useState, useEffect } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { registerSchool, getPlatformSettings } from '../data/store';
+import { 
+  BookIcon, CardIcon, SchoolIcon, FlagIcon, ClockIcon, RocketIcon, CheckIcon, HomeIcon 
+} from '../components/CommonIcons';
 
 export default function Register() {
   const [searchParams] = useSearchParams();
@@ -132,7 +135,7 @@ export default function Register() {
           
           <div className="fblocks">
             <div className="fb">
-              <span className="fb-ico">📋</span>
+              <span className="fb-ico"><BookIcon size={16} color="#fff" /></span>
               <div className="fb-t">CBC Report Cards</div>
               <div className="fb-d">KNEC-aligned portfolios generated in minutes, not days.</div>
               <div className="fb-stat">
@@ -141,7 +144,7 @@ export default function Register() {
               </div>
             </div>
             <div className="fb">
-              <span className="fb-ico">💳</span>
+              <span className="fb-ico"><CardIcon size={16} color="#fff" /></span>
               <div className="fb-t">M-PESA Fees</div>
               <div className="fb-d">Parents pay via Paybill. Receipts auto-generate instantly.</div>
               <div className="fb-stat">
@@ -150,12 +153,12 @@ export default function Register() {
               </div>
             </div>
             <div className="fb">
-              <span className="fb-ico">🏫</span>
+              <span className="fb-ico"><SchoolIcon size={16} color="#fff" /></span>
               <div className="fb-t">200+ Schools</div>
               <div className="fb-d">Trusted across Nairobi, Kisumu, and Mombasa every day.</div>
               <div className="fb-stat">
                 <div><div className="fb-n">48K</div><div className="fb-l">student records</div></div>
-                <div className="fb-badge">🇰🇪 Kenya</div>
+                <div className="fb-badge"><FlagIcon size={10} color="#fff" /> Kenya</div>
               </div>
             </div>
           </div>
@@ -164,7 +167,7 @@ export default function Register() {
             <div className="brand-n">
               ShuleSoft
             </div>
-            <div className="brand-sub">The School Management System for modern Kenya 🇰🇪</div>
+            <div className="brand-sub">The School Management System for modern Kenya <FlagIcon size={10} /></div>
           </div>
         </div>
 
@@ -190,9 +193,9 @@ export default function Register() {
           {step < 4 && (
             <>
               <div className="res-steps">
-                <div className={`res-step ${step >= 1 ? 'done' : ''}`}>{step > 1 ? '✓' : '1'}</div>
+                <div className={`res-step ${step >= 1 ? 'done' : ''}`}>{step > 1 ? <CheckIcon size={12} color="#fff" /> : '1'}</div>
                 <div className={`res-line ${step >= 2 ? 'done' : ''}`}></div>
-                <div className={`res-step ${step >= 2 ? 'done' : step === 2 ? 'now' : 'todo'}`}>{step > 2 ? '✓' : '2'}</div>
+                <div className={`res-step ${step >= 2 ? 'done' : step === 2 ? 'now' : 'todo'}`}>{step > 2 ? <CheckIcon size={12} color="#fff" /> : '2'}</div>
                 <div className={`res-line ${step >= 3 ? 'done' : ''}`}></div>
                 <div className={`res-step ${step === 3 ? 'now' : 'todo'}`}>3</div>
               </div>
@@ -404,7 +407,7 @@ export default function Register() {
               <div className="res-btn-row">
                 <button className="res-btn-back" onClick={() => setStep(2)}>← Back</button>
                 <button className="res-cta" disabled={loading} onClick={handleSubmit}>
-                  {loading ? '⏳ Launching...' : 'Launch Workspace 🚀'}
+                  {loading ? <><ClockIcon size={16} /> Launching...</> : <>Launch Workspace <RocketIcon size={16} /></>}
                 </button>
               </div>
             </div>
@@ -413,7 +416,7 @@ export default function Register() {
           {/* STEP 4: SUCCESS */}
           {step === 4 && (
             <div className="res-sv active success-screen">
-              <div className="success-icon">🎉</div>
+              <div className="success-icon"><RocketIcon size={64} color="var(--primary)" /></div>
               <div className="res-ftitle">Registration Successful!</div>
               <p className="res-fsub">Your school <strong>{formData.schoolName}</strong> has been registered on ShuleSoft.</p>
               <div className="success-box">

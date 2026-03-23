@@ -1,5 +1,10 @@
 import { useState, useEffect, useRef } from 'react';
 import { getSchoolProfile, saveSchoolProfile, importData, exportData, CBC_STRUCTURE, TERM_FEE, applyFeeStructure, getPeriods, createPeriod, setActivePeriod } from '../data/store';
+import {
+  ClockIcon, CheckIcon, SaveIcon, SchoolIcon, ImageIcon, FolderIcon,
+  BookIcon, CardIcon, DiamondIcon, PhoneIcon, RefreshIcon, CrossIcon, PlusIcon,
+  CalendarIcon, DownloadIcon, UploadIcon
+} from '../components/CommonIcons';
 
 export default function Settings() {
   const [profile, setProfile] = useState({
@@ -170,7 +175,8 @@ export default function Settings() {
             <p>School identity, academic structure, and system configuration</p>
           </div>
           <button className="btn btn-primary" onClick={handleSave} disabled={loading}>
-            {loading?'⏳ Saving…':saved?'✅ Saved!':'💾 Save Settings'}
+            {loading ? <ClockIcon size={14} /> : saved ? <CheckIcon size={14} /> : <SaveIcon size={14} />}
+            {loading ? ' Saving…' : saved ? ' Saved!' : ' Save Settings'}
           </button>
         </div>
       </div>
@@ -182,7 +188,7 @@ export default function Settings() {
 
           {/* Identity */}
           <div className="card">
-            <div className="card-header"><h3>🏫 School Identity</h3></div>
+            <div className="card-header"><h3><SchoolIcon size={20} /> School Identity</h3></div>
             <div className="card-body">
               <div className="form-group"><label>School Name</label><input className="form-input" name="schoolName" value={profile.schoolName} onChange={handleChange} placeholder="e.g. Greenfield Academy"/></div>
               <div className="form-group"><label>Motto</label><input className="form-input" name="motto" value={profile.motto} onChange={handleChange} placeholder="Excellence in Education"/></div>
@@ -196,7 +202,7 @@ export default function Settings() {
 
           {/* Logo */}
           <div className="card">
-            <div className="card-header"><h3>🎨 Visual Identity</h3></div>
+            <div className="card-header"><h3><ImageIcon size={20} /> Visual Identity</h3></div>
             <div className="card-body" style={{textAlign:'center'}}>
               <div
                 onClick={()=>fileRef.current.click()}
@@ -205,17 +211,17 @@ export default function Settings() {
                 onMouseLeave={e=>e.currentTarget.style.borderColor='var(--border)'}>
                 {logoPreview?<img src={logoPreview} alt="Logo" style={{width:'100%',height:'100%',objectFit:'contain'}}/>:
                   <div style={{color:'var(--text-muted)',textAlign:'center'}}>
-                    <div style={{fontSize:'1.8rem',marginBottom:4}}>🖼️</div>
+                    <div style={{fontSize:'1.8rem',marginBottom:4}}><ImageIcon size={32} /></div>
                     <div style={{fontSize:'0.68rem',fontWeight:700,textTransform:'uppercase',letterSpacing:'0.06em'}}>Upload Logo</div>
                   </div>}
               </div>
               <input ref={fileRef} type="file" hidden onChange={handleLogoUpload} accept="image/*"/>
-              <button className="btn btn-ghost btn-sm" style={{width:'100%',marginBottom:6}} onClick={()=>fileRef.current.click()}>📁 Choose File</button>
+              <button className="btn btn-ghost btn-sm" style={{width:'100%',marginBottom:6}} onClick={()=>fileRef.current.click()}><FolderIcon size={14} /> Choose File</button>
               <p style={{fontSize:'0.72rem',color:'var(--text-muted)',margin:0}}>PNG or JPG · Max 500KB</p>
               {profile.schoolName&&(
                 <div style={{marginTop:16,padding:'12px 14px',background:'var(--bg)',borderRadius:10,border:'1px solid var(--border)',display:'flex',alignItems:'center',gap:12,textAlign:'left'}}>
                   <div style={{width:38,height:38,borderRadius:9,background:'var(--primary-light)',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0,overflow:'hidden'}}>
-                    {logoPreview?<img src={logoPreview} style={{width:'100%',height:'100%',objectFit:'cover'}}/>:<span>🏫</span>}
+                    {logoPreview?<img src={logoPreview} style={{width:'100%',height:'100%',objectFit:'cover'}}/>:<SchoolIcon size={20} />}
                   </div>
                   <div>
                     <div style={{fontWeight:700,fontSize:'0.875rem'}}>{profile.schoolName}</div>
@@ -272,8 +278,8 @@ export default function Settings() {
                       <div style={{fontSize:'0.74rem',color:'var(--text-light)',marginTop:1}}>Click × to remove a subject</div>
                     </div>
                     <button onClick={()=>resetSubjects(activeLevel)}
-                      style={{padding:'5px 12px',borderRadius:7,border:'1.5px solid var(--border)',background:'var(--bg-card)',color:'var(--text-light)',fontSize:'0.78rem',fontWeight:600,cursor:'pointer',fontFamily:'inherit'}}>
-                      ↺ Reset Defaults
+                      style={{padding:'5px 12px',borderRadius:7,border:'1.5px solid var(--border)',background:'var(--bg-card)',color:'var(--text-light)',fontSize:'0.78rem',fontWeight:600,cursor:'pointer',fontFamily:'inherit',display:'flex',alignItems:'center',gap:4}}>
+                      <RefreshIcon size={14} /> Reset Defaults
                     </button>
                   </div>
 
@@ -308,14 +314,14 @@ export default function Settings() {
                             {(profile.streamsPerClass?.[grade]||[]).map(stream=>(
                               <div key={stream} style={{display:'inline-flex',alignItems:'center',gap:4,padding:'3px 9px',borderRadius:6,background:'var(--bg)',border:'1px solid var(--border)',fontSize:'0.8rem',fontWeight:600}}>
                                 <span>{stream}</span>
-                                <button onClick={()=>removeStream(grade,stream)} style={{background:'none',border:'none',cursor:'pointer',color:'var(--danger)',fontSize:'0.85rem',fontWeight:700,padding:0,lineHeight:1}}>×</button>
+                                <button onClick={()=>removeStream(grade,stream)} style={{background:'none',border:'none',cursor:'pointer',color:'var(--danger)',fontSize:'0.85rem',fontWeight:700,padding:0,lineHeight:1,display:'flex',alignItems:'center'}}><CrossIcon size={12} /></button>
                               </div>
                             ))}
                             {!(profile.streamsPerClass?.[grade]||[]).length&&<span style={{fontSize:'0.75rem',color:'var(--text-muted)',fontStyle:'italic'}}>No streams yet</span>}
                           </div>
                           <div style={{display:'flex',gap:6}}>
                             <input className="form-input" style={{flex:1,fontSize:'0.82rem',padding:'6px 10px'}} value={newStream[grade]||''} onChange={e=>setNewStream({...newStream,[grade]:e.target.value})} onKeyDown={e=>e.key==='Enter'&&addStream(grade)} placeholder="New stream..."/>
-                            <button onClick={()=>addStream(grade)} style={{padding:'6px 12px',borderRadius:7,border:'1.5px solid var(--border)',background:'var(--bg)',color:'var(--text-main)',fontFamily:'inherit',fontSize:'0.82rem',fontWeight:700,cursor:'pointer'}}>+ Add</button>
+                            <button onClick={()=>addStream(grade)} style={{padding:'6px 12px',borderRadius:7,border:'1.5px solid var(--border)',background:'var(--bg)',color:'var(--text-main)',fontFamily:'inherit',fontSize:'0.82rem',fontWeight:700,cursor:'pointer',display:'flex',alignItems:'center',gap:4}}><PlusIcon size={12} /> Add</button>
                           </div>
                         </div>
                       ))}
@@ -325,7 +331,7 @@ export default function Settings() {
 
                 {/* Grading & Exams */}
                 <div style={sectionBox}>
-                  <div style={{fontWeight:700,fontSize:'0.9rem',color:'var(--text-main)',marginBottom:15}}>📝 Grading & Exam Types</div>
+                  <div style={{fontWeight:700,fontSize:'0.9rem',color:'var(--text-main)',marginBottom:15}}><BookIcon size={20} /> Grading & Exam Types</div>
                   
                   <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:20}}>
                     {/* Exam Names */}
@@ -341,7 +347,7 @@ export default function Settings() {
                       </div>
                       <div style={{display:'flex',gap:6}}>
                         <input className="form-input" style={{flex:1,fontSize:'0.82rem'}} value={newExam} onChange={e=>setNewExam(e.target.value)} onKeyDown={e=>e.key==='Enter'&&addExam()} placeholder="e.g. Mock Exam"/>
-                        <button onClick={addExam} className="btn btn-ghost btn-sm">+ Add</button>
+                        <button onClick={addExam} className="btn btn-ghost btn-sm" style={{display:'flex',alignItems:'center',gap:4}}><PlusIcon size={14} /> Add</button>
                       </div>
                     </div>
 
@@ -349,7 +355,7 @@ export default function Settings() {
                     <div>
                       <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:8}}>
                         <div style={{fontSize:'0.72rem',fontWeight:700,color:'var(--text-light)',textTransform:'uppercase'}}>Grading Scale ({activeLevel})</div>
-                        <button onClick={resetGrading} style={{fontSize:'0.65rem',background:'none',border:'none',color:'var(--primary)',cursor:'pointer',fontWeight:700}}>↺ Reset</button>
+                        <button onClick={resetGrading} style={{fontSize:'0.65rem',background:'none',border:'none',color:'var(--primary)',cursor:'pointer',fontWeight:700,display:'flex',alignItems:'center',gap:4}}><RefreshIcon size={12} /> Reset</button>
                       </div>
                       <div style={{display:'flex',flexDirection:'column',gap:4,marginBottom:10,maxHeight:150,overflowY:'auto',paddingRight:5}}>
                         {(profile.gradingSystems?.[activeLevel] || profile.gradingSystems?.default || []).map((g,i)=>(
@@ -375,7 +381,7 @@ export default function Settings() {
                 <div style={sectionBox}>
                   <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:12}}>
                     <div>
-                      <div style={{fontWeight:700,fontSize:'0.9rem',color:'var(--text-main)'}}>💰 Fee Structure (Per Term)</div>
+                      <div style={{fontWeight:700,fontSize:'0.9rem',color:'var(--text-main)'}}><CardIcon size={20} /> Fee Structure (Per Term)</div>
                       <div style={{fontSize:'0.74rem',color:'var(--text-light)',marginTop:1}}>Tuition per grade level</div>
                     </div>
                     <button className="btn btn-primary btn-sm" onClick={runFeeApplication} disabled={loading}>Apply Campus-wide</button>
@@ -422,12 +428,12 @@ export default function Settings() {
                     Active Subscription
                   </div>
                 </div>
-                <div style={{width:50,height:50,borderRadius:14,background:'rgba(255,255,255,0.14)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:'1.4rem'}}>💎</div>
+                <div style={{width:50,height:50,borderRadius:14,background:'rgba(255,255,255,0.14)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:'1.4rem'}}><DiamondIcon size={24} color="#fff" /></div>
               </div>
-              <div style={{background:'rgba(255,255,255,0.12)',borderRadius:12,padding:16}}>
+              <div style={ {background:'rgba(255,255,255,0.12)',borderRadius:12,padding:16} }>
                 <div style={{fontSize:'0.62rem',fontWeight:700,textTransform:'uppercase',letterSpacing:'0.1em',opacity:0.6,marginBottom:10}}>Payment Details</div>
                 <div style={{display:'flex',alignItems:'center',gap:14}}>
-                  <div style={{width:42,height:42,borderRadius:'50%',background:'#fff',display:'flex',alignItems:'center',justifyContent:'center',fontSize:'1.2rem',flexShrink:0}}>📲</div>
+                  <div style={{width:42,height:42,borderRadius:'50%',background:'#fff',display:'flex',alignItems:'center',justifyContent:'center',fontSize:'1.2rem',flexShrink:0}}><PhoneIcon size={20} color="var(--primary)" /></div>
                   <div>
                     <div style={{fontSize:'1.05rem',fontWeight:800,letterSpacing:'-0.2px'}}>M-PESA: 0712260057</div>
                     <div style={{fontSize:'0.75rem',opacity:0.8,marginTop:2,fontWeight:500}}>Payee: Peter Kaulani</div>
@@ -441,7 +447,7 @@ export default function Settings() {
           <div className="card">
             <div className="card-header">
               <div>
-                <h3>📅 Academic Eras & Terms</h3>
+                <h3><CalendarIcon size={20} /> Academic Eras & Terms</h3>
                 <p style={{fontSize:'0.78rem',color:'var(--text-light)',margin:'2px 0 0'}}>Manage terms and set current active period</p>
               </div>
             </div>
@@ -475,7 +481,7 @@ export default function Settings() {
                       {['Term 1','Term 2','Term 3','Semester 1','Semester 2','Quarter 1','Quarter 2','Quarter 3','Quarter 4'].map(t=><option key={t} value={t}>{t}</option>)}
                     </select>
                   </div>
-                  <button className="btn btn-primary" onClick={handleAddPeriod} disabled={loading} style={{height:40}}>+ Add Period</button>
+                      <button className="btn btn-primary" onClick={handleAddPeriod} disabled={loading} style={{height:40,display:'flex',alignItems:'center',gap:6}}><PlusIcon size={16} /> Add Period</button>
                 </div>
               </div>
             </div>
@@ -483,16 +489,16 @@ export default function Settings() {
 
           {/* Data node */}
           <div className="card">
-            <div className="card-header"><h3>💾 System Data</h3></div>
+            <div className="card-header"><h3><SaveIcon size={20} /> System Data</h3></div>
             <div className="card-body" style={{textAlign:'center',padding:'24px 20px'}}>
-              <div style={{width:58,height:58,background:'var(--primary-light)',borderRadius:15,display:'flex',alignItems:'center',justifyContent:'center',fontSize:'1.5rem',margin:'0 auto 14px'}}>💾</div>
+              <div style={{width:58,height:58,background:'var(--primary-light)',borderRadius:15,display:'flex',alignItems:'center',justifyContent:'center',fontSize:'1.5rem',margin:'0 auto 14px'}}><SaveIcon size={32} color="var(--primary)" /></div>
               <h4 style={{fontWeight:700,fontSize:'1rem',marginBottom:6}}>Local Data Backup</h4>
               <p style={{color:'var(--text-light)',fontSize:'0.875rem',marginBottom:22,lineHeight:1.6,maxWidth:280,margin:'0 auto 20px'}}>
                 Export your school's data for safekeeping, or restore from a previous backup file.
               </p>
               <div style={{display:'flex',gap:10,justifyContent:'center',flexWrap:'wrap'}}>
-                <button className="btn btn-primary" onClick={()=>exportData()}>⬇ Export Data</button>
-                <button className="btn btn-ghost" onClick={()=>backupRef.current.click()}>⬆ Restore Backup</button>
+                <button className="btn btn-primary" onClick={()=>exportData()} style={{display:'flex',alignItems:'center',gap:6}}><DownloadIcon size={14} /> Export Data</button>
+                <button className="btn btn-ghost" onClick={()=>backupRef.current.click()} style={{display:'flex',alignItems:'center',gap:6}}><UploadIcon size={14} /> Restore Backup</button>
               </div>
               <input ref={backupRef} type="file" hidden accept=".json" onChange={e=>{
                 const file=e.target.files[0];if(!file)return;

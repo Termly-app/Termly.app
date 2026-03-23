@@ -113,7 +113,7 @@ export default function PremiumLayout({ children }) {
           </div>
         </div>
         <div className="ft-bottom">
-          <span className="ft-copy">© 2025 Kaulani Corp · Made in Nairobi, Kenya 🇰🇪</span>
+          <span className="ft-copy">© 2025 Kaulani Corp · Made in Nairobi, Kenya</span>
           <div className="ft-b-links">
              <span>All rights reserved.</span>
           </div>

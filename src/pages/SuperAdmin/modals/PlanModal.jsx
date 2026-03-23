@@ -1,3 +1,5 @@
+import { RefreshIcon, CheckIcon } from '../../../components/CommonIcons';
+
 export default function PlanModal({
   planModal, setPlanModal,
   chosenPlan, setChosenPlan,
@@ -13,11 +15,11 @@ export default function PlanModal({
       onClick={e => { if (e.target === e.currentTarget) { setPlanModal(null); setChosenPlan(''); } }}
     >
       <div className="mb" style={{ maxWidth:400 }}>
-        <button className="mc" onClick={() => { setPlanModal(null); setChosenPlan(''); }}>✕</button>
+        <button className="mc" onClick={() => { setPlanModal(null); setChosenPlan(''); }}><CrossIcon size={18} /></button>
 
         {/* ── Header ── */}
         <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom:20 }}>
-          <div className="li-ico ni-s" style={{ width:36, height:36, borderRadius:9, fontSize:16 }}>🔄</div>
+          <div className="li-ico ni-s" style={{ width:36, height:36, borderRadius:9 }}><RefreshIcon size={20} /></div>
           <div>
             <div style={{ fontFamily:'var(--fh)', fontSize:'.9rem', fontWeight:700, color:'#fff' }}>
               Change Subscription
@@ -52,7 +54,7 @@ export default function PlanModal({
                 </div>
                 <div style={{ display:'flex', alignItems:'center', gap:8 }}>
                   {isCur && <span style={{ fontSize:'.6rem', color:'var(--sub)' }}>Current</span>}
-                  {isSel && !isCur && <span style={{ fontSize:'.7rem', color:'var(--sk)' }}>✓</span>}
+                  {isSel && !isCur && <span style={{ color:'var(--sk)' }}><CheckIcon size={14} /></span>}
                   <span style={{ fontFamily:'var(--fh)', fontSize:'.72rem', color:'var(--sub)' }}>
                     KSh {p.price?.toLocaleString()}
                   </span>

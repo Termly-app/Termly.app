@@ -6,6 +6,7 @@
  */
 
 import { useState, useEffect } from 'react';
+import { DeleteIcon, AlertIcon, DashboardIcon } from '../CommonIcons';
 
 const VARIANTS = {
   danger  : { accent: '#D4506A', btnBg: 'linear-gradient(135deg,#D4506A,#B03050)', shadow: 'rgba(212,80,106,.3)'  },
@@ -71,7 +72,7 @@ export default function ConfirmModal({
             border: `1px solid ${v.accent}40`,
             display:'flex', alignItems:'center', justifyContent:'center', fontSize:18,
           }}>
-            {variant === 'danger' ? '🗑️' : variant === 'warning' ? '⚠️' : '💬'}
+            {variant === 'danger' ? <DeleteIcon size={32} color="var(--danger)" /> : variant === 'warning' ? <AlertIcon size={32} color="var(--warning)" /> : <DashboardIcon size={32} color="var(--primary)" />}
           </div>
           <div style={{ fontFamily:"'Space Mono',monospace", fontSize:'.95rem', fontWeight:700, color:'#fff' }}>
             {title}

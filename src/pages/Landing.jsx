@@ -2,6 +2,10 @@ import { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { getPlatformSettings } from '../data/store';
 import './Landing.css';
+import {
+  BookIcon, UserIcon, CheckIcon, CardIcon, SchoolIcon,
+  PhoneIcon, DashboardIcon, CalendarIcon, FlagIcon, RocketIcon
+} from '../components/CommonIcons';
 
 export default function Landing() {
   const cursorRef = useRef(null);
@@ -202,12 +206,12 @@ export default function Landing() {
         <div className="ghost ghost-hero">ShuleSoft</div>
 
         <div className="floaters">
-          <div className="floater fl-1">📋</div>
-          <div className="floater fl-2">👤</div>
-          <div className="floater fl-3">📊</div>
-          <div className="floater fl-4">💳</div>
-          <div className="floater fl-5">🏫</div>
-          <div className="floater fl-6">📱</div>
+          <div className="floater fl-1"><BookIcon size={24} /></div>
+          <div className="floater fl-2"><UserIcon size={24} /></div>
+          <div className="floater fl-3"><CheckIcon size={24} /></div>
+          <div className="floater fl-4"><CardIcon size={24} /></div>
+          <div className="floater fl-5"><SchoolIcon size={28} /></div>
+          <div className="floater fl-6"><PhoneIcon size={24} /></div>
         </div>
 
         <div className="hero-icon">
@@ -245,12 +249,12 @@ export default function Landing() {
             <div className="hs-body">
               <div className="hs-side">
                 <div className="hs-side-logo"><div className="hs-side-sq"><svg viewBox="0 0 13 13" fill="none" width="10" height="10"><rect x="1" y="1" width="4.5" height="4.5" rx="1" fill="white"/><rect x="7.5" y="1" width="4.5" height="4.5" rx="1" fill="white"/><rect x="1" y="7.5" width="4.5" height="4.5" rx="1" fill="white"/><rect x="7.5" y="7.5" width="4.5" height="4.5" rx="1" fill="white"/></svg></div>ShuleSoft</div>
-                <div className="sl on"><span className="sl-ico si-v">◈</span>Dashboard</div>
-                <div className="sl"><span className="sl-ico si-g">👤</span>Students</div>
-                <div className="sl"><span className="sl-ico si-g">💳</span>Fees</div>
-                <div className="sl"><span className="sl-ico si-g">📊</span>Exams</div>
-                <div className="sl"><span className="sl-ico si-g">📅</span>Timetable</div>
-                <div className="sl"><span className="sl-ico si-g">📋</span>Attendance</div>
+                <div className="sl on"><span className="sl-ico si-v"><DashboardIcon size={12} /></span>Dashboard</div>
+                <div className="sl"><span className="sl-ico si-g"><UserIcon size={12} /></span>Students</div>
+                <div className="sl"><span className="sl-ico si-g"><CardIcon size={12} /></span>Fees</div>
+                <div className="sl"><span className="sl-ico si-g"><CheckIcon size={12} /></span>Exams</div>
+                <div className="sl"><span className="sl-ico si-g"><CalendarIcon size={12} /></span>Timetable</div>
+                <div className="sl"><span className="sl-ico si-g"><BookIcon size={12} /></span>Attendance</div>
               </div>
               <div className="hs-main">
                 <div className="hs-t">Greenfield Academy</div>
@@ -293,22 +297,22 @@ export default function Landing() {
 
       <div className="ticker-wrap">
         <div className="ticker-track">
-          <span className="ti on"><span className="tic tv-">📋</span>CBC Portfolios</span><span className="tick-dot">·</span>
-          <span className="ti"><span className="tic tg-">💳</span>M-PESA Fees</span><span className="tick-dot">·</span>
-          <span className="ti on"><span className="tic ty-">📊</span>KNEC Report Cards</span><span className="tick-dot">·</span>
-          <span className="ti"><span className="tic tv-">📅</span>Student Analytics</span><span className="tick-dot">·</span>
-          <span className="ti on"><span className="tic tg-">📱</span>Staff Records</span><span className="tick-dot">·</span>
-          <span className="ti"><span className="tic ty-">🎓</span>Exam Analytics</span><span className="tick-dot">·</span>
-          <span className="ti on"><span className="tic tv-">🏫</span>Multi-Campus</span><span className="tick-dot">·</span>
-          <span className="ti"><span className="tic tg-">🇰🇪</span>Built in Nairobi</span><span className="tick-dot">·</span>
-          <span className="ti on"><span className="tic tv-">📋</span>CBC Portfolios</span><span className="tick-dot">·</span>
-          <span className="ti"><span className="tic tg-">💳</span>M-PESA Fees</span><span className="tick-dot">·</span>
-          <span className="ti on"><span className="tic ty-">📊</span>KNEC Report Cards</span><span className="tick-dot">·</span>
-          <span className="ti"><span className="tic tv-">📅</span>Student Analytics</span><span className="tick-dot">·</span>
-          <span className="ti on"><span className="tic tg-">📱</span>Staff Records</span><span className="tick-dot">·</span>
-          <span className="ti"><span className="tic ty-">🎓</span>Exam Analytics</span><span className="tick-dot">·</span>
-          <span className="ti on"><span className="tic tv-">🏫</span>Multi-Campus</span><span className="tick-dot">·</span>
-          <span className="ti"><span className="tic tg-">🇰🇪</span>Built in Nairobi</span>
+          <span className="ti on"><span className="tic tv-"><BookIcon size={14} /></span>CBC Portfolios</span><span className="tick-dot">·</span>
+          <span className="ti"><span className="tic tg-"><CardIcon size={14} /></span>M-PESA Fees</span><span className="tick-dot">·</span>
+          <span className="ti on"><span className="tic ty-"><DashboardIcon size={14} /></span>KNEC Report Cards</span><span className="tick-dot">·</span>
+          <span className="ti"><span className="tic tv-"><CalendarIcon size={14} /></span>Student Analytics</span><span className="tick-dot">·</span>
+          <span className="ti on"><span className="tic tg-"><UserIcon size={14} /></span>Staff Records</span><span className="tick-dot">·</span>
+          <span className="ti"><span className="tic ty-"><RocketIcon size={14} /></span>Exam Analytics</span><span className="tick-dot">·</span>
+          <span className="ti on"><span className="tic tv-"><SchoolIcon size={14} /></span>Multi-Campus</span><span className="tick-dot">·</span>
+          <span className="ti"><span className="tic tg-"><FlagIcon size={14} /></span>Built in Nairobi</span><span className="tick-dot">·</span>
+          <span className="ti on"><span className="tic tv-"><BookIcon size={14} /></span>CBC Portfolios</span><span className="tick-dot">·</span>
+          <span className="ti"><span className="tic tg-"><CardIcon size={14} /></span>M-PESA Fees</span><span className="tick-dot">·</span>
+          <span className="ti on"><span className="tic ty-"><DashboardIcon size={14} /></span>KNEC Report Cards</span><span className="tick-dot">·</span>
+          <span className="ti"><span className="tic tv-"><CalendarIcon size={14} /></span>Student Analytics</span><span className="tick-dot">·</span>
+          <span className="ti on"><span className="tic tg-"><UserIcon size={14} /></span>Staff Records</span><span className="tick-dot">·</span>
+          <span className="ti"><span className="tic ty-"><RocketIcon size={14} /></span>Exam Analytics</span><span className="tick-dot">·</span>
+          <span className="ti on"><span className="tic tv-"><SchoolIcon size={14} /></span>Multi-Campus</span><span className="tick-dot">·</span>
+          <span className="ti"><span className="tic tg-"><FlagIcon size={14} /></span>Built in Nairobi</span>
         </div>
       </div>
 

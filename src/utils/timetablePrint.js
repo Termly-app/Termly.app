@@ -68,8 +68,8 @@ export function printClassTimetable({ school, classGrade, stream, period, config
 
       return `<td class="${dblClass}">
         <div class="cell-subject">${s.subject}${dblBadge}</div>
-        ${s.teachers?.name ? `<div class="cell-teacher">👤 ${s.teachers.name}</div>` : ''}
-        ${s.room ? `<div class="cell-room">🚪 ${s.room}</div>` : ''}
+        ${s.teachers?.name ? `<div class="cell-teacher">Teacher: ${s.teachers.name}</div>` : ''}
+        ${s.room ? `<div class="cell-room">Room: ${s.room}</div>` : ''}
         ${contLabel}
       </td>`;
     }).join('');
@@ -125,7 +125,7 @@ export function printTeacherTimetable({ school, teacher, period, config, slots, 
       return `<td class="${dblClass}">
         <div class="cell-subject">${s.subject}${dblBadge}</div>
         <div class="cell-class">${s.class_grade}${s.stream ? ` ${s.stream}` : ''}</div>
-        ${s.room ? `<div class="cell-room">🚪 ${s.room}</div>` : ''}
+        ${s.room ? `<div class="cell-room">Room: ${s.room}</div>` : ''}
         ${contLabel}
       </td>`;
     }).join('');

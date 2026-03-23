@@ -6,6 +6,7 @@ import {
   setCurrentSchoolContext,
   initActivePeriod,
 } from '../data/store';
+import { CardIcon, DashboardIcon, RocketIcon, FlagIcon } from '../components/CommonIcons';
 
 export default function Login({ onLogin }) {
   const [loading, setLoading] = useState(false);
@@ -182,7 +183,7 @@ export default function Login({ onLogin }) {
           
           <div className="fblocks">
             <div className="fb">
-              <span className="fb-ico">💰</span>
+              <span className="fb-ico"><CardIcon size={16} color="#fff" /></span>
               <div className="fb-t">Fee Management</div>
               <div className="fb-d">Automated invoicing and M-PESA reconciliation.</div>
               <div className="fb-stat">
@@ -191,7 +192,7 @@ export default function Login({ onLogin }) {
               </div>
             </div>
             <div className="fb">
-              <span className="fb-ico">📊</span>
+              <span className="fb-ico"><DashboardIcon size={16} color="#fff" /></span>
               <div className="fb-t">CBC Analytics</div>
               <div className="fb-d">Real-time performance tracking for all learning areas.</div>
               <div className="fb-stat">
@@ -205,7 +206,7 @@ export default function Login({ onLogin }) {
             <div className="brand-n">
               ShuleSoft
             </div>
-            <div className="brand-sub">The School Management System for modern Kenya 🇰🇪</div>
+            <div className="brand-sub">The School Management System for modern Kenya <FlagIcon size={10} /></div>
           </div>
         </div>
 
@@ -316,7 +317,7 @@ export default function Login({ onLogin }) {
               </div>
 
               <button className="res-cta" type="submit" disabled={loading} style={{ marginTop: 24 }}>
-                {loading ? 'Authenticating...' : 'Sign In 🚀'}
+                {loading ? 'Authenticating...' : <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>Sign In <RocketIcon size={18} /></span>}
               </button>
             </form>
 

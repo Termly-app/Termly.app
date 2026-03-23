@@ -16,6 +16,9 @@
 import { useState, useEffect } from 'react';
 import './FeeStructure.css';
 import { printFeeStatement } from '../../utils/receiptPrint';
+import { 
+  CardIcon, PrintIcon, SaveIcon, BookIcon, EditIcon, CrossIcon, CheckIcon 
+} from '../../components/CommonIcons';
 
 const CATEGORIES = ['Tuition', 'Activity / Clubs', 'Boarding', 'Transport', 'Development Levy', 'Uniform', 'Computer', 'Library', 'Examination', 'Other'];
 
@@ -151,7 +154,7 @@ export default function FeeStructure({ currentUser, schoolId, schoolName, getFee
     <div className="fs-root">
       <div className="fs-header">
         <div className="fs-title-group">
-          <div className="fs-icon">💰</div>
+          <div className="fs-icon"><CardIcon size={24} /></div>
           <div>
             <div className="fs-title">Fee Structure</div>
             <div className="fs-sub">Define itemised fees per term and class</div>
@@ -164,10 +167,10 @@ export default function FeeStructure({ currentUser, schoolId, schoolName, getFee
             ))}
           </select>
           <button className="fs-btn-outline" onClick={handlePrintSchedule} disabled={!items.length}>
-            🖨️ Print Schedule
+            <PrintIcon size={14} /> Print Schedule
           </button>
           <button className="fs-btn-primary" onClick={handleSave} disabled={saving || !items.length}>
-            {saving ? 'Saving...' : '💾 Save Structure'}
+            {saving ? 'Saving...' : <><SaveIcon size={14} /> Save Structure</>}
           </button>
         </div>
       </div>
@@ -175,7 +178,7 @@ export default function FeeStructure({ currentUser, schoolId, schoolName, getFee
       {/* Toast */}
       {message && (
         <div className={`fs-toast ${message.type === 'success' ? 'fs-toast-ok' : 'fs-toast-err'}`}>
-          {message.type === 'success' ? '✓' : '✗'} {message.text}
+          {message.type === 'success' ? <CheckIcon size={14} /> : <CrossIcon size={14} />} {message.text}
         </div>
       )}
 
@@ -210,7 +213,7 @@ export default function FeeStructure({ currentUser, schoolId, schoolName, getFee
           </div>
         ) : items.length === 0 ? (
           <div className="fs-empty">
-            <div className="fs-empty-ico">📋</div>
+            <div className="fs-empty-ico"><BookIcon size={48} /></div>
             <div className="fs-empty-title">No fee items yet for {term}</div>
             <div className="fs-empty-sub">Add your first fee item to get started</div>
             <button className="fs-btn-primary" style={{ marginTop:16 }} onClick={addItem}>+ Add Fee Item</button>
@@ -279,7 +282,7 @@ export default function FeeStructure({ currentUser, schoolId, schoolName, getFee
                     </div>
 
                     <div className="fs-edit-actions">
-                      <button className="fs-btn-primary" style={{ padding:'6px 18px' }} onClick={() => setEditId(null)}>✓ Done</button>
+                      <button className="fs-btn-primary" style={{ padding:'6px 18px', display:'flex', alignItems:'center', gap:4 }} onClick={() => setEditId(null)}><CheckIcon size={14} /> Done</button>
                       <button className="fs-btn-outline" style={{ padding:'6px 14px' }} onClick={() => removeItem(item.id)}>Delete</button>
                     </div>
                   </div>
@@ -303,8 +306,8 @@ export default function FeeStructure({ currentUser, schoolId, schoolName, getFee
                       {Number(item.amount || 0).toLocaleString()}
                     </div>
                     <div style={{ width:60, display:'flex', gap:4, justifyContent:'flex-end' }}>
-                      <button className="fs-icon-btn" onClick={() => setEditId(item.id)} title="Edit">✏️</button>
-                      <button className="fs-icon-btn fs-icon-del" onClick={() => removeItem(item.id)} title="Remove">✕</button>
+                      <button className="fs-icon-btn" onClick={() => setEditId(item.id)} title="Edit"><EditIcon size={14} /></button>
+                      <button className="fs-icon-btn fs-icon-del" onClick={() => removeItem(item.id)} title="Remove"><CrossIcon size={14} /></button>
                     </div>
                   </>
                 )}

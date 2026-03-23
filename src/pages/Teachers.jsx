@@ -2,6 +2,10 @@ import { useState, useEffect } from 'react';
 import { getTeachers, addTeacher, updateTeacher, deleteTeacher, getSubjectAssignments, setAssignment, getTeacherWorkload, getTeacherPerformance, getPrintHeader, getSchoolProfile, getPlatformSettings, getUsers } from '../data/store';
 import Loader from '../components/Common/Loader';
 import { CBC_STRUCTURE, getSubjectsForGrade, getLevelForGrade } from '../data/seedData';
+import { 
+  TeacherIcon, BookIcon, DashboardIcon, PlusIcon, EditIcon, 
+  DeleteIcon, SchoolIcon, PrintIcon, PhoneIcon 
+} from '../components/CommonIcons';
 
 export default function Teachers({ currentPeriodId }) {
   const [activeTab, setActiveTab] = useState('records');
@@ -106,9 +110,9 @@ export default function Teachers({ currentPeriodId }) {
   const activeTeachers = teachers.filter(t => t.status === 'Active');
 
   const tabs = [
-    { id: 'records', label: '👩‍🏫 Teachers', icon: '👩‍🏫' },
-    { id: 'assignments', label: '📋 Assignments', icon: '📋' },
-    { id: 'reports', label: '📊 Reports', icon: '📊' },
+    { id: 'records', label: 'Teachers', icon: <TeacherIcon /> },
+    { id: 'assignments', label: 'Assignments', icon: <BookIcon /> },
+    { id: 'reports', label: 'Reports', icon: <DashboardIcon /> },
   ];
 
   return (
@@ -150,7 +154,7 @@ export default function Teachers({ currentPeriodId }) {
                 return registeredUsers.length >= seatLimit;
               })()}
             >
-              ➕ Add Teacher
+              <PlusIcon size={16} /> Add Teacher
             </button>
           )}
         </div>
@@ -262,8 +266,8 @@ function RecordsTab({ teachers, search, setSearch, total, getTeacherSubjects, ge
                     </td>
                     <td data-label="Actions">
                       <div className="inline-flex" style={{justifyContent:'inherit'}}>
-                        <button className="btn btn-ghost btn-sm" onClick={() => onEdit(t)}>✏️</button>
-                        <button className="btn btn-ghost btn-sm" onClick={() => onDelete(t.id)}>🗑️</button>
+                        <button className="btn btn-ghost btn-sm" onClick={() => onEdit(t)}><EditIcon size={14} /></button>
+                        <button className="btn btn-ghost btn-sm" onClick={() => onDelete(t.id)}><DeleteIcon size={14} /></button>
                       </div>
                     </td>
                   </tr>
@@ -580,7 +584,7 @@ function ReportsTab() {
       <div class="item"><div class="val">${selectedInfo.classCount}</div><div class="label">Classes</div></div>
       <div class="item"><div class="val">${overallAvg}%</div><div class="label">Overall Average</div></div>
     </div>
-    <h3>📊 Subject Performance Breakdown</h3>
+    <h3>Performance Breakdown</h3>
     <table><thead><tr><th>Subject</th><th>Class</th><th>Class Average</th><th>Pass Rate (≥70)</th><th>Students</th></tr></thead>
     <tbody>${selectedRows.map(r => {
       const cls = r.average >= 70 ? 'good' : r.average >= 55 ? 'avg' : 'low';
@@ -610,10 +614,10 @@ function ReportsTab() {
     .good{color:#10b981;font-weight:700}.avg{color:#f59e0b;font-weight:700}.low{color:#ef4444;font-weight:700}
     </style></head><body>
     ${headerStr}
-    <h3>👩‍🏫 Teacher Workload</h3>
+    <h3><TeacherIcon size={18} /> Teacher Workload</h3>
     <table><thead><tr><th>Teacher</th><th>Phone</th><th>Status</th><th>Subjects</th><th>Classes</th></tr></thead>
     <tbody>${workload.map(w => `<tr><td><strong>${w.name}</strong></td><td>${w.phone}</td><td>${w.status}</td><td>${w.subjectCount}</td><td>${w.classCount}</td></tr>`).join('')}</tbody></table>
-    <h3>📊 Subject Performance by Teacher</h3>
+    <h3><DashboardIcon size={18} /> Subject Performance by Teacher</h3>
     <table><thead><tr><th>Teacher</th><th>Subject</th><th>Class</th><th>Class Avg</th><th>Pass Rate</th></tr></thead>
     <tbody>${Object.entries(performance).flatMap(([, subs]) =>
       Object.entries(subs).flatMap(([sub, classes]) =>
@@ -637,20 +641,20 @@ function ReportsTab() {
             <strong style={{ fontSize: '0.85rem', whiteSpace: 'nowrap' }}>Select Teacher:</strong>
             <select className="form-select" style={{ maxWidth: 220 }} value={selectedTeacher}
               onChange={e => setSelectedTeacher(e.target.value)}>
-              <option value="all">📊 All Teachers (Summary)</option>
-              {activeTeachers.map(t => <option key={t.id} value={t.id}>👩‍🏫 {t.name}</option>)}
+              <option value="all">Global Summary</option>
+              {activeTeachers.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
             </select>
             <div style={{ marginLeft: 'auto', display: 'flex', gap: 8, flexWrap: 'wrap' }}>
               <div className="btn-group">
-                <button className="btn btn-ghost btn-sm" onClick={() => handlePrintStaff('all')}>📋 All List</button>
-                <button className="btn btn-ghost btn-sm" onClick={() => handlePrintStaff('by-class')}>🏫 By Class</button>
+                <button className="btn btn-ghost btn-sm" onClick={() => handlePrintStaff('all')}><BookIcon size={14} /> All List</button>
+                <button className="btn btn-ghost btn-sm" onClick={() => handlePrintStaff('by-class')}><SchoolIcon size={14} /> By Class</button>
               </div>
               {selectedTeacher !== 'all' && (
                 <button className="btn btn-primary btn-sm" onClick={printTeacherReport}>
-                  🖨️ Print {selectedInfo?.name?.split(' ')[0]}'s Report
+                  <PrintIcon size={14} /> Print {selectedInfo?.name?.split(' ')[0]}'s Report
                 </button>
               )}
-              <button className="btn btn-ghost btn-sm" onClick={printAllReport}>🖨️ Print Global Summary</button>
+              <button className="btn btn-ghost btn-sm" onClick={printAllReport}><PrintIcon size={14} /> Print Global Summary</button>
             </div>
           </div>
         </div>
@@ -682,7 +686,7 @@ function ReportsTab() {
           {/* Performance table for selected teacher */}
           <div className="card">
             <div className="card-header">
-              <h3>📊 {selectedInfo.name} — Performance Breakdown</h3>
+              <h3><DashboardIcon size={20} /> {selectedInfo.name} — Performance Breakdown</h3>
             </div>
             <div className="card-body" style={{ padding: 0 }}>
               <table className="data-table hide-mobile">
@@ -744,7 +748,7 @@ function ReportsTab() {
       {selectedTeacher === 'all' && (
         <>
           <div className="card" style={{ marginBottom: 20 }}>
-            <div className="card-header"><h3>👩‍🏫 Teacher Workload</h3></div>
+            <div className="card-header"><h3><TeacherIcon size={20} /> Teacher Workload</h3></div>
             <div className="card-body" style={{ padding: 0 }}>
               <table className="data-table hide-mobile">
                 <thead><tr><th>Teacher</th><th>Phone</th><th>Status</th><th>Subjects</th><th>Classes</th><th>Details</th></tr></thead>
@@ -773,7 +777,7 @@ function ReportsTab() {
                       <strong style={{ color: 'var(--primary)' }}>{w.name}</strong>
                       <span className={`badge ${w.status === 'Active' ? 'badge-success' : 'badge-ghost'}`} style={{ fontSize: '0.7rem' }}>{w.status}</span>
                     </div>
-                    <div className="text-muted" style={{ fontSize: '0.82rem' }}>📞 {w.phone}</div>
+                    <div className="text-muted" style={{ fontSize: '0.82rem' }}><PhoneIcon size={12} /> {w.phone}</div>
                     <div style={{ display: 'flex', gap: 16, marginTop: 8 }}>
                       <div style={{ textAlign: 'center' }}>
                         <div style={{ fontSize: '1.3rem', fontWeight: 700, color: 'var(--primary)' }}>{w.subjectCount}</div>
@@ -791,7 +795,7 @@ function ReportsTab() {
           </div>
 
           <div className="card">
-            <div className="card-header"><h3>📊 All Teachers — Subject Performance</h3></div>
+            <div className="card-header"><h3><DashboardIcon size={20} /> All Teachers — Subject Performance</h3></div>
             <div className="card-body" style={{ padding: 0 }}>
               <table className="data-table hide-mobile">
                 <thead><tr><th>Teacher</th><th>Subject</th><th>Class</th><th>Class Avg</th><th>Pass Rate (≥70)</th><th>Students</th></tr></thead>
@@ -855,7 +859,7 @@ function TeacherModal({ teacher, onSave, onClose }) {
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal" onClick={e => e.stopPropagation()} style={{ maxWidth: 480 }}>
         <div className="modal-header">
-          <h3>{teacher ? 'Edit Teacher' : 'Add New Teacher'}</h3>
+          <h3>{teacher ? <><EditIcon size={18} /> Edit Teacher</> : <><PlusIcon size={18} /> Add New Teacher</>}</h3>
           <button className="modal-close" onClick={onClose}>×</button>
         </div>
         <form onSubmit={e => { e.preventDefault(); onSave(form); }}>

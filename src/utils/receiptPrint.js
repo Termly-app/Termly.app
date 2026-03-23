@@ -159,7 +159,7 @@ export function printReceipt({ school, student, payment, feeItems = [] }) {
       <div class="balance-box">
         <div class="balance-label">Outstanding Balance</div>
         <div class="balance-amount ${balance > 0 ? 'balance-due' : 'balance-clear'}">
-          ${balance > 0 ? ksh(balance) : 'CLEARED ✓'}
+          ${balance > 0 ? ksh(balance) : 'CLEARED'}
         </div>
       </div>
 
@@ -269,7 +269,7 @@ export function printFeeStatement({ school, student, payments = [], feeStructure
         <div class="balance-box" style="flex:1">
           <div class="balance-label">Balance Due</div>
           <div class="balance-amount ${isCleared ? 'balance-clear' : 'balance-due'}">
-            ${isCleared ? 'CLEARED ✓' : ksh(balance)}
+            ${isCleared ? 'CLEARED' : ksh(balance)}
           </div>
         </div>
       </div>

@@ -1,4 +1,5 @@
 import { getAllPlans, fmtMoney } from '../superAdminUtils';
+import { CheckIcon, AlertIcon, ClockIcon } from '../../../components/CommonIcons';
 
 export default function SubscriptionsTab({
   pStats, activeCount, expiredCount, totalSchools,
@@ -28,14 +29,17 @@ export default function SubscriptionsTab({
       {/* Status KPIs */}
       <div className="kpi-grid" style={{ marginBottom:14 }}>
         {[
-          { a:'var(--te)',  c:'ni-t', l:'Active',      v: pStats?.activeSchools ?? activeCount,           ch:`${totalSchools ? Math.round(((pStats?.activeSchools ?? activeCount) / totalSchools) * 100) : 0}% of total`, up:true  },
-          { a:'var(--sub)', c:'ni-d', l:'Deactivated', v: pStats?.deactivatedSchools ?? deactivatedCount, ch:'Awaiting payment', up:false },
-          { a:'var(--am)',  c:'ni-a', l:'Suspended',   v: pStats?.suspendedSchools ?? suspendedCount,     ch:'Admin action',     up:false },
-          { a:'var(--ro)',  c:'ni-r', l:'Expired',     v: pStats?.expiredSchools ?? expiredCount,         ch:'Needs renewal',    up:false },
+          { a:'var(--te)',  c:'ni-t', l:'Active',      i:<CheckIcon size={14} />, v: pStats?.activeSchools ?? activeCount,           ch:`${totalSchools ? Math.round(((pStats?.activeSchools ?? activeCount) / totalSchools) * 100) : 0}% of total`, up:true  },
+          { a:'var(--sub)', c:'ni-d', l:'Deactivated', i:<ClockIcon size={14} />, v: pStats?.deactivatedSchools ?? deactivatedCount, ch:'Awaiting payment', up:false },
+          { a:'var(--am)',  c:'ni-a', l:'Suspended',   i:<AlertIcon size={14} />, v: pStats?.suspendedSchools ?? suspendedCount,     ch:'Admin action',     up:false },
+          { a:'var(--ro)',  c:'ni-r', l:'Expired',     i:<AlertIcon size={14} />, v: pStats?.expiredSchools ?? expiredCount,         ch:'Needs renewal',    up:false },
         ].map((k, i) => (
-          <div className="kpi" key={i}>
+          <div className="kpi-card" key={i}>
             <div className="kpi-accent" style={{ background:k.a }} />
-            <div className="kpi-hd"><span className="kpi-lbl">{k.l}</span></div>
+            <div className="kpi-hd">
+              <span className="kpi-lbl">{k.l}</span>
+              <div className={`kpi-ico ${k.c}`}>{k.i}</div>
+            </div>
             <div className="kpi-val">{k.v}</div>
             <div className="kpi-ft"><span className={`kpi-ch ${k.up ? 'kup' : 'kdn'}`}>{k.ch}</span></div>
           </div>

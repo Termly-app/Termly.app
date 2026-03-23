@@ -37,6 +37,7 @@ import RevenueTab         from './tabs/RevenueTab';
 import ActivityTab        from './tabs/ActivityTab';
 import SettingsTab        from './tabs/SettingsTab';
 import RecoveryTab        from './tabs/RecoveryTab';
+import { CrossIcon, CheckIcon } from '../../components/CommonIcons';
 
 // Modals
 import ActivateModal    from './modals/ActivateModal';
@@ -54,6 +55,10 @@ import {
   useChart, GC, TC, TIP,
   fmtDate, fmtMoney, calcExpiry, statusLabel, sPill, planAmt,
 } from './superAdminUtils';
+import {
+  CheckIcon, AlertIcon, ClockIcon, SchoolIcon,
+  CardIcon, RocketIcon, ShieldIcon, SearchIcon, BookIcon
+} from '../../components/CommonIcons';
 
 // Store additions (NEMIS student fetch)
 import { getStudentsBySchool } from '../../data/store';
@@ -681,15 +686,15 @@ export default function SuperAdmin({ currentUser, sidebarOpen, setSidebarOpen, o
 
   // ══ NAV ITEMS ═════════════════════════════════════════════════════════
   const navItems = [
-    { id:'overview',      cls:'ni-v', label:'Overview',        icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" width="15" height="15"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg> },
-    { id:'schools',       cls:'ni-t', label:'Schools',         icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" width="15" height="15"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg> },
-    { id:'payments',      cls:'ni-a', label:'Payments',        icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" width="15" height="15"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg> },
-    { id:'history',       cls:'ni-s', label:'Payment History', icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" width="15" height="15"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-4.95"/></svg> },
-    { id:'subscriptions', cls:'ni-s', label:'Subscriptions',   icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" width="15" height="15"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/><line x1="7" y1="15" x2="7.01" y2="15" strokeWidth="3"/></svg> },
-    { id:'revenue',       cls:'ni-v', label:'Revenue',         icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" width="15" height="15"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg> },
-    { id:'activity',      cls:'ni-t', label:'Activity Log',    icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" width="15" height="15"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg> },
-    { id:'config',        cls:'ni-d', label:'Settings',        icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" width="15" height="15"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg> },
-    { id:'recovery',      cls:'ni-r', label:'Data Recovery',   icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" width="15" height="15"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/></svg> },
+    { id:'overview',      cls:'ni-v', label:'Overview',        icon: <CardIcon size={15} /> },
+    { id:'schools',       cls:'ni-t', label:'Schools',         icon: <SchoolIcon size={15} /> },
+    { id:'payments',      cls:'ni-a', label:'Payments',        icon: <CardIcon size={15} /> },
+    { id:'history',       cls:'ni-s', label:'Payment History', icon: <ClockIcon size={15} /> },
+    { id:'subscriptions', cls:'ni-s', label:'Subscriptions',   icon: <RocketIcon size={15} /> },
+    { id:'revenue',       cls:'ni-v', label:'Revenue',         icon: <CardIcon size={15} /> },
+    { id:'activity',      cls:'ni-t', label:'Activity Log',    icon: <ClockIcon size={15} /> },
+    { id:'config',        cls:'ni-d', label:'Settings',        icon: <ShieldIcon size={15} /> },
+    { id:'recovery',      cls:'ni-r', label:'Data Recovery',   icon: <ShieldIcon size={15} /> },
   ];
 
   const expiryInfo = calcExpiry(subEndDate);
@@ -726,7 +731,7 @@ export default function SuperAdmin({ currentUser, sidebarOpen, setSidebarOpen, o
           </div>
           <div className="sb-brand-txt">
             <div className="sb-name">ShuleSoft</div>
-            <div className="sb-tag">PLATFORM ENGINE</div>
+            <div className="sb-tag">COMMAND CENTER</div>
           </div>
           <button
             className="sa-close-btn"
@@ -813,7 +818,7 @@ export default function SuperAdmin({ currentUser, sidebarOpen, setSidebarOpen, o
               onChange={e => setSearchQuery(e.target.value)}
             />
             {searchQuery && (
-              <span className="sa-search-clear" onClick={() => setSearchQuery('')}>✕</span>
+              <span className="sa-search-clear" onClick={() => setSearchQuery('')}><CrossIcon size={14} /></span>
             )}
           </div>
           <div className="sa-tb-right">
@@ -831,7 +836,7 @@ export default function SuperAdmin({ currentUser, sidebarOpen, setSidebarOpen, o
             {/* Toast */}
             {message && (
               <div className={`toast ${message.type === 'success' ? 'toast-ok' : 'toast-err'}`}>
-                <span>{message.type === 'success' ? '✓' : '✕'}</span> {message.text}
+                <span>{message.type === 'success' ? <CheckIcon size={14} /> : <CrossIcon size={14} />}</span> {message.text}
               </div>
             )}
 

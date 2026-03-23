@@ -7,6 +7,11 @@ import {
   getPeriods, setActivePeriod, checkIsSubscriptionActive
 } from '../data/store';
 import Loader from '../components/Common/Loader';
+import {
+  StudentIcon, TeacherIcon, CardIcon, BookIcon, UserIcon, SchoolIcon,
+  RocketIcon, AlertIcon, LogoutIcon, ClockIcon, SearchIcon, DashboardIcon,
+  LeafIcon, GraduationIcon
+} from '../components/CommonIcons';
 
 export default function Dashboard({ currentUser, onLogout, currentPeriodId }) {
   const [data, setData] = useState(null);
@@ -92,7 +97,12 @@ export default function Dashboard({ currentUser, onLogout, currentPeriodId }) {
     'Junior Secondary':  { bg: '#F5F3FF', color: '#6D28D9', accent: '#8B5CF6', gradient: 'linear-gradient(135deg,#A78BFA,#7C3AED)' },
     'Senior Secondary':  { bg: '#FFF1F2', color: '#BE123C', accent: '#F43F5E', gradient: 'linear-gradient(135deg,#FB7185,#E11D48)' },
   };
-  const levelIcons = { 'Early Years':'🌱','Upper Primary':'📚','Junior Secondary':'🎓','Senior Secondary':'🚀' };
+  const levelIcons = { 
+    'Early Years':      <LeafIcon size={14} />,
+    'Upper Primary':    <BookIcon size={14} />,
+    'Junior Secondary': <GraduationIcon size={14} />,
+    'Senior Secondary': <RocketIcon size={14} /> 
+  };
 
   const getGrade = (avg, level = 'Upper Primary') => {
     const scale = data?.profile?.gradingSystems?.[level] || 
@@ -115,18 +125,18 @@ export default function Dashboard({ currentUser, onLogout, currentPeriodId }) {
   const totalStaff = data.adminUsers?.length || 0;
   
   const kpis = [
-    { icon:'👨‍🎓', label:'Total Students',    value: data.totalStudents,       color:'#0EA5E9', bg:'#E0F2FE',  show: true          },
-    { icon:'👩‍🏫', label:'Teaching Staff',    value: data.totalTeachers,       color:'#8B5CF6', bg:'#F5F3FF',  show: !isFinance     },
-    { icon:'💰', label:'Fee Collection',      value: `${data.collectionRate}%`, color:'#10B981', bg:'#ECFDF5',  show: !isTeacher     },
-    { icon:'📋', label:"Today's Attendance", value: `${data.attendance.percentage}%`, color:'#F59E0B', bg:'#FFFBEB', show: !isFinance },
-    { icon:'🪑', label:'Seat Usage',        value: `${totalStaff}/${seatLimit}`, color:'#64748b', bg:'#f1f5f9', show: !isTeacher && !isFinance },
+    { icon:<StudentIcon size={20} />, label:'Total Students',    value: data.totalStudents,       color:'#0EA5E9', bg:'#E0F2FE',  show: true          },
+    { icon:<TeacherIcon size={20} />, label:'Teaching Staff',    value: data.totalTeachers,       color:'#8B5CF6', bg:'#F5F3FF',  show: !isFinance     },
+    { icon:<CardIcon size={20} />,    label:'Fee Collection',      value: `${data.collectionRate}%`, color:'#10B981', bg:'#ECFDF5',  show: !isTeacher     },
+    { icon:<BookIcon size={20} />,    label:"Today's Attendance", value: `${data.attendance.percentage}%`, color:'#F59E0B', bg:'#FFFBEB', show: !isFinance },
+    { icon:<UserIcon size={20} />,    label:'Seat Usage',        value: `${totalStaff}/${seatLimit}`, color:'#64748b', bg:'#f1f5f9', show: !isTeacher && !isFinance },
   ].filter(k => k.show);
 
   const quickActions = [
-    { icon:'👨‍🎓', label:'Students',      sub:'Manage all students',   to:'/students',   bg:'#E0F2FE',  color:'#0EA5E9' },
-    { icon:'👩‍🏫', label:'Teachers',      sub:'Manage staff',          to:'/teachers',   bg:'#F5F3FF',  color:'#8B5CF6' },
-    { icon:'📋', label:'Attendance',     sub:'Record daily attendance', to:'/attendance', bg:'#ECFDF5',  color:'#10B981' },
-    { icon:'💰', label:'Fees',           sub:'Fee collection & tracking', to:'/fees',    bg:'#FFFBEB',  color:'#F59E0B' },
+    { icon:<StudentIcon size={18} />, label:'Students',      sub:'Manage all students',   to:'/students',   bg:'#E0F2FE',  color:'#0EA5E9' },
+    { icon:<TeacherIcon size={18} />, label:'Teachers',      sub:'Manage staff',          to:'/teachers',   bg:'#F5F3FF',  color:'#8B5CF6' },
+    { icon:<BookIcon size={18} />,    label:'Attendance',     sub:'Record daily attendance', to:'/attendance', bg:'#ECFDF5',  color:'#10B981' },
+    { icon:<CardIcon size={18} />,    label:'Fees',           sub:'Fee collection & tracking', to:'/fees',    bg:'#FFFBEB',  color:'#F59E0B' },
   ];
 
   return (
@@ -153,13 +163,13 @@ export default function Dashboard({ currentUser, onLogout, currentPeriodId }) {
           </div>
           <div className="inline-flex" style={{ gap: 10 }}>
             {!isAccountActive && (
-              <div style={{ background: 'rgba(239,68,68,0.1)', color: 'var(--danger)', padding: '6px 14px', borderRadius: 8, fontSize: '0.75rem', fontWeight: 700, border: '1px solid var(--danger)' }}>
-                ⚠️ Subscription Expired
+              <div style={{ background: 'rgba(239,68,68,0.1)', color: 'var(--danger)', padding: '6px 14px', borderRadius: 8, fontSize: '0.75rem', fontWeight: 700, border: '1px solid var(--danger)', display:'flex', alignItems:'center', gap:5 }}>
+                <AlertIcon size={14} /> Subscription Expired
               </div>
             )}
             {onLogout && (
               <button onClick={onLogout} className="btn btn-ghost btn-sm">
-                🚪 Sign Out
+                <LogoutIcon size={14} /> Sign Out
               </button>
             )}
           </div>
@@ -181,18 +191,18 @@ export default function Dashboard({ currentUser, onLogout, currentPeriodId }) {
         ))}
       </div>
 
-      {/* 🧭 GUIDED SETUP (ONBOARDING) 🧭 */}
+      {/* GUIDED SETUP (ONBOARDING) */}
       {(data.totalStudents < 5 || !data.profile?.phone) && (
         <div className="card-premium animate-fade-up" style={{ marginBottom: 24, padding: '24px 30px', position: 'relative', overflow: 'hidden' }}>
           <div style={{ position: 'relative', zIndex: 2 }}>
-            <h2 className="hero-title white" style={{ fontSize: '1.5rem', marginBottom: 8 }}>Start Here 🏁</h2>
+            <h2 className="hero-title white" style={{ fontSize: '1.5rem', marginBottom: 8, display:'flex', alignItems:'center', gap:10 }}>Start Here <RocketIcon size={22} color="#fff" /></h2>
             <p className="hero-subtitle white" style={{ opacity: 0.9, marginBottom: 24, maxWidth: 600 }}>Welcome to ShuleSoft! Let's get your school system ready in 4 easy steps. Follow this guide to go live today.</p>
             
             <div className="guided-steps" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 16 }}>
               {[
                 { 
                   id: 'profile', 
-                  icon: '🏫', 
+                  icon: <SchoolIcon size={32} />, 
                   title: 'Complete School Info', 
                   desc: 'Add your logo, motto, and contact details for official reports.',
                   to: '/settings', 
@@ -200,7 +210,7 @@ export default function Dashboard({ currentUser, onLogout, currentPeriodId }) {
                 },
                 { 
                   id: 'classes', 
-                  icon: '📚', 
+                  icon: <BookIcon size={32} />, 
                   title: 'Setup Classes', 
                   desc: 'Configure which grades and streams are active in your school.',
                   to: '/settings?tab=classes', 
@@ -208,7 +218,7 @@ export default function Dashboard({ currentUser, onLogout, currentPeriodId }) {
                 },
                 { 
                   id: 'students', 
-                  icon: '👨‍🎓', 
+                  icon: <GraduationIcon size={32} />, 
                   title: 'Add Your Students', 
                   desc: 'Import or manually add students to their respective classes.',
                   to: '/students', 
@@ -216,7 +226,7 @@ export default function Dashboard({ currentUser, onLogout, currentPeriodId }) {
                 },
                 { 
                   id: 'finance', 
-                  icon: '💰', 
+                  icon: <CardIcon size={32} />, 
                   title: 'Setup Fee Structure', 
                   desc: 'Define how much each class pays per term.',
                   to: '/fees', 
@@ -236,9 +246,9 @@ export default function Dashboard({ currentUser, onLogout, currentPeriodId }) {
                   position: 'relative'
                 }}>
                   {step.done && (
-                    <div style={{ position: 'absolute', top: 12, right: 12, color: '#22c55e', fontSize: '1.2rem' }}>✓</div>
+                    <div style={{ position: 'absolute', top: 12, right: 12, color: '#22c55e', fontSize: '1.2rem' }}><CheckIcon size={16} /></div>
                   )}
-                  <div style={{ fontSize: '1.8rem', marginBottom: 12 }}>{step.icon}</div>
+                  <div style={{ marginBottom: 12, color: '#fff' }}>{step.icon}</div>
                   <h4 style={{ color: '#fff', fontSize: '0.95rem', fontWeight: 700, margin: '0 0 6px 0' }}>{idx + 1}. {step.title}</h4>
                   <p style={{ color: 'rgba(255,255,255,0.7)', fontSize: '0.75rem', margin: 0, lineHeight: 1.4 }}>{step.desc}</p>
                   {!step.done && <div style={{ marginTop: 'auto', paddingTop: 14, color: '#fff', fontSize: '0.7rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: 4 }}>
@@ -248,7 +258,7 @@ export default function Dashboard({ currentUser, onLogout, currentPeriodId }) {
               ))}
             </div>
           </div>
-          <div style={{ position: 'absolute', top: -20, right: -20, fontSize: '12rem', opacity: 0.05, pointerEvents: 'none' }}>🏫</div>
+          <div style={{ position: 'absolute', top: -20, right: -20, fontSize: '12rem', opacity: 0.1, pointerEvents: 'none', color:'#fff' }}><SchoolIcon size={200} /></div>
         </div>
       )}
 
@@ -258,19 +268,19 @@ export default function Dashboard({ currentUser, onLogout, currentPeriodId }) {
         {/* Recent Activity / Payments */}
         <div className="card">
           <div className="card-header">
-            <h3>🕐 Recent Activity</h3>
+            <h3><ClockIcon size={18} /> Recent Activity</h3>
             {!isTeacher && <Link to="/fees" className="btn btn-ghost btn-sm">View All</Link>}
           </div>
           <div className="card-body" style={{ padding: 0 }}>
             {data.recentPayments.length === 0 ? (
               <div className="empty-state">
-                <div className="empty-state-icon">📂</div>
+                <div className="empty-state-icon"><SearchIcon size={48} /></div>
                 <p>No recent payments found.</p>
               </div>
             ) : (
               data.recentPayments.map((p, i) => (
                 <div className="activity-item" key={i} style={{ padding: '11px 18px' }}>
-                  <div className="activity-icon">💳</div>
+                  <div className="activity-icon"><CardIcon size={18} /></div>
                   <div className="activity-body">
                     <div className="activity-title">{p.studentName}</div>
                     <div className="activity-sub">{p.studentClass} · {p.method}</div>
@@ -285,7 +295,7 @@ export default function Dashboard({ currentUser, onLogout, currentPeriodId }) {
         {/* Quick Actions */}
         <div className="card">
           <div className="card-header">
-            <h3>⚡ Quick Actions</h3>
+            <h3><RocketIcon size={18} /> Quick Actions</h3>
           </div>
           <div className="card-body" style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
             {quickActions.map((a, i) => (
@@ -306,7 +316,7 @@ export default function Dashboard({ currentUser, onLogout, currentPeriodId }) {
       <div className="card" style={{ marginBottom: 24 }}>
         <div className="card-header">
           <div className="flex-center gap-3">
-            <div className="icon-box-primary">🏫</div>
+            <div className="icon-box-primary"><SchoolIcon size={20} /></div>
             <div>
               <h3 style={{ margin: 0 }}>CBC School Structure</h3>
               <p style={{ fontSize: '0.75rem', color: 'var(--text-light)', margin: 0 }}>Distributed across 4 Key Stages</p>
@@ -318,7 +328,7 @@ export default function Dashboard({ currentUser, onLogout, currentPeriodId }) {
           <div className="cbc-structure-grid">
             {Object.entries(data.schoolStructure).map(([levelName, levelData]) => {
               const colors = levelColors[levelName] || levelColors['Early Years'];
-              const icon   = levelIcons[levelName] || '📚';
+              const icon   = levelIcons[levelName] || <BookIcon size={14} />;
               return (
                 <div key={levelName} className="cbc-level-card-refined">
                   <div className="cbc-level-header-refined" style={{ background: colors.gradient }}>
@@ -336,7 +346,7 @@ export default function Dashboard({ currentUser, onLogout, currentPeriodId }) {
                           <span className="grade-indicator" style={{ background: colors.accent }} />
                           <span className="grade-name">{grade}</span>
                           <div className="grade-stats-box">
-                            <span className="count-pill">{info.count} 👤</span>
+                            <span className="count-pill" style={{ display:'flex', alignItems:'center', gap:4 }}>{info.count} <UserIcon size={10} /></span>
                             {info.avgPerformance > 0 && (
                               <span className="perf-pill" style={{ borderColor: perfColor, color: perfColor }}>
                                 {info.avgPerformance}%
@@ -362,7 +372,7 @@ export default function Dashboard({ currentUser, onLogout, currentPeriodId }) {
           <div className="card">
             <div className="card-header">
               <div className="flex-center gap-3">
-                <div className="icon-box-orange">📋</div>
+                <div className="icon-box-orange"><BookIcon size={20} /></div>
                 <h3 style={{ margin: 0 }}>Today's Attendance</h3>
               </div>
               <Link to="/attendance" className="btn btn-ghost btn-sm">Mark Now</Link>
@@ -395,7 +405,7 @@ export default function Dashboard({ currentUser, onLogout, currentPeriodId }) {
           <div className="card">
             <div className="card-header">
               <div className="flex-center gap-3">
-                <div className="icon-box-success">💰</div>
+                <div className="icon-box-success"><CardIcon size={20} /></div>
                 <h3 style={{ margin: 0 }}>Fee Collection</h3>
               </div>
               <Link to="/fees" className="btn btn-ghost btn-sm">View All</Link>
@@ -433,7 +443,7 @@ export default function Dashboard({ currentUser, onLogout, currentPeriodId }) {
           <div className="card">
             <div className="card-header">
               <div className="flex-center gap-3">
-                <div className="icon-box-accent">📊</div>
+                <div className="icon-box-accent"><DashboardIcon size={20} /></div>
                 <h3 style={{ margin: 0 }}>Academic Performance</h3>
               </div>
             </div>
@@ -446,7 +456,7 @@ export default function Dashboard({ currentUser, onLogout, currentPeriodId }) {
                 return (
                   <div key={levelName} className="metric-row">
                     <div className="flex-between" style={{ marginBottom: 6 }}>
-                      <span className="metric-label">{levelIcons[levelName]} {levelName}</span>
+                      <span className="metric-label">{levelName}</span>
                       <span style={{ fontSize: '0.85rem', fontWeight: 700, color }}>{levelAvg}% <small style={{ fontWeight: 500, opacity: 0.7 }}>({grade})</small></span>
                     </div>
                     <div className="progress-container-refined">

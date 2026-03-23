@@ -1,6 +1,10 @@
 import { useState, useEffect } from 'react';
 import { getClassResults, setStudentAllMarks, getSubjectRankings, getClassList, getCBC, setCBC, getTeacherPerformance, getCoreCompetencies, getPrintHeader, getSchoolProfile, subscribeToChanges, getGradeForScore } from '../data/store';
 import { CBC_STRUCTURE, CBC_LEVELS, CBC_CORE_COMPETENCIES, STREAMS, getSubjectsForGrade, getLevelForGrade } from '../data/seedData';
+import { 
+  LeafIcon, BookIcon, PrintIcon, DashboardIcon, EditIcon, 
+  FlagIcon, RocketIcon, TeacherIcon, SchoolIcon, SaveIcon 
+} from '../components/CommonIcons';
 
 export default function Grading({ currentUser, currentPeriodId }) {
   const allGrades = Object.values(CBC_STRUCTURE).flatMap(l => l.grades);
@@ -248,7 +252,7 @@ export default function Grading({ currentUser, currentPeriodId }) {
         <div><strong>Student:</strong> ${student.name}</div><div><strong>Adm No:</strong> ${student.admNo}</div>
         <div><strong>Class:</strong> ${student.class}</div>${!isEarlyYears ? `<div><strong>Position:</strong> ${student.rank} of ${classSize}</div>` : ''}
       </div>
-      <div class="section-title">${isEarlyYears ? '🌱 Learning Areas & Development' : '📝 Academic Performance'}</div>
+      <div class="section-title">${isEarlyYears ? 'Learning Areas & Development' : 'Academic Performance'}</div>
       <table><thead><tr><th>Learning Area</th>${!isEarlyYears ? '<th>Marks</th><th>Grade</th>' : ''}<th>CBC Level</th><th>Remarks</th></tr></thead>
       <tbody>${subjects.map(sub => {
         const mark = student.marks[sub] || 0;
@@ -302,14 +306,14 @@ export default function Grading({ currentUser, currentPeriodId }) {
             {loading && <span className="text-muted" style={{ fontSize: '0.85rem' }}>Loading...</span>}
           </div>
           <div className="inline-flex" style={{ gap: 12, flexWrap: 'wrap' }}>
-            <button className="btn btn-ghost" onClick={printClassList}>🖨️ Class List</button>
-            <button className="btn btn-ghost" onClick={printClassResults}>📊 Print Results</button>
-            <button className="btn btn-accent" onClick={printAllReportCards}>📄 Print All Report Cards</button>
+            <button className="btn btn-ghost" onClick={printClassList}><PrintIcon size={16} /> Class List</button>
+            <button className="btn btn-ghost" onClick={printClassResults}><DashboardIcon size={16} /> Print Results</button>
+            <button className="btn btn-accent" onClick={printAllReportCards}><BookIcon size={16} /> Print All Report Cards</button>
             {activeTab === 'marks' && !isEarlyYears && currentUser?.role?.toLowerCase() !== 'finance' && (editMode ? (
               <><button className="btn btn-ghost" onClick={() => { setEditMode(false); loadResults(); }}>Cancel</button>
-              <button className="btn btn-success" onClick={saveAllMarks}>💾 Save Marks</button></>
+              <button className="btn btn-success" onClick={saveAllMarks}><SaveIcon size={16} /> Save Marks</button></>
             ) : (
-              <button className="btn btn-primary" onClick={() => setEditMode(true)}>✏️ Enter Marks</button>
+              <button className="btn btn-primary" onClick={() => setEditMode(true)}><EditIcon size={16} /> Enter Marks</button>
             ))}
           </div>
         </div>
@@ -342,7 +346,7 @@ export default function Grading({ currentUser, currentPeriodId }) {
                       position: 'relative'
                     }}>
                     {g}
-                    {isMyClass && isTeacher && <span title="My Class" style={{ position: 'absolute', top: -10, right: -4, fontSize: '0.9rem' }}>⭐</span>}
+                    {isMyClass && isTeacher && <span title="My Class" style={{ position: 'absolute', top: -10, right: -4, fontSize: '0.9rem' }}><FlagIcon size={14} /></span>}
                   </button>
                 );
               })}
@@ -366,7 +370,7 @@ export default function Grading({ currentUser, currentPeriodId }) {
         )}
 
         {selectedClass === 'Grade 6' && (
-          <span className="badge badge-accent" style={{ fontSize: '0.75rem' }}>🚀 KPSEA Exam Candidate</span>
+          <span className="badge badge-accent" style={{ fontSize: '0.75rem' }}><RocketIcon size={14} /> KPSEA Exam Candidate</span>
         )}
         
         <div style={{ flex: 1 }} />
@@ -398,10 +402,10 @@ export default function Grading({ currentUser, currentPeriodId }) {
       {/* View Tabs — pill strip */}
       <div style={{ display:'flex', alignItems:'center', gap:6, marginBottom:20, padding:'4px 5px', background:'var(--bg)', borderRadius:12, border:'1px solid var(--border)', width:'fit-content', flexWrap:'wrap' }}>
         {[
-          { key:'marks',       icon: isEarlyYears ? '🎯' : '📝', label: isEarlyYears ? 'Competency Focus' : 'Marks & Rankings' },
-          ...(!isEarlyYears ? [{ key:'subjects', icon:'📊', label:'Subject Rankings' }] : []),
-          { key:'cbc',         icon:'🎯', label:'CBC Levels' },
-          { key:'performance', icon:'👩‍🏫', label:'Teacher Performance' },
+          { key:'marks',       icon: isEarlyYears ? <FlagIcon /> : <BookIcon />, label: isEarlyYears ? 'Competency Focus' : 'Marks & Rankings' },
+          ...(!isEarlyYears ? [{ key:'subjects', icon:<DashboardIcon />, label:'Subject Rankings' }] : []),
+          { key:'cbc',         icon:<FlagIcon />, label:'CBC Levels' },
+          { key:'performance', icon:<TeacherIcon />, label:'Teacher Performance' },
         ].map(t => (
           <button key={t.key} onClick={() => setActiveTab(t.key)}
             style={{
@@ -488,7 +492,7 @@ export default function Grading({ currentUser, currentPeriodId }) {
                         <td className="font-bold">{total}</td>
                         <td className="font-bold">{typeof avg === 'number' ? avg.toFixed(1) : avg}</td>
                         <td><span style={{ color, fontWeight: 700 }}>{grade}</span></td>
-                        <td><button className="btn btn-ghost btn-sm" onClick={() => setShowReport(s)}>📄</button></td>
+                        <td><button className="btn btn-ghost btn-sm" onClick={() => setShowReport(s)}><BookIcon size={14} /></button></td>
                       </tr>
                     );
                   })}
@@ -540,7 +544,7 @@ export default function Grading({ currentUser, currentPeriodId }) {
       {/* CBC COMPETENCIES TAB */}
       {activeTab === 'cbc' && (
         <div className="card">
-          <div className="card-header"><h3>🎯 CBC Competency Levels — {selectedClass} <span className="badge badge-info" style={{ fontSize: '0.7rem', marginLeft: 8 }}>{level}</span></h3></div>
+          <div className="card-header"><h3><FlagIcon size={20} /> CBC Competency Levels — {selectedClass} <span className="badge badge-info" style={{ fontSize: '0.7rem', marginLeft: 8 }}>{level}</span></h3></div>
           <div className="card-body" style={{ padding: 0, overflowX: 'auto' }}>
             <table className="data-table">
               <thead><tr><th>Student</th>{subjects.map(s => <th key={s} style={{ fontSize: '0.7rem' }}>{s.length > 8 ? s.substring(0, 7) + '..' : s}</th>)}</tr></thead>
@@ -594,7 +598,7 @@ export default function Grading({ currentUser, currentPeriodId }) {
           </div>
 
           <div className="card" style={{ marginBottom: 24 }}>
-            <div className="card-header"><h3>📊 Subject Performance Analysis — {selectedClass}</h3></div>
+            <div className="card-header"><h3><DashboardIcon size={20} /> Subject Performance Analysis — {selectedClass}</h3></div>
             <div className="card-body" style={{ padding: 0 }}>
               <table className="data-table">
                 <thead><tr><th>Subject</th><th>Mean Marks</th><th>Highest</th><th>Lowest</th><th>Dev. from Last Term</th></tr></thead>
@@ -621,7 +625,7 @@ export default function Grading({ currentUser, currentPeriodId }) {
           </div>
           
           <div className="card">
-            <div className="card-header"><h3>👩‍🏫 Subject Teacher Engagement</h3></div>
+            <div className="card-header"><h3><TeacherIcon size={20} /> Subject Teacher Engagement</h3></div>
             <div className="card-body">
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 16 }}>
                 {subjects.slice(0, 4).map(sub => (
@@ -681,7 +685,7 @@ function ReportCardModal({ student, cbcData, coreCompData, onClose, getGrade, cb
       <div><strong>Student:</strong> ${student.name}</div><div><strong>Adm No:</strong> ${student.admNo}</div>
       <div><strong>Class:</strong> ${student.class}</div>${!isEarlyYears ? `<div><strong>Position:</strong> ${student.rank} of ${classSize}</div>` : ''}
     </div>
-    <div class="section-title">${isEarlyYears ? '🌱 Learning Areas & Development' : '📝 Academic Performance'}</div>
+    <div class="section-title">${isEarlyYears ? 'Learning Areas & Development' : 'Academic Performance'}</div>
     <table><thead><tr><th>Learning Area</th>${!isEarlyYears ? '<th>Marks</th><th>Grade</th>' : ''}<th>CBC Level</th><th>Remarks</th></tr></thead>
     <tbody>${subjects.map(sub => {
       const mark = student.marks[sub] || 0;
@@ -695,7 +699,7 @@ function ReportCardModal({ student, cbcData, coreCompData, onClose, getGrade, cb
     }).join('')}
     ${!isEarlyYears ? `<tr style="font-weight:700;background:#f8fafc"><td>Total</td><td colspan="4">${student.total} / ${subjects.length * 100} — Average: ${student.average}% (Grade ${grade})</td></tr>` : ''}
     </tbody></table>
-    <div class="section-title">📋 Core Competencies & Values</div>
+    <div class="section-title">Core Competencies & Values</div>
     <table><thead><tr><th>Competency</th><th>Rating</th></tr></thead><tbody>${ccHtml()}</tbody></table>
     <div class="strengths"><strong>Learner Strengths:</strong> ___________________________________</div>
     <div class="strengths"><strong>Areas for Improvement:</strong> ___________________________________</div>
@@ -710,10 +714,10 @@ function ReportCardModal({ student, cbcData, coreCompData, onClose, getGrade, cb
   return (
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal" onClick={e => e.stopPropagation()} style={{ maxWidth: 760 }}>
-        <div className="modal-header"><h3>📄 Report Card — {student.name}</h3><button className="modal-close" onClick={onClose}>×</button></div>
+        <div className="modal-header"><h3><BookIcon size={20} /> Report Card — {student.name}</h3><button className="modal-close" onClick={onClose}>×</button></div>
         <div className="modal-body">
           <div className="report-card">
-            <div className="report-card-header"><h1>🏫 {profile?.school_name || 'ShuleSoft Academy'}</h1><h2>Term 1 {examType} Report Card — 2026</h2>
+            <div className="report-card-header"><h1><SchoolIcon size={24} /> {profile?.school_name || 'ShuleSoft Academy'}</h1><h2>Term 1 {examType} Report Card — 2026</h2>
               <span className="badge badge-info" style={{ marginTop: 6 }}>{level}</span>
             </div>
             <div className="report-card-info">
@@ -723,7 +727,7 @@ function ReportCardModal({ student, cbcData, coreCompData, onClose, getGrade, cb
 
             {/* Academic Performance Table */}
             <h4 style={{ fontSize: '0.92rem', fontWeight: 700, color: 'var(--primary)', marginBottom: 8, borderBottom: '2px solid var(--border)', paddingBottom: 4 }}>
-              {isEarlyYears ? '🌱 Learning Areas & Development' : '📝 Academic Performance'}
+              {isEarlyYears ? <LeafIcon size={16} /> : <BookIcon size={16} />} {isEarlyYears ? 'Learning Areas & Development' : 'Academic Performance'}
             </h4>
             <table>
               <thead><tr><th>Learning Area</th>{!isEarlyYears && <><th>Marks</th><th>Grade</th></>}<th>CBC Level</th><th>Remarks</th></tr></thead>
@@ -754,7 +758,7 @@ function ReportCardModal({ student, cbcData, coreCompData, onClose, getGrade, cb
 
             {/* Core Competencies & Values */}
             <h4 style={{ fontSize: '0.92rem', fontWeight: 700, color: 'var(--primary)', marginTop: 20, marginBottom: 8, borderBottom: '2px solid var(--border)', paddingBottom: 4 }}>
-              📋 Core Competencies & Values
+              <BookIcon size={16} /> Core Competencies & Values
             </h4>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6 }}>
               {CBC_CORE_COMPETENCIES.map(comp => {
@@ -783,7 +787,7 @@ function ReportCardModal({ student, cbcData, coreCompData, onClose, getGrade, cb
             </div>
           </div>
         </div>
-        <div className="modal-footer"><button className="btn btn-ghost" onClick={onClose}>Close</button><button className="btn btn-primary" onClick={handlePrint}>🖨️ Print Report Card</button></div>
+        <div className="modal-footer"><button className="btn btn-ghost" onClick={onClose}>Close</button><button className="btn btn-primary" onClick={handlePrint}><PrintIcon size={16} /> Print Report Card</button></div>
       </div>
     </div>
   );

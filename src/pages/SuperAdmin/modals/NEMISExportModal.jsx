@@ -10,6 +10,7 @@
 
 import { useState } from 'react';
 import { exportNEMIS, downloadCSV, validateNEMISData, nemisFilename, ALL_GRADES } from '../../../utils/nemisExport';
+import { FlagIcon, CheckIcon, AlertIcon, CrossIcon } from '../../../components/CommonIcons';
 
 export default function NEMISExportModal({ school, onClose, getStudentsBySchool }) {
   const [step,     setStep]     = useState('config');  // config | validating | done | error
@@ -80,11 +81,11 @@ export default function NEMISExportModal({ school, onClose, getStudentsBySchool 
   return (
     <div style={S.overlay} onClick={e => { if (e.target === e.currentTarget) onClose(); }}>
       <div style={S.box}>
-        <button style={S.close} onClick={onClose}>✕</button>
+        <button style={S.close} onClick={onClose}><CrossIcon size={18} /></button>
 
         {/* ── Header ── */}
         <div style={{ display:'flex', alignItems:'center', gap:12, marginBottom:22 }}>
-          <div style={{ width:40, height:40, borderRadius:9, background:'rgba(74,158,232,.15)', border:'1px solid rgba(74,158,232,.3)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:20, flexShrink:0 }}>🇰🇪</div>
+          <div style={{ width:40, height:40, borderRadius:9, background:'rgba(74,158,232,.15)', border:'1px solid rgba(74,158,232,.3)', display:'flex', alignItems:'center', justifyContent:'center', color:'#4A9EE8', flexShrink:0 }}><FlagIcon size={24} /></div>
           <div>
             <div style={{ fontFamily:"'Space Mono',monospace", fontSize:'.92rem', fontWeight:700, color:'#fff' }}>NEMIS Export</div>
             <div style={{ fontSize:'.68rem', color:'#5A6B5C', marginTop:2 }}>{school.name}</div>
@@ -117,7 +118,7 @@ export default function NEMISExportModal({ school, onClose, getStudentsBySchool 
             </div>
 
             <button style={S.btn()} onClick={handleExport} disabled={loading}>
-              {loading ? 'Preparing export...' : '⬇️ Generate NEMIS CSV'}
+              {loading ? 'Preparing export...' : <><CheckIcon size={14} /> Generate NEMIS CSV</>}
             </button>
           </>
         )}
@@ -126,8 +127,8 @@ export default function NEMISExportModal({ school, onClose, getStudentsBySchool 
         {step === 'validating' && (
           <>
             <div style={{ background:'rgba(232,160,32,.06)', border:'1px solid rgba(232,160,32,.2)', borderRadius:9, padding:'12px 14px', marginBottom:18 }}>
-              <div style={{ fontSize:'.78rem', fontWeight:700, color:'#E8A020', marginBottom:6 }}>
-                ⚠️ {issues.length} data issue{issues.length !== 1 ? 's' : ''} found in {count} students
+              <div style={{ fontSize:'.78rem', fontWeight:700, color:'#E8A020', marginBottom:6, display:'flex', alignItems:'center', gap:6 }}>
+                <AlertIcon size={14} /> {issues.length} data issue{issues.length !== 1 ? 's' : ''} found in {count} students
               </div>
               <div style={{ fontSize:'.7rem', color:'#8A9B6C', lineHeight:1.5 }}>
                 The NEMIS portal may reject incomplete records. You can fix the student data first, or export anyway and fix in Excel before uploading.
@@ -155,7 +156,7 @@ export default function NEMISExportModal({ school, onClose, getStudentsBySchool 
         {/* ── DONE ── */}
         {step === 'done' && (
           <div style={{ textAlign:'center', padding:'20px 0' }}>
-            <div style={{ fontSize:'2.5rem', marginBottom:12 }}>✅</div>
+            <div style={{ marginBottom:12, color:'#0DD88A' }}><CheckIcon size={48} /></div>
             <div style={{ fontFamily:"'Space Mono',monospace", fontSize:'.95rem', fontWeight:700, color:'#0DD88A', marginBottom:8 }}>CSV Downloaded</div>
             <div style={{ fontSize:'.75rem', color:'#5A6B5C', lineHeight:1.6, marginBottom:20 }}>
               Open the file in Excel, verify the data, then upload to the NEMIS portal at <span style={{ color:'#4A9EE8' }}>nemis.education.go.ke</span>
@@ -167,7 +168,7 @@ export default function NEMISExportModal({ school, onClose, getStudentsBySchool 
         {/* ── ERROR ── */}
         {step === 'error' && (
           <div style={{ textAlign:'center', padding:'20px 0' }}>
-            <div style={{ fontSize:'2rem', marginBottom:12 }}>❌</div>
+            <div style={{ marginBottom:12, color:'#D4506A' }}><CrossIcon size={40} /></div>
             <div style={{ fontSize:'.82rem', color:'#D4506A', marginBottom:16 }}>Export failed. Could not load student data.</div>
             <button style={S.btnOut} onClick={() => setStep('config')}>Try Again</button>
           </div>

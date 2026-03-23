@@ -1,3 +1,5 @@
+import { ClockIcon } from '../../../components/CommonIcons';
+
 export default function ActivityTab({ filteredActivity }) {
   return (
     <div className="tv">
@@ -10,10 +12,10 @@ export default function ActivityTab({ filteredActivity }) {
           extensions, terminations) across all schools for security and audit purposes.
         </p>
         {filteredActivity.length === 0
-          ? <div className="empty"><div className="empty-ico">⚡</div>No activity found.</div>
+          ? <div className="empty"><div className="empty-ico"><ClockIcon size={24} /></div>No activity found.</div>
           : filteredActivity.map(a => (
               <div className="ai" key={a.id}>
-                <div className="li-ico ni-v">⚡</div>
+                <div className="li-ico ni-v"><ClockIcon size={14} /></div>
                 <div className="ai-body">
                   <div className="ai-t">{a.description}</div>
                   <div className="ai-s">

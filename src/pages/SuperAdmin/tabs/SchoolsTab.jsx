@@ -1,4 +1,5 @@
 import { fmtDate, fmtMoney, sPill } from '../superAdminUtils';
+import { SchoolIcon } from '../../../components/CommonIcons';
 
 export default function SchoolsTab({
   filteredSchools, totalSchools, activeCount, expiredCount,
@@ -53,7 +54,7 @@ export default function SchoolsTab({
 
         {filteredSchools.length === 0 ? (
           <div className="empty">
-            <div className="empty-ico">🏫</div>
+            <div className="empty-ico"><SchoolIcon size={48} /></div>
             {searchQuery ? 'No schools match your search.' : 'No schools registered yet.'}
           </div>
         ) : (

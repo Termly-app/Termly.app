@@ -1,5 +1,6 @@
 import { useRef } from 'react';
 import { useChart, GC, TC, TIP, fmtDate, fmtMoney, statusLabel, sPill } from '../superAdminUtils';
+import { CheckIcon, AlertIcon, ClockIcon, SchoolIcon, GraduationIcon } from '../../../components/CommonIcons';
 
 export default function OverviewTab({
   periodFilter, setPeriodFilter,
@@ -14,7 +15,7 @@ export default function OverviewTab({
   weeklyRevenue, newSchoolsCount: newSchoolsCt,
   // data
   schools, recentSchools, filteredSchools, filteredActivity,
-  approvedPayments, pStats,
+  approvedPayments, pStats, isSchoolActive,
   // chart refs passed in from parent to survive re-renders
   revChartRef, growChartRef, subChartRef, weekChartRef,
 }) {
@@ -25,10 +26,10 @@ export default function OverviewTab({
       {/* ── Page header ── */}
       <div className="page-hd">
         <div className="ph-left">
-          <div className="ph-ico">Engine</div>
+          <div className="ph-ico"><SchoolIcon size={24} /></div>
           <div>
-            <div className="ph-title">ShuleSoft Platform Engine</div>
-            <div className="ph-sub">Unified SaaS Command Center</div>
+            <div className="ph-title">ShuleSoft Command Center</div>
+            <div className="ph-sub">Unified Management Portal</div>
             <div className="ph-badge"><span className="sa-dot" /> System Secure & Active</div>
           </div>
         </div>
@@ -58,12 +59,12 @@ export default function OverviewTab({
       {/* ── KPI grid ── */}
       <div className="kpi-grid">
         {[
-          { a:'var(--vi)', c:'ni-v', l:'Total Schools',        i:'', v:totalSchools,           ch:newSchoolsTxt,                                          n:'Across Kenya',   up:newSchoolsTxt.includes('↑') },
-          { a:'var(--te)', c:'ni-t', l:'Active Subscriptions', i:'✓', v:activeCount,            ch:activeChangeTxt,                                        n:'Paid & running', up:activeChangeTxt.includes('↑') },
-          { a:'var(--ro)', c:'ni-r', l:'Expired',              i:'⚠️', v:expiredCount,           ch:expiredCount > 0 ? 'Follow-up needed' : 'All good',     n:'SMS sent',       up:false },
-          { a:'var(--am)', c:'ni-a', l:'Revenue This Term',    i:'', v:fmtMoney(totalRevenue), ch:revChangeTxt,                                           n:'M-PESA',         up:revChangeUp },
-          { a:'var(--sk)', c:'ni-s', l:'New Schools',          i:'', v:newSchoolsCount,        ch:newSchoolsCount > 0 ? `↑ ${newSchoolsCount} registered` : 'No new schools', n:'This month', up:newSchoolsCount > 0 },
-          { a:'rgba(212,80,106,.5)', c:'ni-r', l:'Pending Payments', i:'⏳', v:pendingPayments.length, ch:pendingPayments.length > 0 ? 'Awaiting confirmation' : 'All clear', n:'M-PESA queue', up:false },
+          { a:'var(--vi)', c:'ni-v', l:'Total Schools',        i:null, v:totalSchools,           ch:newSchoolsTxt,                                          n:'Across Kenya',   up:newSchoolsTxt.includes('↑') },
+          { a:'var(--te)', c:'ni-t', l:'Active Subscriptions', i:<CheckIcon size={14} />, v:activeCount,            ch:activeChangeTxt,                                        n:'Paid & running', up:activeChangeTxt.includes('↑') },
+          { a:'var(--ro)', c:'ni-r', l:'Expired',              i:<AlertIcon size={14} />, v:expiredCount,           ch:expiredCount > 0 ? 'Follow-up needed' : 'All good',     n:'SMS sent',       up:false },
+          { a:'var(--am)', c:'ni-a', l:'Revenue This Term',    i:null, v:fmtMoney(totalRevenue), ch:revChangeTxt,                                           n:'M-PESA',         up:revChangeUp },
+          { a:'var(--sk)', c:'ni-s', l:'New Schools',          i:null, v:newSchoolsCount,        ch:newSchoolsCount > 0 ? `↑ ${newSchoolsCount} registered` : 'No new schools', n:'This month', up:newSchoolsCount > 0 },
+          { a:'rgba(212,80,106,.5)', c:'ni-r', l:'Pending Payments', i:<ClockIcon size={14} />, v:pendingPayments.length, ch:pendingPayments.length > 0 ? 'Awaiting confirmation' : 'All clear', n:'M-PESA queue', up:false },
         ].map((k, i) => (
           <div className="kpi-card" key={i}>
             <div className="kpi-accent" style={{ background: k.a }} />
@@ -148,17 +149,20 @@ export default function OverviewTab({
             : (searchQuery ? filteredSchools : recentSchools).slice(0, 5).map((s, i) => {
                 const p   = s.school_profiles?.[0] || {};
                 const cls = ['ni-v', 'ni-t', 'ni-a', 'ni-s', 'ni-r'][i % 5];
+                const active = isSchoolActive(s);
                 return (
                   <div className="li" key={s.id}>
                     <div className="li-l">
-                      <div className={`li-ico ${cls}`}></div>
+                      <div className={`li-ico ${cls}`}><SchoolIcon size={14} /></div>
                       <div>
                         <div className="li-name">{s.name}</div>
                         <div className="li-sub">{p.subscription_plan || 'Starter'} · {p.location || 'Kenya'}</div>
                       </div>
                     </div>
                     <div>
-                      <span className={sPill(p.subscription_status)}>{statusLabel(p.subscription_status)}</span>
+                      <span className={sPill(active ? 'Active' : p.subscription_status)}>
+                        {active ? 'Active' : statusLabel(p.subscription_status)}
+                      </span>
                       <div className="li-date">{fmtDate(p.created_at || s.created_at)}</div>
                     </div>
                   </div>
@@ -174,7 +178,7 @@ export default function OverviewTab({
               ? <div className="empty">Monitoring live system events...</div>
               : filteredActivity.slice(0, 4).map(a => (
                   <div className="ai" key={a.id}>
-                    <div className="li-ico ni-t">✓</div>
+                    <div className="li-ico ni-t"><CheckIcon size={12} /></div>
                     <div className="ai-body">
                       <div className="ai-t">{a.description}</div>
                       <div className="ai-s">{a.school_name || 'System'}</div>
@@ -189,10 +193,10 @@ export default function OverviewTab({
           <div className="panel">
             <div className="panel-lbl"> Student Overview</div>
             {[
-              { c:'ni-v', e:'', n:'Total Students',  s:'Across all active schools', v:pStats?.totalStudents  ? pStats.totalStudents.toLocaleString()  : '—', st:'' },
-              { c:'ni-t', e:'', n:'CBC Portfolios',  s:'Generated this term',       v:pStats?.cbcPortfolios  ? pStats.cbcPortfolios.toLocaleString()  : '—', st:'is-ok' },
-              { c:'ni-a', e:'', n:'Exams Recorded',  s:'Results entered',           v:pStats?.examsRecorded  ? pStats.examsRecorded.toLocaleString()  : '—', st:'is-ok' },
-              { c:'ni-s', e:'✓', n:'Attendance Rate', s:'Platform-wide average',     v:pStats?.attendanceRate ? `${pStats.attendanceRate}%`            : '—', st:'is-ok' },
+              { c:'ni-v', e:<GraduationIcon size={14} />, n:'Total Students',  s:'Across all active schools', v:pStats?.totalStudents  ? pStats.totalStudents.toLocaleString()  : '—', st:'' },
+              { c:'ni-t', e:<CheckIcon size={14} />, n:'CBC Portfolios',  s:'Generated this term',       v:pStats?.cbcPortfolios  ? pStats.cbcPortfolios.toLocaleString()  : '—', st:'is-ok' },
+              { c:'ni-a', e:<CheckIcon size={14} />, n:'Exams Recorded',  s:'Results entered',           v:pStats?.examsRecorded  ? pStats.examsRecorded.toLocaleString()  : '—', st:'is-ok' },
+              { c:'ni-s', e:<CheckIcon size={14} />, n:'Attendance Rate', s:'Platform-wide average',     v:pStats?.attendanceRate ? `${pStats.attendanceRate}%`            : '—', st:'is-ok' },
             ].map((r, i) => (
               <div className="ig" key={i}>
                 <div className="ig-l">

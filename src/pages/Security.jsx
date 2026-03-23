@@ -167,7 +167,7 @@ export default function Security({ currentUser }) {
         {/* Subscription Sidebar info */}
         <div className="card" style={{ borderLeft: '4px solid var(--primary)' }}>
           <div className="card-header">
-            <h3>💎 Active Plan</h3>
+            <h3><DiamondIcon size={18} /> Active Plan</h3>
           </div>
           <div className="card-body">
             <div style={{ marginBottom: 16 }}>
