@@ -40,7 +40,7 @@ export default function PaymentHistoryTab({
           ? <div className="empty"><div className="empty-ico">📋</div>No payment records found.</div>
           : (
             <div className="tbl-w">
-              <table className="data-table responsive-table">
+              <table className="data-table">
                 <thead>
                   <tr><th>School</th><th>Amount</th><th>Code</th><th>Status</th><th>Plan</th><th>Date</th><th>Time</th></tr>
                 </thead>

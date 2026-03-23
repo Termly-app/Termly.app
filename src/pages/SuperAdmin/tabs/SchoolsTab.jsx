@@ -63,7 +63,7 @@ export default function SchoolsTab({
           </div>
         ) : (
           <div className="tbl-w">
-            <table className="data-table responsive-table">
+            <table className="data-table">
               <thead>
                 <tr>
                   <th>School</th><th>Plan</th><th>Staff Usage</th><th>Location</th>
