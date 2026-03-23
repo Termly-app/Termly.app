@@ -431,19 +431,21 @@ function App() {
   // ── Platform Admin ──────────────────────────────────────────────────────
   if (isPlatformAdmin) {
     return (
-      <Routes>
-        <Route path="/super-admin" element={
-          <ErrorBoundary>
-            <SuperAdmin
-              currentUser={currentUser}
-              sidebarOpen={sidebarOpen}
-              setSidebarOpen={setSidebarOpen}
-              onSignOut={handleLogout}
-            />
-          </ErrorBoundary>
-        } />
-        <Route path="*" element={<Navigate to="/super-admin" replace />} />
-      </Routes>
+      <div className="theme-onyx">
+        <Routes>
+          <Route path="/super-admin" element={
+            <ErrorBoundary>
+              <SuperAdmin
+                currentUser={currentUser}
+                sidebarOpen={sidebarOpen}
+                setSidebarOpen={setSidebarOpen}
+                onSignOut={handleLogout}
+              />
+            </ErrorBoundary>
+          } />
+          <Route path="*" element={<Navigate to="/super-admin" replace />} />
+        </Routes>
+      </div>
     );
   }
 
