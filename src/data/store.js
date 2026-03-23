@@ -354,9 +354,6 @@ export async function checkIsSubscriptionActive(profile) {
   return false;
 }
 
-  return false;
-}
-
 export async function submitPayment(amount, transactionCode, notes = '') {
   if (!_currentSchoolId) throw new Error('No school context');
   const { error } = await supabase
