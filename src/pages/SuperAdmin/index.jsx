@@ -149,6 +149,11 @@ export default function SuperAdmin({ currentUser, sidebarOpen, setSidebarOpen, o
   }, [message]);
 
   // ══ DATE HELPERS ══════════════════════════════════════════════════════════
+  useEffect(() => {
+    document.body.classList.add('theme-onyx');
+    return () => document.body.classList.remove('theme-onyx');
+  }, []);
+
   const now            = new Date();
   const thirtyDaysAgo  = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
   const sevenDaysAgo   = new Date(now.getTime() -  7 * 24 * 60 * 60 * 1000);
@@ -712,7 +717,7 @@ export default function SuperAdmin({ currentUser, sidebarOpen, setSidebarOpen, o
 
   // ══ RENDER ════════════════════════════════════════════════════════════
   return (
-    <div className="sa-root theme-onyx">
+    <div className="sa-root theme-onyx" style={{ background: '#050505' }}>
 
       {/* ── Mobile overlay ── */}
       <div
@@ -828,7 +833,7 @@ export default function SuperAdmin({ currentUser, sidebarOpen, setSidebarOpen, o
         </div>
 
         {/* Page content */}
-        <div className="sa-content">
+        <div className="sa-content" style={{ background: '#050505' }}>
           <div className="sa">
 
             {/* Toast */}

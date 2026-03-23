@@ -2,7 +2,7 @@ import { useEffect } from 'react';
 
 // ── Chart.js shared constants ──────────────────────────────────────────────
 export const GC  = 'rgba(255,255,255,0.05)';
-export const TC  = '#354037';
+export const TC  = '#71717a';
 export const TIP = {
   backgroundColor : '#1C2119',
   borderColor     : 'rgba(255,255,255,.08)',

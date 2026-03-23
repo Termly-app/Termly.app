@@ -73,17 +73,21 @@
 }
 
 /* Force Onyx background/text and reset App.css layout bleeds */
-.theme-onyx body, .theme-onyx { 
+html.theme-onyx, body.theme-onyx, .theme-onyx { 
   background: var(--bg) !important; 
   color: var(--txt) !important; 
   font-family: var(--fb) !important; 
 }
 
 .theme-onyx .app-layout, .theme-onyx .app-shell, .theme-onyx .main-content, .theme-onyx .page-content { 
-  background: var(--bg) !important;
+  background: #050505 !important;
   color: var(--txt) !important;
   min-height: 100vh;
 }
+.theme-onyx * {
+  scrollbar-color: #3f3f46 transparent !important;
+}
+.theme-onyx .data-table th { background: #121212 !important; border-bottom: 1px solid rgba(255,255,255,0.06) !important; }
 
 .theme-onyx .main-content { 
   flex: 1 !important; 
