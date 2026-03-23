@@ -326,32 +326,24 @@ export async function checkIsSubscriptionActive(profile) {
   if (!profile) return false;
   if (profile.subscriptionStatus === 'Deactivated' || profile.subscriptionStatus === 'Suspended') return false;
 
-  // 1. GLOBAL TERM EXPIRY - Prioritize platform-wide limits
+  const now = new Date();
+
+  // 1. INDIVIDUAL OVERRIDE - If school has an explicit future expiry, respect it above all
+  if (profile.subscriptionExpiry && new Date(profile.subscriptionExpiry) > now) {
+    return ['Active', 'Trial'].includes(profile.subscriptionStatus);
+  }
+
+  // 2. GLOBAL TERM EXPIRY - Platform-wide cutoff for schools without an individual extension
   const globalExpiry = await getGlobalTermExpiry();
   if (globalExpiry) {
     const expDate = new Date(globalExpiry);
-    // Move slightly past midnight if using just date string to avoid premature cutoff
     if (isNaN(expDate.getTime()) === false) {
-      if (expDate < new Date()) return false;
+      if (expDate < now) return false;
     }
   }
 
-  // 2. Individual School Expiry
-  const now = new Date();
-  if (profile.subscriptionStatus === 'Active') {
-    if (profile.subscriptionExpiry && new Date(profile.subscriptionExpiry) < now) return false;
-    return true;
-  }
-  
-  if (profile.subscriptionStatus === 'Trial') {
-    if (!profile.subscriptionExpiry) return true; // Infinite trial fallback
-    return new Date(profile.subscriptionExpiry) > now;
-  }
-
-  // Final fallback: check for explicit future expiry (payment extended)
-  if (profile.subscriptionExpiry && new Date(profile.subscriptionExpiry) > now) return true;
-  
-  return false;
+  // 3. Status Check for schools within global term but without local expiry
+  return ['Active', 'Trial'].includes(profile.subscriptionStatus);
 }
 
 export async function submitPayment(amount, transactionCode, notes = '') {
@@ -1711,15 +1703,24 @@ export async function getPlatformStats() {
     
     // Active means explicitly 'Active' or 'Trial' AND not and reached global/local expiry
     const activeSchools = prData.filter(p => {
+      const pExp = p.subscription_expiry ? new Date(p.subscription_expiry) : null;
+      // Individual future expiry always wins
+      if (pExp && pExp > now) return ['Active', 'Trial'].includes(p.subscription_status);
+      
+      // Otherwise respect global
       if (isGloballyExpired) return false;
-      if (p.subscription_expiry && new Date(p.subscription_expiry) < now) return false;
+      
       return ['Active', 'Trial'].includes(p.subscription_status);
     }).length;
 
     const suspendedSchools = prData.filter(p => p.subscription_status === 'Suspended').length;
     const expiredSchools = prData.filter(p => {
+      const pExp = p.subscription_expiry ? new Date(p.subscription_expiry) : null;
+      // Individual future expiry means NOT expired
+      if (pExp && pExp > now) return false;
+
       if (isGloballyExpired) return true;
-      if (p.subscription_expiry && new Date(p.subscription_expiry) < now) return true;
+      if (pExp && pExp < now) return true;
       return p.subscription_status === 'Expired';
     }).length;
     

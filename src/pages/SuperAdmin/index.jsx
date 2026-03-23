@@ -164,18 +164,21 @@ export default function SuperAdmin({ currentUser, sidebarOpen, setSidebarOpen, o
     const p = s.school_profiles?.[0];
     if (!p) return false;
 
-    // Check Global Cutoff
+    // 1. INDIVIDUAL EXPIRE OVERRIDE - Future expiry always wins
+    if (p.subscription_expiry) {
+      const pExp = new Date(p.subscription_expiry);
+      if (isNaN(pExp.getTime()) === false && pExp > now) {
+        return ['Active', 'Trial'].includes(p.subscription_status);
+      }
+    }
+
+    // 2. GLOBAL CUTOFF - If no individual future extension, respect platform deadline
     if (subEndDate) {
       const gExp = new Date(subEndDate);
       if (isNaN(gExp.getTime()) === false && gExp < now) return false;
     }
 
-    // Check Individual Expiry
-    if (p.subscription_expiry) {
-      const pExp = new Date(p.subscription_expiry);
-      if (isNaN(pExp.getTime()) === false && pExp < now) return false;
-    }
-
+    // 3. Status check for non-expired (or within global term)
     return ['Active', 'Trial'].includes(p.subscription_status);
   };
 
@@ -183,7 +186,17 @@ export default function SuperAdmin({ currentUser, sidebarOpen, setSidebarOpen, o
   const activeSchools        = schools.filter(isSchoolActive);
   const expiredSchools       = schools.filter(s => {
     const p = s.school_profiles?.[0];
-    return p?.subscription_expiry && new Date(p.subscription_expiry) < now && !isSchoolActive(s);
+    if (!p) return false;
+    
+    // Future individual expiry means NOT expired
+    if (p.subscription_expiry && new Date(p.subscription_expiry) > now) return false;
+
+    const globExp = subEndDate ? new Date(subEndDate) : null;
+    const isGlobExp = globExp && globExp < now;
+
+    if (isGlobExp) return true;
+    if (p.subscription_expiry && new Date(p.subscription_expiry) < now) return true;
+    return p.subscription_status === 'Expired';
   });
   const newThisMonth         = schools.filter(s => {
     const d = s.created_at || s.school_profiles?.[0]?.created_at;
