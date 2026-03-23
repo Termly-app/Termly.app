@@ -74,3 +74,14 @@ export const sPill = (s) => {
   if (s === 'Inactive' || s === 'Pending') return 'pill pill-s';
   return 'pill pill-r';
 };
+
+/**
+ * Refined status that takes activity (date) into account
+ */
+export const getStatusRefined = (p, isActive) => {
+  const s = p.subscription_status || 'Inactive';
+  if (isActive) return s;
+  // If conceptually active but the date-check failed
+  if (s === 'Active' || s === 'Trial') return 'Expired';
+  return s;
+};

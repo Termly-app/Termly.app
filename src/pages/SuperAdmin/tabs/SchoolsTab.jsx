@@ -1,4 +1,4 @@
-import { fmtDate, fmtMoney, sPill } from '../superAdminUtils';
+import { fmtDate, fmtMoney, sPill, getStatusRefined } from '../superAdminUtils';
 import { SchoolIcon } from '../../../components/CommonIcons';
 
 export default function SchoolsTab({
@@ -120,8 +120,8 @@ export default function SchoolsTab({
                       <td data-label="Joined" className="col-joined">{fmtDate(p.created_at || s.created_at)}</td>
 
                       <td data-label="Status" className="col-status">
-                        <span className={`pill ${isActive ? 'pill-g' : 'pill-r'}`}>
-                          {p.subscription_status || (isActive ? 'Active' : 'Inactive')}
+                        <span className={sPill(getStatusRefined(p, isActive))}>
+                          {getStatusRefined(p, isActive)}
                         </span>
                       </td>
 
@@ -139,10 +139,10 @@ export default function SchoolsTab({
 
                       <td data-label="Action" className="col-act">
                         <div className="act-group">
-                          {!isActive ? (
-                            <button className="act-btn g" onClick={() => { setActivateModal(s); setPayMethod('mpesa'); setPayRef(''); setActivateSuccess(false); }}>Activate</button>
-                          ) : (
+                          {['Active', 'Trial'].includes(p.subscription_status) ? (
                             <button className="act-btn" onClick={() => handleDeactivate(s.id, s.name)}>Deactivate</button>
+                          ) : (
+                            <button className="act-btn g" onClick={() => { setActivateModal(s); setPayMethod('mpesa'); setPayRef(''); setActivateSuccess(false); }}>Activate</button>
                           )}
                           <button className="act-btn r" onClick={() => handleRowDeleteSchool(s.id, s.name)}>Terminate</button>
                         </div>

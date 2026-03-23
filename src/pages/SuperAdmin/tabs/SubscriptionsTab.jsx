@@ -20,7 +20,8 @@ export default function SubscriptionsTab({
   }));
 
   const suspendedCount = schools.filter(s => s.school_profiles?.[0]?.subscription_status === 'Suspended').length;
-  const deactivatedCount = pStats?.deactivatedSchools ?? schools.filter(s => !isSchoolActive(s) && s.school_profiles?.[0]?.subscription_status !== 'Suspended' && s.school_profiles?.[0]?.subscription_status !== 'Expired').length;
+  // Deactivated is anything that isn't Active, Suspended, or Expired
+  const deactivatedCount = Math.max(0, totalSchools - activeCount - suspendedCount - expiredCount);
 
   return (
     <div className="tv">
