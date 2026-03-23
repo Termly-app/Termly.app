@@ -172,15 +172,13 @@ export default function SettingsTab({
     label  : { fontSize:'.52rem', color:'var(--sub)', letterSpacing:'.08em', textTransform:'uppercase', marginBottom:5, display:'block' },
     input  : { width:'100%', background:'var(--bg)', border:'1px solid var(--edge)', borderRadius:7, padding:'8px 11px', color:'var(--txt)', fontFamily:'var(--fb)', fontSize:'.78rem', outline:'none' },
     numInput: { background:'var(--bg)', border:'1px solid var(--edge)', borderRadius:6, padding:'7px 10px', color:'var(--txt)', fontFamily:"'Space Mono',monospace", fontSize:'.78rem', outline:'none', width:'100%' },
-    row    : { display:'grid', gridTemplateColumns:'1fr 1fr', gap:12, marginBottom:12 },
-    row3   : { display:'grid', gridTemplateColumns:'1fr 1fr 1fr', gap:10, marginBottom:12 },
     chip   : { padding:'3px 9px', borderRadius:5, fontSize:'.65rem', cursor:'pointer', border:'1px solid rgba(255,255,255,.1)', background:'transparent', color:'var(--sub)', fontFamily:'var(--fb)', transition:'all .13s', display:'inline-block', marginRight:5, marginBottom:5 },
     fChip  : (added) => ({ padding:'2px 8px', borderRadius:4, fontSize:'.62rem', border:`1px solid ${added ? 'rgba(13,216,138,.3)' : 'rgba(255,255,255,.08)'}`, background: added ? 'rgba(13,216,138,.08)' : 'transparent', color: added ? 'var(--te)' : 'var(--sub)', cursor:'pointer', display:'inline-flex', alignItems:'center', gap:4, marginRight:4, marginBottom:4, transition:'all .13s' }),
   };
 
   return (
     <div className="tv">
-      <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:14, marginBottom:14 }}>
+      <div className="grid-2">
 
         {/* ── Global Settings ─────────────────────────────────────────── */}
         <div className="lp">
@@ -286,7 +284,7 @@ export default function SettingsTab({
                     {/* Plan editor (expanded) */}
                     {isOpen && (
                       <div style={{ padding:'0 13px 14px', borderTop:'1px solid var(--edge)' }}>
-                        <div style={{ ...S.row, marginTop:12 }}>
+                        <div className="grid-2" style={{ marginTop:12 }}>
                           <div>
                             <label style={S.label}>Plan Name *</label>
                             <input style={{ ...S.input, fontWeight:700 }} type="text"
@@ -303,8 +301,7 @@ export default function SettingsTab({
                             </div>
                           </div>
                         </div>
-
-                        <div style={S.row3}>
+                        <div className="grid-3">
                           <div>
                             <label style={S.label}>Price (KSh / term)</label>
                             <input style={S.numInput} type="number" min={0}
@@ -321,8 +318,7 @@ export default function SettingsTab({
                               value={plan.admins || 5} onChange={e => updatePlan(plan.id, 'admins', e.target.value)} />
                           </div>
                         </div>
-
-                        <div style={S.row}>
+                        <div className="grid-2">
                           <div>
                             <label style={S.label}>Free Trial (days, 0 = no trial)</label>
                             <input style={S.numInput} type="number" min={0}
@@ -438,11 +434,10 @@ export default function SettingsTab({
 
       {/* ── Suggested subscription tiers (read-only guide) ─────────────── */}
       <div className="lp" style={{ marginBottom:14 }}>
-        <div className="lp-t" style={{ marginBottom:8 }}>Suggested Subscription Structure</div>
         <div style={{ fontSize:'.68rem', color:'var(--sub)', marginBottom:14, lineHeight:1.5 }}>
           Reference guide for Kenyan school market pricing. Use the plan builder above to create and customise your actual plans.
         </div>
-        <div className="tier-grid" style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:12 }}>
+        <div className="tier-grid">
           {[
             {
               name:'Starter', price:'KSh 4,999', color:'#0DD88A',
