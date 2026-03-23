@@ -15,6 +15,7 @@ export default function SchoolsTab({
   handleRowDeleteSchool,
   setPlanModal, setChosenPlan,
   handleOpenStaffModal,
+  onNEMISExport,          // ← new: opens NEMIS export modal for a school
 }) {
   return (
     <div className="tv">
@@ -163,6 +164,11 @@ export default function SchoolsTab({
                             style={{ fontSize:'.63rem', padding:'3px 8px', color:'var(--vi)', borderColor:'rgba(124,92,252,.25)', background:'rgba(124,92,252,.05)' }}
                             onClick={() => handleOpenStaffModal(s.id, s.name)}>
                             Staff
+                          </button>
+                          <button className="act-btn"
+                            style={{ fontSize:'.63rem', padding:'3px 8px', color:'var(--sk)', borderColor:'rgba(74,158,232,.25)', background:'rgba(74,158,232,.05)' }}
+                            onClick={() => onNEMISExport && onNEMISExport(s)}>
+                            🇰🇪 NEMIS
                           </button>
                         </div>
                       </td>
