@@ -50,13 +50,13 @@ export default function Security({ currentUser }) {
   
   // Fallbacks in case settings fail or plan isn't found
   const fallbackPlans = {
-    "Fala": { price: 5999, limit: 150 },
+    "Fala": { price: 5999, limit: 5 },
     "Champe": { price: 50000, limit: 5000 },
-    "Starter": { price: 5999, limit: 150 }
+    "Starter": { price: 5999, limit: 5 }
   };
   
   const planDetails = activePlanKey ? pricing[activePlanKey] : (fallbackPlans[planName] || fallbackPlans["Fala"]);
-  const seatLimit = activePlanKey ? (pricing[activePlanKey].limit || 150) : (fallbackPlans[planName]?.limit || 150);
+  const seatLimit = activePlanKey ? (pricing[activePlanKey].limit || 5) : (fallbackPlans[planName]?.limit || 5);
   const actualStaffCount = users.length;
   const isAtLimit = actualStaffCount >= seatLimit;
 

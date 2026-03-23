@@ -1497,7 +1497,7 @@ export async function getPlatformSettings() {
         phone: "+254712260057" 
       },
       pricing: (settings.pricing && Object.keys(settings.pricing).length > 0) ? settings.pricing : {
-        "Fala":   { "price": 5999,  "active": true, "limit": 150,  "features": ["profiles", "fees", "attendance", "reports"] },
+        "Fala":   { "price": 5999,  "active": true, "limit": 5,  "features": ["profiles", "fees", "attendance", "reports"] },
         "Champe": { "price": 50000, "active": true, "limit": 5000, "features": ["everything_starter", "cbc", "exams", "priority"] }
       },
       platform: settings.platform || {

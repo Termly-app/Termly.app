@@ -124,23 +124,6 @@ export default function Teachers({ currentUser, currentPeriodId }) {
             <h2>Teachers</h2>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 4 }}>
               <p className="text-muted" style={{ margin: 0 }}>{activeTeachers.length} active teachers</p>
-              {(() => {
-                const curPlan = profile.subscription_plan || profile.subscriptionPlan || 'Fala';
-                const pricing = settings?.pricing || {};
-                const planKey = Object.keys(pricing).find(k => k.toLowerCase() === curPlan.toLowerCase());
-                const seatLimit = planKey ? (pricing[planKey].limit || 150) : 150;
-                const seatCount = registeredUsers.length;
-                return (
-                  <>
-                    <div className="badge badge-ghost" style={{ fontSize: '0.75rem', padding: '4px 10px' }}>
-                      Seat Usage: <strong>{seatCount} / {seatLimit}</strong>
-                    </div>
-                    {seatCount >= seatLimit && (
-                      <span className="text-danger" style={{ fontSize: '0.75rem', fontWeight: 600 }}>Limit Reached!</span>
-                    )}
-                  </>
-                );
-              })()}
             </div>
           </div>
           {activeTab === 'records' && (
