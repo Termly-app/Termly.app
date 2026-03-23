@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { getSchoolProfile, submitPayment, getPayments, checkIsSubscriptionActive, getPlatformSettings, updateSchoolPlan, cancelSubscription } from '../data/store';
 import { 
-  RocketIcon, ShieldIcon, AlertIcon, CheckIcon, CrossIcon, FolderIcon, DiamondIcon 
+  RocketIcon, ShieldIcon, AlertIcon, CheckIcon, CrossIcon, FolderIcon, DiamondIcon, TargetIcon, HistoryIcon
 } from '../components/CommonIcons';
 
 export default function Billing() {
@@ -211,7 +211,7 @@ export default function Billing() {
           <div style={{ position: 'absolute', top: -40, right: -40, width: 120, height: 120, background: 'var(--primary)', opacity: 0.1, borderRadius: '50%', filter: 'blur(40px)' }}></div>
           
           <div className="card-header">
-            <h3>🎯 Renew Now</h3>
+            <h3><TargetIcon size={18} /> Renew Now</h3>
           </div>
           <div className="card-body">
             <div style={{ 
@@ -290,7 +290,7 @@ export default function Billing() {
 
       <div className="card glass-premium" style={{ marginTop: 32 }}>
         <div className="card-header">
-          <h3>📜 Transaction History</h3>
+          <h3><HistoryIcon size={18} /> Transaction History</h3>
         </div>
         <div className="table-wrapper">
           <table className="table">

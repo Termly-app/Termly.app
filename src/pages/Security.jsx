@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { getUsers, addUser, deleteUser, getSchoolProfile, getPlatformSettings } from '../data/store';
+import { DiamondIcon, UsersIcon } from '../components/CommonIcons';
 
 export default function Security({ currentUser }) {
   const [users, setUsers] = useState([]);
@@ -116,7 +117,7 @@ export default function Security({ currentUser }) {
         {/* Users Table */}
         <div className="card">
           <div className="card-header">
-            <h3>👥 Access Management</h3>
+            <h3><UsersIcon size={18} /> Access Management</h3>
             <span className="badge badge-primary">{actualStaffCount} / {seatLimit} seats used</span>
           </div>
           <div className="table-wrapper">
