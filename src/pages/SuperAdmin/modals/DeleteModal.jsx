@@ -25,7 +25,7 @@ export default function DeleteModal({ deleteModal, setDeleteModal, deleting, han
         </div>
 
         {/* ── Warning ── */}
-        <div style={{ background:'rgba(212,80,106,.05)', border:'1px solid rgba(212,80,106,.2)', borderRadius:10, padding:16, marginBottom:20 }}>
+        <div style={{ background:'rgba(255,255,255,.03)', border:'1px solid var(--edge)', borderRadius:10, padding:16, marginBottom:20 }}>
           <div style={{ fontSize:'.8rem', color:'#fff', fontWeight:600, marginBottom:6 }}>
             Are you absolutely sure?
           </div>
@@ -46,7 +46,7 @@ export default function DeleteModal({ deleteModal, setDeleteModal, deleting, han
           <button className="save-btn"
             disabled={deleting}
             onClick={handleDeleteSchool}
-            style={{ flex:1.4, background:'var(--ro)', boxShadow:'0 4px 18px rgba(212,80,106,.3)', padding:12, borderRadius:9, fontSize:'.82rem', fontWeight:700 }}>
+            style={{ flex:1.4, background:'var(--dim)', padding:12, borderRadius:9, fontSize:'.82rem', fontWeight:700 }}>
             {deleting ? 'Terminating...' : 'Yes, Terminate School'}
           </button>
         </div>

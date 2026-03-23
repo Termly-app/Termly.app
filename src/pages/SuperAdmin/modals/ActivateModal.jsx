@@ -77,10 +77,10 @@ export default function ActivateModal({
           <button onClick={handleConfirmActivate} disabled={activating}
             style={{
               width:'100%', padding:12, borderRadius:9,
-              background:'linear-gradient(135deg,var(--te),#09A86A)',
+              background:'linear-gradient(135deg,#fff,#a1a1aa)',
               color:'#000', fontFamily:'var(--fb)', fontSize:'.88rem', fontWeight:700,
               border:'none', cursor:'pointer',
-              boxShadow:'0 4px 18px rgba(13,216,138,.3)',
+              boxShadow:'0 4px 18px rgba(255,255,255,.1)',
               opacity: activating ? .7 : 1,
             }}>
             {activating ? 'Activating...' : 'Confirm Payment & Activate Account'}

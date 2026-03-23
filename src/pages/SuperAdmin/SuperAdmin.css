@@ -491,3 +491,58 @@
 /* Final polish: hide all horizontal scrollbars but keep functionality */
 .sa .tbl-w::-webkit-scrollbar { height: 4px; }
 .sa .tbl-w::-webkit-scrollbar-thumb { background: var(--edge2); border-radius: 10px; }
+
+/* ─── Modals (The "Nuclear" Centering System) ─────────────────────────── */
+.sa-root .mo {
+  position:fixed; inset:0; background:rgba(0,0,0,0.85); backdrop-filter:blur(4px);
+  display:flex; align-items:center; justify-content:center; padding:20px;
+  z-index:3000; visibility:hidden; opacity:0; transition:all .3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.sa-root .mo.open { visibility:visible; opacity:1; }
+.sa-root .mb {
+  background:#121212; border:1px solid var(--edge2); border-radius:20px;
+  padding:32px; width:100%; max-width:500px; position:relative;
+  transform:scale(0.9) translateY(20px); transition:all .3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow:0 30px 60px rgba(0,0,0,0.6);
+}
+.sa-root .mo.open .mb { transform:scale(1) translateY(0); }
+.sa-root .mc {
+  position:absolute; top:20px; right:20px; width:34px; height:34px;
+  background:var(--panel2); border:1px solid var(--edge2); border-radius:10px;
+  display:flex; align-items:center; justify-content:center; color:var(--sub);
+  cursor:pointer; transition:all .2s; z-index:10;
+}
+.sa-root .mc:hover { background:var(--edge2); color:#fff; }
+
+/* Modal Info Rows (ActivateModal) */
+.sa-root .mi { background:rgba(255,255,255,0.02); border:1px solid var(--edge); border-radius:12px; padding:15px; margin-bottom:20px; }
+.sa-root .mir { display:flex; align-items:center; justify-content:space-between; margin-bottom:8px; }
+.sa-root .mir:last-child { margin-bottom:0; }
+.sa-root .mil { font-size:.65rem; color:var(--sub); text-transform:uppercase; font-weight:700; }
+.sa-root .miv { font-size:.82rem; font-weight:700; color:#fff; }
+
+/* Payment Methods (ActivateModal) */
+.sa-root .pms { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin-bottom:15px; }
+.sa-root .pm {
+  background:var(--panel2); border:1px solid var(--edge2); border-radius:10px;
+  padding:12px 8px; text-align:center; cursor:pointer; transition:all .2s;
+}
+.sa-root .pm.on { border-color:var(--te); background:rgba(255,255,255,0.04); }
+.sa-root .pmt { font-size:.78rem; font-weight:700; margin-bottom:2px; }
+.sa-root .pms2 { font-size:.58rem; color:var(--dim); text-transform:uppercase; font-weight:700; }
+
+/* Plan Options (PlanModal) */
+.sa-root .po {
+  display:flex; align-items:center; justify-content:space-between;
+  padding:12px 14px; background:var(--panel2); border:1px solid var(--edge2);
+  border-radius:10px; margin-bottom:8px; cursor:pointer; transition:all .2s;
+}
+.sa-root .po.sel { border-color:var(--sk); background:rgba(255,255,255,0.04); }
+.sa-root .po.cur { opacity:.5; cursor:not-allowed; }
+.sa-root .po:hover:not(.cur) { background:rgba(255,255,255,0.03); }
+
+/* Modal helper labels */
+.sa-root .sb-lbl { font-size:.65rem; color:var(--sub); text-transform:uppercase; font-weight:700; letter-spacing:.08em; }
+
+/* NEMIS Export Special Modal (Override width) */
+.mo.open .mb.nemis-w { max-width: 800px; }

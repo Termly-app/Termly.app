@@ -9,9 +9,9 @@ import { useState, useEffect } from 'react';
 import { DeleteIcon, AlertIcon, DashboardIcon } from '../CommonIcons';
 
 const VARIANTS = {
-  danger  : { accent: '#D4506A', btnBg: 'linear-gradient(135deg,#D4506A,#B03050)', shadow: 'rgba(212,80,106,.3)'  },
-  warning : { accent: '#E8A020', btnBg: 'linear-gradient(135deg,#E8A020,#C07010)', shadow: 'rgba(232,160,32,.3)'  },
-  default : { accent: '#fff', btnBg: 'linear-gradient(135deg,#71717a,#3f3f46)', shadow: 'rgba(255,255,255,.1)' },
+  danger  : { accent: '#ef4444', btnBg: 'linear-gradient(135deg,#ef4444,#b91c1c)', shadow: 'rgba(239,68,68,.3)'  },
+  warning : { accent: '#f59e0b', btnBg: 'linear-gradient(135deg,#f59e0b,#d97706)', shadow: 'rgba(245,158,11,.3)'  },
+  default : { accent: '#ffffff', btnBg: 'linear-gradient(135deg,#71717a,#3f3f46)', shadow: 'rgba(255,255,255,.1)' },
 };
 
 export default function ConfirmModal({
@@ -56,8 +56,8 @@ export default function ConfirmModal({
       `}</style>
 
       <div style={{
-        background  : '#161A17',
-        border      : `1px solid ${v.accent}40`,
+        background  : '#121212',
+        border      : `1px solid rgba(255,255,255,0.1)`,
         borderRadius: 14,
         padding     : 28,
         width       : '100%',
@@ -82,9 +82,9 @@ export default function ConfirmModal({
         {/* ── Message ── */}
         {message && (
           <div style={{
-            fontSize:'.82rem', color:'#8A9B8C', lineHeight:1.6, marginBottom:18,
+            fontSize:'.82rem', color:'#d1d1d1', lineHeight:1.6, marginBottom:18,
             padding:'10px 13px', borderRadius:8,
-            background:'rgba(255,255,255,.03)', border:'1px solid rgba(255,255,255,.06)',
+            background:'rgba(255,255,255,.03)', border:'1px solid var(--edge)',
           }}>
             {message}
           </div>
@@ -107,10 +107,10 @@ export default function ConfirmModal({
               onChange={e => setInputValue(e.target.value)}
               onKeyDown={e => { if (e.key === 'Enter') handleConfirm(); }}
               style={{
-                width:'100%', background:'#0C0E0D',
+                width:'100%', background:'#050505',
                 border:'1px solid rgba(255,255,255,.12)', borderRadius:7,
-                padding:'9px 11px', color:'#D4DDD6',
-                fontFamily:"'Inter',sans-serif", fontSize:'.82rem',
+                padding:'9px 11px', color:'#fff',
+                fontFamily:"var(--fb)", fontSize:'.82rem',
                 outline:'none', transition:'border-color .18s',
               }}
             />
