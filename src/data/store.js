@@ -338,11 +338,22 @@ export async function checkIsSubscriptionActive(profile) {
   if (globalExpiry) {
     const expDate = new Date(globalExpiry);
     if (isNaN(expDate.getTime()) === false) {
+      // Set to end of day to avoid premature cutoff
+      expDate.setHours(23, 59, 59, 999);
       if (expDate < now) return false;
     }
   }
 
-  // 3. Status Check for schools within global term but without local expiry
+  // 3. INDIVIDUAL EXPIRE CHECK - If they have a local date and it passed (and no global term extended them)
+  if (profile.subscriptionExpiry) {
+    const pExp = new Date(profile.subscriptionExpiry);
+    if (isNaN(pExp.getTime()) === false) {
+      pExp.setHours(23, 59, 59, 999);
+      if (pExp < now) return false;
+    }
+  }
+
+  // 4. Status Check for schools within terms
   return ['Active', 'Trial'].includes(profile.subscriptionStatus);
 }
 
@@ -1655,45 +1666,39 @@ export async function suspendSchool(schoolId) {
  */
 export async function getPlatformStats() {
   try {
-    // 1. Get ALL schools regardless of profiles (orphans included)
-    const { data: schoolsData, error: sErr } = await supabase
-      .from('schools')
-      .select('id, created_at');
-    
-    // 2. Get profiles for status tracking
-    const { data: profilesData, error: prErr } = await supabase
-      .from('school_profiles')
-      .select('subscription_status, school_id');
-
-    // 3. Get payments for revenue
-    const { data: paymentsData, error: pErr } = await supabase
-      .from('payments')
-      .select('amount, status, created_at');
-
-    // 4. Global usage metrics
-    const [
-      { count: studCount },
-      { count: examCount },
-      { count: portCount },
-      { count: attTotal },
-      { count: attPresent }
-    ] = await Promise.all([
-      supabase.from('students').select('*', { count: 'exact', head: true }),
-      supabase.from('exam_results').select('*', { count: 'exact', head: true }),
-      supabase.from('student_portfolios').select('*', { count: 'exact', head: true }),
-      supabase.from('attendance').select('*', { count: 'exact', head: true }),
-      supabase.from('attendance').select('*', { count: 'exact', head: true }).eq('status', 'Present')
+    // 1. Core Data Queries (Independent)
+    const [schoolsRes, profilesRes, paymentsRes, settingsRes] = await Promise.all([
+      supabase.from('schools').select('id, created_at, plan'),
+      supabase.from('school_profiles').select('school_id, subscription_status, subscription_expiry, created_at'),
+      supabase.from('payments').select('amount, status, created_at'),
+      getPlatformSettings()
     ]);
 
+    const sData  = schoolsRes.data || [];
+    const prData = profilesRes.data || [];
+    const pData  = paymentsRes.data || [];
+    const cf     = settingsRes || {};
+
+    // 2. Auxiliary Metrics (Graceful Failure)
+    let studCount = 0, examCount = 0, portCount = 0, attTotal = 0, attPresent = 0;
+    try {
+      const [sRes, eRes, oRes, aRes, apRes] = await Promise.all([
+        supabase.from('students').select('*', { count: 'exact', head: true }),
+        supabase.from('exam_results').select('*', { count: 'exact', head: true }),
+        supabase.from('student_portfolios').select('*', { count: 'exact', head: true }),
+        supabase.from('attendance').select('*', { count: 'exact', head: true }),
+        supabase.from('attendance').select('*', { count: 'exact', head: true }).eq('status', 'Present')
+      ]);
+      studCount = sRes.count || 0;
+      examCount = eRes.count || 0;
+      portCount = oRes.count || 0;
+      attTotal = aRes.count || 0;
+      attPresent = apRes.count || 0;
+    } catch (e) {
+      console.warn('Auxiliary stats fetch failed partically', e);
+    }
+
     const attendanceRate = attTotal > 0 ? Math.round((attPresent / attTotal) * 100) : 0;
-
-    if (sErr || prErr || pErr) throw (sErr || prErr || pErr);
-
-    const sData = schoolsData || [];
-    const prData = profilesData || [];
-    const pData = paymentsData || [];
-
-    // Global expiry for better stat accuracy
     const globalExpiryRaw = cf?.billing?.expiry_date || cf?.billing?.term_expiry;
     const globalExpiry    = globalExpiryRaw ? new Date(globalExpiryRaw) : null;
     const now             = new Date();
@@ -1756,17 +1761,17 @@ export async function getPlatformStats() {
     }
 
     return {
-      totalSchools,
-      activeSchools,
-      suspendedSchools,
-      expiredSchools,
-      deactivatedSchools,
+      totalSchools: totalSchools || 0,
+      activeSchools: activeSchools || 0,
+      suspendedSchools: suspendedSchools || 0,
+      expiredSchools: expiredSchools || 0,
+      deactivatedSchools: deactivatedSchools || 0,
       revenue: totalRev,
       newSchoolsThisMonth,
       pendingPayments: pData.filter(p => p.status === 'Pending').length,
       revenueHistory,
       labels,
-      health: activeSchools > expiredSchools ? 'Healthy' : 'Critical',
+      health: activeSchools >= expiredSchools ? 'Healthy' : 'Critical',
       studCount: studCount || 0,
       examCount: examCount || 0,
       portCount: portCount || 0,
@@ -1813,22 +1818,24 @@ export async function cancelSubscription() {
 }
 
 export async function updateSchoolPlan(schoolId, plan) {
-  // 1. Update Profile (Detailed data)
+  // 1. Update Profile (Detailed data - used by School Portal)
   const { error: pError } = await supabase
     .from('school_profiles')
     .update({ subscription_plan: plan })
     .eq('school_id', schoolId);
   if (pError) throw pError;
 
-  // 2. Update Schools (Summary data used in lists/sidebar)
+  // 2. Update Schools Master (Summarized data - used by Super Admin list)
   const { error: sError } = await supabase
     .from('schools')
     .update({ plan: plan })
     .eq('id', schoolId);
-  if (sError) throw sError;
+  // We log warning but don't strictly fail if the master sync fails, though it should succeed
+  if (sError) console.warn('Sync to schools table failed:', sError);
 
-  await logPlatformActivity('PLAN_CHANGE', `Updated school plan to ${plan}: ${schoolId}`, schoolId);
+  await logPlatformActivity('PLAN_CHANGE', `Admin updated school plan to ${plan}`, schoolId);
 }
+
 
 /**
  * Reset a user's password (Stub - usually requires a SECURE DEFINER RPC or Admin Auth API)

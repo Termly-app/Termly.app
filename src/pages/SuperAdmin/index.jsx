@@ -175,7 +175,11 @@ export default function SuperAdmin({ currentUser, sidebarOpen, setSidebarOpen, o
     // 2. GLOBAL CUTOFF - If no individual future extension, respect platform deadline
     if (subEndDate) {
       const gExp = new Date(subEndDate);
-      if (isNaN(gExp.getTime()) === false && gExp < now) return false;
+      if (isNaN(gExp.getTime()) === false) {
+        // Set to end of day to avoid premature cutoff
+        gExp.setHours(23, 59, 59, 999);
+        if (gExp < now) return false;
+      }
     }
 
     // 3. Status check for non-expired (or within global term)
