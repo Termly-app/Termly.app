@@ -297,7 +297,7 @@ export default function SuperAdmin({ currentUser, sidebarOpen, setSidebarOpen, o
     const { labels, data } = getRevData('year');
     return new window.Chart(ctx, {
       type: 'line',
-      data: { labels, datasets: [{ data, borderColor:'#10B981', backgroundColor:g, borderWidth:1.5, fill:true, tension:0.4, pointRadius:0, pointHoverRadius:3 }] },
+      data: { labels, datasets: [{ data, borderColor:'#ffffff', backgroundColor:g, borderWidth:1.5, fill:true, tension:0.4, pointRadius:0, pointHoverRadius:3 }] },
       options: { responsive:true, maintainAspectRatio:false, plugins:{ legend:{display:false}, tooltip:{...TIP, callbacks:{label:c => ' KSh ' + c.raw.toLocaleString()}} }, scales:{ x:{grid:{color:GC},ticks:{color:TC}}, y:{grid:{color:GC},ticks:{color:TC,callback:v=>v>0?'KSh '+v/1000+'K':0}} } },
     });
   }, [activeTab, schools]);
@@ -313,7 +313,7 @@ export default function SuperAdmin({ currentUser, sidebarOpen, setSidebarOpen, o
     });
     return new window.Chart(ctx, {
       type: 'line',
-      data: { labels, datasets: [{ data, borderColor:'#0DD88A', backgroundColor:g, borderWidth:1.5, fill:true, tension:0.4, pointRadius:0, pointHoverRadius:3 }] },
+      data: { labels, datasets: [{ data, borderColor:'#a1a1aa', backgroundColor:g, borderWidth:1.5, fill:true, tension:0.4, pointRadius:0, pointHoverRadius:3 }] },
       options: { responsive:true, maintainAspectRatio:false, plugins:{ legend:{display:false}, tooltip:TIP }, scales:{ x:{grid:{color:GC},ticks:{color:TC}}, y:{grid:{color:GC},ticks:{color:TC}} } },
     });
   }, [activeTab, schools]);
@@ -335,7 +335,7 @@ export default function SuperAdmin({ currentUser, sidebarOpen, setSidebarOpen, o
     }).length);
     return new window.Chart(ctx, {
       type: 'bar',
-      data: { labels: planLabels, datasets: [{ label:'Active', data:active, backgroundColor:'#10B981' }, { label:'Deactivated', data:deact, backgroundColor:'#5A6B5C' }, { label:'Expired', data:expd, backgroundColor:'#D4506A' }] },
+      data: { labels: planLabels, datasets: [{ label:'Active', data:active, backgroundColor:'#ffffff' }, { label:'Deactivated', data:deact, backgroundColor:'#a1a1aa' }, { label:'Expired', data:expd, backgroundColor:'#3f3f46' }] },
       options: { responsive:true, maintainAspectRatio:false, plugins:{ legend:{display:false}, tooltip:TIP }, scales:{ x:{stacked:true,grid:{display:false},ticks:{color:TC}}, y:{stacked:true,grid:{color:GC},ticks:{color:TC}} } },
     });
   }, [activeTab, schools]);
@@ -380,8 +380,8 @@ export default function SuperAdmin({ currentUser, sidebarOpen, setSidebarOpen, o
     const deact = schools.filter(s => !['Active','Suspended'].includes(s.school_profiles?.[0]?.subscription_status)).length;
     return new window.Chart(ctx, {
       type: 'doughnut',
-      data: { labels:['Active','Suspended','Deactivated','Expired'], datasets:[{ data:[activeCount,susp,deact,expiredCount], backgroundColor:['#10B981','#4A9EE8','#5A6B5C','#D4506A'], borderWidth:0, hoverOffset:6 }] },
-      options: { responsive:true, maintainAspectRatio:false, cutout:'68%', plugins:{ legend:{ display:true, position:'right', labels:{ color:'#5A6B5C', padding:14, font:{size:11} } }, tooltip:TIP } },
+      data: { labels:['Active','Suspended','Deactivated','Expired'], datasets:[{ data:[activeCount,susp,deact,expiredCount], backgroundColor:['#ffffff','#a1a1aa','#71717a','#3f3f46'], borderWidth:0, hoverOffset:6 }] },
+      options: { responsive:true, maintainAspectRatio:false, cutout:'68%', plugins:{ legend:{ display:true, position:'right', labels:{ color:'#71717a', padding:14, font:{size:11} } }, tooltip:TIP } },
     });
   }, [activeTab, schools]);
 
@@ -712,7 +712,7 @@ export default function SuperAdmin({ currentUser, sidebarOpen, setSidebarOpen, o
 
   // ══ RENDER ════════════════════════════════════════════════════════════
   return (
-    <div className="sa-root">
+    <div className="sa-root theme-onyx">
 
       {/* ── Mobile overlay ── */}
       <div

@@ -11,7 +11,7 @@ import { DeleteIcon, AlertIcon, DashboardIcon } from '../CommonIcons';
 const VARIANTS = {
   danger  : { accent: '#D4506A', btnBg: 'linear-gradient(135deg,#D4506A,#B03050)', shadow: 'rgba(212,80,106,.3)'  },
   warning : { accent: '#E8A020', btnBg: 'linear-gradient(135deg,#E8A020,#C07010)', shadow: 'rgba(232,160,32,.3)'  },
-  default : { accent: '#7C5CFC', btnBg: 'linear-gradient(135deg,#7C5CFC,#5B3ED4)', shadow: 'rgba(124,92,252,.3)' },
+  default : { accent: '#fff', btnBg: 'linear-gradient(135deg,#71717a,#3f3f46)', shadow: 'rgba(255,255,255,.1)' },
 };
 
 export default function ConfirmModal({

@@ -34,7 +34,7 @@ const CSS = (theme) => `
   content: '';
   position: absolute;
   width: 10px; height: 10px;
-  background: ${theme === 'dark' ? '#7C5CFC' : '#2d1fa3'};
+  background: ${theme === 'dark' ? '#ffffff' : '#4b5563'};
   border-radius: 50%;
   top: -5px; left: 50%;
   transform: translateX(-50%);
@@ -94,7 +94,7 @@ const CSS = (theme) => `
 }
 .ss-pdot {
   width: 6px; height: 6px; border-radius: 50%;
-  background: ${theme === 'dark' ? '#7C5CFC' : '#6c5ce7'}; flex-shrink: 0;
+  background: ${theme === 'dark' ? '#71717a' : '#4b5563'}; flex-shrink: 0;
 }
 `;
 

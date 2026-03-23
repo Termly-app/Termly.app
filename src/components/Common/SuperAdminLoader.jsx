@@ -85,7 +85,7 @@ const CSS = `
   background: #111411;
   border: 1px solid rgba(124,92,252,0.2);
   border-radius: 999px; padding: 9px 20px;
-  font-size: 12px; font-weight: 600; color: #7C5CFC;
+  font-size: 12px; font-weight: 600; color: #ffffff;
   animation: saUp .5s ease both .5s; opacity: 0;
   animation-fill-mode: forwards;
 }
