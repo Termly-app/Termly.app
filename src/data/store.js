@@ -328,32 +328,37 @@ export async function checkIsSubscriptionActive(profile) {
 
   const now = new Date();
 
-  // 1. INDIVIDUAL OVERRIDE - If school has an explicit future expiry, respect it above all
-  if (profile.subscriptionExpiry && new Date(profile.subscriptionExpiry) > now) {
-    return ['Active', 'Trial'].includes(profile.subscriptionStatus);
+  // 1. INDIVIDUAL FUTURE OVERRIDE - If school has an explicit future expiry, respect it above all
+  if (profile.subscriptionExpiry) {
+    const pExp = new Date(profile.subscriptionExpiry);
+    if (!isNaN(pExp.getTime()) && pExp > now) {
+      return ['Active', 'Trial'].includes(profile.subscriptionStatus);
+    }
   }
 
   // 2. GLOBAL TERM EXPIRY - Platform-wide cutoff for schools without an individual extension
   const globalExpiry = await getGlobalTermExpiry();
   if (globalExpiry) {
     const expDate = new Date(globalExpiry);
-    if (isNaN(expDate.getTime()) === false) {
+    if (!isNaN(expDate.getTime())) {
       // Set to end of day to avoid premature cutoff
       expDate.setHours(23, 59, 59, 999);
       if (expDate < now) return false;
     }
   }
 
-  // 3. INDIVIDUAL EXPIRE CHECK - If they have a local date and it passed (and no global term extended them)
+  // 3. INDIVIDUAL EXPIRE CHECK - If they have a local date and it passed
   if (profile.subscriptionExpiry) {
     const pExp = new Date(profile.subscriptionExpiry);
-    if (isNaN(pExp.getTime()) === false) {
+    if (!isNaN(pExp.getTime())) {
       pExp.setHours(23, 59, 59, 999);
       if (pExp < now) return false;
     }
   }
 
-  // 4. Status Check for schools within terms
+  // 4. Default Expiry - If both global and local dates are missing but we are past a known platform deadline, fail
+  // We can hardcode or rely on the global settings which we already checked.
+  
   return ['Active', 'Trial'].includes(profile.subscriptionStatus);
 }
 

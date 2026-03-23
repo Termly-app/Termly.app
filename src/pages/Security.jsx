@@ -42,7 +42,7 @@ export default function Security({ currentUser }) {
     try { setUsers(await getUsers()); } catch (err) { console.error(err); }
   };
 
-  const planName = profile.subscription_plan || 'Fala';
+  const planName = profile.subscriptionPlan || 'Fala';
   
   // Try to find the plan case-insensitively in settings
   const pricing = settings?.pricing || {};
