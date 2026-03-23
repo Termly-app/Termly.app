@@ -34,6 +34,9 @@
   display    : flex;
   overflow   : hidden;
 }
+.sa-root, .sa-root div, .sa-root section, .sa-root main, .sa-root aside {
+  background-color: transparent;
+}
 
 /* Sidebar structure refined */
 .sb-brand { padding: 32px 24px; display: flex; align-items: center; gap: 15px; border: none !important; }
@@ -73,32 +76,18 @@
   transition:transform .25s ease; z-index:200; flex-shrink:0;
 }
 
-/* Brand */
-.sb-brand {
-  padding:20px 18px 16px;
-  border-bottom:1px solid var(--edge);
-  display:flex; align-items:center; gap:10px; flex-shrink:0;
-}
-.sb-name { font-family:var(--fh); font-size:.72rem; font-weight:700; color:var(--txt); line-height:1.2; }
-.sb-tag  { font-size:.5rem; color:var(--sub); letter-spacing:.1em; text-transform:uppercase; margin-top:2px; }
-
-/* Period picker */
-.sb-period { padding:10px 14px; border-bottom:1px solid var(--edge); flex-shrink:0; }
-.sb-lbl    { font-size:.5rem; color:var(--sub); letter-spacing:.09em; text-transform:uppercase; margin-bottom:5px; }
-.sb-period select {
-  width:100%; background:var(--panel); border:1px solid var(--edge2);
-  border-radius:6px; padding:6px 28px 6px 9px; font-family:var(--fb);
-  font-size:.7rem; color:var(--txt); outline:none; cursor:pointer; appearance:none;
-  background-image:url("data:image/svg+xml,%3Csvg width='10' height='6' viewBox='0 0 10 6' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%23556558' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
-  background-repeat:no-repeat; background-position:right 8px center;
+/* Sidebar Period picker (NEW) */
+.sidebar-period { padding: 10px 24px 20px; border-bottom: 1px solid var(--edge); flex-shrink: 0; }
+.sidebar-period-label { font-size: 0.65rem; color: var(--sub); text-transform: uppercase; font-weight: 700; letter-spacing: 0.12em; margin-bottom: 8px; display: block; }
+.sidebar-period-select {
+  width: 100%; background: var(--panel); border: 1px solid var(--edge2); 
+  border-radius: 8px; padding: 10px 14px; color: #fff; font-size: 0.85rem; outline: none; cursor: pointer;
+  appearance: none; background-image: url("data:image/svg+xml,%3Csvg width='10' height='6' viewBox='0 0 10 6' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%2371717a' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat; background-position: right 12px center;
 }
 
-/* Section label */
-.sb-sec {
-  padding:14px 16px 5px;
-  font-size:.48rem; color:var(--sub);
-  letter-spacing:.12em; text-transform:uppercase; flex-shrink:0;
-}
+/* Section labels */
+.sb-sec-lbl { padding: 20px 24px 10px; font-size: 0.65rem; color: var(--sub); text-transform: uppercase; font-weight: 700; letter-spacing: 0.12em; }
 
 /* Nav items */
 .sb-nav {
@@ -215,7 +204,7 @@
   font-family:var(--fh); font-size:.52rem; font-weight:700; color:#fff;
 }
 .sa-content { flex:1; overflow-y:auto; padding:20px; min-width:0; background:var(--bg) !important; }
-.sa-content .sa { background:var(--bg) !important; min-height:100%; }
+.sa-content .sa { background:var(--bg) !important; min-height:100%; position: relative; z-index: 1; }
 
 /* ─── Status variants ────────────────────────────────────────────────────── */
 .sa .ni-v { background:rgba(111,82,232,.16); color:var(--vi); }
@@ -307,29 +296,30 @@
 .sa .fbtn:hover { color:var(--txt); }
 .sa .fbtn.on    { background:var(--vi); color:#fff; border-color:var(--vi); }
 
-/* ─── KPI grid ───────────────────────────────────────────────────────────── */
-.sa .kpi-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin-bottom:16px; min-width:0; }
-.sa .kpi {
-  background:var(--panel); border:1px solid var(--edge);
-  border-radius:10px; padding:14px; position:relative; overflow:hidden; min-width:0;
+/* ─── Dashboard KPIs (Consolidated) ───────────────────────────────────────── */
+.sa .kpi-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:16px; margin-bottom:24px; min-width:0; }
+.sa .kpi-card {
+  background:var(--panel) !important; border:1px solid var(--edge);
+  border-radius:12px; padding:24px; position:relative; overflow:hidden; min-width:0;
+  display: flex; flex-direction: column; min-height: 140px;
 }
-.sa .kpi-accent { position:absolute; top:0; left:0; width:2.5px; height:100%; border-radius:10px 0 0 10px; }
-.sa .kpi-hd     { display:flex; align-items:center; justify-content:space-between; margin-bottom:9px; padding-left:8px; }
-.sa .kpi-lbl    { font-size:.53rem; color:var(--sub); letter-spacing:.08em; text-transform:uppercase; font-weight:500; }
-.sa .kpi-ico    { width:26px; height:26px; border-radius:6px; display:flex; align-items:center; justify-content:center; }
-.sa .kpi-val    { font-family:var(--fh); font-size:1.4rem; font-weight:700; color:#fff; line-height:1; padding-left:8px; margin-bottom:5px; }
-.sa .kpi-ft     { display:flex; align-items:center; justify-content:space-between; padding-left:8px; }
-.sa .kpi-ch     { font-size:.6rem; font-weight:600; }
+.sa .kpi-accent { position:absolute; top:0; left:0; width:4px; height:100%; border-radius:12px 0 0 12px; }
+.sa .kpi-hd     { display:flex; align-items:center; justify-content:space-between; margin-bottom:12px; }
+.sa .kpi-lbl    { font-size:.65rem; color:var(--sub); letter-spacing:.08em; text-transform:uppercase; font-weight:700; }
+.sa .kpi-ico    { width:32px; height:32px; border-radius:8px; display:flex; align-items:center; justify-content:center; background: rgba(255,255,255,0.03); }
+.sa .kpi-val    { font-family:var(--fh); font-size:2rem; font-weight:400; color:#fff; line-height:1; margin-bottom:8px; }
+.sa .kpi-ft     { display:flex; align-items:center; justify-content:space-between; margin-top: auto; }
+.sa .kpi-ch     { font-size:.7rem; font-weight:700; display: flex; align-items: center; gap: 4px; }
 .sa .kup        { color:var(--te); }
 .sa .kdn        { color:var(--ro); }
-.sa .kpi-note   { font-size:.57rem; color:var(--sub); }
+.sa .kpi-note   { font-size:.62rem; color:var(--dim); }
 
-/* ─── Chart panels ───────────────────────────────────────────────────────── */
-.sa .charts-grid   { display:grid; grid-template-columns:2fr 1fr; gap:10px; margin-bottom:14px; min-width:0; }
-.sa .charts-grid-3 { display:grid; grid-template-columns:1fr 2fr; gap:10px; margin-bottom:14px; min-width:0; }
-.sa .cp {
-  background:var(--panel); border:1px solid var(--edge);
-  border-radius:10px; padding:14px; min-width:0;
+/* ─── Chart panels (Consolidated) ────────────────────────────────────────── */
+.sa .charts-grid   { display:grid; grid-template-columns:2fr 1fr; gap:20px; margin-bottom:20px; min-width:0; }
+.sa .charts-grid-3 { display:grid; grid-template-columns:1fr 2fr; gap:20px; margin-bottom:20px; min-width:0; }
+.sa .panel {
+  background:var(--panel) !important; border:1px solid var(--edge);
+  border-radius:16px; padding:24px; min-width:0;
 }
 .sa .cp-hd  { display:flex; align-items:flex-start; justify-content:space-between; margin-bottom:10px; }
 .sa .cp-lbl { font-size:.5rem; color:var(--sub); letter-spacing:.08em; text-transform:uppercase; margin-bottom:3px; }
@@ -342,9 +332,9 @@
 
 /* ─── Bottom grid ────────────────────────────────────────────────────────── */
 .sa .bot-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; min-width:0; }
-.sa .lp {
-  background:var(--panel); border:1px solid var(--edge);
-  border-radius:10px; padding:14px; min-width:0;
+.sa .lp, .sa .panel {
+  background:var(--panel) !important; border:1px solid var(--edge);
+  border-radius:12px; padding:32px; min-width:0; margin-bottom: 24px;
 }
 /* ─── Lists & Simple rows ────────────────────────────────────────────────── */
 .sa .li { display:flex; align-items:center; justify-content:space-between; padding:10px 0; border-bottom:1px solid var(--edge); }
@@ -400,18 +390,7 @@
 .sa .act-btn.r { color: var(--ro); border-color: rgba(239,68,68,0.2); background: rgba(239,68,68,0.05); }
 .sa .act-btn:hover { background: rgba(255,255,255,0.02); }
 
-/* ─── Dashboard KPIs ─────────────────────────────────────────────────────── */
-.sa .kpi-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; margin-bottom: 24px; }
-.sa .kpi-card { 
-  background: var(--panel); border: 1px solid var(--edge); border-radius: 12px; 
-  padding: 24px; display: flex; flex-direction: column; min-height: 140px; position: relative;
-}
-.sa .kpi-lbl { font-size: 0.62rem; color: var(--sub); font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 15px; }
-.sa .kpi-val { font-family: var(--fh); font-size: 2.5rem; font-weight: 400; color: #fff; line-height: 1; margin-bottom: 10px; }
-.sa .kpi-ft  { display: flex; align-items: center; justify-content: space-between; margin-top: auto; }
-.sa .kpi-meta { font-size: 0.75rem; font-weight: 700; color: var(--te); display: flex; align-items: center; gap: 4px; }
-.sa .kpi-dn   { color: var(--ro); }
-.sa .kpi-sub  { font-size: 0.68rem; color: var(--dim); }
+/* ─── End of specialized components ─── */
 
 /* ─── Charts & Panels ────────────────────────────────────────────────────── */
 .sa .charts-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 24px; margin-bottom: 24px; }

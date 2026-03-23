@@ -431,7 +431,7 @@ function App() {
   // ── Platform Admin ──────────────────────────────────────────────────────
   if (isPlatformAdmin) {
     return (
-      <div className="theme-onyx">
+      <div className="theme-onyx" style={{ minHeight: '100vh', background: '#050505' }}>
         <Routes>
           <Route path="/super-admin" element={
             <ErrorBoundary>

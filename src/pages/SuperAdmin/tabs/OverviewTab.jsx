@@ -25,11 +25,11 @@ export default function OverviewTab({
       {/* ── Page header ── */}
       <div className="page-hd">
         <div className="ph-left">
-          <div className="ph-ico"></div>
+          <div className="ph-ico">Engine</div>
           <div>
-            <div className="ph-title">Platform Command Tower</div>
-            <div className="ph-sub">Unified SaaS Oversight</div>
-            <div className="ph-badge"><span className="sa-dot" /> System Secure &amp; Active</div>
+            <div className="ph-title">ShuleSoft Platform Engine</div>
+            <div className="ph-sub">Unified SaaS Command Center</div>
+            <div className="ph-badge"><span className="sa-dot" /> System Secure & Active</div>
           </div>
         </div>
         <div className="ph-right">
@@ -65,7 +65,7 @@ export default function OverviewTab({
           { a:'var(--sk)', c:'ni-s', l:'New Schools',          i:'', v:newSchoolsCount,        ch:newSchoolsCount > 0 ? `↑ ${newSchoolsCount} registered` : 'No new schools', n:'This month', up:newSchoolsCount > 0 },
           { a:'rgba(212,80,106,.5)', c:'ni-r', l:'Pending Payments', i:'⏳', v:pendingPayments.length, ch:pendingPayments.length > 0 ? 'Awaiting confirmation' : 'All clear', n:'M-PESA queue', up:false },
         ].map((k, i) => (
-          <div className="kpi" key={i}>
+          <div className="kpi-card" key={i}>
             <div className="kpi-accent" style={{ background: k.a }} />
             <div className="kpi-hd">
               <span className="kpi-lbl">{k.l}</span>
@@ -82,11 +82,11 @@ export default function OverviewTab({
 
       {/* ── Revenue + Growth charts ── */}
       <div className="charts-grid">
-        <div className="cp">
-          <div className="cp-hd">
+        <div className="panel">
+          <div className="panel-hd">
             <div>
-              <div className="cp-lbl">Revenue This Year</div>
-              <div className="cp-val">
+              <div className="panel-lbl">Revenue This Year</div>
+              <div className="panel-val">
                 {fmtMoney(totalRevenue)}
                 {revChange !== null && (
                   <span className={`cbadge ${revChangeUp ? 'cup' : 'cdn'}`}>
@@ -95,19 +95,19 @@ export default function OverviewTab({
                 )}
               </div>
             </div>
-            <div className="cp-per">THIS YEAR ▸</div>
+            <div className="panel-per">THIS YEAR ▸</div>
           </div>
           <div className="chart-box"><canvas ref={revChartRef} height="100" /></div>
         </div>
-        <div className="cp">
-          <div className="cp-hd">
+        <div className="panel">
+          <div className="panel-hd">
             <div>
-              <div className="cp-lbl">School Growth</div>
-              <div className="cp-val">
+              <div className="panel-lbl">School Growth</div>
+              <div className="panel-val">
                 {totalSchools} <span className="cbadge cup">+{newSchoolsCount} new</span>
               </div>
             </div>
-            <div className="cp-per">THIS YEAR ▸</div>
+            <div className="panel-per">THIS YEAR ▸</div>
           </div>
           <div className="chart-box"><canvas ref={growChartRef} height="100" /></div>
         </div>
@@ -115,25 +115,25 @@ export default function OverviewTab({
 
       {/* ── Subscription mix + weekly payments ── */}
       <div className="charts-grid-3">
-        <div className="cp">
-          <div className="cp-hd">
+        <div className="panel">
+          <div className="panel-hd">
             <div>
-              <div className="cp-lbl">Subscription Mix</div>
-              <div className="cp-val">{totalSchools} schools</div>
+              <div className="panel-lbl">Subscription Mix</div>
+              <div className="panel-val">{totalSchools} schools</div>
             </div>
           </div>
           <div className="chart-box"><canvas ref={subChartRef} height="100" /></div>
         </div>
-        <div className="cp">
-          <div className="cp-hd">
+        <div className="panel">
+          <div className="panel-hd">
             <div>
-              <div className="cp-lbl">Weekly Payments</div>
-              <div className="cp-val">
+              <div className="panel-lbl">Weekly Payments</div>
+              <div className="panel-val">
                 {fmtMoney(weeklyRevenue)}
                 {weeklyRevenue > 0 && <span className="cbadge cup">this week</span>}
               </div>
             </div>
-            <div className="cp-per">THIS WEEK ▸</div>
+            <div className="panel-per">THIS WEEK ▸</div>
           </div>
           <div className="chart-box"><canvas ref={weekChartRef} height="100" /></div>
         </div>
@@ -141,10 +141,10 @@ export default function OverviewTab({
 
       {/* ── Recent schools + activity ── */}
       <div className="bot-grid">
-        <div className="lp">
-          <div className="lp-t">Recent Schools</div>
+        <div className="panel">
+          <div className="panel-lbl">Recent Schools</div>
           {(searchQuery ? filteredSchools : recentSchools).length === 0
-            ? <div className="empty"><div className="empty-ico"></div>No schools found.</div>
+            ? <div className="empty">No school data available for this period.</div>
             : (searchQuery ? filteredSchools : recentSchools).slice(0, 5).map((s, i) => {
                 const p   = s.school_profiles?.[0] || {};
                 const cls = ['ni-v', 'ni-t', 'ni-a', 'ni-s', 'ni-r'][i % 5];
@@ -168,10 +168,10 @@ export default function OverviewTab({
         </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-          <div className="lp" style={{ flex: 1 }}>
-            <div className="lp-t">Recent Activity</div>
+          <div className="panel" style={{ flex: 1 }}>
+            <div className="panel-lbl">Recent Activity</div>
             {filteredActivity.length === 0
-              ? <div className="empty"><div className="empty-ico">⚡</div>No activity yet.</div>
+              ? <div className="empty">Monitoring live system events...</div>
               : filteredActivity.slice(0, 4).map(a => (
                   <div className="ai" key={a.id}>
                     <div className="li-ico ni-t">✓</div>
@@ -186,8 +186,8 @@ export default function OverviewTab({
           </div>
 
           {/* Student overview panel */}
-          <div className="lp">
-            <div className="lp-t"> Student Overview</div>
+          <div className="panel">
+            <div className="panel-lbl"> Student Overview</div>
             {[
               { c:'ni-v', e:'', n:'Total Students',  s:'Across all active schools', v:pStats?.totalStudents  ? pStats.totalStudents.toLocaleString()  : '—', st:'' },
               { c:'ni-t', e:'', n:'CBC Portfolios',  s:'Generated this term',       v:pStats?.cbcPortfolios  ? pStats.cbcPortfolios.toLocaleString()  : '—', st:'is-ok' },

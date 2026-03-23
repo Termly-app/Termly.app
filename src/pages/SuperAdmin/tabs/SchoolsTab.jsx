@@ -19,22 +19,16 @@ export default function SchoolsTab({
 }) {
   return (
     <div className="tv">
-      <div className="lp">
-        <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:14, flexWrap:'wrap', gap:8 }}>
-          <div className="lp-t" style={{ margin:0 }}>
-            All Schools ({filteredSchools.length}/{totalSchools})
+      <div className="panel">
+        <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:20, flexWrap:'wrap', gap:12 }}>
+          <div className="panel-lbl" style={{ margin:0, fontSize: '0.8rem' }}>
+            ALL SCHOOLS ({filteredSchools.length}/{totalSchools})
           </div>
-          <div style={{ display:'flex', gap:8 }}>
-            <button className="act-btn" onClick={handleBulkActivate}
-              style={{ color:'var(--te)', borderColor:'rgba(13,216,138,.2)' }}>
-              Activate All
-            </button>
-            <button className="act-btn" onClick={handleBulkDeactivate}
-              style={{ color:'var(--ro)', borderColor:'rgba(212,80,106,.2)' }}>
-              Deactivate All
-            </button>
+          <div style={{ display:'flex', gap:10 }}>
+            <button className="act-btn g" onClick={handleBulkActivate}>Activate All</button>
+            <button className="act-btn r" onClick={handleBulkDeactivate}>Deactivate All</button>
             <button className={`act-btn${showFilter ? ' active' : ''}`} onClick={() => setShowFilter(f => !f)}>
-              {showFilter ? '✕ Close' : '⚙️ Filter'}
+              {showFilter ? 'Close' : 'Filter'}
             </button>
           </div>
         </div>
