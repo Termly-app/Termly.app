@@ -22,7 +22,7 @@ import Teachers     from './pages/Teachers';
 import Grading      from './pages/Grading';
 import Fees         from './pages/Fees';
 import FeeStructure from './pages/FeeStructure';
-import Timetable    from './pages/TimeTable';
+import Timetable    from './pages/Timetable';
 import Attendance   from './pages/Attendance';
 import Settings     from './pages/Settings';
 import Login        from './pages/Login';

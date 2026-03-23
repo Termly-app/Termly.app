@@ -34,6 +34,12 @@ export const planAmt = (plan, settings) => {
   return { champe: 50000, fala: 5999, starter: 5999 }[p] || 5999;
 };
 
+// ── Get all plans from settings ──────────────────────────────────────────
+export const getAllPlans = (settings) => {
+  const p = settings?.pricing || {};
+  return Object.keys(p).map(k => ({ id: k, ...p[k] }));
+};
+
 // ── Date / money formatters ────────────────────────────────────────────────
 export const fmtDate = (d) =>
   d ? new Date(d).toLocaleDateString('en-KE', { day: 'numeric', month: 'short', year: 'numeric' }) : '—';

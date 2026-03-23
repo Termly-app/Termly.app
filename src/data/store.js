@@ -1876,3 +1876,272 @@ export function subscribeToPlatformChanges(onUpdate) {
   };
 }
 
+
+// ============= TIMETABLE =============
+
+export async function getTimetableConfig(schoolId, periodId) {
+  const { data, error } = await supabase
+    .from('timetable_config')
+    .select('*')
+    .eq('school_id', schoolId)
+    .eq('period_id', periodId)
+    .order('slot_index', { ascending: true });
+  if (error) throw error;
+  return data || [];
+}
+
+export async function saveTimetableConfig(schoolId, periodId, slots) {
+  const { error: delErr } = await supabase
+    .from('timetable_config')
+    .delete()
+    .eq('school_id', schoolId)
+    .eq('period_id', periodId);
+  if (delErr) throw delErr;
+  if (!slots || slots.length === 0) return;
+  const rows = slots.map((s, i) => ({
+    school_id  : schoolId,
+    period_id  : periodId,
+    slot_index : i,
+    label      : s.label      || `Period ${i + 1}`,
+    start_time : s.start_time || '08:00',
+    end_time   : s.end_time   || '08:40',
+    is_break   : s.is_break   || false,
+  }));
+  const { error } = await supabase.from('timetable_config').insert(rows);
+  if (error) throw error;
+}
+
+export async function getTimetableSlots(schoolId, periodId, classGrade, stream) {
+  let query = supabase
+    .from('timetable_slots')
+    .select('*, teachers(id, name)')
+    .eq('school_id', schoolId)
+    .eq('period_id', periodId)
+    .eq('class_grade', classGrade);
+  if (stream) query = query.eq('stream', stream);
+  const { data, error } = await query;
+  if (error) throw error;
+  return data || [];
+}
+
+export async function getAllTimetableSlots(schoolId, periodId) {
+  const { data, error } = await supabase
+    .from('timetable_slots')
+    .select('*, teachers(id, name)')
+    .eq('school_id', schoolId)
+    .eq('period_id', periodId);
+  if (error) throw error;
+  return data || [];
+}
+
+export async function getTeacherTimetable(schoolId, periodId, teacherId) {
+  const { data, error } = await supabase
+    .from('timetable_slots')
+    .select('*')
+    .eq('school_id', schoolId)
+    .eq('period_id', periodId)
+    .eq('teacher_id', teacherId);
+  if (error) throw error;
+  return data || [];
+}
+
+export async function saveTimetableSlot(schoolId, periodId, slot) {
+  const row = {
+    school_id        : schoolId,
+    period_id        : periodId,
+    class_grade      : slot.class_grade,
+    stream           : slot.stream           || null,
+    day_of_week      : slot.day_of_week,
+    slot_index       : slot.slot_index,
+    subject          : slot.subject          || null,
+    teacher_id       : slot.teacher_id       || null,
+    room             : slot.room             || null,
+    color            : slot.color            || null,
+    is_double_first  : slot.is_double_first  || false,
+    is_double_second : slot.is_double_second || false,
+  };
+  const { error } = await supabase
+    .from('timetable_slots')
+    .upsert(row, { onConflict: 'school_id,period_id,class_grade,stream,day_of_week,slot_index' });
+  if (error) throw error;
+}
+
+export async function clearTimetableSlot(schoolId, periodId, classGrade, stream, day, slotIndex) {
+  const { error } = await supabase
+    .from('timetable_slots')
+    .delete()
+    .eq('school_id',   schoolId)
+    .eq('period_id',   periodId)
+    .eq('class_grade', classGrade)
+    .eq('stream',      stream || null)
+    .eq('day_of_week', day)
+    .eq('slot_index',  slotIndex);
+  if (error) throw error;
+}
+
+export async function clearAndSaveTimetable(schoolId, periodId, slots, classGrades = null) {
+  // Delete existing
+  let delQuery = supabase
+    .from('timetable_slots')
+    .delete()
+    .eq('school_id', schoolId)
+    .eq('period_id', periodId);
+  if (classGrades && classGrades.length > 0) {
+    delQuery = delQuery.in('class_grade', classGrades);
+  }
+  const { error: delErr } = await delQuery;
+  if (delErr) throw delErr;
+
+  if (!slots || slots.length === 0) return;
+
+  const BATCH = 50;
+  for (let i = 0; i < slots.length; i += BATCH) {
+    const batch = slots.slice(i, i + BATCH).map(s => ({
+      school_id        : schoolId,
+      period_id        : periodId,
+      class_grade      : s.class_grade,
+      stream           : s.stream           || null,
+      day_of_week      : s.day_of_week,
+      slot_index       : s.slot_index,
+      subject          : s.subject          || null,
+      teacher_id       : s.teacher_id       || null,
+      room             : s.room             || null,
+      color            : s.color            || null,
+      is_double_first  : s.is_double_first  || false,
+      is_double_second : s.is_double_second || false,
+    }));
+    const { error } = await supabase.from('timetable_slots').insert(batch);
+    if (error) throw error;
+  }
+}
+
+export async function getRequirements(schoolId, periodId, classGrade, stream) {
+  let query = supabase
+    .from('timetable_requirements')
+    .select('*, teachers(id, name)')
+    .eq('school_id', schoolId)
+    .eq('period_id', periodId);
+  if (classGrade) query = query.eq('class_grade', classGrade);
+  if (stream !== undefined) {
+    query = stream ? query.eq('stream', stream) : query.is('stream', null);
+  }
+  query = query.order('subject');
+  const { data, error } = await query;
+  if (error) throw error;
+  return data || [];
+}
+
+export async function getAllRequirements(schoolId, periodId) {
+  const { data, error } = await supabase
+    .from('timetable_requirements')
+    .select('*, teachers(id, name)')
+    .eq('school_id', schoolId)
+    .eq('period_id', periodId)
+    .order('class_grade')
+    .order('subject');
+  if (error) throw error;
+  return data || [];
+}
+
+export async function saveRequirement(schoolId, periodId, req) {
+  const row = {
+    school_id        : schoolId,
+    period_id        : periodId,
+    class_grade      : req.class_grade,
+    stream           : req.stream           || null,
+    subject          : req.subject.trim(),
+    teacher_id       : req.teacher_id       || null,
+    periods_per_week : req.periods_per_week || 1,
+    allow_double     : req.allow_double     || false,
+    color            : req.color            || null,
+  };
+  const { error } = await supabase
+    .from('timetable_requirements')
+    .upsert(row, { onConflict: 'school_id,period_id,class_grade,stream,subject' });
+  if (error) throw error;
+}
+
+export async function deleteRequirement(schoolId, periodId, classGrade, stream, subject) {
+  const { error } = await supabase
+    .from('timetable_requirements')
+    .delete()
+    .eq('school_id',   schoolId)
+    .eq('period_id',   periodId)
+    .eq('class_grade', classGrade)
+    .eq('stream',      stream || null)
+    .eq('subject',     subject);
+  if (error) throw error;
+}
+
+export async function checkTeacherConflict(
+  schoolId, periodId, teacherId, day, slotIndex, currentClass, currentStream
+) {
+  if (!teacherId) return null;
+  const { data, error } = await supabase
+    .from('timetable_slots')
+    .select('class_grade, stream, subject')
+    .eq('school_id',   schoolId)
+    .eq('period_id',   periodId)
+    .eq('teacher_id',  teacherId)
+    .eq('day_of_week', day)
+    .eq('slot_index',  slotIndex);
+  if (error) throw error;
+  if (!data || data.length === 0) return null;
+  const clash = data.find(row => {
+    const sameClass  = row.class_grade === currentClass;
+    const sameStream = (row.stream || null) === (currentStream || null);
+    return !(sameClass && sameStream);
+  });
+  return clash || null;
+}
+
+// ============= FEE STRUCTURE =============
+
+export async function getFeeStructure(schoolId, term) {
+  const { data, error } = await supabase
+    .from('fee_structure')
+    .select('*')
+    .eq('school_id', schoolId)
+    .eq('term', term)
+    .order('category', { ascending: true });
+  if (error) throw error;
+  return data || [];
+}
+
+export async function saveFeeStructure(schoolId, term, items) {
+  const { error: delErr } = await supabase
+    .from('fee_structure')
+    .delete()
+    .eq('school_id', schoolId)
+    .eq('term', term);
+  if (delErr) throw delErr;
+  if (!items || items.length === 0) return;
+  const rows = items.map(item => ({
+    school_id: schoolId,
+    term: term,
+    category: item.category,
+    amount: item.amount,
+    notes: item.notes || ''
+  }));
+  const { error } = await supabase.from('fee_structure').insert(rows);
+  if (error) throw error;
+}
+
+export async function deleteFeeItem(itemId) {
+  const { error } = await supabase
+    .from('fee_structure')
+    .delete()
+    .eq('id', itemId);
+  if (error) throw error;
+}
+
+// ============= SUPER ADMIN / PLATFORM =============
+
+export async function getStudentsBySchool(schoolId) {
+  const { data, error } = await supabase
+    .from('students')
+    .select('*')
+    .eq('school_id', schoolId);
+  if (error) throw error;
+  return data || [];
+}
