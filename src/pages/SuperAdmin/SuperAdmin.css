@@ -12,7 +12,7 @@
   --edge     : rgba(255,255,255,0.06) !important;
   --edge2    : rgba(255,255,255,0.09) !important;
   --txt      : #ffffff !important;
-  --sub      : #a1a1aa !important;
+  --sub      : #d1d1d1 !important; /* Brighter silver for better readability */
   --dim      : #3f3f46 !important;
   --vi       : #71717a !important; 
   --te       : #ffffff !important; /* Success -> White */
@@ -485,6 +485,9 @@
 .theme-onyx .page-hd, .theme-onyx .top-bar, .theme-onyx th, .theme-onyx .sa-topbar {
   background-color: var(--bg) !important;
 }
+.sa .data-table td { color: var(--sub) !important; font-size: 0.82rem; border-bottom: 1px solid var(--edge) !important; }
+.sa .data-table td.td-b, .sa .data-table td:first-child { color: #ffffff !important; font-weight: 600; }
+.sa .data-table th { color: #ffffff !important; font-weight: 700; text-transform: uppercase; font-size: 0.65rem; letter-spacing: 0.05em; background: #1a1a1a !important; }
 /* Final polish: hide all horizontal scrollbars but keep functionality */
 .sa .tbl-w::-webkit-scrollbar { height: 4px; }
 .sa .tbl-w::-webkit-scrollbar-thumb { background: var(--edge2); border-radius: 10px; }
