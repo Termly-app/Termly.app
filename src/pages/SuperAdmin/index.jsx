@@ -293,11 +293,11 @@ export default function SuperAdmin({ currentUser, sidebarOpen, setSidebarOpen, o
   // ══ CHARTS ════════════════════════════════════════════════════════════
   useChart(revChartRef, (ctx) => {
     const g = ctx.createLinearGradient(0, 0, 0, 100);
-    g.addColorStop(0, 'rgba(124,92,252,0.35)'); g.addColorStop(1, 'rgba(124,92,252,0)');
+    g.addColorStop(0, 'rgba(16,185,129,0.35)'); g.addColorStop(1, 'rgba(16,185,129,0)');
     const { labels, data } = getRevData('year');
     return new window.Chart(ctx, {
       type: 'line',
-      data: { labels, datasets: [{ data, borderColor:'#7C5CFC', backgroundColor:g, borderWidth:1.5, fill:true, tension:0.4, pointRadius:0, pointHoverRadius:3 }] },
+      data: { labels, datasets: [{ data, borderColor:'#10B981', backgroundColor:g, borderWidth:1.5, fill:true, tension:0.4, pointRadius:0, pointHoverRadius:3 }] },
       options: { responsive:true, maintainAspectRatio:false, plugins:{ legend:{display:false}, tooltip:{...TIP, callbacks:{label:c => ' KSh ' + c.raw.toLocaleString()}} }, scales:{ x:{grid:{color:GC},ticks:{color:TC}}, y:{grid:{color:GC},ticks:{color:TC,callback:v=>v>0?'KSh '+v/1000+'K':0}} } },
     });
   }, [activeTab, schools]);
@@ -335,7 +335,7 @@ export default function SuperAdmin({ currentUser, sidebarOpen, setSidebarOpen, o
     }).length);
     return new window.Chart(ctx, {
       type: 'bar',
-      data: { labels: planLabels, datasets: [{ label:'Active', data:active, backgroundColor:'#7C5CFC' }, { label:'Deactivated', data:deact, backgroundColor:'#5A6B5C' }, { label:'Expired', data:expd, backgroundColor:'#D4506A' }] },
+      data: { labels: planLabels, datasets: [{ label:'Active', data:active, backgroundColor:'#10B981' }, { label:'Deactivated', data:deact, backgroundColor:'#5A6B5C' }, { label:'Expired', data:expd, backgroundColor:'#D4506A' }] },
       options: { responsive:true, maintainAspectRatio:false, plugins:{ legend:{display:false}, tooltip:TIP }, scales:{ x:{stacked:true,grid:{display:false},ticks:{color:TC}}, y:{stacked:true,grid:{color:GC},ticks:{color:TC}} } },
     });
   }, [activeTab, schools]);
@@ -356,7 +356,7 @@ export default function SuperAdmin({ currentUser, sidebarOpen, setSidebarOpen, o
     });
     return new window.Chart(ctx, {
       type: 'bar',
-      data: { labels: days, datasets: [{ label:'Collected', data, backgroundColor:'#7C5CFC' }, { label:'Pending', data:pendData, backgroundColor:'#E8A020' }] },
+      data: { labels: days, datasets: [{ label:'Collected', data, backgroundColor:'#10B981' }, { label:'Pending', data:pendData, backgroundColor:'#E8A020' }] },
       options: { responsive:true, maintainAspectRatio:false, plugins:{ legend:{display:false}, tooltip:{...TIP, callbacks:{label:c=>' KSh '+c.raw.toLocaleString()}} }, scales:{ x:{stacked:true,grid:{display:false},ticks:{color:TC}}, y:{stacked:true,grid:{color:GC},ticks:{color:TC,callback:v=>v>0?'KSh '+v/1000+'K':0}} } },
     });
   }, [activeTab, schools, pendingPayments, allPayments]);
@@ -380,18 +380,18 @@ export default function SuperAdmin({ currentUser, sidebarOpen, setSidebarOpen, o
     const deact = schools.filter(s => !['Active','Suspended'].includes(s.school_profiles?.[0]?.subscription_status)).length;
     return new window.Chart(ctx, {
       type: 'doughnut',
-      data: { labels:['Active','Suspended','Deactivated','Expired'], datasets:[{ data:[activeCount,susp,deact,expiredCount], backgroundColor:['#7C5CFC','#4A9EE8','#5A6B5C','#D4506A'], borderWidth:0, hoverOffset:6 }] },
+      data: { labels:['Active','Suspended','Deactivated','Expired'], datasets:[{ data:[activeCount,susp,deact,expiredCount], backgroundColor:['#10B981','#4A9EE8','#5A6B5C','#D4506A'], borderWidth:0, hoverOffset:6 }] },
       options: { responsive:true, maintainAspectRatio:false, cutout:'68%', plugins:{ legend:{ display:true, position:'right', labels:{ color:'#5A6B5C', padding:14, font:{size:11} } }, tooltip:TIP } },
     });
   }, [activeTab, schools]);
 
   useChart(revBigRef, (ctx) => {
     const g = ctx.createLinearGradient(0, 0, 0, 220);
-    g.addColorStop(0, 'rgba(124,92,252,0.4)'); g.addColorStop(1, 'rgba(124,92,252,0)');
+    g.addColorStop(0, 'rgba(16,185,129,0.4)'); g.addColorStop(1, 'rgba(16,185,129,0)');
     const { labels, data } = getRevData(revPeriod);
     return new window.Chart(ctx, {
       type: 'line',
-      data: { labels, datasets: [{ label:'Revenue', data, borderColor:'#7C5CFC', backgroundColor:g, borderWidth:2, fill:true, tension:0.4, pointRadius:0, pointHoverRadius:4 }] },
+      data: { labels, datasets: [{ label:'Revenue', data, borderColor:'#10B981', backgroundColor:g, borderWidth:2, fill:true, tension:0.4, pointRadius:0, pointHoverRadius:4 }] },
       options: { responsive:true, maintainAspectRatio:false, plugins:{ legend:{display:false}, tooltip:{...TIP, callbacks:{label:c=>' KSh '+c.raw.toLocaleString()}} }, scales:{ x:{grid:{color:GC},ticks:{color:TC}}, y:{grid:{color:GC},ticks:{color:TC,callback:v=>v>0?'KSh '+v/1000+'K':0}} } },
     });
   }, [activeTab, revPeriod, schools]);

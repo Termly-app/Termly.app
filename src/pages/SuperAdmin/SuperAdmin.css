@@ -14,7 +14,7 @@
   --txt      : #e4e4e7;
   --sub      : #71717a;
   --dim      : #3f3f46;
-  --vi       : #d4d4d8; /* Silver */
+  --vi       : #10b981; /* Brand Green formerly indigo/purple/silver */
   --te       : #10b981;
   --am       : #f59e0b;
   --ro       : #ef4444;
@@ -75,6 +75,14 @@
   display:flex; flex-direction:column; overflow-y:auto;
   transition:transform .25s ease; z-index:200; flex-shrink:0;
 }
+.sa-close-btn { 
+  display:none; width:34px; height:34px; border-radius:var(--radius);
+  background:var(--panel2); border:1px solid rgba(255,255,255,.1);
+  align-items:center; justify-content:center; cursor:pointer;
+  flex-shrink:0; color:var(--sub); margin-left: auto; margin-right: -5px;
+}
+.sa .tbl-w { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+
 
 /* Sidebar Period picker (NEW) */
 .sidebar-period { padding: 10px 24px 20px; border-bottom: 1px solid var(--edge); flex-shrink: 0; }

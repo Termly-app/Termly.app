@@ -10,7 +10,7 @@
  *     active       : true,       // visible on registration/landing
  *     trial_days   : 14,         // free trial period
  *     description  : "...",      // shown to schools on registration
- *     color        : "#7C5CFC",  // accent colour for UI
+ *     color        : "#10B981",  // accent colour for UI
  *     features     : [           // feature list displayed on landing page
  *       "CBC Report Cards",
  *       "M-PESA Integration",
@@ -62,7 +62,7 @@ const FEATURE_SUGGESTIONS = [
 ];
 
 const PLAN_COLORS = [
-  '#7C5CFC','#0DD88A','#4A9EE8','#E8A020','#D4506A','#10B981','#F97316',
+  '#10B981','#0DD88A','#4A9EE8','#E8A020','#D4506A','#7C5CFC','#F97316',
 ];
 
 const EMPTY_PLAN = {

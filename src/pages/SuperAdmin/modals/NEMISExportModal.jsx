@@ -73,8 +73,8 @@ export default function NEMISExportModal({ school, onClose, getStudentsBySchool 
     close   : { position:'absolute', top:14, right:14, background:'#0C0E0D', border:'1px solid rgba(255,255,255,.08)', borderRadius:6, width:28, height:28, color:'#5A6B5C', cursor:'pointer', fontSize:14, display:'flex', alignItems:'center', justifyContent:'center' },
     label   : { fontSize:'.58rem', color:'#5A6B5C', letterSpacing:'.08em', textTransform:'uppercase', marginBottom:6 },
     input   : { width:'100%', background:'#0C0E0D', border:'1px solid rgba(255,255,255,.1)', borderRadius:7, padding:'8px 11px', color:'#D4DDD6', fontFamily:"'Inter',sans-serif", fontSize:'.78rem', outline:'none' },
-    pill    : (active) => ({ padding:'4px 10px', borderRadius:5, border:`1px solid ${active ? '#7C5CFC' : 'rgba(255,255,255,.08)'}`, background: active ? 'rgba(124,92,252,.15)' : 'transparent', color: active ? '#7C5CFC' : '#5A6B5C', fontSize:'.68rem', cursor:'pointer', transition:'all .15s' }),
-    btn     : (color='#7C5CFC') => ({ padding:'10px 0', borderRadius:8, background:`linear-gradient(135deg,${color},${color}cc)`, color:'#fff', border:'none', fontFamily:"'Inter',sans-serif", fontSize:'.82rem', fontWeight:700, cursor:'pointer', width:'100%', marginTop:6 }),
+    pill    : (active) => ({ padding:'4px 10px', borderRadius:5, border:`1px solid ${active ? '#10B981' : 'rgba(255,255,255,.08)'}`, background: active ? 'rgba(16,185,129,.15)' : 'transparent', color: active ? '#10B981' : '#5A6B5C', fontSize:'.68rem', cursor:'pointer', transition:'all .15s' }),
+    btn     : (color='#10B981') => ({ padding:'10px 0', borderRadius:8, background:`linear-gradient(135deg,${color},${color}cc)`, color:'#fff', border:'none', fontFamily:"'Inter',sans-serif", fontSize:'.82rem', fontWeight:700, cursor:'pointer', width:'100%', marginTop:6 }),
     btnOut  : { padding:'10px 0', borderRadius:8, background:'transparent', border:'1px solid rgba(255,255,255,.1)', color:'#5A6B5C', fontFamily:"'Inter',sans-serif", fontSize:'.82rem', cursor:'pointer', width:'100%', marginTop:6 },
   };
 
