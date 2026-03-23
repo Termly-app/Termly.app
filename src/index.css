@@ -54,7 +54,7 @@
   --txt: #e4e4e7; 
   --sub: #71717a; 
   --dim: #3f3f46;
-  --vi: #6366f1; 
+  --vi: #d4d4d8; 
   --te: #10b981; 
   --am: #f59e0b; 
   --ro: #ef4444; 
@@ -197,9 +197,9 @@
 .theme-onyx .sb-brand { padding: 32px 24px; display: flex; align-items: center; gap: 15px; border: none !important; }
 .theme-onyx .sb-logo { 
   width: 42px; height: 42px; border-radius: 10px; 
-  background: linear-gradient(135deg, #6366f1, #4f46e5);
+  background: linear-gradient(135deg, #333, #111);
   display: flex; align-items: center; justify-content: center; 
-  box-shadow: 0 8px 25px rgba(79, 70, 229, 0.25); flex-shrink: 0; 
+  box-shadow: 0 8px 25px rgba(0,0,0,0.4); flex-shrink: 0; 
 }
 .theme-onyx .sb-logo-grid {
   display: grid; grid-template-columns: repeat(2, 1fr); gap: 2px;

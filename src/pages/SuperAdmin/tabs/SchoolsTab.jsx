@@ -97,21 +97,18 @@ export default function SchoolsTab({
 
                       <td data-label="Staff Usage" className="col-usage">
                         <div style={{ display:'flex', alignItems:'center', gap:6 }}>
-                          <div className="td-m" style={{
-                            color:      (s._staffCount || 0) > adminLimit ? 'var(--ro)' : 'var(--txt)',
-                            fontWeight: (s._staffCount || 0) > adminLimit ? 700 : 400,
-                          }}>
+                          <div className="td-m" style={{ color: 'var(--txt)' }}>
                             {s._staffCount || 0} / {adminLimit}
                           </div>
-                          <button className="mini-btn" onClick={() => handleOpenStaffModal(s.id, s.name)}>List</button>
+                          <button className="mini-btn" onClick={() => handleOpenStaffModal(s.id, s.name)}>Details</button>
                         </div>
                       </td>
 
                       <td data-label="Location" className="col-loc">{s.location || p.location || 'Kenya'}</td>
 
                       <td data-label="Students" className="col-stud">
-                        <div className="td-b">{s._studentCount || 0}</div>
-                        <div className="td-sub">Limit: {studentLimit}</div>
+                        <div className="td-b" style={{ fontSize: '0.9rem' }}>{s._studentCount || 0}</div>
+                        <div className="td-sub">Cap: {studentLimit}</div>
                       </td>
 
                       <td data-label="Joined" className="col-joined">{fmtDate(p.created_at || s.created_at)}</td>
@@ -123,7 +120,7 @@ export default function SchoolsTab({
                       </td>
 
                       <td data-label="Revenue" className="col-rev">
-                        <div className="td-m" style={{ color: isActive ? 'var(--te)' : 'var(--sub)' }}>
+                        <div className="td-m" style={{ color: 'var(--txt)', opacity: isActive ? 1 : 0.4 }}>
                           {isActive ? fmtMoney(amt) : '—'}
                         </div>
                       </td>
