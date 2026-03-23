@@ -10,7 +10,7 @@ import Loader from '../components/Common/Loader';
 import {
   StudentIcon, TeacherIcon, CardIcon, BookIcon, UserIcon, SchoolIcon,
   RocketIcon, AlertIcon, LogoutIcon, ClockIcon, SearchIcon, DashboardIcon,
-  LeafIcon, GraduationIcon, ChevronDownIcon
+  LeafIcon, GraduationIcon, ChevronDownIcon, CheckIcon
 } from '../components/CommonIcons';
 
 export default function Dashboard({ currentUser, onLogout, currentPeriodId }) {
