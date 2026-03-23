@@ -713,10 +713,14 @@ export default function SuperAdmin({ currentUser, sidebarOpen, setSidebarOpen, o
       <aside className={`sa-sidebar${sidebarOpen ? ' open' : ''}`}>
         {/* Brand */}
         <div className="sb-brand">
-          <div className="sb-logo">S</div>
-          <div>
+          <div className="sb-logo">
+            <div className="sb-logo-grid">
+              <span></span><span></span><span></span><span></span>
+            </div>
+          </div>
+          <div className="sb-brand-txt">
             <div className="sb-name">ShuleSoft</div>
-            <div className="sb-tag">Platform Admin</div>
+            <div className="sb-tag">PLATFORM ENGINE</div>
           </div>
           <button
             className="sa-close-btn"
@@ -729,9 +733,21 @@ export default function SuperAdmin({ currentUser, sidebarOpen, setSidebarOpen, o
           </button>
         </div>
 
+        {/* Academic Period Selector (New Sidebar Position) */}
+        <div className="sidebar-dropdown">
+          <label>ACADEMIC PERIOD</label>
+          <select 
+            className="custom-select"
+            value={searchQuery} // Temporary or bind to a global period state if available
+            onChange={() => {}} // Hook this to period change logic
+          >
+            <option>2026 — Term 1 (Active)</option>
+          </select>
+        </div>
+
         {/* Nav */}
         <nav style={{ flex:1, padding:'8px 0 16px' }}>
-          <div className="sb-sec">Navigation</div>
+          <div className="sidebar-sec-lbl">GENERAL</div>
           {navItems.map(item => (
             <button
               key={item.id}
@@ -746,24 +762,26 @@ export default function SuperAdmin({ currentUser, sidebarOpen, setSidebarOpen, o
 
         {/* Footer */}
         <div className="sb-spacer" />
-        <div className="sb-status">
-          <div className="ss-row">
-            <span className="ss-lbl">Status</span>
-            <div className="ss-dot">
-              <span className="sa-dot" />
-              Live
+        <div className="sb-footer">
+          <div className="sb-status-card">
+            <div className="sb-status-row">
+              <span className="sb-status-label">Status</span>
+              <div className="sb-status-live">
+                <span className="sa-dot" />
+                Live
+              </div>
             </div>
+            <div className="sb-status-name">{currentUser?.name || 'Administrator'}</div>
           </div>
-          <div className="ss-name">{currentUser?.name || 'Administrator'}</div>
+          <button className="sb-signout-btn" onClick={handleSignOut}>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" width="14" height="14">
+              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+              <polyline points="16 17 21 12 16 7"/>
+              <line x1="21" y1="12" x2="9" y2="12"/>
+            </svg>
+            Sign Out
+          </button>
         </div>
-        <button className="sb-signout" onClick={handleSignOut}>
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" width="14" height="14">
-            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
-            <polyline points="16 17 21 12 16 7"/>
-            <line x1="21" y1="12" x2="9" y2="12"/>
-          </svg>
-          Sign Out
-        </button>
       </aside>
 
       {/* ── Main content ── */}
