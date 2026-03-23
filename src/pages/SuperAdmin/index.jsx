@@ -37,7 +37,7 @@ import RevenueTab         from './tabs/RevenueTab';
 import ActivityTab        from './tabs/ActivityTab';
 import SettingsTab        from './tabs/SettingsTab';
 import RecoveryTab        from './tabs/RecoveryTab';
-import { CrossIcon, CheckIcon } from '../../components/CommonIcons';
+import { CrossIcon } from '../../components/CommonIcons';
 
 // Modals
 import ActivateModal    from './modals/ActivateModal';

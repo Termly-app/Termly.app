@@ -1054,8 +1054,8 @@ export default function Timetable({ currentUser, currentPeriodId, periods = [] }
                   onChange={e => updateDraft(i, 'is_break', e.target.checked)} />
                 Break / Non-teaching
               </label>
-              <button className="tt-btn tt-btn-danger tt-btn-sm" style={{ marginLeft:'auto' }}
-                onClick={() => removeDraft(i)} style={{ display:'flex', alignItems:'center', justifyContent:'center' }}><CrossIcon size={14} /></button>
+              <button className="tt-btn tt-btn-danger tt-btn-sm" 
+                onClick={() => removeDraft(i)} style={{ marginLeft:'auto', display:'flex', alignItems:'center', justifyContent:'center' }}><CrossIcon size={14} /></button>
             </div>
           ))}
           <button className="tt-add-slot" onClick={addDraftSlot}><PlusIcon size={14} /> Add Time Slot</button>
