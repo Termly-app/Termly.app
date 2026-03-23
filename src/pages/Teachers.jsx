@@ -7,7 +7,8 @@ import {
   LeafIcon, GraduationIcon, PlusIcon, EditIcon, DeleteIcon, SchoolIcon, PrintIcon, PhoneIcon, BookIcon
 } from '../components/CommonIcons';
 
-export default function Teachers({ currentPeriodId }) {
+export default function Teachers({ currentUser, currentPeriodId }) {
+  const isAdmin = currentUser?.role === 'Owner' || currentUser?.role === 'Admin';
   const [activeTab, setActiveTab] = useState('records');
   const [teachers, setTeachers] = useState([]);
   const [assignments, setAssignments] = useState({});
@@ -193,6 +194,7 @@ export default function Teachers({ currentPeriodId }) {
           getTeacherClasses={getTeacherClasses}
           onEdit={(t) => { setEditingTeacher(t); setShowModal(true); }}
           onDelete={handleDelete}
+          isAdmin={isAdmin}
         />
       )}
 
@@ -206,14 +208,14 @@ export default function Teachers({ currentPeriodId }) {
 
       {showModal && (
         <TeacherModal teacher={editingTeacher} onSave={handleSave}
-          onClose={() => { setShowModal(false); setEditingTeacher(null); }} />
+          onClose={() => { setShowModal(false); setEditingTeacher(null); }} isAdmin={isAdmin} />
       )}
     </div>
   );
 }
 
 // ========== RECORDS TAB ==========
-function RecordsTab({ teachers, search, setSearch, total, getTeacherSubjects, getTeacherClasses, onEdit, onDelete }) {
+function RecordsTab({ teachers, search, setSearch, total, getTeacherSubjects, getTeacherClasses, onEdit, onDelete, isAdmin }) {
   return (
     <>
       <div className="filter-bar">
@@ -231,17 +233,18 @@ function RecordsTab({ teachers, search, setSearch, total, getTeacherSubjects, ge
         <div className="card-body" style={{ padding: 0 }}>
           <table className="data-table responsive-table">
             <thead>
-              <tr><th>Name</th><th>Phone</th><th>Subjects</th><th>Classes</th><th>Status</th><th>Actions</th></tr>
+              <tr><th>Name</th>{isAdmin && <th>TSC No.</th>}<th>Phone</th><th>Subjects</th><th>Classes</th><th>Status</th><th>Actions</th></tr>
             </thead>
             <tbody>
               {teachers.length === 0 ? (
-                <tr><td colSpan="6" className="text-center text-muted" style={{ padding: 40 }}>No teachers found</td></tr>
+                <tr><td colSpan={isAdmin ? 7 : 6} className="text-center text-muted" style={{ padding: 40 }}>No teachers found</td></tr>
               ) : teachers.map(t => {
                 const subs = getTeacherSubjects(t.id);
                 const cls = getTeacherClasses(t.id);
                 return (
                   <tr key={t.id}>
                     <td data-label="Name"><strong>{t.name}</strong></td>
+                    {isAdmin && <td data-label="TSC No.">{t.tsc_number || '—'}</td>}
                     <td data-label="Phone">{t.phone}</td>
                     <td data-label="Subjects">
                       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, justifyContent:'inherit' }}>
@@ -851,7 +854,7 @@ function ReportsTab() {
 }
 
 // ========== TEACHER MODAL ==========
-function TeacherModal({ teacher, onSave, onClose }) {
+function TeacherModal({ teacher, onSave, onClose, isAdmin }) {
   const [form, setForm] = useState(teacher || { name: '', phone: '', status: 'Active' });
   const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
 
@@ -868,6 +871,12 @@ function TeacherModal({ teacher, onSave, onClose }) {
               <label>Full Name *</label>
               <input className="form-input" name="name" value={form.name} onChange={handleChange} required placeholder="e.g. John Mwangi" />
             </div>
+            {isAdmin && (
+              <div className="form-group">
+                <label>TSC Number</label>
+                <input className="form-input" name="tsc_number" value={form.tsc_number || ''} onChange={handleChange} placeholder="e.g. 123456" />
+              </div>
+            )}
             <div className="form-row">
               <div className="form-group">
                 <label>Phone Number *</label>

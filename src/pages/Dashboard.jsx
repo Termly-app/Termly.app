@@ -146,7 +146,7 @@ export default function Dashboard({ currentUser, onLogout, currentPeriodId }) {
       <div className="page-header">
         <div className="page-header-actions">
           <div style={{ flex: 1 }}>
-            <div className="flex-center-between mobile-wrap" style={{ gap: 16 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 16 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
                 <h2 style={{ fontSize: '1.5rem', fontWeight: 800, margin: 0, color: 'var(--text)' }}>
                   {data.profile?.schoolName || 'Dashboard'}

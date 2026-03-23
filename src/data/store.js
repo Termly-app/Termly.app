@@ -1188,7 +1188,7 @@ export async function addTeacher(teacher) {
 
   const { data, error } = await supabase
     .from('teachers')
-    .insert({ school_id: _currentSchoolId, name: teacher.name, phone: teacher.phone || '', status: teacher.status || 'Active' })
+    .insert({ school_id: _currentSchoolId, name: teacher.name, phone: teacher.phone || '', status: teacher.status || 'Active', tsc_number: teacher.tsc_number || null })
     .select()
     .single();
   if (error) throw error;
@@ -1204,7 +1204,7 @@ export async function addTeacher(teacher) {
 export async function updateTeacher(id, updates) {
   const { error } = await supabase
     .from('teachers')
-    .update({ name: updates.name, phone: updates.phone, status: updates.status })
+    .update({ name: updates.name, phone: updates.phone, status: updates.status, tsc_number: updates.tsc_number || null })
     .eq('id', id);
   if (error) throw error;
 }
