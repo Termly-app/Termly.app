@@ -1,48 +1,90 @@
 import { useState, useEffect, Component } from 'react';
-import { BrowserRouter, Routes, Route, NavLink, useLocation, useNavigate, Navigate } from 'react-router-dom';
+import { Routes, Route, NavLink, useLocation, Navigate } from 'react-router-dom';
 import { supabase } from './lib/supabase';
-import { 
-  getSchoolProfile, 
-  setCurrentSchoolContext, 
-  getUserByAuthId, 
-  getPeriods, 
-  setActivePeriod, 
+import {
+  getSchoolProfile,
+  setCurrentSchoolContext,
+  getUserByAuthId,
+  getPeriods,
+  setActivePeriod,
   initActivePeriod,
   getCurrentPeriodId,
-  checkIsSubscriptionActive
+  checkIsSubscriptionActive,
+  getFeeStructure,
+  saveFeeStructure,
+  deleteFeeItem,
 } from './data/store';
-import Dashboard from './pages/Dashboard';
-import Students from './pages/Students';
-import Teachers from './pages/Teachers';
-import Grading from './pages/Grading';
-import Fees from './pages/Fees';
-import Attendance from './pages/Attendance';
-import Settings from './pages/Settings';
-import Login from './pages/Login';
-import Security from './pages/Security';
-import Billing from './pages/Billing';
-import SuperAdmin from './pages/SuperAdmin';
-import Landing from './pages/Landing';
-import Register from './pages/Register';
-import TermsOfService from './pages/legal/TermsOfService';
-import PrivacyPolicy from './pages/legal/PrivacyPolicy';
-import AcceptableUse from './pages/legal/AcceptableUse';
-import RefundPolicy from './pages/legal/RefundPolicy';
-import ServiceLevel from './pages/legal/ServiceLevel';
-import ContactSupport from './pages/ContactSupport';
-import AboutUs from './pages/AboutUs';
-import FAQ from './pages/FAQ';
-import SecurityTrust from './pages/SecurityTrust';
-import Docs from './pages/Docs';
-import CustomCursor from './components/Common/CustomCursor';
-import Loader from './components/Common/Loader';
 
-import ScrollToTop from './components/ScrollToTop';
+// Pages
+import Dashboard    from './pages/Dashboard';
+import Students     from './pages/Students';
+import Teachers     from './pages/Teachers';
+import Grading      from './pages/Grading';
+import Fees         from './pages/Fees';
+import FeeStructure from './pages/FeeStructure';
+import Timetable    from './pages/Timetable';
+import Attendance   from './pages/Attendance';
+import Settings     from './pages/Settings';
+import Login        from './pages/Login';
+import Security     from './pages/Security';
+import Billing      from './pages/Billing';
+import SuperAdmin   from './pages/SuperAdmin';
+import Landing      from './pages/Landing';
+import Register     from './pages/Register';
+import TermsOfService  from './pages/legal/TermsOfService';
+import PrivacyPolicy   from './pages/legal/PrivacyPolicy';
+import AcceptableUse   from './pages/legal/AcceptableUse';
+import RefundPolicy    from './pages/legal/RefundPolicy';
+import ServiceLevel    from './pages/legal/ServiceLevel';
+import ContactSupport  from './pages/ContactSupport';
+import AboutUs         from './pages/AboutUs';
+import FAQ             from './pages/FAQ';
+import SecurityTrust   from './pages/SecurityTrust';
+import Docs            from './pages/Docs';
+import CustomCursor    from './components/Common/CustomCursor';
+import Loader          from './components/Common/Loader';
+import ScrollToTop     from './components/ScrollToTop';
 
+// Icon library — no emojis
+import {
+  LogoMark,
+  DashboardIcon, StudentsIcon, StaffIcon, AttendanceIcon, GradingIcon,
+  TimetableIcon, FeesIcon, FeeStructureIcon, SecurityIcon, SettingsIcon,
+  BillingIcon, SignOutIcon, MenuIcon, CloseIcon, ChevronDownIcon,
+  OverviewIcon, SchoolsIcon, PaymentsIcon, HistoryIcon, RevenueIcon,
+  ActivityIcon, RecoveryIcon, StatusDotIcon, ZapIcon,
+} from './components/Common/Icons';
+
+// ── Sidebar nav link helper ───────────────────────────────────────────────
+function SbLink({ to, icon: Icon, label, onClick, exact = false }) {
+  const location = useLocation();
+  const isActive = exact
+    ? location.pathname === to && location.search === ''
+    : location.pathname === to || (to.includes('?') && location.search.includes(to.split('?')[1]));
+
+  return (
+    <NavLink
+      to={to}
+      end={exact}
+      className={`nav-item${isActive ? ' active' : ''}`}
+      onClick={onClick}
+    >
+      <span className="nav-icon"><Icon size={16} strokeWidth={1.75} /></span>
+      <span className="nav-label">{label}</span>
+    </NavLink>
+  );
+}
+
+// ── Sidebar section label ─────────────────────────────────────────────────
+function SbSection({ label }) {
+  return <div className="sidebar-section">{label}</div>;
+}
+
+// ══ SIDEBAR ════════════════════════════════════════════════════════════════
 function Sidebar({ isOpen, onClose, onLogout, currentUser, subscriptionActive }) {
-  const [schoolName, setSchoolName] = useState('ShuleSoft');
-  const [profile, setProfile] = useState(null);
-  const [periods, setPeriods] = useState([]);
+  const [schoolName,     setSchoolName]     = useState('ShuleSoft');
+  const [profile,        setProfile]        = useState(null);
+  const [periods,        setPeriods]        = useState([]);
   const [selectedPeriod, setSelectedPeriod] = useState(getCurrentPeriodId());
   const location = useLocation();
 
@@ -65,15 +107,13 @@ function Sidebar({ isOpen, onClose, onLogout, currentUser, subscriptionActive })
   useEffect(() => {
     loadProfile();
     loadPeriods();
-    
     window.addEventListener('schoolProfileChanged', loadProfile);
-    window.addEventListener('periodChanged', loadPeriods);
-    window.addEventListener('schoolChanged', loadPeriods);
-    
+    window.addEventListener('periodChanged',        loadPeriods);
+    window.addEventListener('schoolChanged',        loadPeriods);
     return () => {
       window.removeEventListener('schoolProfileChanged', loadProfile);
-      window.removeEventListener('periodChanged', loadPeriods);
-      window.removeEventListener('schoolChanged', loadPeriods);
+      window.removeEventListener('periodChanged',        loadPeriods);
+      window.removeEventListener('schoolChanged',        loadPeriods);
     };
   }, []);
 
@@ -83,191 +123,195 @@ function Sidebar({ isOpen, onClose, onLogout, currentUser, subscriptionActive })
     setSelectedPeriod(periodId);
   };
 
-  const role = currentUser?.role?.toLowerCase() || 'teacher';
-  const isAdmin = role === 'admin';
+  const role      = currentUser?.role?.toLowerCase() || 'teacher';
+  const isAdmin   = role === 'admin';
   const isTeacher = role === 'teacher';
-  const isFinance = role === 'finance';
 
-  const isPlatformAdmin = currentUser?.email === 'admin@shulesoft.com' || currentUser?.email === 'shulesoft8@gmail.com';
+  const isPlatformAdmin = currentUser?.email === 'admin@shulesoft.com'
+    || currentUser?.email === 'shulesoft8@gmail.com';
 
+  // ── Platform Admin sidebar ──────────────────────────────────────────────
   if (isPlatformAdmin) {
     return (
-      <aside className={`sidebar ${isOpen ? 'open' : ''}`}>
+      <aside className={`sidebar sidebar--admin ${isOpen ? 'open' : ''}`}>
+        {/* Brand */}
         <div className="sb-brand">
-          <div className="sb-logo">S</div>
+          <LogoMark size={32} />
           <div className="sb-brand-txt">
-            <div className="sb-name">Shulesoft HQ</div>
-            <div className="sb-tag">MANAGEMENT SYSTEM</div>
+            <div className="sb-name">ShuleSoft</div>
+            <div className="sb-tag">Platform Admin</div>
           </div>
         </div>
 
-        <div className="sidebar-dropdown">
-          <label>ACADEMIC PERIOD</label>
-          <select className="custom-select" value={selectedPeriod || ''} onChange={handlePeriodChange}>
-            {periods.map(p => (
-              <option key={p.id} value={p.id} style={{ color: '#000' }}>
-                {p.year} — Term {p.term} {p.is_active ? '(Active)' : ''}
-              </option>
-            ))}
-          </select>
+        {/* Period picker */}
+        <div className="sidebar-period">
+          <label className="sidebar-period-label">Academic Period</label>
+          <div className="sidebar-period-select-wrap">
+            <select
+              className="sidebar-period-select"
+              value={selectedPeriod || ''}
+              onChange={handlePeriodChange}
+            >
+              {periods.map(p => (
+                <option key={p.id} value={p.id} style={{ color: '#000' }}>
+                  {p.year} — Term {p.term}{p.is_active ? '  ·  Active' : ''}
+                </option>
+              ))}
+            </select>
+            <ChevronDownIcon size={12} color="var(--text-muted, #6B7280)" />
+          </div>
         </div>
 
-        <nav style={{ flex: 1, paddingBottom: '32px' }}>
-          <div className="sidebar-sec-lbl">GENERAL</div>
-          <NavLink to="/super-admin" end className={({ isActive }) => `sb-link ${isActive && location.search === '' ? 'on' : ''}`} onClick={onClose}>
-            <div className="nav-ico ni-v">◈</div>Overview
-          </NavLink>
-          <NavLink to="/super-admin?tab=schools" className={({ isActive }) => `sb-link ${isActive || location.search.includes('tab=schools') ? 'on' : ''}`} onClick={onClose}>
-            <div className="nav-ico ni-t">🏫</div>Schools
-          </NavLink>
-          <NavLink to="/super-admin?tab=payments" className={({ isActive }) => `sb-link ${isActive || location.search.includes('tab=payments') ? 'on' : ''}`} onClick={onClose}>
-            <div className="nav-ico ni-a">💳</div>Payments
-          </NavLink>
-          <NavLink to="/super-admin?tab=subscriptions" className={({ isActive }) => `sb-link ${isActive || location.search.includes('tab=subscriptions') ? 'on' : ''}`} onClick={onClose}>
-            <div className="nav-ico ni-s">📅</div>Subscriptions
-          </NavLink>
-          <NavLink to="/super-admin?tab=revenue" className={({ isActive }) => `sb-link ${isActive || location.search.includes('tab=revenue') ? 'on' : ''}`} onClick={onClose}>
-            <div className="nav-ico ni-v">📈</div>Revenue
-          </NavLink>
-          <NavLink to="/super-admin?tab=activity" className={({ isActive }) => `sb-link ${isActive || location.search.includes('tab=activity') ? 'on' : ''}`} onClick={onClose}>
-            <div className="nav-ico ni-t">⚡</div>Activity
-          </NavLink>
-          <NavLink to="/super-admin?tab=settings" className={({ isActive }) => `sb-link ${isActive || location.search.includes('tab=settings') ? 'on' : ''}`} onClick={onClose}>
-            <div className="nav-ico ni-d">⚙</div>Settings
-          </NavLink>
+        {/* Nav */}
+        <nav className="sidebar-nav">
+          <SbSection label="Overview" />
+          <SbLink to="/super-admin"                          icon={OverviewIcon}   label="Dashboard"        onClick={onClose} exact />
+          <SbLink to="/super-admin?tab=schools"              icon={SchoolsIcon}    label="Schools"          onClick={onClose} />
+          <SbLink to="/super-admin?tab=payments"             icon={PaymentsIcon}   label="Payments"         onClick={onClose} />
+          <SbLink to="/super-admin?tab=history"              icon={HistoryIcon}    label="Payment History"  onClick={onClose} />
+          <SbSection label="Analytics" />
+          <SbLink to="/super-admin?tab=subscriptions"        icon={BillingIcon}    label="Subscriptions"    onClick={onClose} />
+          <SbLink to="/super-admin?tab=revenue"              icon={RevenueIcon}    label="Revenue"          onClick={onClose} />
+          <SbLink to="/super-admin?tab=activity"             icon={ActivityIcon}   label="Activity Log"     onClick={onClose} />
+          <SbSection label="System" />
+          <SbLink to="/super-admin?tab=config"               icon={SettingsIcon}   label="Settings"         onClick={onClose} />
+          <SbLink to="/super-admin?tab=recovery"             icon={RecoveryIcon}   label="Data Recovery"    onClick={onClose} />
         </nav>
 
+        {/* Footer */}
         <div className="sb-footer">
-          <div className="status-card">
-            <div className="status-top">
-              <span className="status-lbl">STATUS</span>
-              <div className="status-dot-box">
-                <span className="status-dot"></span> Active
+          <div className="sb-status-card">
+            <div className="sb-status-row">
+              <span className="sb-status-label">System Status</span>
+              <div className="sb-status-live">
+                <StatusDotIcon size={6} color="#0DD88A" />
+                <span>Operational</span>
               </div>
             </div>
-            <div className="status-name">{profile?.schoolName || 'Kaulani Corp'}</div>
+            <div className="sb-status-name">
+              {profile?.schoolName || 'ShuleSoft HQ'}
+            </div>
           </div>
-          <button className="btn-signout" onClick={onLogout}>
-            <span>⬡</span> Sign Out
+          <button className="sb-signout-btn" onClick={onLogout}>
+            <SignOutIcon size={15} strokeWidth={1.75} />
+            <span>Sign Out</span>
           </button>
         </div>
       </aside>
     );
   }
 
+  // ── School Admin / Teacher sidebar ──────────────────────────────────────
   return (
     <aside className={`sidebar ${isOpen ? 'open' : ''}`}>
+      {/* Brand */}
       <div className="sidebar-logo">
-        <div className="sidebar-logo-img" style={{ background: 'var(--primary)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <svg viewBox="0 0 13 13" fill="none" width="24" height="24">
-            <rect x="1" y="1" width="4.5" height="4.5" rx="1" fill="white"/>
-            <rect x="7.5" y="1" width="4.5" height="4.5" rx="1" fill="rgba(255,255,255,.5)"/>
-            <rect x="1" y="7.5" width="4.5" height="4.5" rx="1" fill="rgba(255,255,255,.5)"/>
-            <rect x="7.5" y="7.5" width="4.5" height="4.5" rx="1" fill="rgba(255,255,255,.2)"/>
-          </svg>
-        </div>
+        <LogoMark size={34} />
         <div className="sidebar-logo-txt">
           <div className="sidebar-logo-name">ShuleSoft</div>
-          <div className="sidebar-logo-sub">SCHOOL PORTAL</div>
+          <div className="sidebar-logo-sub">School Portal</div>
         </div>
       </div>
 
+      {/* Nav */}
       <nav className="sidebar-nav">
-        <div className="sidebar-section">GENERAL</div>
-        <NavLink to="/dashboard" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`} onClick={onClose}>
-          <span className="nav-icon">📊</span> Dashboard
-        </NavLink>
-        <NavLink to="/students" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`} onClick={onClose}>
-          <span className="nav-icon">🎓</span> Students
-        </NavLink>
+        <SbSection label="General" />
+        <SbLink to="/dashboard" icon={DashboardIcon} label="Dashboard" onClick={onClose} />
+        <SbLink to="/students"  icon={StudentsIcon}  label="Students"  onClick={onClose} />
         {isAdmin && (
-          <NavLink to="/teachers" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`} onClick={onClose}>
-            <span className="nav-icon">👩‍🏫</span> Staff
-          </NavLink>
+          <SbLink to="/teachers" icon={StaffIcon} label="Staff" onClick={onClose} />
         )}
-        
-        <div className="sidebar-section">ACADEMICS</div>
-        {(isAdmin || isTeacher) && (
-          <NavLink to="/attendance" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`} onClick={onClose}>
-            <span className="nav-icon">📋</span> Attendance
-          </NavLink>
-        )}
-        <NavLink to="/grading" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`} onClick={onClose}>
-          <span className="nav-icon">📝</span> Grading
-        </NavLink>
 
-        <div className="sidebar-section">ADMINISTRATION</div>
+        <SbSection label="Academics" />
+        {(isAdmin || isTeacher) && (
+          <SbLink to="/attendance" icon={AttendanceIcon} label="Attendance" onClick={onClose} />
+        )}
+        <SbLink to="/grading"   icon={GradingIcon}   label="Grading"    onClick={onClose} />
+        <SbLink to="/timetable" icon={TimetableIcon} label="Timetable"  onClick={onClose} />
+
+        <SbSection label="Administration" />
         {!isTeacher && (
-          <NavLink to="/fees" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`} onClick={onClose}>
-            <span className="nav-icon">💰</span> Fees & Billing
-          </NavLink>
+          <SbLink to="/fees"         icon={FeesIcon}         label="Fees & Billing"  onClick={onClose} />
         )}
         {isAdmin && (
-          <NavLink to="/security" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`} onClick={onClose}>
-            <span className="nav-icon">🛡️</span> Security
-          </NavLink>
+          <SbLink to="/fee-structure" icon={FeeStructureIcon} label="Fee Structure"  onClick={onClose} />
         )}
         {isAdmin && (
-          <NavLink to="/billing" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`} onClick={onClose}>
-            <span className="nav-icon">💳</span> Subscriptions
-          </NavLink>
+          <SbLink to="/security" icon={SecurityIcon} label="Security" onClick={onClose} />
         )}
         {isAdmin && (
-          <NavLink to="/settings" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`} onClick={onClose}>
-            <span className="nav-icon">⚙️</span> Settings
-          </NavLink>
+          <SbLink to="/billing"  icon={BillingIcon}  label="Subscription" onClick={onClose} />
+        )}
+        {isAdmin && (
+          <SbLink to="/settings" icon={SettingsIcon} label="Settings" onClick={onClose} />
         )}
       </nav>
 
+      {/* Footer */}
       <div className="sidebar-bottom">
         <div className="sidebar-school-badge">
           <div className="school-avatar">{schoolName.charAt(0)}</div>
           <div className="school-info">
             <div className="school-name">{schoolName}</div>
             <div className="school-plan">
-              <span className={`badge ${subscriptionActive ? 'badge-success sm' : 'badge-danger sm'}`} style={{ 
-                textTransform: 'uppercase',
-                background: subscriptionActive ? 'rgba(16,185,129,0.1)' : 'rgba(239,68,68,0.1)',
-                color: subscriptionActive ? '#10B981' : '#EF4444',
-                border: `1px solid ${subscriptionActive ? 'rgba(16,185,129,0.2)' : 'rgba(239,68,68,0.2)'}`
-              }}>
+              <span
+                className="school-plan-badge"
+                style={{
+                  background : subscriptionActive ? 'rgba(16,185,129,0.08)' : 'rgba(239,68,68,0.08)',
+                  color      : subscriptionActive ? '#10B981'               : '#EF4444',
+                  border     : `1px solid ${subscriptionActive ? 'rgba(16,185,129,0.2)' : 'rgba(239,68,68,0.2)'}`,
+                }}
+              >
                 {profile?.subscriptionPlan || (subscriptionActive ? 'Active' : 'Restricted')}
               </span>
             </div>
           </div>
         </div>
         <button className="sb-logout-btn" onClick={onLogout}>
-          <span className="sb-logout-ico">🚪</span> Sign Out
+          <SignOutIcon size={15} strokeWidth={1.75} />
+          <span>Sign Out</span>
         </button>
       </div>
     </aside>
   );
 }
 
+// ══ ERROR BOUNDARY ═════════════════════════════════════════════════════════
 class ErrorBoundary extends Component {
   constructor(props) {
     super(props);
     this.state = { hasError: false, error: null, errorInfo: null };
   }
-
-  static getDerivedStateFromError(error) {
-    return { hasError: true, error };
-  }
-
+  static getDerivedStateFromError(error) { return { hasError: true, error }; }
   componentDidCatch(error, errorInfo) {
     this.setState({ errorInfo });
-    console.error("ErrorBoundary caught an error", error, errorInfo);
+    console.error('ErrorBoundary caught:', error, errorInfo);
   }
-
   render() {
     if (this.state.hasError) {
       return (
-        <div style={{ padding: 40, background: '#fee2e2', color: '#991b1b', height: '100vh', width: '100vw' }}>
-          <h2>Something went wrong in the component tree.</h2>
-          <details style={{ whiteSpace: 'pre-wrap' }}>
-            {this.state.error && this.state.error.toString()}
-            <br />
-            {this.state.errorInfo && this.state.errorInfo.componentStack}
+        <div style={{
+          padding: 48, background: '#fef2f2', color: '#991b1b',
+          height: '100vh', display: 'flex', flexDirection: 'column',
+          alignItems: 'center', justifyContent: 'center', fontFamily: 'Inter, sans-serif',
+        }}>
+          <div style={{ fontSize: '1.1rem', fontWeight: 700, marginBottom: 12 }}>
+            An error occurred
+          </div>
+          <div style={{ fontSize: '.85rem', color: '#B91C1C', marginBottom: 20 }}>
+            Please refresh the page. If the problem persists, contact support.
+          </div>
+          <button
+            onClick={() => window.location.reload()}
+            style={{
+              padding: '8px 20px', borderRadius: 8, background: '#DC2626',
+              color: '#fff', border: 'none', cursor: 'pointer', fontSize: '.85rem',
+            }}
+          >
+            Refresh Page
+          </button>
+          <details style={{ marginTop: 20, fontSize: '.75rem', color: '#9CA3AF', whiteSpace: 'pre-wrap', maxWidth: 600 }}>
+            {this.state.error?.toString()}
           </details>
         </div>
       );
@@ -276,13 +320,14 @@ class ErrorBoundary extends Component {
   }
 }
 
+// ══ APP ═══════════════════════════════════════════════════════════════════
 function App() {
-  const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [currentUser, setCurrentUser] = useState(null);
-  const [authLoading, setAuthLoading] = useState(true);
+  const [sidebarOpen,        setSidebarOpen]        = useState(false);
+  const [currentUser,        setCurrentUser]        = useState(null);
+  const [authLoading,        setAuthLoading]        = useState(true);
   const [subscriptionActive, setSubscriptionActive] = useState(true);
-  const [currentPeriodId, setPeriodId] = useState(getCurrentPeriodId());
-  const [periods, setPeriods] = useState([]);
+  const [currentPeriodId,    setPeriodId]           = useState(getCurrentPeriodId());
+  const [periods,            setPeriods]            = useState([]);
   const location = useLocation();
 
   useEffect(() => {
@@ -297,17 +342,17 @@ function App() {
           if (userRecord) {
             setCurrentSchoolContext(userRecord.school_id, session.user);
             const activePeriod = await initActivePeriod();
-            const allPeriods = await getPeriods();
+            const allPeriods   = await getPeriods();
             setPeriods(allPeriods);
             setPeriodId(activePeriod?.id);
             setCurrentUser({
-              id: userRecord.id,
-              name: userRecord.name,
-              email: userRecord.email || session.user.email,
-              role: userRecord.role,
-              schoolName: userRecord.schools?.name,
+              id         : userRecord.id,
+              name       : userRecord.name,
+              email      : userRecord.email || session.user.email,
+              role       : userRecord.role,
+              schoolName : userRecord.schools?.name,
+              school_id  : userRecord.school_id,
             });
-
             const profileData = await getSchoolProfile();
             const PLATFORM_ADMINS = ['admin@shulesoft.com', 'shulesoft8@gmail.com'];
             const isPlatAdmin = session.user.email && PLATFORM_ADMINS.includes(session.user.email);
@@ -343,8 +388,9 @@ function App() {
 
     return () => {
       subscription?.unsubscribe();
-      window.removeEventListener('periodChanged', handleGlobalPeriodRefresh);
-      window.removeEventListener('schoolChanged', handleGlobalPeriodRefresh);
+      window.removeEventListener('periodChanged',    handleGlobalPeriodRefresh);
+      window.removeEventListener('schoolChanged',    handleGlobalPeriodRefresh);
+      window.removeEventListener('periodChanged',    handlePeriodChange);
     };
   }, []);
 
@@ -354,110 +400,164 @@ function App() {
     setCurrentUser(null);
   };
 
-  const loadPeriods = async () => {
-    // This is just a trigger to refresh sidebar
-    window.dispatchEvent(new CustomEvent('periodChanged'));
-  };
+  const isPlatformAdmin = currentUser?.email &&
+    ['admin@shulesoft.com', 'shulesoft8@gmail.com'].includes(currentUser.email);
 
-  const isPlatformAdmin = currentUser?.email && ['admin@shulesoft.com', 'shulesoft8@gmail.com'].includes(currentUser.email);
+  // ── Auth loading ────────────────────────────────────────────────────────
+  if (authLoading) return <Loader />;
 
-  return (
-    <>
-      {authLoading ? (
-        <Loader />
-      ) : !currentUser ? (
-        <Routes>
-          <Route path="/" element={<Landing />} />
-          <Route path="/login" element={<Login onLogin={setCurrentUser} />} />
-          <Route path="/register" element={<Register />} />
-          <Route path="/legal/terms" element={<TermsOfService />} />
-          <Route path="/legal/privacy" element={<PrivacyPolicy />} />
-          <Route path="/legal/acceptable-use" element={<AcceptableUse />} />
-          <Route path="/legal/refunds" element={<RefundPolicy />} />
-          <Route path="/legal/service-level" element={<ServiceLevel />} />
-          <Route path="/support" element={<ContactSupport />} />
-          <Route path="/about" element={<AboutUs />} />
-          <Route path="/faq" element={<FAQ />} />
-          <Route path="/docs" element={<Docs />} />
-          <Route path="/security-trust" element={<SecurityTrust />} />
-          <Route path="*" element={<Landing />} />
-        </Routes>
-      ) : isPlatformAdmin ? (
-        <Routes>
-          <Route path="/super-admin" element={
-            <ErrorBoundary>
-              <SuperAdmin currentUser={currentUser} sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} onSignOut={handleLogout} />
-            </ErrorBoundary>
-          } />
-          <Route path="*" element={<Navigate to="/super-admin" replace />} />
-        </Routes>
-      ) : (
-        <div className="app-layout app-shell">
-          <>
-            <button className="mobile-toggle" onClick={() => setSidebarOpen(!sidebarOpen)}>
-              {sidebarOpen ? '✕' : '☰'}
-            </button>
-            {sidebarOpen && <div className="sidebar-overlay" onClick={() => setSidebarOpen(false)} />}
-            
-            <Sidebar 
-              isOpen={sidebarOpen} 
-              onClose={() => setSidebarOpen(false)} 
-              onLogout={handleLogout} 
-              currentUser={currentUser} 
-              subscriptionActive={subscriptionActive} 
+  // ── Not logged in ───────────────────────────────────────────────────────
+  if (!currentUser) {
+    return (
+      <Routes>
+        <Route path="/"                   element={<Landing />} />
+        <Route path="/login"              element={<Login onLogin={setCurrentUser} />} />
+        <Route path="/register"           element={<Register />} />
+        <Route path="/legal/terms"        element={<TermsOfService />} />
+        <Route path="/legal/privacy"      element={<PrivacyPolicy />} />
+        <Route path="/legal/acceptable-use" element={<AcceptableUse />} />
+        <Route path="/legal/refunds"      element={<RefundPolicy />} />
+        <Route path="/legal/service-level" element={<ServiceLevel />} />
+        <Route path="/support"            element={<ContactSupport />} />
+        <Route path="/about"              element={<AboutUs />} />
+        <Route path="/faq"                element={<FAQ />} />
+        <Route path="/docs"               element={<Docs />} />
+        <Route path="/security-trust"     element={<SecurityTrust />} />
+        <Route path="*"                   element={<Landing />} />
+      </Routes>
+    );
+  }
+
+  // ── Platform Admin ──────────────────────────────────────────────────────
+  if (isPlatformAdmin) {
+    return (
+      <Routes>
+        <Route path="/super-admin" element={
+          <ErrorBoundary>
+            <SuperAdmin
+              currentUser={currentUser}
+              sidebarOpen={sidebarOpen}
+              setSidebarOpen={setSidebarOpen}
+              onSignOut={handleLogout}
             />
+          </ErrorBoundary>
+        } />
+        <Route path="*" element={<Navigate to="/super-admin" replace />} />
+      </Routes>
+    );
+  }
 
-            <main className="main-content">
-              <div className="topbar">
-                <div className="topbar-title desktop-only">School Control Center</div>
-                <div className="topbar-title mobile-only">ShuleSoft</div>
-                <div className="topbar-actions">
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                    <span style={{ fontSize: '0.7rem', fontWeight: 700, color: 'var(--text-muted)' }}>PERIOD:</span>
-                    <select 
-                      className="topbar-program-select" 
-                      value={currentPeriodId || ''} 
-                      onChange={async (e) => {
-                        await setActivePeriod(e.target.value);
-                      }}
-                    >
-                      <option value="">Select Period</option>
-                      {periods.map(p => (
-                        <option key={p.id} value={p.id}>
-                          {p.year} {p.term} {p.is_active ? '(Active)' : ''}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                  <div className="topbar-avatar" style={{ border: '2px solid var(--primary-light)' }}>
-                    {currentUser?.name?.charAt(0) || 'U'}
-                  </div>
-                </div>
-              </div>
+  // ── School portal ───────────────────────────────────────────────────────
+  return (
+    <div className="app-layout app-shell">
+      {/* Mobile hamburger */}
+      <button
+        className="mobile-toggle"
+        onClick={() => setSidebarOpen(o => !o)}
+        aria-label={sidebarOpen ? 'Close menu' : 'Open menu'}
+      >
+        {sidebarOpen
+          ? <CloseIcon  size={18} color="currentColor" />
+          : <MenuIcon   size={18} color="currentColor" />
+        }
+      </button>
 
-              <div className="page-content">
-                <ErrorBoundary>
-                  <Routes>
-                    <Route path="/dashboard" element={<Dashboard currentUser={currentUser} onLogout={handleLogout} currentPeriodId={currentPeriodId} />} />
-                    <Route path="/students" element={subscriptionActive ? <Students currentUser={currentUser} currentPeriodId={currentPeriodId} /> : <Navigate to="/billing" />} />
-                    <Route path="/teachers" element={subscriptionActive ? <Teachers currentUser={currentUser} currentPeriodId={currentPeriodId} /> : <Navigate to="/billing" />} />
-                    <Route path="/grading" element={subscriptionActive ? <Grading currentUser={currentUser} currentPeriodId={currentPeriodId} /> : <Navigate to="/billing" />} />
-                    <Route path="/fees" element={subscriptionActive ? <Fees currentUser={currentUser} currentPeriodId={currentPeriodId} /> : <Navigate to="/billing" />} />
-                    <Route path="/attendance" element={subscriptionActive ? <Attendance currentUser={currentUser} currentPeriodId={currentPeriodId} /> : <Navigate to="/billing" />} />
-                    <Route path="/security" element={<Security currentUser={currentUser} />} />
-                    <Route path="/settings" element={<Settings currentUser={currentUser} />} />
-                    <Route path="/billing" element={<Billing />} />
-                    <Route path="/" element={<Navigate to="/dashboard" replace />} />
-                    <Route path="*" element={<Navigate to="/dashboard" replace />} />
-                  </Routes>
-                </ErrorBoundary>
-              </div>
-            </main>
-          </>
-        </div>
+      {sidebarOpen && (
+        <div className="sidebar-overlay" onClick={() => setSidebarOpen(false)} />
       )}
-      <CustomCursor disabled={!isPlatformAdmin && currentUser} />
-    </>
+
+      <Sidebar
+        isOpen={sidebarOpen}
+        onClose={() => setSidebarOpen(false)}
+        onLogout={handleLogout}
+        currentUser={currentUser}
+        subscriptionActive={subscriptionActive}
+      />
+
+      <main className="main-content">
+        {/* Top bar */}
+        <div className="topbar">
+          <div className="topbar-left">
+            <div className="topbar-title desktop-only">Administration</div>
+            <div className="topbar-title mobile-only">ShuleSoft</div>
+          </div>
+          <div className="topbar-actions">
+            <div className="topbar-period">
+              <span className="topbar-period-label">Period</span>
+              <select
+                className="topbar-program-select"
+                value={currentPeriodId || ''}
+                onChange={async (e) => { await setActivePeriod(e.target.value); }}
+              >
+                <option value="">Select Period</option>
+                {periods.map(p => (
+                  <option key={p.id} value={p.id}>
+                    {p.year} — Term {p.term}{p.is_active ? ' (Active)' : ''}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div
+              className="topbar-avatar"
+              title={currentUser?.name}
+              style={{ border: '2px solid var(--primary-light)' }}
+            >
+              {currentUser?.name?.charAt(0)?.toUpperCase() || 'U'}
+            </div>
+          </div>
+        </div>
+
+        {/* Page content */}
+        <div className="page-content">
+          <ErrorBoundary>
+            <Routes>
+              <Route path="/dashboard"
+                element={<Dashboard currentUser={currentUser} onLogout={handleLogout} currentPeriodId={currentPeriodId} />} />
+              <Route path="/students"
+                element={subscriptionActive ? <Students currentUser={currentUser} currentPeriodId={currentPeriodId} /> : <Navigate to="/billing" />} />
+              <Route path="/teachers"
+                element={subscriptionActive ? <Teachers currentUser={currentUser} currentPeriodId={currentPeriodId} /> : <Navigate to="/billing" />} />
+              <Route path="/grading"
+                element={subscriptionActive ? <Grading currentUser={currentUser} currentPeriodId={currentPeriodId} /> : <Navigate to="/billing" />} />
+              <Route path="/fees"
+                element={subscriptionActive ? <Fees currentUser={currentUser} currentPeriodId={currentPeriodId} /> : <Navigate to="/billing" />} />
+              <Route path="/attendance"
+                element={subscriptionActive ? <Attendance currentUser={currentUser} currentPeriodId={currentPeriodId} /> : <Navigate to="/billing" />} />
+
+              <Route path="/fee-structure" element={
+                subscriptionActive ? (
+                  <FeeStructure
+                    schoolId={currentUser?.school_id}
+                    schoolName={currentUser?.schoolName}
+                    getFeeStructure={getFeeStructure}
+                    saveFeeStructure={saveFeeStructure}
+                    deleteFeeItem={deleteFeeItem}
+                  />
+                ) : <Navigate to="/billing" />
+              } />
+
+              <Route path="/timetable" element={
+                subscriptionActive ? (
+                  <Timetable
+                    currentUser={currentUser}
+                    currentPeriodId={currentPeriodId}
+                    periods={periods}
+                  />
+                ) : <Navigate to="/billing" />
+              } />
+
+              <Route path="/security" element={<Security currentUser={currentUser} />} />
+              <Route path="/settings" element={<Settings currentUser={currentUser} />} />
+              <Route path="/billing"  element={<Billing />} />
+              <Route path="/"         element={<Navigate to="/dashboard" replace />} />
+              <Route path="*"         element={<Navigate to="/dashboard" replace />} />
+            </Routes>
+          </ErrorBoundary>
+        </div>
+      </main>
+
+      <CustomCursor disabled={currentUser !== null} />
+    </div>
   );
 }
 

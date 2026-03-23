@@ -25,7 +25,7 @@ export default function OverviewTab({
       {/* ── Page header ── */}
       <div className="page-hd">
         <div className="ph-left">
-          <div className="ph-ico">🏢</div>
+          <div className="ph-ico"></div>
           <div>
             <div className="ph-title">Platform Command Tower</div>
             <div className="ph-sub">Unified SaaS Oversight</div>
@@ -39,7 +39,7 @@ export default function OverviewTab({
             <option value="yearly">This Year</option>
           </select>
           <button className={`act-btn${showFilter ? ' active' : ''}`} onClick={() => setShowFilter(f => !f)}>
-            {showFilter ? '✕ Close' : '⚙️ Filter'}
+            {showFilter ? 'Close' : 'Filter'}
           </button>
         </div>
       </div>
@@ -58,11 +58,11 @@ export default function OverviewTab({
       {/* ── KPI grid ── */}
       <div className="kpi-grid">
         {[
-          { a:'var(--vi)', c:'ni-v', l:'Total Schools',        i:'🏫', v:totalSchools,           ch:newSchoolsTxt,                                          n:'Across Kenya',   up:newSchoolsTxt.includes('↑') },
-          { a:'var(--te)', c:'ni-t', l:'Active Subscriptions', i:'✅', v:activeCount,            ch:activeChangeTxt,                                        n:'Paid & running', up:activeChangeTxt.includes('↑') },
+          { a:'var(--vi)', c:'ni-v', l:'Total Schools',        i:'', v:totalSchools,           ch:newSchoolsTxt,                                          n:'Across Kenya',   up:newSchoolsTxt.includes('↑') },
+          { a:'var(--te)', c:'ni-t', l:'Active Subscriptions', i:'✓', v:activeCount,            ch:activeChangeTxt,                                        n:'Paid & running', up:activeChangeTxt.includes('↑') },
           { a:'var(--ro)', c:'ni-r', l:'Expired',              i:'⚠️', v:expiredCount,           ch:expiredCount > 0 ? 'Follow-up needed' : 'All good',     n:'SMS sent',       up:false },
-          { a:'var(--am)', c:'ni-a', l:'Revenue This Term',    i:'💰', v:fmtMoney(totalRevenue), ch:revChangeTxt,                                           n:'M-PESA',         up:revChangeUp },
-          { a:'var(--sk)', c:'ni-s', l:'New Schools',          i:'🌱', v:newSchoolsCount,        ch:newSchoolsCount > 0 ? `↑ ${newSchoolsCount} registered` : 'No new schools', n:'This month', up:newSchoolsCount > 0 },
+          { a:'var(--am)', c:'ni-a', l:'Revenue This Term',    i:'', v:fmtMoney(totalRevenue), ch:revChangeTxt,                                           n:'M-PESA',         up:revChangeUp },
+          { a:'var(--sk)', c:'ni-s', l:'New Schools',          i:'', v:newSchoolsCount,        ch:newSchoolsCount > 0 ? `↑ ${newSchoolsCount} registered` : 'No new schools', n:'This month', up:newSchoolsCount > 0 },
           { a:'rgba(212,80,106,.5)', c:'ni-r', l:'Pending Payments', i:'⏳', v:pendingPayments.length, ch:pendingPayments.length > 0 ? 'Awaiting confirmation' : 'All clear', n:'M-PESA queue', up:false },
         ].map((k, i) => (
           <div className="kpi" key={i}>
@@ -144,14 +144,14 @@ export default function OverviewTab({
         <div className="lp">
           <div className="lp-t">Recent Schools</div>
           {(searchQuery ? filteredSchools : recentSchools).length === 0
-            ? <div className="empty"><div className="empty-ico">🏫</div>No schools found.</div>
+            ? <div className="empty"><div className="empty-ico"></div>No schools found.</div>
             : (searchQuery ? filteredSchools : recentSchools).slice(0, 5).map((s, i) => {
                 const p   = s.school_profiles?.[0] || {};
                 const cls = ['ni-v', 'ni-t', 'ni-a', 'ni-s', 'ni-r'][i % 5];
                 return (
                   <div className="li" key={s.id}>
                     <div className="li-l">
-                      <div className={`li-ico ${cls}`}>🏫</div>
+                      <div className={`li-ico ${cls}`}></div>
                       <div>
                         <div className="li-name">{s.name}</div>
                         <div className="li-sub">{p.subscription_plan || 'Starter'} · {p.location || 'Kenya'}</div>
@@ -174,7 +174,7 @@ export default function OverviewTab({
               ? <div className="empty"><div className="empty-ico">⚡</div>No activity yet.</div>
               : filteredActivity.slice(0, 4).map(a => (
                   <div className="ai" key={a.id}>
-                    <div className="li-ico ni-t">✅</div>
+                    <div className="li-ico ni-t">✓</div>
                     <div className="ai-body">
                       <div className="ai-t">{a.description}</div>
                       <div className="ai-s">{a.school_name || 'System'}</div>
@@ -187,12 +187,12 @@ export default function OverviewTab({
 
           {/* Student overview panel */}
           <div className="lp">
-            <div className="lp-t">👧 Student Overview</div>
+            <div className="lp-t"> Student Overview</div>
             {[
-              { c:'ni-v', e:'🏫', n:'Total Students',  s:'Across all active schools', v:pStats?.totalStudents  ? pStats.totalStudents.toLocaleString()  : '—', st:'' },
-              { c:'ni-t', e:'📋', n:'CBC Portfolios',  s:'Generated this term',       v:pStats?.cbcPortfolios  ? pStats.cbcPortfolios.toLocaleString()  : '—', st:'is-ok' },
-              { c:'ni-a', e:'📊', n:'Exams Recorded',  s:'Results entered',           v:pStats?.examsRecorded  ? pStats.examsRecorded.toLocaleString()  : '—', st:'is-ok' },
-              { c:'ni-s', e:'✅', n:'Attendance Rate', s:'Platform-wide average',     v:pStats?.attendanceRate ? `${pStats.attendanceRate}%`            : '—', st:'is-ok' },
+              { c:'ni-v', e:'', n:'Total Students',  s:'Across all active schools', v:pStats?.totalStudents  ? pStats.totalStudents.toLocaleString()  : '—', st:'' },
+              { c:'ni-t', e:'', n:'CBC Portfolios',  s:'Generated this term',       v:pStats?.cbcPortfolios  ? pStats.cbcPortfolios.toLocaleString()  : '—', st:'is-ok' },
+              { c:'ni-a', e:'', n:'Exams Recorded',  s:'Results entered',           v:pStats?.examsRecorded  ? pStats.examsRecorded.toLocaleString()  : '—', st:'is-ok' },
+              { c:'ni-s', e:'✓', n:'Attendance Rate', s:'Platform-wide average',     v:pStats?.attendanceRate ? `${pStats.attendanceRate}%`            : '—', st:'is-ok' },
             ].map((r, i) => (
               <div className="ig" key={i}>
                 <div className="ig-l">

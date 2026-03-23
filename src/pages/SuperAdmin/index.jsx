@@ -39,16 +39,24 @@ import SettingsTab        from './tabs/SettingsTab';
 import RecoveryTab        from './tabs/RecoveryTab';
 
 // Modals
-import ActivateModal from './modals/ActivateModal';
-import PlanModal     from './modals/PlanModal';
-import DeleteModal   from './modals/DeleteModal';
-import StaffModal    from './modals/StaffModal';
+import ActivateModal    from './modals/ActivateModal';
+import PlanModal        from './modals/PlanModal';
+import DeleteModal      from './modals/DeleteModal';
+import StaffModal       from './modals/StaffModal';
+import NEMISExportModal from './modals/NEMISExportModal';
+
+// Shared confirm dialog — replaces all window.confirm / window.prompt
+import ConfirmModal from '../../components/Common/ConfirmModal';
+import { useConfirm } from '../../components/Common/useConfirm';
 
 // Utilities
 import {
   useChart, GC, TC, TIP,
   fmtDate, fmtMoney, calcExpiry, statusLabel, sPill, planAmt,
 } from './superAdminUtils';
+
+// Store additions (NEMIS student fetch)
+import { getStudentsBySchool } from '../../data/store';
 
 // Styles — imported once, no more useEffect injection
 import './SuperAdmin.css';
@@ -122,7 +130,13 @@ export default function SuperAdmin({ currentUser, sidebarOpen, setSidebarOpen, o
 
   const isSuperOwner = currentUser?.email && PLATFORM_ADMINS.includes(currentUser.email);
 
-  // ── Auto-dismiss toast after 4 s ────────────────────────────────────────
+  // ── Styled confirm dialogs (replaces window.confirm / window.prompt) ─────
+  const { confirmModal, confirm, prompt } = useConfirm();
+
+  // ── NEMIS export modal ────────────────────────────────────────────────────
+  const [nemisSchool, setNemisSchool] = useState(null);
+
+  // ── Auto-dismiss toast after 4 s ─────────────────────────────────────────
   useEffect(() => {
     if (!message) return;
     const t = setTimeout(() => setMessage(null), 4000);
@@ -457,33 +471,63 @@ export default function SuperAdmin({ currentUser, sidebarOpen, setSidebarOpen, o
 
   // ══ ACTION HANDLERS ═══════════════════════════════════════════════════
   const handleApprove = async (p) => {
-    if (!window.confirm(`Approve payment ${p.transaction_code}?`)) return;
+    const ok = await confirm({
+      title: 'Approve Payment',
+      message: `Approve M-PESA transaction ${p.transaction_code} from ${p.school_profiles?.school_name || 'this school'}?`,
+      confirmText: 'Approve',
+      variant: 'default',
+    });
+    if (!ok) return;
     try   { await approvePayment(p.id, p.school_id); setMessage({ type:'success', text:'Payment approved.' }); loadData(); }
     catch (err) { setMessage({ type:'error', text: err.message }); }
   };
 
   const handleReject = async (p) => {
-    const reason = window.prompt('Reject reason:', 'Invalid transaction code');
+    const reason = await prompt({
+      title: 'Reject Payment',
+      message: `Rejecting payment from ${p.school_profiles?.school_name || 'this school'} · ${p.transaction_code}`,
+      inputLabel: 'Rejection Reason',
+      inputPlaceholder: 'e.g. Invalid transaction code',
+      confirmText: 'Reject Payment',
+      cancelText: 'Cancel',
+    });
     if (reason === null) return;
     try   { await rejectPayment(p.id, p.school_id, reason); setMessage({ type:'success', text:'Payment rejected.' }); loadData(); }
     catch (err) { setMessage({ type:'error', text: err.message }); }
   };
 
   const handleRestore = async (id, name) => {
-    if (!window.confirm(`Restore access for ${name}?`)) return;
+    const ok = await confirm({
+      title: 'Restore Access',
+      message: `Restore portal access for ${name}? Their subscription will be extended.`,
+      confirmText: 'Restore',
+    });
+    if (!ok) return;
     try   { await restoreSchool(id); setMessage({ type:'success', text:`${name} restored.` }); loadData(); }
     catch (err) { setMessage({ type:'error', text: err.message }); }
   };
 
   const handleDeactivate = async (id, name) => {
-    if (!window.confirm(`Deactivate ${name}? This will restrict their access.`)) return;
+    const ok = await confirm({
+      title: 'Deactivate School',
+      message: `Deactivate ${name}? Their staff will lose portal access until reactivated.`,
+      confirmText: 'Deactivate',
+      variant: 'warning',
+    });
+    if (!ok) return;
     try   { await deactivateSchool(id); setMessage({ type:'success', text:`${name} deactivated.` }); loadData(); }
     catch (err) { setMessage({ type:'error', text: err.message || 'Failed to deactivate school' }); }
   };
 
   const handleBulkDeactivate = async () => {
     if (!filteredSchools.length) return;
-    if (!window.confirm(`WARNING: Deactivate ALL ${filteredSchools.length} schools currently in view?`)) return;
+    const ok = await confirm({
+      title: 'Bulk Deactivate',
+      message: `This will deactivate ALL ${filteredSchools.length} schools currently visible. Their staff will lose portal access immediately.`,
+      confirmText: `Deactivate ${filteredSchools.length} Schools`,
+      variant: 'danger',
+    });
+    if (!ok) return;
     try {
       setMessage({ type:'info', text:'Processing bulk deactivation...' });
       for (const s of filteredSchools) await deactivateSchool(s.id);
@@ -494,7 +538,13 @@ export default function SuperAdmin({ currentUser, sidebarOpen, setSidebarOpen, o
 
   const handleBulkActivate = async () => {
     if (!filteredSchools.length) return;
-    if (!window.confirm(`WARNING: Activate ALL ${filteredSchools.length} schools currently in view (+4 months)?`)) return;
+    const ok = await confirm({
+      title: 'Bulk Activate',
+      message: `This will activate ALL ${filteredSchools.length} schools currently visible and extend their subscriptions by 4 months.`,
+      confirmText: `Activate ${filteredSchools.length} Schools`,
+      variant: 'warning',
+    });
+    if (!ok) return;
     try {
       setMessage({ type:'info', text:'Processing bulk activation...' });
       for (const s of filteredSchools) await restoreSchool(s.id);
@@ -504,14 +554,25 @@ export default function SuperAdmin({ currentUser, sidebarOpen, setSidebarOpen, o
   };
 
   const handleRowDeleteSchool = async (id, name) => {
-    if (!window.confirm(`STRICT WARNING: Terminate ${name}? This will DELETE all their data permanently.`)) return;
-    if (!window.confirm('Are you absolutely sure? This cannot be undone.')) return;
+    const ok = await confirm({
+      title: 'Terminate School',
+      message: `Permanently delete ${name} and ALL associated data — students, payments, profiles? This action cannot be undone.`,
+      confirmText: 'Yes, Terminate Forever',
+      variant: 'danger',
+    });
+    if (!ok) return;
     try   { await deleteSchool(id); setMessage({ type:'success', text:`${name} terminated and deleted.` }); loadData(); }
     catch (err) { setMessage({ type:'error', text: err.message || 'Failed to terminate school' }); }
   };
 
   const handleSuspend = async (id, name) => {
-    if (!window.confirm(`Suspend ${name}?`)) return;
+    const ok = await confirm({
+      title: 'Suspend School',
+      message: `Suspend ${name}? Their account will be locked until you manually restore it.`,
+      confirmText: 'Suspend',
+      variant: 'warning',
+    });
+    if (!ok) return;
     try   { await suspendSchool(id); setMessage({ type:'success', text:`${name} suspended.` }); loadData(); }
     catch (err) { setMessage({ type:'error', text: err.message || 'Failed to suspend school' }); }
   };
@@ -582,7 +643,13 @@ export default function SuperAdmin({ currentUser, sidebarOpen, setSidebarOpen, o
   };
 
   const handleDeleteStaff = async (teacherId, teacherName) => {
-    if (!window.confirm(`Permanently delete ${teacherName}?`)) return;
+    const ok = await confirm({
+      title: 'Delete Staff Member',
+      message: `Permanently delete ${teacherName}? This will remove their portal access and all assigned grading/attendance records.`,
+      confirmText: 'Delete Staff',
+      variant: 'danger',
+    });
+    if (!ok) return;
     try {
       await deleteTeacher(teacherId);
       setStaffModal(prev => ({ ...prev, staff: prev.staff.filter(t => t.id !== teacherId) }));
@@ -597,24 +664,26 @@ export default function SuperAdmin({ currentUser, sidebarOpen, setSidebarOpen, o
   if (!isSuperOwner) {
     return (
       <div style={{ padding:48, textAlign:'center', background:'#0C0E0D', color:'#D4DDD6', minHeight:'100vh', display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center' }}>
-        <div style={{ fontSize:'2.5rem', marginBottom:12 }}>🔒</div>
-        <h2 style={{ color:'#D4506A', fontFamily:"'Space Mono',monospace", marginBottom:8 }}>Access Denied</h2>
-        <p style={{ color:'#5A6B5C', fontSize:'0.85rem' }}>This area is restricted to ShuleSoft platform administrators only.</p>
+        <svg viewBox="0 0 24 24" fill="none" stroke="#D4506A" strokeWidth="1.5" width="48" height="48" style={{ marginBottom:16, opacity:.8 }}>
+          <rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+        </svg>
+        <h2 style={{ color:'#D4506A', fontFamily:"'Space Mono',monospace", marginBottom:8, fontSize:'1rem' }}>Access Restricted</h2>
+        <p style={{ color:'#5A6B5C', fontSize:'0.85rem', maxWidth:320 }}>This area is restricted to ShuleSoft platform administrators only.</p>
       </div>
     );
   }
 
   // ══ NAV ITEMS ═════════════════════════════════════════════════════════
   const navItems = [
-    { id:'overview',      ico:'🏠', cls:'ni-v', label:'Overview'         },
-    { id:'schools',       ico:'🏫', cls:'ni-t', label:'Schools'          },
-    { id:'payments',      ico:'💳', cls:'ni-a', label:'Payments'         },
-    { id:'history',       ico:'📋', cls:'ni-s', label:'Payment History'  },
-    { id:'subscriptions', ico:'📅', cls:'ni-s', label:'Subscriptions'    },
-    { id:'revenue',       ico:'📈', cls:'ni-v', label:'Revenue'          },
-    { id:'activity',      ico:'⚡', cls:'ni-t', label:'Activity'         },
-    { id:'config',        ico:'⚙️', cls:'ni-d', label:'Settings'         },
-    { id:'recovery',      ico:'🛡️', cls:'ni-r', label:'Recovery'         },
+    { id:'overview',      cls:'ni-v', label:'Overview',        icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" width="15" height="15"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg> },
+    { id:'schools',       cls:'ni-t', label:'Schools',         icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" width="15" height="15"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg> },
+    { id:'payments',      cls:'ni-a', label:'Payments',        icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" width="15" height="15"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg> },
+    { id:'history',       cls:'ni-s', label:'Payment History', icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" width="15" height="15"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-4.95"/></svg> },
+    { id:'subscriptions', cls:'ni-s', label:'Subscriptions',   icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" width="15" height="15"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/><line x1="7" y1="15" x2="7.01" y2="15" strokeWidth="3"/></svg> },
+    { id:'revenue',       cls:'ni-v', label:'Revenue',         icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" width="15" height="15"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg> },
+    { id:'activity',      cls:'ni-t', label:'Activity Log',    icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" width="15" height="15"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg> },
+    { id:'config',        cls:'ni-d', label:'Settings',        icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" width="15" height="15"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg> },
+    { id:'recovery',      cls:'ni-r', label:'Data Recovery',   icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" width="15" height="15"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/></svg> },
   ];
 
   const expiryInfo = calcExpiry(subEndDate);
@@ -632,12 +701,83 @@ export default function SuperAdmin({ currentUser, sidebarOpen, setSidebarOpen, o
 
   // ══ RENDER ════════════════════════════════════════════════════════════
   return (
-    <div className="sa" style={{ flex:1, display:'flex', flexDirection:'column' }}>
+    <div className="sa-root">
+
+      {/* ── Mobile overlay ── */}
+      <div
+        className={`sa-overlay${sidebarOpen ? ' show' : ''}`}
+        onClick={() => setSidebarOpen(false)}
+      />
+
+      {/* ── Sidebar ── */}
+      <aside className={`sa-sidebar${sidebarOpen ? ' open' : ''}`}>
+        {/* Brand */}
+        <div className="sb-brand">
+          <div className="sb-logo">S</div>
+          <div>
+            <div className="sb-name">ShuleSoft</div>
+            <div className="sb-tag">Platform Admin</div>
+          </div>
+          <button
+            className="sa-close-btn"
+            onClick={() => setSidebarOpen(false)}
+            aria-label="Close menu"
+          >
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="14" height="14">
+              <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+            </svg>
+          </button>
+        </div>
+
+        {/* Nav */}
+        <nav style={{ flex:1, padding:'8px 0 16px' }}>
+          <div className="sb-sec">Navigation</div>
+          {navItems.map(item => (
+            <button
+              key={item.id}
+              className={`sb-nav${activeTab === item.id ? ' on' : ''}`}
+              onClick={() => { setTab(item.id); }}
+            >
+              <div className={`nav-ico ${item.cls}`}>{item.icon}</div>
+              <span>{item.label}</span>
+            </button>
+          ))}
+        </nav>
+
+        {/* Footer */}
+        <div className="sb-spacer" />
+        <div className="sb-status">
+          <div className="ss-row">
+            <span className="ss-lbl">Status</span>
+            <div className="ss-dot">
+              <span className="sa-dot" />
+              Live
+            </div>
+          </div>
+          <div className="ss-name">{currentUser?.name || 'Administrator'}</div>
+        </div>
+        <button className="sb-signout" onClick={handleSignOut}>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" width="14" height="14">
+            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+            <polyline points="16 17 21 12 16 7"/>
+            <line x1="21" y1="12" x2="9" y2="12"/>
+          </svg>
+          Sign Out
+        </button>
+      </aside>
+
+      {/* ── Main content ── */}
       <div className="sa-main">
 
-        {/* ── Top bar ── */}
+        {/* Top bar */}
         <div className="sa-topbar">
-          <div className="sa-menu-btn" style={{ display:'none' }} onClick={() => setSidebarOpen(o => !o)}>☰</div>
+          <button className="sa-menu-btn" onClick={() => setSidebarOpen(o => !o)} aria-label="Toggle menu">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="18" height="18">
+              <line x1="3" y1="6"  x2="21" y2="6"/>
+              <line x1="3" y1="12" x2="21" y2="12"/>
+              <line x1="3" y1="18" x2="21" y2="18"/>
+            </svg>
+          </button>
           <div className="sa-search-wrap">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <circle cx="11" cy="11" r="8" /><path d="m21 21-4.35-4.35" />
@@ -648,16 +788,19 @@ export default function SuperAdmin({ currentUser, sidebarOpen, setSidebarOpen, o
               value={searchQuery}
               onChange={e => setSearchQuery(e.target.value)}
             />
-            {searchQuery && <span className="sa-search-clear" onClick={() => setSearchQuery('')}>✕</span>}
+            {searchQuery && (
+              <span className="sa-search-clear" onClick={() => setSearchQuery('')}>✕</span>
+            )}
           </div>
           <div className="sa-tb-right">
             <div className="sa-tb-badge">
-              <div className="sa-tb-badge-dot">SA</div>Super Admin
+              <div className="sa-tb-badge-dot">SA</div>
+              <span>Super Admin</span>
             </div>
           </div>
         </div>
 
-        {/* ── Content ── */}
+        {/* Page content */}
         <div className="sa-content">
           <div className="sa">
 
@@ -671,10 +814,10 @@ export default function SuperAdmin({ currentUser, sidebarOpen, setSidebarOpen, o
             {loading ? <SuperAdminLoader /> : (
               <>
                 {activeTab === 'overview'      && <OverviewTab       {...commonProps} revChartRef={revChartRef} growChartRef={growChartRef} subChartRef={subChartRef} weekChartRef={weekChartRef} />}
-                {activeTab === 'schools'       && <SchoolsTab        {...commonProps} handleBulkActivate={handleBulkActivate} handleBulkDeactivate={handleBulkDeactivate} handleDeactivate={handleDeactivate} handleRowDeleteSchool={handleRowDeleteSchool} handleOpenStaffModal={handleOpenStaffModal} setActivateModal={setActivateModal} setPayMethod={setPayMethod} setPayRef={setPayRef} setActivateSuccess={setActivateSuccess} setPlanModal={setPlanModal} setChosenPlan={setChosenPlan} />}
+                {activeTab === 'schools'       && <SchoolsTab        {...commonProps} handleBulkActivate={handleBulkActivate} handleBulkDeactivate={handleBulkDeactivate} handleDeactivate={handleDeactivate} handleRowDeleteSchool={handleRowDeleteSchool} handleOpenStaffModal={handleOpenStaffModal} setActivateModal={setActivateModal} setPayMethod={setPayMethod} setPayRef={setPayRef} setActivateSuccess={setActivateSuccess} setPlanModal={setPlanModal} setChosenPlan={setChosenPlan} onNEMISExport={setNemisSchool} />}
                 {activeTab === 'payments'      && <PaymentsTab       {...commonProps} handleApprove={handleApprove} handleReject={handleReject} payChartRef={payChartRef} />}
                 {activeTab === 'history'       && <PaymentHistoryTab allPayments={allPayments} historyStatusFilter={historyStatusFilter} setHistoryStatusFilter={setHistoryStatusFilter} historySchoolFilter={historySchoolFilter} setHistorySchoolFilter={setHistorySchoolFilter} />}
-                {activeTab === 'subscriptions' && <SubscriptionsTab  {...commonProps} subBreakRef={subBreakRef} />}
+                {activeTab === 'subscriptions' && <SubscriptionsTab  {...commonProps} settings={settings} subBreakRef={subBreakRef} />}
                 {activeTab === 'revenue'       && <RevenueTab        {...commonProps} revPeriod={revPeriod} setRevPeriod={setRevPeriod} revPeriodLabel={revPeriodLabel} revBigRef={revBigRef} />}
                 {activeTab === 'activity'      && <ActivityTab       filteredActivity={filteredActivity} />}
                 {activeTab === 'config'        && <SettingsTab       gwInstructions={gwInstructions} setGwInstructions={setGwInstructions} statusMsg={statusMsg} setStatusMsg={setStatusMsg} subEndDate={subEndDate} setSubEndDate={setSubEndDate} plans={plans} setPlans={setPlans} priceSaved={priceSaved} setPriceSaved={setPriceSaved} handleUpdateSetting={handleUpdateSetting} updatePlatformSetting={updatePlatformSetting} loadData={loadData} setMessage={setMessage} />}
@@ -689,7 +832,7 @@ export default function SuperAdmin({ currentUser, sidebarOpen, setSidebarOpen, o
               </>
             )}
 
-            {/* ── Modals (always rendered, open/close via state) ── */}
+            {/* Modals */}
             <ActivateModal
               activateModal={activateModal} setActivateModal={setActivateModal}
               payMethod={payMethod} setPayMethod={setPayMethod}
@@ -712,6 +855,12 @@ export default function SuperAdmin({ currentUser, sidebarOpen, setSidebarOpen, o
               staffModal={staffModal} setStaffModal={setStaffModal}
               loadingStaff={loadingStaff} handleDeleteStaff={handleDeleteStaff}
             />
+            <NEMISExportModal
+              school={nemisSchool}
+              onClose={() => setNemisSchool(null)}
+              getStudentsBySchool={getStudentsBySchool}
+            />
+            <ConfirmModal {...confirmModal} />
 
           </div>
         </div>

@@ -1,19 +1,98 @@
+/**
+ * SettingsTab.jsx — Platform Settings & Subscription Plan Builder
+ *
+ * Plans are stored in platform_settings.pricing as:
+ * {
+ *   "PlanName": {
+ *     price        : 5999,       // KSh per term
+ *     limit        : 150,        // student seats
+ *     admins       : 5,          // staff accounts
+ *     active       : true,       // visible on registration/landing
+ *     trial_days   : 14,         // free trial period
+ *     description  : "...",      // shown to schools on registration
+ *     color        : "#7C5CFC",  // accent colour for UI
+ *     features     : [           // feature list displayed on landing page
+ *       "CBC Report Cards",
+ *       "M-PESA Integration",
+ *       ...
+ *     ]
+ *   }
+ * }
+ *
+ * When saved here, ALL of the following update automatically:
+ *   - Registration page plan picker
+ *   - School billing page
+ *   - SuperAdmin schools table (plan badge, revenue column)
+ *   - SuperAdmin activate modal (amount shown)
+ *   - SuperAdmin change-plan modal (options listed)
+ *   - Landing page pricing section (if it reads from settings)
+ */
+
+import { useState } from 'react';
 import { calcExpiry } from '../superAdminUtils';
+
+// ── Suggested features to quickly add ────────────────────────────────────
+const FEATURE_SUGGESTIONS = [
+  'CBC Report Cards (PP1–Grade 9)',
+  'KCSE / KCPE Report Cards (8-4-4)',
+  'M-PESA Paybill Integration',
+  'Airtel Money Integration',
+  'Student Fee Statements',
+  'M-PESA Receipt Generation',
+  'Timetable Builder',
+  'Automated Timetable Generation',
+  'NEMIS Data Export',
+  'Attendance Tracking',
+  'CBC Competency Grading',
+  'Teacher Portal Access',
+  'Parent SMS Notifications',
+  'WhatsApp Fee Reminders',
+  'Multi-Stream Support',
+  'Multiple Academic Periods',
+  'Staff Management',
+  'Fee Structure Builder',
+  'Data Recovery Tools',
+  'Priority Support',
+  'Custom Branding',
+  'API Access',
+  'Bulk Student Import (CSV)',
+  'Exam Scheduling',
+  'Library Management',
+];
+
+const PLAN_COLORS = [
+  '#7C5CFC','#0DD88A','#4A9EE8','#E8A020','#D4506A','#10B981','#F97316',
+];
+
+const EMPTY_PLAN = {
+  id          : '',
+  name        : '',
+  price       : 0,
+  limit       : 150,
+  admins      : 5,
+  active      : true,
+  trial_days  : 14,
+  description : '',
+  color       : PLAN_COLORS[0],
+  features    : [],
+};
 
 export default function SettingsTab({
   gwInstructions, setGwInstructions,
   statusMsg, setStatusMsg,
   subEndDate, setSubEndDate,
   plans, setPlans,
-  priceSaved,
+  priceSaved, setPriceSaved,
   handleUpdateSetting,
   updatePlatformSetting,
   loadData,
   setMessage,
-  setPriceSaved,
 }) {
-  const expiryInfo = calcExpiry(subEndDate);
+  const expiryInfo   = calcExpiry(subEndDate);
+  const [expandedPlan, setExpandedPlan] = useState(null); // plan id being edited
+  const [savingPricing, setSavingPricing] = useState(false);
 
+  // ── Global settings ────────────────────────────────────────────────────
   const handleSaveGlobal = () => {
     let formattedDate = subEndDate;
     if (subEndDate) {
@@ -24,49 +103,119 @@ export default function SettingsTab({
     handleUpdateSetting('platform', { status_message: statusMsg });
   };
 
+  // ── Plan management ────────────────────────────────────────────────────
+  const addPlan = () => {
+    const newPlan = {
+      ...EMPTY_PLAN,
+      id    : `new_${Date.now()}`,
+      color : PLAN_COLORS[plans.length % PLAN_COLORS.length],
+    };
+    setPlans(p => [...p, newPlan]);
+    setExpandedPlan(newPlan.id);
+  };
+
+  const updatePlan = (id, field, value) => {
+    setPlans(prev => prev.map(p => p.id === id ? { ...p, [field]: value } : p));
+  };
+
+  const addFeature = (id, feature) => {
+    setPlans(prev => prev.map(p =>
+      p.id === id ? { ...p, features: [...(p.features || []), feature] } : p
+    ));
+  };
+
+  const removeFeature = (id, idx) => {
+    setPlans(prev => prev.map(p =>
+      p.id === id ? { ...p, features: p.features.filter((_, i) => i !== idx) } : p
+    ));
+  };
+
+  const removePlan = (id) => {
+    setPlans(prev => prev.filter(p => p.id !== id));
+    if (expandedPlan === id) setExpandedPlan(null);
+  };
+
   const handleSavePricing = async () => {
-    const newPricing = {};
-    plans.forEach(p => {
-      const key = p.name.trim() || p.id;
-      newPricing[key] = { price: p.price, limit: p.limit, active: p.active, features: p.features || [] };
-    });
+    const invalid = plans.filter(p => !p.name.trim());
+    if (invalid.length) {
+      setMessage({ type:'error', text:'All plans must have a name.' });
+      return;
+    }
+    setSavingPricing(true);
     try {
+      const newPricing = {};
+      plans.forEach(p => {
+        const key = p.name.trim();
+        newPricing[key] = {
+          price       : Number(p.price) || 0,
+          limit       : Number(p.limit) || 150,
+          admins      : Number(p.admins) || 5,
+          active      : p.active !== false,
+          trial_days  : Number(p.trial_days) || 0,
+          description : p.description || '',
+          color       : p.color || PLAN_COLORS[0],
+          features    : Array.isArray(p.features) ? p.features : [],
+        };
+      });
       await updatePlatformSetting('pricing', newPricing);
       setPriceSaved(true);
       setTimeout(() => setPriceSaved(false), 3000);
+      setMessage({ type:'success', text:'Pricing saved. All pages updated automatically.' });
       loadData();
     } catch (err) {
       setMessage({ type:'error', text: err.message });
-    }
+    } finally { setSavingPricing(false); }
+  };
+
+  const S = {
+    label  : { fontSize:'.52rem', color:'var(--sub)', letterSpacing:'.08em', textTransform:'uppercase', marginBottom:5, display:'block' },
+    input  : { width:'100%', background:'var(--bg)', border:'1px solid var(--edge)', borderRadius:7, padding:'8px 11px', color:'var(--txt)', fontFamily:'var(--fb)', fontSize:'.78rem', outline:'none' },
+    numInput: { background:'var(--bg)', border:'1px solid var(--edge)', borderRadius:6, padding:'7px 10px', color:'var(--txt)', fontFamily:"'Space Mono',monospace", fontSize:'.78rem', outline:'none', width:'100%' },
+    row    : { display:'grid', gridTemplateColumns:'1fr 1fr', gap:12, marginBottom:12 },
+    row3   : { display:'grid', gridTemplateColumns:'1fr 1fr 1fr', gap:10, marginBottom:12 },
+    chip   : { padding:'3px 9px', borderRadius:5, fontSize:'.65rem', cursor:'pointer', border:'1px solid rgba(255,255,255,.1)', background:'transparent', color:'var(--sub)', fontFamily:'var(--fb)', transition:'all .13s', display:'inline-block', marginRight:5, marginBottom:5 },
+    fChip  : (added) => ({ padding:'2px 8px', borderRadius:4, fontSize:'.62rem', border:`1px solid ${added ? 'rgba(13,216,138,.3)' : 'rgba(255,255,255,.08)'}`, background: added ? 'rgba(13,216,138,.08)' : 'transparent', color: added ? 'var(--te)' : 'var(--sub)', cursor:'pointer', display:'inline-flex', alignItems:'center', gap:4, marginRight:4, marginBottom:4, transition:'all .13s' }),
   };
 
   return (
     <div className="tv">
-      <div className="bot-grid" style={{ marginBottom:12 }}>
-        {/* ── Global Settings ── */}
+      <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:14, marginBottom:14 }}>
+
+        {/* ── Global Settings ─────────────────────────────────────────── */}
         <div className="lp">
-          <div className="lp-t">⚙️ Global Settings</div>
+          <div className="lp-t">Global Settings</div>
 
           <div style={{ marginBottom:14 }}>
-            <div className="sb-lbl" style={{ marginBottom:6 }}>Gateway Instructions</div>
-            <textarea rows={4} placeholder="Enter M-PESA gateway instructions..."
-              value={gwInstructions} onChange={e => setGwInstructions(e.target.value)} />
+            <label style={S.label}>M-PESA Gateway Instructions</label>
+            <textarea rows={4} style={{ ...S.input, resize:'vertical' }}
+              placeholder="Payment instructions shown to schools on the billing page..."
+              value={gwInstructions}
+              onChange={e => setGwInstructions(e.target.value)} />
           </div>
 
           <div style={{ marginBottom:14 }}>
-            <div className="sb-lbl" style={{ marginBottom:6 }}>Platform Status Message</div>
-            <input type="text" value={statusMsg} onChange={e => setStatusMsg(e.target.value)} />
-          </div>
-
-          <div style={{ marginBottom:18 }}>
-            <div className="sb-lbl" style={{ marginBottom:6 }}>
-              Subscription End Date <span style={{ color:'var(--sub)' }}>(all schools)</span>
+            <label style={S.label}>Platform Status Message</label>
+            <input type="text" style={S.input}
+              placeholder="e.g. System maintenance on Sunday 10pm–12am"
+              value={statusMsg}
+              onChange={e => setStatusMsg(e.target.value)} />
+            <div style={{ fontSize:'.6rem', color:'var(--sub)', marginTop:4 }}>
+              Shown as a banner to all logged-in users when set.
             </div>
-            <input type="date" value={subEndDate} onChange={e => setSubEndDate(e.target.value)} />
+          </div>
+
+          <div style={{ marginBottom:20 }}>
+            <label style={S.label}>
+              Global Subscription End Date{' '}
+              <span style={{ color:'var(--sub)', textTransform:'none', letterSpacing:0 }}>(applies to all schools)</span>
+            </label>
+            <input type="date" style={{ ...S.input, colorScheme:'dark', appearance:'none' }}
+              value={subEndDate}
+              onChange={e => setSubEndDate(e.target.value)} />
             {subEndDate && expiryInfo && (
-              <div style={{ marginTop:10, padding:'10px 13px', borderRadius:7, background:'rgba(212,80,106,.08)', border:'1px solid rgba(212,80,106,.18)' }}>
-                <div style={{ fontSize:'.58rem', color:'var(--sub)', letterSpacing:'.07em', textTransform:'uppercase', marginBottom:4 }}>
-                  All subscriptions auto-expire on
+              <div style={{ marginTop:10, padding:'10px 13px', borderRadius:7, background:'rgba(212,80,106,.07)', border:'1px solid rgba(212,80,106,.18)' }}>
+                <div style={{ fontSize:'.55rem', color:'var(--sub)', letterSpacing:'.07em', textTransform:'uppercase', marginBottom:3 }}>
+                  All subscriptions expire on
                 </div>
                 <div style={{ fontFamily:'var(--fh)', fontSize:'.88rem', fontWeight:700, color:'var(--ro)' }}>
                   {expiryInfo.label}
@@ -78,81 +227,267 @@ export default function SettingsTab({
             )}
           </div>
 
-          <button className="save-btn" onClick={handleSaveGlobal}>Save Changes</button>
+          <button className="save-btn" onClick={handleSaveGlobal} style={{ width:'100%' }}>
+            Save Global Settings
+          </button>
         </div>
 
-        {/* ── Pricing Control ── */}
-        <div className="lp">
-          <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:12 }}>
-            <div className="lp-t" style={{ marginBottom:0 }}>💰 Pricing Control</div>
-            <button
-              onClick={() => setPlans(p => [...p, { id:`new_${Date.now()}`, name:'New Plan', price:5000, limit:500, active:true, features:[] }])}
-              style={{ padding:'4px 10px', borderRadius:6, background:'rgba(124,92,252,.1)', border:'1px solid rgba(124,92,252,.2)', color:'var(--vi)', fontSize:'.65rem', fontWeight:700, cursor:'pointer' }}>
-              + Add Plan
+        {/* ── Subscription Plan Builder ────────────────────────────────── */}
+        <div className="lp" style={{ display:'flex', flexDirection:'column' }}>
+          <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:10 }}>
+            <div className="lp-t" style={{ margin:0 }}>Subscription Plans</div>
+            <button onClick={addPlan}
+              style={{ padding:'5px 12px', borderRadius:6, background:'rgba(124,92,252,.1)', border:'1px solid rgba(124,92,252,.25)', color:'var(--vi)', fontSize:'.68rem', fontWeight:700, cursor:'pointer' }}>
+              + New Plan
             </button>
           </div>
+          <div style={{ fontSize:'.65rem', color:'var(--sub)', marginBottom:14, lineHeight:1.5 }}>
+            Plans appear on the registration and billing pages automatically. Features, limits, and prices update everywhere when saved.
+          </div>
 
-          <p style={{ fontSize:'.7rem', color:'var(--sub)', marginBottom:16, lineHeight:1.6 }}>
-            Set custom names, costs, and limits. Toggled plans appear globally on landing and registration pages.
-          </p>
-
-          {plans.map((p, idx) => (
-            <div key={p.id} style={{ background:'var(--bg)', border:'1px solid var(--edge)', borderRadius:8, padding:'12px 14px', marginBottom:10, opacity:p.active ? 1 : .5, transition:'opacity .2s' }}>
-              <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:10 }}>
-                <div style={{ display:'flex', alignItems:'center', gap:8, flex:1 }}>
-                  <input type="text" value={p.name}
-                    onChange={e => { const n = [...plans]; n[idx].name = e.target.value; setPlans(n); }}
-                    style={{ background:'transparent', border:'none', padding:0, fontSize:'.82rem', fontWeight:700, width:'100%', color:'#fff', outline:'none' }}
-                    placeholder="Plan Name" />
-                </div>
-                <div style={{ display:'flex', alignItems:'center', gap:10 }}>
-                  <label style={{ display:'flex', alignItems:'center', gap:5, cursor:'pointer', userSelect:'none' }}>
-                    <input type="checkbox" checked={p.active}
-                      onChange={e => { const n = [...plans]; n[idx].active = e.target.checked; setPlans(n); }}
-                      style={{ accentColor:'var(--te)' }} />
-                    <span style={{ fontSize:'.6rem', color: p.active ? 'var(--te)' : 'var(--sub)', fontWeight:600 }}>
-                      {p.active ? 'Public' : 'Hidden'}
-                    </span>
-                  </label>
-                  <button onClick={() => setPlans(plans.filter((_, i) => i !== idx))}
-                    style={{ background:'transparent', border:'none', color:'var(--ro)', fontSize:'11px', cursor:'pointer', padding:4 }}>
-                    ✕
-                  </button>
-                </div>
-              </div>
-
-              <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:12 }}>
-                <div>
-                  <div className="sb-lbl" style={{ marginBottom:4, fontSize:'.55rem' }}>Price (KSh / term)</div>
-                  <input type="number" value={p.price}
-                    onChange={e => { const n = [...plans]; n[idx].price = Number(e.target.value); setPlans(n); }}
-                    style={{ width:'100%', background:'var(--panel)', border:'1px solid var(--edge2)', borderRadius:6, padding:'6px 8px', color:'var(--txt)', fontFamily:'var(--fh)', fontSize:'.76rem' }} />
-                </div>
-                <div>
-                  <div className="sb-lbl" style={{ marginBottom:4, fontSize:'.55rem' }}>Student Limit</div>
-                  <input type="number" value={p.limit}
-                    onChange={e => { const n = [...plans]; n[idx].limit = Number(e.target.value); setPlans(n); }}
-                    style={{ width:'100%', background:'var(--panel)', border:'1px solid var(--edge2)', borderRadius:6, padding:'6px 8px', color:'var(--txt)', fontFamily:'var(--fh)', fontSize:'.76rem' }} />
-                </div>
-              </div>
+          {plans.length === 0 ? (
+            <div className="empty" style={{ flex:1 }}>
+              <div style={{ fontSize:'1.4rem', marginBottom:8, opacity:.4 }}>◫</div>
+              <div style={{ fontSize:'.8rem', color:'var(--sub)' }}>No plans yet. Add your first plan.</div>
             </div>
-          ))}
+          ) : (
+            <div style={{ display:'flex', flexDirection:'column', gap:8, flex:1, overflowY:'auto' }}>
+              {plans.map((plan) => {
+                const isOpen = expandedPlan === plan.id;
+                const existingFeatures = plan.features || [];
 
-          <div style={{ display:'flex', alignItems:'center', gap:8, marginTop:6 }}>
-            <button className="save-btn" style={{ flex:1 }} onClick={handleSavePricing}>
-              Save Pricing
+                return (
+                  <div key={plan.id} style={{
+                    background:'var(--bg)', border:`1px solid ${isOpen ? 'rgba(124,92,252,.3)' : 'var(--edge)'}`,
+                    borderRadius:9, overflow:'hidden', transition:'all .2s',
+                  }}>
+                    {/* Plan header row */}
+                    <div
+                      style={{ display:'flex', alignItems:'center', gap:10, padding:'10px 13px', cursor:'pointer' }}
+                      onClick={() => setExpandedPlan(isOpen ? null : plan.id)}
+                    >
+                      <div style={{ width:10, height:10, borderRadius:'50%', background: plan.color || 'var(--vi)', flexShrink:0 }} />
+                      <div style={{ flex:1, minWidth:0 }}>
+                        <div style={{ fontFamily:'var(--fh)', fontSize:'.75rem', fontWeight:700, color: plan.active ? '#fff' : 'var(--sub)', display:'flex', alignItems:'center', gap:8 }}>
+                          {plan.name || 'Unnamed Plan'}
+                          {!plan.active && <span style={{ fontSize:'.55rem', padding:'1px 6px', borderRadius:3, background:'rgba(255,255,255,.06)', color:'var(--sub)', fontWeight:600 }}>Hidden</span>}
+                        </div>
+                        <div style={{ fontSize:'.62rem', color:'var(--sub)', marginTop:1 }}>
+                          KSh {Number(plan.price || 0).toLocaleString()} / term · {plan.limit || 0} students · {plan.admins || 0} staff
+                        </div>
+                      </div>
+                      <div style={{ fontSize:'.65rem', color:'var(--sub)' }}>
+                        {existingFeatures.length} features
+                      </div>
+                      <div style={{ fontSize:10, color:'var(--sub)', transform: isOpen ? 'rotate(180deg)' : 'none', transition:'transform .2s' }}>▾</div>
+                    </div>
+
+                    {/* Plan editor (expanded) */}
+                    {isOpen && (
+                      <div style={{ padding:'0 13px 14px', borderTop:'1px solid var(--edge)' }}>
+                        <div style={{ ...S.row, marginTop:12 }}>
+                          <div>
+                            <label style={S.label}>Plan Name *</label>
+                            <input style={{ ...S.input, fontWeight:700 }} type="text"
+                              placeholder="e.g. Starter" value={plan.name}
+                              onChange={e => updatePlan(plan.id, 'name', e.target.value)} />
+                          </div>
+                          <div>
+                            <label style={S.label}>Accent Colour</label>
+                            <div style={{ display:'flex', gap:6, marginTop:2 }}>
+                              {PLAN_COLORS.map(c => (
+                                <div key={c} onClick={() => updatePlan(plan.id, 'color', c)}
+                                  style={{ width:20, height:20, borderRadius:'50%', background:c, cursor:'pointer', flexShrink:0, border: plan.color === c ? '2px solid #fff' : '2px solid transparent', transform: plan.color === c ? 'scale(1.15)' : 'none', transition:'all .13s' }} />
+                              ))}
+                            </div>
+                          </div>
+                        </div>
+
+                        <div style={S.row3}>
+                          <div>
+                            <label style={S.label}>Price (KSh / term)</label>
+                            <input style={S.numInput} type="number" min={0}
+                              value={plan.price} onChange={e => updatePlan(plan.id, 'price', e.target.value)} />
+                          </div>
+                          <div>
+                            <label style={S.label}>Student Limit</label>
+                            <input style={S.numInput} type="number" min={1}
+                              value={plan.limit} onChange={e => updatePlan(plan.id, 'limit', e.target.value)} />
+                          </div>
+                          <div>
+                            <label style={S.label}>Staff Accounts</label>
+                            <input style={S.numInput} type="number" min={1}
+                              value={plan.admins || 5} onChange={e => updatePlan(plan.id, 'admins', e.target.value)} />
+                          </div>
+                        </div>
+
+                        <div style={S.row}>
+                          <div>
+                            <label style={S.label}>Free Trial (days, 0 = no trial)</label>
+                            <input style={S.numInput} type="number" min={0}
+                              value={plan.trial_days || 0} onChange={e => updatePlan(plan.id, 'trial_days', e.target.value)} />
+                          </div>
+                          <div style={{ display:'flex', flexDirection:'column', justifyContent:'flex-end' }}>
+                            <label style={{ ...S.label, cursor:'pointer', userSelect:'none', display:'flex', alignItems:'center', gap:7, marginBottom:8 }}>
+                              <input type="checkbox" checked={plan.active !== false}
+                                onChange={e => updatePlan(plan.id, 'active', e.target.checked)}
+                                style={{ accentColor:'var(--te)', width:15, height:15 }} />
+                              <span style={{ fontSize:'.72rem', color: plan.active !== false ? 'var(--te)' : 'var(--sub)', fontWeight:600 }}>
+                                {plan.active !== false ? 'Visible on registration' : 'Hidden from schools'}
+                              </span>
+                            </label>
+                          </div>
+                        </div>
+
+                        <div style={{ marginBottom:12 }}>
+                          <label style={S.label}>Plan Description (shown to schools)</label>
+                          <textarea rows={2} style={{ ...S.input, resize:'vertical' }}
+                            placeholder="Brief description of what this plan includes..."
+                            value={plan.description || ''}
+                            onChange={e => updatePlan(plan.id, 'description', e.target.value)} />
+                        </div>
+
+                        {/* Features */}
+                        <div style={{ marginBottom:10 }}>
+                          <label style={S.label}>Features</label>
+
+                          {/* Current features */}
+                          {existingFeatures.length > 0 && (
+                            <div style={{ display:'flex', flexWrap:'wrap', gap:5, marginBottom:10 }}>
+                              {existingFeatures.map((f, i) => (
+                                <div key={i} style={{ display:'inline-flex', alignItems:'center', gap:5, padding:'3px 8px', borderRadius:5, background:'rgba(13,216,138,.08)', border:'1px solid rgba(13,216,138,.2)', fontSize:'.65rem', color:'var(--te)' }}>
+                                  {f}
+                                  <button onClick={() => removeFeature(plan.id, i)}
+                                    style={{ background:'none', border:'none', color:'rgba(13,216,138,.6)', cursor:'pointer', padding:0, fontSize:11, lineHeight:1 }}>✕</button>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+
+                          {/* Quick-add suggestions */}
+                          <div style={{ fontSize:'.58rem', color:'var(--sub)', marginBottom:6 }}>Quick add:</div>
+                          <div style={{ maxHeight:120, overflowY:'auto' }}>
+                            {FEATURE_SUGGESTIONS.filter(f => !existingFeatures.includes(f)).map(f => (
+                              <button key={f} style={S.fChip(false)}
+                                onClick={() => addFeature(plan.id, f)}>
+                                + {f}
+                              </button>
+                            ))}
+                          </div>
+
+                          {/* Custom feature input */}
+                          <div style={{ display:'flex', gap:6, marginTop:8 }}>
+                            <input type="text" style={{ ...S.input, flex:1 }}
+                              placeholder="Type a custom feature and press Enter"
+                              id={`custom-feat-${plan.id}`}
+                              onKeyDown={e => {
+                                if (e.key === 'Enter' && e.target.value.trim()) {
+                                  addFeature(plan.id, e.target.value.trim());
+                                  e.target.value = '';
+                                }
+                              }} />
+                            <button
+                              onClick={() => {
+                                const el = document.getElementById(`custom-feat-${plan.id}`);
+                                if (el && el.value.trim()) { addFeature(plan.id, el.value.trim()); el.value = ''; }
+                              }}
+                              style={{ padding:'7px 12px', borderRadius:7, background:'rgba(124,92,252,.15)', border:'1px solid rgba(124,92,252,.3)', color:'var(--vi)', fontSize:'.72rem', cursor:'pointer', whiteSpace:'nowrap' }}>
+                              + Add
+                            </button>
+                          </div>
+                        </div>
+
+                        {/* Plan actions */}
+                        <div style={{ display:'flex', gap:8, justifyContent:'space-between', marginTop:14, paddingTop:12, borderTop:'1px solid var(--edge)' }}>
+                          <button onClick={() => removePlan(plan.id)}
+                            style={{ padding:'6px 14px', borderRadius:7, background:'rgba(212,80,106,.08)', border:'1px solid rgba(212,80,106,.2)', color:'var(--ro)', fontSize:'.72rem', cursor:'pointer', fontWeight:600 }}>
+                            Delete Plan
+                          </button>
+                          <button onClick={() => setExpandedPlan(null)}
+                            style={{ padding:'6px 14px', borderRadius:7, background:'transparent', border:'1px solid var(--edge2)', color:'var(--sub)', fontSize:'.72rem', cursor:'pointer' }}>
+                            Collapse
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          )}
+
+          {/* Save pricing */}
+          <div style={{ marginTop:12, display:'flex', gap:8 }}>
+            <button className="save-btn" style={{ flex:1 }}
+              onClick={handleSavePricing} disabled={savingPricing}>
+              {savingPricing ? 'Saving...' : 'Save All Plans'}
             </button>
             <button onClick={loadData}
               style={{ padding:'9px 14px', borderRadius:7, background:'transparent', border:'1px solid var(--edge2)', color:'var(--sub)', fontFamily:'var(--fb)', fontSize:'.76rem', cursor:'pointer' }}>
               Reset
             </button>
           </div>
-
           {priceSaved && (
-            <div style={{ marginTop:10, padding:'8px 12px', borderRadius:7, background:'rgba(13,216,138,.1)', border:'1px solid rgba(13,216,138,.2)', fontSize:'.72rem', color:'var(--te)' }}>
-              ✓ Pricing updated successfully
+            <div style={{ marginTop:10, padding:'8px 12px', borderRadius:7, background:'rgba(13,216,138,.08)', border:'1px solid rgba(13,216,138,.2)', fontSize:'.72rem', color:'var(--te)' }}>
+              ✓ Plans saved — registration, billing, and admin pages updated.
             </div>
           )}
+        </div>
+      </div>
+
+      {/* ── Suggested subscription tiers (read-only guide) ─────────────── */}
+      <div className="lp" style={{ marginBottom:14 }}>
+        <div className="lp-t" style={{ marginBottom:8 }}>Suggested Subscription Structure</div>
+        <div style={{ fontSize:'.68rem', color:'var(--sub)', marginBottom:14, lineHeight:1.5 }}>
+          Reference guide for Kenyan school market pricing. Use the plan builder above to create and customise your actual plans.
+        </div>
+        <div className="tier-grid" style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:12 }}>
+          {[
+            {
+              name:'Starter', price:'KSh 4,999', color:'#0DD88A',
+              limit:'Up to 100 students · 3 staff',
+              trial:'14-day free trial',
+              features:['Student Management','Attendance Tracking','CBC Grading (PP1–Grade 6)','M-PESA Fee Tracking','Basic Report Cards','Email Support'],
+            },
+            {
+              name:'School', price:'KSh 9,999', color:'#7C5CFC',
+              limit:'Up to 300 students · 10 staff',
+              trial:'14-day free trial',
+              popular:true,
+              features:['Everything in Starter','Timetable Builder','Fee Structure Builder','NEMIS Data Export','Multi-Stream Support','CBC & 8-4-4 Support','SMS Notifications','Priority Support'],
+            },
+            {
+              name:'Academy', price:'KSh 24,999', color:'#E8A020',
+              limit:'Up to 1,000 students · Unlimited staff',
+              trial:'30-day free trial',
+              features:['Everything in School','Multi-Campus Support','Parent Portal','WhatsApp Integration','Custom Branding','Exam Scheduling','Library Management','Dedicated Account Manager'],
+            },
+          ].map(tier => (
+            <div key={tier.name} style={{
+              background:'var(--bg)', border:`1px solid ${tier.popular ? 'rgba(124,92,252,.3)' : 'var(--edge)'}`,
+              borderRadius:10, padding:14, position:'relative',
+            }}>
+              {tier.popular && (
+                <div style={{ position:'absolute', top:-1, right:14, background:'var(--vi)', color:'#fff', fontSize:'.5rem', fontWeight:700, padding:'2px 8px', borderRadius:'0 0 5px 5px', letterSpacing:'.06em' }}>
+                  POPULAR
+                </div>
+              )}
+              <div style={{ display:'flex', alignItems:'center', gap:7, marginBottom:8 }}>
+                <div style={{ width:8, height:8, borderRadius:'50%', background:tier.color }} />
+                <div style={{ fontFamily:'var(--fh)', fontSize:'.75rem', fontWeight:700, color:'#fff' }}>{tier.name}</div>
+              </div>
+              <div style={{ fontFamily:'var(--fh)', fontSize:'1rem', fontWeight:700, color:tier.color, marginBottom:3 }}>{tier.price}</div>
+              <div style={{ fontSize:'.6rem', color:'var(--sub)', marginBottom:3 }}>per term</div>
+              <div style={{ fontSize:'.62rem', color:'var(--sub)', marginBottom:10, paddingBottom:10, borderBottom:'1px solid var(--edge)' }}>{tier.limit}</div>
+              <div style={{ fontSize:'.6rem', color:'var(--te)', marginBottom:8 }}>✓ {tier.trial}</div>
+              {tier.features.map(f => (
+                <div key={f} style={{ display:'flex', alignItems:'flex-start', gap:6, marginBottom:4 }}>
+                  <span style={{ color:'var(--sub)', fontSize:'.6rem', flexShrink:0, marginTop:1 }}>–</span>
+                  <span style={{ fontSize:'.63rem', color:'var(--sub)' }}>{f}</span>
+                </div>
+              ))}
+            </div>
+          ))}
         </div>
       </div>
     </div>
