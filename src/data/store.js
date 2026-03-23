@@ -1672,13 +1672,14 @@ export async function getPlatformStats() {
     const pData = paymentsData || [];
 
     const totalSchools = sData.length;
-    const activeSchools = prData.filter(p => p.subscription_status === 'Active').length;
-    const suspendedSchools = prData.filter(p => p.subscription_status === 'Suspended').length;
     
-    // Deactivated means neither Active, Suspended, nor actually Expired (date-wise)
-    // But for simplicity in the current UI, we categorize based on status string
+    // Active means explicitly 'Active' or currently in 'Trial'
+    const activeSchools = prData.filter(p => ['Active', 'Trial'].includes(p.subscription_status)).length;
+    const suspendedSchools = prData.filter(p => p.subscription_status === 'Suspended').length;
     const expiredSchools = prData.filter(p => p.subscription_status === 'Expired').length;
-    const deactivatedSchools = prData.filter(p => !['Active', 'Suspended', 'Expired'].includes(p.subscription_status)).length;
+    
+    // Deactivated means anything else (e.g., 'Inactive', 'Deactivated')
+    const deactivatedSchools = prData.filter(p => !['Active', 'Trial', 'Suspended', 'Expired'].includes(p.subscription_status)).length;
     
     const totalRev = pData
       .filter(p => p.status === 'Approved')

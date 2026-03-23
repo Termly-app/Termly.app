@@ -210,10 +210,10 @@ export default function SuperAdmin({ currentUser, sidebarOpen, setSidebarOpen, o
     .filter(p => new Date(p.created_at) > sevenDaysAgo)
     .reduce((sum, p) => sum + (p.amount || 0), 0);
 
-  const totalSchools    = pStats?.totalSchools     ?? schools.length;
-  const activeCount     = pStats?.activeSubscribers ?? activeSchools.length;
-  const expiredCount    = pStats?.expiredSubscribers ?? expiredSchools.length;
-  const newSchoolsCount = pStats?.newSchools        ?? newThisMonth.length;
+  const totalSchools    = pStats?.totalSchools      ?? schools.length;
+  const activeCount     = pStats?.activeSchools      ?? activeSchools.length;
+  const expiredCount    = pStats?.expiredSchools     ?? expiredSchools.length;
+  const newSchoolsCount = pStats?.newSchoolsThisMonth ?? newThisMonth.length;
 
   const revChange    = totalRevenue > 0 && lastMonthRevenue > 0
     ? Math.round(((totalRevenue - lastMonthRevenue) / lastMonthRevenue) * 100)

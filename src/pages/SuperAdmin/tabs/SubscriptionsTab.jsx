@@ -19,20 +19,18 @@ export default function SubscriptionsTab({
     }).length,
   }));
 
-  const deactivatedCount = schools.filter(s => !isSchoolActive(s)).length;
-  const suspendedCount   = schools.filter(s =>
-    s.school_profiles?.[0]?.subscription_status === 'Suspended'
-  ).length;
+  const suspendedCount = schools.filter(s => s.school_profiles?.[0]?.subscription_status === 'Suspended').length;
+  const deactivatedCount = pStats?.deactivatedSchools ?? schools.filter(s => !isSchoolActive(s) && s.school_profiles?.[0]?.subscription_status !== 'Suspended' && s.school_profiles?.[0]?.subscription_status !== 'Expired').length;
 
   return (
     <div className="tv">
       {/* Status KPIs */}
       <div className="kpi-grid" style={{ marginBottom:14 }}>
         {[
-          { a:'var(--te)',  c:'ni-t', l:'Active',      i:<CheckIcon size={14} />, v: pStats?.activeSchools ?? activeCount,           ch:`${totalSchools ? Math.round(((pStats?.activeSchools ?? activeCount) / totalSchools) * 100) : 0}% of total`, up:true  },
-          { a:'var(--sub)', c:'ni-d', l:'Deactivated', i:<ClockIcon size={14} />, v: pStats?.deactivatedSchools ?? deactivatedCount, ch:'Awaiting payment', up:false },
-          { a:'var(--am)',  c:'ni-a', l:'Suspended',   i:<AlertIcon size={14} />, v: pStats?.suspendedSchools ?? suspendedCount,     ch:'Admin action',     up:false },
-          { a:'var(--ro)',  c:'ni-r', l:'Expired',     i:<AlertIcon size={14} />, v: pStats?.expiredSchools ?? expiredCount,         ch:'Needs renewal',    up:false },
+          { a:'var(--te)',  c:'ni-t', l:'Active',      i:<CheckIcon size={14} />, v: activeCount,           ch:`${totalSchools ? Math.round((activeCount / totalSchools) * 100) : 0}% of total`, up:true  },
+          { a:'var(--sub)', c:'ni-d', l:'Deactivated', i:<ClockIcon size={14} />, v: deactivatedCount,      ch:'Awaiting payment', up:false },
+          { a:'var(--am)',  c:'ni-a', l:'Suspended',   i:<AlertIcon size={14} />, v: suspendedCount,        ch:'Admin action',     up:false },
+          { a:'var(--ro)',  c:'ni-r', l:'Expired',     i:<AlertIcon size={14} />, v: expiredCount,          ch:'Needs renewal',    up:false },
         ].map((k, i) => (
           <div className="kpi-card" key={i}>
             <div className="kpi-accent" style={{ background:k.a }} />
