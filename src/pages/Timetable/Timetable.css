@@ -14,7 +14,7 @@
   display:flex; align-items:center; justify-content:center; flex-shrink:0;
   color:rgba(111,82,232,.8);
 }
-.tt-title { font-family:'Space Mono',monospace; font-size:1rem; font-weight:700; color:#fff; }
+.tt-title { font-family:'Inter',sans-serif; font-size:1.1rem; font-weight:700; color:#fff; letter-spacing: -0.01em; }
 .tt-sub   { font-size:.7rem; color:var(--text-muted,#556558); margin-top:2px; }
 .tt-header-actions { display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
 
@@ -135,7 +135,7 @@
   border-bottom:1px solid rgba(255,255,255,.03);
   vertical-align:middle; width:90px;
 }
-.tt-time-label { font-family:'Space Mono',monospace; font-size:.63rem; font-weight:700; color:var(--text,#D0DAD2); }
+.tt-time-label { font-family:'Inter',sans-serif; font-size:.68rem; font-weight:700; color:var(--text,#D0DAD2); }
 .tt-time-range { font-size:.57rem; color:var(--text-muted,#556558); margin-top:2px; }
 .tt-break-row td {
   background:rgba(255,255,255,.015); text-align:center; padding:7px;
@@ -288,7 +288,7 @@
   border-radius:10px; padding:16px;
 }
 .tt-config-hd { display:flex; align-items:center; justify-content:space-between; margin-bottom:14px; }
-.tt-config-title { font-family:'Space Mono',monospace; font-size:.8rem; font-weight:700; color:var(--text,#D0DAD2); }
+.tt-config-title { font-family:'Inter',sans-serif; font-size:.85rem; font-weight:700; color:var(--text,#D0DAD2); }
 .tt-config-sub   { font-size:.67rem; color:var(--text-muted,#556558); margin-top:2px; }
 .tt-days-row { display:flex; gap:5px; flex-wrap:wrap; margin-bottom:14px; }
 .tt-day-pill {
@@ -332,7 +332,7 @@
   border-radius:14px; padding:24px; width:100%; max-width:410px;
   position:relative; max-height:90vh; overflow-y:auto;
 }
-.tt-modal-title { font-family:'Space Mono',monospace; font-size:.88rem; font-weight:700; color:#fff; margin-bottom:3px; }
+.tt-modal-title { font-family:'Inter',sans-serif; font-size:.95rem; font-weight:700; color:#fff; margin-bottom:3px; }
 .tt-modal-sub   { font-size:.67rem; color:#556558; margin-bottom:18px; }
 .tt-modal-close {
   position:absolute; top:14px; right:14px; background:#0C0E0D;
