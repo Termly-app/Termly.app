@@ -300,9 +300,12 @@ export default function Dashboard({ currentUser, onLogout, currentPeriodId }) {
           </div>
           <div className="card-body" style={{ padding: 0 }}>
             {data.recentPayments.length === 0 ? (
-              <div className="empty-state">
-                <div className="empty-state-icon"><SearchIcon size={48} /></div>
-                <p>No recent payments found.</p>
+              <div className="empty-state" style={{ padding: '40px 20px' }}>
+                <div className="empty-state-icon" style={{ marginBottom: 12, opacity: 0.5 }}><CardIcon size={40} /></div>
+                <p style={{ margin: '0 0 16px 0', fontSize: '0.85rem' }}>No fee payments recorded this term.</p>
+                <Link to="/fees" className="btn btn-primary btn-sm">
+                  Record First Payment
+                </Link>
               </div>
             ) : (
               data.recentPayments.map((p, i) => (
@@ -352,42 +355,55 @@ export default function Dashboard({ currentUser, onLogout, currentPeriodId }) {
           <span className="badge badge-info">{data.totalStudents} Students</span>
         </div>
         <div className="card-body">
-          <div className="cbc-structure-grid">
-            {Object.entries(data.schoolStructure).map(([levelName, levelData]) => {
-              const colors = levelColors[levelName] || levelColors['Early Years'];
-              const icon   = levelIcons[levelName] || <BookIcon size={14} />;
-              return (
-                <div key={levelName} className="cbc-level-card-refined">
-                  <div className="cbc-level-header-refined" style={{ background: colors.gradient }}>
-                    <span className="cbc-level-icon-glow">{icon}</span>
-                    <div>
-                      <div className="cbc-level-name-alt">{levelName}</div>
-                      <div className="cbc-level-count-alt">{levelData.totalStudents} Students</div>
-                    </div>
-                  </div>
-                  <div className="cbc-grades-list-refined">
-                    {Object.entries(levelData.grades).map(([grade, info]) => {
-                      const perfColor = info.avgPerformance >= 70 ? 'var(--success)' : info.avgPerformance >= 50 ? 'var(--warning)' : 'var(--danger)';
-                      return (
-                        <div key={grade} className="cbc-grade-row-refined">
-                          <span className="grade-indicator" style={{ background: colors.accent }} />
-                          <span className="grade-name">{grade}</span>
-                          <div className="grade-stats-box">
-                            <span className="count-pill" style={{ display:'flex', alignItems:'center', gap:4 }}>{info.count} <UserIcon size={10} /></span>
-                            {info.avgPerformance > 0 && (
-                              <span className="perf-pill" style={{ borderColor: perfColor, color: perfColor }}>
-                                {info.avgPerformance}%
-                              </span>
-                            )}
-                          </div>
+            {Object.keys(data.schoolStructure).length === 0 ? (
+              <div className="empty-state" style={{ padding: '60px 20px', textAlign: 'center' }}>
+                <div className="empty-state-icon" style={{ marginBottom: 16, opacity: 0.5 }}><StudentIcon size={64} /></div>
+                <h4 style={{ margin: '0 0 8px 0', color: 'var(--text)' }}>Your School is Empty</h4>
+                <p style={{ margin: '0 0 20px 0', fontSize: '0.88rem', color: 'var(--text-secondary)', maxWidth: 300, marginInline: 'auto' }}>
+                  Add your students to sessions to see the CBC structure and academic analytics.
+                </p>
+                <Link to="/students" className="btn btn-primary">
+                  <PlusIcon size={16} /> Add Students Now
+                </Link>
+              </div>
+            ) : (
+              <div className="cbc-structure-grid">
+                {Object.entries(data.schoolStructure).map(([levelName, levelData]) => {
+                  const colors = levelColors[levelName] || levelColors['Early Years'];
+                  const icon   = levelIcons[levelName] || <BookIcon size={14} />;
+                  return (
+                    <div key={levelName} className="cbc-level-card-refined">
+                      <div className="cbc-level-header-refined" style={{ background: colors.gradient }}>
+                        <span className="cbc-level-icon-glow">{icon}</span>
+                        <div>
+                          <div className="cbc-level-name-alt">{levelName}</div>
+                          <div className="cbc-level-count-alt">{levelData.totalStudents} Students</div>
                         </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
+                      </div>
+                      <div className="cbc-grades-list-refined">
+                        {Object.entries(levelData.grades).map(([grade, info]) => {
+                          const perfColor = info.avgPerformance >= 70 ? 'var(--success)' : info.avgPerformance >= 50 ? 'var(--warning)' : 'var(--danger)';
+                          return (
+                            <div key={grade} className="cbc-grade-row-refined">
+                              <span className="grade-indicator" style={{ background: colors.accent }} />
+                              <span className="grade-name">{grade}</span>
+                              <div className="grade-stats-box">
+                                <span className="count-pill" style={{ display:'flex', alignItems:'center', gap:4 }}>{info.count} <UserIcon size={10} /></span>
+                                {info.avgPerformance > 0 && (
+                                  <span className="perf-pill" style={{ borderColor: perfColor, color: perfColor }}>
+                                    {info.avgPerformance}%
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
         </div>
       </div>
 

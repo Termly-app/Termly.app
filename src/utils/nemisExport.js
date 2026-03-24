@@ -85,9 +85,9 @@ function formatDOB(dateStr) {
 function normaliseGender(g) {
   if (!g) return '';
   const v = g.toLowerCase();
-  if (v === 'm' || v === 'male' || v === 'boy')   return 'Male';
-  if (v === 'f' || v === 'female' || v === 'girl') return 'Female';
-  return g;
+  if (v === 'm' || v === 'male' || v === 'boy')   return 'M';
+  if (v === 'f' || v === 'female' || v === 'girl') return 'F';
+  return g.toUpperCase().charAt(0);
 }
 
 /**
@@ -121,9 +121,9 @@ export function exportNEMIS(students, options = {}) {
       cell(s.father_phone     || ''),
       cell(s.mother_name      || ''),
       cell(s.mother_phone     || ''),
-      cell(s.guardian_name    || s.parent_name      || ''),
-      cell(s.guardian_phone   || s.parent_phone     || ''),
-      cell(s.guardian_relationship || ''),
+      cell(s.guardian_name    || s.parent_name      || s.father_name || s.mother_name || ''),
+      cell(s.guardian_phone   || s.parent_phone     || s.father_phone || s.mother_phone || ''),
+      cell(s.guardian_relationship || (s.father_name ? 'Father' : s.mother_name ? 'Mother' : 'Guardian')),
     ].join(','));
 
   return [NEMIS_HEADERS.join(','), ...rows].join('\n');

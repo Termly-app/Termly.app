@@ -6,6 +6,8 @@ import {
   TeacherIcon, RocketIcon, AlertIcon, LogoutIcon, ClockIcon, SearchIcon, DashboardIcon,
   LeafIcon, GraduationIcon, PlusIcon, EditIcon, DeleteIcon, SchoolIcon, PrintIcon, PhoneIcon, BookIcon
 } from '../components/CommonIcons';
+import ConfirmModal from '../components/Common/ConfirmModal';
+import { useConfirm } from '../components/Common/useConfirm';
 
 export default function Teachers({ currentUser, currentPeriodId }) {
   const isAdmin = currentUser?.role === 'Owner' || currentUser?.role === 'Admin';
@@ -19,6 +21,7 @@ export default function Teachers({ currentUser, currentPeriodId }) {
   const [settings, setSettings] = useState({});
   const [registeredUsers, setRegisteredUsers] = useState([]);
   const [loading, setLoading] = useState(true);
+  const { confirm, confirmModal } = useConfirm();
 
   const loadData = async () => {
     setLoading(true);
@@ -62,7 +65,12 @@ export default function Teachers({ currentUser, currentPeriodId }) {
   };
 
   const handleDelete = async (id) => {
-    if (confirm('Remove this teacher?')) { 
+    const ok = await confirm({ 
+      title: 'Remove Teacher', 
+      message: 'Are you sure you want to remove this teacher? This will also unassign them from all classes.', 
+      variant: 'danger' 
+    });
+    if (ok) { 
       setLoading(true);
       try { await deleteTeacher(id); await refresh(); } 
       catch(err){ alert(err.message); } finally { setLoading(false); }
@@ -193,6 +201,7 @@ export default function Teachers({ currentUser, currentPeriodId }) {
         <TeacherModal teacher={editingTeacher} onSave={handleSave}
           onClose={() => { setShowModal(false); setEditingTeacher(null); }} isAdmin={isAdmin} />
       )}
+      <ConfirmModal {...confirmModal} />
     </div>
   );
 }
