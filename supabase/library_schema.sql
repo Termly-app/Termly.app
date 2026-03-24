@@ -40,14 +40,22 @@ ALTER TABLE public.library_books ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.library_borrows ENABLE ROW LEVEL SECURITY;
 
 -- Books
-DROP POLICY IF EXISTS "Schools can manage their own books" ON public.library_books;
-CREATE POLICY "Schools can manage their own books" ON public.library_books
-    FOR ALL USING (school_id = (SELECT school_id FROM public.profiles WHERE auth_user_id = auth.uid()));
+DROP POLICY IF EXISTS "library_books_select" ON public.library_books;
+CREATE POLICY "library_books_select" ON public.library_books 
+    FOR SELECT USING (school_id = public.get_auth_school_id() OR public.is_school_owner(school_id));
+
+DROP POLICY IF EXISTS "library_books_modify" ON public.library_books;
+CREATE POLICY "library_books_modify" ON public.library_books 
+    FOR ALL USING (public.is_school_owner(school_id) OR public.is_school_admin(school_id));
 
 -- Borrows
-DROP POLICY IF EXISTS "Schools can manage their own borrows" ON public.library_borrows;
-CREATE POLICY "Schools can manage their own borrows" ON public.library_borrows
-    FOR ALL USING (school_id = (SELECT school_id FROM public.profiles WHERE auth_user_id = auth.uid()));
+DROP POLICY IF EXISTS "library_borrows_select" ON public.library_borrows;
+CREATE POLICY "library_borrows_select" ON public.library_borrows 
+    FOR SELECT USING (school_id = public.get_auth_school_id() OR public.is_school_owner(school_id));
+
+DROP POLICY IF EXISTS "library_borrows_modify" ON public.library_borrows;
+CREATE POLICY "library_borrows_modify" ON public.library_borrows 
+    FOR ALL USING (public.is_school_owner(school_id) OR public.is_school_admin(school_id));
 
 -- ── INDEXES ──────────────────────────────────────────────────────────────────
 
