@@ -2270,7 +2270,7 @@ export async function checkTeacherConflict(schoolId, periodId, teacherId, day, s
   return null;
 }
 
-export async function getSubjectAssignments(schoolId, periodId, classGrade, stream = null) {
+export async function getClassSubjectAssignments(schoolId, periodId, classGrade, stream = null) {
   let query = supabase
     .from('subject_assignments')
     .select('*')
@@ -2284,7 +2284,7 @@ export async function getSubjectAssignments(schoolId, periodId, classGrade, stre
   return data || [];
 }
 
-export async function saveSubjectAssignment(schoolId, periodId, assignment) {
+export async function saveClassSubjectAssignment(schoolId, periodId, assignment) {
   const { error } = await supabase
     .from('subject_assignments')
     .upsert({
