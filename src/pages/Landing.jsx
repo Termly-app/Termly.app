@@ -228,8 +228,8 @@ export default function Landing() {
             <span className="bdot"></span>
             Built for Kenyan Schools · CBC Ready
           </div>
-          <h1 className="hero-h1">The #1 CBC-Compliant School System in Kenya<br/><span className="h1-dim">— students, finances, results —</span><br/>all in one place.</h1>
-          <p className="hero-sub">ShuleSoft is built for the modern Kenyan classroom. Manage your secondary school grading and <strong>CBC learner portfolios</strong> with a system that's as fast as you are.</p>
+          <h1 className="hero-h1">Manage your entire school easily<br/><span className="h1-dim">— students, fees, results —</span><br/>all in one system.</h1>
+          <p className="hero-sub">Built for Kenyan schools. Stop juggling bank slips and paper registers. Automate your fee collection, secondary school grading, and CBC portfolios with ShuleSoft.</p>
           <div className="hero-btns">
             <Link to="/register" className="btn-p">
               Get access
