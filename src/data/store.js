@@ -811,12 +811,14 @@ export async function addStudent(student) {
   if (error) throw error;
 
   // Create fee record for new student
+  const baseFee = p.gradeFees?.[student.class] || TERM_FEE;
   await supabase.from('fees').insert({
     school_id: _currentSchoolId,
     student_id: data.id,
-    total_fee: TERM_FEE,
+    period_id: _currentPeriodId,
+    total_fee: baseFee,
     paid: 0,
-    balance: TERM_FEE,
+    balance: baseFee,
   });
 
   await logPlatformActivity('STUDENT_ADD', `Added new student: ${student.name}`);

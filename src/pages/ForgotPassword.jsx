@@ -8,21 +8,40 @@ const ForgotPassword = () => {
     const [submitted, setSubmitted] = useState(false);
     const [error, setError] = useState(null);
 
+    const [resendLoading, setResendLoading] = useState(false);
+    const [lastSent, setLastSent] = useState(0);
+
     const handleSubmit = async (e) => {
-        e.preventDefault();
+        if (e) e.preventDefault();
+        
+        // Rate limit frontend slightly (60s)
+        const now = Date.now();
+        if (now - lastSent < 60000) {
+            setError(`Please wait ${Math.ceil((60000 - (now - lastSent)) / 1000)} seconds before resending.`);
+            return;
+        }
+
         setLoading(true);
+        setResendLoading(true);
         setError(null);
 
-        const { error } = await supabase.auth.resetPasswordForEmail(email, {
-            redirectTo: `${window.location.origin}/reset-password`,
-        });
+        try {
+            const { error } = await supabase.auth.resetPasswordForEmail(email, {
+                redirectTo: `${window.location.origin}/reset-password`,
+            });
 
-        if (error) {
-            setError(error.message);
-        } else {
-            setSubmitted(true);
+            if (error) {
+                setError(error.message);
+            } else {
+                setSubmitted(true);
+                setLastSent(Date.now());
+            }
+        } catch (err) {
+            setError("Authentication service is temporarily unavailable. Please try again later.");
+        } finally {
+            setLoading(false);
+            setResendLoading(false);
         }
-        setLoading(false);
     };
 
     return (
@@ -79,12 +98,33 @@ const ForgotPassword = () => {
                                 <p className="res-fsub">
                                     We've sent a recovery link to <strong>{email}</strong>. Check your inbox and follow the instructions.
                                 </p>
-                                <div style={{ background: '#ecfdf5', color: '#10b981', padding: '20px', borderRadius: '16px', textAlign: 'center', marginBottom: '32px' }}>
+                                <div style={{ background: '#ecfdf5', color: '#10b981', padding: '20px', borderRadius: '16px', textAlign: 'center', marginBottom: '24px' }}>
                                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ width: '48px', height: '48px', marginBottom: '12px' }}>
                                         <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>
                                     </svg>
                                     <div style={{ fontWeight: 700 }}>Recovery Link Sent</div>
                                 </div>
+
+                                {/* Troubleshooting Block */}
+                                <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '16px', padding: '16px', marginBottom: '32px' }}>
+                                    <div style={{ fontSize: '0.8rem', fontWeight: 700, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '10px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                        <span style={{ color: '#6366f1' }}>💡</span> Didn't receive an email?
+                                    </div>
+                                    <ul style={{ margin: 0, paddingLeft: '18px', fontSize: '0.85rem', color: '#64748b', lineHeight: 1.6 }}>
+                                        <li>Check your <strong>Spam/Junk</strong> folder.</li>
+                                        <li>Verify that <strong>{email}</strong> is spelled correctly.</li>
+                                        <li>Wait up to 5 minutes (delivery can be delayed).</li>
+                                        <li>Ensure <code>noreply@mail.supabase.co</code> is not blocked.</li>
+                                    </ul>
+                                    <button 
+                                        onClick={handleSubmit} 
+                                        disabled={resendLoading || (Date.now() - lastSent < 60000)}
+                                        style={{ marginTop: '14px', background: 'none', border: 'none', color: '#5B3EF5', fontWeight: 700, fontSize: '0.85rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', padding: 0 }}
+                                    >
+                                        {resendLoading ? 'Sending...' : '→ Resend Recovery Link'}
+                                    </button>
+                                </div>
+
                                 <Link to="/login" className="res-cta" style={{ textDecoration: 'none' }}>
                                     Back to Login
                                 </Link>

@@ -12,6 +12,8 @@ export default function Register() {
   
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
+  const [resendLoading, setResendLoading] = useState(false);
+  const [lastResent, setLastResent] = useState(0);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
@@ -92,7 +94,8 @@ export default function Register() {
         options: {
           data: {
             full_name: formData.adminName
-          }
+          },
+          emailRedirectTo: `${window.location.origin}/login`
         }
       });
 
@@ -424,9 +427,38 @@ export default function Register() {
               <div className="success-icon"><RocketIcon size={64} color="var(--primary)" /></div>
               <div className="res-ftitle">Registration Successful!</div>
               <p className="res-fsub">Your school <strong>{formData.schoolName}</strong> has been registered on ShuleSoft.</p>
-              <div className="success-box">
+              <div className="success-box" style={{ textAlign: 'left' }}>
                 <p>An activation email has been sent to your <strong>School Email:</strong><br/><strong>{formData.schoolEmail}</strong></p>
-                <p style={{ marginTop: 12, opacity: 0.8, fontSize: '0.9rem' }}>Please check the school's inbox to activate your workspace. This school email will be your <strong>Super Admin</strong> login ID.</p>
+                
+                <div style={{ marginTop: 20, padding: 16, background: 'rgba(91, 62, 245, 0.05)', borderRadius: 12, border: '1px solid rgba(91, 62, 245, 0.1)' }}>
+                  <div style={{ fontWeight: 700, fontSize: '0.85rem', color: 'var(--primary)', marginBottom: 8, display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <span>💡</span> Didn't get the email?
+                  </div>
+                  <ul style={{ margin: 0, paddingLeft: 18, fontSize: '0.8rem', color: '#6B7280', lineHeight: 1.5 }}>
+                    <li>Check your <strong>Spam/Junk</strong> folder.</li>
+                    <li>Wait ~5 minutes for delivery.</li>
+                    <li>Look for sender <code>noreply@mail.supabase.co</code>.</li>
+                  </ul>
+                  <button 
+                    onClick={async () => {
+                      if (Date.now() - lastResent < 60000) return;
+                      setResendLoading(true);
+                      try {
+                        const { error } = await supabase.auth.resend({ type: 'signup', email: formData.schoolEmail });
+                        if (error) throw error;
+                        setLastResent(Date.now());
+                        alert("Activation email resent!");
+                      } catch (e) { alert(e.message); }
+                      finally { setResendLoading(false); }
+                    }}
+                    disabled={resendLoading || (Date.now() - lastResent < 60000)}
+                    style={{ marginTop: 12, background: 'none', border: 'none', color: 'var(--primary)', fontWeight: 700, fontSize: '0.8rem', cursor: 'pointer', padding: 0 }}
+                  >
+                    {resendLoading ? 'Sending...' : '→ Resend Activation Email'}
+                  </button>
+                </div>
+
+                <p style={{ marginTop: 16, opacity: 0.8, fontSize: '0.85rem' }}>This school email will be your <strong>Super Admin</strong> login ID.</p>
                 <Link to="/login" className="res-cta success-cta">Proceed to Login</Link>
               </div>
             </div>
