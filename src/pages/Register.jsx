@@ -29,7 +29,7 @@ export default function Register() {
   const [formData, setFormData] = useState({
     schoolName: '',
     schoolEmail: '',
-    plan: searchParams.get('plan') || 'School',
+    plan: searchParams.get('plan') || 'Starter Plan',
     adminName: '',
     password: '',
     confirmPassword: '',

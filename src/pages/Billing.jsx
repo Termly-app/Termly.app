@@ -164,7 +164,7 @@ export default function Billing() {
               </div>
               <div>
                 <h4 style={{ fontSize: '1.5rem', fontWeight: 900, color: 'var(--text)', margin: 0, letterSpacing: '-0.5px' }}>
-                  {profile.subscriptionPlan?.toUpperCase() || 'STARTER'}
+                  {profile.subscriptionPlan?.toUpperCase() || 'STARTER PLAN'}
                 </h4>
                 <div style={{ display: 'flex', gap: 8, marginTop: 4 }}>
                   <p style={{ margin: 0, opacity: 0.7, fontSize: '0.9rem', fontWeight: 500 }}>
@@ -391,7 +391,7 @@ export default function Billing() {
                   <CheckIcon size={14} color="var(--primary)" /> Up to {p.limit?.toLocaleString()} students
                 </li>
                 <li style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8, fontSize: '0.9rem', opacity: 0.8 }}>
-                  <CheckIcon size={14} color="var(--primary)" /> Max 5 staff seats
+                  <CheckIcon size={14} color="var(--primary)" /> Max {p.admins || 5} staff seats
                 </li>
                 {p.features?.map((f, i) => (
                   <li key={i} style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8, fontSize: '0.9rem', opacity: 0.8 }}>

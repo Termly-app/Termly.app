@@ -31,7 +31,8 @@ export const planAmt = (plan, settings) => {
     const key = Object.keys(settings.pricing).find(k => k.toLowerCase() === p);
     if (key) return settings.pricing[key].price;
   }
-  return { champe: 50000, starter: 5999 }[p] || 5999;
+  const fallbacks = { 'starter plan': 4000, 'growth plan': 10000, 'pro plan': 20000, 'enterprise': 35000 };
+  return fallbacks[p] || 4000;
 };
 
 // ── Get all plans from settings ──────────────────────────────────────────

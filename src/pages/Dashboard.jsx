@@ -122,10 +122,10 @@ export default function Dashboard({ currentUser, onLogout, currentPeriodId }) {
     return { grade: '?', color: '#64748b' };
   };
 
-  const plan = data.profile?.subscription_plan || data.profile?.subscriptionPlan || 'Fala';
+  const plan = data.profile?.subscription_plan || data.profile?.subscriptionPlan || 'Starter Plan';
   const pricing = data.platformSettings?.pricing || {};
   const planKey = Object.keys(pricing).find(k => k.toLowerCase() === plan.toLowerCase());
-  const seatLimit = 5; // Forced 5-seat limit across all plans for consistency
+  const seatLimit = planKey ? (pricing[planKey].admins || 5) : 5;
   const totalStaff = data.adminUsers?.length || 0;
   
   const kpis = [

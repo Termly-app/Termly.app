@@ -131,10 +131,10 @@ export default function Teachers({ currentUser, currentPeriodId }) {
               className="btn btn-primary" 
               onClick={() => { setEditingTeacher(null); setShowModal(true); }}
               disabled={!editingTeacher && (() => {
-                const curPlan = profile.subscription_plan || profile.subscriptionPlan || 'Fala';
+                const curPlan = profile.subscription_plan || profile.subscriptionPlan || 'Starter Plan';
                 const pricing = settings?.pricing || {};
                 const planKey = Object.keys(pricing).find(k => k.toLowerCase() === curPlan.toLowerCase());
-                const seatLimit = planKey ? (pricing[planKey].limit || 5) : 5;
+                const seatLimit = planKey ? (pricing[planKey].admins || 5) : 5;
                 return registeredUsers.length >= seatLimit;
               })()}
             >

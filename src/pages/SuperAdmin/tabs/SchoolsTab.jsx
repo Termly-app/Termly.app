@@ -79,13 +79,13 @@ export default function SchoolsTab({
                   const p = s.school_profiles?.[0] || {};
                   const isActive = isSchoolActive(s);
 
-                  let curPlan   = s.plan || p.subscription_plan || 'Starter';
-                  if (['fala', 'starter plan'].includes(curPlan.toLowerCase())) curPlan = 'Starter';
+                  let curPlan   = s.plan || p.subscription_plan || 'Starter Plan';
+                  if (['fala', 'starter', 'basic'].includes(curPlan.toLowerCase())) curPlan = 'Starter Plan';
                   const pricing   = settings?.pricing || {};
                   const planKey   = Object.keys(pricing).find(k => k.toLowerCase() === curPlan.toLowerCase());
                   const planInfo  = planKey ? pricing[planKey] : { price:5999, limit:5 };
                   const studentLimit = planInfo.limit || 150;
-                  const adminLimit   = 5; // Forced to 5 as per user request
+                  const adminLimit   = planInfo.admins || 5;
 
                   const schoolRevenue = (approvedPayments || [])
                     .filter(ap => ap.school_id === s.id)

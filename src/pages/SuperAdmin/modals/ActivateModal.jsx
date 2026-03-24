@@ -38,7 +38,7 @@ export default function ActivateModal({
           <div className="mir">
             <span className="mil">Plan</span>
             <span style={{ fontSize:'.75rem', color:'var(--txt)', textTransform:'capitalize' }}>
-              {activateModal.school_profiles?.[0]?.subscription_plan || 'Starter'} Plan
+              {activateModal.school_profiles?.[0]?.subscription_plan || 'Starter Plan'}
             </span>
           </div>
           <div className="mir">

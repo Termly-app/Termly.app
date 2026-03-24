@@ -42,7 +42,7 @@ export default function Security({ currentUser }) {
     try { setUsers(await getUsers()); } catch (err) { console.error(err); }
   };
 
-  const planName = profile.subscriptionPlan || 'Fala';
+  const planName = profile.subscriptionPlan || 'Starter Plan';
   
   // Try to find the plan case-insensitively in settings
   const pricing = settings?.pricing || {};
@@ -50,15 +50,14 @@ export default function Security({ currentUser }) {
   
   // Fallbacks in case settings fail or plan isn't found
   const fallbackPlans = {
-    "Fala": { price: 5999, limit: 150 },
-    "Champe": { price: 50000, limit: 5000 },
-    "Starter": { price: 5999, limit: 150 }
+    "Starter Plan": { price: 5999, limit: 150 },
+    "Champe": { price: 50000, limit: 5000 }
   };
   
-  const planDetails = activePlanKey ? pricing[activePlanKey] : (fallbackPlans[planName] || fallbackPlans["Fala"]);
+  const planDetails = activePlanKey ? pricing[activePlanKey] : (fallbackPlans[planName] || fallbackPlans["Starter Plan"]);
   
   // Seat limit is for STAFF (Admins + Teachers)
-  let seatLimit = activePlanKey ? (pricing[activePlanKey].seat_limit || 5) : 5;
+  let seatLimit = activePlanKey ? (pricing[activePlanKey].admins || pricing[activePlanKey].seat_limit || 5) : 5;
   
   // Strict override for Starter/Fala plans (5 staff seats)
   if (planName.toLowerCase().includes('starter') || planName.toLowerCase().includes('fala')) {

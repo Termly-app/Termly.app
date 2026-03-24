@@ -32,7 +32,7 @@ export default function PlanModal({
         <div style={{ background:'var(--bg)', border:'1px solid var(--edge)', borderRadius:8, padding:'10px 13px', marginBottom:16, display:'flex', alignItems:'center', justifyContent:'space-between' }}>
           <span style={{ fontSize:'.65rem', color:'var(--sub)' }}>Current plan</span>
           <span style={{ fontFamily:'var(--fh)', fontSize:'.75rem', fontWeight:700, color:'var(--txt)', textTransform:'capitalize' }}>
-            {planModal.currentPlan} Plan
+            {planModal.currentPlan}
           </span>
         </div>
 
@@ -78,7 +78,7 @@ export default function PlanModal({
             opacity:  planSaving ? .7 : 1,
             transition:'all .25s',
           }}>
-          {planSaving ? 'Updating...' : chosenPlan ? `Confirm — Switch to ${chosenPlan} Plan` : 'Select a plan above'}
+          {planSaving ? 'Updating...' : chosenPlan ? `Confirm — Switch to ${chosenPlan}` : 'Select a plan above'}
         </button>
       </div>
     </div>

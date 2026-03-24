@@ -344,23 +344,24 @@ export default function SuperAdmin({ currentUser, sidebarOpen, setSidebarOpen, o
     
     // 2. Unique list, prioritizing active plans and normalizing legacy names
     let planLabels = [...new Set([...activePlanNames, ...inUsePlanNames])].map(n => {
-      if (n?.toLowerCase() === 'fala') return 'Starter';
+      const lower = n?.toLowerCase();
+      if (lower === 'fala' || lower === 'starter' || lower === 'basic') return 'Starter Plan';
       return n;
     }).filter(Boolean);
     
     // De-duplicate after normalization
     planLabels = [...new Set(planLabels)];
-    if (planLabels.length === 0) planLabels.push('Starter', 'Pro', 'Enterprise');
+    if (planLabels.length === 0) planLabels.push('Starter Plan', 'Growth Plan', 'Pro Plan', 'Enterprise');
 
     const active = planLabels.map(p => activeSchools.filter(s => {
       const d = s.school_profiles?.[0] || {};
-      const sPlan = (s.plan || d.subscription_plan || 'Starter').toLowerCase();
+      const sPlan = (s.plan || d.subscription_plan || 'Starter Plan').toLowerCase();
       return sPlan === p.toLowerCase();
     }).length);
 
     const deact = planLabels.map(p => deactSchools.filter(s => {
       const d = s.school_profiles?.[0] || {};
-      const sPlan = (s.plan || d.subscription_plan || 'Starter').toLowerCase();
+      const sPlan = (s.plan || d.subscription_plan || 'Starter Plan').toLowerCase();
       return sPlan === p.toLowerCase();
     }).length);
 

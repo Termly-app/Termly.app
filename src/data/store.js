@@ -299,9 +299,17 @@ export async function getSchoolProfile() {
 
 // Helper to map DB columns to frontend shape with robust fallbacks
 function mapProfileData(data) {
-  let plan = data.subscription_plan || 'Starter';
-  // Normalize legacy names to Starter
-  if (['fala', 'starter plan', 'basic'].includes(plan.toLowerCase())) plan = 'Starter';
+  let plan = data.subscription_plan || 'Starter Plan';
+  // Normalize legacy names to Starter Plan
+  if (['fala', 'starter', 'basic'].includes(plan.toLowerCase())) plan = 'Starter Plan';
+
+  const mapped = {
+    'starter plan': 'Starter Plan',
+    'growth plan':  'Growth Plan',
+    'pro plan':    'Pro Plan',
+    'enterprise':   'Enterprise'
+  };
+  if (mapped[plan.toLowerCase()]) plan = mapped[plan.toLowerCase()];
 
   return {
     schoolName: data.school_name || DEFAULT_PROFILE.schoolName,
@@ -315,7 +323,7 @@ function mapProfileData(data) {
     customSubjects: data.custom_subjects || {},
     activeClasses: data.active_classes || DEFAULT_PROFILE.activeClasses,
     gradeFees: data.grade_fees || {},
-    subscriptionStatus: data.subscription_status || 'Trial',
+    subscriptionStatus: data.subscription_status || 'Inactive',
     subscriptionExpiry: data.subscription_expiry || null,
     lastPaymentStatus: data.last_payment_status || 'none',
     customExams: data.custom_exams || DEFAULT_PROFILE.customExams,
@@ -1501,8 +1509,10 @@ export async function getPlatformSettings() {
         phone: "+254712260057" 
       },
       pricing: (settings.pricing && Object.keys(settings.pricing).length > 0) ? settings.pricing : {
-        "Fala":   { "price": 5999,  "active": true, "limit": 5,  "features": ["profiles", "fees", "attendance", "reports"] },
-        "Champe": { "price": 50000, "active": true, "limit": 5000, "features": ["everything_starter", "cbc", "exams", "priority"] }
+        "Starter Plan": { "price": 4000,  "active": true, "limit": 150,  "admins": 5, "features": ["Student Management", "Attendance Tracking", "CBC Grading (PP1–Grade 6)", "M-PESA Fee Tracking", "Basic Report Cards"] },
+        "Growth Plan":  { "price": 10000, "active": true, "limit": 400,  "admins": 10, "features": ["Everything in Starter", "Timetable Builder", "Fee Structure Builder", "NEMIS Data Export", "CBC & 8-4-4 Support", "SMS Notifications"] },
+        "Pro Plan":     { "price": 20000, "active": true, "limit": 800,  "admins": 20, "features": ["Everything in Growth", "Multi-Campus Support", "Parent Portal", "WhatsApp Integration", "Custom Branding", "Exam Scheduling"] },
+        "Enterprise":   { "price": 35000, "active": true, "limit": 100000, "admins": 100, "features": ["Everything Pro", "Dedicated Account Manager", "Custom Features", "Unlimited Staff", "Priority 24/7 Support"] }
       },
       platform: settings.platform || {
         status_message: "",
@@ -1518,8 +1528,10 @@ export async function getPlatformSettings() {
       billing: { instructions: 'Pay via Business Till 908070 (ShuleSoft LTD)', term_price: 8400, trial_days: 30 },
       support: { email: "support@shulesoft.com", phone: "+254 700 000000" },
       pricing: { 
-        "Fala":   { "price": 5999,  "active": true, "limit": 5,  "features": ["profiles", "fees", "attendance", "reports"] },
-        "Champe": { "price": 50000, "active": true, "limit": 5000, "features": ["everything_starter", "cbc", "exams", "priority"] }
+        "Starter Plan": { "price": 4000,  "active": true, "limit": 150,  "admins": 5, "features": ["Student Management", "Attendance Tracking", "CBC Grading (PP1–Grade 6)", "M-PESA Fee Tracking", "Basic Report Cards"] },
+        "Growth Plan":  { "price": 10000, "active": true, "limit": 400,  "admins": 10, "features": ["Everything in Starter", "Timetable Builder", "Fee Structure Builder", "NEMIS Data Export", "CBC & 8-4-4 Support", "SMS Notifications"] },
+        "Pro Plan":     { "price": 20000, "active": true, "limit": 800,  "admins": 20, "features": ["Everything in Growth", "Multi-Campus Support", "Parent Portal", "WhatsApp Integration", "Custom Branding", "Exam Scheduling"] },
+        "Enterprise":   { "price": 35000, "active": true, "limit": 100000, "admins": 100, "features": ["Everything Pro", "Dedicated Account Manager", "Custom Features", "Unlimited Staff", "Priority 24/7 Support"] }
       },
       platform: { status_message: "", maintenance: false }
     };
@@ -1540,8 +1552,8 @@ export async function getPlanPrice(planName) {
     plan = settings.pricing[key];
   }
   
-  // Fallback to Starter or some default
-  plan = plan || settings.pricing["Starter"] || Object.values(settings.pricing)[0];
+  // Fallback to Starter Plan or some default
+  plan = plan || settings.pricing["Starter Plan"] || settings.pricing["Starter"] || Object.values(settings.pricing)[0];
   return plan?.price || 4999;
 }
 
