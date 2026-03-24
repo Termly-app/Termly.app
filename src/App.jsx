@@ -10,6 +10,7 @@ import {
   initActivePeriod,
   getCurrentPeriodId,
   checkIsSubscriptionActive,
+  checkIsPlatformAdmin,
   getFeeStructure,
   saveFeeStructure,
   deleteFeeItem,
@@ -41,6 +42,8 @@ import AboutUs         from './pages/AboutUs';
 import FAQ             from './pages/FAQ';
 import SecurityTrust   from './pages/SecurityTrust';
 import Docs            from './pages/Docs';
+import ForgotPassword  from './pages/ForgotPassword';
+import ResetPassword   from './pages/ResetPassword';
 import CustomCursor    from './components/Common/CustomCursor';
 import Loader          from './components/Common/Loader';
 import ScrollToTop     from './components/ScrollToTop';
@@ -333,6 +336,7 @@ function App() {
   const [subscriptionActive, setSubscriptionActive] = useState(true);
   const [currentPeriodId,    setPeriodId]           = useState(getCurrentPeriodId());
   const [periods,            setPeriods]            = useState([]);
+  const [isPlatformAdmin,    setIsPlatformAdmin]    = useState(false);
   const location = useLocation();
 
   useEffect(() => {
@@ -363,6 +367,10 @@ function App() {
             const isPlatAdmin = session.user.email && PLATFORM_ADMINS.includes(session.user.email);
             const isSubActive = await checkIsSubscriptionActive(profileData);
             setSubscriptionActive(isPlatAdmin || isSubActive);
+            
+            // Database-backed check for UI branching
+            const realIsPlatAdmin = await checkIsPlatformAdmin(session.user.email);
+            setIsPlatformAdmin(realIsPlatAdmin);
           }
         }
       } catch (err) {
@@ -403,10 +411,12 @@ function App() {
     await supabase.auth.signOut();
     setCurrentSchoolContext(null, null);
     setCurrentUser(null);
+    setIsPlatformAdmin(false);
   };
 
-  const isPlatformAdmin = currentUser?.email &&
+  const isPlatformAdminOld = currentUser?.email &&
     ['admin@shulesoft.com', 'shulesoft8@gmail.com'].includes(currentUser.email);
+  // We use the state variable isPlatformAdmin for the actual routes below
 
   // ── Auth loading ────────────────────────────────────────────────────────
   if (authLoading) return <Loader />;
@@ -427,6 +437,8 @@ function App() {
         <Route path="/about"              element={<AboutUs />} />
         <Route path="/faq"                element={<FAQ />} />
         <Route path="/docs"               element={<Docs />} />
+        <Route path="/forgot-password"    element={<ForgotPassword />} />
+        <Route path="/reset-password"     element={<ResetPassword />} />
         <Route path="/security-trust"     element={<SecurityTrust />} />
         <Route path="*"                   element={<Landing />} />
       </Routes>
@@ -442,6 +454,7 @@ function App() {
             <ErrorBoundary>
               <SuperAdmin
                 currentUser={currentUser}
+                isPlatformAdmin={isPlatformAdmin}
                 sidebarOpen={sidebarOpen}
                 setSidebarOpen={setSidebarOpen}
                 onSignOut={handleLogout}

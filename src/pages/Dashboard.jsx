@@ -82,9 +82,8 @@ export default function Dashboard({ currentUser, onLogout, currentPeriodId }) {
     };
   }, [currentPeriodId, currentUser]);
 
-  const PLATFORM_ADMINS = ['admin@shulesoft.com', 'shulesoft8@gmail.com'];
-  const isPlatformAdmin = currentUser?.email && PLATFORM_ADMINS.includes(currentUser.email);
-  if (isPlatformAdmin) return <Navigate to="/super-admin" />;
+  // Platform admins are handled at the router level in App.jsx.
+  // This component is only rendered for school users.
 
   if (loading || !data) {
     return <Loader />;

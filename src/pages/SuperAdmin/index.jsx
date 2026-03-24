@@ -73,11 +73,8 @@ const supabase = createClient(
   import.meta.env.VITE_SUPABASE_ANON_KEY,
 );
 
-// ── Platform admin whitelist ───────────────────────────────────────────────
-const PLATFORM_ADMINS = ['admin@shulesoft.com', 'shulesoft8@gmail.com'];
-
 // ══════════════════════════════════════════════════════════════════════════════
-export default function SuperAdmin({ currentUser, sidebarOpen, setSidebarOpen, onSignOut }) {
+export default function SuperAdmin({ currentUser, isPlatformAdmin, sidebarOpen, setSidebarOpen, onSignOut }) {
   const [searchParams, setSearchParams] = useSearchParams();
   const activeTab = searchParams.get('tab') || 'overview';
 
@@ -133,7 +130,7 @@ export default function SuperAdmin({ currentUser, sidebarOpen, setSidebarOpen, o
   const subBreakRef  = useRef(null);
   const revBigRef    = useRef(null);
 
-  const isSuperOwner = currentUser?.email && PLATFORM_ADMINS.includes(currentUser.email);
+  const isSuperOwner = isPlatformAdmin;
 
   // ── Styled confirm dialogs (replaces window.confirm / window.prompt) ─────
   const { confirmModal, confirm, prompt } = useConfirm();
@@ -462,7 +459,10 @@ export default function SuperAdmin({ currentUser, sidebarOpen, setSidebarOpen, o
         setSettings(cf || {});
         setGwInstructions(cf?.billing?.instructions || '');
         setStatusMsg(cf?.platform?.status_message || '');
-        setSubEndDate(cf?.billing?.expiry_date || '');
+        
+        // Use both possible expiry field names for consistency with store.js
+        const gExp = cf?.billing?.expiry_date || cf?.billing?.term_expiry || '';
+        setSubEndDate(gExp);
         const pricing = cf?.pricing || {};
         setPlans(Object.entries(pricing).map(([id, p]) => ({
           id, name: id, price: p.price || 0, limit: p.limit || 0,

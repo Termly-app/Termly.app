@@ -132,7 +132,7 @@ export async function registerSchool(name, email, plan, authUserId, adminName, a
 export async function findSchool(schoolEmail) {
   const { data, error } = await supabase
     .from('schools')
-    .select('id, name, email, plan, owner_id, phone, location, created_at, school_profiles(*)')
+    .select('id, name, email, plan, owner_id, phone, location, created_at, school_profiles(subscription_status, subscription_plan, subscription_expiry)')
     .eq('email', schoolEmail)
     .maybeSingle();
   if (error) throw error;
@@ -268,7 +268,7 @@ export async function getSchoolProfile() {
     // Attempt to get all columns first
     const { data, error } = await supabase
       .from('school_profiles')
-      .select('*')
+      .select(SAFE_PROFILE_COLUMNS + ', school_id, custom_exams, grading_systems')
       .eq('school_id', _currentSchoolId)
       .single();
 
@@ -395,7 +395,7 @@ export async function getPayments() {
   if (!_currentSchoolId) return [];
   const { data, error } = await supabase
     .from('payments')
-    .select('*')
+    .select('id, amount, transaction_code, notes, status, created_at, school_id')
     .eq('school_id', _currentSchoolId)
     .order('created_at', { ascending: false });
   if (error) throw error;
@@ -405,7 +405,7 @@ export async function getPayments() {
 export async function getAllPendingPayments() {
   const { data, error } = await supabase
     .from('payments')
-    .select('*, school_profiles(school_name)')
+    .select('id, amount, transaction_code, notes, status, created_at, school_id, school_profiles(school_name)')
     .eq('status', 'Pending')
     .order('created_at', { ascending: false });
   if (error) throw error;
@@ -415,7 +415,7 @@ export async function getAllPendingPayments() {
 export async function getAllPayments() {
   const { data, error } = await supabase
     .from('payments')
-    .select('*, school_profiles(school_name, subscription_plan)')
+    .select('id, amount, transaction_code, notes, status, created_at, school_id, school_profiles(school_name, subscription_plan)')
     .order('created_at', { ascending: false });
   if (error) throw error;
   return data || [];
@@ -536,7 +536,7 @@ export async function getPeriods() {
   if (!_currentSchoolId) return [];
   const { data, error } = await supabase
     .from('academic_periods')
-    .select('*')
+    .select('id, year, term, is_active, school_id')
     .eq('school_id', _currentSchoolId)
     .order('year', { ascending: false })
     .order('term', { ascending: false });
@@ -652,7 +652,7 @@ export async function getUsers() {
   if (!_currentSchoolId) return [];
   const { data, error } = await supabase
     .from('users')
-    .select('*')
+    .select('id, name, email, role, school_id, auth_user_id')
     .eq('school_id', _currentSchoolId);
   if (error) throw error;
   return data || [];
@@ -711,7 +711,7 @@ export async function deleteUser(id) {
 export async function getUserByAuthId(authUserId) {
   const { data, error } = await supabase
     .from('users')
-    .select('*, schools(id, name, plan)')
+    .select('id, name, email, role, school_id, auth_user_id, schools(id, name, plan)')
     .eq('auth_user_id', authUserId)
     .single();
   if (error && error.code !== 'PGRST116') throw error;
@@ -723,7 +723,7 @@ export async function getStudents() {
   if (!_currentSchoolId) return [];
   const { data, error } = await supabase
     .from('students')
-    .select('*')
+    .select('id, name, adm_no, class_grade, stream, parent_phone, gender, join_date, school_id')
     .eq('school_id', _currentSchoolId);
   if (error) throw error;
   return (data || []).map(s => ({
@@ -735,7 +735,11 @@ export async function getStudents() {
 }
 
 export async function getStudent(id) {
-  const { data, error } = await supabase.from('students').select('*').eq('id', id).single();
+  const { data, error } = await supabase
+    .from('students')
+    .select('id, name, adm_no, class, stream, parent, parent_phone, gender, dob, join_date, notes, school_id')
+    .eq('id', id)
+    .single();
   if (error) throw error;
   return data ? { ...data, admNo: data.adm_no, parentPhone: data.parent_phone, joinDate: data.join_date } : null;
 }
@@ -848,7 +852,7 @@ export async function getMarks(examType = _currentExamType) {
   if (!_currentSchoolId || !_currentPeriodId) return {};
   const { data, error } = await supabase
     .from('marks')
-    .select('*')
+    .select('id, student_id, subject, mark, period_id, exam_type, school_id')
     .eq('school_id', _currentSchoolId)
     .eq('period_id', _currentPeriodId)
     .eq('exam_type', examType);
@@ -928,7 +932,7 @@ export async function getFees() {
   if (!_currentSchoolId || !_currentPeriodId) return {};
   const { data, error } = await supabase
     .from('fees')
-    .select('*, fee_payments(*)')
+    .select('id, student_id, total_fee, paid, balance, period_id, school_id, fee_payments(id, amount, date, method, reference)')
     .eq('school_id', _currentSchoolId)
     .eq('period_id', _currentPeriodId);
   if (error) throw error;
@@ -1057,7 +1061,7 @@ export async function getAttendance() {
   if (!_currentSchoolId || !_currentPeriodId) return {};
   const { data, error } = await supabase
     .from('attendance')
-    .select('*')
+    .select('id, student_id, date, status, period_id, school_id')
     .eq('school_id', _currentSchoolId)
     .eq('period_id', _currentPeriodId);
   if (error) throw error;
@@ -1097,7 +1101,7 @@ export async function getCBC() {
   if (!_currentSchoolId || !_currentPeriodId) return {};
   const { data, error } = await supabase
     .from('cbc_assessments')
-    .select('*')
+    .select('id, student_id, subject, level, period_id, school_id')
     .eq('school_id', _currentSchoolId)
     .eq('period_id', _currentPeriodId);
   if (error) throw error;
@@ -1123,7 +1127,7 @@ export async function getCoreCompetencies() {
   if (!_currentSchoolId || !_currentPeriodId) return {};
   const { data, error } = await supabase
     .from('core_competencies')
-    .select('*')
+    .select('id, student_id, competency, level, period_id, school_id')
     .eq('school_id', _currentSchoolId)
     .eq('period_id', _currentPeriodId);
   if (error) throw error;
@@ -1186,7 +1190,7 @@ export async function getTeachers() {
   if (!_currentSchoolId) return [];
   const { data, error } = await supabase
     .from('teachers')
-    .select('*')
+    .select('id, name, email, phone, subjects, school_id')
     .eq('school_id', _currentSchoolId);
   if (error) throw error;
   return data || [];
@@ -1195,7 +1199,7 @@ export async function getTeachers() {
 export async function getTeachersBySchool(schoolId) {
   const { data, error } = await supabase
     .from('teachers')
-    .select('*')
+    .select('id, name, email, phone, subjects, school_id')
     .eq('school_id', schoolId);
   if (error) throw error;
   return data || [];
@@ -1257,7 +1261,7 @@ export async function getSubjectAssignments() {
   if (!_currentSchoolId || !_currentPeriodId) return {};
   const { data, error } = await supabase
     .from('subject_assignments')
-    .select('*')
+    .select('id, class_grade, stream, subject, teacher_id, period_id, school_id')
     .eq('school_id', _currentSchoolId)
     .eq('period_id', _currentPeriodId);
   if (error) throw error;
@@ -1440,6 +1444,30 @@ export function getCurrentSchool() {
   return _currentSchoolId;
 }
 
+/**
+ * Check if a user is a platform admin (Super Admin)
+ */
+export async function checkIsPlatformAdmin(email) {
+  if (!email) return false;
+  try {
+    const { data, error } = await supabase
+      .from('platform_admins')
+      .select('email')
+      .eq('email', email)
+      .maybeSingle();
+    
+    if (error) {
+      console.warn('Error checking platform admin status:', error);
+      // Fallback for safety during migration
+      return ['admin@shulesoft.com', 'shulesoft8@gmail.com'].includes(email);
+    }
+    return !!data;
+  } catch (err) {
+    console.error('Failed to check platform admin status:', err);
+    return false;
+  }
+}
+
 // ============= PLATFORM MANAGEMENT (SUPER ADMIN) =============
 
 /**
@@ -1467,7 +1495,7 @@ export async function logPlatformActivity(type, description, schoolId = null) {
 export async function getPlatformActivities(limit = 50) {
   const { data, error } = await supabase
     .from('platform_activity')
-    .select('*, schools(name)')
+    .select('id, type, description, actor_email, created_at, schools(name)')
     .order('created_at', { ascending: false })
     .limit(limit);
   if (error) throw error;
@@ -1480,8 +1508,8 @@ export async function getPlatformActivities(limit = 50) {
 export async function getPlatformSettings() {
   try {
     const { data, error } = await supabase
-      .from('platform_settings')
-      .select('*');
+    .from('platform_settings')
+    .select('key, value, updated_at');
     
     if (error) throw error;
 
@@ -1955,7 +1983,7 @@ export function subscribeToPlatformChanges(onUpdate) {
 export async function getTimetableConfig(schoolId, periodId) {
   const { data, error } = await supabase
     .from('timetable_config')
-    .select('*')
+    .select('id, label, start_time, end_time, is_break, slot_index, period_id, school_id')
     .eq('school_id', schoolId)
     .eq('period_id', periodId)
     .order('slot_index', { ascending: true });
@@ -1987,7 +2015,7 @@ export async function saveTimetableConfig(schoolId, periodId, slots) {
 export async function getTimetableSlots(schoolId, periodId, classGrade, stream) {
   let query = supabase
     .from('timetable_slots')
-    .select('*, teachers(id, name)')
+    .select('id, class_grade, stream, day_of_week, slot_index, subject, teacher_id, room, color, is_double_first, is_double_second, period_id, school_id, teachers(id, name)')
     .eq('school_id', schoolId)
     .eq('period_id', periodId)
     .eq('class_grade', classGrade);
@@ -2000,7 +2028,7 @@ export async function getTimetableSlots(schoolId, periodId, classGrade, stream) 
 export async function getAllTimetableSlots(schoolId, periodId) {
   const { data, error } = await supabase
     .from('timetable_slots')
-    .select('*, teachers(id, name)')
+    .select('id, class_grade, stream, day_of_week, slot_index, subject, teacher_id, room, color, is_double_first, is_double_second, period_id, school_id, teachers(id, name)')
     .eq('school_id', schoolId)
     .eq('period_id', periodId);
   if (error) throw error;
@@ -2010,7 +2038,7 @@ export async function getAllTimetableSlots(schoolId, periodId) {
 export async function getTeacherTimetable(schoolId, periodId, teacherId) {
   const { data, error } = await supabase
     .from('timetable_slots')
-    .select('*')
+    .select('id, class_grade, stream, day_of_week, slot_index, subject, teacher_id, room, color, is_double_first, is_double_second, period_id, school_id')
     .eq('school_id', schoolId)
     .eq('period_id', periodId)
     .eq('teacher_id', teacherId);
@@ -2091,7 +2119,7 @@ export async function clearAndSaveTimetable(schoolId, periodId, slots, classGrad
 export async function getRequirements(schoolId, periodId, classGrade, stream) {
   let query = supabase
     .from('timetable_requirements')
-    .select('*, teachers(id, name)')
+    .select('id, class_grade, stream, subject, teacher_id, periods_per_week, allow_double, color, period_id, school_id, teachers(id, name)')
     .eq('school_id', schoolId)
     .eq('period_id', periodId);
   if (classGrade) query = query.eq('class_grade', classGrade);
@@ -2107,7 +2135,7 @@ export async function getRequirements(schoolId, periodId, classGrade, stream) {
 export async function getAllRequirements(schoolId, periodId) {
   const { data, error } = await supabase
     .from('timetable_requirements')
-    .select('*, teachers(id, name)')
+    .select('id, class_grade, stream, subject, teacher_id, periods_per_week, allow_double, color, period_id, school_id, teachers(id, name)')
     .eq('school_id', schoolId)
     .eq('period_id', periodId)
     .order('class_grade')
@@ -2173,7 +2201,7 @@ export async function checkTeacherConflict(
 export async function getFeeStructure(schoolId, term) {
   const { data, error } = await supabase
     .from('fee_structure')
-    .select('*')
+    .select('id, term, category, amount, notes, school_id')
     .eq('school_id', schoolId)
     .eq('term', term)
     .order('category', { ascending: true });
@@ -2213,7 +2241,7 @@ export async function deleteFeeItem(itemId) {
 export async function getStudentsBySchool(schoolId) {
   const { data, error } = await supabase
     .from('students')
-    .select('*')
+    .select('id, name, adm_no, class_grade, stream, parent_phone, gender, join_date, school_id')
     .eq('school_id', schoolId);
   if (error) throw error;
   return data || [];
