@@ -8,8 +8,6 @@ import {
 } from '../components/CommonIcons';
 
 export default function Landing() {
-  const cursorRef = useRef(null);
-  const ringRef = useRef(null);
   const ringFillRef = useRef(null);
   const barsRef = useRef(null);
   const [settings, setSettings] = useState(null);

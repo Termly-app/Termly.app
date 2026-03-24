@@ -442,6 +442,7 @@ function App() {
         <Route path="/security-trust"     element={<SecurityTrust />} />
         <Route path="*"                   element={<Landing />} />
       </Routes>
+      <CustomCursor disabled={false} />
     );
   }
 
@@ -572,8 +573,7 @@ function App() {
           </ErrorBoundary>
         </div>
       </main>
-
-      <CustomCursor disabled={currentUser !== null} />
+      <CustomCursor disabled={false} />
     </div>
   );
 }
