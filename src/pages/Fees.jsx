@@ -5,6 +5,7 @@ import { CLASSES, CBC_STRUCTURE } from '../data/seedData';
 import { 
   CardIcon, RocketIcon, UserIcon, InfoIcon, SearchIcon, CheckIcon, ReceiptIcon, PrintIcon, AlertIcon, DashboardIcon
 } from '../components/CommonIcons';
+import { printReceipt } from '../utils/receiptPrint';
 
 function PaymentModal({ student, fee, onPay, onClose }) {
   const [amount, setAmount] = useState('');
@@ -37,13 +38,28 @@ function PaymentModal({ student, fee, onPay, onClose }) {
 
 function ReceiptModal({ receipt, onClose, profile }) {
   const formatKSh = (n) => `KSh ${Number(n||0).toLocaleString()}`;
-  const handlePrint = async () => {
-    try {
-      const headerStr = await getPrintHeader('Payment Receipt');
-      const w = window.open('','_blank');
-      w.document.write(`<html><head><title>Receipt</title><style>body{font-family:Arial,sans-serif;padding:20px}.r{max-width:400px;margin:0 auto;border:2px solid #1e3a5f;padding:24px;border-radius:8px}.row{display:flex;justify-content:space-between;padding:6px 0;font-size:14px}.t{border-top:2px solid #1e3a5f;margin-top:12px;padding-top:12px;font-size:18px;font-weight:700}</style></head><body><div class="r">${headerStr}<div class="row"><span>Receipt:</span><strong>${receipt.id}</strong></div><div class="row"><span>Date:</span><strong>${receipt.date}</strong></div><div class="row"><span>Student:</span><strong>${receipt.studentName}</strong></div><div class="row"><span>Class:</span><strong>${receipt.studentClass}</strong></div><div class="row"><span>Method:</span><strong>${receipt.method}</strong></div><div class="row t"><span>Amount:</span><strong>${formatKSh(receipt.amount)}</strong></div></div></body></html>`);
-      w.document.close(); w.print();
-    } catch (err) { alert("Print failed"); }
+  const handlePrint = () => {
+    printReceipt({
+      school: {
+        name: profile?.school_name || 'ShuleSoft Academy',
+        location: profile?.address || 'Nairobi, Kenya',
+        phone: profile?.phone || '',
+        email: profile?.email || ''
+      },
+      student: {
+        name: receipt.studentName,
+        admission_number: receipt.admNo,
+        grade: receipt.studentClass
+      },
+      payment: {
+        id: receipt.id,
+        amount: receipt.amount,
+        transaction_code: receipt.reference,
+        created_at: receipt.date,
+        method: receipt.method,
+        balance: receipt.balance // Passed from parent
+      }
+    });
   };
   return (
     <div className="modal-overlay" onClick={onClose}>
@@ -148,7 +164,8 @@ export default function Fees({ currentPeriodId }) {
     try {
       const p = await recordPayment(sid,amount,method,ref);
       const s = students.find(x=>x.id===sid);
-      setShowReceipt({...p,studentName:s.name,studentClass:s.class,admNo:s.admNo});
+      const fee = (await getFees())[sid] || {};
+      setShowReceipt({...p,studentName:s.name,studentClass:s.class,admNo:s.admNo,balance:fee.balance});
       setShowPayment(null); 
       await refresh();
     } catch (err) { alert(err.message); }
@@ -216,7 +233,7 @@ export default function Fees({ currentPeriodId }) {
                 <td data-label="Action">
                   <div className="inline-flex" style={{justifyContent:'inherit'}}>
                     {f.balance>0&&<button className="btn btn-primary btn-sm" onClick={()=>setShowPayment(s)}><CardIcon size={14} /> Pay</button>}
-                    {f.payments&&f.payments.length>0&&<button className="btn btn-ghost btn-sm" onClick={()=>setShowReceipt({...f.payments[f.payments.length-1],studentName:s.name,studentClass:s.class,admNo:s.admNo})}><ReceiptIcon size={14} /></button>}
+                    {f.payments&&f.payments.length>0&&<button className="btn btn-ghost btn-sm" onClick={()=>setShowReceipt({...f.payments[f.payments.length-1],studentName:s.name,studentClass:s.class,admNo:s.admNo,balance:f.balance})}><ReceiptIcon size={14} /></button>}
                   </div>
                 </td>
               </tr>

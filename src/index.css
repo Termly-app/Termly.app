@@ -358,6 +358,9 @@ body {
 .btn { padding: 10px 20px; border-radius: 8px; font-weight: 600; cursor: pointer; border: none; display: inline-flex; align-items: center; gap: 8px; transition: var(--transition); }
 .btn-primary { background: var(--primary); color: white; }
 .btn-ghost { background: transparent; color: var(--text-secondary); border: 1px solid var(--border); }
+.pill-y { background: #fef9c3; color: #854d0e; }
+.pill-v { background: #dcfce7; color: #15803d; }
+.pill-s { background: #f3f4f6; color: #4b5563; }
 
 .badge { padding: 4px 12px; border-radius: 100px; font-size: 0.75rem; font-weight: 700; }
 .badge-success { background: var(--success-light); color: var(--success); }

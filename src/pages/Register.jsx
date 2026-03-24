@@ -22,6 +22,11 @@ export default function Register() {
     async function loadSettings() {
       const s = await getPlatformSettings();
       setSettings(s);
+      // If the URL plan isn't in settings, use the first active plan from DB
+      if (s?.pricing && !s.pricing[formData.plan]) {
+        const firstPlan = Object.entries(s.pricing).find(([_, p]) => p.active !== false)?.[0];
+        if (firstPlan) setFormData(prev => ({ ...prev, plan: firstPlan }));
+      }
     }
     loadSettings();
   }, []);

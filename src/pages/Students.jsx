@@ -7,6 +7,8 @@ import {
   PrintIcon, RefreshIcon, SearchIcon, StudentIcon, EditIcon, 
   DeleteIcon, PlusIcon, FlagIcon
 } from '../components/CommonIcons';
+import ConfirmModal from '../components/Common/ConfirmModal';
+import { useConfirm } from '../components/Common/useConfirm';
 
 function getCurrentTermLabel() {
   const now = new Date();
@@ -31,6 +33,7 @@ export default function Students({ currentUser, currentPeriodId }) {
   const [profile, setProfile] = useState({ activeClasses: [], streamsPerClass: {}, gradeFees: {} });
   const [loading, setLoading] = useState(true);
   const [showTransitionModal, setShowTransitionModal] = useState(false);
+  const { confirm, prompt, confirmModal } = useConfirm();
 
   const loadData = async () => {
     setLoading(true);
@@ -62,18 +65,19 @@ export default function Students({ currentUser, currentPeriodId }) {
     try {
       if (editingStudent) await updateStudent(editingStudent.id, st); else await addStudent(st);
       await refresh(); setShowModal(false); setEditingStudent(null);
-    } catch (err) { alert(err.message); } finally { setLoading(false); }
+    } catch (err) { console.error(err); } finally { setLoading(false); }
   };
   const handleDelete = async (id) => {
-    if (!confirm('Remove this student?')) return;
+    const ok = await confirm({ title: 'Remove Student', message: 'Are you sure you want to remove this student record?', variant: 'danger' });
+    if (!ok) return;
     setLoading(true);
     try { await deleteStudent(id); await refresh(); setSelectedStudent(null); }
-    catch (err) { alert(err.message); } finally { setLoading(false); }
+    catch (err) { console.error(err); } finally { setLoading(false); }
   };
   const handleTransfer = async (ids, dir) => {
     setLoading(true);
-    try { await transferStudents(ids, dir); await refresh(); setShowTransitionModal(false); alert(`Students ${dir === 'promote' ? 'promoted' : 'demoted'}!`); }
-    catch (err) { alert(err.message); } finally { setLoading(false); }
+    try { await transferStudents(ids, dir); await refresh(); setShowTransitionModal(false); }
+    catch (err) { console.error(err); } finally { setLoading(false); }
   };
   const printClassList = async () => {
     try {
@@ -206,14 +210,19 @@ export default function Students({ currentUser, currentPeriodId }) {
 
       {showModal&&<StudentModal student={editingStudent} profile={profile} onSave={handleSave} onClose={()=>{setShowModal(false);setEditingStudent(null);}}/>}
       {selectedStudent&&<StudentDetail student={selectedStudent} feeData={fees[selectedStudent.id]||{}} onClose={()=>setSelectedStudent(null)} onEdit={()=>{setSelectedStudent(null);setEditingStudent(selectedStudent);setShowModal(true);}} currentUser={currentUser} profile={profile}/>}
-      {showTransitionModal&&<TransitionModal students={students} profile={profile} onTransfer={handleTransfer} onClose={()=>setShowTransitionModal(false)}/>}
+      {showTransitionModal&&<TransitionModal students={students} profile={profile} onTransfer={handleTransfer} onClose={()=>setShowTransitionModal(false)} confirm={confirm}/>}
+      {confirmModal}
     </div>
   );
 }
 
 function StudentModal({ student, profile, onSave, onClose }) {
   const ic=profile.activeClasses?.[0]||'Grade 1';
-  const [form,setForm]=useState(student||{name:'',admNo:'',class:ic,stream:profile.streamsPerClass?.[ic]?.[0]||'',parent:'',parentPhone:'',gender:'Male',dob:'',joinDate:new Date().toISOString().split('T')[0],notes:''});
+  const [form,setForm]=useState(student||{
+    name:'',admNo:'',class:ic,stream:profile.streamsPerClass?.[ic]?.[0]||'',
+    parent:'',parentPhone:'',gender:'Male',dob:'',joinDate:new Date().toISOString().split('T')[0],notes:'',
+    birthCertNo:'',county:'',fatherName:'',fatherPhone:'',motherName:'',motherPhone:'',nemisVerified:false
+  });
   const hc=(e)=>{const{name,value}=e.target;if(name==='class'){const s=profile.streamsPerClass?.[value]||[];setForm({...form,class:value,stream:s[0]||''});}else setForm({...form,[name]:value});};
   return(
     <div className="modal-overlay" onClick={onClose}><div className="modal" onClick={e=>e.stopPropagation()}>
@@ -242,6 +251,22 @@ function StudentModal({ student, profile, onSave, onClose }) {
             <div className="form-group"><label>Join Date</label><input className="form-input" type="date" name="joinDate" value={form.joinDate} onChange={hc}/></div>
           </div>
           <div className="form-group"><label>Notes</label><textarea className="form-input" name="notes" value={form.notes} onChange={hc} rows={2} style={{resize:'vertical'}}/></div>
+          
+          <div style={{marginTop:20,paddingTop:15,borderTop:'1px dashed var(--border)'}}>
+            <h4 style={{fontSize:'0.75rem',fontWeight:700,color:'var(--primary)',marginBottom:12,textTransform:'uppercase',letterSpacing:'0.05em'}}>Optional: NEMIS Details</h4>
+            <div className="form-row">
+              <div className="form-group"><label>Birth Certificate No</label><input className="form-input" name="birthCertNo" value={form.birthCertNo} onChange={hc} placeholder="e.g. 12345678"/></div>
+              <div className="form-group"><label>County</label><input className="form-input" name="county" value={form.county} onChange={hc} placeholder="e.g. Nairobi"/></div>
+            </div>
+            <div className="form-row">
+              <div className="form-group"><label>Father's Name</label><input className="form-input" name="fatherName" value={form.fatherName} onChange={hc}/></div>
+              <div className="form-group"><label>Father's Phone</label><input className="form-input" name="fatherPhone" value={form.fatherPhone} onChange={hc}/></div>
+            </div>
+            <div className="form-row">
+              <div className="form-group"><label>Mother's Name</label><input className="form-input" name="motherName" value={form.motherName} onChange={hc}/></div>
+              <div className="form-group"><label>Mother's Phone</label><input className="form-input" name="motherPhone" value={form.motherPhone} onChange={hc}/></div>
+            </div>
+          </div>
         </div>
         <div className="modal-footer"><button type="button" className="btn btn-ghost" onClick={onClose}>Cancel</button><button type="submit" className="btn btn-primary">{student?'Save Changes':'Add Student'}</button></div>
       </form>
@@ -279,6 +304,7 @@ function StudentDetail({ student, feeData, onClose, onEdit, currentUser, profile
           </div>
           <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:10,background:'var(--bg)',borderRadius:10,padding:14,marginBottom:12,fontSize:'0.875rem'}}>
             {[{l:'Gender',v:student.gender},{l:'D.O.B',v:student.dob||'—'},{l:'Parent',v:student.parent},{l:'Phone',v:student.parentPhone},{l:'Joined',v:student.joinDate||'—'},
+              {l:'Birth Cert',v:student.birthCertNo||'—'},{l:'County',v:student.county||'—'},
               ...(!isTeacher?[{l:'Fee Balance',v:(()=>{const b=feeData.balance!==undefined?feeData.balance:(profile?.gradeFees?.[student.class]||TERM_FEE);return<span style={{fontWeight:700,color:b>0?'var(--danger)':'var(--success)'}}>{fmtKSh(b)}</span>;})()}]:[]),
             ].map((r,i)=>(
               <div key={i}><div style={{fontSize:'0.68rem',color:'var(--text-muted)',textTransform:'uppercase',letterSpacing:'0.06em',marginBottom:2}}>{r.l}</div><div style={{fontWeight:500}}>{r.v}</div></div>
@@ -351,7 +377,9 @@ function TransitionModal({ students, profile, onTransfer, onClose }) {
         <div style={{display:'flex',gap:8}}>
           <button className="btn btn-ghost" onClick={onClose}>Cancel</button>
           <button className={`btn ${dir==='promote'?'btn-primary':'btn-accent'}`} disabled={!sel.length}
-            onClick={()=>{if(confirm(`${dir==='promote'?'Promote':'Demote'} ${sel.length} students?`))onTransfer(sel,dir);}}>
+            onClick={async ()=>{
+              if(await confirm({ title: `${dir==='promote'?'Promote':'Demote'} Students`, message: `Are you sure you want to ${dir==='promote'?'promote':'demote'} ${sel.length} students?` })) onTransfer(sel,dir);
+            }}>
             Confirm {dir==='promote'?'Promotions':'Demotions'}
           </button>
         </div>

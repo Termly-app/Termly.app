@@ -26,6 +26,24 @@ export const SEAT_LIMITS = {
   "Super Admin": { students: 9999, admins: 999, price: 0 }
 };
 
+/**
+ * Get limits for a plan, favoring DB settings if available
+ */
+export async function getPlanLimits(planName) {
+  try {
+    const settings = await getPlatformSettings();
+    if (settings?.pricing?.[planName]) {
+      const p = settings.pricing[planName];
+      return {
+        students: p.limit || p.students || 0,
+        admins: p.admins || 0,
+        price: p.price || 0
+      };
+    }
+  } catch (e) { console.error("Error fetching plan limits:", e); }
+  return SEAT_LIMITS[planName] || SEAT_LIMITS.Basic;
+}
+
 export function setCurrentSchoolContext(schoolId, authUser) {
   _currentSchoolId = schoolId;
   _currentAuthUser = authUser;
@@ -723,7 +741,7 @@ export async function getStudents() {
   if (!_currentSchoolId) return [];
   const { data, error } = await supabase
     .from('students')
-    .select('id, name, adm_no, class_grade, stream, parent_phone, gender, join_date, school_id')
+    .select('id, name, adm_no, class, stream, parent, parent_phone, gender, dob, join_date, notes, school_id, birth_cert_no, county, father_name, father_phone, mother_name, mother_phone, nemis_verified')
     .eq('school_id', _currentSchoolId);
   if (error) throw error;
   return (data || []).map(s => ({
@@ -731,13 +749,19 @@ export async function getStudents() {
     admNo: s.adm_no,
     parentPhone: s.parent_phone,
     joinDate: s.join_date,
+    birthCertNo: s.birth_cert_no,
+    fatherName: s.father_name,
+    fatherPhone: s.father_phone,
+    motherName: s.mother_name,
+    motherPhone: s.mother_phone,
+    nemisVerified: s.nemis_verified
   }));
 }
 
 export async function getStudent(id) {
   const { data, error } = await supabase
     .from('students')
-    .select('id, name, adm_no, class, stream, parent, parent_phone, gender, dob, join_date, notes, school_id')
+    .select('id, name, adm_no, class, stream, parent, parent_phone, gender, dob, join_date, notes, school_id, birth_cert_no, county, father_name, father_phone, mother_name, mother_phone, nemis_verified')
     .eq('id', id)
     .single();
   if (error) throw error;
@@ -750,8 +774,8 @@ export async function addStudent(student) {
   const planName = p.subscriptionPlan || 'Basic';
   
   // Robust plan lookup matching other components
-  const planLimits = SEAT_LIMITS[planName] || SEAT_LIMITS.Basic;
-  const maxStudents = planLimits.students || planLimits.maxStudents || 5;
+  const planLimits = await getPlanLimits(planName);
+  const maxStudents = planLimits.students || 5;
   
   if (all.length >= maxStudents) {
     throw new Error(`Student limit reached for your ${planName} plan (${maxStudents} students). Please upgrade your plan in Settings.`);
@@ -774,6 +798,13 @@ export async function addStudent(student) {
       dob: student.dob || '',
       join_date: student.joinDate || new Date().toISOString().split('T')[0],
       notes: student.notes || '',
+      birth_cert_no: student.birthCertNo || null,
+      county: student.county || null,
+      father_name: student.fatherName || null,
+      father_phone: student.fatherPhone || null,
+      mother_name: student.motherName || null,
+      mother_phone: student.motherPhone || null,
+      nemis_verified: student.nemisVerified || false
     })
     .select()
     .single();
@@ -789,7 +820,18 @@ export async function addStudent(student) {
   });
 
   await logPlatformActivity('STUDENT_ADD', `Added new student: ${student.name}`);
-  return { ...data, admNo: data.adm_no, parentPhone: data.parent_phone, joinDate: data.join_date };
+  return { 
+    ...data, 
+    admNo: data.adm_no, 
+    parentPhone: data.parent_phone, 
+    joinDate: data.join_date,
+    birthCertNo: data.birth_cert_no,
+    fatherName: data.father_name,
+    fatherPhone: data.father_phone,
+    motherName: data.mother_name,
+    motherPhone: data.mother_phone,
+    nemisVerified: data.nemis_verified
+  };
 }
 
 export async function updateStudent(id, updates) {
@@ -804,6 +846,13 @@ export async function updateStudent(id, updates) {
   if (updates.joinDate !== undefined) row.join_date = updates.joinDate;
   if (updates.notes !== undefined) row.notes = updates.notes;
   if (updates.admNo !== undefined) row.adm_no = updates.admNo;
+  if (updates.birthCertNo !== undefined) row.birth_cert_no = updates.birthCertNo;
+  if (updates.county !== undefined) row.county = updates.county;
+  if (updates.fatherName !== undefined) row.father_name = updates.fatherName;
+  if (updates.fatherPhone !== undefined) row.father_phone = updates.fatherPhone;
+  if (updates.motherName !== undefined) row.mother_name = updates.motherName;
+  if (updates.motherPhone !== undefined) row.mother_phone = updates.motherPhone;
+  if (updates.nemisVerified !== undefined) row.nemis_verified = updates.nemisVerified;
 
   const { data, error } = await supabase
     .from('students')
@@ -995,6 +1044,14 @@ export async function getFees() {
   });
 
   if (error) throw error;
+  
+  return { 
+    id: `RCT-${Math.random().toString(36).substr(2, 9).toUpperCase()}`, 
+    amount: Number(amount), 
+    method, 
+    reference, 
+    date: paymentDate 
+  };
 }
 
 /**
