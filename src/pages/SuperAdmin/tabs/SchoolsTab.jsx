@@ -76,8 +76,14 @@ export default function SchoolsTab({
               </thead>
               <tbody>
                 {filteredSchools.map(s => {
-                  const p = s.school_profiles?.[0] || {};
                   const isActive = isSchoolActive(s);
+                  // Pick the best profile to show in the table (prefer active one)
+                  const p = (s.school_profiles || []).find(prof => {
+                    const now = new Date();
+                    const pExp = prof.subscription_expiry ? new Date(prof.subscription_expiry) : null;
+                    const isExp = pExp && !isNaN(pExp.getTime()) && pExp > now;
+                    return prof.subscription_status === 'Active' || isExp;
+                  }) || (s.school_profiles || [])[0] || {};
 
                   let curPlan   = s.plan || p.subscription_plan || 'Starter Plan';
                   if (['fala', 'starter', 'basic'].includes(curPlan.toLowerCase())) curPlan = 'Starter Plan';

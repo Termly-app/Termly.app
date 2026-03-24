@@ -164,35 +164,35 @@ export default function SuperAdmin({ currentUser, sidebarOpen, setSidebarOpen, o
     // 1. PLATFORM OVERRIDE: ShuleSoft HQ is always active
     if (s.name?.toLowerCase().includes('shulesoft hq')) return true;
 
-    const p = s.school_profiles?.[0];
-    if (!p) return false;
+    const profiles = s.school_profiles || [];
+    if (profiles.length === 0) return false;
 
-    // 2. Explicit deactivation/suspension wins
-    if (p.subscription_status === 'Deactivated' || p.subscription_status === 'Suspended') return false;
+    // If ANY profile is functional, the school is active
+    return profiles.some(p => {
+      // 2. Explicit deactivation/suspension wins for this profile
+      if (p.subscription_status === 'Deactivated' || p.subscription_status === 'Suspended') return false;
 
-    // 3. INDIVIDUAL FUTURE OVERRIDE - Future expiry always wins
-    if (p.subscription_expiry) {
-      const pExp = new Date(p.subscription_expiry);
-      if (isNaN(pExp.getTime()) === false) {
-        // Set to end of day to avoid premature cutoff
-        pExp.setHours(23, 59, 59, 999);
-        if (pExp > now) return true;
+      // 3. INDIVIDUAL FUTURE OVERRIDE - Future expiry always wins
+      if (p.subscription_expiry) {
+        const pExp = new Date(p.subscription_expiry);
+        if (isNaN(pExp.getTime()) === false) {
+          pExp.setHours(23, 59, 59, 999);
+          if (pExp > now) return true;
+        }
       }
-    }
 
-    // 4. GLOBAL CUTOFF - Respect platform deadline for older schools
-    if (subEndDate) {
-      const gExp = new Date(subEndDate);
-      if (isNaN(gExp.getTime()) === false) {
-        // Set to end of day to avoid premature cutoff
-        gExp.setHours(23, 59, 59, 999);
-        if (gExp < now) return false;
+      // 4. GLOBAL CUTOFF
+      if (subEndDate) {
+        const gExp = new Date(subEndDate);
+        if (isNaN(gExp.getTime()) === false) {
+          gExp.setHours(23, 59, 59, 999);
+          if (gExp < now) return false;
+        }
       }
-    }
 
-    // 5. Status check for non-expired (or within global term)
-    const st = p.subscription_status || 'Inactive';
-    return st === 'Active';
+      // 5. Status check
+      return (p.subscription_status || 'Inactive') === 'Active';
+    });
   };
 
   // ══ COMPUTED VALUES ════════════════════════════════════════════════════
