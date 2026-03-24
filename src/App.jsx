@@ -424,47 +424,52 @@ function App() {
   // ── Not logged in ───────────────────────────────────────────────────────
   if (!currentUser) {
     return (
-      <Routes>
-        <Route path="/"                   element={<Landing />} />
-        <Route path="/login"              element={<Login onLogin={setCurrentUser} />} />
-        <Route path="/register"           element={<Register />} />
-        <Route path="/legal/terms"        element={<TermsOfService />} />
-        <Route path="/legal/privacy"      element={<PrivacyPolicy />} />
-        <Route path="/legal/acceptable-use" element={<AcceptableUse />} />
-        <Route path="/legal/refunds"      element={<RefundPolicy />} />
-        <Route path="/legal/service-level" element={<ServiceLevel />} />
-        <Route path="/support"            element={<ContactSupport />} />
-        <Route path="/about"              element={<AboutUs />} />
-        <Route path="/faq"                element={<FAQ />} />
-        <Route path="/docs"               element={<Docs />} />
-        <Route path="/forgot-password"    element={<ForgotPassword />} />
-        <Route path="/reset-password"     element={<ResetPassword />} />
-        <Route path="/security-trust"     element={<SecurityTrust />} />
-        <Route path="*"                   element={<Landing />} />
-      </Routes>
-      <CustomCursor disabled={false} />
+      <>
+        <Routes>
+          <Route path="/"                   element={<Landing />} />
+          <Route path="/login"              element={<Login onLogin={setCurrentUser} />} />
+          <Route path="/register"           element={<Register />} />
+          <Route path="/legal/terms"        element={<TermsOfService />} />
+          <Route path="/legal/privacy"      element={<PrivacyPolicy />} />
+          <Route path="/legal/acceptable-use" element={<AcceptableUse />} />
+          <Route path="/legal/refunds"      element={<RefundPolicy />} />
+          <Route path="/legal/service-level" element={<ServiceLevel />} />
+          <Route path="/support"            element={<ContactSupport />} />
+          <Route path="/about"              element={<AboutUs />} />
+          <Route path="/faq"                element={<FAQ />} />
+          <Route path="/docs"               element={<Docs />} />
+          <Route path="/forgot-password"    element={<ForgotPassword />} />
+          <Route path="/reset-password"     element={<ResetPassword />} />
+          <Route path="/security-trust"     element={<SecurityTrust />} />
+          <Route path="*"                   element={<Landing />} />
+        </Routes>
+        <CustomCursor disabled={false} />
+      </>
     );
   }
 
   // ── Platform Admin ──────────────────────────────────────────────────────
   if (isPlatformAdmin) {
     return (
-      <div className="theme-onyx" style={{ minHeight: '100vh', background: '#050505' }}>
-        <Routes>
-          <Route path="/super-admin" element={
-            <ErrorBoundary>
-              <SuperAdmin
-                currentUser={currentUser}
-                isPlatformAdmin={isPlatformAdmin}
-                sidebarOpen={sidebarOpen}
-                setSidebarOpen={setSidebarOpen}
-                onSignOut={handleLogout}
-              />
-            </ErrorBoundary>
-          } />
-          <Route path="*" element={<Navigate to="/super-admin" replace />} />
-        </Routes>
-      </div>
+      <>
+        <div className="theme-onyx" style={{ minHeight: '100vh', background: '#050505' }}>
+          <Routes>
+            <Route path="/super-admin" element={
+              <ErrorBoundary>
+                <SuperAdmin
+                  currentUser={currentUser}
+                  isPlatformAdmin={isPlatformAdmin}
+                  sidebarOpen={sidebarOpen}
+                  setSidebarOpen={setSidebarOpen}
+                  onSignOut={handleLogout}
+                />
+              </ErrorBoundary>
+            } />
+            <Route path="*" element={<Navigate to="/super-admin" replace />} />
+          </Routes>
+        </div>
+        <CustomCursor disabled={false} />
+      </>
     );
   }
 
