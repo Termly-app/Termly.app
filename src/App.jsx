@@ -9,11 +9,11 @@ import {
   setActivePeriod,
   initActivePeriod,
   getCurrentPeriodId,
-  checkIsSubscriptionActive,
   checkIsPlatformAdmin,
   getFeeStructure,
   saveFeeStructure,
   deleteFeeItem,
+  isFeatureEnabled,
 } from './data/store';
 
 // Pages
@@ -25,6 +25,7 @@ import Fees         from './pages/Fees';
 import FeeStructure from './pages/FeeStructure';
 import Timetable    from './pages/Timetable';
 import Attendance   from './pages/Attendance';
+import Library      from './pages/Library';
 import Settings     from './pages/Settings';
 import Login        from './pages/Login';
 import Security     from './pages/Security';
@@ -131,9 +132,36 @@ function Sidebar({ isOpen, onClose, onLogout, currentUser, subscriptionActive })
     setSelectedPeriod(periodId);
   };
 
-  const role      = currentUser?.role?.toLowerCase() || 'teacher';
-  const isAdmin   = role === 'admin';
-  const isTeacher = role === 'teacher';
+  const [features, setFeatures] = useState({
+    library: false,
+    timetable: false,
+    attendance: false,
+    grading: false,
+    fees: false,
+    nemis: false,
+    sms: false,
+  });
+
+  useEffect(() => {
+    const checkFeatures = async () => {
+      const f = {
+        library: await isFeatureEnabled('library'),
+        timetable: await isFeatureEnabled('timetable'),
+        attendance: await isFeatureEnabled('attendance'),
+        grading: await isFeatureEnabled('grading'),
+        fees: await isFeatureEnabled('fees'),
+        nemis: await isFeatureEnabled('nemis'),
+        sms: await isFeatureEnabled('sms'),
+      };
+      setFeatures(f);
+    };
+    if (currentUser) checkFeatures();
+  }, [currentUser, profile]);
+
+  const role        = currentUser?.role?.toLowerCase() || 'teacher';
+  const isAdmin     = role === 'admin';
+  const isTeacher   = role === 'teacher';
+  const isLibrarian = role === 'librarian';
 
   const isPlatformAdmin = currentUser?.email === 'admin@shulesoft.com'
     || currentUser?.email === 'shulesoft8@gmail.com';
@@ -225,31 +253,55 @@ function Sidebar({ isOpen, onClose, onLogout, currentUser, subscriptionActive })
       <nav className="sidebar-nav">
         <SbSection label="General" />
         <SbLink to="/dashboard" icon={DashboardIcon} label="Dashboard" onClick={onClose} locked={!subscriptionActive} />
-        <SbLink to="/students"  icon={StudentsIcon}  label="Students"  onClick={onClose} locked={!subscriptionActive} />
+        
+        {!isLibrarian && (
+          <SbLink to="/students"  icon={StudentsIcon}  label="Students"  onClick={onClose} locked={!subscriptionActive} />
+        )}
+        
         {isAdmin && (
           <SbLink to="/teachers" icon={StaffIcon} label="Staff" onClick={onClose} locked={!subscriptionActive} />
         )}
 
-        <SbSection label="Academics" />
-        {(isAdmin || isTeacher) && (
+        {(features.library || isLibrarian) && (
+          <SbLink to="/library" icon={BookIcon} label="Library" onClick={onClose} locked={!subscriptionActive} />
+        )}
+
+        {!isLibrarian && (features.attendance || features.grading || features.timetable) && (
+          <SbSection label="Academics" />
+        )}
+        
+        {!isLibrarian && features.attendance && (isAdmin || isTeacher) && (
           <SbLink to="/attendance" icon={AttendanceIcon} label="Attendance" onClick={onClose} locked={!subscriptionActive} />
         )}
-        <SbLink to="/grading"   icon={GradingIcon}   label="Grading"    onClick={onClose} locked={!subscriptionActive} />
-        <SbLink to="/timetable" icon={TimetableIcon} label="Timetable"  onClick={onClose} locked={!subscriptionActive} />
+        
+        {!isLibrarian && features.grading && (
+          <SbLink to="/grading"   icon={GradingIcon}   label="Grading"    onClick={onClose} locked={!subscriptionActive} />
+        )}
+        
+        {!isLibrarian && features.timetable && (
+          <SbLink to="/timetable" icon={TimetableIcon} label="Timetable"  onClick={onClose} locked={!subscriptionActive} />
+        )}
 
-        <SbSection label="Administration" />
-        {!isTeacher && (
+        {!isLibrarian && (features.fees || isAdmin) && (
+          <SbSection label="Administration" />
+        )}
+        
+        {!isLibrarian && features.fees && !isTeacher && (
           <SbLink to="/fees" icon={FeesIcon} label="Fees & Billing" onClick={onClose} locked={!subscriptionActive} />
         )}
-        {isAdmin && (
+        
+        {!isLibrarian && isAdmin && features.fees && (
           <SbLink to="/fee-structure" icon={FeeStructureIcon} label="Fee Structure" onClick={onClose} locked={!subscriptionActive} />
         )}
+        
         {isAdmin && (
           <SbLink to="/security" icon={SecurityIcon} label="Security" onClick={onClose} />
         )}
+        
         {isAdmin && (
           <SbLink to="/billing"  icon={SubscriptionIcon}  label="Subscription" onClick={onClose} red={!subscriptionActive} />
         )}
+        
         {isAdmin && (
           <SbLink to="/settings" icon={SettingsIcon} label="Settings" onClick={onClose} />
         )}
@@ -543,6 +595,12 @@ function App() {
                   <Route path="/support"  element={<ContactSupport />} />
                   <Route path="*"         element={<Navigate to="/billing" replace />} />
                 </>
+              ) : isLibrarian ? (
+                <>
+                  <Route path="/dashboard" element={<Dashboard currentUser={currentUser} onLogout={handleLogout} currentPeriodId={currentPeriodId} />} />
+                  <Route path="/library"   element={<Library currentUser={currentUser} currentPeriodId={currentPeriodId} />} />
+                  <Route path="*"          element={<Navigate to="/dashboard" replace />} />
+                </>
               ) : (
                 <>
                   <Route path="/dashboard" element={<Dashboard currentUser={currentUser} onLogout={handleLogout} currentPeriodId={currentPeriodId} />} />
@@ -551,6 +609,7 @@ function App() {
                   <Route path="/grading"   element={<Grading currentUser={currentUser} currentPeriodId={currentPeriodId} />} />
                   <Route path="/fees"      element={<Fees currentUser={currentUser} currentPeriodId={currentPeriodId} />} />
                   <Route path="/attendance" element={<Attendance currentUser={currentUser} currentPeriodId={currentPeriodId} />} />
+                  <Route path="/library"    element={<Library currentUser={currentUser} currentPeriodId={currentPeriodId} />} />
                   <Route path="/fee-structure" element={
                     <FeeStructure
                       schoolId={currentUser?.school_id}

@@ -2348,3 +2348,167 @@ export async function getStudentsBySchool(schoolId) {
   if (error) throw error;
   return data || [];
 }
+
+// ============= LIBRARY MANAGEMENT =============
+
+export async function getBooks() {
+  if (!_currentSchoolId) return [];
+  const { data, error } = await supabase
+    .from('library_books')
+    .select('*')
+    .eq('school_id', _currentSchoolId)
+    .order('title', { ascending: true });
+  if (error) throw error;
+  return data || [];
+}
+
+export async function saveBook(book) {
+  if (!_currentSchoolId) throw new Error('No school context');
+  const payload = {
+    ...book,
+    school_id: _currentSchoolId,
+    updated_at: new Date().toISOString()
+  };
+  
+  if (book.id) {
+    const { data, error } = await supabase
+      .from('library_books')
+      .update(payload)
+      .eq('id', book.id)
+      .select()
+      .single();
+    if (error) throw error;
+    return data;
+  } else {
+    const { data, error } = await supabase
+      .from('library_books')
+      .insert(payload)
+      .select()
+      .single();
+    if (error) throw error;
+    return data;
+  }
+}
+
+export async function deleteBook(id) {
+  const { error } = await supabase
+    .from('library_books')
+    .delete()
+    .eq('id', id);
+  if (error) throw error;
+}
+
+export async function getBorrows() {
+  if (!_currentSchoolId) return [];
+  const { data, error } = await supabase
+    .from('library_borrows')
+    .select('*, library_books(title, author, book_code), students(name, adm_no, class, stream)')
+    .eq('school_id', _currentSchoolId)
+    .order('borrow_date', { ascending: false });
+  if (error) throw error;
+  return data || [];
+}
+
+export async function saveBorrow(borrow) {
+  if (!_currentSchoolId) throw new Error('No school context');
+  const payload = {
+    ...borrow,
+    school_id: _currentSchoolId
+  };
+
+  if (borrow.id) {
+    const { data, error } = await supabase
+      .from('library_borrows')
+      .update(payload)
+      .eq('id', borrow.id)
+      .select()
+      .single();
+    if (error) throw error;
+    return data;
+  } else {
+    // Check availability
+    const { data: book, error: bErr } = await supabase
+      .from('library_books')
+      .select('available_copies')
+      .eq('id', borrow.book_id)
+      .single();
+    if (bErr) throw bErr;
+    if (book.available_copies <= 0) throw new Error('No copies available for borrowing.');
+
+    const { data, error } = await supabase
+      .from('library_borrows')
+      .insert(payload)
+      .select()
+      .single();
+    if (error) throw error;
+
+    // Decrement available copies using manual update (instead of RPC for now if not defined)
+    await supabase.from('library_books').update({ 
+      available_copies: book.available_copies - 1,
+      updated_at: new Date().toISOString()
+    }).eq('id', borrow.book_id);
+    
+    return data;
+  }
+}
+
+export async function returnBook(borrowId, bookId) {
+  const { error } = await supabase
+    .from('library_borrows')
+    .update({ status: 'returned', return_date: new Date().toISOString().split('T')[0] })
+    .eq('id', borrowId);
+  if (error) throw error;
+
+  // Increment available copies
+  const { data: book } = await supabase.from('library_books').select('available_copies').eq('id', bookId).single();
+  if (book) {
+    await supabase.from('library_books').update({ 
+      available_copies: book.available_copies + 1,
+      updated_at: new Date().toISOString()
+    }).eq('id', bookId);
+  }
+}
+
+// ============= FEATURE GATING =============
+
+const FEATURE_MAPPING = {
+  attendance : ['Attendance Tracking'],
+  grading    : ['CBC Grading', 'CBC Competency Grading', 'KCSE / KCPE Report Cards (8-4-4)', 'Grading'],
+  timetable  : ['Timetable Builder', 'Automated Timetable Generation'],
+  fees       : ['Fee Structure Builder', 'M-PESA Fee Tracking', 'Student Fee Statements', 'Fees & Billing'],
+  library    : ['Library Management'],
+  nemis      : ['NEMIS Data Export'],
+  sms        : ['SMS Notifications', 'Parent SMS Notifications'],
+  whatsapp   : ['WhatsApp Fee Reminders', 'WhatsApp Integration'],
+};
+
+/**
+ * Check if a feature is enabled for the current school
+ */
+export async function isFeatureEnabled(featureSlug) {
+  try {
+    const profile = await getSchoolProfile();
+    const planName = profile?.subscriptionPlan;
+    if (!planName) return false;
+
+    // Platform Admin override
+    const user = getCurrentAuthUser();
+    if (user?.email === 'admin@shulesoft.com' || user?.email === 'shulesoft8@gmail.com') return true;
+
+    // Librarian role specific override for Library module
+    if (featureSlug === 'library' && user?.role?.toLowerCase() === 'librarian') return true;
+
+    const settings = await getPlatformSettings();
+    const plan = settings?.pricing?.[planName];
+    if (!plan) return false;
+
+    const allowedFeatures = plan.features || [];
+    const keywords = FEATURE_MAPPING[featureSlug] || [];
+    
+    // Check if any of the keywords/user-facing strings match what's in the plan's feature list
+    return keywords.some(k => allowedFeatures.some(af => af.includes(k) || k.includes(af)));
+  } catch (e) {
+    console.error("Feature gating error:", e);
+    return false;
+  }
+}
