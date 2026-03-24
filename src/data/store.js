@@ -2831,6 +2831,7 @@ let _syncing = false;
 export async function triggerSync() {
   if (_syncing || !navigator.onLine) return;
   _syncing = true;
+  window.dispatchEvent(new Event('syncStarted'));
   
   try {
     const pending = await getPendingSync();
@@ -2846,6 +2847,17 @@ export async function triggerSync() {
           case syncTypes.ADD_MARK: {
             const { error: err2 } = await supabase.from('marks').insert([item.payload]);
             if (!err2) success = true;
+            break;
+          }
+          case syncTypes.UPDATE_STUDENT: {
+            const { id: studentId, ...updates } = item.payload;
+            const { error: err3 } = await supabase.from('students').update(updates).eq('id', studentId);
+            if (!err3) success = true;
+            break;
+          }
+          case syncTypes.ADD_ATTENDANCE: {
+            const { error: err4 } = await supabase.from('attendance').upsert(item.payload);
+            if (!err4) success = true;
             break;
           }
           default:
@@ -2866,6 +2878,75 @@ export async function triggerSync() {
     _syncing = false;
     window.dispatchEvent(new Event('syncCompleted'));
   }
+}
+
+// ============= M-PESA RECONCILIATION =============
+
+/**
+ * Fetch M-Pesa callbacks that are "orphaned" or pending manual action
+ */
+export async function getOrphanedMpesaCallbacks() {
+  if (!_currentSchoolId) return [];
+  const { data, error } = await supabase
+    .from('mpesa_callbacks')
+    .select('*')
+    .eq('school_id', _currentSchoolId)
+    .in('status', ['pending', 'orphaned', 'failed'])
+    .order('created_at', { ascending: false });
+  if (error) throw error;
+  return data || [];
+}
+
+/**
+ * Manually reconcile an orphaned payment to a student
+ */
+export async function reconcileMpesaPayment(callbackId, studentId) {
+  const { data: callback, error: cbError } = await supabase
+    .from('mpesa_callbacks')
+    .select('*')
+    .eq('id', callbackId)
+    .single();
+  
+  if (cbError) throw cbError;
+  if (!callback) throw new Error("Payment record not found.");
+
+  // 1. Update the callback status
+  const { error: updateError } = await supabase
+    .from('mpesa_callbacks')
+    .update({ 
+      student_id: studentId,
+      status: 'processed'
+    })
+    .eq('id', callbackId);
+  
+  if (updateError) throw updateError;
+
+  // 2. Add to student fees
+  const { data: fee, error: feeError } = await supabase
+    .from('fees')
+    .select('*')
+    .eq('student_id', studentId)
+    .eq('period_id', _currentPeriodId)
+    .single();
+  
+  if (!feeError && fee) {
+    const newPaid = Number(fee.paid) + Number(callback.amount);
+    const newBal = Number(fee.total_fee) - newPaid;
+
+    await supabase
+      .from('fees')
+      .update({
+        paid: newPaid,
+        balance: newBal,
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', fee.id);
+  }
+
+  // 3. Log activity
+  await logPlatformActivity('PAYMENT_RECONCILED', `Reconciled payment ${callback.mpesa_receipt_number} to student ID ${studentId}`);
+
+  return { success: true };
 }
 
 // Auto-sync every 60s if online

@@ -38,6 +38,13 @@ export async function getPendingSync() {
 }
 
 /**
+ * Get count of pending sync items
+ */
+export async function getPendingSyncCount() {
+  return await db.syncQueue.where('status').equals('pending').count();
+}
+
+/**
  * Mark item as synced or failed
  */
 export async function updateSyncStatus(id, status, error = null) {

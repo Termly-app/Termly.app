@@ -6,6 +6,7 @@ import {
   CardIcon, RocketIcon, UserIcon, InfoIcon, SearchIcon, CheckIcon, ReceiptIcon, PrintIcon, AlertIcon, DashboardIcon, ClockIcon
 } from '../components/CommonIcons';
 import { printReceipt } from '../utils/receiptPrint';
+import MpesaReconciliation from './MpesaReconciliation';
 
 function PaymentModal({ student, fee, onPay, onClose }) {
   const [amount, setAmount] = useState('');
@@ -198,7 +199,10 @@ export default function Fees({ currentPeriodId }) {
       </div>
       <div className="tabs-container" style={{ marginBottom: 20 }}>
         <button className={`tab-btn ${activeTab === 'list' ? 'active' : ''}`} onClick={() => setActiveTab('list')}>Student Fee List</button>
-        <button className={`tab-btn ${activeTab === 'mpesa' ? 'active' : ''}`} onClick={() => setActiveTab('mpesa')}>Automated Payments (M-Pesa)</button>
+        <button className={`tab-btn ${activeTab === 'mpesa' ? 'active' : ''}`} onClick={() => setActiveTab('mpesa')}>M-Pesa Transactions</button>
+        {(currentUser?.role === 'Admin' || currentUser?.role === 'Finance') && (
+          <button className={`tab-btn ${activeTab === 'reconcile' ? 'active' : ''}`} onClick={() => setActiveTab('reconcile')}>Manual Reconciliation</button>
+        )}
       </div>
 
       {activeTab === 'list' ? (
@@ -250,6 +254,8 @@ export default function Fees({ currentPeriodId }) {
               })}</tbody></table>
           </div></div>
         </>
+      ) : activeTab === 'reconcile' ? (
+        <MpesaReconciliation currentUser={currentUser} />
       ) : (
         <div className="card slide-up">
           <div className="card-header flex-between" style={{ padding: '16px 20px', borderBottom: '1px solid var(--border)' }}>

@@ -33,6 +33,7 @@ import Billing      from './pages/Billing';
 import SuperAdmin   from './pages/SuperAdmin';
 import Landing      from './pages/Landing';
 import Register     from './pages/Register';
+import MpesaReconciliation from './pages/MpesaReconciliation';
 import TermsOfService  from './pages/legal/TermsOfService';
 import PrivacyPolicy   from './pages/legal/PrivacyPolicy';
 import AcceptableUse   from './pages/legal/AcceptableUse';
@@ -47,9 +48,8 @@ import ForgotPassword  from './pages/ForgotPassword';
 import ResetPassword   from './pages/ResetPassword';
 import CustomCursor    from './components/Common/CustomCursor';
 import Loader          from './components/Common/Loader';
-import ScrollToTop     from './components/ScrollToTop';
+import SyncIndicator from './components/Common/SyncIndicator';
 
-// Icon library — no emojis
 import {
   LogoMark,
   DashboardIcon, StudentsIcon, StaffIcon, AttendanceIcon, GradingIcon,
@@ -162,6 +162,7 @@ function Sidebar({ isOpen, onClose, onLogout, currentUser, subscriptionActive })
   const isAdmin     = role === 'admin';
   const isTeacher   = role === 'teacher';
   const isLibrarian = role === 'librarian';
+  const isFinance   = role === 'finance';
 
   const isPlatformAdmin = currentUser?.email === 'admin@shulesoft.com'
     || currentUser?.email === 'shulesoft8@gmail.com';
@@ -254,56 +255,60 @@ function Sidebar({ isOpen, onClose, onLogout, currentUser, subscriptionActive })
         <SbSection label="General" />
         <SbLink to="/dashboard" icon={DashboardIcon} label="Dashboard" onClick={onClose} locked={!subscriptionActive} />
         
-        {!isLibrarian && (
+        {/* Teachers and Admins manage students */}
+        {(isTeacher || isAdmin) && (
           <SbLink to="/students"  icon={StudentsIcon}  label="Students"  onClick={onClose} locked={!subscriptionActive} />
         )}
         
+        {/* Only Admins manage staff */}
         {isAdmin && (
           <SbLink to="/teachers" icon={StaffIcon} label="Staff" onClick={onClose} locked={!subscriptionActive} />
         )}
 
-        {(features.library || isLibrarian) && (
+        {/* Librarians and Admins manage library */}
+        {(isLibrarian || isAdmin) && features.library && (
           <SbLink to="/library" icon={BookIcon} label="Library" onClick={onClose} locked={!subscriptionActive} />
         )}
 
-        {!isLibrarian && (features.attendance || features.grading || features.timetable) && (
+        {/* Academic section for Teachers and Admins */}
+        {(isTeacher || isAdmin) && (features.attendance || features.grading || features.timetable) && (
           <SbSection label="Academics" />
         )}
         
-        {!isLibrarian && features.attendance && (isAdmin || isTeacher) && (
+        {(isTeacher || isAdmin) && features.attendance && (
           <SbLink to="/attendance" icon={AttendanceIcon} label="Attendance" onClick={onClose} locked={!subscriptionActive} />
         )}
         
-        {!isLibrarian && features.grading && (
+        {(isTeacher || isAdmin) && features.grading && (
           <SbLink to="/grading"   icon={GradingIcon}   label="Grading"    onClick={onClose} locked={!subscriptionActive} />
         )}
         
-        {!isLibrarian && features.timetable && (
+        {(isTeacher || isAdmin) && features.timetable && (
           <SbLink to="/timetable" icon={TimetableIcon} label="Timetable"  onClick={onClose} locked={!subscriptionActive} />
         )}
 
-        {!isLibrarian && (features.fees || isAdmin) && (
+        {/* Administration/Finance section */}
+        {(isAdmin || isFinance) && (features.fees || isAdmin) && (
           <SbSection label="Administration" />
         )}
         
-        {!isLibrarian && features.fees && !isTeacher && (
+        {(isAdmin || isFinance) && features.fees && (
           <SbLink to="/fees" icon={FeesIcon} label="Fees & Billing" onClick={onClose} locked={!subscriptionActive} />
         )}
+
         
-        {!isLibrarian && isAdmin && features.fees && (
+        {isAdmin && features.fees && (
           <SbLink to="/fee-structure" icon={FeeStructureIcon} label="Fee Structure" onClick={onClose} locked={!subscriptionActive} />
         )}
         
+        {/* Strictly Admin-only settings */}
         {isAdmin && (
-          <SbLink to="/security" icon={SecurityIcon} label="Security" onClick={onClose} />
-        )}
-        
-        {isAdmin && (
-          <SbLink to="/billing"  icon={SubscriptionIcon}  label="Subscription" onClick={onClose} red={!subscriptionActive} />
-        )}
-        
-        {isAdmin && (
-          <SbLink to="/settings" icon={SettingsIcon} label="Settings" onClick={onClose} />
+          <>
+            <SbSection label="System" />
+            <SbLink to="/security" icon={SecurityIcon} label="Security" onClick={onClose} />
+            <SbLink to="/billing"  icon={SubscriptionIcon}  label="Subscription" onClick={onClose} red={!subscriptionActive} />
+            <SbLink to="/settings" icon={SettingsIcon} label="Settings" onClick={onClose} />
+          </>
         )}
       </nav>
 
@@ -420,7 +425,6 @@ function App() {
             const isSubActive = await checkIsSubscriptionActive(profileData);
             setSubscriptionActive(isPlatAdmin || isSubActive);
             
-            // Database-backed check for UI branching
             const realIsPlatAdmin = await checkIsPlatformAdmin(session.user.email);
             setIsPlatformAdmin(realIsPlatAdmin);
           }
@@ -458,6 +462,12 @@ function App() {
       window.removeEventListener('periodChanged',    handlePeriodChange);
     };
   }, []);
+
+  const role = currentUser?.role?.toLowerCase() || '';
+  const isAdmin     = role === 'admin';
+  const isTeacher   = role === 'teacher';
+  const isLibrarian = role === 'librarian';
+  const isFinance   = role === 'finance';
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
@@ -560,6 +570,7 @@ function App() {
             <div className="topbar-title mobile-only">ShuleSoft</div>
           </div>
           <div className="topbar-actions">
+            <SyncIndicator />
             <div className="topbar-period">
               <span className="topbar-period-label">Period</span>
               <select
@@ -595,42 +606,58 @@ function App() {
                   <Route path="/support"  element={<ContactSupport />} />
                   <Route path="*"         element={<Navigate to="/billing" replace />} />
                 </>
-              ) : isLibrarian ? (
-                <>
-                  <Route path="/dashboard" element={<Dashboard currentUser={currentUser} onLogout={handleLogout} currentPeriodId={currentPeriodId} />} />
-                  <Route path="/library"   element={<Library currentUser={currentUser} currentPeriodId={currentPeriodId} />} />
-                  <Route path="*"          element={<Navigate to="/dashboard" replace />} />
-                </>
               ) : (
                 <>
+                  {/* Shared Dashboard */}
                   <Route path="/dashboard" element={<Dashboard currentUser={currentUser} onLogout={handleLogout} currentPeriodId={currentPeriodId} />} />
-                  <Route path="/students"  element={<Students currentUser={currentUser} currentPeriodId={currentPeriodId} />} />
-                  <Route path="/teachers"  element={<Teachers currentUser={currentUser} currentPeriodId={currentPeriodId} />} />
-                  <Route path="/grading"   element={<Grading currentUser={currentUser} currentPeriodId={currentPeriodId} />} />
-                  <Route path="/fees"      element={<Fees currentUser={currentUser} currentPeriodId={currentPeriodId} />} />
-                  <Route path="/attendance" element={<Attendance currentUser={currentUser} currentPeriodId={currentPeriodId} />} />
-                  <Route path="/library"    element={<Library currentUser={currentUser} currentPeriodId={currentPeriodId} />} />
-                  <Route path="/fee-structure" element={
-                    <FeeStructure
-                      schoolId={currentUser?.school_id}
-                      schoolName={currentUser?.schoolName}
-                      getFeeStructure={getFeeStructure}
-                      saveFeeStructure={saveFeeStructure}
-                      deleteFeeItem={deleteFeeItem}
-                    />
-                  } />
-                  <Route path="/timetable" element={
-                    <Timetable
-                      currentUser={currentUser}
-                      currentPeriodId={currentPeriodId}
-                      periods={periods}
-                    />
-                  } />
-                  <Route path="/security" element={<Security currentUser={currentUser} />} />
-                  <Route path="/settings" element={<Settings currentUser={currentUser} />} />
-                  <Route path="/billing"  element={<Billing />} />
+                  
+                  {/* Academic Routes: Admin & Teacher */}
+                  {(isAdmin || isTeacher) && (
+                    <>
+                      <Route path="/students"  element={<Students currentUser={currentUser} currentPeriodId={currentPeriodId} />} />
+                      <Route path="/grading"   element={<Grading currentUser={currentUser} currentPeriodId={currentPeriodId} />} />
+                      <Route path="/attendance" element={<Attendance currentUser={currentUser} currentPeriodId={currentPeriodId} />} />
+                      <Route path="/timetable" element={
+                        <Timetable currentUser={currentUser} currentPeriodId={currentPeriodId} periods={periods} />
+                      } />
+                    </>
+                  )}
+
+                  {/* Finance Routes: Admin & Finance */}
+                  {(isAdmin || isFinance) && (
+                    <>
+                      <Route path="/fees"      element={<Fees currentUser={currentUser} currentPeriodId={currentPeriodId} />} />
+                      {isAdmin && (
+                        <Route path="/fee-structure" element={
+                          <FeeStructure
+                            schoolId={currentUser?.school_id}
+                            schoolName={currentUser?.schoolName}
+                            getFeeStructure={getFeeStructure}
+                            saveFeeStructure={saveFeeStructure}
+                            deleteFeeItem={deleteFeeItem}
+                          />
+                        } />
+                      )}
+                    </>
+                  )}
+
+                  {/* Library Routes: Admin & Librarian */}
+                  {(isAdmin || isLibrarian) && (
+                    <Route path="/library" element={<Library currentUser={currentUser} currentPeriodId={currentPeriodId} />} />
+                  )}
+
+                  {/* Admin-Only Routes */}
+                  {isAdmin && (
+                    <>
+                      <Route path="/teachers" element={<Teachers currentUser={currentUser} currentPeriodId={currentPeriodId} />} />
+                      <Route path="/security" element={<Security currentUser={currentUser} />} />
+                      <Route path="/settings" element={<Settings currentUser={currentUser} />} />
+                      <Route path="/billing"  element={<Billing />} />
+                    </>
+                  )}
+
                   <Route path="/"         element={<Navigate to="/dashboard" replace />} />
-                  <Route path="*"         element={<Navigate to="/dashboard" replace />} />
+                  <Route path="*"         element={<div style={{padding:48, textAlign:'center'}}><h2>403 — Unauthorized</h2><p>You don't have permission to access this module.</p></div>} />
                 </>
               )}
             </Routes>

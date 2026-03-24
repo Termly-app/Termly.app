@@ -382,3 +382,9 @@ export const SubscriptionsIcon = ({ size = 18, color = 'currentColor', className
     <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/>
   </svg>
 );
+
+export const CloudSyncIcon = ({ size = 18, color = 'currentColor', className = '' }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={iconStyle} className={className}>
+    <path d="M17.5 19a3.5 3.5 0 1 1-5.83-2.65L12 16.5m0-13.5v4m0 0l-2-2m2 2l2-2M5.5 10A3.5 3.5 0 1 0 5 16.5m14-1.5a3.5 3.5 0 1 0-1.5-6.57"/>
+  </svg>
+);
