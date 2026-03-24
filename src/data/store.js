@@ -336,19 +336,26 @@ function mapProfileData(data) {
 // ============= SUBSCRIPTIONS & PAYMENTS =============
 export async function checkIsSubscriptionActive(profile) {
   if (!profile) return false;
-  if (profile.subscriptionStatus === 'Deactivated' || profile.subscriptionStatus === 'Suspended') return false;
+
+  // 1. PLATFORM OVERRIDE: ShuleSoft HQ or similar internal accounts are always active
+  if (profile.schoolName?.toLowerCase().includes('shulesoft hq')) return true;
 
   const now = new Date();
 
-  // 1. INDIVIDUAL FUTURE OVERRIDE - If school has an explicit future expiry, respect it above all
+  // 2. Explicit deactivation/suspension wins
+  if (profile.subscriptionStatus === 'Deactivated' || profile.subscriptionStatus === 'Suspended') return false;
+
+  // 3. INDIVIDUAL FUTURE OVERRIDE - If school has an explicit future expiry, respect it above all
   if (profile.subscriptionExpiry) {
     const pExp = new Date(profile.subscriptionExpiry);
-    if (!isNaN(pExp.getTime()) && pExp > now) {
-      return profile.subscriptionStatus === 'Active';
+    if (!isNaN(pExp.getTime())) {
+      // Set to end of day to avoid premature cutoff
+      pExp.setHours(23, 59, 59, 999);
+      if (pExp > now) return true;
     }
   }
 
-  // 2. GLOBAL TERM EXPIRY - Platform-wide cutoff for schools without an individual extension
+  // 4. GLOBAL TERM EXPIRY - Platform-wide cutoff for schools without an individual extension
   const globalExpiry = await getGlobalTermExpiry();
   if (globalExpiry) {
     const expDate = new Date(globalExpiry);
@@ -358,18 +365,6 @@ export async function checkIsSubscriptionActive(profile) {
       if (expDate < now) return false;
     }
   }
-
-  // 3. INDIVIDUAL EXPIRE CHECK - If they have a local date and it passed
-  if (profile.subscriptionExpiry) {
-    const pExp = new Date(profile.subscriptionExpiry);
-    if (!isNaN(pExp.getTime())) {
-      pExp.setHours(23, 59, 59, 999);
-      if (pExp < now) return false;
-    }
-  }
-
-  // 4. Default Expiry - If both global and local dates are missing but we are past a known platform deadline, fail
-  // We can hardcode or rely on the global settings which we already checked.
   
   return profile.subscriptionStatus === 'Active';
 }

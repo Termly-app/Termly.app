@@ -140,7 +140,7 @@ export default function SchoolsTab({
 
                       <td data-label="Action" className="col-act">
                         <div className="act-group">
-                          {['Active', 'Trial'].includes(p.subscription_status) ? (
+                          {isActive ? (
                             <button className="act-btn" onClick={() => handleDeactivate(s.id, s.name)}>Deactivate</button>
                           ) : (
                             <button className="act-btn g" onClick={() => { setActivateModal(s); setPayMethod('mpesa'); setPayRef(''); setActivateSuccess(false); }}>Activate</button>

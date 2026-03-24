@@ -161,21 +161,22 @@ export default function SuperAdmin({ currentUser, sidebarOpen, setSidebarOpen, o
 
   // ══ isSchoolActive — mirrors Billing page logic ════════════════════════
   const isSchoolActive = (s) => {
-    const p = s.school_profiles?.[0];
-    
     // 1. PLATFORM OVERRIDE: ShuleSoft HQ is always active
     if (s.name?.toLowerCase().includes('shulesoft hq')) return true;
 
+    const p = s.school_profiles?.[0];
     if (!p) return false;
 
     // 2. Explicit deactivation/suspension wins
     if (p.subscription_status === 'Deactivated' || p.subscription_status === 'Suspended') return false;
 
-    // 3. INDIVIDUAL EXPIRE OVERRIDE - Future expiry always wins
+    // 3. INDIVIDUAL FUTURE OVERRIDE - Future expiry always wins
     if (p.subscription_expiry) {
       const pExp = new Date(p.subscription_expiry);
-      if (isNaN(pExp.getTime()) === false && pExp > now) {
-        return true;
+      if (isNaN(pExp.getTime()) === false) {
+        // Set to end of day to avoid premature cutoff
+        pExp.setHours(23, 59, 59, 999);
+        if (pExp > now) return true;
       }
     }
 
@@ -191,7 +192,7 @@ export default function SuperAdmin({ currentUser, sidebarOpen, setSidebarOpen, o
 
     // 5. Status check for non-expired (or within global term)
     const st = p.subscription_status || 'Inactive';
-    return ['Active'].includes(st);
+    return st === 'Active';
   };
 
   // ══ COMPUTED VALUES ════════════════════════════════════════════════════
