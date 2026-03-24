@@ -164,7 +164,7 @@ export default function SuperAdmin({ currentUser, sidebarOpen, setSidebarOpen, o
     // 1. PLATFORM OVERRIDE: ShuleSoft HQ is always active
     if (s.name?.toLowerCase().includes('shulesoft hq')) return true;
 
-    const profiles = s.school_profiles || [];
+    const profiles = Array.isArray(s.school_profiles) ? s.school_profiles : [];
     if (profiles.length === 0) return false;
 
     // If ANY profile is functional, the school is active
