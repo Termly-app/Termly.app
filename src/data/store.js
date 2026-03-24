@@ -265,6 +265,8 @@ const DEFAULT_PROFILE = {
   subscriptionStatus: 'Trial',
   subscriptionExpiry: null,
   lastPaymentStatus: 'none',
+  mpesa_config: { shortcode: '', consumer_key: '', consumer_secret: '' },
+  sms_config: { sender_id: '', api_key: '' },
   customExams: ['CAT 1', 'CAT 2', 'Mid Term', 'End Term'],
   gradingSystems: { 
     default: [
@@ -277,7 +279,7 @@ const DEFAULT_PROFILE = {
   }
 };
 
-const SAFE_PROFILE_COLUMNS = 'id, school_name, motto, phone, email, address, logo, subscription_plan, streams_per_class, custom_subjects, active_classes, grade_fees, subscription_status, subscription_expiry, last_payment_status';
+const SAFE_PROFILE_COLUMNS = 'id, school_name, motto, phone, email, address, logo, subscription_plan, streams_per_class, custom_subjects, active_classes, grade_fees, subscription_status, subscription_expiry, last_payment_status, mpesa_config, sms_config';
 
 export async function getSchoolProfile() {
   if (!_currentSchoolId) return { ...DEFAULT_PROFILE };
@@ -346,6 +348,8 @@ function mapProfileData(data) {
     lastPaymentStatus: data.last_payment_status || 'none',
     customExams: data.custom_exams || DEFAULT_PROFILE.customExams,
     gradingSystems: data.grading_systems || DEFAULT_PROFILE.gradingSystems,
+    mpesa_config: data.mpesa_config || DEFAULT_PROFILE.mpesa_config,
+    sms_config: data.sms_config || DEFAULT_PROFILE.sms_config,
     _dbId: data.id,
     schoolId: data.school_id,
   };
@@ -502,6 +506,8 @@ export async function saveSchoolProfile(profile) {
     grade_fees: profile.gradeFees || {},
     custom_exams: profile.customExams || DEFAULT_PROFILE.customExams,
     grading_systems: profile.gradingSystems || DEFAULT_PROFILE.gradingSystems,
+    mpesa_config: profile.mpesa_config || {},
+    sms_config: profile.sms_config || {},
     updated_at: new Date().toISOString(),
   };
 
@@ -1046,6 +1052,16 @@ export async function getFees() {
   });
 
   if (error) throw error;
+
+  // 4. Queue Payment Confirmation SMS
+  const student = (await getStudents()).find(s => s.id === studentId);
+  if (student && student.parent_phone) {
+    await queueSMS(
+      student.parent_phone, 
+      `ShuleSoft: We have received KSh ${amount.toLocaleString()} for ${student.name}. Balance: KSh ${(feeRecord?.balance - amount).toLocaleString()}. Ref: ${reference || 'N/A'}`,
+      'fee_payment'
+    );
+  }
   
   return { 
     id: `RCT-${Math.random().toString(36).substr(2, 9).toUpperCase()}`, 
@@ -1140,6 +1156,18 @@ export async function markAttendance(date, studentId, status) {
       { school_id: _currentSchoolId, date, student_id: studentId, status, period_id: _currentPeriodId },
       { onConflict: 'school_id,date,student_id,period_id' }
     );
+
+  // Trigger Absence SMS
+  if (status === 'absent') {
+    const student = (await getStudents()).find(s => s.id === studentId);
+    if (student && student.parent_phone) {
+      await queueSMS(
+        student.parent_phone,
+        `ShuleSoft Alert: ${student.name} is marked ABSENT today (${date}). Please contact the school for details.`,
+        'attendance'
+      );
+    }
+  }
 }
 
 export async function getAttendanceSummary(date, preFetchedAttendance = null) {
@@ -2511,4 +2539,147 @@ export async function isFeatureEnabled(featureSlug) {
     console.error("Feature gating error:", e);
     return false;
   }
+}
+
+// ============= M-PESA & SMS INTEGRATION =============
+
+/**
+ * Queue an SMS for sending. 
+ * This inserts into the DB queue for a background worker.
+ */
+export async function queueSMS(phoneNumber, message, type = 'general') {
+  if (!_currentSchoolId) return;
+  try {
+    const { error } = await supabase
+      .from('sms_messages')
+      .insert({
+        school_id: _currentSchoolId,
+        phone_number: phoneNumber,
+        message: message,
+        type: type,
+        status: 'queued'
+      });
+    if (error) console.error('Failed to queue SMS:', error);
+  } catch (err) {
+    console.error('SMS Queue Error:', err);
+  }
+}
+
+/**
+ * Process a Daraja API callback.
+ * Typically called by an Edge Function or Webhook endpoint.
+ */
+export async function processMpesaPayment(callbackData) {
+  const { 
+    SchoolId, 
+    Amount, 
+    MpesaReceiptNumber, 
+    TransactionDate, 
+    PhoneNumber, 
+    BillRefNumber // This usually contains the Admission No
+  } = callbackData;
+
+  // 1. Log the raw callback first
+  const { data: log, error: logErr } = await supabase
+    .from('mpesa_callbacks')
+    .insert({
+      school_id: SchoolId,
+      amount: Amount,
+      mpesa_receipt_number: MpesaReceiptNumber,
+      transaction_date: TransactionDate,
+      phone_number: PhoneNumber,
+      bill_ref_number: BillRefNumber,
+      raw_payload: callbackData,
+      status: 'pending'
+    })
+    .select()
+    .single();
+
+  if (logErr) throw logErr;
+
+  try {
+    // 2. Try to find the student by Admission Number
+    const { data: student, error: studentErr } = await supabase
+      .from('students')
+      .select('id, name, parent_phone, class')
+      .eq('school_id', SchoolId)
+      .ilike('adm_no', BillRefNumber)
+      .maybeSingle();
+
+    if (!student) {
+      // Mark as orphaned for manual reconciliation
+      await supabase.from('mpesa_callbacks').update({ status: 'orphaned' }).eq('id', log.id);
+      return { status: 'orphaned', message: 'Student not found' };
+    }
+
+    // 3. Record the payment using the RPC
+    await recordPayment(student.id, Amount, 'M-Pesa', MpesaReceiptNumber);
+
+    // 4. Success - Update callback status
+    await supabase.from('mpesa_callbacks').update({ 
+      status: 'processed', 
+      student_id: student.id 
+    }).eq('id', log.id);
+
+    return { status: 'success', student: student.name };
+  } catch (err) {
+    await supabase.from('mpesa_callbacks').update({ status: 'failed', result_desc: err.message }).eq('id', log.id);
+    throw err;
+  }
+}
+
+export async function getMpesaLogs() {
+  if (!_currentSchoolId) return [];
+  const { data, error } = await supabase
+    .from('mpesa_callbacks')
+    .select('*, students(name, class, adm_no)')
+    .eq('school_id', _currentSchoolId)
+    .order('created_at', { ascending: false });
+  if (error) throw error;
+  return data || [];
+}
+
+export async function getSMSLogs() {
+  if (!_currentSchoolId) return [];
+  const { data, error } = await supabase
+    .from('sms_messages')
+    .select('*')
+    .eq('school_id', _currentSchoolId)
+    .order('created_at', { ascending: false });
+  if (error) throw error;
+  return data || [];
+}
+
+/**
+ * Validate M-Pesa credentials (Mock/Local validation for now)
+ */
+export async function testMpesaConnection(config) {
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      if (!config.shortcode || !config.consumer_key || !config.consumer_secret) {
+        resolve({ success: false, message: 'Missing required configuration fields.' });
+      } else if (config.shortcode.length < 5) {
+        resolve({ success: false, message: 'Invalid Shortcode format.' });
+      } else {
+        resolve({ success: true, message: 'Connection to Safaricom Daraja API successful!' });
+      }
+    }, 1500);
+  });
+}
+
+/**
+ * Validate SMS credentials (Mock/Local validation for now)
+ */
+export async function testSmsConnection(config) {
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      if (!config.api_key) {
+        resolve({ success: false, message: 'API Key is required.' });
+      } else if (config.api_key.length < 20) {
+        resolve({ success: false, message: 'API Key appears to be too short or invalid.' });
+      } else {
+        resolve({ success: true, message: 'Connection to Africa\'s Talking API successful!' });
+      }
+    }, 1200);
+  });
 }

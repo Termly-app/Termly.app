@@ -119,6 +119,8 @@ export default function SuperAdmin({ currentUser, isPlatformAdmin, sidebarOpen, 
   const [statusMsg,      setStatusMsg]      = useState('');
   const [subEndDate,     setSubEndDate]     = useState('');
   const [plans,          setPlans]          = useState([]);
+  const [smsConfig,      setSmsConfig]      = useState({ senderId: '', apiKey: '' });
+  const [mpesaConfig,    setMpesaConfig]    = useState({ shortcode: '', consumerKey: '', consumerSecret: '' });
   const [priceSaved,     setPriceSaved]     = useState(false);
 
   // ── Chart refs ───────────────────────────────────────────────────────────
@@ -459,6 +461,8 @@ export default function SuperAdmin({ currentUser, isPlatformAdmin, sidebarOpen, 
         setSettings(cf || {});
         setGwInstructions(cf?.billing?.instructions || '');
         setStatusMsg(cf?.platform?.status_message || '');
+        setSmsConfig(cf?.sms || { senderId: '', apiKey: '' });
+        setMpesaConfig(cf?.mpesa_api || { shortcode: '', consumerKey: '', consumerSecret: '' });
         
         // Use both possible expiry field names for consistency with store.js
         const gExp = cf?.billing?.expiry_date || cf?.billing?.term_expiry || '';
@@ -910,7 +914,7 @@ export default function SuperAdmin({ currentUser, isPlatformAdmin, sidebarOpen, 
                 {activeTab === 'subscriptions' && <SubscriptionsTab  {...commonProps} settings={settings} subBreakRef={subBreakRef} />}
                 {activeTab === 'revenue'       && <RevenueTab        {...commonProps} revPeriod={revPeriod} setRevPeriod={setRevPeriod} revPeriodLabel={revPeriodLabel} revBigRef={revBigRef} />}
                 {activeTab === 'activity'      && <ActivityTab       filteredActivity={filteredActivity} />}
-                {activeTab === 'config'        && <SettingsTab       gwInstructions={gwInstructions} setGwInstructions={setGwInstructions} statusMsg={statusMsg} setStatusMsg={setStatusMsg} subEndDate={subEndDate} setSubEndDate={setSubEndDate} plans={plans} setPlans={setPlans} priceSaved={priceSaved} setPriceSaved={setPriceSaved} handleUpdateSetting={handleUpdateSetting} updatePlatformSetting={updatePlatformSetting} loadData={loadData} setMessage={setMessage} />}
+                {activeTab === 'config'        && <SettingsTab       gwInstructions={gwInstructions} setGwInstructions={setGwInstructions} statusMsg={statusMsg} setStatusMsg={setStatusMsg} subEndDate={subEndDate} setSubEndDate={setSubEndDate} plans={plans} setPlans={setPlans} smsConfig={smsConfig} setSmsConfig={setSmsConfig} mpesaConfig={mpesaConfig} setMpesaConfig={setMpesaConfig} priceSaved={priceSaved} setPriceSaved={setPriceSaved} handleUpdateSetting={handleUpdateSetting} updatePlatformSetting={updatePlatformSetting} loadData={loadData} setMessage={setMessage} />}
                 {activeTab === 'recovery'      && <RecoveryTab       discoveryMeta={discoveryMeta} repairingId={repairingId} handleRepair={handleRepair} />}
 
                 {/* Footer */}

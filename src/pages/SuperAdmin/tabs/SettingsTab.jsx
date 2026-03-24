@@ -83,6 +83,8 @@ export default function SettingsTab({
   statusMsg, setStatusMsg,
   subEndDate, setSubEndDate,
   plans, setPlans,
+  smsConfig, setSmsConfig,
+  mpesaConfig, setMpesaConfig,
   priceSaved, setPriceSaved,
   handleUpdateSetting,
   updatePlatformSetting,
@@ -102,6 +104,8 @@ export default function SettingsTab({
     }
     handleUpdateSetting('billing',  { instructions: gwInstructions, expiry_date: formattedDate });
     handleUpdateSetting('platform', { status_message: statusMsg });
+    handleUpdateSetting('sms',      smsConfig);
+    handleUpdateSetting('mpesa_api', mpesaConfig);
   };
 
   // ── Plan management ────────────────────────────────────────────────────
@@ -200,6 +204,29 @@ export default function SettingsTab({
               onChange={e => setStatusMsg(e.target.value)} />
             <div style={{ fontSize:'.6rem', color:'var(--sub)', marginTop:4 }}>
               Shown as a banner to all logged-in users when set.
+            </div>
+          </div>
+
+          <div style={{ marginBottom:20, padding:'16px 0', borderTop:'1px solid var(--edge)', borderBottom:'1px solid var(--edge)' }}>
+            <label style={{ ...S.label, color:'var(--vi)', marginBottom:12 }}>Platform Integration Gateways (HQ Only)</label>
+            
+            <div style={{ marginBottom:16 }}>
+              <div style={{ fontSize:'.62rem', color:'var(--sub2)', textTransform:'uppercase', letterSpacing:'.05em', marginBottom:4 }}>SMS (Platform Notifications)</div>
+              <div style={{ fontSize:'.55rem', color:'var(--sub)', marginBottom:6, fontStyle:'italic' }}>Used for system-wide alerts and ShuleSoft HQ communications.</div>
+              <div style={{ display:'flex', gap:8, marginBottom:8 }}>
+                <input type="text" style={{ ...S.input, flex:2 }} placeholder="Sender ID" value={smsConfig.senderId} onChange={e => setSmsConfig({...smsConfig, senderId: e.target.value.toUpperCase()})} />
+                <input type="password" style={{ ...S.input, flex:3 }} placeholder="API Key" value={smsConfig.apiKey} onChange={e => setSmsConfig({...smsConfig, apiKey: e.target.value})} />
+              </div>
+            </div>
+
+            <div style={{ marginBottom:4 }}>
+              <div style={{ fontSize:'.62rem', color:'var(--sub2)', textTransform:'uppercase', letterSpacing:'.05em', marginBottom:4 }}>M-Pesa (Platform Revenue)</div>
+              <div style={{ fontSize:'.55rem', color:'var(--sub)', marginBottom:6, fontStyle:'italic' }}>Used for school's subscription payments to ShuleSoft.</div>
+              <input type="text" style={{ ...S.input, marginBottom:8 }} placeholder="Shortcode" value={mpesaConfig.shortcode} onChange={e => setMpesaConfig({...mpesaConfig, shortcode: e.target.value})} />
+              <div style={{ display:'flex', gap:8 }}>
+                <input type="password" style={{ ...S.input }} placeholder="Consumer Key" value={mpesaConfig.consumerKey} onChange={e => setMpesaConfig({...mpesaConfig, consumerKey: e.target.value})} />
+                <input type="password" style={{ ...S.input }} placeholder="Consumer Secret" value={mpesaConfig.consumerSecret} onChange={e => setMpesaConfig({...mpesaConfig, consumerSecret: e.target.value})} />
+              </div>
             </div>
           </div>
 

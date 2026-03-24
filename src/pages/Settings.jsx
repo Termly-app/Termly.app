@@ -1,16 +1,18 @@
 import { useState, useEffect, useRef } from 'react';
-import { getSchoolProfile, saveSchoolProfile, importData, exportData, CBC_STRUCTURE, TERM_FEE, applyFeeStructure, getPeriods, createPeriod, setActivePeriod } from '../data/store';
+import { getSchoolProfile, saveSchoolProfile, importData, exportData, CBC_STRUCTURE, TERM_FEE, applyFeeStructure, getPeriods, createPeriod, setActivePeriod, testMpesaConnection, testSmsConnection } from '../data/store';
 import {
   ClockIcon, CheckIcon, SaveIcon, SchoolIcon, ImageIcon, FolderIcon,
   BookIcon, CardIcon, DiamondIcon, PhoneIcon, RefreshIcon, CrossIcon, PlusIcon,
-  CalendarIcon, DownloadIcon, UploadIcon
+  CalendarIcon, DownloadIcon, UploadIcon, ZapIcon, ShieldIcon
 } from '../components/CommonIcons';
 
 export default function Settings() {
   const [profile, setProfile] = useState({
     schoolName:'',motto:'',phone:'',email:'',address:'',
     logo:'',subscriptionPlan:'Basic',
-    activeClasses:[],gradeFees:{},streamsPerClass:{},customSubjects:{}
+    activeClasses:[],gradeFees:{},streamsPerClass:{},customSubjects:{},
+    mpesa_config: { shortcode: '', consumer_key: '', consumer_secret: '' },
+    sms_config: { sender_id: '', api_key: '' }
   });
   const [saved,setSaved]       = useState(false);
   const [loading,setLoading]   = useState(false);
@@ -22,6 +24,8 @@ export default function Settings() {
   const [newGradeItem, setNewGradeItem] = useState({ symbol: '', min: 0, max: 100, color: '#3b82f6' });
   const [periods, setPeriods]     = useState([]);
   const [newPeriod, setNewPeriod] = useState({ year: new Date().getFullYear(), term: 'Term 1' });
+  const [testingMpesa, setTestingMpesa] = useState(false);
+  const [testingSms, setTestingSms] = useState(false);
   const fileRef   = useRef(null);
   const backupRef = useRef(null);
 
@@ -151,6 +155,22 @@ export default function Settings() {
       setPeriods(per);
     } catch (err) { alert(err.message); }
     finally { setLoading(false); }
+  };
+
+  const handleTestMpesa = async () => {
+    setTestingMpesa(true);
+    try {
+      const res = await testMpesaConnection(profile.mpesa_config);
+      alert(res.message);
+    } finally { setTestingMpesa(false); }
+  };
+
+  const handleTestSms = async () => {
+    setTestingSms(true);
+    try {
+      const res = await testSmsConnection(profile.sms_config);
+      alert(res.message);
+    } finally { setTestingSms(false); }
   };
 
   const levels=Object.keys(CBC_STRUCTURE);
@@ -407,6 +427,102 @@ export default function Settings() {
                 </div>
 
               </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Integrations (M-Pesa & SMS) */}
+        <div className="card">
+          <div className="card-header">
+            <div>
+              <h3><ZapIcon size={20} color="var(--primary)" /> Gateway Integrations</h3>
+              <p style={{fontSize:'0.78rem',color:'var(--text-light)',margin:'2px 0 0'}}>Connect your school to M-Pesa and SMS networks</p>
+            </div>
+          </div>
+          <div className="card-body">
+            <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:24}}>
+              
+              {/* M-Pesa Daraja */}
+              <div style={sectionBox}>
+                <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',marginBottom:15}}>
+                  <div>
+                    <div style={{fontWeight:800,fontSize:'1rem',color:'var(--text-main)'}}>M-Pesa (Daraja API)</div>
+                    <div style={{fontSize:'0.75rem',color:'var(--text-light)'}}>Automate fee reconciliation & STK Pushes</div>
+                  </div>
+                  <div style={{padding:'4px 10px',borderRadius:20,background:'var(--primary-light)',color:'var(--primary)',fontSize:'0.65rem',fontWeight:700}}>Safaricom</div>
+                </div>
+
+                <div style={{background:'var(--bg-card)',padding:12,borderRadius:10,marginBottom:15,border:'1px solid var(--border)'}}>
+                  <div style={{fontSize:'0.72rem',fontWeight:700,color:'var(--text-light)',textTransform:'uppercase',marginBottom:8}}>Setup Instructions</div>
+                  <ol style={{fontSize:'0.75rem',color:'var(--text-main)',paddingLeft:16,lineHeight:1.6}}>
+                    <li>Login to <a href="https://developer.safaricom.co.ke/" target="_blank" rel="noreferrer" style={{color:'var(--primary)',fontWeight:600}}>Daraja Portal</a></li>
+                    <li>Create a "Lipan M-Pesa Paybill" app in My Apps</li>
+                    <li>Copy your **Shortcode**, **Consumer Key**, and **Secret** below</li>
+                  </ol>
+                </div>
+
+                <div style={{display:'flex',flexDirection:'column',gap:12}}>
+                  <div className="form-group">
+                    <label style={{fontSize:'0.7rem'}}>Business Shortcode / Paybill</label>
+                    <input className="form-input" placeholder="e.g. 174379" value={profile.mpesa_config?.shortcode||''} 
+                      onChange={e=>setProfile({...profile, mpesa_config: {...profile.mpesa_config, shortcode: e.target.value}})}/>
+                  </div>
+                  <div className="form-group">
+                    <label style={{fontSize:'0.7rem'}}>Consumer Key</label>
+                    <input className="form-input" type="password" placeholder="Daraja Consumer Key" value={profile.mpesa_config?.consumer_key||''} 
+                      onChange={e=>setProfile({...profile, mpesa_config: {...profile.mpesa_config, consumer_key: e.target.value}})}/>
+                  </div>
+                  <div className="form-group">
+                    <label style={{fontSize:'0.7rem'}}>Consumer Secret</label>
+                    <input className="form-input" type="password" placeholder="Daraja Consumer Secret" value={profile.mpesa_config?.consumer_secret||''} 
+                      onChange={e=>setProfile({...profile, mpesa_config: {...profile.mpesa_config, consumer_secret: e.target.value}})}/>
+                  </div>
+                  <button className="btn btn-ghost btn-sm" onClick={handleTestMpesa} disabled={testingMpesa} style={{width:'100%',marginTop:8}}>
+                    {testingMpesa ? 'Testing...' : 'Test M-Pesa Connection'}
+                  </button>
+                </div>
+              </div>
+
+              {/* Africa's Talking SMS */}
+              <div style={sectionBox}>
+                <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',marginBottom:15}}>
+                  <div>
+                    <div style={{fontWeight:800,fontSize:'1rem',color:'var(--text-main)'}}>SMS (Africa's Talking)</div>
+                    <div style={{fontSize:'0.75rem',color:'var(--text-light)'}}>Send automated payment & attendance alerts</div>
+                  </div>
+                  <div style={{padding:'4px 10px',borderRadius:20,background:'#DCFCE7',color:'#166534',fontSize:'0.65rem',fontWeight:700}}>Africa's Talking</div>
+                </div>
+
+                <div style={{background:'var(--bg-card)',padding:12,borderRadius:10,marginBottom:15,border:'1px solid var(--border)'}}>
+                  <div style={{fontSize:'0.72rem',fontWeight:700,color:'var(--text-light)',textTransform:'uppercase',marginBottom:8}}>Setup Instructions</div>
+                  <ul style={{fontSize:'0.75rem',color:'var(--text-main)',paddingLeft:16,lineHeight:1.6}}>
+                    <li>Create account at <a href="https://africastalking.com/" target="_blank" rel="noreferrer" style={{color:'#166534',fontWeight:600}}>Africa's Talking</a></li>
+                    <li>Apply for a **Sender ID** (Alphanumeric)</li>
+                    <li>Generate an **API Key** from the dashboard</li>
+                  </ul>
+                </div>
+
+                <div style={{display:'flex',flexDirection:'column',gap:12}}>
+                  <div className="form-group">
+                    <label style={{fontSize:'0.7rem'}}>Sender ID (Optional)</label>
+                    <input className="form-input" placeholder="e.g. SHULESOFT" value={profile.sms_config?.sender_id||''} 
+                      onChange={e=>setProfile({...profile, sms_config: {...profile.sms_config, sender_id: e.target.value}})}/>
+                  </div>
+                  <div className="form-group">
+                    <label style={{fontSize:'0.7rem'}}>API Key</label>
+                    <input className="form-input" type="password" placeholder="Africa's Talking API Key" value={profile.sms_config?.api_key||''} 
+                      onChange={e=>setProfile({...profile, sms_config: {...profile.sms_config, api_key: e.target.value}})}/>
+                  </div>
+                  <button className="btn btn-ghost btn-sm" onClick={handleTestSms} disabled={testingSms} style={{width:'100%',marginTop:8}}>
+                    {testingSms ? 'Testing...' : 'Test SMS Connection'}
+                  </button>
+                  <div style={{marginTop:8,padding:12,background:'var(--bg)',borderRadius:8,border:'1px dashed var(--border)',display:'flex',alignItems:'center',gap:10}}>
+                    <ShieldIcon size={18} color="var(--primary)" />
+                    <p style={{fontSize:'0.68rem',color:'var(--text-light)',margin:0}}>Credentials are encrypted at rest and never shared with third parties.</p>
+                  </div>
+                </div>
+              </div>
+
             </div>
           </div>
         </div>

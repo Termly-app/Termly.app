@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react';
-import { getStudents, getFees, recordPayment, getFeeSummary, getPrintHeader, getSchoolProfile, TERM_FEE, subscribeToChanges } from '../data/store';
+import { getStudents, getFees, recordPayment, getFeeSummary, getPrintHeader, getSchoolProfile, TERM_FEE, subscribeToChanges, getMpesaLogs } from '../data/store';
 import Loader from '../components/Common/Loader';
 import { CLASSES, CBC_STRUCTURE } from '../data/seedData';
 import { 
-  CardIcon, RocketIcon, UserIcon, InfoIcon, SearchIcon, CheckIcon, ReceiptIcon, PrintIcon, AlertIcon, DashboardIcon
+  CardIcon, RocketIcon, UserIcon, InfoIcon, SearchIcon, CheckIcon, ReceiptIcon, PrintIcon, AlertIcon, DashboardIcon, ClockIcon
 } from '../components/CommonIcons';
 import { printReceipt } from '../utils/receiptPrint';
 
@@ -95,6 +95,8 @@ export default function Fees({ currentPeriodId }) {
   const [profile, setProfile] = useState({});
   const [streamFilter, setStreamFilter] = useState('All');
   const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState('list'); // list or mpesa
+  const [mpesaLogs, setMpesaLogs] = useState([]);
 
   useEffect(() => {
     const init = async () => {
@@ -119,8 +121,8 @@ export default function Fees({ currentPeriodId }) {
 
   const refresh = async () => {
     try {
-      const [sData, fData, sumData] = await Promise.all([getStudents(), getFees(), getFeeSummary()]);
-      setStudents(sData); setFees(fData); setSummary(sumData);
+      const [sData, fData, sumData, mLogs] = await Promise.all([getStudents(), getFees(), getFeeSummary(), getMpesaLogs()]);
+      setStudents(sData); setFees(fData); setSummary(sumData); setMpesaLogs(mLogs);
     } catch (err) { console.error(err); }
   };
   const formatKSh = (n) => `KSh ${Number(n||0).toLocaleString()}`;
@@ -194,52 +196,114 @@ export default function Fees({ currentPeriodId }) {
         <div className="kpi-card blue"><div className="kpi-icon blue"><DashboardIcon size={20} /></div><div className="kpi-value">{formatKSh(summary.totalExpected)}</div><div className="kpi-label">Expected</div></div>
         <div className="kpi-card purple"><div className="kpi-icon purple"><CheckIcon size={20} /></div><div className="kpi-value">{summary.fullyPaid||0}</div><div className="kpi-label">Fully Paid</div></div>
       </div>
-      <div className="filter-bar">
-        <div className="search-bar"><span className="search-icon"><SearchIcon size={16} /></span><input type="text" placeholder="Search student..." value={search} onChange={e=>setSearch(e.target.value)}/></div>
-        <select className="form-select" value={classFilter} onChange={e=>{setClassFilter(e.target.value); setStreamFilter('All');}}>
-          <option value="All">All Classes</option>
-          {Object.entries(CBC_STRUCTURE).map(([levelName, levelData]) => {
-            const activeInLevel = levelData.grades.filter(g => profile.activeClasses?.includes(g));
-            if (activeInLevel.length === 0) return null;
-            return (
-              <optgroup key={levelName} label={levelName}>
-                {activeInLevel.map(g => <option key={g} value={g}>{g}</option>)}
-              </optgroup>
-            )
-          })}
-        </select>
-        <select className="form-select" value={streamFilter} onChange={e=>setStreamFilter(e.target.value)}>
-          <option value="All">All Streams</option>
-          {classFilter !== 'All' 
-             ? (profile.streamsPerClass?.[classFilter] || []).map(stream => <option key={stream} value={stream}>{stream}</option>)
-             : Object.values(profile.streamsPerClass || {}).flat().filter((v,i,a) => a.indexOf(v)===i).map((stream, idx) => <option key={idx} value={stream}>{stream}</option>)
-          }
-        </select>
-        <select className="form-select" value={statusFilter} onChange={e=>setStatusFilter(e.target.value)}><option value="All">All Status</option><option value="Paid">Fully Paid</option><option value="Partial">Partial</option><option value="Unpaid">Unpaid</option></select>
+      <div className="tabs-container" style={{ marginBottom: 20 }}>
+        <button className={`tab-btn ${activeTab === 'list' ? 'active' : ''}`} onClick={() => setActiveTab('list')}>Student Fee List</button>
+        <button className={`tab-btn ${activeTab === 'mpesa' ? 'active' : ''}`} onClick={() => setActiveTab('mpesa')}>Automated Payments (M-Pesa)</button>
       </div>
-      <div className="card"><div className="card-body" style={{padding:0}}>
-        <table className="data-table responsive-table"><thead><tr><th>Student</th><th>Class</th><th>Total Fee</th><th>Paid</th><th>Balance</th><th>Status</th><th>Action</th></tr></thead>
-          <tbody>{filtered.map(s=>{
-            const f=fees[s.id]||{totalFee:(profile.gradeFees?.[s.class]||TERM_FEE),paid:0,balance:(profile.gradeFees?.[s.class]||TERM_FEE)};
-            const st=f.balance<=0?'Paid':f.paid>0?'Partial':'Unpaid';
-            return(
-              <tr key={s.id}>
-                <td data-label="Student"><strong>{s.name}</strong><br/><span className="text-muted" style={{fontSize:'0.78rem'}}>{s.admNo}</span></td>
-                <td data-label="Class">{s.class}</td>
-                <td data-label="Total Fee">{formatKSh(f.totalFee)}</td>
-                <td data-label="Paid" className="text-success font-bold">{formatKSh(f.paid)}</td>
-                <td data-label="Balance" className={f.balance>0?'text-danger font-bold':'text-success font-bold'}>{formatKSh(f.balance)}</td>
-                <td data-label="Status"><span className={`badge ${st==='Paid'?'badge-success':st==='Partial'?'badge-warning':'badge-danger'}`}>{st}</span></td>
-                <td data-label="Action">
-                  <div className="inline-flex" style={{justifyContent:'inherit'}}>
-                    {f.balance>0&&<button className="btn btn-primary btn-sm" onClick={()=>setShowPayment(s)}><CardIcon size={14} /> Pay</button>}
-                    {f.payments&&f.payments.length>0&&<button className="btn btn-ghost btn-sm" onClick={()=>setShowReceipt({...f.payments[f.payments.length-1],studentName:s.name,studentClass:s.class,admNo:s.admNo,balance:f.balance})}><ReceiptIcon size={14} /></button>}
-                  </div>
-                </td>
-              </tr>
-            );
-          })}</tbody></table>
-      </div></div>
+
+      {activeTab === 'list' ? (
+        <>
+          <div className="filter-bar">
+            <div className="search-bar"><span className="search-icon"><SearchIcon size={16} /></span><input type="text" placeholder="Search student..." value={search} onChange={e=>setSearch(e.target.value)}/></div>
+            <select className="form-select" value={classFilter} onChange={e=>{setClassFilter(e.target.value); setStreamFilter('All');}}>
+              <option value="All">All Classes</option>
+              {Object.entries(CBC_STRUCTURE).map(([levelName, levelData]) => {
+                const activeInLevel = levelData.grades.filter(g => profile.activeClasses?.includes(g));
+                if (activeInLevel.length === 0) return null;
+                return (
+                  <optgroup key={levelName} label={levelName}>
+                    {activeInLevel.map(g => <option key={g} value={g}>{g}</option>)}
+                  </optgroup>
+                )
+              })}
+            </select>
+            <select className="form-select" value={streamFilter} onChange={e=>setStreamFilter(e.target.value)}>
+              <option value="All">All Streams</option>
+              {classFilter !== 'All' 
+                ? (profile.streamsPerClass?.[classFilter] || []).map(stream => <option key={stream} value={stream}>{stream}</option>)
+                : Object.values(profile.streamsPerClass || {}).flat().filter((v,i,a) => a.indexOf(v)===i).map((stream, idx) => <option key={idx} value={stream}>{stream}</option>)
+              }
+            </select>
+            <select className="form-select" value={statusFilter} onChange={e=>setStatusFilter(e.target.value)}><option value="All">All Status</option><option value="Paid">Fully Paid</option><option value="Partial">Partial</option><option value="Unpaid">Unpaid</option></select>
+          </div>
+          <div className="card"><div className="card-body" style={{padding:0}}>
+            <table className="data-table responsive-table"><thead><tr><th>Student</th><th>Class</th><th>Total Fee</th><th>Paid</th><th>Balance</th><th>Status</th><th>Action</th></tr></thead>
+              <tbody>{filtered.map(s=>{
+                const f=fees[s.id]||{totalFee:(profile.gradeFees?.[s.class]||TERM_FEE),paid:0,balance:(profile.gradeFees?.[s.class]||TERM_FEE)};
+                const st=f.balance<=0?'Paid':f.paid>0?'Partial':'Unpaid';
+                return(
+                  <tr key={s.id}>
+                    <td data-label="Student"><strong>{s.name}</strong><br/><span className="text-muted" style={{fontSize:'0.78rem'}}>{s.admNo}</span></td>
+                    <td data-label="Class">{s.class}</td>
+                    <td data-label="Total Fee">{formatKSh(f.totalFee)}</td>
+                    <td data-label="Paid" className="text-success font-bold">{formatKSh(f.paid)}</td>
+                    <td data-label="Balance" className={f.balance>0?'text-danger font-bold':'text-success font-bold'}>{formatKSh(f.balance)}</td>
+                    <td data-label="Status"><span className={`badge ${st==='Paid'?'badge-success':st==='Partial'?'badge-warning':'badge-danger'}`}>{st}</span></td>
+                    <td data-label="Action">
+                      <div className="inline-flex" style={{justifyContent:'inherit'}}>
+                        {f.balance>0&&<button className="btn btn-primary btn-sm" onClick={()=>setShowPayment(s)}><CardIcon size={14} /> Pay</button>}
+                        {f.payments&&f.payments.length>0&&<button className="btn btn-ghost btn-sm" onClick={()=>setShowReceipt({...f.payments[f.payments.length-1],studentName:s.name,studentClass:s.class,admNo:s.admNo,balance:f.balance})}><ReceiptIcon size={14} /></button>}
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}</tbody></table>
+          </div></div>
+        </>
+      ) : (
+        <div className="card slide-up">
+          <div className="card-header flex-between" style={{ padding: '16px 20px', borderBottom: '1px solid var(--border)' }}>
+            <h4 style={{ margin: 0 }}>M-Pesa Callbacks (Daraja API)</h4>
+            <div className="badge badge-info">{mpesaLogs.length} Transactions</div>
+          </div>
+          <div className="card-body" style={{ padding: 0 }}>
+            <table className="data-table">
+              <thead>
+                <tr>
+                  <th>Date</th>
+                  <th>Receipt</th>
+                  <th>Student/Account</th>
+                  <th>Phone</th>
+                  <th>Amount</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {mpesaLogs.length === 0 ? (
+                  <tr><td colSpan="6" className="text-center text-muted" style={{ padding: 40 }}>No automated payments received yet.</td></tr>
+                ) : (
+                  mpesaLogs.map(log => (
+                    <tr key={log.id}>
+                      <td className="text-muted" style={{ fontSize: '0.8rem' }}>{new Date(log.created_at).toLocaleString()}</td>
+                      <td><strong>{log.mpesa_receipt_number}</strong></td>
+                      <td>
+                        {log.students ? (
+                          <div>
+                            <strong>{log.students.name}</strong><br/>
+                            <span className="text-muted" style={{ fontSize: '0.75rem' }}>{log.students.adm_no} ({log.students.class})</span>
+                          </div>
+                        ) : (
+                          <div className="text-danger flex-center" style={{ gap: 4 }}>
+                            <AlertIcon size={14} /> 
+                            <span>Orphan: {log.bill_ref_number}</span>
+                          </div>
+                        )}
+                      </td>
+                      <td>{log.phone_number}</td>
+                      <td className="font-bold text-success">{formatKSh(log.amount)}</td>
+                      <td>
+                        <span className={`badge ${log.status === 'processed' ? 'badge-success' : log.status === 'orphaned' ? 'badge-danger' : 'badge-warning'}`}>
+                          {log.status === 'processed' ? 'Matched' : log.status === 'orphaned' ? 'Mismatch' : log.status}
+                        </span>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
       {showPayment&&<PaymentModal student={showPayment} fee={fees[showPayment.id] || {totalFee:(profile.gradeFees?.[showPayment.class]||TERM_FEE),paid:0,balance:(profile.gradeFees?.[showPayment.class]||TERM_FEE)}} onPay={handlePayment} onClose={()=>setShowPayment(null)}/>}
       {showReceipt&&<ReceiptModal receipt={showReceipt} profile={profile} onClose={()=>setShowReceipt(null)}/>}
     </div>
