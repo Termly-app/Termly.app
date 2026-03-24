@@ -1,4 +1,10 @@
-import { supabase } from '../lib/supabase';
+import { createClient } from '@supabase/supabase-js';
+import { db, queueChange, getPendingSync, updateSyncStatus, syncTypes } from './offlineStore';
+
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+
 import { CBC_STRUCTURE, CBC_CORE_COMPETENCIES, TERM_FEE, getLevelForGrade, getSubjectsForGrade } from './seedData';
 
 export { CBC_STRUCTURE, CBC_CORE_COMPETENCIES, TERM_FEE, getLevelForGrade, getSubjectsForGrade };
@@ -16,13 +22,13 @@ let _currentAuthUser = null;
 let _currentPeriodId = null;
 
 export const SEAT_LIMITS = {
-  Basic:   { students: 5, admins: 5,   price: 5999 },
-  Standard: { students: 300, admins: 10,  price: 15000 },
-  Premium: { students: 1000, admins: 30, price: 50000 },
-  Starter: { students: 5, admins: 5,   price: 5999 }, // Legacy
-  Fala:    { students: 5, admins: 5,   price: 5999 }, // Kenyan branding
-  Champe:  { students: 1000, admins: 30, price: 50000 },
-  School:  { students: 500, admins: 15,  price: 25000 },
+  Basic:   { students: 5, admins: 1,   price: 5999 },
+  Standard: { students: 300, admins: 1,  price: 15000 },
+  Premium: { students: 1000, admins: 1, price: 50000 },
+  Starter: { students: 5, admins: 1,   price: 5999 }, // Legacy
+  Fala:    { students: 5, admins: 1,   price: 5999 }, // Kenyan branding
+  Champe:  { students: 1000, admins: 1, price: 50000 },
+  School:  { students: 500, admins: 1,  price: 25000 },
   "Super Admin": { students: 9999, admins: 999, price: 0 }
 };
 
@@ -95,7 +101,53 @@ export async function registerSchool(name, email, plan, authUserId, adminName, a
     .single();
   if (schoolErr) throw schoolErr;
 
-  // 2. Create the school profile (default)
+// ============= CRYPTO UTILITIES =============
+// Derived key from Supabase URL (stable anchor for this environment)
+async function getCryptoKey() {
+  const enc = new TextEncoder();
+  const salt = enc.encode(supabaseUrl.substring(0, 16));
+  const baseKey = await window.crypto.subtle.importKey(
+    'raw', enc.encode('shulesoft-v1-secret'), { name: 'PBKDF2' }, false, ['deriveKey']
+  );
+  return window.crypto.subtle.deriveKey(
+    { name: 'PBKDF2', salt, iterations: 100000, hash: 'SHA-256' },
+    baseKey, { name: 'AES-GCM', length: 256 }, false, ['encrypt', 'decrypt']
+  );
+}
+
+async function encryptData(text) {
+  if (!text) return null;
+  const key = await getCryptoKey();
+  const iv = window.crypto.getRandomValues(new Uint8Array(12));
+  const enc = new TextEncoder();
+  const encrypted = await window.crypto.subtle.encrypt({ name: 'AES-GCM', iv }, key, enc.encode(text));
+  const combined = new Uint8Array(iv.length + encrypted.byteLength);
+  combined.set(iv);
+  combined.set(new Uint8Array(encrypted), iv.length);
+  return btoa(String.fromCharCode(...combined));
+}
+
+async function decryptData(encoded) {
+  if (!encoded || encoded.startsWith('mask_')) return encoded;
+  try {
+    const combined = new Uint8Array(atob(encoded).split('').map(c => c.charCodeAt(0)));
+    const iv = combined.slice(0, 12);
+    const data = combined.slice(12);
+    const key = await getCryptoKey();
+    const decrypted = await window.crypto.subtle.decrypt({ name: 'AES-GCM', iv }, key, data);
+    return new TextDecoder().decode(decrypted);
+  } catch (e) {
+    console.warn("Decryption failed, returning original:", e.message);
+    return encoded;
+  }
+}
+
+function maskSecret(val) {
+  if (!val || val.length < 4) return val;
+  return `${val.substring(0, 4)}...********`;
+}
+
+// 2. Create the school profile (default)
   const { error: profileErr } = await supabase
     .from('school_profiles')
     .insert({ 
@@ -346,10 +398,18 @@ function mapProfileData(data) {
     subscriptionStatus: data.subscription_status || 'Inactive',
     subscriptionExpiry: data.subscription_expiry || null,
     lastPaymentStatus: data.last_payment_status || 'none',
-    customExams: data.custom_exams || DEFAULT_PROFILE.customExams,
     gradingSystems: data.grading_systems || DEFAULT_PROFILE.gradingSystems,
-    mpesa_config: data.mpesa_config || DEFAULT_PROFILE.mpesa_config,
-    sms_config: data.sms_config || DEFAULT_PROFILE.sms_config,
+    mpesa_config: {
+      shortcode: data.mpesa_config?.shortcode || '',
+      consumer_key: maskSecret(data.mpesa_config?.consumer_key),
+      consumer_secret: maskSecret(data.mpesa_config?.consumer_secret),
+      _encrypted: data.mpesa_config // Keep raw for saving later if unchanged
+    },
+    sms_config: {
+      sender_id: data.sms_config?.sender_id || '',
+      api_key: maskSecret(data.sms_config?.api_key),
+      _encrypted: data.sms_config
+    },
     _dbId: data.id,
     schoolId: data.school_id,
   };
@@ -503,12 +563,30 @@ export async function saveSchoolProfile(profile) {
     streams_per_class: profile.streamsPerClass || defaultStreamsPerClass,
     active_classes: profile.activeClasses || DEFAULT_PROFILE.activeClasses,
     custom_subjects: profile.customSubjects || {},
-    grade_fees: profile.gradeFees || {},
     custom_exams: profile.customExams || DEFAULT_PROFILE.customExams,
     grading_systems: profile.gradingSystems || DEFAULT_PROFILE.gradingSystems,
-    mpesa_config: profile.mpesa_config || {},
-    sms_config: profile.sms_config || {},
     updated_at: new Date().toISOString(),
+  };
+
+  // Encrypt sensitive fields if they were modified (not masked)
+  const mpesa = { ...profile.mpesa_config };
+  const sms = { ...profile.sms_config };
+
+  const encryptIfNew = async (val, oldEncrypted) => {
+    if (!val) return null;
+    if (val.includes('...********')) return oldEncrypted; // Use old encrypted value if masked
+    return await encryptData(val);
+  };
+
+  row.mpesa_config = {
+    shortcode: mpesa.shortcode || '',
+    consumer_key: await encryptIfNew(mpesa.consumer_key, mpesa._encrypted?.consumer_key),
+    consumer_secret: await encryptIfNew(mpesa.consumer_secret, mpesa._encrypted?.consumer_secret),
+  };
+
+  row.sms_config = {
+    sender_id: sms.sender_id || '',
+    api_key: await encryptIfNew(sms.api_key, sms._encrypted?.api_key),
   };
 
   const attemptSave = async (payload) => {
@@ -683,7 +761,11 @@ export async function getUsers() {
 }
 
 export async function saveUsers(users) {
-  // Bulk update — used by Login during registration
+  // Bulk update
+  const admins = users.filter(u => u.role === 'Admin');
+  if (admins.length > 1) {
+    throw new Error("Only one Administrator per school is allowed.");
+  }
   for (const user of users) {
     await supabase.from('users')
       .update({ name: user.name, email: user.email, role: user.role })
@@ -692,6 +774,12 @@ export async function saveUsers(users) {
 }
 
 export async function addUser(user) {
+  if (user.role === 'Admin') {
+    const existing = await getUsers();
+    if (existing.some(u => u.role === 'Admin')) {
+      throw new Error("Only one Administrator is allowed per school.");
+    }
+  }
   // Use the RPC to securely create an Auth identity and a public.user record
   const { data, error } = await supabase.rpc('invite_sub_admin', {
     new_email: user.email,
@@ -743,13 +831,55 @@ export async function getUserByAuthId(authUserId) {
 }
 
 // ============= STUDENTS =============
+/**
+ * Get students for the current school (Offline-First)
+ */
 export async function getStudents() {
   if (!_currentSchoolId) return [];
-  const { data, error } = await supabase
-    .from('students')
-    .select('id, name, adm_no, class, stream, parent, parent_phone, gender, dob, join_date, notes, school_id, birth_cert_no, county, father_name, father_phone, mother_name, mother_phone, nemis_verified')
-    .eq('school_id', _currentSchoolId);
+  
+  // Try to load from offline cache first (SWR)
+  const cached = await db.students.where('school_id').equals(_currentSchoolId).toArray();
+  
+  // Background fetch from cloud
+  const fetchCloud = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('students')
+        .select('*')
+        .eq('school_id', _currentSchoolId)
+        .order('name');
+      if (error) throw error;
+      if (data) {
+        // Update offline cache
+        await db.students.bulkPut(data.map(s => ({ ...s, school_id: _currentSchoolId })));
+        window.dispatchEvent(new Event('studentsSynced'));
+      }
+    } catch (e) {
+      console.warn("Offline fetch: showing cached students.", e.message);
+    }
+  };
+  
+  fetchCloud(); // Fire and forget for internal sync
+  
+  if (cached.length > 0) {
+    return cached.map(s => ({
+      ...s,
+      admNo: s.adm_no,
+      parentPhone: s.parent_phone,
+      joinDate: s.join_date,
+      birthCertNo: s.birth_cert_no,
+      fatherName: s.father_name,
+      fatherPhone: s.father_phone,
+      motherName: s.mother_name,
+      motherPhone: s.mother_phone,
+      nemisVerified: s.nemis_verified
+    }));
+  }
+  
+  // If no cache, wait for cloud
+  const { data, error } = await supabase.from('students').select('*').eq('school_id', _currentSchoolId).order('name');
   if (error) throw error;
+  if (data) await db.students.bulkPut(data.map(s => ({ ...s, school_id: _currentSchoolId })));
   return (data || []).map(s => ({
     ...s,
     admNo: s.adm_no,
@@ -2654,9 +2784,16 @@ export async function getSMSLogs() {
  * Validate M-Pesa credentials (Mock/Local validation for now)
  */
 export async function testMpesaConnection(config) {
+  const key = config.consumer_key?.includes('...********') 
+    ? await decryptData(config._encrypted?.consumer_key) 
+    : config.consumer_key;
+  const secret = config.consumer_secret?.includes('...********')
+    ? await decryptData(config._encrypted?.consumer_secret)
+    : config.consumer_secret;
+
   return new Promise((resolve) => {
     setTimeout(() => {
-      if (!config.shortcode || !config.consumer_key || !config.consumer_secret) {
+      if (!config.shortcode || !key || !secret) {
         resolve({ success: false, message: 'Missing required configuration fields.' });
       } else if (config.shortcode.length < 5) {
         resolve({ success: false, message: 'Invalid Shortcode format.' });
@@ -2671,11 +2808,15 @@ export async function testMpesaConnection(config) {
  * Validate SMS credentials (Mock/Local validation for now)
  */
 export async function testSmsConnection(config) {
+  const apiKey = config.api_key?.includes('...********')
+    ? await decryptData(config._encrypted?.api_key)
+    : config.api_key;
+
   return new Promise((resolve) => {
     setTimeout(() => {
-      if (!config.api_key) {
+      if (!apiKey) {
         resolve({ success: false, message: 'API Key is required.' });
-      } else if (config.api_key.length < 20) {
+      } else if (apiKey.length < 20) {
         resolve({ success: false, message: 'API Key appears to be too short or invalid.' });
       } else {
         resolve({ success: true, message: 'Connection to Africa\'s Talking API successful!' });
@@ -2683,3 +2824,50 @@ export async function testSmsConnection(config) {
     }, 1200);
   });
 }
+
+// ============= OFFLINE SYNC MANAGER =============
+
+let _syncing = false;
+export async function triggerSync() {
+  if (_syncing || !navigator.onLine) return;
+  _syncing = true;
+  
+  try {
+    const pending = await getPendingSync();
+    for (const item of pending) {
+      try {
+        let success = false;
+        switch (item.type) {
+          case syncTypes.ADD_STUDENT: {
+            const { error: err1 } = await supabase.from('students').insert([item.payload]);
+            if (!err1) success = true;
+            break;
+          }
+          case syncTypes.ADD_MARK: {
+            const { error: err2 } = await supabase.from('marks').insert([item.payload]);
+            if (!err2) success = true;
+            break;
+          }
+          default:
+            success = true;
+            break;
+        }
+        
+        if (success) {
+          await updateSyncStatus(item.id, 'synced');
+        } else {
+          await updateSyncStatus(item.id, 'failed');
+        }
+      } catch (e) {
+        console.error("Sync item failed:", e);
+      }
+    }
+  } finally {
+    _syncing = false;
+    window.dispatchEvent(new Event('syncCompleted'));
+  }
+}
+
+// Auto-sync every 60s if online
+setInterval(triggerSync, 60000);
+window.addEventListener('online', triggerSync);

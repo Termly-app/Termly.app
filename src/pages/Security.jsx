@@ -107,14 +107,15 @@ export default function Security({ currentUser }) {
             {loading && <span className="text-muted" style={{ fontSize: '0.85rem' }}>Loading...</span>}
           </div>
           <div>
-            <button 
-              className="btn btn-primary" 
-              onClick={() => setShowModal(true)}
-              style={{ opacity: isAtLimit ? 0.6 : 1, cursor: isAtLimit ? 'not-allowed' : 'pointer'}}
-              title={isAtLimit ? 'Limit reached' : 'Add new user'}
-            >
-              + Add Admin User
-            </button>
+              <button 
+                className="btn btn-primary" 
+                onClick={() => setShowModal(true)}
+                style={{ opacity: isAtLimit ? 0.6 : 1, cursor: isAtLimit ? 'not-allowed' : 'pointer'}}
+                disabled={isAtLimit}
+                title={isAtLimit ? 'Limit reached' : 'Add new user'}
+              >
+                + Add Staff Member
+              </button>
           </div>
         </div>
       </div>
@@ -125,7 +126,7 @@ export default function Security({ currentUser }) {
         <div className="card">
           <div className="card-header">
             <h3><UsersIcon size={18} /> Access Management</h3>
-            <span className="badge badge-primary">{actualStaffCount} / {seatLimit} seats used</span>
+            <span className="badge badge-primary">{actualStaffCount} / {seatLimit} staff seats</span>
           </div>
           <div className="table-wrapper">
             <table className="table">
@@ -217,13 +218,14 @@ export default function Security({ currentUser }) {
           onClose={() => { setShowModal(false); setError(''); }}
           onSave={handleAdd}
           error={error}
+          adminExists={users.some(u => u.role === 'Admin' || u.role === 'admin')}
         />
       )}
     </div>
   );
 }
 
-function UserModal({ onClose, onSave, error }) {
+function UserModal({ onClose, onSave, error, adminExists }) {
   const [form, setForm] = useState({ name: '', email: '', role: 'Teacher' });
 
   const handleSubmit = (e) => {
@@ -270,7 +272,7 @@ function UserModal({ onClose, onSave, error }) {
               >
                 <option value="Teacher">Teacher (Grading, Attendance, Students)</option>
                 <option value="Finance">Finance (Fees, Students List)</option>
-                <option value="Admin">Admin (Full Access)</option>
+                <option value="Admin" disabled={adminExists}>Admin (Full Access) {adminExists ? '— (Limit: 1)' : ''}</option>
               </select>
             </div>
             <div className="form-group">

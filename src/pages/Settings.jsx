@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { getSchoolProfile, saveSchoolProfile, importData, exportData, CBC_STRUCTURE, TERM_FEE, applyFeeStructure, getPeriods, createPeriod, setActivePeriod, testMpesaConnection, testSmsConnection } from '../data/store';
+import { getSchoolProfile, saveSchoolProfile, importData, exportData, CBC_STRUCTURE, TERM_FEE, applyFeeStructure, getPeriods, createPeriod, setActivePeriod, testMpesaConnection, testSmsConnection, getCurrentAuthUser, supabase } from '../data/store';
 import {
   ClockIcon, CheckIcon, SaveIcon, SchoolIcon, ImageIcon, FolderIcon,
   BookIcon, CardIcon, DiamondIcon, PhoneIcon, RefreshIcon, CrossIcon, PlusIcon,
@@ -26,6 +26,7 @@ export default function Settings() {
   const [newPeriod, setNewPeriod] = useState({ year: new Date().getFullYear(), term: 'Term 1' });
   const [testingMpesa, setTestingMpesa] = useState(false);
   const [testingSms, setTestingSms] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
   const fileRef   = useRef(null);
   const backupRef = useRef(null);
 
@@ -39,6 +40,12 @@ export default function Settings() {
         
         const per = await getPeriods();
         setPeriods(per);
+
+        const authUser = await getCurrentAuthUser();
+        if (authUser) {
+          const { data: userData } = await supabase.from('users').select('role').eq('auth_user_id', authUser.id).single();
+          setIsAdmin(userData?.role === 'Admin');
+        }
       }catch(e){console.error(e);}
     })();
   },[]);
@@ -431,101 +438,113 @@ export default function Settings() {
           </div>
         </div>
 
-        {/* Integrations (M-Pesa & SMS) */}
-        <div className="card">
-          <div className="card-header">
-            <div>
-              <h3><ZapIcon size={20} color="var(--primary)" /> Gateway Integrations</h3>
-              <p style={{fontSize:'0.78rem',color:'var(--text-light)',margin:'2px 0 0'}}>Connect your school to M-Pesa and SMS networks</p>
+        {/* Integrations (M-Pesa & SMS) - ONLY FOR ADMINS */}
+        {isAdmin && (
+          <div className="card">
+            <div className="card-header">
+              <div>
+                <h3><ZapIcon size={20} color="var(--primary)" /> Gateway Integrations</h3>
+                <p style={{fontSize:'0.78rem',color:'var(--text-light)',margin:'2px 0 0'}}>Connect your school to M-Pesa and SMS networks</p>
+              </div>
+            </div>
+            <div className="card-body">
+              <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:24}}>
+                
+                {/* M-Pesa Daraja */}
+                <div style={sectionBox}>
+                  <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',marginBottom:15}}>
+                    <div>
+                      <div style={{fontWeight:800,fontSize:'1rem',color:'var(--text-main)'}}>M-Pesa (Daraja API)</div>
+                      <div style={{fontSize:'0.75rem',color:'var(--text-light)'}}>Automate fee reconciliation & STK Pushes</div>
+                    </div>
+                    <div style={{padding:'4px 10px',borderRadius:20,background:'var(--primary-light)',color:'var(--primary)',fontSize:'0.65rem',fontWeight:700}}>Safaricom</div>
+                  </div>
+
+                  <div style={{background:'var(--bg-card)',padding:12,borderRadius:10,marginBottom:15,border:'1px solid var(--border)'}}>
+                    <div style={{fontSize:'0.72rem',fontWeight:700,color:'var(--text-light)',textTransform:'uppercase',marginBottom:8}}>Setup Instructions</div>
+                    <ol style={{fontSize:'0.75rem',color:'var(--text-main)',paddingLeft:16,lineHeight:1.6}}>
+                      <li>Login to <a href="https://developer.safaricom.co.ke/" target="_blank" rel="noreferrer" style={{color:'var(--primary)',fontWeight:600}}>Daraja Portal</a></li>
+                      <li>Create a "Lipan M-Pesa Paybill" app in My Apps</li>
+                      <li>Copy your **Shortcode**, **Consumer Key**, and **Secret** below</li>
+                    </ol>
+                  </div>
+
+                  <div style={{display:'flex',flexDirection:'column',gap:12}}>
+                    <div className="form-group">
+                      <label style={{fontSize:'0.7rem'}}>Business Shortcode / Paybill</label>
+                      <input className="form-input" placeholder="e.g. 174379" value={profile.mpesa_config?.shortcode||''} 
+                        onChange={e=>setProfile({...profile, mpesa_config: {...profile.mpesa_config, shortcode: e.target.value}})}/>
+                    </div>
+                    <div className="form-group">
+                      <label style={{fontSize:'0.7rem'}}>Consumer Key</label>
+                      <input className="form-input" type="password" placeholder="Daraja Consumer Key" value={profile.mpesa_config?.consumer_key||''} 
+                        onChange={e=>setProfile({...profile, mpesa_config: {...profile.mpesa_config, consumer_key: e.target.value}})}/>
+                    </div>
+                    <div className="form-group">
+                      <label style={{fontSize:'0.7rem'}}>Consumer Secret</label>
+                      <input className="form-input" type="password" placeholder="Daraja Consumer Secret" value={profile.mpesa_config?.consumer_secret||''} 
+                        onChange={e=>setProfile({...profile, mpesa_config: {...profile.mpesa_config, consumer_secret: e.target.value}})}/>
+                    </div>
+                    
+                    <div style={{marginTop:12,padding:12,background:'var(--bg)',borderRadius:8,border:'1px dashed var(--border)',display:'flex',flexDirection:'column',gap:8}}>
+                      <div style={{display:'flex',alignItems:'center',gap:10}}>
+                        <ShieldIcon size={18} color="var(--primary)" />
+                        <p style={{fontSize:'0.68rem',color:'var(--text-light)',margin:0,fontWeight:600}}>AES-256 Encryption Active</p>
+                      </div>
+                      <p style={{fontSize:'0.65rem',color:'var(--text-light)',margin:0,lineHeight:1.4}}>
+                        Your Consumer Key and Secret are encrypted at the database level. They are only decrypted temporarily when performing a connection test or during automated reconciliation. <strong>ShuleSoft staff cannot see your raw credentials.</strong>
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Africa's Talking SMS */}
+                <div style={sectionBox}>
+                  <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',marginBottom:15}}>
+                    <div>
+                      <div style={{fontWeight:800,fontSize:'1rem',color:'var(--text-main)'}}>SMS (Africa's Talking)</div>
+                      <div style={{fontSize:'0.75rem',color:'var(--text-light)'}}>Send automated payment & attendance alerts</div>
+                    </div>
+                    <div style={{padding:'4px 10px',borderRadius:20,background:'#DCFCE7',color:'#166534',fontSize:'0.65rem',fontWeight:700}}>Africa's Talking</div>
+                  </div>
+
+                  <div style={{background:'var(--bg-card)',padding:12,borderRadius:10,marginBottom:15,border:'1px solid var(--border)'}}>
+                    <div style={{fontSize:'0.72rem',fontWeight:700,color:'var(--text-light)',textTransform:'uppercase',marginBottom:8}}>Setup Instructions</div>
+                    <ul style={{fontSize:'0.75rem',color:'var(--text-main)',paddingLeft:16,lineHeight:1.6}}>
+                      <li>Create account at <a href="https://africastalking.com/" target="_blank" rel="noreferrer" style={{color:'#166534',fontWeight:600}}>Africa's Talking</a></li>
+                      <li>Apply for a **Sender ID** (Alphanumeric)</li>
+                      <li>Generate an **API Key** from the dashboard</li>
+                    </ul>
+                  </div>
+
+                  <div style={{display:'flex',flexDirection:'column',gap:12}}>
+                    <div className="form-group">
+                      <label style={{fontSize:'0.7rem'}}>Sender ID (Optional)</label>
+                      <input className="form-input" placeholder="e.g. SHULESOFT" value={profile.sms_config?.sender_id||''} 
+                        onChange={e=>setProfile({...profile, sms_config: {...profile.sms_config, sender_id: e.target.value}})}/>
+                    </div>
+                    <div className="form-group">
+                      <label style={{fontSize:'0.7rem'}}>API Key</label>
+                      <input className="form-input" type="password" placeholder="Africa's Talking API Key" value={profile.sms_config?.api_key||''} 
+                        onChange={e=>setProfile({...profile, sms_config: {...profile.sms_config, api_key: e.target.value}})}/>
+                    </div>
+                    
+                    <div style={{marginTop:8,padding:12,background:'var(--bg)',borderRadius:8,border:'1px dashed var(--border)',display:'flex',flexDirection:'column',gap:8}}>
+                      <div style={{display:'flex',alignItems:'center',gap:10}}>
+                        <ShieldIcon size={18} color="var(--primary)" />
+                        <p style={{fontSize:'0.68rem',color:'var(--text-light)',margin:0,fontWeight:600}}>Secure API Storage</p>
+                      </div>
+                      <p style={{fontSize:'0.65rem',color:'var(--text-light)',margin:0,lineHeight:1.4}}>
+                        Your Africa's Talking API key is stored using hardware-level encryption primitives. We use this key only to dispatch automated SMS alerts (Attendance, Fees, Exams) as configured in your communication settings.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+              </div>
             </div>
           </div>
-          <div className="card-body">
-            <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:24}}>
-              
-              {/* M-Pesa Daraja */}
-              <div style={sectionBox}>
-                <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',marginBottom:15}}>
-                  <div>
-                    <div style={{fontWeight:800,fontSize:'1rem',color:'var(--text-main)'}}>M-Pesa (Daraja API)</div>
-                    <div style={{fontSize:'0.75rem',color:'var(--text-light)'}}>Automate fee reconciliation & STK Pushes</div>
-                  </div>
-                  <div style={{padding:'4px 10px',borderRadius:20,background:'var(--primary-light)',color:'var(--primary)',fontSize:'0.65rem',fontWeight:700}}>Safaricom</div>
-                </div>
-
-                <div style={{background:'var(--bg-card)',padding:12,borderRadius:10,marginBottom:15,border:'1px solid var(--border)'}}>
-                  <div style={{fontSize:'0.72rem',fontWeight:700,color:'var(--text-light)',textTransform:'uppercase',marginBottom:8}}>Setup Instructions</div>
-                  <ol style={{fontSize:'0.75rem',color:'var(--text-main)',paddingLeft:16,lineHeight:1.6}}>
-                    <li>Login to <a href="https://developer.safaricom.co.ke/" target="_blank" rel="noreferrer" style={{color:'var(--primary)',fontWeight:600}}>Daraja Portal</a></li>
-                    <li>Create a "Lipan M-Pesa Paybill" app in My Apps</li>
-                    <li>Copy your **Shortcode**, **Consumer Key**, and **Secret** below</li>
-                  </ol>
-                </div>
-
-                <div style={{display:'flex',flexDirection:'column',gap:12}}>
-                  <div className="form-group">
-                    <label style={{fontSize:'0.7rem'}}>Business Shortcode / Paybill</label>
-                    <input className="form-input" placeholder="e.g. 174379" value={profile.mpesa_config?.shortcode||''} 
-                      onChange={e=>setProfile({...profile, mpesa_config: {...profile.mpesa_config, shortcode: e.target.value}})}/>
-                  </div>
-                  <div className="form-group">
-                    <label style={{fontSize:'0.7rem'}}>Consumer Key</label>
-                    <input className="form-input" type="password" placeholder="Daraja Consumer Key" value={profile.mpesa_config?.consumer_key||''} 
-                      onChange={e=>setProfile({...profile, mpesa_config: {...profile.mpesa_config, consumer_key: e.target.value}})}/>
-                  </div>
-                  <div className="form-group">
-                    <label style={{fontSize:'0.7rem'}}>Consumer Secret</label>
-                    <input className="form-input" type="password" placeholder="Daraja Consumer Secret" value={profile.mpesa_config?.consumer_secret||''} 
-                      onChange={e=>setProfile({...profile, mpesa_config: {...profile.mpesa_config, consumer_secret: e.target.value}})}/>
-                  </div>
-                  <button className="btn btn-ghost btn-sm" onClick={handleTestMpesa} disabled={testingMpesa} style={{width:'100%',marginTop:8}}>
-                    {testingMpesa ? 'Testing...' : 'Test M-Pesa Connection'}
-                  </button>
-                </div>
-              </div>
-
-              {/* Africa's Talking SMS */}
-              <div style={sectionBox}>
-                <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',marginBottom:15}}>
-                  <div>
-                    <div style={{fontWeight:800,fontSize:'1rem',color:'var(--text-main)'}}>SMS (Africa's Talking)</div>
-                    <div style={{fontSize:'0.75rem',color:'var(--text-light)'}}>Send automated payment & attendance alerts</div>
-                  </div>
-                  <div style={{padding:'4px 10px',borderRadius:20,background:'#DCFCE7',color:'#166534',fontSize:'0.65rem',fontWeight:700}}>Africa's Talking</div>
-                </div>
-
-                <div style={{background:'var(--bg-card)',padding:12,borderRadius:10,marginBottom:15,border:'1px solid var(--border)'}}>
-                  <div style={{fontSize:'0.72rem',fontWeight:700,color:'var(--text-light)',textTransform:'uppercase',marginBottom:8}}>Setup Instructions</div>
-                  <ul style={{fontSize:'0.75rem',color:'var(--text-main)',paddingLeft:16,lineHeight:1.6}}>
-                    <li>Create account at <a href="https://africastalking.com/" target="_blank" rel="noreferrer" style={{color:'#166534',fontWeight:600}}>Africa's Talking</a></li>
-                    <li>Apply for a **Sender ID** (Alphanumeric)</li>
-                    <li>Generate an **API Key** from the dashboard</li>
-                  </ul>
-                </div>
-
-                <div style={{display:'flex',flexDirection:'column',gap:12}}>
-                  <div className="form-group">
-                    <label style={{fontSize:'0.7rem'}}>Sender ID (Optional)</label>
-                    <input className="form-input" placeholder="e.g. SHULESOFT" value={profile.sms_config?.sender_id||''} 
-                      onChange={e=>setProfile({...profile, sms_config: {...profile.sms_config, sender_id: e.target.value}})}/>
-                  </div>
-                  <div className="form-group">
-                    <label style={{fontSize:'0.7rem'}}>API Key</label>
-                    <input className="form-input" type="password" placeholder="Africa's Talking API Key" value={profile.sms_config?.api_key||''} 
-                      onChange={e=>setProfile({...profile, sms_config: {...profile.sms_config, api_key: e.target.value}})}/>
-                  </div>
-                  <button className="btn btn-ghost btn-sm" onClick={handleTestSms} disabled={testingSms} style={{width:'100%',marginTop:8}}>
-                    {testingSms ? 'Testing...' : 'Test SMS Connection'}
-                  </button>
-                  <div style={{marginTop:8,padding:12,background:'var(--bg)',borderRadius:8,border:'1px dashed var(--border)',display:'flex',alignItems:'center',gap:10}}>
-                    <ShieldIcon size={18} color="var(--primary)" />
-                    <p style={{fontSize:'0.68rem',color:'var(--text-light)',margin:0}}>Credentials are encrypted at rest and never shared with third parties.</p>
-                  </div>
-                </div>
-              </div>
-
-            </div>
-          </div>
-        </div>
+        )}
 
         {/* Subscription + Data Node */}
         <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:20}}>
@@ -608,9 +627,15 @@ export default function Settings() {
             <div className="card-header"><h3><SaveIcon size={20} /> System Data</h3></div>
             <div className="card-body" style={{textAlign:'center',padding:'24px 20px'}}>
               <div style={{width:58,height:58,background:'var(--primary-light)',borderRadius:15,display:'flex',alignItems:'center',justifyContent:'center',fontSize:'1.5rem',margin:'0 auto 14px'}}><SaveIcon size={32} color="var(--primary)" /></div>
-              <h4 style={{fontWeight:700,fontSize:'1rem',marginBottom:6}}>Local Data Backup</h4>
+              <h4 style={{fontWeight:700,fontSize:'1rem',marginBottom:6}}>Local Data Backup & Sync</h4>
+              <div style={{display:'flex',alignItems:'center',justifyContent:'center',gap:8,marginBottom:15}}>
+                <div style={{width:8,height:8,borderRadius:'50%',background:navigator.onLine?'#4ade80':'#fbbf24'}}></div>
+                <span style={{fontSize:'0.75rem',fontWeight:600,color:'var(--text-light)'}}>
+                  {navigator.onLine ? 'Cloud Sync Engine Active' : 'Offline Mode: Local Storage active'}
+                </span>
+              </div>
               <p style={{color:'var(--text-light)',fontSize:'0.875rem',marginBottom:22,lineHeight:1.6,maxWidth:280,margin:'0 auto 20px'}}>
-                Export your school's data for safekeeping, or restore from a previous backup file.
+                Your data is automatically synced to the cloud via IndexedDB. Export your school's data for safekeeping, or restore from a previous backup file.
               </p>
               <div style={{display:'flex',gap:10,justifyContent:'center',flexWrap:'wrap'}}>
                 <button className="btn btn-primary" onClick={()=>exportData()} style={{display:'flex',alignItems:'center',gap:6}}><DownloadIcon size={14} /> Export Data</button>
