@@ -162,22 +162,24 @@ export default function SuperAdmin({ currentUser, sidebarOpen, setSidebarOpen, o
   // ══ isSchoolActive — mirrors Billing page logic ════════════════════════
   const isSchoolActive = (s) => {
     const p = s.school_profiles?.[0];
+    
+    // 1. PLATFORM OVERRIDE: ShuleSoft HQ is always active
+    if (s.name?.toLowerCase().includes('shulesoft hq')) return true;
+
     if (!p) return false;
 
-    // 0. Explicit deactivation/suspension wins
+    // 2. Explicit deactivation/suspension wins
     if (p.subscription_status === 'Deactivated' || p.subscription_status === 'Suspended') return false;
 
-    // 1. INDIVIDUAL EXPIRE OVERRIDE - Future expiry always wins
+    // 3. INDIVIDUAL EXPIRE OVERRIDE - Future expiry always wins
     if (p.subscription_expiry) {
       const pExp = new Date(p.subscription_expiry);
       if (isNaN(pExp.getTime()) === false && pExp > now) {
-        // Fallback to 'Trial' if null/falsy
-        const st = p.subscription_status || 'Trial';
-        return ['Active', 'Trial'].includes(st);
+        return true;
       }
     }
 
-    // 2. GLOBAL CUTOFF - If no individual future extension, respect platform deadline
+    // 4. GLOBAL CUTOFF - Respect platform deadline for older schools
     if (subEndDate) {
       const gExp = new Date(subEndDate);
       if (isNaN(gExp.getTime()) === false) {
@@ -187,27 +189,18 @@ export default function SuperAdmin({ currentUser, sidebarOpen, setSidebarOpen, o
       }
     }
 
-    // 3. Status check for non-expired (or within global term)
-    const finalStatus = p.subscription_status || 'Trial';
-    return ['Active', 'Trial'].includes(finalStatus);
+    // 5. Status check for non-expired (or within global term)
+    const st = p.subscription_status || 'Inactive';
+    return ['Active'].includes(st);
   };
 
   // ══ COMPUTED VALUES ════════════════════════════════════════════════════
   const activeSchools        = schools.filter(isSchoolActive);
-  const expiredSchools       = schools.filter(s => {
+  const deactSchools         = schools.filter(s => {
     const p = s.school_profiles?.[0];
-    if (!p) return false;
-    
-    // Future individual expiry means NOT expired
-    if (p.subscription_expiry && new Date(p.subscription_expiry) > now) return false;
-
-    const globExp = subEndDate ? new Date(subEndDate) : null;
-    const isGlobExp = globExp && globExp < now;
-
-    if (isGlobExp) return true;
-    if (p.subscription_expiry && new Date(p.subscription_expiry) < now) return true;
-    return p.subscription_status === 'Expired';
+    return p && (p.subscription_status === 'Deactivated' || p.subscription_status === 'Suspended');
   });
+  const expiredSchools       = schools.filter(s => !isSchoolActive(s) && !deactSchools.some(d => d.id === s.id));
   const newThisMonth         = schools.filter(s => {
     const d = s.created_at || s.school_profiles?.[0]?.created_at;
     return d && new Date(d) > thirtyDaysAgo;
@@ -269,9 +262,9 @@ export default function SuperAdmin({ currentUser, sidebarOpen, setSidebarOpen, o
     const sStatus = (p.subscription_status || 'Active').toLowerCase();
     const matchQ  = !q || s.name?.toLowerCase().includes(q) || p.location?.toLowerCase().includes(q) || sPlan.includes(q);
     const matchS  = filterStatus === 'all'
-      || (filterStatus === 'active'      && sStatus === 'active')
+      || (filterStatus === 'active'      && isSchoolActive(s))
       || (filterStatus === 'expired'     && expiredSchools.some(ex => ex.id === s.id))
-      || (filterStatus === 'deactivated' && sStatus === 'deactivated');
+      || (filterStatus === 'deactivated' && deactSchools.some(de => de.id === s.id));
     return matchQ && matchS;
   });
   const filteredActivity = activity.filter(a =>
@@ -359,17 +352,16 @@ export default function SuperAdmin({ currentUser, sidebarOpen, setSidebarOpen, o
     planLabels = [...new Set(planLabels)];
     if (planLabels.length === 0) planLabels.push('Starter', 'Pro', 'Enterprise');
 
-    const active = planLabels.map(p => schools.filter(s => {
+    const active = planLabels.map(p => activeSchools.filter(s => {
       const d = s.school_profiles?.[0] || {};
       const sPlan = (s.plan || d.subscription_plan || 'Starter').toLowerCase();
-      return d.subscription_status?.toLowerCase() === 'active' && sPlan === p.toLowerCase();
+      return sPlan === p.toLowerCase();
     }).length);
 
-    const deact = planLabels.map(p => schools.filter(s => {
+    const deact = planLabels.map(p => deactSchools.filter(s => {
       const d = s.school_profiles?.[0] || {};
-      const st = d.subscription_status?.toLowerCase();
       const sPlan = (s.plan || d.subscription_plan || 'Starter').toLowerCase();
-      return st !== 'active' && !expiredSchools.some(ex => ex.id === s.id) && sPlan === p.toLowerCase();
+      return sPlan === p.toLowerCase();
     }).length);
 
     const expd = planLabels.map(p => expiredSchools.filter(s => {
@@ -384,7 +376,7 @@ export default function SuperAdmin({ currentUser, sidebarOpen, setSidebarOpen, o
         labels: planLabels, 
         datasets: [
           { label:'Active',      data:active, backgroundColor:'#ffffff' }, 
-          { label:'Deactivated', data:deact,  backgroundColor:'#a1a1aa' }, 
+          { label:'Deact/Susp',  data:deact,  backgroundColor:'#a1a1aa' }, 
           { label:'Expired',     data:expd,   backgroundColor:'#3f3f46' }
         ] 
       },
@@ -435,11 +427,12 @@ export default function SuperAdmin({ currentUser, sidebarOpen, setSidebarOpen, o
   }, [activeTab, schools, allPayments]);
 
   useChart(subBreakRef, (ctx) => {
-    const susp  = schools.filter(s => s.school_profiles?.[0]?.subscription_status === 'Suspended').length;
-    const deact = schools.filter(s => !['Active','Suspended'].includes(s.school_profiles?.[0]?.subscription_status)).length;
+    const active = activeSchools.length;
+    const deact  = deactSchools.length;
+    const expd   = expiredSchools.length;
     return new window.Chart(ctx, {
       type: 'doughnut',
-      data: { labels:['Active','Suspended','Deactivated','Expired'], datasets:[{ data:[activeCount,susp,deact,expiredCount], backgroundColor:['#ffffff','#a1a1aa','#71717a','#3f3f46'], borderWidth:0, hoverOffset:6 }] },
+      data: { labels:['Active','Deact/Susp','Expired'], datasets:[{ data:[active,deact,expd], backgroundColor:['#ffffff','#a1a1aa','#3f3f46'], borderWidth:0, hoverOffset:6 }] },
       options: { responsive:true, maintainAspectRatio:false, cutout:'68%', plugins:{ legend:{ display:true, position:'right', labels:{ color:'#71717a', padding:14, font:{size:11} } }, tooltip:TIP } },
     });
   }, [activeTab, schools]);

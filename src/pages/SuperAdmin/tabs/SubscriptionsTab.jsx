@@ -19,9 +19,10 @@ export default function SubscriptionsTab({
     }).length,
   }));
 
-  const suspendedCount = schools.filter(s => s.school_profiles?.[0]?.subscription_status === 'Suspended').length;
-  // Deactivated is anything that isn't Active, Suspended, or Expired
-  const deactivatedCount = Math.max(0, totalSchools - activeCount - suspendedCount - expiredCount);
+  const deactCount = schools.filter(s => {
+    const st = s.school_profiles?.[0]?.subscription_status;
+    return st === 'Deactivated' || st === 'Suspended';
+  }).length;
 
   return (
     <div className="tv">
@@ -29,8 +30,7 @@ export default function SubscriptionsTab({
       <div className="kpi-grid" style={{ marginBottom:14 }}>
         {[
           { a:'var(--te)',  c:'ni-t', l:'Active',      i:<CheckIcon size={14} />, v: activeCount,           ch:`${totalSchools ? Math.round((activeCount / totalSchools) * 100) : 0}% of total`, up:true  },
-          { a:'var(--sub)', c:'ni-d', l:'Deactivated', i:<ClockIcon size={14} />, v: deactivatedCount,      ch:'Awaiting payment', up:false },
-          { a:'var(--am)',  c:'ni-a', l:'Suspended',   i:<AlertIcon size={14} />, v: suspendedCount,        ch:'Admin action',     up:false },
+          { a:'var(--sub)', c:'ni-d', l:'Deact/Susp',  i:<AlertIcon size={14} />, v: deactCount,            ch:'Admin action / Pending', up:false },
           { a:'var(--ro)',  c:'ni-r', l:'Expired',     i:<AlertIcon size={14} />, v: expiredCount,          ch:'Needs renewal',    up:false },
         ].map((k, i) => (
           <div className="kpi-card" key={i}>
@@ -99,7 +99,7 @@ export default function SubscriptionsTab({
         <div className="cp-hd">
           <div>
             <div className="cp-lbl">Status Breakdown</div>
-            <div style={{ fontSize:'.62rem', color:'var(--sub)', marginTop:2 }}>Visual split: Active / Suspended / Deactivated / Expired</div>
+            <div style={{ fontSize:'.62rem', color:'var(--sub)', marginTop:2 }}>Visual split: Active / Deact/Susp / Expired</div>
           </div>
         </div>
         <div className="chart-box"><canvas ref={subBreakRef} height="220" /></div>

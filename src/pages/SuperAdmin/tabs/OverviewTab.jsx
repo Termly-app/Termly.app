@@ -50,7 +50,7 @@ export default function OverviewTab({
           <span>Status:</span>
           {['all', 'active', 'expired', 'deactivated'].map(s => (
             <button key={s} className={`fbtn${filterStatus === s ? ' on' : ''}`} onClick={() => setFilterStatus(s)}>
-              {s.charAt(0).toUpperCase() + s.slice(1)}
+              {s === 'deactivated' ? 'Deact/Susp' : s.charAt(0).toUpperCase() + s.slice(1)}
             </button>
           ))}
         </div>
@@ -160,8 +160,8 @@ export default function OverviewTab({
                       </div>
                     </div>
                     <div>
-                      <span className={sPill(active ? 'Active' : p.subscription_status)}>
-                        {active ? 'Active' : statusLabel(p.subscription_status)}
+                      <span className={sPill(getStatusRefined(p, active))}>
+                        {getStatusRefined(p, active)}
                       </span>
                       <div className="li-date">{fmtDate(p.created_at || s.created_at)}</div>
                     </div>

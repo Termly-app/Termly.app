@@ -336,7 +336,7 @@ export async function checkIsSubscriptionActive(profile) {
   if (profile.subscriptionExpiry) {
     const pExp = new Date(profile.subscriptionExpiry);
     if (!isNaN(pExp.getTime()) && pExp > now) {
-      return ['Active', 'Trial'].includes(profile.subscriptionStatus);
+      return profile.subscriptionStatus === 'Active';
     }
   }
 
@@ -363,7 +363,7 @@ export async function checkIsSubscriptionActive(profile) {
   // 4. Default Expiry - If both global and local dates are missing but we are past a known platform deadline, fail
   // We can hardcode or rely on the global settings which we already checked.
   
-  return ['Active', 'Trial'].includes(profile.subscriptionStatus);
+  return profile.subscriptionStatus === 'Active';
 }
 
 export async function submitPayment(amount, transactionCode, notes = '') {
@@ -1713,33 +1713,32 @@ export async function getPlatformStats() {
     const now             = new Date();
     const isGloballyExpired = globalExpiry && globalExpiry < now;
 
-    const totalSchools = sData.length;
-    
-    // Active means explicitly 'Active' or 'Trial' AND not and reached global/local expiry
-    const activeSchools = prData.filter(p => {
-      const pExp = p.subscription_expiry ? new Date(p.subscription_expiry) : null;
-      // Individual future expiry always wins
-      if (pExp && pExp > now) return ['Active', 'Trial'].includes(p.subscription_status);
-      
-      // Otherwise respect global
+    const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+
+    const checkActive = (p) => {
+      if (!p) return false;
+      // PLATFORM OVERRIDE: ShuleSoft HQ is always active
+      if (p.schools?.name?.toLowerCase().includes('shulesoft hq')) return true;
+
+      // 1. Explicit deactivation/suspension wins
+      if (p.subscription_status === 'Deactivated' || p.subscription_status === 'Suspended') return false;
+
+      // 2. Individual future expiry wins
+      if (p.subscription_expiry && new Date(p.subscription_expiry) > now) return true;
+
+      // 3. Global cutoff for older schools
       if (isGloballyExpired) return false;
-      
-      return ['Active', 'Trial'].includes(p.subscription_status);
-    }).length;
 
-    const suspendedSchools = prData.filter(p => p.subscription_status === 'Suspended').length;
-    const expiredSchools = prData.filter(p => {
-      const pExp = p.subscription_expiry ? new Date(p.subscription_expiry) : null;
-      // Individual future expiry means NOT expired
-      if (pExp && pExp > now) return false;
+      // 4. Status check
+      return p.subscription_status === 'Active';
+    };
 
-      if (isGloballyExpired) return true;
-      if (pExp && pExp < now) return true;
-      return p.subscription_status === 'Expired';
-    }).length;
+    const activeCount = prData.filter(checkActive).length;
+    const suspendedSchools = prData.filter(p => p.subscription_status === 'Suspended' || p.subscription_status === 'Deactivated').length;
+    const expiredSchools = prData.filter(p => !checkActive(p) && !['Suspended', 'Deactivated'].includes(p.subscription_status)).length;
     
-    // Deactivated means anything else (e.g., 'Inactive', 'Deactivated')
-    const deactivatedSchools = prData.filter(p => !['Active', 'Trial', 'Suspended', 'Expired'].includes(p.subscription_status)).length;
+    const totalSchools = sData.length;
+    const deactivatedSchools = suspendedSchools; // Grouped as requested
     
     const totalRev = pData
       .filter(p => p.status === 'Approved')
@@ -1771,7 +1770,7 @@ export async function getPlatformStats() {
 
     return {
       totalSchools: totalSchools || 0,
-      activeSchools: activeSchools || 0,
+      activeSchools: activeCount || 0,
       suspendedSchools: suspendedSchools || 0,
       expiredSchools: expiredSchools || 0,
       deactivatedSchools: deactivatedSchools || 0,
@@ -1780,7 +1779,7 @@ export async function getPlatformStats() {
       pendingPayments: pData.filter(p => p.status === 'Pending').length,
       revenueHistory,
       labels,
-      health: activeSchools >= expiredSchools ? 'Healthy' : 'Critical',
+      health: activeCount >= expiredSchools ? 'Healthy' : 'Critical',
       studCount: studCount || 0,
       examCount: examCount || 0,
       portCount: portCount || 0,
