@@ -141,8 +141,8 @@ export default function Register() {
           <div className="fblocks">
             <div className="fb">
               <span className="fb-ico"><BookIcon size={16} color="#fff" /></span>
-              <div className="fb-t">CBC Report Cards</div>
-              <div className="fb-d">KNEC-aligned portfolios generated in minutes, not days.</div>
+              <div className="fb-t">CBC & 8-4-4 Ready</div>
+              <div className="fb-d">Full KNEC-aligned portfolios & secondary grading.</div>
               <div className="fb-stat">
                 <div><div className="fb-n">3hrs</div><div className="fb-l">saved per teacher / term</div></div>
                 <div className="fb-badge">KNEC Ready</div>
@@ -150,11 +150,11 @@ export default function Register() {
             </div>
             <div className="fb">
               <span className="fb-ico"><CardIcon size={16} color="#fff" /></span>
-              <div className="fb-t">M-PESA Fees</div>
-              <div className="fb-d">Parents pay via Paybill. Receipts auto-generate instantly.</div>
+              <div className="fb-t">Fee Tracking</div>
+              <div className="fb-d">Manage collections with professional receipts and instant statements.</div>
               <div className="fb-stat">
-                <div><div className="fb-n">+23%</div><div className="fb-l">fee collection increase</div></div>
-                <div className="fb-badge">M-PESA</div>
+                <div><div className="fb-n">+18%</div><div className="fb-l">collection efficiency</div></div>
+                <div className="fb-badge">Finance</div>
               </div>
             </div>
             <div className="fb">

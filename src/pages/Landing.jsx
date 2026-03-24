@@ -228,8 +228,8 @@ export default function Landing() {
             <span className="bdot"></span>
             Built for Kenyan Schools · CBC Ready
           </div>
-          <h1 className="hero-h1">Manage your entire school easily<br/><span className="h1-dim">— students, fees, results —</span><br/>all in one system.</h1>
-          <p className="hero-sub">Built for Kenyan schools. Stop juggling bank slips and paper registers. Automate your M-PESA fee collection, secondary school grading, and CBC portfolios with ShuleSoft.</p>
+          <h1 className="hero-h1">The #1 CBC-Compliant School System in Kenya<br/><span className="h1-dim">— students, finances, results —</span><br/>all in one place.</h1>
+          <p className="hero-sub">ShuleSoft is built for the modern Kenyan classroom. Manage your secondary school grading and <strong>CBC learner portfolios</strong> with a system that's as fast as you are.</p>
           <div className="hero-btns">
             <Link to="/register" className="btn-p">
               Get access
@@ -357,8 +357,8 @@ export default function Landing() {
                 <div className="mr"><span className="mn">Njeri P.</span><span className="mtag" style={{ background: '#FEE2E2', color: '#B91C1C' }}>Pending</span></div>
               </div>
             </div>
-            <div className="fc-title">M-PESA Fee Collection</div>
-            <p className="fc-desc">Parents pay via M-PESA Paybill. Receipts are auto-generated and fees are reconciled instantly. No more manual tracking or lost bank slips.</p>
+            <div className="fc-title">Smart Fee Tracking</div>
+            <p className="fc-desc">Keep your school's finances in check. Professional receipts, instant balance tracking, and detailed financial reports for every term.</p>
           </div>
 
           <div className="fc reveal reveal-delay-2">
@@ -379,8 +379,8 @@ export default function Landing() {
                 <div className="mr"><span className="mn">Top scorer</span><span style={{ color: '#6B4EFF', fontWeight: 500 }}>Achieng — 96</span></div>
               </div>
             </div>
-            <div className="fc-title">Exams & CBC Portfolios</div>
-            <p className="fc-desc">Record marks for CATs, Mid-Term, and End-Term exams. Generate CBC learner portfolios and KNEC-standard report cards with a single click.</p>
+            <div className="fc-title">CBC, 8-4-4 & IGCSE Ready</div>
+            <p className="fc-desc">Record CATs, Mid-Term, and End-Term marks. Generate CBC learner portfolios and KNEC-standard report cards with a single click. Compliant with all Kenyan curricula.</p>
           </div>
         </div>
 
@@ -403,8 +403,8 @@ export default function Landing() {
                 </div>
               </div>
             </div>
-            <div className="fc-title">Digital Attendance</div>
-            <p className="fc-desc">Cloud-based registers that replace paper books. Track student and staff attendance with real-time reporting and analytics.</p>
+            <div className="fc-title">Staff & NEMIS Export</div>
+            <p className="fc-desc">Replace paper registers with cloud-based attendance. Export your school data to NEMIS format seamlessly, saving hours of manual data entry.</p>
           </div>
 
           <div className="fc fc-dark reveal reveal-delay-2">
