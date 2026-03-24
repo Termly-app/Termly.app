@@ -22,7 +22,7 @@ import {
   getTimetableSlots, saveTimetableSlot, clearTimetableSlot,
   getTeacherTimetable, clearAndSaveTimetable,
   getRequirements, getAllRequirements, saveRequirement, deleteRequirement,
-  getSubjectAssignments, getTeachers, checkTeacherConflict, getSchoolProfile,
+  getClassSubjectAssignments, getTeachers, checkTeacherConflict, getSchoolProfile,
 } from '../../data/store';
 import { 
   CalendarIcon, PrintIcon, BookIcon, SettingsIcon, CheckIcon, CrossIcon, 
@@ -523,7 +523,7 @@ export default function Timetable({ currentUser, currentPeriodId, periods = [] }
   // ── Auto-import from subject_assignments ──────────────────────────────
   const handleAutoImport = async () => {
     try {
-      const assignments = await getSubjectAssignments(schoolId, periodId, selClass, selStream || null);
+      const assignments = await getClassSubjectAssignments(schoolId, periodId, selClass, selStream || null);
       if (assignments.length === 0) {
         setMessage({ type:'err', text:'No subject assignments found for this class.' });
         return;

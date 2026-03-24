@@ -71,6 +71,8 @@ ALTER TABLE subject_assignments ENABLE ROW LEVEL SECURITY;
 -- ... (previous policies remain) ...
 
 -- Assignments RLS
+DROP POLICY IF EXISTS "assignments_select" ON subject_assignments;
+DROP POLICY IF EXISTS "assignments_modify" ON subject_assignments;
 CREATE POLICY "assignments_select" ON subject_assignments FOR SELECT USING (
   school_id IN (SELECT school_id FROM users WHERE auth_user_id = auth.uid())
   OR school_id IN (SELECT id FROM schools WHERE owner_id = auth.uid())
@@ -81,6 +83,8 @@ CREATE POLICY "assignments_modify" ON subject_assignments FOR ALL USING (
 );
 
 -- Config RLS
+DROP POLICY IF EXISTS "configs_select" ON timetable_configs;
+DROP POLICY IF EXISTS "configs_modify" ON timetable_configs;
 CREATE POLICY "configs_select" ON timetable_configs FOR SELECT USING (
   school_id IN (SELECT school_id FROM users WHERE auth_user_id = auth.uid())
   OR school_id IN (SELECT id FROM schools WHERE owner_id = auth.uid())
@@ -91,6 +95,8 @@ CREATE POLICY "configs_modify" ON timetable_configs FOR ALL USING (
 );
 
 -- Requirements RLS
+DROP POLICY IF EXISTS "reqs_select" ON timetable_requirements;
+DROP POLICY IF EXISTS "reqs_modify" ON timetable_requirements;
 CREATE POLICY "reqs_select" ON timetable_requirements FOR SELECT USING (
   school_id IN (SELECT school_id FROM users WHERE auth_user_id = auth.uid())
   OR school_id IN (SELECT id FROM schools WHERE owner_id = auth.uid())
@@ -101,6 +107,8 @@ CREATE POLICY "reqs_modify" ON timetable_requirements FOR ALL USING (
 );
 
 -- Slots RLS
+DROP POLICY IF EXISTS "slots_select" ON timetable_slots;
+DROP POLICY IF EXISTS "slots_modify" ON timetable_slots;
 CREATE POLICY "slots_select" ON timetable_slots FOR SELECT USING (
   school_id IN (SELECT school_id FROM users WHERE auth_user_id = auth.uid())
   OR school_id IN (SELECT id FROM schools WHERE owner_id = auth.uid())
