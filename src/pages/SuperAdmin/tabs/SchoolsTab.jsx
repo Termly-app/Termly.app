@@ -84,7 +84,7 @@ export default function SchoolsTab({
                   const pricing   = settings?.pricing || {};
                   const planKey   = Object.keys(pricing).find(k => k.toLowerCase() === curPlan.toLowerCase());
                   const planInfo  = planKey ? pricing[planKey] : { price:5999, limit:5 };
-                  const studentLimit = planInfo.limit || 5;
+                  const studentLimit = planInfo.limit || 150;
                   const adminLimit   = 5; // Forced to 5 as per user request
 
                   const schoolRevenue = (approvedPayments || [])

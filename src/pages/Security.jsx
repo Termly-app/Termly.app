@@ -50,15 +50,17 @@ export default function Security({ currentUser }) {
   
   // Fallbacks in case settings fail or plan isn't found
   const fallbackPlans = {
-    "Fala": { price: 5999, limit: 5 },
+    "Fala": { price: 5999, limit: 150 },
     "Champe": { price: 50000, limit: 5000 },
-    "Starter": { price: 5999, limit: 5 }
+    "Starter": { price: 5999, limit: 150 }
   };
   
   const planDetails = activePlanKey ? pricing[activePlanKey] : (fallbackPlans[planName] || fallbackPlans["Fala"]);
-  let seatLimit = activePlanKey ? (pricing[activePlanKey].limit || 5) : (fallbackPlans[planName]?.limit || 5);
   
-  // Strict override for Starter/Fala plans as requested (2/5 seats)
+  // Seat limit is for STAFF (Admins + Teachers)
+  let seatLimit = activePlanKey ? (pricing[activePlanKey].seat_limit || 5) : 5;
+  
+  // Strict override for Starter/Fala plans (5 staff seats)
   if (planName.toLowerCase().includes('starter') || planName.toLowerCase().includes('fala')) {
     seatLimit = 5;
   }
@@ -193,7 +195,7 @@ export default function Security({ currentUser }) {
             <ul style={{ listStyle: 'none', padding: 0, margin: 0, fontSize: '0.85rem', color: 'var(--text-light)', display: 'flex', flexDirection: 'column', gap: 8 }}>
               <li style={{ display: 'flex', justifyContent: 'space-between' }}>
                 <span>Max Students:</span>
-                <strong>{planDetails.limit || seatLimit}</strong>
+                <strong>{(planDetails.limit || 150).toLocaleString()}</strong>
               </li>
               <li style={{ display: 'flex', justifyContent: 'space-between', color: isAtLimit ? 'var(--danger)' : 'inherit' }}>
                 <span>Total Staff (Admins + Teachers):</span>
