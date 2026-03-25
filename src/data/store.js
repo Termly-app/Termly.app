@@ -6,8 +6,9 @@ const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 import { CBC_STRUCTURE, CBC_CORE_COMPETENCIES, TERM_FEE, getLevelForGrade, getSubjectsForGrade } from './seedData';
-
 export { CBC_STRUCTURE, CBC_CORE_COMPETENCIES, TERM_FEE, getLevelForGrade, getSubjectsForGrade };
+
+import { encryptData as encrypt, decryptData as decrypt } from '../utils/securityUtils';
 
 
 // ============= SaaS Subscription Tiers =============
@@ -100,47 +101,6 @@ export async function registerSchool(name, email, plan, authUserId, adminName, a
     .select('id, name, email, plan, owner_id, phone, location, created_at')
     .single();
   if (schoolErr) throw schoolErr;
-
-// ============= CRYPTO UTILITIES =============
-// Derived key from Supabase URL (stable anchor for this environment)
-async function getCryptoKey() {
-  const enc = new TextEncoder();
-  const salt = enc.encode(supabaseUrl.substring(0, 16));
-  const baseKey = await window.crypto.subtle.importKey(
-    'raw', enc.encode('shulesoft-v1-secret'), { name: 'PBKDF2' }, false, ['deriveKey']
-  );
-  return window.crypto.subtle.deriveKey(
-    { name: 'PBKDF2', salt, iterations: 100000, hash: 'SHA-256' },
-    baseKey, { name: 'AES-GCM', length: 256 }, false, ['encrypt', 'decrypt']
-  );
-}
-
-async function encryptData(text) {
-  if (!text) return null;
-  const key = await getCryptoKey();
-  const iv = window.crypto.getRandomValues(new Uint8Array(12));
-  const enc = new TextEncoder();
-  const encrypted = await window.crypto.subtle.encrypt({ name: 'AES-GCM', iv }, key, enc.encode(text));
-  const combined = new Uint8Array(iv.length + encrypted.byteLength);
-  combined.set(iv);
-  combined.set(new Uint8Array(encrypted), iv.length);
-  return btoa(String.fromCharCode(...combined));
-}
-
-async function decryptData(encoded) {
-  if (!encoded || encoded.startsWith('mask_')) return encoded;
-  try {
-    const combined = new Uint8Array(atob(encoded).split('').map(c => c.charCodeAt(0)));
-    const iv = combined.slice(0, 12);
-    const data = combined.slice(12);
-    const key = await getCryptoKey();
-    const decrypted = await window.crypto.subtle.decrypt({ name: 'AES-GCM', iv }, key, data);
-    return new TextDecoder().decode(decrypted);
-  } catch (e) {
-    console.warn("Decryption failed, returning original:", e.message);
-    return encoded;
-  }
-}
 
 function maskSecret(val) {
   if (!val || val.length < 4) return val;
@@ -575,7 +535,7 @@ export async function saveSchoolProfile(profile) {
   const encryptIfNew = async (val, oldEncrypted) => {
     if (!val) return null;
     if (val.includes('...********')) return oldEncrypted; // Use old encrypted value if masked
-    return await encryptData(val);
+    return await encrypt(val, _currentSchoolId);
   };
 
   row.mpesa_config = {
@@ -1898,7 +1858,9 @@ export async function restoreSchool(schoolId, monthsToAdd = 4) {
   let expiry = new Date();
   if (profileData && profileData.subscription_expiry) {
     const currentExpiry = new Date(profileData.subscription_expiry);
-    if (currentExpiry > expiry) expiry = currentExpiry;
+    if (currentExpiry > expiry) {
+      expiry = currentExpiry;
+    }
   }
   expiry.setMonth(expiry.getMonth() + monthsToAdd);
 
@@ -2785,10 +2747,10 @@ export async function getSMSLogs() {
  */
 export async function testMpesaConnection(config) {
   const key = config.consumer_key?.includes('...********') 
-    ? await decryptData(config._encrypted?.consumer_key) 
+    ? await decrypt(config._encrypted?.consumer_key, _currentSchoolId) 
     : config.consumer_key;
   const secret = config.consumer_secret?.includes('...********')
-    ? await decryptData(config._encrypted?.consumer_secret)
+    ? await decrypt(config._encrypted?.consumer_secret, _currentSchoolId)
     : config.consumer_secret;
 
   return new Promise((resolve) => {
@@ -2808,15 +2770,15 @@ export async function testMpesaConnection(config) {
  * Validate SMS credentials (Mock/Local validation for now)
  */
 export async function testSmsConnection(config) {
-  const apiKey = config.api_key?.includes('...********')
-    ? await decryptData(config._encrypted?.api_key)
+  const key = config.api_key?.includes('...********')
+    ? await decrypt(config._encrypted?.api_key, _currentSchoolId)
     : config.api_key;
 
   return new Promise((resolve) => {
     setTimeout(() => {
-      if (!apiKey) {
+      if (!key) {
         resolve({ success: false, message: 'API Key is required.' });
-      } else if (apiKey.length < 20) {
+      } else if (key.length < 20) {
         resolve({ success: false, message: 'API Key appears to be too short or invalid.' });
       } else {
         resolve({ success: true, message: 'Connection to Africa\'s Talking API successful!' });

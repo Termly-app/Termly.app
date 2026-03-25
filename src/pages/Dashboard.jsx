@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Link, Navigate } from 'react-router-dom';
+import { Link, Navigate, useNavigate } from 'react-router-dom';
 import {
   getStudents, getFeeSummary, getAttendanceSummary, getTodayStr,
   getFees, getSchoolStructure, getTeachers, getSchoolProfile,
@@ -12,8 +12,10 @@ import {
   RocketIcon, AlertIcon, LogoutIcon, ClockIcon, SearchIcon, DashboardIcon,
   LeafIcon, GraduationIcon, ChevronDownIcon, CheckIcon
 } from '../components/CommonIcons';
+import SetupWizard from '../components/SetupWizard';
 
 export default function Dashboard({ currentUser, onLogout, currentPeriodId }) {
+  const navigate = useNavigate();
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [periods, setPeriods] = useState([]);
@@ -142,8 +144,20 @@ export default function Dashboard({ currentUser, onLogout, currentPeriodId }) {
     { icon:<CardIcon size={18} />,    label:'Fees',           sub:'Fee collection & tracking', to:'/fees',    bg:'#FFFBEB',  color:'#F59E0B' },
   ];
 
+  const [showWizard, setShowWizard] = useState(data.totalStudents === 0 && !data.profile?.phone);
+
   return (
     <div className="animate-fade-up">
+      {showWizard && (
+        <SetupWizard 
+          profile={data.profile} 
+          totalStudents={data.totalStudents} 
+          onComplete={() => {
+            setShowWizard(false);
+            navigate('/billing');
+          }} 
+        />
+      )}
 
       {/* Page Header */}
       <div className="page-header">

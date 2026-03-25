@@ -37,6 +37,7 @@ import RevenueTab         from './tabs/RevenueTab';
 import ActivityTab        from './tabs/ActivityTab';
 import SettingsTab        from './tabs/SettingsTab';
 import RecoveryTab        from './tabs/RecoveryTab';
+import SecurityTab        from './tabs/SecurityTab';
 import { CrossIcon } from '../../components/CommonIcons';
 
 // Modals
@@ -760,6 +761,7 @@ export default function SuperAdmin({ currentUser, isPlatformAdmin, sidebarOpen, 
     { id:'subscriptions', cls:'ni-s', label:'Subscriptions',   icon: <RocketIcon size={15} /> },
     { id:'revenue',       cls:'ni-v', label:'Revenue',         icon: <CardIcon size={15} /> },
     { id:'activity',      cls:'ni-t', label:'Activity Log',    icon: <ClockIcon size={15} /> },
+    { id:'security',      cls:'ni-v', label:'Security',        icon: <ShieldIcon size={15} /> },
     { id:'config',        cls:'ni-d', label:'Settings',        icon: <ShieldIcon size={15} /> },
     { id:'recovery',      cls:'ni-r', label:'Data Recovery',   icon: <ShieldIcon size={15} /> },
   ];
