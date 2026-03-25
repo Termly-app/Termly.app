@@ -1,0 +1,114 @@
+.referral-tool {
+  background: var(--bg-card);
+  border: 2px dashed var(--primary-light);
+  border-radius: 20px;
+  padding: 24px;
+  position: relative;
+  overflow: hidden;
+}
+
+.ref-header {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.ref-title {
+  font-size: 1.1rem;
+  font-weight: 750;
+  margin-bottom: 2px;
+}
+
+.ref-sub {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+.ref-form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.ref-inputs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+@media (max-width: 600px) {
+  .ref-inputs { grid-template-columns: 1fr; }
+}
+
+.ref-input {
+  background: var(--bg-page);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 10px 14px;
+  font-size: 0.9rem;
+  color: var(--text);
+  transition: all 0.2s;
+}
+
+.ref-input:focus {
+  border-color: var(--primary);
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(111, 82, 232, 0.1);
+}
+
+.ref-btn {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+}
+
+.ref-divider {
+  text-align: center;
+  margin: 16px 0;
+  position: relative;
+}
+
+.ref-divider::before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: var(--border-light);
+  z-index: 1;
+}
+
+.ref-divider span {
+  background: var(--bg-card);
+  padding: 0 12px;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  position: relative;
+  z-index: 2;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-weight: 600;
+}
+
+.ref-social {
+  display: flex;
+  justify-content: center;
+}
+
+.ref-social-btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border-color: #25D366;
+  color: #25D366;
+}
+
+.ref-social-btn:hover {
+  background: rgba(37, 211, 102, 0.05);
+  border-color: #128C7E;
+}

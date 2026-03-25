@@ -46,6 +46,8 @@ import AboutUs         from './pages/AboutUs';
 import FAQ             from './pages/FAQ';
 import SecurityTrust   from './pages/SecurityTrust';
 import Docs            from './pages/Docs';
+import Blog            from './pages/Blog';
+import Partners        from './pages/Partners';
 import ForgotPassword  from './pages/ForgotPassword';
 import ResetPassword   from './pages/ResetPassword';
 import CustomCursor    from './components/Common/CustomCursor';
@@ -524,6 +526,8 @@ function App() {
           <Route path="/about"              element={<AboutUs />} />
           <Route path="/faq"                element={<FAQ />} />
           <Route path="/docs"               element={<Docs />} />
+          <Route path="/blog"               element={<Blog />} />
+          <Route path="/partners"           element={<Partners />} />
           <Route path="/forgot-password"    element={<ForgotPassword />} />
           <Route path="/reset-password"     element={<ResetPassword />} />
           <Route path="/security-trust"     element={<SecurityTrust />} />

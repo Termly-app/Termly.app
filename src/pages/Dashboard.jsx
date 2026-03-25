@@ -13,6 +13,7 @@ import {
   LeafIcon, GraduationIcon, ChevronDownIcon, CheckIcon
 } from '../components/CommonIcons';
 import SetupWizard from '../components/SetupWizard';
+import ReferralTool from '../components/ReferralTool';
 
 export default function Dashboard({ currentUser, onLogout, currentPeriodId }) {
   const navigate = useNavigate();
@@ -547,6 +548,12 @@ export default function Dashboard({ currentUser, onLogout, currentPeriodId }) {
         )}
 
       </div>
+
+      {/* SaaS Growth: Referral Tool */}
+      <div className="animate-fade-up" style={{ marginBottom: 40 }}>
+        <ReferralTool />
+      </div>
+
       <style>{`
         @media (max-width: 768px) {
           .page-header { flex-direction: column !important; align-items: flex-start !important; gap: 15px !important; }

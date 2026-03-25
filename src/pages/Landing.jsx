@@ -190,6 +190,8 @@ export default function Landing() {
             ShuleSoft
           </Link>
           <a href="#pricing" className="nlink">Pricing</a>
+          <Link to="/blog" className="nlink">Blog</Link>
+          <Link to="/partners" className="nlink">Partners</Link>
           <Link to="/docs" className="nlink">Docs</Link>
           <div className="nsep"></div>
           <Link to="/login" className="nlink">Sign in</Link>
@@ -522,7 +524,8 @@ export default function Landing() {
             <ul className="ft-links">
               <li><Link to="/about">About Us</Link></li>
               <li><Link to="/security-trust">Security & Trust</Link></li>
-              <li><a href="#">Blog</a></li>
+              <li><Link to="/blog">Blog</Link></li>
+              <li><Link to="/partners">Partners</Link></li>
             </ul>
           </div>
           <div className="ft-col ft-col-news">

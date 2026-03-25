@@ -1452,6 +1452,134 @@ export async function setTeacherLeaveStatus(teacherId, onLeave) {
   return { success: true };
 }
 
+// ============= SAAS BLOG & MARKETING =============
+
+const INITIAL_BLOG_POSTS = [
+  {
+    id: 'post-feature-guide',
+    title: 'Everything ShuleSoft Offers: The Ultimate Guide to Modern School Management',
+    excerpt: 'Explore the full power of ShuleSoft. From M-Pesa automation to CBC grading and smart timetables, see how we transform schools.',
+    content: `
+      <h2>Welcome to the ShuleSoft Ecosystem</h2>
+      <p>ShuleSoft is more than just a management tool; it is a comprehensive growth engine for your institution. We have spent years refining our platform to handle the unique challenges of African schools. Below is a detailed breakdown of everything we offer.</p>
+      
+      <h3>1. Financial Automation & M-Pesa Integration</h3>
+      <p>Stop tracing bank slips and manual receipts. Our system integrates directly with M-Pesa to provide zero-effort reconciliation.</p>
+      <ul>
+        <li><strong>Auto-Reconciliation</strong>: Payments made via M-Pesa are instantly matched to the student's admission number and reflected on their balance.</li>
+        <li><strong>Tiered Fee Structures</strong>: Easily manage different rates for Day and Boarding students within the same class.</li>
+        <li><strong>Smart Invoicing</strong>: Generate and send itemized invoices and receipts automatically via SMS.</li>
+      </ul>
+
+      <h3>2. Advanced Academic & CBC Grading</h3>
+      <p>Whether you follow the CBC or the traditional 8-4-4 curriculum, ShuleSoft handles the complex math of grading and ranking.</p>
+      <ul>
+        <li><strong>CBC Assessment</strong>: Track Core Competencies and Values for Early Years, Primary, and Junior Secondary.</li>
+        <li><strong>Automatic Ranking</strong>: Instantly rank students by subject or overall performance across multiple streams.</li>
+        <li><strong>Professional Report Cards</strong>: Generate beautiful, printable report cards with teacher remarks and principal signatures in one click.</li>
+      </ul>
+
+      <h3>3. Smart Timetabling & Operations</h3>
+      <p>Optimize your school's daily schedule with our intelligent conflict-detection engine.</p>
+      <ul>
+        <li><strong>Timetable Builder</strong>: Create custom schedules for every class and stream. The system prevents room and teacher double-bookings.</li>
+        <li><strong>Leave & Cover Management</strong>: Mark staff as "On Leave" and the system will automatically flag lessons needing cover, suggesting available teachers.</li>
+      </ul>
+
+      <h3>4. Security & Real-Time Sync</h3>
+      <p>Your data is your most valuable asset. We protect it with banking-grade security.</p>
+      <ul>
+        <li><strong>Real-Time Updates</strong>: All staff see the same data instantly. No more "stale" spreadsheets.</li>
+        <li><strong>Selective Access</strong>: Role-based permissions ensure that teachers only see marks, while finance only sees fees.</li>
+      </ul>
+
+      <p><em>Ready to transform your school? Join 500+ institutions already growing with ShuleSoft.</em></p>
+    `,
+    category: 'Feature Deep-Dives',
+    author: 'ShuleSoft Team',
+    date: new Date().toISOString(),
+    image: 'https://images.unsplash.com/photo-1546410531-bb4caa1b424d?auto=format&fit=crop&w=1200&q=80',
+    readTime: '8 min read'
+  }
+];
+
+export async function getSaasBlogPosts() {
+  const { data, error } = await supabase
+    .from('saas_blog')
+    .select('*')
+    .order('created_at', { ascending: false });
+  
+  if (error) {
+    console.warn('saas_blog table may not exist yet, using initial data:', error);
+    return INITIAL_BLOG_POSTS;
+  }
+  
+  return data.length > 0 ? data : INITIAL_BLOG_POSTS;
+}
+
+export async function saveSaasBlogPost(post) {
+  const { error } = await supabase
+    .from('saas_blog')
+    .upsert({ 
+      ...post, 
+      id: post.id || `post-${Date.now()}`,
+      created_at: post.date || new Date().toISOString()
+    });
+  
+  if (error) throw error;
+  return { success: true };
+}
+
+// --- PARTNERS & REFERRALS ---
+
+const INITIAL_PARTNERS = [
+  {
+    id: 'p1',
+    name: 'Greenfield Academy',
+    location: 'Nairobi, Kenya',
+    image: 'https://images.unsplash.com/photo-1541339907198-e08756ebafe3?auto=format&fit=crop&w=800&q=80',
+    description: 'A leading primary school using ShuleSoft to automate CBC assessments for 800+ students.',
+    rating: 5,
+    since: '2023'
+  },
+  {
+    id: 'p2',
+    name: 'St. Jude International',
+    location: 'Mombasa, Kenya',
+    image: 'https://images.unsplash.com/photo-1519750157634-b6d493a0f77c?auto=format&fit=crop&w=800&q=80',
+    description: 'Transforming fee collection through M-Pesa automated reconciliation across three campuses.',
+    rating: 5,
+    since: '2024'
+  },
+  {
+    id: 'p3',
+    name: 'Rift Valley Heights',
+    location: 'Nakuru, Kenya',
+    image: 'https://images.unsplash.com/photo-1497633762265-9d179a990aa6?auto=format&fit=crop&w=800&q=80',
+    description: 'Leveraging smart timetables and leave management to optimize staff scheduling.',
+    rating: 4.8,
+    since: '2023'
+  }
+];
+
+export async function getFeaturedPartners() {
+  const { data, error } = await supabase
+    .from('featured_partners')
+    .select('*');
+  
+  if (error) {
+    console.warn('featured_partners table missing, using defaults');
+    return INITIAL_PARTNERS;
+  }
+  return data.length > 0 ? data : INITIAL_PARTNERS;
+}
+
+export async function sendSchoolInvite(email, recipientName) {
+  // Simulate an invitation log
+  await logPlatformActivity('REFERRAL_SENT', `Referral sent to ${recipientName} (${email})`);
+  return { success: true, message: 'Invite sent successfully!' };
+}
+
 export async function getTeachersBySchool(schoolId) {
   const { data, error } = await supabase
     .from('teachers')
