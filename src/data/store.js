@@ -2622,13 +2622,13 @@ export async function returnBook(borrowId, bookId) {
 // ============= FEATURE GATING =============
 
 const FEATURE_MAPPING = {
-  attendance : ['Attendance Tracking'],
-  grading    : ['CBC Grading', 'CBC Competency Grading', 'KCSE / KCPE Report Cards (8-4-4)', 'Grading'],
-  timetable  : ['Timetable Builder', 'Automated Timetable Generation'],
-  fees       : ['Fee Structure Builder', 'M-PESA Fee Tracking', 'Student Fee Statements', 'Fees & Billing'],
-  library    : ['Library Management'],
-  nemis      : ['NEMIS Data Export'],
-  sms        : ['SMS Notifications', 'Parent SMS Notifications'],
+  attendance : ['Attendance Tracking', 'Daily Attendance'],
+  grading    : ['CBC Grading', 'CBC Competency', 'Grading & Results', 'KCSE / KCPE Report Cards', 'CBC Report Cards'],
+  timetable  : ['Timetable Builder', 'Automated Timetable', 'Scheduler'],
+  fees       : ['Student Fee Statements', 'M-PESA Fee Tracking', 'Fee Management', 'Billing', 'Fee Structure Builder'],
+  library    : ['Library Management', 'E-Library'],
+  nemis      : ['NEMIS Data Export', 'Ministry Export'],
+  sms        : ['SMS Notifications', 'Parent SMS Notifications', 'Bulk SMS', 'WhatsApp'],
   whatsapp   : ['WhatsApp Fee Reminders', 'WhatsApp Integration'],
 };
 
@@ -2638,8 +2638,7 @@ const FEATURE_MAPPING = {
 export async function isFeatureEnabled(featureSlug) {
   try {
     const profile = await getSchoolProfile();
-    const planName = profile?.subscriptionPlan;
-    if (!planName) return false;
+    const planName = profile?.subscriptionPlan || profile?.subscription_plan || 'Starter Plan';
 
     // Platform Admin override
     const user = getCurrentAuthUser();

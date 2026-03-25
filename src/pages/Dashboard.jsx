@@ -353,36 +353,25 @@ export default function Dashboard({ currentUser, onLogout, currentPeriodId }) {
             <h3><RocketIcon size={18} /> Quick Actions</h3>
           </div>
           <div className="card-body" style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-            {quickActions.map((a, i) => {
-              const locked = !hasAccess(a.feature);
-              return (
-                <div 
+            {quickActions
+              .filter(a => hasAccess(a.feature))
+              .map((a, i) => (
+                <Link 
+                  to={a.to} 
                   key={i} 
-                  className={`quick-action ${locked ? 'locked' : ''}`}
-                  onClick={() => {
-                    if (locked) {
-                      alert(`The "${a.feature}" feature is NOT included in your current ${data.profile?.subscriptionPlan || 'Starter'} plan. Please upgrade to unlock.`);
-                      navigate('/billing');
-                    } else {
-                      navigate(a.to);
-                    }
-                  }}
-                  style={{ cursor: 'pointer', position: 'relative' }}
+                  className="quick-action"
+                  style={{ textDecoration: 'none' }}
                 >
                   <div className="quick-action-icon" style={{ background: a.bg, color: a.color }}>{a.icon}</div>
                   <div style={{ flex: 1 }}>
                     <div style={{ fontWeight: 600, fontSize: '0.875rem', color: 'var(--text-main)', display:'flex', alignItems:'center', gap:8 }}>
                       {a.label}
-                      {locked && <span style={{ fontSize:'.55rem', padding:'1px 5px', borderRadius:4, background:'rgba(0,0,0,0.05)', color:'var(--text-light)', border:'1px solid rgba(0,0,0,0.1)' }}>PREMIUM</span>}
                     </div>
                     <div style={{ fontSize: '0.78rem', color: 'var(--text-light)' }}>{a.sub}</div>
                   </div>
-                  <div className="quick-action-plus">
-                    {locked ? <ShieldIcon size={14} opacity={0.5} /> : '+'}
-                  </div>
-                </div>
-              );
-            })}
+                  <div className="quick-action-plus">+</div>
+                </Link>
+              ))}
           </div>
         </div>
       </div>
