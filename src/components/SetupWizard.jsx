@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { 
   SchoolIcon, BookIcon, GraduationIcon, CardIcon, 
   CheckIcon, RocketIcon, ChevronRightIcon, ChevronLeftIcon,
-  PlusIcon, CrossIcon, RefreshIcon, ImageIcon
+  PlusIcon, CrossIcon, RefreshIcon, ImageIcon, ShieldIcon
 } from './CommonIcons';
 import { saveSchoolProfile, CBC_STRUCTURE } from '../data/store';
 

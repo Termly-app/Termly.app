@@ -4,6 +4,11 @@ import { db, queueChange, getPendingSync, updateSyncStatus, syncTypes } from './
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+ 
+function maskSecret(val) {
+  if (!val || val.length < 4) return val;
+  return `${val.substring(0, 4)}...********`;
+}
 
 import { CBC_STRUCTURE, CBC_CORE_COMPETENCIES, TERM_FEE, getLevelForGrade, getSubjectsForGrade } from './seedData';
 export { CBC_STRUCTURE, CBC_CORE_COMPETENCIES, TERM_FEE, getLevelForGrade, getSubjectsForGrade };
@@ -101,11 +106,6 @@ export async function registerSchool(name, email, plan, authUserId, adminName, a
     .select('id, name, email, plan, owner_id, phone, location, created_at')
     .single();
   if (schoolErr) throw schoolErr;
-
-function maskSecret(val) {
-  if (!val || val.length < 4) return val;
-  return `${val.substring(0, 4)}...********`;
-}
 
 // 2. Create the school profile (default)
   const { error: profileErr } = await supabase

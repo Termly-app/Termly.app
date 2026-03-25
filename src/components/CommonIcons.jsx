@@ -62,6 +62,12 @@ export const ShieldIcon = ({ size = 18, color = 'currentColor', className = '' }
   </svg>
 );
 
+export const LockIcon = ({ size = 18, color = 'currentColor', className = '' }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={iconStyle} className={className}>
+    <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+  </svg>
+);
+
 export const SearchIcon = ({ size = 18, color = 'currentColor', className = '' }) => (
   <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={iconStyle} className={className}>
     <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
@@ -233,6 +239,18 @@ export const SubscriptionIcon = ({ size = 18, color = 'currentColor', className 
 export const ChevronDownIcon = ({ size = 18, color = 'currentColor', className = '' }) => (
   <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={iconStyle} className={className}>
     <polyline points="6 9 12 15 18 9"/>
+  </svg>
+);
+
+export const ChevronRightIcon = ({ size = 18, color = 'currentColor', className = '' }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={iconStyle} className={className}>
+    <polyline points="9 18 15 12 9 6"/>
+  </svg>
+);
+
+export const ChevronLeftIcon = ({ size = 18, color = 'currentColor', className = '' }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={iconStyle} className={className}>
+    <polyline points="15 18 9 12 15 6"/>
   </svg>
 );
 
