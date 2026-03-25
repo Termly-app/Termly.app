@@ -17,6 +17,17 @@ export default function SecurityTab({ schools, activities }) {
 
   return (
     <div className="tv animate-in">
+      <style>{`
+        @media (max-width: 768px) {
+          .charts-grid { grid-template-columns: 1fr !important; }
+          .kpi-grid { grid-template-columns: 1fr !important; }
+          .page-hd { flex-direction: column; align-items: flex-start; gap: 15px; }
+          .ph-right { width: 100%; }
+          .ph-badge { width: 100%; justify-content: center; }
+          .sa-table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+          .sa-table { min-width: 600px; }
+        }
+      `}</style>
       <div className="page-hd">
         <div className="ph-left">
           <div className="ph-ico" style={{ background: 'var(--primary)', color: '#fff' }}><ShieldIcon size={24} /></div>
@@ -112,7 +123,7 @@ export default function SecurityTab({ schools, activities }) {
         <div className="panel-hd">
           <div className="panel-lbl">Platform Access & Security Log</div>
         </div>
-        <div style={{ marginTop: 15 }}>
+        <div style={{ marginTop: 15 }} className="sa-table-wrap">
           <table className="sa-table">
             <thead>
               <tr>

@@ -14,6 +14,7 @@ import {
   saveFeeStructure,
   deleteFeeItem,
   isFeatureEnabled,
+  checkIsSubscriptionActive,
 } from './data/store';
 
 // Pages
@@ -537,7 +538,7 @@ function App() {
 
   // ── School portal ───────────────────────────────────────────────────────
   return (
-    <div className="app-layout app-shell">
+    <div className="app-layout app-shell animate-pop">
       {/* Mobile hamburger */}
       <button
         className="mobile-toggle"
@@ -597,7 +598,7 @@ function App() {
         </div>
 
         {/* Page content */}
-        <div className="page-content">
+        <div className="page-content animate-slide">
           <ErrorBoundary>
             <Routes>
               {!subscriptionActive ? (

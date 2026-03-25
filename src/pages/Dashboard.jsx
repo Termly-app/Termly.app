@@ -527,6 +527,23 @@ export default function Dashboard({ currentUser, onLogout, currentPeriodId }) {
         )}
 
       </div>
+      <style>{`
+        @media (max-width: 768px) {
+          .page-header { flex-direction: column !important; align-items: flex-start !important; gap: 15px !important; }
+          .page-header-actions { width: 100% !important; justify-content: space-between !important; gap: 10px !important; }
+          .kpi-grid { grid-template-columns: 1fr 1fr !important; gap: 12px !important; }
+          .kpi-card { padding: 15px !important; }
+          .hero-title { font-size: 1.25rem !important; }
+          .hero-subtitle { font-size: 0.85rem !important; }
+          .cbc-structure-grid { grid-template-columns: 1fr !important; }
+          .dashboard-grid-2 { grid-template-columns: 1fr !important; }
+        }
+        @media (max-width: 480px) {
+          .kpi-grid { grid-template-columns: 1fr !important; }
+          .page-header-actions { flex-direction: column !important; align-items: stretch !important; }
+          .inline-flex { width: 100% !important; justify-content: flex-end !important; }
+        }
+      `}</style>
     </div>
   );
 }

@@ -406,3 +406,21 @@ export const CloudSyncIcon = ({ size = 18, color = 'currentColor', className = '
     <path d="M17.5 19a3.5 3.5 0 1 1-5.83-2.65L12 16.5m0-13.5v4m0 0l-2-2m2 2l2-2M5.5 10A3.5 3.5 0 1 0 5 16.5m14-1.5a3.5 3.5 0 1 0-1.5-6.57"/>
   </svg>
 );
+
+export const SparklesIcon = ({ size = 18, color = 'currentColor', className = '' }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={iconStyle} className={className}>
+    <path d="M9.937 15.5L8 20l-1.937-4.5L1.562 13.5l4.5-1.937L8 7l1.937 4.562 4.563 1.938-4.563 1.937zm9.563-10.5l-1 2.25-2.25 1 2.25 1 1 2.25 1-2.25 2.25-1-2.25-1-1-2.25zm0 10l-1 2.25-2.25 1 2.25 1 1 2.25 1-2.25 2.25-1-2.25-1-1-2.25z"/>
+  </svg>
+);
+
+export const TrendUpIcon = ({ size = 18, color = 'currentColor', className = '' }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={iconStyle} className={className}>
+    <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/>
+  </svg>
+);
+
+export const ChartBarIcon = ({ size = 18, color = 'currentColor', className = '' }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={iconStyle} className={className}>
+    <line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/>
+  </svg>
+);

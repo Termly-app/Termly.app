@@ -523,6 +523,41 @@ export default function SetupWizard({ profile, onComplete, totalStudents }) {
         .empty-mini { grid-column: span 2; padding: 30px; text-align: center; color: var(--text-muted); font-style: italic; font-size: 0.85rem; }
         
         .wizard-footer { padding: 24px 40px; background: rgba(255,255,255,0.02); border-top: 1px solid var(--border); display: flex; align-items: center; }
+
+        @media (max-width: 768px) {
+          .setup-wizard-overlay { padding: 0; }
+          .setup-wizard-card { height: 100vh; max-height: 100vh; border-radius: 0; border: none; }
+          .wizard-progress { padding: 15px 10px; }
+          .step-title { display: none; }
+          .progress-step:not(:last-child)::after { top: 11px; }
+          .step-number { width: 22px; height: 22px; font-size: 0.65rem; }
+          
+          .wizard-content { padding: 20px; min-height: 0; flex: 1; }
+          h2 { font-size: 1.3rem; }
+          
+          .form-grid-2 { grid-template-columns: 1fr; }
+          .form-group { grid-column: span 1 !important; }
+          
+          .wizard-step-inner > div[style*="gridTemplateColumns"] { 
+            grid-template-columns: 1fr !important;
+            gap: 20px !important;
+          }
+          
+          .streams-manager div[style*="gridTemplateColumns"] {
+            grid-template-columns: 1fr !important;
+          }
+          
+          .fees-grid { grid-template-columns: 1fr; }
+          
+          .wizard-footer { padding: 15px 20px; }
+          .btn-lg { width: 100%; justify-content: center; }
+          
+          .wizard-hero-icon { width: 80px; height: 80px; margin-bottom: 20px; }
+          .wizard-hero-icon svg { width: 40px !important; height: 40px !important; }
+          
+          .grade-item { padding: 12px 16px; margin-bottom: 8px; }
+          .tag { padding: 6px 12px; font-size: 0.85rem; }
+        }
       `}</style>
     </div>
   );

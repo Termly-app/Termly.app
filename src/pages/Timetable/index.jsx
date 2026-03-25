@@ -29,10 +29,18 @@ import {
   RocketIcon, SaveIcon, AlertIcon, UserIcon, HomeIcon, TeacherIcon, PlusIcon
 } from '../../components/CommonIcons';
 
-// ── Colour palette for subjects ──────────────────────────────────────────
+// ── Colour palette for subjects (Modern, Premium Palette) ────────────────
 const COLORS = [
-  '#7C5CFC','#0DD88A','#E8A020','#D4506A','#4A9EE8',
-  '#F97316','#10B981','#EC4899','#06B6D4','#8B5CF6','#EAB308','#6366F1',
+  'hsla(250, 84%, 63%, 0.85)', // Indigo
+  'hsla(158, 82%, 40%, 0.85)', // Emerald
+  'hsla(38, 92%, 50%, 0.85)',  // Amber
+  'hsla(341, 89%, 60%, 0.85)', // Rose
+  'hsla(199, 89%, 48%, 0.85)', // Sky
+  'hsla(271, 91%, 65%, 0.85)', // Violet
+  'hsla(11, 90%, 63%, 0.85)',  // Orange/Coral
+  'hsla(170, 78%, 45%, 0.85)', // Teal
+  'hsla(320, 80%, 60%, 0.85)', // Pink
+  'hsla(45, 93%, 47%, 0.85)',  // Yellow/Gold
 ];
 
 const ALL_DAYS = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
@@ -673,11 +681,28 @@ export default function Timetable({ currentUser, currentPeriodId, periods = [] }
          ═══════════════════════════════════════════════════════════════ */}
       {panel === 'grid' && (
         <>
+          {/* Generate Button (Admin only) */}
+          {isAdmin && !preview && (
+            <div style={{ marginBottom: 16, display: 'flex', justifyContent: 'flex-end' }}>
+              <button className="tt-generate-btn" disabled={generating} onClick={handleGenerate}>
+                {generating ? (
+                  <><div className="tt-spin" style={{ width: 14, height: 14, borderWidth: 2, margin: 0, marginRight: 8 }} /> Generating...</>
+                ) : (
+                  <><SparklesIcon size={16} /> Auto-Generate Timetable</>
+                )}
+              </button>
+            </div>
+          )}
+
           {/* Preview banner */}
           {preview && (
             <div className="tt-preview-banner">
               <div className="tt-preview-banner-text">
-                <RocketIcon size={16} /> Preview — {preview.slots.length} slots generated. Not saved yet.
+                <RocketIcon size={18} /> 
+                <div style={{ display:'flex', flexDirection:'column' }}>
+                  <span>Preview Mode</span>
+                  <span style={{ fontSize:'.68rem', fontWeight:400, opacity:.8 }}>{preview.slots.length} slots generated. Discard or save to apply changes.</span>
+                </div>
               </div>
               <div className="tt-preview-actions">
                 <button className="tt-btn tt-btn-sm" onClick={() => { setPreview(null); setMessage(null); }}>

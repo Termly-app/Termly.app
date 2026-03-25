@@ -36,13 +36,16 @@
 
   --font: 'Plus Jakarta Sans', 'Inter', sans-serif;
   --font-display: 'Plus Jakarta Sans', 'Inter', sans-serif;
-  --radius: 12px;
-  --radius-sm: 8px;
+  --radius: 14px;
+  --radius-sm: 10px;
   --shadow-sm: 0 1px 2px rgba(0,0,0,0.05);
   --shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
-  --shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.1);
-  --glass-blur: blur(0px);
-  --transition: all 0.2s ease;
+  --shadow-lg: 0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04);
+  --shadow-premium: 0 8px 32px 0 rgba(0, 0, 0, 0.25);
+  --glass-blur: blur(12px);
+  --glass-bg: rgba(255, 255, 255, 0.04);
+  --glass-border: rgba(255, 255, 255, 0.08);
+  --transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 /* ====== SHULESOFT COMMAND TOWER (High-Contrast Dark) ====== */
@@ -368,7 +371,29 @@ body {
 
 /* Animations */
 @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes popIn { 
+  from { opacity: 0; transform: scale(0.96) translateY(10px); } 
+  to { opacity: 1; transform: scale(1) translateY(0); } 
+}
+@keyframes slideUp { 
+  from { opacity: 0; transform: translateY(20px); } 
+  to { opacity: 1; transform: translateY(0); } 
+}
+
 .animate-in { animation: fadeIn 0.4s ease-out; }
+.animate-pop { animation: popIn 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) forwards; }
+.animate-slide { animation: slideUp 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) forwards; }
+
+.glass-card {
+  background: var(--glass-bg);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--shadow-premium);
+}
+
+.hover-lift { transition: var(--transition); }
+.hover-lift:hover { transform: translateY(-4px); box-shadow: var(--shadow-xl); }
 
 @keyframes pulse {
   0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }

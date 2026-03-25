@@ -3,7 +3,8 @@ import { getClassResults, setStudentAllMarks, getSubjectRankings, getClassList, 
 import { CBC_STRUCTURE, CBC_LEVELS, CBC_CORE_COMPETENCIES, STREAMS, getSubjectsForGrade, getLevelForGrade } from '../data/seedData';
 import { 
   LeafIcon, BookIcon, PrintIcon, DashboardIcon, EditIcon, 
-  FlagIcon, RocketIcon, TeacherIcon, SchoolIcon, SaveIcon 
+  FlagIcon, RocketIcon, TeacherIcon, SchoolIcon, SaveIcon,
+  SparklesIcon, TrendUpIcon, ChartBarIcon
 } from '../components/CommonIcons';
 
 export default function Grading({ currentUser, currentPeriodId }) {
@@ -577,19 +578,28 @@ export default function Grading({ currentUser, currentPeriodId }) {
         <div className="animate-in">
           <div className="kpi-grid" style={{ marginBottom: 24 }}>
             <div className="card kpi-card">
-              <span className="kpi-label">Class Mean Score</span>
+              <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start' }}>
+                <span className="kpi-label">Class Mean Score</span>
+                <div style={{ padding:6, borderRadius:8, background:'rgba(14,165,233,0.1)', color:'var(--primary)' }}><ChartBarIcon size={16} /></div>
+              </div>
               <div className="kpi-value">
                 {(results.reduce((acc, s) => acc + s.average, 0) / (results.length || 1)).toFixed(1)}%
               </div>
-              <span className="kpi-trend text-success">Overall Avg</span>
+              <span className="kpi-trend text-success"><TrendUpIcon size={12} /> Overall Avg</span>
             </div>
             <div className="card kpi-card">
-              <span className="kpi-label">Top Performer</span>
+              <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start' }}>
+                <span className="kpi-label">Top Performer</span>
+                <div style={{ padding:6, borderRadius:8, background:'rgba(16,185,129,0.1)', color:'#10b981' }}><SparklesIcon size={16} /></div>
+              </div>
               <div className="kpi-value" style={{ fontSize: '1.4rem' }}>{results[0]?.name || '—'}</div>
               <span className="kpi-trend">Score: {results[0]?.average}%</span>
             </div>
             <div className="card kpi-card">
-              <span className="kpi-label">Grade C+ & Above</span>
+              <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start' }}>
+                <span className="kpi-label">Grade C+ & Above</span>
+                <div style={{ padding:6, borderRadius:8, background:'rgba(245,158,11,0.1)', color:'#f59e0b' }}><FlagIcon size={16} /></div>
+              </div>
               <div className="kpi-value">
                 {results.filter(s => ['A', 'B+', 'B', 'B-', 'C+'].includes(getGrade(s.average).grade)).length}
               </div>

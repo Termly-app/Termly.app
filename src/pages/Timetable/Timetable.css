@@ -145,41 +145,53 @@
 
 /* ─── Teaching cells ─────────────────────────────────────────────────────── */
 .tt-cell {
-  padding:5px; border-right:1px solid rgba(255,255,255,.03);
-  border-bottom:1px solid rgba(255,255,255,.03);
-  vertical-align:top; cursor:pointer; transition:background .12s;
-  min-height:58px; position:relative;
+  padding: 6px; border-right: 1px solid rgba(255,255,255,.03);
+  border-bottom: 1px solid rgba(255,255,255,.03);
+  vertical-align: top; cursor: pointer; transition: all .2s cubic-bezier(0.4, 0, 0.2, 1);
+  min-height: 72px; position: relative;
 }
-.tt-cell:hover { background:rgba(111,82,232,.04); }
+.tt-cell:hover { background: rgba(111,82,232,0.06); transform: scale(1.01); z-index: 5; }
 .tt-cell-inner {
-  border-radius:6px; padding:6px 7px; min-height:50px;
-  display:flex; flex-direction:column; justify-content:center;
+  border-radius: 10px; padding: 10px; min-height: 60px;
+  display: flex; flex-direction: column; justify-content: center;
+  backdrop-filter: blur(4px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+  border: 1px solid rgba(255,255,255,0.08);
+  transition: all 0.2s ease;
 }
-.tt-cell.empty .tt-cell-inner { border:1px dashed rgba(255,255,255,.06); }
+.tt-cell:hover .tt-cell-inner { border-color: rgba(255,255,255,0.2); box-shadow: 0 6px 16px rgba(0,0,0,0.2); }
+.tt-cell.empty .tt-cell-inner { 
+  border: 1px dashed rgba(255,255,255,.06); 
+  background: transparent;
+  backdrop-filter: none;
+  box-shadow: none;
+}
 .tt-cell.empty:hover .tt-cell-inner {
-  border-color:rgba(111,82,232,.28); background:rgba(111,82,232,.04);
+  border-color: rgba(111,82,232,.4); background: rgba(111,82,232,.06);
 }
-.tt-cell-subject { font-size:.74rem; font-weight:600; color:#fff; line-height:1.25; }
-.tt-cell-teacher { font-size:.6rem;  color:rgba(255,255,255,.5); margin-top:3px; }
-.tt-cell-room    { font-size:.57rem; color:rgba(255,255,255,.35); margin-top:2px; }
-.tt-cell-class   { font-size:.6rem;  color:rgba(255,255,255,.44); margin-top:2px; font-style:italic; }
-.tt-add-hint { font-size:.6rem; color:var(--text-muted,#556558); opacity:0; transition:opacity .14s; text-align:center; }
-.tt-cell.empty:hover .tt-add-hint { opacity:1; }
+.tt-cell-subject { font-size: .8rem; font-weight: 700; color: #fff; line-height: 1.2; letter-spacing: -0.01em; }
+.tt-cell-teacher { font-size: .62rem; color: rgba(255,255,255,.7); margin-top: 4px; font-weight: 500; }
+.tt-cell-room    { font-size: .58rem; color: rgba(255,255,255,.45); margin-top: 3px; }
+.tt-cell-class   { font-size: .62rem; color: rgba(255,255,255,.5); margin-top: 3px; font-style: italic; }
+.tt-add-hint { font-size: .6rem; color: var(--text-muted,#556558); opacity: 0; transition: opacity .14s; text-align: center; }
+.tt-cell.empty:hover .tt-add-hint { opacity: 1; }
 
 /* Double lesson */
-.tt-cell.double-first  .tt-cell-inner { border-bottom-left-radius:0; border-bottom-right-radius:0; border-bottom:1.5px dashed rgba(255,255,255,.18); }
-.tt-cell.double-second .tt-cell-inner { border-top-left-radius:0; border-top-right-radius:0; opacity:.82; }
-.tt-double-badge { display:inline-flex; align-items:center; padding:1px 5px; border-radius:3px; font-size:.53rem; font-weight:700; background:rgba(255,255,255,.14); color:#fff; margin-left:4px; vertical-align:middle; }
-.tt-double-cont  { font-size:.59rem; color:rgba(255,255,255,.45); font-style:italic; margin-top:2px; }
+.tt-cell.double-first  .tt-cell-inner { border-bottom-left-radius: 0; border-bottom-right-radius: 0; border-bottom: 2px dashed rgba(255,255,255,.2); }
+.tt-cell.double-second { margin-top: -6px; }
+.tt-cell.double-second .tt-cell-inner { border-top-left-radius: 0; border-top-right-radius: 0; opacity: .9; }
+.tt-double-badge { display: inline-flex; align-items: center; padding: 2px 6px; border-radius: 4px; font-size: .55rem; font-weight: 800; background: rgba(255,255,255,.2); color: #fff; margin-left: 6px; vertical-align: middle; text-transform: uppercase; }
+.tt-double-cont  { font-size: .6rem; color: rgba(255,255,255,.6); font-style: italic; margin-top: 3px; }
 
 /* Clear button */
 .tt-cell-clear {
-  position:absolute; top:4px; right:4px; width:16px; height:16px;
-  border-radius:50%; background:rgba(200,64,78,.8); color:#fff;
-  font-size:9px; display:none; align-items:center; justify-content:center;
-  cursor:pointer; border:none; z-index:2;
+  position: absolute; top: -4px; right: -4px; width: 20px; height: 20px;
+  border-radius: 50%; background: #EF4444; color: #fff;
+  font-size: 10px; display: none; align-items: center; justify-content: center;
+  cursor: pointer; border: 2px solid #161A17; z-index: 10;
+  box-shadow: 0 2px 6px rgba(239, 68, 68, 0.4);
 }
-.tt-cell:hover .tt-cell-clear { display:flex; }
+.tt-cell:hover .tt-cell-clear { display: flex; }
 
 /* ─── Legend ─────────────────────────────────────────────────────────────── */
 .tt-legend {
