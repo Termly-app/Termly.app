@@ -421,13 +421,11 @@ function App() {
               school_id  : userRecord.school_id,
             });
             const profileData = await getSchoolProfile();
-            const PLATFORM_ADMINS = ['admin@shulesoft.com', 'shulesoft8@gmail.com'];
-            const isPlatAdmin = session.user.email && PLATFORM_ADMINS.includes(session.user.email);
-            const isSubActive = await checkIsSubscriptionActive(profileData);
-            setSubscriptionActive(isPlatAdmin || isSubActive);
-            
             const realIsPlatAdmin = await checkIsPlatformAdmin(session.user.email);
             setIsPlatformAdmin(realIsPlatAdmin);
+
+            const isSubActive = await checkIsSubscriptionActive(profileData);
+            setSubscriptionActive(realIsPlatAdmin || isSubActive);
           }
         }
       } catch (err) {

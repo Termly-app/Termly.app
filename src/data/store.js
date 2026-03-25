@@ -379,8 +379,9 @@ function mapProfileData(data) {
 export async function checkIsSubscriptionActive(profile) {
   if (!profile) return false;
 
-  // 1. PLATFORM OVERRIDE: ShuleSoft HQ or similar internal accounts are always active
-  if (profile.schoolName?.toLowerCase().includes('shulesoft hq')) return true;
+  // 1. PLATFORM OVERRIDE: ShuleSoft HQ or Platform Admins are always active
+  const isAdmin = await checkIsPlatformAdmin(_currentAuthUser?.email);
+  if (isAdmin || profile.schoolName?.toLowerCase().includes('shulesoft hq')) return true;
 
   const now = new Date();
 
@@ -1627,6 +1628,9 @@ export function getCurrentSchool() {
 export async function checkIsPlatformAdmin(email) {
   if (!email) return false;
   try {
+    const ROOT_ADMINS = ['admin@shulesoft.com', 'shulesoft8@gmail.com'];
+    if (ROOT_ADMINS.includes(email)) return true;
+
     const { data, error } = await supabase
       .from('platform_admins')
       .select('email')
@@ -1635,8 +1639,7 @@ export async function checkIsPlatformAdmin(email) {
     
     if (error) {
       console.warn('Error checking platform admin status:', error);
-      // Fallback for safety during migration
-      return ['admin@shulesoft.com', 'shulesoft8@gmail.com'].includes(email);
+      return false;
     }
     return !!data;
   } catch (err) {
