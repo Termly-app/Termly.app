@@ -2869,6 +2869,9 @@ export async function triggerSync() {
     _syncing = false;
     window.dispatchEvent(new Event('syncCompleted'));
   }
+
+  // Also auto-process any pending M-Pesa callbacks
+  try { await autoProcessMpesaCallbacks(); } catch (e) { /* silent */ }
 }
 
 // ============= M-PESA RECONCILIATION =============
@@ -2886,6 +2889,117 @@ export async function getOrphanedMpesaCallbacks() {
     .order('created_at', { ascending: false });
   if (error) throw error;
   return data || [];
+}
+
+/**
+ * Automatically process pending M-Pesa callbacks by matching bill_ref_number
+ * to student adm_no. Matched payments are reconciled; unmatched are orphaned.
+ */
+let _autoProcessing = false;
+export async function autoProcessMpesaCallbacks() {
+  if (!_currentSchoolId || _autoProcessing) return { processed: 0, orphaned: 0 };
+  _autoProcessing = true;
+  window.dispatchEvent(new CustomEvent('mpesaAutoProcessStart'));
+
+  let processed = 0, orphaned = 0;
+
+  try {
+    // 1. Fetch only 'pending' callbacks (not already orphaned/failed)
+    const { data: pending, error: fetchErr } = await supabase
+      .from('mpesa_callbacks')
+      .select('*')
+      .eq('school_id', _currentSchoolId)
+      .eq('status', 'pending')
+      .order('created_at', { ascending: true });
+
+    if (fetchErr || !pending || pending.length === 0) {
+      return { processed: 0, orphaned: 0 };
+    }
+
+    // 2. Fetch all students for this school (for matching)
+    const { data: allStudents, error: studErr } = await supabase
+      .from('students')
+      .select('id, adm_no, name')
+      .eq('school_id', _currentSchoolId);
+
+    if (studErr || !allStudents) {
+      return { processed: 0, orphaned: 0 };
+    }
+
+    // 3. Build a lookup map: normalised admission number → student id
+    const admLookup = {};
+    for (const s of allStudents) {
+      if (s.adm_no) {
+        admLookup[s.adm_no.trim().toUpperCase()] = s.id;
+      }
+    }
+
+    // 4. Process each pending callback
+    for (const cb of pending) {
+      const ref = (cb.bill_ref_number || '').trim().toUpperCase();
+      const matchedStudentId = admLookup[ref];
+
+      if (matchedStudentId) {
+        // Auto-reconcile
+        try {
+          await reconcileMpesaPayment(cb.id, matchedStudentId);
+          processed++;
+        } catch (e) {
+          console.error(`Auto-reconcile failed for ${cb.mpesa_receipt_number}:`, e.message);
+        }
+      } else {
+        // Mark as orphaned for manual review
+        await supabase
+          .from('mpesa_callbacks')
+          .update({ status: 'orphaned' })
+          .eq('id', cb.id);
+        orphaned++;
+      }
+    }
+
+    if (processed > 0) {
+      await logPlatformActivity(
+        'MPESA_AUTO_RECONCILED',
+        `Auto-reconciled ${processed} payment(s). ${orphaned} orphaned for manual review.`
+      );
+    }
+  } catch (e) {
+    console.error('Auto-process M-Pesa error:', e);
+  } finally {
+    _autoProcessing = false;
+    window.dispatchEvent(new CustomEvent('mpesaAutoProcessEnd', {
+      detail: { processed, orphaned }
+    }));
+  }
+
+  return { processed, orphaned };
+}
+
+/**
+ * Simulate an M-Pesa Daraja callback for testing.
+ * Inserts a mock record into mpesa_callbacks and triggers auto-processing.
+ */
+export async function simulateMpesaCallback({ amount, phone, admNo, receiptNumber }) {
+  if (!_currentSchoolId) throw new Error('No school context.');
+
+  const receipt = receiptNumber || `SIM${Date.now()}`;
+  const { error } = await supabase.from('mpesa_callbacks').insert([{
+    school_id: _currentSchoolId,
+    mpesa_receipt_number: receipt,
+    amount: Number(amount),
+    phone_number: phone || '2547XXXXXXXX',
+    bill_ref_number: admNo,
+    transaction_date: new Date().toISOString(),
+    status: 'pending',
+    created_at: new Date().toISOString()
+  }]);
+
+  if (error) throw error;
+
+  // Immediately trigger auto-processing
+  const result = await autoProcessMpesaCallbacks();
+
+  return { receipt, ...result };
 }
 
 /**

@@ -2,7 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { 
   getOrphanedMpesaCallbacks, 
   getStudents, 
-  reconcileMpesaPayment 
+  reconcileMpesaPayment,
+  autoProcessMpesaCallbacks,
+  simulateMpesaCallback
 } from '../data/store';
 import { 
   PaymentsIcon, 
@@ -10,7 +12,9 @@ import {
   UserIcon, 
   CheckIcon, 
   AlertIcon,
-  ClockIcon
+  ClockIcon,
+  ZapIcon,
+  RefreshIcon
 } from '../components/CommonIcons';
 import Loader from '../components/Common/Loader';
 
@@ -29,9 +33,32 @@ export default function MpesaReconciliation({ currentUser }) {
   const [selectedCallback, setSelectedCallback] = useState(null);
   const [processing, setProcessing] = useState(false);
   const [feedback, setFeedback] = useState(null);
+  const [autoProcessing, setAutoProcessing] = useState(false);
+  const [showSimulator, setShowSimulator] = useState(false);
+  const [simForm, setSimForm] = useState({ amount: '', phone: '', admNo: '' });
+  const [simulating, setSimulating] = useState(false);
 
   useEffect(() => {
     loadData();
+
+    // Listen for auto-processing events
+    const handleStart = () => setAutoProcessing(true);
+    const handleEnd = (e) => {
+      setAutoProcessing(false);
+      const detail = e.detail || {};
+      if (detail.processed > 0) {
+        setFeedback({ type: 'success', message: `⚡ Auto-reconciled ${detail.processed} payment(s)!` });
+        loadData(); // Refresh the list
+      }
+    };
+
+    window.addEventListener('mpesaAutoProcessStart', handleStart);
+    window.addEventListener('mpesaAutoProcessEnd', handleEnd);
+
+    return () => {
+      window.removeEventListener('mpesaAutoProcessStart', handleStart);
+      window.removeEventListener('mpesaAutoProcessEnd', handleEnd);
+    };
   }, []);
 
   const loadData = async () => {
@@ -53,7 +80,7 @@ export default function MpesaReconciliation({ currentUser }) {
   const filteredStudents = searchTerm.length > 1 
     ? students.filter(s => 
         s.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
-        s.adm_no.toLowerCase().includes(searchTerm.toLowerCase())
+        (s.admNo || s.adm_no || '').toLowerCase().includes(searchTerm.toLowerCase())
       ).slice(0, 10)
     : [];
 
@@ -73,7 +100,54 @@ export default function MpesaReconciliation({ currentUser }) {
     }
   };
 
+  const handleRunAutoProcess = async () => {
+    setAutoProcessing(true);
+    try {
+      const result = await autoProcessMpesaCallbacks();
+      if (result.processed > 0) {
+        setFeedback({ type: 'success', message: `⚡ Auto-reconciled ${result.processed} payment(s). ${result.orphaned} need manual review.` });
+      } else if (result.orphaned > 0) {
+        setFeedback({ type: 'error', message: `No auto-matches found. ${result.orphaned} payment(s) need manual review.` });
+      } else {
+        setFeedback({ type: 'success', message: 'No pending payments to process.' });
+      }
+      await loadData();
+    } catch (err) {
+      setFeedback({ type: 'error', message: err.message });
+    } finally {
+      setAutoProcessing(false);
+    }
+  };
+
+  const handleSimulate = async () => {
+    if (!simForm.amount || !simForm.admNo) {
+      setFeedback({ type: 'error', message: 'Amount and Admission Number are required.' });
+      return;
+    }
+    setSimulating(true);
+    try {
+      const result = await simulateMpesaCallback({
+        amount: simForm.amount,
+        phone: simForm.phone || '254712345678',
+        admNo: simForm.admNo
+      });
+      if (result.processed > 0) {
+        setFeedback({ type: 'success', message: `✅ Simulated payment KES ${Number(simForm.amount).toLocaleString()} auto-matched to student ${simForm.admNo}! Receipt: ${result.receipt}` });
+      } else {
+        setFeedback({ type: 'error', message: `⚠️ Payment simulated (${result.receipt}) but no matching student found for "${simForm.admNo}". Marked as orphaned for manual review.` });
+      }
+      setSimForm({ amount: '', phone: '', admNo: '' });
+      await loadData();
+    } catch (err) {
+      setFeedback({ type: 'error', message: err.message });
+    } finally {
+      setSimulating(false);
+    }
+  };
+
   if (loading) return <Loader />;
+
+  const isAdmin = currentUser?.role === 'Admin';
 
   return (
     <div className="page-container glass-morph">
@@ -84,10 +158,72 @@ export default function MpesaReconciliation({ currentUser }) {
           </div>
           <div>
             <h1 className="header-title">M-Pesa Reconciliation</h1>
-            <p className="header-subtitle">Manage payments that failed automatic student matching</p>
+            <p className="header-subtitle">Payments are auto-matched by Admission Number. Orphans need manual linking.</p>
           </div>
         </div>
+        <div style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
+          {autoProcessing && (
+            <div className="auto-status-badge processing">
+              <div className="pulse-dot" />
+              Auto-Processing...
+            </div>
+          )}
+          <button className="auto-process-btn" onClick={handleRunAutoProcess} disabled={autoProcessing}>
+            <ZapIcon size={16} /> {autoProcessing ? 'Processing...' : 'Run Auto-Match'}
+          </button>
+          {isAdmin && (
+            <button className="sim-toggle-btn" onClick={() => setShowSimulator(!showSimulator)}>
+              {showSimulator ? 'Hide Simulator' : '🧪 Simulate Payment'}
+            </button>
+          )}
+        </div>
       </div>
+
+      {/* Simulation Panel */}
+      {showSimulator && isAdmin && (
+        <div className="sim-panel slide-up">
+          <div className="sim-header">
+            <h4>🧪 M-Pesa Payment Simulator</h4>
+            <span className="sim-badge">Testing Mode</span>
+          </div>
+          <p className="sim-desc">Simulate a Daraja API callback. If the Admission Number matches a student, it will be auto-reconciled instantly.</p>
+          <div className="sim-form">
+            <div className="sim-field">
+              <label>Amount (KES)</label>
+              <input 
+                type="number" 
+                placeholder="e.g. 15000" 
+                value={simForm.amount}
+                onChange={e => setSimForm({...simForm, amount: e.target.value})}
+                className="glass-input"
+              />
+            </div>
+            <div className="sim-field">
+              <label>Parent Phone</label>
+              <input
+                type="text"
+                placeholder="254712345678"
+                value={simForm.phone}
+                onChange={e => setSimForm({...simForm, phone: e.target.value})}
+                className="glass-input"
+              />
+            </div>
+            <div className="sim-field">
+              <label>Account No (Admission No)</label>
+              <input
+                type="text"
+                placeholder="e.g. ADM-001"
+                value={simForm.admNo}
+                onChange={e => setSimForm({...simForm, admNo: e.target.value})}
+                className="glass-input"
+              />
+            </div>
+            <button className="sim-submit-btn" onClick={handleSimulate} disabled={simulating}>
+              {simulating ? 'Sending...' : '⚡ Send Simulated Payment'}
+            </button>
+          </div>
+        </div>
+      )}
 
       <div className="reconciliation-layout">
         <div className="callback-list-panel">
@@ -165,7 +301,7 @@ export default function MpesaReconciliation({ currentUser }) {
                         <UserIcon size={16} />
                         <div>
                           <div className="s-name">{s.name}</div>
-                          <div className="s-meta">{s.adm_no} • {s.class}</div>
+                          <div className="s-meta">{s.admNo || s.adm_no} • {s.class}</div>
                         </div>
                       </div>
                       <button className="link-btn" disabled={processing}>
@@ -201,8 +337,136 @@ export default function MpesaReconciliation({ currentUser }) {
           grid-template-columns: 350px 1fr;
           gap: 24px;
           margin-top: 24px;
-          height: calc(100vh - 250px);
+          height: calc(100vh - 350px);
         }
+        .page-header {
+          display: flex;
+          justify-content: space-between;
+          align-items: flex-start;
+          flex-wrap: wrap;
+          gap: 16px;
+        }
+        .auto-process-btn {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          padding: 10px 20px;
+          background: linear-gradient(135deg, #6B4EFF 0%, #9B7DFF 100%);
+          color: white;
+          border: none;
+          border-radius: 10px;
+          font-size: 0.85rem;
+          font-weight: 700;
+          cursor: pointer;
+          transition: all 0.2s;
+        }
+        .auto-process-btn:hover { transform: translateY(-2px); box-shadow: 0 4px 20px rgba(107,78,255,0.3); }
+        .auto-process-btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+        .sim-toggle-btn {
+          padding: 10px 20px;
+          background: rgba(245, 158, 11, 0.15);
+          color: #F59E0B;
+          border: 1px solid rgba(245, 158, 11, 0.3);
+          border-radius: 10px;
+          font-size: 0.85rem;
+          font-weight: 700;
+          cursor: pointer;
+          transition: all 0.2s;
+        }
+        .sim-toggle-btn:hover { background: rgba(245, 158, 11, 0.25); }
+        .auto-status-badge {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          padding: 6px 14px;
+          border-radius: 20px;
+          font-size: 0.75rem;
+          font-weight: 700;
+          text-transform: uppercase;
+          letter-spacing: 0.5px;
+        }
+        .auto-status-badge.processing {
+          background: rgba(107, 78, 255, 0.15);
+          color: #9B7DFF;
+          border: 1px solid rgba(107, 78, 255, 0.3);
+        }
+        .pulse-dot {
+          width: 8px;
+          height: 8px;
+          border-radius: 50%;
+          background: #6B4EFF;
+          animation: pulse 1.2s ease-in-out infinite;
+        }
+        @keyframes pulse {
+          0%, 100% { opacity: 1; transform: scale(1); }
+          50% { opacity: 0.4; transform: scale(0.7); }
+        }
+
+        /* Simulator Panel */
+        .sim-panel {
+          margin-top: 20px;
+          padding: 24px;
+          background: rgba(245, 158, 11, 0.06);
+          border: 1px solid rgba(245, 158, 11, 0.2);
+          border-radius: 16px;
+          animation: slideDown 0.3s ease-out;
+        }
+        @keyframes slideDown {
+          from { opacity: 0; transform: translateY(-10px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        .sim-header {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          margin-bottom: 8px;
+        }
+        .sim-header h4 { margin: 0; font-size: 1rem; }
+        .sim-badge {
+          padding: 3px 10px;
+          background: rgba(245, 158, 11, 0.2);
+          color: #F59E0B;
+          border-radius: 20px;
+          font-size: 0.65rem;
+          font-weight: 800;
+          text-transform: uppercase;
+          letter-spacing: 0.5px;
+        }
+        .sim-desc {
+          font-size: 0.82rem;
+          color: var(--text-muted);
+          margin-bottom: 16px;
+        }
+        .sim-form {
+          display: grid;
+          grid-template-columns: 1fr 1fr 1fr auto;
+          gap: 12px;
+          align-items: end;
+        }
+        .sim-field label {
+          display: block;
+          font-size: 0.7rem;
+          font-weight: 600;
+          color: var(--text-muted);
+          margin-bottom: 6px;
+          text-transform: uppercase;
+          letter-spacing: 0.3px;
+        }
+        .sim-submit-btn {
+          padding: 12px 24px;
+          background: linear-gradient(135deg, #F59E0B 0%, #D97706 100%);
+          color: white;
+          border: none;
+          border-radius: 10px;
+          font-weight: 700;
+          font-size: 0.85rem;
+          cursor: pointer;
+          transition: all 0.2s;
+          white-space: nowrap;
+        }
+        .sim-submit-btn:hover { transform: translateY(-2px); box-shadow: 0 4px 20px rgba(245,158,11,0.3); }
+        .sim-submit-btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+
         .callback-list-panel {
           display: flex;
           flex-direction: column;
@@ -341,6 +605,9 @@ export default function MpesaReconciliation({ currentUser }) {
           color: white;
           font-size: 1rem;
         }
+        .sim-field .glass-input {
+          padding: 12px;
+        }
         .student-result-item {
           display: flex;
           justify-content: space-between;
@@ -384,12 +651,18 @@ export default function MpesaReconciliation({ currentUser }) {
           align-items: center;
           gap: 12px;
           animation: slideIn 0.3s ease-out;
+          max-width: 420px;
+          font-size: 0.88rem;
         }
         .feedback-toast.success { background: #065F46; color: #D1FAE5; }
         .feedback-toast.error { background: #991B1B; color: #FEE2E2; }
         @keyframes slideIn {
           from { transform: translateX(50px); opacity: 0; }
           to { transform: translateX(0); opacity: 1; }
+        }
+        @media (max-width: 768px) {
+          .reconciliation-layout { grid-template-columns: 1fr; height: auto; }
+          .sim-form { grid-template-columns: 1fr; }
         }
       `}</style>
     </div>
