@@ -15,6 +15,7 @@ import {
   deleteFeeItem,
   isFeatureEnabled,
   checkIsSubscriptionActive,
+  subscribeToSchoolChanges,
 } from './data/store';
 
 // Pages
@@ -120,10 +121,26 @@ function Sidebar({ isOpen, onClose, onLogout, currentUser, subscriptionActive })
     window.addEventListener('schoolProfileChanged', loadProfile);
     window.addEventListener('periodChanged',        loadPeriods);
     window.addEventListener('schoolChanged',        loadPeriods);
+
+    // Real-time: re-fetch profile & features when SuperAdmin modifies settings or this school's profile
+    const unsubRealtime = subscribeToSchoolChanges(
+      () => {
+        // Platform settings changed (pricing, features, plans)
+        loadProfile();
+        window.dispatchEvent(new Event('platformSettingsChanged'));
+      },
+      () => {
+        // This school's profile changed (plan upgrade, status, etc.)
+        loadProfile();
+        window.dispatchEvent(new Event('schoolProfileChanged'));
+      }
+    );
+
     return () => {
       window.removeEventListener('schoolProfileChanged', loadProfile);
       window.removeEventListener('periodChanged',        loadPeriods);
       window.removeEventListener('schoolChanged',        loadPeriods);
+      unsubRealtime();
     };
   }, []);
 
@@ -157,6 +174,14 @@ function Sidebar({ isOpen, onClose, onLogout, currentUser, subscriptionActive })
       setFeatures(f);
     };
     if (currentUser) checkFeatures();
+
+    // Re-evaluate features when platform settings change in real-time
+    window.addEventListener('platformSettingsChanged', checkFeatures);
+    window.addEventListener('schoolProfileChanged', checkFeatures);
+    return () => {
+      window.removeEventListener('platformSettingsChanged', checkFeatures);
+      window.removeEventListener('schoolProfileChanged', checkFeatures);
+    };
   }, [currentUser, profile]);
 
   const role        = currentUser?.role?.toLowerCase() || 'teacher';

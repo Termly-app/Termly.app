@@ -2169,7 +2169,8 @@ export function subscribeToChanges(table, onUpdate) {
 }
 
 /**
- * Global platform subscription for Super Admins
+ * Global platform subscription for Super Admins.
+ * Covers ALL key tables so the SuperAdmin dashboard updates in real-time.
  */
 export function subscribeToPlatformChanges(onUpdate) {
   const channel = supabase
@@ -2179,6 +2180,54 @@ export function subscribeToPlatformChanges(onUpdate) {
     .on('postgres_changes', { event: '*', schema: 'public', table: 'payments' }, onUpdate)
     .on('postgres_changes', { event: '*', schema: 'public', table: 'platform_activity' }, onUpdate)
     .on('postgres_changes', { event: '*', schema: 'public', table: 'platform_settings' }, onUpdate)
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'users' }, onUpdate)
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'students' }, onUpdate)
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'fees' }, onUpdate)
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'mpesa_callbacks' }, onUpdate)
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'marks' }, onUpdate)
+    .subscribe();
+
+  return () => {
+    supabase.removeChannel(channel);
+  };
+}
+
+/**
+ * School-portal subscription for the App shell.
+ * Listens to platform_settings and the school's own profile so that
+ * plan changes, feature toggles, and profile updates by the SuperAdmin
+ * propagate instantly without a page refresh.
+ */
+export function subscribeToSchoolChanges(onSettingsChange, onProfileChange) {
+  if (!_currentSchoolId) return () => {};
+
+  const channel = supabase
+    .channel(`school_shell_${_currentSchoolId}`)
+    // Platform-wide settings (pricing, plans, features)
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'platform_settings' }, () => {
+      onSettingsChange();
+    })
+    // This school's profile (plan, name, status)
+    .on('postgres_changes', {
+      event: '*', schema: 'public', table: 'school_profiles',
+      filter: `school_id=eq.${_currentSchoolId}`
+    }, () => {
+      onProfileChange();
+    })
+    // Students added/removed (for sidebar counts, etc.)
+    .on('postgres_changes', {
+      event: '*', schema: 'public', table: 'students',
+      filter: `school_id=eq.${_currentSchoolId}`
+    }, () => {
+      window.dispatchEvent(new Event('studentsSynced'));
+    })
+    // Payments / M-Pesa callbacks
+    .on('postgres_changes', {
+      event: '*', schema: 'public', table: 'mpesa_callbacks',
+      filter: `school_id=eq.${_currentSchoolId}`
+    }, () => {
+      window.dispatchEvent(new Event('mpesaCallbackReceived'));
+    })
     .subscribe();
 
   return () => {
