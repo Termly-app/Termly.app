@@ -833,8 +833,15 @@ export default function Timetable({ currentUser, currentPeriodId, periods = [] }
                                     </div>
                                     {isDoubleSecond && <div className="tt-double-cont">↑ continued</div>}
                                     {view === 'class' && (cell.teachers?.name || teacherName(cell.teacher_id)) && !isDoubleSecond && (
-                                      <div className="tt-cell-teacher">
-                                      <UserIcon size={12} /> {cell.teachers?.name || teacherName(cell.teacher_id)}
+                                      <div style={{display:'flex', flexDirection:'column', gap:2}}>
+                                        <div className="tt-cell-teacher">
+                                          <UserIcon size={12} /> {cell.teachers?.name || teacherName(cell.teacher_id)}
+                                        </div>
+                                        {teachers.find(t => t.id === cell.teacher_id)?.on_leave && (
+                                          <div className="tt-leave-warning" style={{fontSize:'0.6rem', background:'var(--warning-light)', color:'var(--warning)', padding:'1px 4px', borderRadius:4, fontWeight:700, display:'inline-flex', alignItems:'center', gap:2}}>
+                                            <AlertIcon size={10} /> COVER NEEDED
+                                          </div>
+                                        )}
                                       </div>
                                     )}
                                     {view === 'teacher' && cell.class_grade && (
@@ -1134,18 +1141,33 @@ export default function Timetable({ currentUser, currentPeriodId, periods = [] }
             <select className="tt-field" value={editTeacher}
               onChange={e => { setEditTeacher(e.target.value); setConflictWarning(null); }}>
               <option value="">— Unassigned —</option>
-              {teachers.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
+              {teachers.map(t => (
+                <option key={t.id} value={t.id} style={t.on_leave ? {color:'var(--warning)'} : {}}>
+                  {t.name} {t.on_leave ? '(On Leave 🏖️)' : ''}
+                </option>
+              ))}
             </select>
 
             {/* Conflict warning */}
             {conflictWarning && (
               <div className="tt-conflict-box">
-                <div className="tt-conflict-title"><AlertIcon size={16} /> Teacher Already Booked</div>
+                <div className="tt-conflict-title"><AlertIcon size={16} /> Teacher Unavailable</div>
                 <div className="tt-conflict-body">
                   <strong style={{ color:'#D4DDD6' }}>{teacherName(editTeacher)}</strong> is already teaching{' '}
                   <strong style={{ color:'#D4DDD6' }}>{conflictWarning.subject}</strong> in{' '}
                   <strong style={{ color:'#D4DDD6' }}>{conflictWarning.class_grade}{conflictWarning.stream ? ` ${conflictWarning.stream}` : ''}</strong>{' '}
                   at this time. Choose a different teacher or leave unassigned.
+                </div>
+              </div>
+            )}
+
+            {/* Leave Warning in Modal */}
+            {!conflictWarning && editTeacher && teachers.find(t => t.id === editTeacher)?.on_leave && (
+              <div className="tt-conflict-box" style={{borderColor:'var(--warning)', background:'var(--warning-light)'}}>
+                <div className="tt-conflict-title" style={{color:'var(--warning)'}}><AlertIcon size={16} /> Teacher On Leave</div>
+                <div className="tt-conflict-body" style={{color:'var(--text-main)'}}>
+                  <strong style={{ color:'var(--warning)' }}>{teacherName(editTeacher)}</strong> is currently marked as <strong>On Leave</strong>. 
+                  Assigning them will require a cover teacher to be placed manually later.
                 </div>
               </div>
             )}

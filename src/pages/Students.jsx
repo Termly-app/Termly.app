@@ -159,7 +159,7 @@ export default function Students({ currentUser, currentPeriodId }) {
             <thead>
               <tr>
                 <th>Full Name</th><th>Adm No</th><th>Class</th><th>Level</th><th>Stream</th>
-                <th>Parent</th><th>Phone</th>
+                <th>Category</th><th>Parent</th><th>Phone</th>
                 {!isTeacher&&<th>Fee Balance</th>}
                 {isAdmin&&<th style={{textAlign:'center'}}>Actions</th>}
               </tr>
@@ -187,6 +187,7 @@ export default function Students({ currentUser, currentPeriodId }) {
                     <td data-label="Class"><span className="badge badge-info">{s.class}</span></td>
                     <td data-label="Level"><span className={`level-badge ${lb.cls}`}>{lb.ico} {getLevelForGrade(s.class)}</span></td>
                     <td data-label="Stream">{s.stream||<span className="text-muted">—</span>}</td>
+                    <td data-label="Category"><span className={`badge ${s.residenceType === 'boarding' ? 'badge-accent' : 'badge-ghost'}`} style={{textTransform:'capitalize'}}>{s.residenceType || 'day'}</span></td>
                     <td data-label="Parent">{s.parent}</td>
                     <td data-label="Phone" style={{color:'var(--text-light)',fontSize:'0.85rem'}}>{s.parentPhone}</td>
                     {!isTeacher&&(
@@ -220,6 +221,7 @@ function StudentModal({ student, profile, onSave, onClose }) {
   const ic=profile.activeClasses?.[0]||'Grade 1';
   const [form,setForm]=useState(student||{
     name:'',admNo:'',class:ic,stream:profile.streamsPerClass?.[ic]?.[0]||'',
+    residenceType:'day',
     parent:'',parentPhone:'',gender:'Male',dob:'',joinDate:new Date().toISOString().split('T')[0],notes:'',
     birthCertNo:'',county:'',fatherName:'',fatherPhone:'',motherName:'',motherPhone:'',nemisVerified:false
   });
@@ -233,6 +235,7 @@ function StudentModal({ student, profile, onSave, onClose }) {
           <div className="form-row">
             <div className="form-group"><label>Admission No</label><input className="form-input" name="admNo" value={form.admNo} onChange={hc} placeholder="Auto if blank"/></div>
             <div className="form-group"><label>Gender</label><select className="form-select" name="gender" value={form.gender} onChange={hc}><option>Male</option><option>Female</option></select></div>
+            <div className="form-group"><label>Residence Type</label><select className="form-select" name="residenceType" value={form.residenceType} onChange={hc}><option value="day">Day Student</option><option value="boarding">Boarding Student</option></select></div>
           </div>
           <div className="form-row">
             <div className="form-group"><label>Class *</label>
@@ -303,7 +306,7 @@ function StudentDetail({ student, feeData, onClose, onEdit, currentUser, profile
             </div>
           </div>
           <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:10,background:'var(--bg)',borderRadius:10,padding:14,marginBottom:12,fontSize:'0.875rem'}}>
-            {[{l:'Gender',v:student.gender},{l:'D.O.B',v:student.dob||'—'},{l:'Parent',v:student.parent},{l:'Phone',v:student.parentPhone},{l:'Joined',v:student.joinDate||'—'},
+            {[{l:'Gender',v:student.gender},{l:'Residence',v:<span style={{textTransform:'capitalize'}}>{student.residenceType || 'day'}</span>},{l:'D.O.B',v:student.dob||'—'},{l:'Parent',v:student.parent},{l:'Phone',v:student.parentPhone},{l:'Joined',v:student.joinDate||'—'},
               {l:'Birth Cert',v:student.birthCertNo||'—'},{l:'County',v:student.county||'—'},
               ...(!isTeacher?[{l:'Fee Balance',v:(()=>{const b=feeData.balance!==undefined?feeData.balance:(profile?.gradeFees?.[student.class]||TERM_FEE);return<span style={{fontWeight:700,color:b>0?'var(--danger)':'var(--success)'}}>{fmtKSh(b)}</span>;})()}]:[]),
             ].map((r,i)=>(

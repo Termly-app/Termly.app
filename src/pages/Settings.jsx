@@ -104,8 +104,10 @@ export default function Settings() {
     const cur=profile.streamsPerClass?.[grade]||[];
     setProfile({...profile,streamsPerClass:{...profile.streamsPerClass,[grade]:cur.filter(s=>s!==stream)}});
   };
-  const handleFeeChange=(grade,val)=>{
-    setProfile({...profile,gradeFees:{...profile.gradeFees,[grade]:Number(val)}});setSaved(false);
+  const handleFeeChange=(grade,type,val)=>{
+    const current = profile.gradeFees?.[grade] || {};
+    const updated = typeof current === 'object' ? { ...current, [type]: Number(val) } : { day: Number(current), [type]: Number(val) };
+    setProfile({...profile,gradeFees:{...profile.gradeFees,[grade]:updated}});setSaved(false);
   };
   const runFeeApplication=async()=>{
     setLoading(true);
@@ -416,16 +418,28 @@ export default function Settings() {
                   {profile.activeClasses?.filter(g=>CBC_STRUCTURE[activeLevel].grades.includes(g)).length===0?(
                     <p style={{fontSize:'0.875rem',color:'var(--text-muted)',fontStyle:'italic',textAlign:'center',padding:'14px 0'}}>Select active grades to configure fees.</p>
                   ):(
-                    <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(190px,1fr))',gap:10}}>
+                    <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(280px,1fr))',gap:12}}>
                       {CBC_STRUCTURE[activeLevel].grades.filter(g=>profile.activeClasses?.includes(g)).map(grade=>(
-                        <div key={grade} style={{display:'flex',justifyContent:'space-between',alignItems:'center',padding:'10px 14px',background:'var(--bg-card)',borderRadius:10,border:'1px solid var(--border)'}}>
-                          <span style={{fontSize:'0.875rem',fontWeight:600}}>{grade}</span>
-                          <div style={{display:'flex',alignItems:'center',gap:5}}>
-                            <span style={{fontSize:'0.7rem',color:'var(--text-muted)',fontWeight:600}}>KSh</span>
-                            <input type="number" value={profile.gradeFees?.[grade]||TERM_FEE} onChange={e=>handleFeeChange(grade,e.target.value)}
-                              style={{width:88,textAlign:'right',fontWeight:700,padding:'5px 7px',border:'1.5px solid var(--border)',borderRadius:7,fontSize:'0.875rem',outline:'none',background:'var(--bg)',color:'var(--text-main)',fontFamily:'inherit',transition:'border-color 0.15s'}}
-                              onFocus={e=>e.target.style.borderColor='var(--primary)'}
-                              onBlur={e=>e.target.style.borderColor='var(--border)'}/>
+                        <div key={grade} style={{display:'flex',flexDirection:'column',gap:8,padding:'12px 14px',background:'var(--bg-card)',borderRadius:10,border:'1px solid var(--border)'}}>
+                          <div style={{display:'flex',justifyContent:'space-between',alignItems:'center'}}>
+                            <span style={{fontSize:'0.875rem',fontWeight:700,color:'var(--primary)'}}>{grade}</span>
+                            <span style={{fontSize:'0.65rem',color:'var(--text-light)',fontWeight:600,textTransform:'uppercase'}}>KSh / Term</span>
+                          </div>
+                          <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:8}}>
+                            <div className="form-group" style={{margin:0}}>
+                              <label style={{fontSize:'0.65rem',marginBottom:2}}>Day</label>
+                              <input type="number" 
+                                value={typeof profile.gradeFees?.[grade] === 'object' ? profile.gradeFees[grade].day : profile.gradeFees?.[grade] || TERM_FEE} 
+                                onChange={e=>handleFeeChange(grade,'day',e.target.value)}
+                                style={{width:'100%',textAlign:'right',fontWeight:700,padding:'5px 7px',border:'1.5px solid var(--border)',borderRadius:7,fontSize:'0.875rem',outline:'none',background:'var(--bg)',color:'var(--text-main)',fontFamily:'inherit'}}/>
+                            </div>
+                            <div className="form-group" style={{margin:0}}>
+                              <label style={{fontSize:'0.65rem',marginBottom:2}}>Boarding</label>
+                              <input type="number" 
+                                value={typeof profile.gradeFees?.[grade] === 'object' ? (profile.gradeFees[grade].boarding || 0) : 0} 
+                                onChange={e=>handleFeeChange(grade,'boarding',e.target.value)}
+                                style={{width:'100%',textAlign:'right',fontWeight:700,padding:'5px 7px',border:'1.5px solid var(--border)',borderRadius:7,fontSize:'0.875rem',outline:'none',background:'var(--bg)',color:'var(--text-main)',fontFamily:'inherit'}}/>
+                            </div>
                           </div>
                         </div>
                       ))}

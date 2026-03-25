@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { getTeachers, addTeacher, updateTeacher, deleteTeacher, getSubjectAssignments, setAssignment, getTeacherWorkload, getTeacherPerformance, getPrintHeader, getSchoolProfile, getPlatformSettings, getUsers } from '../data/store';
+import { getTeachers, addTeacher, updateTeacher, deleteTeacher, getSubjectAssignments, setAssignment, getTeacherWorkload, getTeacherPerformance, getPrintHeader, getSchoolProfile, getPlatformSettings, getUsers, setTeacherLeaveStatus } from '../data/store';
 import Loader from '../components/Common/Loader';
 import { CBC_STRUCTURE, getSubjectsForGrade, getLevelForGrade } from '../data/seedData';
 import { 
@@ -79,6 +79,9 @@ export default function Teachers({ currentUser, currentPeriodId }) {
 
   const handleAssign = async (cls, stream, sub, teacherId) => {
     try { await setAssignment(cls, stream, sub, teacherId); await refresh(); } catch(err){ alert(err.message); }
+  };
+  const handleLeaveToggle = async (id, status) => {
+    try { await setTeacherLeaveStatus(id, status); await refresh(); } catch(err){ alert(err.message); }
   };
 
   const getTeacherSubjects = (teacherId) => {
@@ -185,6 +188,7 @@ export default function Teachers({ currentUser, currentPeriodId }) {
           getTeacherClasses={getTeacherClasses}
           onEdit={(t) => { setEditingTeacher(t); setShowModal(true); }}
           onDelete={handleDelete}
+          onLeaveToggle={handleLeaveToggle}
           isAdmin={isAdmin}
         />
       )}
@@ -207,7 +211,7 @@ export default function Teachers({ currentUser, currentPeriodId }) {
 }
 
 // ========== RECORDS TAB ==========
-function RecordsTab({ teachers, search, setSearch, total, getTeacherSubjects, getTeacherClasses, onEdit, onDelete, isAdmin }) {
+function RecordsTab({ teachers, search, setSearch, total, getTeacherSubjects, getTeacherClasses, onEdit, onDelete, onLeaveToggle, isAdmin }) {
   return (
     <>
       <div className="filter-bar">
@@ -255,12 +259,19 @@ function RecordsTab({ teachers, search, setSearch, total, getTeacherSubjects, ge
                       </div>
                     </td>
                     <td data-label="Status">
-                      <span className={`badge ${t.status === 'Active' ? 'badge-success' : 'badge-ghost'}`}>
-                        {t.status === 'Active' ? '● Active' : '○ Left'}
-                      </span>
+                      <div style={{display:'flex', flexDirection:'column', gap:4}}>
+                        <span className={`badge ${t.status === 'Active' ? 'badge-success' : 'badge-ghost'}`}>
+                          {t.status === 'Active' ? '● Active' : '○ Left'}
+                        </span>
+                        {t.on_leave && <span className="badge badge-warning" style={{fontSize:'0.65rem'}}>🏖️ On Leave</span>}
+                      </div>
                     </td>
                     <td data-label="Actions">
                       <div className="inline-flex" style={{justifyContent:'inherit'}}>
+                        <button className="btn btn-ghost btn-sm" title={t.on_leave ? "Mark as Present" : "Mark as On Leave"} 
+                          onClick={() => onLeaveToggle(t.id, !t.on_leave)}>
+                          <ClockIcon size={14} color={t.on_leave ? 'var(--warning)' : 'currentColor'} />
+                        </button>
                         <button className="btn btn-ghost btn-sm" onClick={() => onEdit(t)}><EditIcon size={14} /></button>
                         <button className="btn btn-ghost btn-sm" onClick={() => onDelete(t.id)}><DeleteIcon size={14} /></button>
                       </div>
@@ -876,10 +887,20 @@ function TeacherModal({ teacher, onSave, onClose, isAdmin }) {
               </div>
               <div className="form-group">
                 <label>Status</label>
-                <select className="form-select" name="status" value={form.status} onChange={handleChange}>
-                  <option>Active</option>
-                  <option>Left</option>
-                </select>
+                <div style={{display:'flex', gap:10}}>
+                  <select className="form-select" name="status" value={form.status} onChange={handleChange} style={{flex:1}}>
+                    <option>Active</option>
+                    <option>Left</option>
+                  </select>
+                  {form.status === 'Active' && (
+                    <label style={{display:'flex', alignItems:'center', gap:6, padding:'0 10px', background:'var(--bg)', borderRadius:8, border:'1px solid var(--border)', cursor:'pointer', fontSize:'0.82rem'}}>
+                      <input type="checkbox" checked={form.on_leave || false} 
+                        onChange={e => setForm({...form, on_leave: e.target.checked})} 
+                        style={{width:16, height:16, accentColor:'var(--warning)'}} />
+                      <span>On Leave</span>
+                    </label>
+                  )}
+                </div>
               </div>
             </div>
           </div>

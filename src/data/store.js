@@ -853,6 +853,7 @@ export async function getStudents() {
     return cached.map(s => ({
       ...s,
       admNo: s.adm_no,
+      residenceType: s.residence_type || 'day',
       parentPhone: s.parent_phone,
       joinDate: s.join_date,
       birthCertNo: s.birth_cert_no,
@@ -871,6 +872,7 @@ export async function getStudents() {
   return (data || []).map(s => ({
     ...s,
     admNo: s.adm_no,
+    residenceType: s.residence_type || 'day',
     parentPhone: s.parent_phone,
     joinDate: s.join_date,
     birthCertNo: s.birth_cert_no,
@@ -1201,8 +1203,16 @@ export async function applyFeeStructure() {
   const students = await getStudents();
   
   for (const student of students) {
-    const customFee = gradeFees[student.class];
-    const finalFee = customFee ? Number(customFee) : TERM_FEE;
+    const classFees = gradeFees[student.class] || {};
+    // Fallback logic: if it's a number, use it; if object, use residence key
+    const residenceKey = (student.residence_type || 'day').toLowerCase();
+    let finalFee = TERM_FEE;
+
+    if (typeof classFees === 'object') {
+      finalFee = Number(classFees[residenceKey]) || Number(classFees.day) || TERM_FEE;
+    } else {
+      finalFee = Number(classFees) || TERM_FEE;
+    }
     
     // Get current fee record for THIS period
     const { data: currentFee } = await supabase
@@ -1393,12 +1403,53 @@ export async function getSchoolStructure(preFetchedStudents = null, preFetchedMa
 // ============= TEACHERS =============
 export async function getTeachers() {
   if (!_currentSchoolId) return [];
+  
+  // Try to load from offline cache first
+  const cached = await db.teachers.where('school_id').equals(_currentSchoolId).toArray();
+
+  const fetchCloud = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('teachers')
+        .select('id, name, email, phone, subjects, school_id, on_leave')
+        .eq('school_id', _currentSchoolId);
+      if (error) throw error;
+      if (data) {
+        await db.teachers.bulkPut(data.map(t => ({ ...t, school_id: _currentSchoolId })));
+        window.dispatchEvent(new Event('teachersSynced'));
+      }
+    } catch (e) {
+      console.warn("Offline fetch: showing cached teachers.", e.message);
+    }
+  };
+
+  fetchCloud();
+
+  if (cached.length > 0) return cached;
+
   const { data, error } = await supabase
     .from('teachers')
-    .select('id, name, email, phone, subjects, school_id')
+    .select('id, name, email, phone, subjects, school_id, on_leave')
     .eq('school_id', _currentSchoolId);
   if (error) throw error;
+  if (data) await db.teachers.bulkPut(data.map(t => ({ ...t, school_id: _currentSchoolId })));
   return data || [];
+}
+
+/**
+ * Update teacher leave status
+ */
+export async function setTeacherLeaveStatus(teacherId, onLeave) {
+  const { error } = await supabase
+    .from('teachers')
+    .update({ on_leave: onLeave })
+    .eq('id', teacherId);
+  
+  if (error) throw error;
+  
+  // Update local cache
+  await db.teachers.update(teacherId, { on_leave: onLeave });
+  return { success: true };
 }
 
 export async function getTeachersBySchool(schoolId) {

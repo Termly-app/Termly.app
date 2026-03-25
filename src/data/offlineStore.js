@@ -3,8 +3,9 @@ import Dexie from 'dexie';
 export const db = new Dexie('ShuleSoftOffline');
 
 // Schema definition
-db.version(1).stores({
-  students: 'id, school_id, name, adm_no, class, status',
+db.version(2).stores({
+  students: 'id, school_id, name, adm_no, class, status, residence_type',
+  teachers: 'id, school_id, name, on_leave',
   marks: '[period_id+student_id+subject], period_id, student_id, school_id',
   attendance: 'id, date, school_id, class_id',
   syncQueue: '++id, type, payload, status, created_at'

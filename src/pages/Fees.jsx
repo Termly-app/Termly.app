@@ -233,7 +233,13 @@ export default function Fees({ currentPeriodId }) {
           <div className="card"><div className="card-body" style={{padding:0}}>
             <table className="data-table responsive-table"><thead><tr><th>Student</th><th>Class</th><th>Total Fee</th><th>Paid</th><th>Balance</th><th>Status</th><th>Action</th></tr></thead>
               <tbody>{filtered.map(s=>{
-                const f=fees[s.id]||{totalFee:(profile.gradeFees?.[s.class]||TERM_FEE),paid:0,balance:(profile.gradeFees?.[s.class]||TERM_FEE)};
+                const classFees = profile.gradeFees?.[s.class] || {};
+                const resType = (s.residenceType || 'day').toLowerCase();
+                const defaultTotal = typeof classFees === 'object' 
+                  ? (Number(classFees[resType]) || Number(classFees.day) || TERM_FEE)
+                  : (Number(classFees) || TERM_FEE);
+
+                const f=fees[s.id]||{totalFee:defaultTotal,paid:0,balance:defaultTotal};
                 const st=f.balance<=0?'Paid':f.paid>0?'Partial':'Unpaid';
                 return(
                   <tr key={s.id}>
