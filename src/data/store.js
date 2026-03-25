@@ -412,6 +412,33 @@ export async function checkIsSubscriptionActive(profile) {
   return profile.subscriptionStatus === 'Active';
 }
 
+/**
+ * Check if the active school has access to a specific premium feature
+ * based on their current subscription plan.
+ */
+export async function checkFeatureAccess(featureName, profile) {
+  // 1. PLATFORM OVERRIDE: Platform Admins bypass all feature restrictions
+  const isAdmin = await checkIsPlatformAdmin(_currentAuthUser?.email);
+  if (isAdmin) return true;
+
+  // 2. Load platform settings to get plan details
+  const settings = await getPlatformSettings();
+  if (!settings?.pricing) return false;
+
+  // 3. Resolve the plan name (handling legacy field names)
+  const planName = profile?.subscriptionPlan || profile?.subscription_plan || 'Starter Plan';
+
+  // 4. Find the plan and check its features array
+  const plan = settings.pricing[planName];
+  if (!plan) return false;
+
+  // If the plan has no features array or the feature isn't listed, deny access
+  return Array.isArray(plan.features) && plan.features.some(f => 
+    f.toLowerCase() === featureName.toLowerCase() || 
+    f.toLowerCase().includes(featureName.toLowerCase())
+  );
+}
+
 export async function submitPayment(amount, transactionCode, notes = '') {
   if (!_currentSchoolId) throw new Error('No school context');
   const { error } = await supabase

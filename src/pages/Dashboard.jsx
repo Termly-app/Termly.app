@@ -138,11 +138,22 @@ export default function Dashboard({ currentUser, onLogout, currentPeriodId }) {
   ].filter(k => k.show);
 
   const quickActions = [
-    { icon:<StudentIcon size={18} />, label:'Students',      sub:'Manage all students',   to:'/students',   bg:'#E0F2FE',  color:'#0EA5E9' },
-    { icon:<TeacherIcon size={18} />, label:'Teachers',      sub:'Manage staff',          to:'/teachers',   bg:'#F5F3FF',  color:'#8B5CF6' },
-    { icon:<BookIcon size={18} />,    label:'Attendance',     sub:'Record daily attendance', to:'/attendance', bg:'#ECFDF5',  color:'#10B981' },
-    { icon:<CardIcon size={18} />,    label:'Fees',           sub:'Fee collection & tracking', to:'/fees',    bg:'#FFFBEB',  color:'#F59E0B' },
+    { icon:<StudentIcon size={18} />, label:'Students',      sub:'Manage all students',   to:'/students',   bg:'#E0F2FE',  color:'#0EA5E9', feature: 'Student Management' },
+    { icon:<TeacherIcon size={18} />, label:'Teachers',      sub:'Manage staff',          to:'/teachers',   bg:'#F5F3FF',  color:'#8B5CF6', feature: 'Staff Management' },
+    { icon:<BookIcon size={18} />,    label:'Attendance',     sub:'Record daily attendance', to:'/attendance', bg:'#ECFDF5',  color:'#10B981', feature: 'Attendance Tracking' },
+    { icon:<CardIcon size={18} />,    label:'Fees',           sub:'Fee collection & tracking', to:'/fees',    bg:'#FFFBEB',  color:'#F59E0B', feature: 'Student Fee Statements' },
+    { icon:<BookIcon size={18} />,    label:'Timetable',      sub:'Automated scheduler',    to:'/timetable',  bg:'#F5F3FF',  color:'#6D28D9', feature: 'Timetable Builder' },
+    { icon:<RocketIcon size={18} />,  label:'NEMIS Export',  sub:'Ministry data upload',   to:'/dashboard',  bg:'#FFF1F2',  color:'#BE123C', feature: 'NEMIS Data Export' },
   ];
+
+  // Helper to check if a feature is included in the current plan
+  const hasAccess = (featureName) => {
+    if (!featureName) return true;
+    const planName = data.profile?.subscriptionPlan || 'Starter Plan';
+    const plan = data.platformSettings?.pricing?.[planName];
+    if (!plan?.features) return false;
+    return plan.features.some(f => f.toLowerCase().includes(featureName.toLowerCase()));
+  };
 
   const [showWizard, setShowWizard] = useState(data.totalStudents === 0 && !data.profile?.phone);
 
@@ -342,16 +353,36 @@ export default function Dashboard({ currentUser, onLogout, currentPeriodId }) {
             <h3><RocketIcon size={18} /> Quick Actions</h3>
           </div>
           <div className="card-body" style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-            {quickActions.map((a, i) => (
-              <Link to={a.to} key={i} className="quick-action">
-                <div className="quick-action-icon" style={{ background: a.bg, color: a.color }}>{a.icon}</div>
-                <div>
-                  <div style={{ fontWeight: 600, fontSize: '0.875rem', color: 'var(--text-main)' }}>{a.label}</div>
-                  <div style={{ fontSize: '0.78rem', color: 'var(--text-light)' }}>{a.sub}</div>
+            {quickActions.map((a, i) => {
+              const locked = !hasAccess(a.feature);
+              return (
+                <div 
+                  key={i} 
+                  className={`quick-action ${locked ? 'locked' : ''}`}
+                  onClick={() => {
+                    if (locked) {
+                      alert(`The "${a.feature}" feature is NOT included in your current ${data.profile?.subscriptionPlan || 'Starter'} plan. Please upgrade to unlock.`);
+                      navigate('/billing');
+                    } else {
+                      navigate(a.to);
+                    }
+                  }}
+                  style={{ cursor: 'pointer', position: 'relative' }}
+                >
+                  <div className="quick-action-icon" style={{ background: a.bg, color: a.color }}>{a.icon}</div>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontWeight: 600, fontSize: '0.875rem', color: 'var(--text-main)', display:'flex', alignItems:'center', gap:8 }}>
+                      {a.label}
+                      {locked && <span style={{ fontSize:'.55rem', padding:'1px 5px', borderRadius:4, background:'rgba(0,0,0,0.05)', color:'var(--text-light)', border:'1px solid rgba(0,0,0,0.1)' }}>PREMIUM</span>}
+                    </div>
+                    <div style={{ fontSize: '0.78rem', color: 'var(--text-light)' }}>{a.sub}</div>
+                  </div>
+                  <div className="quick-action-plus">
+                    {locked ? <ShieldIcon size={14} opacity={0.5} /> : '+'}
+                  </div>
                 </div>
-                <div className="quick-action-plus">+</div>
-              </Link>
-            ))}
+              );
+            })}
           </div>
         </div>
       </div>

@@ -598,6 +598,17 @@ function App() {
         {/* Page content */}
         <div className="page-content animate-slide">
           <ErrorBoundary>
+            {/* Context-aware feature helper */}
+            {(() => {
+              const hasFeature = (name) => {
+                if (isPlatformAdmin) return true;
+                const planName = profileData?.subscriptionPlan || profileData?.subscription_plan || 'Starter Plan';
+                const plan = platformSettings?.pricing?.[planName];
+                if (!plan?.features) return false;
+                return plan.features.some(f => f.toLowerCase().includes(name.toLowerCase()));
+              };
+
+              return (
             <Routes>
               {!subscriptionActive ? (
                 <>
@@ -617,7 +628,9 @@ function App() {
                       <Route path="/grading"   element={<Grading currentUser={currentUser} currentPeriodId={currentPeriodId} />} />
                       <Route path="/attendance" element={<Attendance currentUser={currentUser} currentPeriodId={currentPeriodId} />} />
                       <Route path="/timetable" element={
-                        <Timetable currentUser={currentUser} currentPeriodId={currentPeriodId} periods={periods} />
+                        hasFeature('Timetable') 
+                          ? <Timetable currentUser={currentUser} currentPeriodId={currentPeriodId} periods={periods} />
+                          : <Navigate to="/dashboard" replace />
                       } />
                     </>
                   )}
@@ -642,7 +655,11 @@ function App() {
 
                   {/* Library Routes: Admin & Librarian */}
                   {(isAdmin || isLibrarian) && (
-                    <Route path="/library" element={<Library currentUser={currentUser} currentPeriodId={currentPeriodId} />} />
+                    <Route path="/library" element={
+                      hasFeature('Library')
+                        ? <Library currentUser={currentUser} currentPeriodId={currentPeriodId} />
+                        : <Navigate to="/dashboard" replace />
+                    } />
                   )}
 
                   {/* Admin-Only Routes */}
@@ -655,12 +672,13 @@ function App() {
                     </>
                   )}
 
-                  <Route path="/"         element={<Navigate to="/dashboard" replace />} />
                   <Route path="*"         element={<div style={{padding:48, textAlign:'center'}}><h2>403 — Unauthorized</h2><p>You don't have permission to access this module.</p></div>} />
                 </>
               )}
             </Routes>
-          </ErrorBoundary>
+          );
+        })()}
+      </ErrorBoundary>
         </div>
       </main>
       <CustomCursor disabled={false} />
