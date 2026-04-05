@@ -37,6 +37,9 @@ import SuperAdmin   from './pages/SuperAdmin';
 import Landing      from './pages/Landing';
 import Register     from './pages/Register';
 import MpesaReconciliation from './pages/MpesaReconciliation';
+import PortalManager from './pages/Portal';
+import StaffPortalManager from './pages/StaffPortal';
+import LMS          from './pages/LMS';
 import TermsOfService  from './pages/legal/TermsOfService';
 import PrivacyPolicy   from './pages/legal/PrivacyPolicy';
 import AcceptableUse   from './pages/legal/AcceptableUse';
@@ -61,7 +64,8 @@ import {
   TimetableIcon, FeesIcon, FeeStructureIcon, SecurityIcon, SettingsIcon,
   BillingIcon, SignOutIcon, MenuIcon, CloseIcon, ChevronDownIcon,
   OverviewIcon, SchoolsIcon, PaymentsIcon, HistoryIcon, RevenueIcon,
-  ActivityIcon, RecoveryIcon, StatusDotIcon, ZapIcon, SubscriptionIcon, MessageIcon
+  ActivityIcon, RecoveryIcon, StatusDotIcon, ZapIcon, SubscriptionIcon, MessageIcon,
+  BookIcon, ClipboardIcon
 } from './components/CommonIcons';
 
 // ── Sidebar nav link helper ───────────────────────────────────────────────
@@ -161,6 +165,7 @@ function Sidebar({ isOpen, onClose, onLogout, currentUser, subscriptionActive })
     fees: false,
     nemis: false,
     sms: false,
+    lms: false,
   });
 
   useEffect(() => {
@@ -173,6 +178,7 @@ function Sidebar({ isOpen, onClose, onLogout, currentUser, subscriptionActive })
         fees: await isFeatureEnabled('fees'),
         nemis: await isFeatureEnabled('nemis'),
         sms: await isFeatureEnabled('sms'),
+        lms: await isFeatureEnabled('lms'),
       };
       setFeatures(f);
     };
@@ -300,7 +306,7 @@ function Sidebar({ isOpen, onClose, onLogout, currentUser, subscriptionActive })
         )}
 
         {/* Academic section for Teachers and Admins */}
-        {(isTeacher || isAdmin) && (features.attendance || features.grading || features.timetable) && (
+        {(isTeacher || isAdmin) && (features.attendance || features.grading || features.timetable || features.lms) && (
           <SbSection label="Academics" />
         )}
         
@@ -314,6 +320,10 @@ function Sidebar({ isOpen, onClose, onLogout, currentUser, subscriptionActive })
         
         {(isTeacher || isAdmin) && features.timetable && (
           <SbLink to="/timetable" icon={TimetableIcon} label="Timetable"  onClick={onClose} locked={!subscriptionActive} />
+        )}
+
+        {(isTeacher || isAdmin) && features.lms && (
+          <SbLink to="/lms" icon={ClipboardIcon} label="E-Learning" onClick={onClose} locked={!subscriptionActive} />
         )}
 
         {/* Administration/Finance section */}
@@ -507,10 +517,6 @@ function App() {
     setIsPlatformAdmin(false);
   };
 
-  const isPlatformAdminOld = currentUser?.email &&
-    ['admin@shulesoft.com', 'shulesoft8@gmail.com'].includes(currentUser.email);
-  // We use the state variable isPlatformAdmin for the actual routes below
-
   // ── Auth loading ────────────────────────────────────────────────────────
   if (authLoading) return <Loader />;
 
@@ -536,6 +542,8 @@ function App() {
           <Route path="/forgot-password"    element={<ForgotPassword />} />
           <Route path="/reset-password"     element={<ResetPassword />} />
           <Route path="/security-trust"     element={<SecurityTrust />} />
+          <Route path="/portal/*"           element={<PortalManager />} />
+          <Route path="/staff/*"            element={<StaffPortalManager />} />
           <Route path="*"                   element={<Landing />} />
         </Routes>
         <CustomCursor disabled={false} />
@@ -632,17 +640,6 @@ function App() {
         {/* Page content */}
         <div className="page-content animate-slide">
           <ErrorBoundary>
-            {/* Context-aware feature helper */}
-            {(() => {
-              const hasFeature = (name) => {
-                if (isPlatformAdmin) return true;
-                const planName = profileData?.subscriptionPlan || profileData?.subscription_plan || 'Starter Plan';
-                const plan = platformSettings?.pricing?.[planName];
-                if (!plan?.features) return false;
-                return plan.features.some(f => f.toLowerCase().includes(name.toLowerCase()));
-              };
-
-              return (
             <Routes>
               {!subscriptionActive ? (
                 <>
@@ -661,11 +658,8 @@ function App() {
                       <Route path="/students"  element={<Students currentUser={currentUser} currentPeriodId={currentPeriodId} />} />
                       <Route path="/grading"   element={<Grading currentUser={currentUser} currentPeriodId={currentPeriodId} />} />
                       <Route path="/attendance" element={<Attendance currentUser={currentUser} currentPeriodId={currentPeriodId} />} />
-                      <Route path="/timetable" element={
-                        hasFeature('Timetable') 
-                          ? <Timetable currentUser={currentUser} currentPeriodId={currentPeriodId} periods={periods} />
-                          : <Navigate to="/dashboard" replace />
-                      } />
+                      <Route path="/timetable" element={<Timetable currentUser={currentUser} currentPeriodId={currentPeriodId} periods={periods} />} />
+                      <Route path="/lms" element={<LMS currentUser={currentUser} />} />
                     </>
                   )}
 
@@ -689,20 +683,12 @@ function App() {
 
                   {/* Communications Routes: Admin */}
                   {isAdmin && (
-                    <Route path="/communications" element={
-                      hasFeature('sms')
-                        ? <Communications currentUser={currentUser} />
-                        : <Navigate to="/dashboard" replace />
-                    } />
+                    <Route path="/communications" element={<Communications currentUser={currentUser} />} />
                   )}
 
                   {/* Library Routes: Admin & Librarian */}
                   {(isAdmin || isLibrarian) && (
-                    <Route path="/library" element={
-                      hasFeature('Library')
-                        ? <Library currentUser={currentUser} currentPeriodId={currentPeriodId} />
-                        : <Navigate to="/dashboard" replace />
-                    } />
+                    <Route path="/library" element={<Library currentUser={currentUser} currentPeriodId={currentPeriodId} />} />
                   )}
 
                   {/* Admin-Only Routes */}
@@ -719,9 +705,7 @@ function App() {
                 </>
               )}
             </Routes>
-          );
-        })()}
-      </ErrorBoundary>
+          </ErrorBoundary>
         </div>
       </main>
       <CustomCursor disabled={false} />
