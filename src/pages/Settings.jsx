@@ -20,6 +20,7 @@ export default function Settings() {
   const [activeLevel,setActiveLevel] = useState('Upper Primary');
   const [newSubject,setNewSubject]   = useState('');
   const [newStream,setNewStream]     = useState({});
+  const [newHouse,setNewHouse]       = useState('');
   const [newExam, setNewExam]       = useState('');
   const [newGradeItem, setNewGradeItem] = useState({ symbol: '', min: 0, max: 100, color: '#3b82f6' });
   const [periods, setPeriods]     = useState([]);
@@ -103,6 +104,17 @@ export default function Settings() {
   const removeStream=(grade,stream)=>{
     const cur=profile.streamsPerClass?.[grade]||[];
     setProfile({...profile,streamsPerClass:{...profile.streamsPerClass,[grade]:cur.filter(s=>s!==stream)}});
+  };
+  const addHouse=()=>{
+    const val=newHouse.trim();if(!val)return;
+    const cur=profile.boardingHouses||[];
+    if(cur.includes(val))return;
+    setProfile({...profile,boardingHouses:[...cur,val]});
+    setNewHouse('');setSaved(false);
+  };
+  const removeHouse=(house)=>{
+    const cur=profile.boardingHouses||[];
+    setProfile({...profile,boardingHouses:cur.filter(h=>h!==house)});setSaved(false);
   };
   const handleFeeChange=(grade,type,val)=>{
     const current = profile.gradeFees?.[grade] || {};
@@ -356,6 +368,26 @@ export default function Settings() {
                       ))}
                     </div>
                   )}
+                </div>
+
+                {/* Boarding Houses */}
+                <div style={sectionBox}>
+                  <div style={{fontWeight:700,fontSize:'0.9rem',color:'var(--text-main)',marginBottom:12}}>Boarding Houses</div>
+                  <div style={{background:'var(--bg-card)',padding:12,borderRadius:10,border:'1px solid var(--border)'}}>
+                    <div style={{display:'flex',flexWrap:'wrap',gap:5,marginBottom:8,minHeight:28}}>
+                      {(profile.boardingHouses||[]).map(house=>(
+                        <div key={house} style={{display:'inline-flex',alignItems:'center',gap:4,padding:'4px 10px',borderRadius:6,background:'var(--bg)',border:'1px solid var(--border)',fontSize:'0.82rem',fontWeight:600}}>
+                          <span>{house}</span>
+                          <button onClick={()=>removeHouse(house)} style={{background:'none',border:'none',cursor:'pointer',color:'var(--danger)',fontSize:'0.9rem',fontWeight:700,padding:0,lineHeight:1,display:'flex',alignItems:'center'}}><CrossIcon size={12} /></button>
+                        </div>
+                      ))}
+                      {!(profile.boardingHouses||[]).length&&<span style={{fontSize:'0.8rem',color:'var(--text-muted)',fontStyle:'italic'}}>No houses added yet</span>}
+                    </div>
+                    <div style={{display:'flex',gap:6,maxWidth:300}}>
+                      <input className="form-input" style={{flex:1,fontSize:'0.82rem',padding:'8px 12px'}} value={newHouse} onChange={e=>setNewHouse(e.target.value)} onKeyDown={e=>e.key==='Enter'&&addHouse()} placeholder="e.g. Red House"/>
+                      <button onClick={addHouse} style={{padding:'8px 16px',borderRadius:8,border:'none',background:'var(--text-main)',color:'#fff',fontFamily:'inherit',fontSize:'0.82rem',fontWeight:700,cursor:'pointer',display:'flex',alignItems:'center',gap:4}}><PlusIcon size={12} /> Add</button>
+                    </div>
+                  </div>
                 </div>
 
                 {/* Grading & Exams */}

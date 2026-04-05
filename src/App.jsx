@@ -32,6 +32,7 @@ import Settings     from './pages/Settings';
 import Login        from './pages/Login';
 import Security     from './pages/Security';
 import Billing      from './pages/Billing';
+import Communications from './pages/Communications';
 import SuperAdmin   from './pages/SuperAdmin';
 import Landing      from './pages/Landing';
 import Register     from './pages/Register';
@@ -60,7 +61,7 @@ import {
   TimetableIcon, FeesIcon, FeeStructureIcon, SecurityIcon, SettingsIcon,
   BillingIcon, SignOutIcon, MenuIcon, CloseIcon, ChevronDownIcon,
   OverviewIcon, SchoolsIcon, PaymentsIcon, HistoryIcon, RevenueIcon,
-  ActivityIcon, RecoveryIcon, StatusDotIcon, ZapIcon, SubscriptionIcon
+  ActivityIcon, RecoveryIcon, StatusDotIcon, ZapIcon, SubscriptionIcon, MessageIcon
 } from './components/CommonIcons';
 
 // ── Sidebar nav link helper ───────────────────────────────────────────────
@@ -327,6 +328,10 @@ function Sidebar({ isOpen, onClose, onLogout, currentUser, subscriptionActive })
         
         {isAdmin && features.fees && (
           <SbLink to="/fee-structure" icon={FeeStructureIcon} label="Fee Structure" onClick={onClose} locked={!subscriptionActive} />
+        )}
+
+        {isAdmin && features.sms && (
+          <SbLink to="/communications" icon={MessageIcon} label="Communications" onClick={onClose} locked={!subscriptionActive} />
         )}
         
         {/* Strictly Admin-only settings */}
@@ -680,6 +685,15 @@ function App() {
                         } />
                       )}
                     </>
+                  )}
+
+                  {/* Communications Routes: Admin */}
+                  {isAdmin && (
+                    <Route path="/communications" element={
+                      hasFeature('sms')
+                        ? <Communications currentUser={currentUser} />
+                        : <Navigate to="/dashboard" replace />
+                    } />
                   )}
 
                   {/* Library Routes: Admin & Librarian */}

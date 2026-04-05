@@ -272,6 +272,7 @@ const DEFAULT_PROFILE = {
   subscriptionPlan: 'Basic',
   streamsPerClass: defaultStreamsPerClass,
   customSubjects: {},
+  boardingHouses: [],
   activeClasses: Object.values(CBC_STRUCTURE).flatMap(l => l.grades),
   gradeFees: {},
   subscriptionStatus: 'Trial',
@@ -353,6 +354,7 @@ function mapProfileData(data) {
     subscriptionPlan: plan,
     streamsPerClass: data.streams_per_class || DEFAULT_PROFILE.streamsPerClass,
     customSubjects: data.custom_subjects || {},
+    boardingHouses: data.custom_subjects?.__boarding_houses || DEFAULT_PROFILE.boardingHouses,
     activeClasses: data.active_classes || DEFAULT_PROFILE.activeClasses,
     gradeFees: data.grade_fees || {},
     subscriptionStatus: data.subscription_status || 'Inactive',
@@ -550,7 +552,7 @@ export async function saveSchoolProfile(profile) {
     subscription_plan: profile.subscriptionPlan || 'Basic',
     streams_per_class: profile.streamsPerClass || defaultStreamsPerClass,
     active_classes: profile.activeClasses || DEFAULT_PROFILE.activeClasses,
-    custom_subjects: profile.customSubjects || {},
+    custom_subjects: { ...(profile.customSubjects || {}), __boarding_houses: profile.boardingHouses || [] },
     custom_exams: profile.customExams || DEFAULT_PROFILE.customExams,
     grading_systems: profile.gradingSystems || DEFAULT_PROFILE.gradingSystems,
     updated_at: new Date().toISOString(),
@@ -873,6 +875,7 @@ export async function getStudents() {
     ...s,
     admNo: s.adm_no,
     residenceType: s.residence_type || 'day',
+    house: s.house || null,
     parentPhone: s.parent_phone,
     joinDate: s.join_date,
     birthCertNo: s.birth_cert_no,
@@ -887,11 +890,11 @@ export async function getStudents() {
 export async function getStudent(id) {
   const { data, error } = await supabase
     .from('students')
-    .select('id, name, adm_no, class, stream, parent, parent_phone, gender, dob, join_date, notes, school_id, birth_cert_no, county, father_name, father_phone, mother_name, mother_phone, nemis_verified')
+    .select('id, name, adm_no, class, stream, parent, parent_phone, gender, dob, join_date, notes, school_id, birth_cert_no, county, father_name, father_phone, mother_name, mother_phone, nemis_verified, residence_type, house')
     .eq('id', id)
     .single();
   if (error) throw error;
-  return data ? { ...data, admNo: data.adm_no, parentPhone: data.parent_phone, joinDate: data.join_date } : null;
+  return data ? { ...data, admNo: data.adm_no, parentPhone: data.parent_phone, joinDate: data.join_date, residenceType: data.residence_type || 'day', house: data.house || null } : null;
 }
 
 export async function addStudent(student) {
@@ -919,6 +922,8 @@ export async function addStudent(student) {
       class: student.class,
       stream: student.stream || 'General',
       parent: student.parent || '',
+      residence_type: student.residenceType || 'day',
+      house: student.house || null,
       parent_phone: student.parentPhone || '',
       gender: student.gender || '',
       dob: student.dob || '',
@@ -951,6 +956,8 @@ export async function addStudent(student) {
   return { 
     ...data, 
     admNo: data.adm_no, 
+    residenceType: data.residence_type || 'day',
+    house: data.house || null,
     parentPhone: data.parent_phone, 
     joinDate: data.join_date,
     birthCertNo: data.birth_cert_no,
@@ -968,6 +975,8 @@ export async function updateStudent(id, updates) {
   if (updates.class !== undefined) row.class = updates.class;
   if (updates.stream !== undefined) row.stream = updates.stream;
   if (updates.parent !== undefined) row.parent = updates.parent;
+  if (updates.residenceType !== undefined) row.residence_type = updates.residenceType;
+  if (updates.house !== undefined) row.house = updates.house;
   if (updates.parentPhone !== undefined) row.parent_phone = updates.parentPhone;
   if (updates.gender !== undefined) row.gender = updates.gender;
   if (updates.dob !== undefined) row.dob = updates.dob;
@@ -989,7 +998,7 @@ export async function updateStudent(id, updates) {
     .select()
     .single();
   if (error) throw error;
-  return data ? { ...data, admNo: data.adm_no, parentPhone: data.parent_phone, joinDate: data.join_date } : null;
+  return data ? { ...data, admNo: data.adm_no, parentPhone: data.parent_phone, joinDate: data.join_date, residenceType: data.residence_type || 'day', house: data.house || null } : null;
 }
 
 export async function deleteStudent(id) {
