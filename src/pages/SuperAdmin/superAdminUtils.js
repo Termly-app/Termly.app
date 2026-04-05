@@ -93,3 +93,47 @@ export const getStatusRefined = (p, isActive) => {
   if (s === 'Active' || s === 'Trial') return 'Expired';
   return s;
 };
+
+// ── Module slug → human-friendly label for display ──────────────────────
+const MODULE_LABELS = {
+  attendance:     'Attendance Tracking',
+  grading:        'Academic Grading & Reports',
+  fees:           'Fee & Billing Engine',
+  timetable:      'Timetable Builder',
+  lms:            'E-Learning / LMS',
+  sms:            'SMS & Communications',
+  library:        'Library Management',
+  nemis:          'NEMIS Data Export',
+  mpesa:          'M-Pesa STK Push',
+  teacher_portal: 'Teacher Mobile Portal',
+  parent_portal:  'Parent & Student Portal',
+  analytics:      'Smart Analytics & Insights',
+  multi_stream:   'Multi-Stream Support',
+  custom_brand:   'Custom Branding',
+  api_access:     'API Access',
+};
+
+/**
+ * Get the final display-ready feature list for a plan.
+ * Priority:
+ *   1. If the plan has marketing text `features[]`, show those.
+ *   2. If marketing text is empty but `modules[]` exists, auto-generate labels.
+ *   3. If both exist, merge them (modules first, then any extra marketing text that isn't a duplicate).
+ */
+export const getPlanDisplayFeatures = (plan) => {
+  const textFeatures   = Array.isArray(plan.features) ? plan.features : [];
+  const modulesSlugs   = Array.isArray(plan.modules)  ? plan.modules  : [];
+
+  // Auto-generate labels from module slugs
+  const moduleLabels = modulesSlugs.map(s => MODULE_LABELS[s] || s);
+
+  if (moduleLabels.length === 0) return textFeatures;
+  if (textFeatures.length === 0) return moduleLabels;
+
+  // Merge: show module labels first, then any extra marketing text not already covered
+  const lowerModuleLabels = moduleLabels.map(l => l.toLowerCase());
+  const extras = textFeatures.filter(f => !lowerModuleLabels.some(ml => 
+    ml.includes(f.toLowerCase()) || f.toLowerCase().includes(ml)
+  ));
+  return [...moduleLabels, ...extras];
+};

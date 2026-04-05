@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { getPlatformSettings } from '../data/store';
+import { getPlanDisplayFeatures } from './SuperAdmin/superAdminUtils';
 import './Landing.css';
 import {
   BookIcon, UserIcon, CheckIcon, CardIcon, SchoolIcon,
@@ -448,16 +449,19 @@ export default function Landing() {
                 <div className="pp">per term · up to {p.limit?.toLocaleString() || '0'} students</div>
                 <hr className="pdiv"/>
                 <ul className="pfeats">
-                  {p.features?.length > 0 ? (
-                    p.features.map((f, i) => <li key={i}>{f.replace(/_/g, ' ')}</li>)
-                  ) : (
-                    <>
-                      <li>Core management features</li>
-                      <li>Student & staff profiles</li>
-                      <li>M-PESA integration</li>
-                      <li>Support included</li>
-                    </>
-                  )}
+                  {(() => {
+                    const displayFeatures = getPlanDisplayFeatures(p);
+                    return displayFeatures.length > 0 ? (
+                      displayFeatures.map((f, i) => <li key={i}>{f.replace(/_/g, ' ')}</li>)
+                    ) : (
+                      <>
+                        <li>Core management features</li>
+                        <li>Student & staff profiles</li>
+                        <li>M-PESA integration</li>
+                        <li>Support included</li>
+                      </>
+                    );
+                  })()}
                 </ul>
                 <Link to={`/register?plan=${name}`} className="pbtn">Get started</Link>
               </div>

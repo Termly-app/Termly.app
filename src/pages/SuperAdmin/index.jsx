@@ -471,7 +471,10 @@ export default function SuperAdmin({ currentUser, isPlatformAdmin, sidebarOpen, 
         const pricing = cf?.pricing || {};
         setPlans(Object.entries(pricing).map(([id, p]) => ({
           id, name: id, price: p.price || 0, limit: p.limit || 0,
+          admins: p.admins || 5, trial_days: p.trial_days || 0,
+          description: p.description || '', color: p.color || '#ffffff',
           active: p.active !== false, features: p.features || [],
+          modules: p.modules || [],
         })));
       } catch (e) {
         console.error('Failed to load platform settings:', e);
