@@ -2866,11 +2866,22 @@ const FEATURE_MAPPING = {
   library    : ['Library Management', 'E-Library'],
   nemis      : ['NEMIS Data Export', 'Ministry Export'],
   sms        : ['SMS Notifications', 'Parent SMS Notifications', 'Bulk SMS', 'WhatsApp'],
-  whatsapp   : ['WhatsApp Fee Reminders', 'WhatsApp Integration'],
+  lms        : ['E-Learning', 'LMS', 'Homework'],
+  mpesa      : ['M-Pesa STK Push', 'M-PESA Paybill'],
+  teacher_portal : ['Teacher Portal Access', 'Teacher Mobile Portal'],
+  parent_portal  : ['Parent Portal', 'Student Portal'],
+  analytics  : ['Smart Analytics', 'Insights'],
+  multi_stream : ['Multi-Stream Support'],
+  custom_brand : ['Custom Branding'],
+  api_access   : ['API Access'],
 };
 
 /**
- * Check if a feature is enabled for the current school
+ * Check if a feature is enabled for the current school.
+ * Priority:
+ *   1. Platform admin override → always true
+ *   2. plan.modules[] hard slug check (new authoritative system)
+ *   3. Fuzzy FEATURE_MAPPING string match (backward compat for plans without modules[])
  */
 export async function isFeatureEnabled(featureSlug) {
   try {
@@ -2888,10 +2899,14 @@ export async function isFeatureEnabled(featureSlug) {
     const plan = settings?.pricing?.[planName];
     if (!plan) return false;
 
+    // === NEW: Hard module slug check (authoritative) ===
+    if (Array.isArray(plan.modules) && plan.modules.length > 0) {
+      return plan.modules.includes(featureSlug);
+    }
+
+    // === FALLBACK: Legacy fuzzy string matching for plans that haven't been upgraded ===
     const allowedFeatures = plan.features || [];
     const keywords = FEATURE_MAPPING[featureSlug] || [];
-    
-    // Check if any of the keywords/user-facing strings match what's in the plan's feature list
     return keywords.some(k => allowedFeatures.some(af => af.includes(k) || k.includes(af)));
   } catch (e) {
     console.error("Feature gating error:", e);

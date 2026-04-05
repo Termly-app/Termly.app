@@ -32,7 +32,28 @@ import { useState } from 'react';
 import { calcExpiry } from '../superAdminUtils';
 import { CrossIcon, CheckIcon } from '../../../components/CommonIcons';
 
-// ── Suggested features to quickly add ────────────────────────────────────
+// ── Master registry of ALL system modules ────────────────────────────────
+// Each entry maps a backend slug to a human label + icon character.
+// The SuperAdmin toggles these ON/OFF per plan to control hard access.
+const ALL_SYSTEM_MODULES = [
+  { slug: 'attendance',    label: 'Attendance Tracking',        icon: '📋', desc: 'Daily class attendance register' },
+  { slug: 'grading',       label: 'Academic Grading & Reports', icon: '📊', desc: 'CBC/8-4-4 report cards, competency scoring' },
+  { slug: 'fees',          label: 'Fee & Billing Engine',       icon: '💰', desc: 'Student balances, payments, fee structure' },
+  { slug: 'timetable',     label: 'Timetable Builder',          icon: '🗓️', desc: 'Manual & automated class scheduling' },
+  { slug: 'lms',           label: 'E-Learning / LMS',           icon: '📚', desc: 'Homework assignments, student submissions' },
+  { slug: 'sms',           label: 'SMS & Communications',       icon: '📩', desc: 'Bulk SMS, fee reminders, WhatsApp' },
+  { slug: 'library',       label: 'Library Management',         icon: '📖', desc: 'Book catalogue, borrowing, returns' },
+  { slug: 'nemis',         label: 'NEMIS Data Export',           icon: '🏛️', desc: 'Ministry of Education compliance export' },
+  { slug: 'mpesa',         label: 'M-Pesa STK Push',            icon: '📱', desc: 'Zero-touch automated fee collection' },
+  { slug: 'teacher_portal',label: 'Teacher Mobile Portal',      icon: '👨‍🏫', desc: 'Mobile grading from personal devices' },
+  { slug: 'parent_portal', label: 'Parent & Student Portal',    icon: '👨‍👩‍👧', desc: 'Self-service portal for parents/students' },
+  { slug: 'analytics',     label: 'Smart Analytics & Insights', icon: '🧠', desc: 'Prediction, defaulter lists, trend alerts' },
+  { slug: 'multi_stream',  label: 'Multi-Stream Support',       icon: '🏫', desc: 'A, B, C streams per class' },
+  { slug: 'custom_brand',  label: 'Custom Branding',            icon: '🎨', desc: 'School logo, colors on reports' },
+  { slug: 'api_access',    label: 'API Access',                 icon: '🔌', desc: 'External system integrations' },
+];
+
+// ── Suggested features to quickly add (marketing text) ───────────────────
 const FEATURE_SUGGESTIONS = [
   'CBC Report Cards (PP1–Grade 9)',
   'KCSE / KCPE Report Cards (8-4-4)',
@@ -76,6 +97,7 @@ const EMPTY_PLAN = {
   description : '',
   color       : PLAN_COLORS[0],
   features    : [],
+  modules     : [],   // <-- Hard feature access control slugs
 };
 
 export default function SettingsTab({
@@ -140,6 +162,14 @@ export default function SettingsTab({
     if (expandedPlan === id) setExpandedPlan(null);
   };
 
+  const toggleModule = (planId, slug) => {
+    setPlans(prev => prev.map(p => {
+      if (p.id !== planId) return p;
+      const mods = p.modules || [];
+      return { ...p, modules: mods.includes(slug) ? mods.filter(m => m !== slug) : [...mods, slug] };
+    }));
+  };
+
   const handleSavePricing = async () => {
     const invalid = plans.filter(p => !p.name.trim());
     if (invalid.length) {
@@ -160,6 +190,7 @@ export default function SettingsTab({
           description : p.description || '',
           color       : p.color || PLAN_COLORS[0],
           features    : Array.isArray(p.features) ? p.features : [],
+          modules     : Array.isArray(p.modules)  ? p.modules  : [],
         };
       });
       await updatePlatformSetting('pricing', newPricing);
@@ -371,9 +402,59 @@ export default function SettingsTab({
                             onChange={e => updatePlan(plan.id, 'description', e.target.value)} />
                         </div>
 
-                        {/* Features */}
+                        {/* ── MODULE ACCESS TOGGLES (Hard Feature Gating) ─── */}
+                        <div style={{ marginBottom:14 }}>
+                          <label style={{ ...S.label, color:'var(--vi)', marginBottom:8 }}>Module Access Control</label>
+                          <div style={{ fontSize:'.58rem', color:'var(--sub)', marginBottom:10, lineHeight:1.5 }}>
+                            Toggle system modules ON/OFF for this plan. Schools on this plan will only see enabled modules in their sidebar.
+                          </div>
+                          <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:6 }}>
+                            {ALL_SYSTEM_MODULES.map(mod => {
+                              const enabled = (plan.modules || []).includes(mod.slug);
+                              return (
+                                <div key={mod.slug}
+                                  onClick={() => toggleModule(plan.id, mod.slug)}
+                                  style={{
+                                    display:'flex', alignItems:'center', gap:8, padding:'8px 10px',
+                                    borderRadius:7, cursor:'pointer', transition:'all .15s',
+                                    background: enabled ? 'rgba(13,216,138,.06)' : 'var(--bg)',
+                                    border: `1px solid ${enabled ? 'rgba(13,216,138,.25)' : 'var(--edge)'}`,
+                                  }}>
+                                  <div style={{ fontSize:'1.1rem', flexShrink:0 }}>{mod.icon}</div>
+                                  <div style={{ flex:1, minWidth:0 }}>
+                                    <div style={{ fontSize:'.68rem', fontWeight:700, color: enabled ? 'var(--te)' : 'var(--sub)', whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis' }}>
+                                      {mod.label}
+                                    </div>
+                                    <div style={{ fontSize:'.52rem', color:'var(--sub)', marginTop:1, whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis' }}>
+                                      {mod.desc}
+                                    </div>
+                                  </div>
+                                  <div style={{
+                                    width:32, height:18, borderRadius:9, position:'relative', transition:'all .2s',
+                                    background: enabled ? 'var(--te)' : 'rgba(255,255,255,.1)',
+                                    border: `1px solid ${enabled ? 'rgba(13,216,138,.4)' : 'rgba(255,255,255,.15)'}`,
+                                    flexShrink:0,
+                                  }}>
+                                    <div style={{
+                                      width:12, height:12, borderRadius:'50%', background:'#fff',
+                                      position:'absolute', top:2, transition:'left .2s',
+                                      left: enabled ? 16 : 3,
+                                      boxShadow:'0 1px 3px rgba(0,0,0,.3)',
+                                    }} />
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
+                          <div style={{ marginTop:8, padding:'6px 10px', borderRadius:6, background:'rgba(124,92,252,.06)', border:'1px solid rgba(124,92,252,.15)', fontSize:'.58rem', color:'var(--sub)', lineHeight:1.5 }}>
+                            {(plan.modules || []).length} of {ALL_SYSTEM_MODULES.length} modules enabled.
+                            {(plan.modules || []).length === 0 && ' Schools on this plan will have no feature access beyond the dashboard.'}
+                          </div>
+                        </div>
+
+                        {/* ── MARKETING FEATURES (Text bullets for landing page) ─── */}
                         <div style={{ marginBottom:10 }}>
-                          <label style={S.label}>Features</label>
+                          <label style={S.label}>Marketing Features (Landing Page Display)</label>
 
                           {/* Current features */}
                           {existingFeatures.length > 0 && (
