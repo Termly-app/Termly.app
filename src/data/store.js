@@ -114,8 +114,8 @@ export async function registerSchool(name, email, plan, authUserId, adminName, a
       school_id: school.id, 
       school_name: name,
       subscription_plan: plan,
-      subscription_status: 'Inactive', // No trial, needs payment
-      subscription_expiry: new Date().toISOString(),
+      subscription_status: plan === 'Sandbox' ? 'Active' : 'Inactive', 
+      subscription_expiry: plan === 'Sandbox' ? '2099-12-31T23:59:59Z' : new Date().toISOString(),
       phone,
       address: location
     });
@@ -340,7 +340,8 @@ function mapProfileData(data) {
     'starter plan': 'Starter Plan',
     'growth plan':  'Growth Plan',
     'pro plan':    'Pro Plan',
-    'enterprise':   'Enterprise'
+    'enterprise':   'Enterprise',
+    'sandbox':      'Sandbox'
   };
   if (mapped[plan.toLowerCase()]) plan = mapped[plan.toLowerCase()];
 
@@ -1927,9 +1928,10 @@ export async function getPlatformSettings() {
         phone: "+254712260057" 
       },
       pricing: (settings.pricing && Object.keys(settings.pricing).length > 0) ? settings.pricing : {
-        "Starter Plan": { "price": 4000,  "active": true, "limit": 150,  "admins": 5, "features": ["Student Management", "Attendance Tracking", "CBC Grading (PP1–Grade 6)", "M-PESA Fee Tracking", "Basic Report Cards"] },
-        "Growth Plan":  { "price": 10000, "active": true, "limit": 400,  "admins": 10, "features": ["Everything in Starter", "Timetable Builder", "Fee Structure Builder", "NEMIS Data Export", "CBC & 8-4-4 Support", "SMS Notifications"] },
-        "Pro Plan":     { "price": 20000, "active": true, "limit": 800,  "admins": 20, "features": ["Everything in Growth", "Multi-Campus Support", "Parent Portal", "WhatsApp Integration", "Custom Branding", "Exam Scheduling"] },
+        "Sandbox":      { "price": 0,      "active": true, "limit": 10,  "admins": 1,  "features": ["Student Management", "Feature Exploration"], "modules": ["students", "dashboard"] },
+        "Starter Plan": { "price": 4000,  "active": true, "limit": 150,  "admins": 5,  "features": ["Student Management", "Attendance Tracking", "CBC Grading (PP1–Grade 6)", "M-PESA Fee Tracking", "Basic Report Cards"], "modules": ["students", "attendance", "grading", "fees"] },
+        "Growth Plan":  { "price": 10000, "active": true, "limit": 400,  "admins": 10, "features": ["Everything in Starter", "Timetable Builder", "Fee Structure Builder", "NEMIS Data Export", "CBC & 8-4-4 Support", "SMS Notifications"], "modules": ["students", "attendance", "grading", "fees", "timetable", "nemis", "sms"] },
+        "Pro Plan":     { "price": 20000, "active": true, "limit": 800,  "admins": 20, "features": ["Everything in Growth", "Multi-Campus Support", "Parent Portal", "WhatsApp Integration", "Custom Branding", "Exam Scheduling"], "modules": ["students", "attendance", "grading", "fees", "timetable", "nemis", "sms", "lms", "parent_portal", "custom_brand"] },
         "Enterprise":   { "price": 35000, "active": true, "limit": 100000, "admins": 100, "features": ["Everything Pro", "Dedicated Account Manager", "Custom Features", "Unlimited Staff", "Priority 24/7 Support"] }
       },
       platform: settings.platform || {
@@ -1946,9 +1948,10 @@ export async function getPlatformSettings() {
       billing: { instructions: 'Pay via Business Till 908070 (ShuleSoft LTD)', term_price: 8400, trial_days: 30 },
       support: { email: "support@shulesoft.com", phone: "+254 700 000000" },
       pricing: { 
-        "Starter Plan": { "price": 4000,  "active": true, "limit": 150,  "admins": 5, "features": ["Student Management", "Attendance Tracking", "CBC Grading (PP1–Grade 6)", "M-PESA Fee Tracking", "Basic Report Cards"] },
-        "Growth Plan":  { "price": 10000, "active": true, "limit": 400,  "admins": 10, "features": ["Everything in Starter", "Timetable Builder", "Fee Structure Builder", "NEMIS Data Export", "CBC & 8-4-4 Support", "SMS Notifications"] },
-        "Pro Plan":     { "price": 20000, "active": true, "limit": 800,  "admins": 20, "features": ["Everything in Growth", "Multi-Campus Support", "Parent Portal", "WhatsApp Integration", "Custom Branding", "Exam Scheduling"] },
+        "Sandbox":      { "price": 0,      "active": true, "limit": 10,   "admins": 1,  "features": ["Student Management", "Feature Exploration"], "modules": ["students", "dashboard"] },
+        "Starter Plan": { "price": 4000,  "active": true, "limit": 150,  "admins": 5,  "features": ["Student Management", "Attendance Tracking", "CBC Grading (PP1–Grade 6)", "M-PESA Fee Tracking", "Basic Report Cards"], "modules": ["students", "attendance", "grading", "fees"] },
+        "Growth Plan":  { "price": 10000, "active": true, "limit": 400,  "admins": 10, "features": ["Everything in Starter", "Timetable Builder", "Fee Structure Builder", "NEMIS Data Export", "CBC & 8-4-4 Support", "SMS Notifications"], "modules": ["students", "attendance", "grading", "fees", "timetable", "nemis", "sms"] },
+        "Pro Plan":     { "price": 20000, "active": true, "limit": 800,  "admins": 20, "features": ["Everything in Growth", "Multi-Campus Support", "Parent Portal", "WhatsApp Integration", "Custom Branding", "Exam Scheduling"], "modules": ["students", "attendance", "grading", "fees", "timetable", "nemis", "sms", "lms", "parent_portal", "custom_brand"] },
         "Enterprise":   { "price": 35000, "active": true, "limit": 100000, "admins": 100, "features": ["Everything Pro", "Dedicated Account Manager", "Custom Features", "Unlimited Staff", "Priority 24/7 Support"] }
       },
       platform: { status_message: "", maintenance: false }

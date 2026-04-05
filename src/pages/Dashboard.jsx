@@ -180,6 +180,21 @@ export default function Dashboard({ currentUser, onLogout, currentPeriodId }) {
                 <h2 style={{ fontSize: '1.5rem', fontWeight: 800, margin: 0, color: 'var(--text)' }}>
                   {data.profile?.schoolName || 'Dashboard'}
                 </h2>
+                {plan === 'Sandbox' && (
+                  <div style={{ 
+                    background: 'var(--primary)', 
+                    color: '#fff', 
+                    fontSize: '0.65rem', 
+                    fontWeight: 900, 
+                    padding: '2px 8px', 
+                    borderRadius: 20, 
+                    textTransform: 'uppercase', 
+                    letterSpacing: '0.05em',
+                    boxShadow: '0 4px 10px rgba(91, 62, 245, 0.3)'
+                  }}>
+                    Sandbox Mode
+                  </div>
+                )}
                 <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '4px 12px', background: 'rgba(0,0,0,0.03)', borderRadius: 10, border: '1px solid var(--border)' }}>
                   <span style={{ fontSize: '0.65rem', fontWeight: 700, textTransform: 'uppercase', color: 'var(--text-muted)', letterSpacing: '0.05em' }}>Period:</span>
                   <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
@@ -248,8 +263,12 @@ export default function Dashboard({ currentUser, onLogout, currentPeriodId }) {
       {(data.totalStudents < 5 || !data.profile?.phone) && (
         <div className="card-premium animate-fade-up" style={{ marginBottom: 24, padding: '24px 30px', position: 'relative', overflow: 'hidden' }}>
           <div style={{ position: 'relative', zIndex: 2 }}>
-            <h2 className="hero-title white" style={{ fontSize: '1.5rem', marginBottom: 8, display:'flex', alignItems:'center', gap:10 }}>Start Here <RocketIcon size={22} color="#fff" /></h2>
-            <p className="hero-subtitle white" style={{ opacity: 0.9, marginBottom: 24, maxWidth: 600 }}>Welcome to ShuleSoft! Let's get your school system ready in 4 easy steps. Follow this guide to go live today.</p>
+            <h2 className="hero-title white" style={{ fontSize: '1.5rem', marginBottom: 8, display:'flex', alignItems:'center', gap:10 }}>{plan === 'Sandbox' ? 'Welcome to your Sandbox' : 'Start Here'} <RocketIcon size={22} color="#fff" /></h2>
+            <p className="hero-subtitle white" style={{ opacity: 0.9, marginBottom: 24, maxWidth: 600 }}>
+              {plan === 'Sandbox' 
+                ? "You're in exploration mode! Follow these steps to set up your school and see how ShuleSoft automates your daily tasks."
+                : "Welcome to ShuleSoft! Let's get your school system ready in 4 easy steps. Follow this guide to go live today."}
+            </p>
             
             <div className="guided-steps" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 16 }}>
               {[
@@ -373,6 +392,43 @@ export default function Dashboard({ currentUser, onLogout, currentPeriodId }) {
                   <div className="quick-action-plus">+</div>
                 </Link>
               ))}
+          </div>
+        </div>
+
+        {/* Learning Center Widget (New for PLG) */}
+        <div className="card" style={{ background: 'linear-gradient(135deg, #F8FAFC 0%, #F1F5F9 100%)', border: '1px dashed var(--primary)' }}>
+          <div className="card-header">
+            <h3><BookIcon size={18} /> Learning Center</h3>
+            <Link to="/help" className="btn btn-ghost btn-sm" style={{ color: 'var(--primary)' }}>Open Guides</Link>
+          </div>
+          <div className="card-body" style={{ padding: '0 20px 20px' }}>
+            <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: 16 }}>New to ShuleSoft? Explore these popular guides to master the system.</p>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              {[
+                { title: 'How to Import Students', to: '/help?cat=students', icon: <StudentIcon size={14} /> },
+                { title: 'Setting up M-Pesa Fees', to: '/help?cat=fees', icon: <CardIcon size={14} /> },
+                { title: 'Generating CBC Report Cards', to: '/help?cat=cbc', icon: <GraduationIcon size={14} /> },
+                { title: 'System Setup Checklist', to: '/help?cat=onboarding', icon: <RocketIcon size={14} /> }
+              ].map((link, i) => (
+                <Link key={i} to={link.to} style={{ 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  gap: 10, 
+                  padding: '10px 14px', 
+                  background: '#fff', 
+                  borderRadius: 10, 
+                  fontSize: '0.85rem', 
+                  fontWeight: 600, 
+                  color: 'var(--text)',
+                  textDecoration: 'none',
+                  border: '1px solid var(--edge)',
+                  transition: 'all 0.2s'
+                }} className="hover-lift">
+                  <span style={{ color: 'var(--primary)' }}>{link.icon}</span>
+                  {link.title}
+                </Link>
+              ))}
+            </div>
           </div>
         </div>
       </div>

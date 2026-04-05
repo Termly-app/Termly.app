@@ -57,6 +57,8 @@ import ResetPassword   from './pages/ResetPassword';
 import CustomCursor    from './components/Common/CustomCursor';
 import Loader          from './components/Common/Loader';
 import SyncIndicator from './components/Common/SyncIndicator';
+import HelpCenter from './pages/HelpCenter';
+import PricingUpgrade from './components/PricingUpgrade';
 
 import {
   LogoMark,
@@ -88,7 +90,7 @@ function SbLink({ to, icon: Icon, label, onClick, exact = false, locked = false,
         {locked ? <SecurityIcon size={16} strokeWidth={1.75} /> : <Icon size={16} strokeWidth={1.75} />}
       </span>
       <span className="nav-label">{label}</span>
-      {locked && <span className="nav-lock-badge" style={{ fontSize:'0.5rem', background:'var(--danger)', color:'white', padding:'1px 4px', borderRadius:3, marginLeft:'auto' }}>LOCKED</span>}
+      {locked && <span className="nav-lock-badge" style={{ fontSize:'0.55rem', background:'var(--primary)', color:'white', padding:'2px 6px', borderRadius:10, marginLeft:'auto', fontWeight: 800 }}>UPGRADE</span>}
     </NavLink>
   );
 }
@@ -643,7 +645,7 @@ function App() {
             <Routes>
               {!subscriptionActive ? (
                 <>
-                  <Route path="/billing"  element={<Billing />} />
+                  <Route path="/billing"  element={<Billing currentUser={currentUser} />} />
                   <Route path="/support"  element={<ContactSupport />} />
                   <Route path="*"         element={<Navigate to="/billing" replace />} />
                 </>
@@ -655,18 +657,18 @@ function App() {
                   {/* Academic Routes: Admin & Teacher */}
                   {(isAdmin || isTeacher) && (
                     <>
-                      <Route path="/students"  element={<Students currentUser={currentUser} currentPeriodId={currentPeriodId} />} />
-                      <Route path="/grading"   element={<Grading currentUser={currentUser} currentPeriodId={currentPeriodId} />} />
-                      <Route path="/attendance" element={<Attendance currentUser={currentUser} currentPeriodId={currentPeriodId} />} />
-                      <Route path="/timetable" element={<Timetable currentUser={currentUser} currentPeriodId={currentPeriodId} periods={periods} />} />
-                      <Route path="/lms" element={<LMS currentUser={currentUser} />} />
+                      <Route path="/students"     element={<Students currentUser={currentUser} currentPeriodId={currentPeriodId} />} />
+                      <Route path="/grading"      element={<SectionGate featureSlug="grading" featureName="Grading" profile={profile}><Grading currentUser={currentUser} currentPeriodId={currentPeriodId} /></SectionGate>} />
+                      <Route path="/attendance"   element={<SectionGate featureSlug="attendance" featureName="Attendance" profile={profile}><Attendance currentUser={currentUser} currentPeriodId={currentPeriodId} /></SectionGate>} />
+                      <Route path="/timetable"    element={<SectionGate featureSlug="timetable" featureName="Timetable" profile={profile}><Timetable currentUser={currentUser} currentPeriodId={currentPeriodId} periods={periods} /></SectionGate>} />
+                      <Route path="/lms"          element={<LMS currentUser={currentUser} />} />
                     </>
                   )}
 
                   {/* Finance Routes: Admin & Finance */}
                   {(isAdmin || isFinance) && (
                     <>
-                      <Route path="/fees"      element={<Fees currentUser={currentUser} currentPeriodId={currentPeriodId} />} />
+                      <Route path="/fees"      element={<SectionGate featureSlug="fees" featureName="Fees" profile={profile}><Fees currentUser={currentUser} currentPeriodId={currentPeriodId} /></SectionGate>} />
                       {isAdmin && (
                         <Route path="/fee-structure" element={
                           <FeeStructure
@@ -697,7 +699,8 @@ function App() {
                       <Route path="/teachers" element={<Teachers currentUser={currentUser} currentPeriodId={currentPeriodId} />} />
                       <Route path="/security" element={<Security currentUser={currentUser} />} />
                       <Route path="/settings" element={<Settings currentUser={currentUser} />} />
-                      <Route path="/billing"  element={<Billing />} />
+                      <Route path="/billing"  element={<Billing currentUser={currentUser} />} />
+                      <Route path="/help"     element={<HelpCenter />} />
                     </>
                   )}
 
@@ -711,6 +714,27 @@ function App() {
       <CustomCursor disabled={false} />
     </div>
   );
+}
+
+/**
+ * SectionGate Component
+ * Redirects Sandbox users to an upsell page if they try to access premium features.
+ */
+function SectionGate({ featureSlug, featureName, children, profile }) {
+  const [hasAccess, setHasAccess] = useState(null);
+
+  useEffect(() => {
+    const check = async () => {
+      const ok = await isFeatureEnabled(featureSlug);
+      setHasAccess(ok);
+    };
+    check();
+  }, [featureSlug, profile]);
+
+  if (hasAccess === null) return <Loader />;
+  if (!hasAccess) return <PricingUpgrade featureName={featureName} />;
+  
+  return children;
 }
 
 export default App;

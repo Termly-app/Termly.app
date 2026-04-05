@@ -36,13 +36,12 @@ export default function Register() {
   const [formData, setFormData] = useState({
     schoolName: '',
     schoolEmail: '',
-    plan: searchParams.get('plan') || 'Starter Plan',
+    plan: 'Sandbox', 
     adminName: '',
     password: '',
-    confirmPassword: '',
     phone: '',
     location: '',
-    termsAccepted: false
+    termsAccepted: true // Auto-accept terms for smoother PLG flow
   });
 
   const handleChange = (e) => {
@@ -53,21 +52,9 @@ export default function Register() {
     });
   };
 
-  const selPlan = (p) => {
-    setFormData({ ...formData, plan: p });
-  };
-
   const handleNext = (nextStep) => {
     if (step === 1 && (!formData.schoolName || !formData.schoolEmail || !formData.phone || !formData.location)) {
       setError("Please provide all school identity and contact details.");
-      return;
-    }
-    if (step === 2 && (!formData.adminName || !formData.password)) {
-      setError("Please complete all administrator details.");
-      return;
-    }
-    if (step === 2 && formData.password !== formData.confirmPassword) {
-      setError("Passwords do not match.");
       return;
     }
     setError(null);
@@ -86,8 +73,7 @@ export default function Register() {
     setError(null);
 
     try {
-      // 1. Sign up the user in Supabase Auth using the SCHOOL EMAIL
-      // This ensures the activation link goes to the official school inbox
+      // 1. Sign up the user in Supabase Auth
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email: formData.schoolEmail,
         password: formData.password,
@@ -101,11 +87,11 @@ export default function Register() {
 
       if (authError) throw authError;
 
-      // 2. Register the school and link the owner (the school account)
+      // 2. Register with Sandbox plan
       await registerSchool(
         formData.schoolName,
         formData.schoolEmail,
-        formData.plan,
+        'Sandbox',
         authData.user.id,
         formData.adminName,
         formData.schoolEmail,
@@ -114,7 +100,7 @@ export default function Register() {
       );
 
       setSuccess(true);
-      setStep(4);
+      setStep(3); // Success screen is now step 3
     } catch (err) {
       setError(err.message);
     } finally {
@@ -198,46 +184,27 @@ export default function Register() {
             ShuleSoft
           </Link>
 
-          {step < 4 && (
+          {step < 3 && (
             <>
               <div className="res-steps">
-                <div className={`res-step ${step >= 1 ? 'done' : ''}`}>{step > 1 ? <CheckIcon size={12} color="#fff" /> : '1'}</div>
+                <div className={`res-step ${step >= 1 ? 'done' : 'now'}`}>{step > 1 ? <CheckIcon size={12} color="#fff" /> : '1'}</div>
                 <div className={`res-line ${step >= 2 ? 'done' : ''}`}></div>
-                <div className={`res-step ${step >= 2 ? 'done' : step === 2 ? 'now' : 'todo'}`}>{step > 2 ? <CheckIcon size={12} color="#fff" /> : '2'}</div>
-                <div className={`res-line ${step >= 3 ? 'done' : ''}`}></div>
-                <div className={`res-step ${step === 3 ? 'now' : 'todo'}`}>3</div>
+                <div className={`res-step ${step >= 2 ? 'done' : step === 2 ? 'now' : 'todo'}`}>2</div>
               </div>
               <div className="res-slbls">
-                <span className={`res-slbl ${step === 1 ? 'now' : ''}`}>Plan & School</span>
-                <span className={`res-slbl ${step === 2 ? 'now' : ''}`}>Admin Details</span>
-                <span className={`res-slbl ${step === 3 ? 'now' : ''}`}>Confirmation</span>
+                <span className={`res-slbl ${step === 1 ? 'now' : ''}`}>School Profile</span>
+                <span className={`res-slbl ${step === 2 ? 'now' : ''}`}>Account Setup</span>
               </div>
             </>
           )}
 
           {error && <div className="res-error">{error}</div>}
 
-          {/* STEP 1: PLAN & IDENTITY */}
+          {/* STEP 1: IDENTITY */}
           {step === 1 && (
             <div className="res-sv active">
               <div className="res-ftitle">Register Your School</div>
               <p className="res-fsub">Modernize your institution with Kenya's leading school management system.</p>
-
-              <div className="res-sec-lbl">Select Your Plan</div>
-              <div className="res-plans">
-                {Object.entries(settings?.pricing || {})
-                  .filter(([_, p]) => p.active !== false)
-                  .map(([name, p]) => (
-                    <div key={name} className={`res-plan ${formData.plan === name ? 'sel' : ''}`} onClick={() => selPlan(name)}>
-                      <div className="res-prad"></div>
-                      <div>
-                        <div className="res-pname">{name}</div>
-                        <div className="res-pprice">KSh {p.price?.toLocaleString() || '0'} / term</div>
-                      </div>
-                      {p.badge && <div className="res-pbadge">{p.badge}</div>}
-                    </div>
-                  ))}
-              </div>
 
               <div className="res-sec-lbl">School Identity</div>
               <div className="res-field">
@@ -308,7 +275,8 @@ export default function Register() {
                 <input type="text" name="adminName" placeholder="Full name" value={formData.adminName} onChange={handleChange} required />
                 <div className="res-uline"></div>
               </div>
-                <div className="res-fhint">This account will be your primary Super Admin account.</div>
+              <div className="res-fhint">This will be your primary Super Admin account.</div>
+              
               <div className="res-field">
                 <div className="res-fico">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
@@ -319,17 +287,15 @@ export default function Register() {
                 <input 
                   type={showPassword ? "text" : "password"} 
                   name="password" 
-                  placeholder="Create a password" 
+                  placeholder="Create a secure password" 
                   value={formData.password} 
                   onChange={handleChange} 
                   required 
-                  style={{ paddingRight: 40 }}
                 />
                 <button 
                   type="button" 
                   className="res-eye" 
                   onClick={() => setShowPassword(!showPassword)}
-                  aria-label={showPassword ? "Hide password" : "Show password"}
                 >
                   {showPassword ? (
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
@@ -338,91 +304,25 @@ export default function Register() {
                   )}
                 </button>
                 <div className="res-uline"></div>
-                <div className="res-pw-bar">
-                  <div className="res-pw-fill" style={{ 
-                    width: `${getPasswordStrength() * 25}%`,
-                    background: ['','#DC2626','#F59E0B','#3B82F6','#16A34A'][getPasswordStrength()]
-                  }}></div>
-                </div>
-              </div>
-              <div className="res-field">
-                <div className="res-fico">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                    <rect x="3" y="11" width="18" height="11" rx="2"/>
-                    <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
-                  </svg>
-                </div>
-                <input 
-                  type={showConfirmPassword ? "text" : "password"} 
-                  name="confirmPassword" 
-                  placeholder="Confirm password" 
-                  value={formData.confirmPassword} 
-                  onChange={handleChange} 
-                  required 
-                  style={{ paddingRight: 40 }}
-                />
-                <button 
-                  type="button" 
-                  className="res-eye" 
-                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                  aria-label={showConfirmPassword ? "Hide password" : "Show password"}
-                >
-                  {showConfirmPassword ? (
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
-                  ) : (
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-                  )}
-                </button>
-                <div className="res-uline"></div>
               </div>
 
-              <div className="res-btn-row">
+              <div style={{ marginTop: 20, padding: 16, background: 'rgba(91, 62, 245, 0.05)', borderRadius: 12, border: '1px solid rgba(91, 62, 245, 0.1)' }}>
+                <div style={{ fontSize: '0.65rem', color: 'var(--primary)', fontWeight: 700, textTransform: 'uppercase', marginBottom: 4 }}>Access Tier</div>
+                <div style={{ fontSize: '0.85rem', fontWeight: 700, color: '#111118' }}>Free Sandbox Workspace</div>
+                <div style={{ fontSize: '0.75rem', color: '#6B7280', marginTop: 2 }}>Exploration mode enabled. Add your students & test all features immediately.</div>
+              </div>
+
+              <div className="res-btn-row" style={{ marginTop: 24 }}>
                 <button className="res-btn-back" onClick={() => setStep(1)}>← Back</button>
-                <button className="res-cta" onClick={() => handleNext(3)}>
-                  Next: Review
-                  <svg width="15" height="15" viewBox="0 0 16 16" fill="none">
-                    <path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-                  </svg>
-                </button>
-              </div>
-            </div>
-          )}
-
-          {/* STEP 3: REVIEW & LAUNCH */}
-          {step === 3 && (
-            <div className="res-sv active">
-              <div className="res-ftitle">Final Review</div>
-              <p className="res-fsub">Launch your school's workspace once you're ready.</p>
-
-              <div className="res-summary">
-                <div className="res-sum-hd">
-                  <span className="res-sum-t">Review Details</span>
-                  <button className="res-sum-e" onClick={() => setStep(1)}>Edit</button>
-                </div>
-                <div className="res-sum-grid">
-                  <div><div className="res-sum-k">Plan</div><div className="res-sum-v">{formData.plan} — KSh {(settings?.pricing?.[formData.plan]?.price || 0).toLocaleString()} / term</div></div>
-                  <div><div className="res-sum-k">School</div><div className="res-sum-v">{formData.schoolName}</div></div>
-                  <div><div className="res-sum-k">Admin</div><div className="res-sum-v">{formData.adminName}</div></div>
-                  <div><div className="res-sum-k">Login Email</div><div className="res-sum-v" style={{ wordBreak: 'break-all' }}>{formData.schoolEmail}</div></div>
-                </div>
-              </div>
-
-              <label className="res-check-row">
-                <input type="checkbox" name="termsAccepted" checked={formData.termsAccepted} onChange={handleChange} />
-                <span>I agree to ShuleSoft's <Link to="/legal/terms">Terms of Service</Link> and <Link to="/legal/privacy">Privacy Policy</Link>.</span>
-              </label>
-
-              <div className="res-btn-row">
-                <button className="res-btn-back" onClick={() => setStep(2)}>← Back</button>
                 <button className="res-cta" disabled={loading} onClick={handleSubmit}>
-                  {loading ? <><ClockIcon size={16} /> Launching...</> : <>Launch Workspace <RocketIcon size={16} /></>}
+                  {loading ? <><ClockIcon size={16} /> Creating Account...</> : <>Launch Workspace <RocketIcon size={16} /></>}
                 </button>
               </div>
             </div>
           )}
 
-          {/* STEP 4: SUCCESS */}
-          {step === 4 && (
+          {/* STEP 3: SUCCESS */}
+          {step === 3 && (
             <div className="res-sv active success-screen">
               <div className="success-icon"><RocketIcon size={64} color="var(--primary)" /></div>
               <div className="res-ftitle">Registration Successful!</div>
