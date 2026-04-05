@@ -1,11 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import { LogoutIcon, UserIcon, CardIcon, MessageIcon, StatusDotIcon, ActivityIcon, ClipboardIcon, CheckIcon } from '../../components/CommonIcons';
 import { getAssignments, submitAssignment } from '../../data/offlineStore';
+import { getFees, simulateMpesaSTKPush } from '../../data/store';
 
 export default function PortalDashboard({ user, onLogout }) {
-  // We mock a fee balance for the dashboard
-  const feeBalance = Math.floor(Math.random() * 20000) + 5000;
+  const [feeBalance, setFeeBalance] = useState(0);
+  const [showMpesaModal, setShowMpesaModal] = useState(false);
+  const [mpesaPhone, setMpesaPhone] = useState('254700000000');
+  const [mpesaAmount, setMpesaAmount] = useState(0);
+  const [isSTKPushing, setIsSTKPushing] = useState(false);
+
   // If they have recent comms from offline store
+  const comms = user.recent_comms || [];
   const [assignments, setAssignments] = useState([]);
   const [showSubmitModal, setShowSubmitModal] = useState(null);
   const [submissionPayload, setSubmissionPayload] = useState('');
@@ -14,6 +20,16 @@ export default function PortalDashboard({ user, onLogout }) {
     async function init() {
       const asts = await getAssignments(user.class);
       setAssignments(asts);
+      
+      const fees = await getFees();
+      const myFee = fees[user.id];
+      if (myFee) {
+        setFeeBalance(myFee.balance);
+        setMpesaAmount(myFee.balance > 0 ? myFee.balance : 0);
+      } else {
+        setFeeBalance(15000);
+        setMpesaAmount(15000);
+      }
     }
     init();
   }, [user]);
@@ -74,7 +90,10 @@ export default function PortalDashboard({ user, onLogout }) {
           <div style={{ fontSize: '0.9rem', color: '#cbd5e1', marginBottom: 24 }}>
             Outstanding Balance for Current Term
           </div>
-          <button style={{ background: '#10b981', color: 'white', border: 'none', padding: '12px 24px', borderRadius: 100, fontWeight: 700, fontSize: '0.9rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8, boxShadow: '0 4px 12px rgba(16, 185, 129, 0.4)' }}>
+          <button 
+            onClick={() => setShowMpesaModal(true)}
+            style={{ background: '#10b981', color: 'white', border: 'none', padding: '12px 24px', borderRadius: 100, fontWeight: 700, fontSize: '0.9rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8, boxShadow: '0 4px 12px rgba(16, 185, 129, 0.4)' }}
+          >
             Proceed to Payment <span style={{ marginLeft: 4 }}>→</span>
           </button>
         </div>
@@ -185,6 +204,69 @@ export default function PortalDashboard({ user, onLogout }) {
                 <button type="button" onClick={() => setShowSubmitModal(null)} style={{ flex: 1, padding: 14, background: '#f1f5f9', color: '#475569', border: 'none', borderRadius: 12, fontWeight: 700, cursor: 'pointer' }}>Cancel</button>
                 <button type="submit" style={{ flex: 2, padding: 14, background: '#10b981', color: 'white', border: 'none', borderRadius: 12, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
                   <CheckIcon size={18} /> Turn In
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* M-Pesa STK Push Modal */}
+      {showMpesaModal && (
+        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(15, 23, 42, 0.7)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: 20 }}>
+          <div style={{ background: 'white', padding: 32, borderRadius: 24, width: '100%', maxWidth: 400, animation: 'sIn 0.3s ease-out' }}>
+            <div style={{ textAlign: 'center', marginBottom: 24 }}>
+              <div style={{ background: '#ecfdf5', width: 64, height: 64, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px', color: '#10b981' }}>
+                <CardIcon size={32} />
+              </div>
+              <h3 style={{ margin: '0 0 8px', fontSize: '1.25rem', color: '#0f172a' }}>Lipa na M-Pesa</h3>
+              <p style={{ margin: '0', color: '#64748b', fontSize: '0.9rem' }}>Instant STK Push for {user.name}</p>
+            </div>
+            
+            <form onSubmit={async (e) => {
+              e.preventDefault();
+              setIsSTKPushing(true);
+              try {
+                await simulateMpesaSTKPush(user, mpesaAmount, mpesaPhone);
+                setIsSTKPushing(false);
+                setShowMpesaModal(false);
+                const fees = await getFees();
+                setFeeBalance(fees[user.id]?.balance || 0);
+                alert('M-Pesa payment confirmed! The administration has automatically received a receipt.');
+              } catch(err) {
+                console.error(err);
+                setIsSTKPushing(false);
+                alert('M-Pesa push failed. Please try again.');
+              }
+            }}>
+              <div className="form-group" style={{ marginBottom: 16 }}>
+                <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 700, color: '#64748b', marginBottom: 8 }}>M-Pesa Phone Number</label>
+                <input 
+                  type="text" 
+                  required 
+                  value={mpesaPhone} 
+                  onChange={e => setMpesaPhone(e.target.value)} 
+                  style={{ width: '100%', padding: 12, border: '2px solid #cbd5e1', borderRadius: 12, fontSize: '1.1rem', boxSizing: 'border-box' }}
+                />
+              </div>
+
+              <div className="form-group" style={{ marginBottom: 24 }}>
+                <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 700, color: '#64748b', marginBottom: 8 }}>Amount (KSh)</label>
+                <input 
+                  type="number" 
+                  min="1"
+                  max={feeBalance > 0 ? feeBalance : 1000000}
+                  required 
+                  value={mpesaAmount} 
+                  onChange={e => setMpesaAmount(e.target.value)} 
+                  style={{ width: '100%', padding: 12, border: '2px solid #cbd5e1', borderRadius: 12, fontSize: '1.1rem', boxSizing: 'border-box' }}
+                />
+              </div>
+
+              <div style={{ display: 'flex', gap: 12 }}>
+                <button type="button" onClick={() => setShowMpesaModal(false)} disabled={isSTKPushing} style={{ flex: 1, padding: 14, background: '#f1f5f9', color: '#475569', border: 'none', borderRadius: 12, fontWeight: 700, cursor: 'pointer' }}>Cancel</button>
+                <button type="submit" disabled={isSTKPushing} style={{ flex: 2, padding: 14, background: '#10b981', color: 'white', border: 'none', borderRadius: 12, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, opacity: isSTKPushing ? 0.7 : 1 }}>
+                  {isSTKPushing ? 'Awaiting PIN...' : <><CardIcon size={18} /> Request STK Push</>}
                 </button>
               </div>
             </form>

@@ -3291,6 +3291,46 @@ export async function reconcileMpesaPayment(callbackId, studentId) {
   return { success: true };
 }
 
+// ==========================================
+// M-PESA MAGIC AUTOMATION ORCHESTRATOR
+// ==========================================
+export async function simulateMpesaSTKPush(student, amount, phone) {
+  // 1. Simulate Network Delay (STK Push pop-up on user's phone)
+  await new Promise(resolve => setTimeout(resolve, 2500));
+
+  // 2. Generate generic M-pesa reference
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+  const mpesaRef = Array.from({length: 10}, () => chars[Math.floor(Math.random() * chars.length)]).join('');
+
+  // 3. Process the actual payment in the ledger
+  const payment = await recordPayment(student.id, amount, 'M-Pesa', mpesaRef);
+
+  // 4. Inject into mpesa_logs to simulate Daraja API webhook firing
+  await supabase.from('mpesa_callbacks').insert({
+    school_id: _currentSchoolId,
+    phone_number: phone,
+    amount: amount,
+    mpesa_receipt_number: mpesaRef,
+    bill_ref_number: student.adm_no || student.admNo || 'DEF',
+    status: 'processed',
+    student_id: student.id,
+    raw_payload: { mocked: true }
+  });
+
+  // 5. Synthesize an automated SMS receipt into the offline communications store
+  const { db } = await import('./offlineStore');
+  await db.communications.add({
+    type: 'SMS',
+    target: 'single',
+    message: `Dear Parent, we confirm receipt of Ksh ${amount} via M-Pesa (${mpesaRef}) for ${student.name}. Thank you.`,
+    timestamp: new Date().toISOString(),
+    user: 'M-Pesa Auto-Bot',
+    recipientCount: 1
+  });
+
+  return payment;
+}
+
 // Auto-sync every 60s if online
 setInterval(triggerSync, 60000);
 window.addEventListener('online', triggerSync);

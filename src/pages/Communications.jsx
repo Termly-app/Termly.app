@@ -4,8 +4,8 @@ import { MessageIcon, SendIcon, HistoryIcon, UsersIcon, CheckIcon } from '../com
 import { getStudents, getSchoolProfile } from '../data/store';
 
 export default function Communications({ currentUser }) {
-  const [history, setHistory] = useState=[];
-  const [students, setStudents] = useState=[];
+  const [history, setHistory] = useState([]);
+  const [students, setStudents] = useState([]);
   const [profile, setProfile] = useState(null);
   
   // Composer State
