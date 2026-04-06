@@ -68,12 +68,8 @@ import { getStudentsBySchool } from '../../data/store';
 // Styles — imported once, no more useEffect injection
 import './SuperAdmin.css';
 
-// ── Supabase client (reuse the singleton already used by store.js) ─────────
-import { createClient } from '@supabase/supabase-js';
-const supabase = createClient(
-  import.meta.env.VITE_SUPABASE_URL,
-  import.meta.env.VITE_SUPABASE_ANON_KEY,
-);
+// ── Supabase client (reuse the singleton from store.js) ─────────────────────
+import { supabase } from '../../data/store';
 
 // ══════════════════════════════════════════════════════════════════════════════
 export default function SuperAdmin({ currentUser, isPlatformAdmin, sidebarOpen, setSidebarOpen, onSignOut }) {

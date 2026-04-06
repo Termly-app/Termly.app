@@ -457,6 +457,7 @@ function App() {
   const [currentPeriodId,    setPeriodId]           = useState(getCurrentPeriodId());
   const [periods,            setPeriods]            = useState([]);
   const [isPlatformAdmin,    setIsPlatformAdmin]    = useState(false);
+  const [profile,            setProfile]            = useState(null);
   const location = useLocation();
 
   useEffect(() => {
@@ -483,6 +484,7 @@ function App() {
               school_id  : userRecord.school_id,
             });
             const profileData = await getSchoolProfile();
+            setProfile(profileData);
             const realIsPlatAdmin = await checkIsPlatformAdmin(session.user.email);
             setIsPlatformAdmin(realIsPlatAdmin);
 
