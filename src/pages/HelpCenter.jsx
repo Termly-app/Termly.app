@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { 
   RocketIcon, BookIcon, CardIcon, GraduationIcon, ClockIcon, 
-  MessageIcon, LeafIcon, StudentIcon, SearchIcon, ArrowRightIcon,
+  MessageIcon, LeafIcon, StudentIcon, SearchIcon, ChevronRightIcon,
   CheckIcon, InfoIcon, ShieldIcon, CalendarIcon
 } from '../components/CommonIcons';
 import { Link } from 'react-router-dom';
@@ -177,7 +177,7 @@ export default function HelpCenter() {
                 <h3 style={{ fontSize: '1.25rem', fontWeight: 800, marginBottom: 12, color: 'var(--primary)' }}>{art.title}</h3>
                 <p style={{ fontSize: '1rem', color: 'var(--text)', lineHeight: 1.6, margin: 0 }}>{art.content}</p>
                 <div style={{ marginTop: 20, display: 'flex', alignItems: 'center', gap: 8, fontSize: '0.85rem', fontWeight: 700, color: 'var(--primary)', cursor: 'pointer' }}>
-                  Read full guide <ArrowRightIcon size={14} />
+                  Read full guide <ChevronRightIcon size={14} />
                 </div>
               </div>
             ))}
