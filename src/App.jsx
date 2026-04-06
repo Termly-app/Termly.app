@@ -67,7 +67,7 @@ import {
   BillingIcon, SignOutIcon, MenuIcon, CloseIcon, ChevronDownIcon,
   OverviewIcon, SchoolsIcon, PaymentsIcon, HistoryIcon, RevenueIcon,
   ActivityIcon, RecoveryIcon, StatusDotIcon, ZapIcon, SubscriptionIcon, MessageIcon,
-  BookIcon, ClipboardIcon
+  BookIcon, ClipboardIcon, TeacherIcon, UsersIcon
 } from './components/CommonIcons';
 
 // ── Sidebar nav link helper ───────────────────────────────────────────────

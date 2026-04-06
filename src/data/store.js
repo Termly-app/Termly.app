@@ -301,7 +301,7 @@ export async function getSchoolProfile() {
     // Attempt to get all columns first
     const { data, error } = await supabase
       .from('school_profiles')
-      .select(SAFE_PROFILE_COLUMNS + ', school_id, custom_exams, grading_systems')
+      .select(SAFE_PROFILE_COLUMNS + ', school_id, grading_systems')
       .eq('school_id', _currentSchoolId)
       .single();
 
@@ -554,7 +554,7 @@ export async function saveSchoolProfile(profile) {
     streams_per_class: profile.streamsPerClass || defaultStreamsPerClass,
     active_classes: profile.activeClasses || DEFAULT_PROFILE.activeClasses,
     custom_subjects: { ...(profile.customSubjects || {}), __boarding_houses: profile.boardingHouses || [] },
-    custom_exams: profile.customExams || DEFAULT_PROFILE.customExams,
+    // custom_exams column removed — does not exist in DB schema
     grading_systems: profile.gradingSystems || DEFAULT_PROFILE.gradingSystems,
     updated_at: new Date().toISOString(),
   };
