@@ -3,13 +3,25 @@ import { fmtDate, sPill } from '../superAdminUtils';
 
 export default function SecurityTab({ schools, activities }) {
   // Aggregate security stats
+  // Real-time encryption audit: Scan for masked data '...********' in sensitive config fields
+  const schoolsWithUnsecuredConfig = schools.filter(s => {
+    const p = s.school_profiles?.[0];
+    if (!p) return false;
+    const mConfig = p.mpesa_config;
+    const sConfig = p.sms_config;
+    // Values are considered "Secured" if they are masked in the client-side profile object
+    const mUnsecured = mConfig && (mConfig.length > 0 && !mConfig.includes('*'));
+    const sUnsecured = sConfig && (sConfig.length > 0 && !sConfig.includes('*'));
+    return mUnsecured || sUnsecured;
+  });
+
   const schoolsWithConfig = schools.filter(s => s.school_profiles?.[0]?.mpesa_config || s.school_profiles?.[0]?.sms_config);
   const totalSensitiveConfigs = schoolsWithConfig.length;
-  
-  // Simulated encryption audit (in a real app, this would check if values are currently encrypted in DB)
-  // For now, we assume all schools with config are "Secured" by our new logic
-  const securedSchools = totalSensitiveConfigs; 
-  const securityScore = totalSensitiveConfigs > 0 ? 100 : 85;
+
+  const securedSchools = totalSensitiveConfigs - schoolsWithUnsecuredConfig.length;
+  const securityScore = totalSensitiveConfigs > 0 
+    ? Math.round((securedSchools / totalSensitiveConfigs) * 100) 
+    : 100;
 
   const securityActivities = (activities || []).filter(a => 
     ['REGISTRATION', 'PASSWORD_RESET', 'DEACTIVATION', 'REPAIR', 'PLAN_CHANGE'].includes(a.type)

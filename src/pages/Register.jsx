@@ -86,36 +86,42 @@ export default function Register() {
     try {
       let authUserId = null;
 
-      // 1. Attempt to sign up the user in Supabase Auth
-      const { data: authData, error: authError } = await supabase.auth.signUp({
-        email: formData.schoolEmail,
-        password: formData.password,
-        options: {
-          data: { full_name: formData.adminName },
-          emailRedirectTo: `${window.location.origin}/login`
-        }
-      });
-
-      if (authError) {
-        // If user already exists in Auth, try signing in instead
-        if (authError.message?.toLowerCase().includes('already registered') || 
-            authError.message?.toLowerCase().includes('already been registered') ||
-            authError.message?.toLowerCase().includes('user already exists')) {
-          
-          const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
-            email: formData.schoolEmail,
-            password: formData.password,
-          });
-
-          if (signInError) {
-            throw new Error('An account with this email already exists with a different password. Please use the correct password or reset it.');
-          }
-          authUserId = signInData.user.id;
-        } else {
-          throw authError;
-        }
+      // 0. Check if already signed in
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session?.user) {
+        authUserId = session.user.id;
       } else {
-        authUserId = authData?.user?.id;
+        // 1. Attempt to sign up the user in Supabase Auth
+        const { data: authData, error: authError } = await supabase.auth.signUp({
+          email: formData.schoolEmail,
+          password: formData.password,
+          options: {
+            data: { full_name: formData.adminName },
+            emailRedirectTo: `${window.location.origin}/login`
+          }
+        });
+
+        if (authError) {
+          // If user already exists in Auth, try signing in instead
+          if (authError.message?.toLowerCase().includes('already registered') || 
+              authError.message?.toLowerCase().includes('already been registered') ||
+              authError.message?.toLowerCase().includes('user already exists')) {
+            
+            const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
+              email: formData.schoolEmail,
+              password: formData.password,
+            });
+
+            if (signInError) {
+              throw new Error('An account with this email already exists with a different password. Please use the correct password or reset it.');
+            }
+            authUserId = signInData.user.id;
+          } else {
+            throw authError;
+          }
+        } else {
+          authUserId = authData?.user?.id;
+        }
       }
 
       if (!authUserId) {

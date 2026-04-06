@@ -142,6 +142,96 @@ export default function SuperAdmin({ currentUser, isPlatformAdmin, sidebarOpen, 
   // ── NEMIS export modal ────────────────────────────────────────────────────
   const [nemisSchool, setNemisSchool] = useState(null);
 
+  // ══ DATA LOADING ══════════════════════════════════════════════════════
+  const loadData = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      // 1. Platform settings
+      try {
+        const cf = await getPlatformSettings();
+        setSettings(cf || {});
+        setGwInstructions(cf?.billing?.instructions || '');
+        setStatusMsg(cf?.platform?.status_message || '');
+        setSmsConfig(cf?.sms || { senderId: '', apiKey: '' });
+        setMpesaConfig(cf?.mpesa_api || { shortcode: '', consumerKey: '', consumerSecret: '' });
+        
+        // Use both possible expiry field names for consistency with store.js
+        const gExp = cf?.billing?.expiry_date || cf?.billing?.term_expiry || '';
+        setSubEndDate(gExp);
+        const pricing = cf?.pricing || {};
+        setPlans(Object.entries(pricing).map(([id, p]) => ({
+          id, name: id, price: p.price || 0, limit: p.limit || 0,
+          admins: p.admins || 5, trial_days: p.trial_days || 0,
+          description: p.description || '', color: p.color || '#ffffff',
+          active: p.active !== false, features: p.features || [],
+          modules: p.modules || [],
+        })));
+      } catch (e) {
+        console.error('Failed to load platform settings:', e);
+        setError('Could not load pricing settings. Please check your connection.');
+      }
+
+      // 2. Parallel data fetches
+      const fetch = async (fn, setter, fallback) => {
+        try { const r = await fn(); setter(r || fallback); }
+        catch (e) { console.warn(`Dashboard partial failure (${fn.name}):`, e); if (fallback !== undefined) setter(fallback); }
+      };
+
+      await Promise.all([
+        fetch(getAllPendingPayments, setPendingPayments, []),
+        fetch(getAllPayments,        setAllPayments,     []),
+        (async () => {
+          const rawSchools = await getAllSchools();
+
+          // Per-school stats aggregation
+          let userCounts = {};
+          let studentCounts = {};
+          try {
+            const [{ data: allUsers }, { data: allStudents }] = await Promise.all([
+              supabase.from('users').select('school_id'),
+              supabase.from('students').select('school_id')
+            ]);
+            if (allUsers) allUsers.forEach(u => { if (u.school_id) userCounts[u.school_id] = (userCounts[u.school_id] || 0) + 1; });
+            if (allStudents) allStudents.forEach(s => { if (s.school_id) studentCounts[s.school_id] = (studentCounts[s.school_id] || 0) + 1; });
+          } catch (e) { console.warn('Could not fetch usage counts', e); }
+
+          const enriched = rawSchools.map(s => ({
+            ...s,
+            _staffCount: userCounts[s.id] || 0,
+            _studentCount: studentCounts[s.id] || 0
+          }));
+          setSchools(enriched);
+
+          // Optional profile merge (catches anything the join missed)
+          try {
+            const { data: profiles } = await supabase.from('school_profiles').select('*');
+            if (profiles?.length > 0) {
+              setSchools(enriched.map(s => {
+                const existing = s.school_profiles || [];
+                const extra    = profiles.filter(p => p.school_id === s.id);
+                const merged   = [...existing, ...extra].reduce((acc, curr) => {
+                  if (!acc.find(p => p.id === curr.id)) acc.push(curr);
+                  return acc;
+                }, []);
+                return { ...s, school_profiles: merged };
+              }));
+            }
+          } catch (e) { console.warn('SuperAdmin: Could not fetch profiles', e); }
+        })(),
+        fetch(getPlatformActivities, setActivity,      []),
+        fetch(getPlatformStats,      setPStats,         null),
+        fetch(getDiscoveryMetrics,   setDiscoveryMeta,  { orphans: [], legacy: [] }),
+      ]);
+    } catch (err) {
+      console.error('Overall loadData error:', err);
+      setError('An unexpected error occurred while loading dashboard data.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   // ── Auto-dismiss toast after 4 s ─────────────────────────────────────────
   useEffect(() => {
     if (!message) return;
@@ -450,96 +540,6 @@ export default function SuperAdmin({ currentUser, isPlatformAdmin, sidebarOpen, 
       options: { responsive:true, maintainAspectRatio:false, plugins:{ legend:{display:false}, tooltip:{...TIP, callbacks:{label:c=>' KSh '+c.raw.toLocaleString()}} }, scales:{ x:{grid:{color:GC},ticks:{color:TC}}, y:{grid:{color:GC},ticks:{color:TC,callback:v=>v>0?'KSh '+v/1000+'K':0}} } },
     });
   }, [activeTab, revPeriod, schools]);
-
-  // ══ DATA LOADING ══════════════════════════════════════════════════════
-  const loadData = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-
-      // 1. Platform settings
-      try {
-        const cf = await getPlatformSettings();
-        setSettings(cf || {});
-        setGwInstructions(cf?.billing?.instructions || '');
-        setStatusMsg(cf?.platform?.status_message || '');
-        setSmsConfig(cf?.sms || { senderId: '', apiKey: '' });
-        setMpesaConfig(cf?.mpesa_api || { shortcode: '', consumerKey: '', consumerSecret: '' });
-        
-        // Use both possible expiry field names for consistency with store.js
-        const gExp = cf?.billing?.expiry_date || cf?.billing?.term_expiry || '';
-        setSubEndDate(gExp);
-        const pricing = cf?.pricing || {};
-        setPlans(Object.entries(pricing).map(([id, p]) => ({
-          id, name: id, price: p.price || 0, limit: p.limit || 0,
-          admins: p.admins || 5, trial_days: p.trial_days || 0,
-          description: p.description || '', color: p.color || '#ffffff',
-          active: p.active !== false, features: p.features || [],
-          modules: p.modules || [],
-        })));
-      } catch (e) {
-        console.error('Failed to load platform settings:', e);
-        setError('Could not load pricing settings. Please check your connection.');
-      }
-
-      // 2. Parallel data fetches
-      const fetch = async (fn, setter, fallback) => {
-        try { const r = await fn(); setter(r || fallback); }
-        catch (e) { console.warn(`Dashboard partial failure (${fn.name}):`, e); if (fallback !== undefined) setter(fallback); }
-      };
-
-      await Promise.all([
-        fetch(getAllPendingPayments, setPendingPayments, []),
-        fetch(getAllPayments,        setAllPayments,     []),
-        (async () => {
-          const rawSchools = await getAllSchools();
-
-          // Per-school stats aggregation
-          let userCounts = {};
-          let studentCounts = {};
-          try {
-            const [{ data: allUsers }, { data: allStudents }] = await Promise.all([
-              supabase.from('users').select('school_id'),
-              supabase.from('students').select('school_id')
-            ]);
-            if (allUsers) allUsers.forEach(u => { if (u.school_id) userCounts[u.school_id] = (userCounts[u.school_id] || 0) + 1; });
-            if (allStudents) allStudents.forEach(s => { if (s.school_id) studentCounts[s.school_id] = (studentCounts[s.school_id] || 0) + 1; });
-          } catch (e) { console.warn('Could not fetch usage counts', e); }
-
-          const enriched = rawSchools.map(s => ({
-            ...s,
-            _staffCount: userCounts[s.id] || 0,
-            _studentCount: studentCounts[s.id] || 0
-          }));
-          setSchools(enriched);
-
-          // Optional profile merge (catches anything the join missed)
-          try {
-            const { data: profiles } = await supabase.from('school_profiles').select('*');
-            if (profiles?.length > 0) {
-              setSchools(enriched.map(s => {
-                const existing = s.school_profiles || [];
-                const extra    = profiles.filter(p => p.school_id === s.id);
-                const merged   = [...existing, ...extra].reduce((acc, curr) => {
-                  if (!acc.find(p => p.id === curr.id)) acc.push(curr);
-                  return acc;
-                }, []);
-                return { ...s, school_profiles: merged };
-              }));
-            }
-          } catch (e) { console.warn('SuperAdmin: Could not fetch profiles', e); }
-        })(),
-        fetch(getPlatformActivities, setActivity,      []),
-        fetch(getPlatformStats,      setPStats,         null),
-        fetch(getDiscoveryMetrics,   setDiscoveryMeta,  { orphans: [], legacy: [] }),
-      ]);
-    } catch (err) {
-      console.error('Overall loadData error:', err);
-      setError('An unexpected error occurred while loading dashboard data.');
-    } finally {
-      setLoading(false);
-    }
-  };
 
   // Initial load + real-time subscription
   useEffect(() => {

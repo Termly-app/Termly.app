@@ -482,8 +482,8 @@ export default function Timetable({ currentUser, currentPeriodId, periods = [] }
     e.stopPropagation();
     if (!isAdmin || preview) return;
     try {
-      await clearTimetableSlot(schoolId, periodId, selClass, selStream || null, day, slotIndex);
       const type = mode === 'exam' ? 'exam' : 'class';
+      await clearTimetableSlot(schoolId, periodId, selClass, selStream || null, day, slotIndex, type);
       setSlots(await getTimetableSlots(schoolId, periodId, selClass, selStream || null, type));
     } catch (e) { setMessage({ type:'err', text: e.message }); }
   };
@@ -601,12 +601,13 @@ export default function Timetable({ currentUser, currentPeriodId, periods = [] }
     setSavingGen(true);
     try {
       const classGrades = [...new Set(preview.slots.map(s => s.class_grade))];
-      await clearAndSaveTimetable(schoolId, periodId, preview.slots, classGrades);
+      const type = mode === 'exam' ? 'exam' : 'class';
+      await clearAndSaveTimetable(schoolId, periodId, preview.slots, classGrades, type);
       // Reload current class view
-      const updated = await getTimetableSlots(schoolId, periodId, selClass, selStream || null);
+      const updated = await getTimetableSlots(schoolId, periodId, selClass, selStream || null, type);
       setSlots(updated);
       setPreview(null);
-      setMessage({ type:'ok', text:'Timetable saved for all classes!' });
+      setMessage({ type:'ok', text: `Timetable saved for all classes in ${mode} mode!` });
     } catch (e) { setMessage({ type:'err', text: e.message }); }
     finally { setSavingGen(false); }
   };

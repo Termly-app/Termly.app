@@ -25,7 +25,7 @@ export default function PortalLogin({ onLogin }) {
     setLoading(true);
     try {
       // Offline Simulation
-      const result = await validatePortalLogin(schoolSearch, admNo);
+      const result = await validatePortalLogin(schoolSearch, admNo, phone);
       
       if (result) {
         // Success

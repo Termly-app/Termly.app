@@ -3,9 +3,9 @@ import Dexie from 'dexie';
 export const db = new Dexie('ShuleSoftOffline');
 
 // Schema definition
-db.version(4).stores({
-  students: 'id, school_id, name, adm_no, class, status, residence_type',
-  teachers: 'id, school_id, name, on_leave',
+db.version(5).stores({
+  students: 'id, school_id, name, adm_no, parent_phone, class, status, residence_type',
+  teachers: 'id, school_id, name, pin, phone, on_leave',
   marks: '[period_id+student_id+subject], period_id, student_id, school_id',
   attendance: 'id, date, school_id, class_id',
   communications: '++id, type, target, timestamp, user',
@@ -59,13 +59,21 @@ export async function updateSyncStatus(id, status, error = null) {
  * Validate Portal authentication by checking local offlineStore for student
  * In production, this would make an anonymous query to Supabase.
  */
-export async function validatePortalLogin(schoolSearch, admNo) {
+export async function validatePortalLogin(schoolSearch, admNo, phone) {
   // Try to find a student who matches the ADM number exactly
   const students = await db.students.where('adm_no').equalsIgnoreCase(admNo).toArray();
   
   if (students.length === 0) return null;
-  // If we had the school context, we'd filter by it. We just mock success with the first find.
-  const student = students[0];
+  
+  // Refined check: also verify phone number (guardian phone)
+  const student = students.find(s => {
+    // Basic normalization: remove spaces/dashes if any
+    const sPhone = (s.parent_phone || '').replace(/[\s-]/g, '');
+    const pPhone = (phone || '').replace(/[\s-]/g, '');
+    return sPhone.includes(pPhone) || pPhone.includes(sPhone);
+  });
+
+  if (!student) return null;
   
   // Try to find outstanding fees or communication history
   const allComms = await db.communications.orderBy('timestamp').reverse().toArray();

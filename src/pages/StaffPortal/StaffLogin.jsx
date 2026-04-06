@@ -12,27 +12,36 @@ export default function StaffLogin({ onLogin }) {
     setLoading(true);
     setError('');
     
-    // Offline authentication simulation. In production, this uses Supabase Auth.
-    // For this isolated mobile UI demo, we simulate checking local Dexie teachers table.
     try {
-      const teachers = await db.teachers.toArray();
-      if (teachers.length > 0) {
-        // Fallback demo: any 4+ digit PIN logs into the first available teacher account for simulation
-        if (pin.length >= 4) {
-          onLogin({ id: teachers[0].id, name: teachers[0].name, role: 'teacher' });
-        } else {
-          setError('Invalid PIN format. Enter at least 4 digits.');
-        }
+      // 1. Try to find a teacher with this PIN in the offline store
+      const matches = await db.teachers.where('pin').equals(pin).toArray();
+      
+      if (matches.length > 0) {
+        onLogin({ 
+          id: matches[0].id, 
+          name: matches[0].name, 
+          role: 'teacher',
+          schoolId: matches[0].school_id 
+        });
+        return;
+      }
+
+      // 2. Demo Fallback: If database is empty or no PIN match, allow demo PIN 1234
+      if (pin === '1234') {
+        const teachers = await db.teachers.toArray();
+        const demoStaff = teachers.length > 0 ? teachers[0] : { id: 'staff-demo', name: 'Demo Teacher', school_id: 'school-demo' };
+        
+        onLogin({ 
+          id: demoStaff.id, 
+          name: demoStaff.name, 
+          role: 'teacher',
+          schoolId: demoStaff.school_id 
+        });
       } else {
-        // No teachers found offline
-        if (pin === '1234') {
-          onLogin({ id: 'staff-999', name: 'Demo Teacher', role: 'teacher' });
-        } else {
-          setError('No staff found. Please try PIN 1234');
-        }
+        setError('Invalid PIN. Please try again or use the demo PIN 1234.');
       }
     } catch(err) {
-      setError('Unable to reach storage. Try again later.');
+      setError('Connection to secure storage failed. Please restart the app.');
     }
     setLoading(false);
   };

@@ -2022,7 +2022,12 @@ export async function deleteSchool(schoolId) {
     'teachers',
     'library_books',
     'library_borrows',
-    'activity_logs'
+    'activity_logs',
+    'platform_activity',
+    'cbc_assessments',
+    'core_competencies',
+    'fee_payments',
+    'notifications'
   ];
 
   for (const table of tables) {
@@ -2601,7 +2606,7 @@ export async function saveTimetableSlot(schoolId, periodId, slot) {
   return true;
 }
 
-export async function clearTimetableSlot(schoolId, periodId, classGrade, stream, day, slotIndex) {
+export async function clearTimetableSlot(schoolId, periodId, classGrade, stream, day, slotIndex, type = 'class') {
   let query = supabase
     .from('timetable_slots')
     .delete()
@@ -2609,7 +2614,8 @@ export async function clearTimetableSlot(schoolId, periodId, classGrade, stream,
     .eq('period_id', periodId)
     .eq('class_grade', classGrade)
     .eq('day_of_week', day)
-    .eq('slot_index', slotIndex);
+    .eq('slot_index', slotIndex)
+    .eq('type', type);
   
   if (stream) query = query.eq('stream', stream);
   else query = query.is('stream', null);
@@ -2618,12 +2624,13 @@ export async function clearTimetableSlot(schoolId, periodId, classGrade, stream,
   if (error) throw error;
 }
 
-export async function clearAndSaveTimetable(schoolId, periodId, slots, classGrades) {
+export async function clearAndSaveTimetable(schoolId, periodId, slots, classGrades, type = 'class') {
   const { error: delErr } = await supabase
     .from('timetable_slots')
     .delete()
     .eq('school_id', schoolId)
     .eq('period_id', periodId)
+    .eq('type', type)
     .in('class_grade', classGrades);
   if (delErr) throw delErr;
 
@@ -2640,7 +2647,8 @@ export async function clearAndSaveTimetable(schoolId, periodId, slots, classGrad
     room: s.room || null,
     color: s.color || null,
     is_double_first: s.is_double_first || false,
-    is_double_second: s.is_double_second || false
+    is_double_second: s.is_double_second || false,
+    type: type
   }));
 
   const CHUNK_SIZE = 100;
