@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { SchoolIcon, UserIcon, PhoneIcon } from '../../components/CommonIcons';
-import { validatePortalLogin } from '../../data/offlineStore';
+import { validateParentLogin } from '../../data/store';
 
 export default function PortalLogin({ onLogin }) {
   const [searchParams] = useSearchParams();
@@ -24,18 +24,14 @@ export default function PortalLogin({ onLogin }) {
 
     setLoading(true);
     try {
-      // Offline Simulation
-      const result = await validatePortalLogin(schoolSearch, admNo, phone);
+      // Secure Cloud Validation
+      const result = await validateParentLogin(schoolSearch, admNo, phone);
       
       if (result) {
-        // Success
         onLogin(result);
-      } else {
-        // Did not match
-        setError('No student found matching this Admission Number and Phone at the selected school.');
       }
     } catch (err) {
-      setError(err.message || 'An error occurred during authentication.');
+      setError(err.message || 'Authentication failed. Please check your details or contact the school office.');
     } finally {
       setLoading(false);
     }

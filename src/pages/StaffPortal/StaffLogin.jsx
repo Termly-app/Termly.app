@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
-import { TeacherIcon, ShieldIcon } from '../../components/CommonIcons';
-import { db } from '../../data/offlineStore';
+import { TeacherIcon, ShieldIcon, PhoneIcon } from '../../components/CommonIcons';
+import { validateStaffLogin } from '../../data/store';
 
 export default function StaffLogin({ onLogin }) {
+  const [phone, setPhone] = useState('');
   const [pin, setPin] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -13,37 +14,14 @@ export default function StaffLogin({ onLogin }) {
     setError('');
     
     try {
-      // 1. Try to find a teacher with this PIN in the offline store
-      const matches = await db.teachers.where('pin').equals(pin).toArray();
-      
-      if (matches.length > 0) {
-        onLogin({ 
-          id: matches[0].id, 
-          name: matches[0].name, 
-          role: 'teacher',
-          schoolId: matches[0].school_id 
-        });
-        return;
-      }
-
-      // 2. Demo Fallback: If database is empty or no PIN match, allow demo PIN 1234
-      if (pin === '1234') {
-        const teachers = await db.teachers.toArray();
-        const demoStaff = teachers.length > 0 ? teachers[0] : { id: 'staff-demo', name: 'Demo Teacher', school_id: 'school-demo' };
-        
-        onLogin({ 
-          id: demoStaff.id, 
-          name: demoStaff.name, 
-          role: 'teacher',
-          schoolId: demoStaff.school_id 
-        });
-      } else {
-        setError('Invalid PIN. Please try again or use the demo PIN 1234.');
-      }
-    } catch(err) {
-      setError('Connection to secure storage failed. Please restart the app.');
+      // Secure Validation via Supabase
+      const result = await validateStaffLogin(phone, pin);
+      onLogin(result);
+    } catch (err) {
+      setError(err.message || 'Invalid credentials. Please try again.');
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   return (
@@ -60,23 +38,39 @@ export default function StaffLogin({ onLogin }) {
 
         <div style={{ background: 'white', padding: 32, borderRadius: 24, boxShadow: '0 20px 40px rgba(0,0,0,0.4)', textAlign: 'center' }}>
           <ShieldIcon size={24} color="#94a3b8" style={{ marginBottom: 16 }} />
-          <h2 style={{ margin: '0 0 24px', fontSize: '1rem', color: '#0f172a' }}>Enter Access PIN</h2>
+          <h2 style={{ margin: '0 0 24px', fontSize: '1rem', color: '#0f172a' }}>Enter Access Details</h2>
           
           {error && <div style={{ color: '#ef4444', background: '#fef2f2', padding: 12, borderRadius: 8, fontSize: '0.85rem', marginBottom: 20 }}>{error}</div>}
 
           <form onSubmit={handleLogin}>
-            {/* Optimized for mobile number pads */}
-            <input 
-              type="password" 
-              inputMode="numeric" 
-              pattern="[0-9]*" 
-              value={pin}
-              onChange={(e) => setPin(e.target.value)}
-              placeholder="••••"
-              style={{ width: '100%', padding: 16, border: '2px solid #cbd5e1', borderRadius: 12, fontSize: '2rem', textAlign: 'center', letterSpacing: '0.5em', fontWeight: 800, boxSizing: 'border-box', marginBottom: 24 }}
-              autoFocus
-              required
-            />
+            <div style={{ marginBottom: 16, textAlign: 'left' }}>
+              <label style={{ fontSize: '0.75rem', fontWeight: 700, color: '#64748b', textTransform: 'uppercase', marginBottom: 6, display: 'block' }}>Primary Phone</label>
+              <div style={{ position: 'relative' }}>
+                <PhoneIcon size={16} color="#94a3b8" style={{ position: 'absolute', left: 12, top: 14 }} />
+                <input 
+                  type="tel"
+                  placeholder="e.g. 0712 345 678"
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                  style={{ width: '100%', padding: '12px 12px 12px 40px', border: '2px solid #cbd5e1', borderRadius: 12, boxSizing: 'border-box' }}
+                  required
+                />
+              </div>
+            </div>
+
+            <div style={{ marginBottom: 24, textAlign: 'left' }}>
+              <label style={{ fontSize: '0.75rem', fontWeight: 700, color: '#64748b', textTransform: 'uppercase', marginBottom: 6, display: 'block' }}>Access PIN</label>
+              <input 
+                type="password" 
+                inputMode="numeric" 
+                pattern="[0-9]*" 
+                value={pin}
+                onChange={(e) => setPin(e.target.value)}
+                placeholder="••••"
+                style={{ width: '100%', padding: 12, border: '2px solid #cbd5e1', borderRadius: 12, fontSize: '1.5rem', textAlign: 'center', letterSpacing: '0.4em', fontWeight: 800, boxSizing: 'border-box' }}
+                required
+              />
+            </div>
 
             <button 
               type="submit"
@@ -86,6 +80,10 @@ export default function StaffLogin({ onLogin }) {
               {loading ? 'Authenticating...' : 'Access Workspace'}
             </button>
           </form>
+          
+          <div style={{ fontSize: '0.75rem', color: '#94a3b8', marginTop: 20 }}>
+            Contact Admin if you forgot your PIN or need to register your mobile number.
+          </div>
         </div>
 
       </div>
