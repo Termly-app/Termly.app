@@ -368,7 +368,7 @@ export default function SettingsTab({
                         </div>
                       </div>
                       <div style={{ fontSize:'.65rem', color:'var(--sub)' }}>
-                        {existingFeatures.length} features
+                        {(plan.modules || []).length + existingFeatures.length} features
                       </div>
                       <div style={{ fontSize:10, color:'var(--sub)', transform: isOpen ? 'rotate(180deg)' : 'none', transition:'transform .2s' }}>▾</div>
                     </div>
@@ -442,7 +442,7 @@ export default function SettingsTab({
                           <div style={{ fontSize:'.58rem', color:'var(--sub)', marginBottom:10, lineHeight:1.5 }}>
                             Toggle system modules ON/OFF for this plan. Schools on this plan will only see enabled modules in their sidebar.
                           </div>
-                          <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:6 }}>
+                          <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:6, maxHeight:340, overflowY:'auto', overflowX:'hidden', padding:'2px' }}>
                             {ALL_SYSTEM_MODULES.map(mod => {
                               const enabled = (plan.modules || []).includes(mod.slug);
                               return (
@@ -482,9 +482,11 @@ export default function SettingsTab({
                               );
                             })}
                           </div>
-                          <div style={{ marginTop:8, padding:'6px 10px', borderRadius:6, background:'rgba(124,92,252,.06)', border:'1px solid rgba(124,92,252,.15)', fontSize:'.58rem', color:'var(--sub)', lineHeight:1.5 }}>
-                            {(plan.modules || []).length} of {ALL_SYSTEM_MODULES.length} modules enabled.
-                            {(plan.modules || []).length === 0 && ' Schools on this plan will have no feature access beyond the dashboard.'}
+                          <div style={{ marginTop:8, padding:'8px 12px', borderRadius:6, background:'rgba(124,92,252,.06)', border:'1px solid rgba(124,92,252,.15)', fontSize:'.6rem', color:'var(--sub)', lineHeight:1.5, display:'flex', justifyContent:'space-between', alignItems:'center' }}>
+                            <span><strong style={{ color:'var(--vi)', fontFamily:'var(--fh)' }}>{(plan.modules || []).length}</strong> of {ALL_SYSTEM_MODULES.length} modules enabled</span>
+                            {(plan.modules || []).length === 0 && <span style={{ color:'var(--ro)', fontSize:'.55rem' }}>No access beyond dashboard</span>}
+                            {(plan.modules || []).length > 0 && (plan.modules || []).length < ALL_SYSTEM_MODULES.length && <span style={{ color:'var(--am)', fontSize:'.55rem' }}>Partial access</span>}
+                            {(plan.modules || []).length === ALL_SYSTEM_MODULES.length && <span style={{ color:'var(--te)', fontSize:'.55rem' }}>Full access</span>}
                           </div>
                         </div>
 
@@ -578,6 +580,7 @@ export default function SettingsTab({
 
       {/* ── Suggested subscription tiers (read-only guide) ─────────────── */}
       <div className="lp" style={{ marginBottom:14 }}>
+        <div className="lp-t" style={{ marginBottom:6 }}>Recommended Tier Guide</div>
         <div style={{ fontSize:'.68rem', color:'var(--sub)', marginBottom:14, lineHeight:1.5 }}>
           Reference guide for Kenyan school market pricing. Use the plan builder above to create and customise your actual plans.
         </div>
@@ -587,20 +590,42 @@ export default function SettingsTab({
               name:'Starter', price:'KSh 4,999', color:'#0DD88A',
               limit:'Up to 100 students · 3 staff',
               trial:'14-day free trial',
-              features:['Student Management','Attendance Tracking','CBC Grading (PP1–Grade 6)','M-PESA Fee Tracking','Basic Report Cards','Email Support'],
+              modules: 12,
+              features:[
+                'Student Management', 'Staff Management', 'Attendance Tracking', 'Dashboard & Analytics',
+                'CBC Report Cards (PP1–G9)', 'CBC Competency Grading', 'Fee & Billing Engine',
+                'Fee Structure Builder', 'Student Fee Statements', 'M-Pesa Paybill Integration',
+                'M-Pesa Receipt Generation', 'Email Support',
+              ],
             },
             {
               name:'School', price:'KSh 9,999', color:'#e4e4e7',
               limit:'Up to 300 students · 10 staff',
               trial:'14-day free trial',
               popular:true,
-              features:['Everything in Starter','Timetable Builder','Fee Structure Builder','NEMIS Data Export','Multi-Stream Support','CBC & 8-4-4 Support','SMS Notifications','Priority Support'],
+              modules: 22,
+              features:[
+                'Everything in Starter',
+                'KCSE / KCPE Report Cards (8-4-4)', 'Academic Grading & Reports',
+                'Timetable Builder', 'Automated Timetable Generation', 'Exam Scheduling',
+                'M-Pesa STK Push', 'SMS & Communications', 'Parent SMS Notifications',
+                'NEMIS Data Export', 'Bulk Student Import (CSV)', 'Multi-Stream Support',
+                'Multiple Academic Periods', 'Priority Support',
+              ],
             },
             {
               name:'Academy', price:'KSh 24,999', color:'#E8A020',
               limit:'Up to 1,000 students · Unlimited staff',
               trial:'30-day free trial',
-              features:['Everything in School','Multi-Campus Support','Parent Portal','WhatsApp Integration','Custom Branding','Exam Scheduling','Library Management','Dedicated Account Manager'],
+              modules: 35,
+              features:[
+                'Everything in School',
+                'Teacher Mobile Portal', 'Parent & Student Portal',
+                'E-Learning / LMS', 'Library Management',
+                'WhatsApp Fee Reminders', 'Airtel Money Integration',
+                'Smart Analytics & Insights', 'Data Recovery Tools',
+                'Custom Branding', 'API Access', 'Dedicated Account Manager',
+              ],
             },
           ].map(tier => (
             <div key={tier.name} style={{
@@ -618,11 +643,14 @@ export default function SettingsTab({
               </div>
               <div style={{ fontFamily:'var(--fh)', fontSize:'1rem', fontWeight:700, color:tier.color, marginBottom:3 }}>{tier.price}</div>
               <div style={{ fontSize:'.6rem', color:'var(--sub)', marginBottom:3 }}>per term</div>
-              <div style={{ fontSize:'.62rem', color:'var(--sub)', marginBottom:10, paddingBottom:10, borderBottom:'1px solid var(--edge)' }}>{tier.limit}</div>
-              <div style={{ fontSize:'.6rem', color:'var(--te)', marginBottom:8, display:'flex', alignItems:'center', gap:4 }}><CheckIcon size={10} /> {tier.trial}</div>
+              <div style={{ fontSize:'.62rem', color:'var(--sub)', marginBottom:6, paddingBottom:6, borderBottom:'1px solid var(--edge)' }}>{tier.limit}</div>
+              <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:8 }}>
+                <div style={{ fontSize:'.6rem', color:'var(--te)', display:'flex', alignItems:'center', gap:4 }}><CheckIcon size={10} /> {tier.trial}</div>
+                <div style={{ fontSize:'.55rem', color:'var(--vi)', fontWeight:600 }}>{tier.modules} modules</div>
+              </div>
               {tier.features.map(f => (
                 <div key={f} style={{ display:'flex', alignItems:'flex-start', gap:6, marginBottom:4 }}>
-                  <CheckIcon size={12} color="var(--sub)" style={{ flexShrink:0, marginTop:1, opacity:.6 }} />
+                  <CheckIcon size={12} color="var(--te)" style={{ flexShrink:0, marginTop:1 }} />
                   <span style={{ fontSize:'.63rem', color:'var(--sub)' }}>{f}</span>
                 </div>
               ))}
