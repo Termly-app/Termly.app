@@ -6,7 +6,6 @@ import './index.css'
 import { initStore } from './data/store'
 import { BrowserRouter } from 'react-router-dom';
 import ScrollToTop from './components/ScrollToTop';
-import CustomCursor from './components/Common/CustomCursor';
 
 console.log(">>> BOOTING SHULESOFT MAIN.JSX");
 
