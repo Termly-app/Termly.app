@@ -44,6 +44,20 @@ export default function PricingUpgrade({ featureName, requiredPlan = "Profession
       desc: 'Communicate with authority. Reach every parent and guardian at scale with professional, school-branded updates.',
       benefits: ['Bulk SMS broadcasting', 'Scheduled school alerts', 'Delivery report tracking', 'Template-based messaging'],
       color: '#EF4444'
+    },
+    'Teacher Portal': {
+      icon: <TeacherIcon size={56} />,
+      title: 'Teacher Mobile Portal',
+      desc: 'Empower your staff. Let teachers mark attendance, enter marks, and manage their classes directly from their phones.',
+      benefits: ['Mobile mark entry', 'Digital registers', 'Teacher-parent messaging', 'Smart lesson planning'],
+      color: '#0EA5E9'
+    },
+    'Parent Portal': {
+      icon: <UsersIcon size={56} />,
+      title: 'Real-time Parent Engagement',
+      desc: 'Bridge the gap. Give parents instant access to fees, results, and school updates through a secure personal portal.',
+      benefits: ['Instant fee balance viewing', 'Child performance tracking', 'Direct school communication', 'Secure result card access'],
+      color: '#8B5CF6'
     }
   };
 

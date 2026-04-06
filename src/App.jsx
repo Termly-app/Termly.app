@@ -723,6 +723,8 @@ function App() {
                       <Route path="/settings" element={<Settings currentUser={currentUser} />} />
                       <Route path="/billing"  element={<Billing currentUser={currentUser} />} />
                       <Route path="/help"     element={<HelpCenter />} />
+                      <Route path="/portal/teacher" element={<SectionGate featureSlug="teacher_portal" featureName="Teacher Portal" profile={profile}><div style={{padding:40}}>Teacher Portal Management (Coming Soon)</div></SectionGate>} />
+                      <Route path="/portal/parent"  element={<SectionGate featureSlug="parent_portal"  featureName="Parent Portal"  profile={profile}><div style={{padding:40}}>Parent Portal Management (Coming Soon)</div></SectionGate>} />
                     </>
                   )}
 
