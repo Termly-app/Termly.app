@@ -54,7 +54,6 @@ import Blog            from './pages/Blog';
 import Partners        from './pages/Partners';
 import ForgotPassword  from './pages/ForgotPassword';
 import ResetPassword   from './pages/ResetPassword';
-import CustomCursor    from './components/Common/CustomCursor';
 import Loader          from './components/Common/Loader';
 import SyncIndicator from './components/Common/SyncIndicator';
 import HelpCenter from './pages/HelpCenter';
@@ -571,7 +570,6 @@ function App() {
           <Route path="/staff/*"            element={<StaffPortalManager />} />
           <Route path="*"                   element={<Landing />} />
         </Routes>
-        <CustomCursor disabled={false} />
       </>
     );
   }
@@ -596,7 +594,6 @@ function App() {
             <Route path="*" element={<Navigate to="/super-admin" replace />} />
           </Routes>
         </div>
-        <CustomCursor disabled={false} />
       </>
     );
   }
@@ -736,7 +733,6 @@ function App() {
           </ErrorBoundary>
         </div>
       </main>
-      <CustomCursor disabled={false} />
     </div>
   );
 }
