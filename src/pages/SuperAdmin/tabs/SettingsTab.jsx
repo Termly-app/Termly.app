@@ -144,8 +144,8 @@ export default function SettingsTab({
   priceSaved, setPriceSaved,
   handleUpdateSetting,
   updatePlatformSetting,
-  loadData,
   setMessage,
+  onWipeSchools, // New prop for bulk cleanup
 }) {
   const expiryInfo   = calcExpiry(subEndDate);
   const [expandedPlan, setExpandedPlan] = useState(null); // plan id being edited
@@ -321,6 +321,34 @@ export default function SettingsTab({
           <button className="save-btn" onClick={handleSaveGlobal} style={{ width:'100%' }}>
             Save Global Settings
           </button>
+
+          {/* ── System Maintenance ── */}
+          <div style={{ marginTop:24, padding:'20px', borderRadius:11, background:'rgba(212,80,106,.05)', border:'1px solid rgba(212,80,106,.15)' }}>
+            <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:10 }}>
+              <RefreshIcon size={18} color="var(--ro)" />
+              <div style={{ fontFamily:'var(--fh)', fontSize:'.85rem', fontWeight:800, color:'var(--ro)', letterSpacing:'-0.01em' }}>System Maintenance</div>
+            </div>
+            
+            <p style={{ fontSize:'.68rem', color:'var(--sub)', lineHeight:1.6, marginBottom:16 }}>
+              Perform a bulk cleanup of the entire platform. This will permanently delete all school workspaces, students, and staff <strong style={{ color:'#fff' }}>EXCEPT</strong> the ShuleSoft HQ admin workspace.
+            </p>
+
+            <button 
+              onClick={onWipeSchools}
+              style={{ 
+                width:'100%', padding:'10px', borderRadius:8, background:'rgba(212,80,106,.1)', 
+                border:'1px solid rgba(212,80,106,.25)', color:'var(--ro)', fontSize:'.72rem', 
+                fontWeight:700, cursor:'pointer', transition:'all .2s' 
+              }}
+              onMouseOver={e => e.currentTarget.style.background = 'rgba(212,80,106,.15)'}
+              onMouseOut={e => e.currentTarget.style.background = 'rgba(212,80,106,.1)'}
+            >
+              Terminate All Non-Admin Schools
+            </button>
+            <div style={{ fontSize:'.55rem', color:'rgba(212,80,106,.6)', marginTop:8, textAlign:'center' }}>
+              Warning: This action is irreversible.
+            </div>
+          </div>
         </div>
 
         {/* ── Subscription Plan Builder ────────────────────────────────── */}
@@ -368,7 +396,7 @@ export default function SettingsTab({
                         </div>
                       </div>
                       <div style={{ fontSize:'.65rem', color:'var(--sub)' }}>
-                        {(plan.modules || []).length + existingFeatures.length} features
+                        {(plan.modules || []).length} Enabled
                       </div>
                       <div style={{ fontSize:10, color:'var(--sub)', transform: isOpen ? 'rotate(180deg)' : 'none', transition:'transform .2s' }}>▾</div>
                     </div>
@@ -442,7 +470,18 @@ export default function SettingsTab({
                           <div style={{ fontSize:'.58rem', color:'var(--sub)', marginBottom:10, lineHeight:1.5 }}>
                             Toggle system modules ON/OFF for this plan. Schools on this plan will only see enabled modules in their sidebar.
                           </div>
-                          <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:6, maxHeight:340, overflowY:'auto', overflowX:'hidden', padding:'2px' }}>
+                          <div style={{ 
+                            display:'grid', 
+                            gridTemplateColumns:'repeat(auto-fill, minmax(180px, 1fr))', 
+                            gap:8, 
+                            maxHeight:400, 
+                            overflowY:'auto', 
+                            overflowX:'auto', 
+                            padding:'4px',
+                            background:'rgba(255,255,255,0.02)',
+                            borderRadius:8,
+                            border:'1px solid rgba(255,255,255,0.05)'
+                          }}>
                             {ALL_SYSTEM_MODULES.map(mod => {
                               const enabled = (plan.modules || []).includes(mod.slug);
                               return (

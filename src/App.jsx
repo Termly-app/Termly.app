@@ -165,9 +165,14 @@ function Sidebar({ isOpen, onClose, onLogout, currentUser, subscriptionActive })
     attendance: false,
     grading: false,
     fees: false,
-    nemis: false,
     sms: false,
     lms: false,
+    exam_scheduling: false,
+    teacher_portal: false,
+    parent_portal: false,
+    mpesa: false,
+    whatsapp: false,
+    nemis: false,
   });
 
   useEffect(() => {
@@ -178,9 +183,14 @@ function Sidebar({ isOpen, onClose, onLogout, currentUser, subscriptionActive })
         attendance: await isFeatureEnabled('attendance'),
         grading: await isFeatureEnabled('grading'),
         fees: await isFeatureEnabled('fees'),
-        nemis: await isFeatureEnabled('nemis'),
         sms: await isFeatureEnabled('sms'),
         lms: await isFeatureEnabled('lms'),
+        exam_scheduling: await isFeatureEnabled('exam_scheduling'),
+        teacher_portal: await isFeatureEnabled('teacher_portal'),
+        parent_portal: await isFeatureEnabled('parent_portal'),
+        mpesa: await isFeatureEnabled('mpesa'),
+        whatsapp: await isFeatureEnabled('whatsapp'),
+        nemis: await isFeatureEnabled('nemis'),
       };
       setFeatures(f);
     };
@@ -321,7 +331,7 @@ function Sidebar({ isOpen, onClose, onLogout, currentUser, subscriptionActive })
         )}
         
         {(isTeacher || isAdmin) && features.timetable && (
-          <SbLink to="/timetable" icon={TimetableIcon} label="Timetable"  onClick={onClose} locked={!subscriptionActive} />
+          <SbLink to="/timetable" icon={TimetableIcon} label={features.exam_scheduling ? "Scheduling" : "Timetable"} onClick={onClose} locked={!subscriptionActive} />
         )}
 
         {(isTeacher || isAdmin) && features.lms && (
@@ -343,7 +353,15 @@ function Sidebar({ isOpen, onClose, onLogout, currentUser, subscriptionActive })
         )}
 
         {isAdmin && features.sms && (
-          <SbLink to="/communications" icon={MessageIcon} label="Communications" onClick={onClose} locked={!subscriptionActive} />
+          <SbLink to="/communications" icon={MessageIcon} label="Comm. Center" onClick={onClose} locked={!subscriptionActive} />
+        )}
+
+        {(isAdmin || isTeacher) && features.teacher_portal && (
+          <SbLink to="/portal/teacher" icon={TeacherIcon} label="Teacher Portal" onClick={onClose} locked={!subscriptionActive} />
+        )}
+
+        {isAdmin && features.parent_portal && (
+          <SbLink to="/portal/parent" icon={UsersIcon} label="Parent Portal" onClick={onClose} locked={!subscriptionActive} />
         )}
         
         {/* Strictly Admin-only settings */}

@@ -21,6 +21,7 @@ import {
   suspendSchool, restoreSchool, updateSchoolPlan, subscribeToPlatformChanges,
   deleteSchool, repairSchoolProfile, getDiscoveryMetrics, deactivateSchool,
   getTeachersBySchool, deleteTeacher, SEAT_LIMITS,
+  wipeAllNonAdminSchools,
 } from '../../data/store';
 
 // Components
@@ -740,6 +741,39 @@ export default function SuperAdmin({ currentUser, isPlatformAdmin, sidebarOpen, 
     } catch (err) { setMessage({ type:'error', text:'Failed to delete staff' }); }
   };
 
+  const handleWipeSchools = async () => {
+    const ok = await confirm({
+      title: 'PLATFORM WIPE: DANGER ZONE',
+      message: 'This will permanently delete ALL school workspaces AND all their associated data (students, staff, etc.) except for the HQ admin school. This is IRREVERSIBLE.',
+      confirmText: 'Prepare for Wipe',
+      variant: 'danger',
+    });
+    if (!ok) return;
+
+    // Second "strict" confirmation
+    const verify = await prompt({
+      title: 'Final Confirmation Required',
+      message: 'To confirm, please type verbatim: "TERMINATE ALL NON-ADMIN WORKSPACES"',
+      inputLabel: 'Security Verification',
+      confirmText: 'EXECUTE WIPE',
+      cancelText: 'ABORT',
+    });
+
+    if (verify !== 'TERMINATE ALL NON-ADMIN WORKSPACES') {
+      setMessage({ type:'error', text:'Wipe aborted. Verification failed.' });
+      return;
+    }
+
+    try {
+      setMessage({ type:'info', text:'Commencing platform-wide cleanup...' });
+      const result = await wipeAllNonAdminSchools();
+      setMessage({ type:'success', text:`Wipe complete. Successfully removed ${result.totalDeleted} school(s).` });
+      loadData();
+    } catch (err) {
+      setMessage({ type:'error', text: err.message || 'Wipe failed - see logs' });
+    }
+  };
+
   const handleSignOut = () => { if (onSignOut) onSignOut(); else window.location.href = '/'; };
 
   // ══ ACCESS GUARD ══════════════════════════════════════════════════════
@@ -919,7 +953,7 @@ export default function SuperAdmin({ currentUser, isPlatformAdmin, sidebarOpen, 
                 {activeTab === 'subscriptions' && <SubscriptionsTab  {...commonProps} settings={settings} subBreakRef={subBreakRef} />}
                 {activeTab === 'revenue'       && <RevenueTab        {...commonProps} revPeriod={revPeriod} setRevPeriod={setRevPeriod} revPeriodLabel={revPeriodLabel} revBigRef={revBigRef} />}
                 {activeTab === 'activity'      && <ActivityTab       filteredActivity={filteredActivity} />}
-                {activeTab === 'config'        && <SettingsTab       gwInstructions={gwInstructions} setGwInstructions={setGwInstructions} statusMsg={statusMsg} setStatusMsg={setStatusMsg} subEndDate={subEndDate} setSubEndDate={setSubEndDate} plans={plans} setPlans={setPlans} smsConfig={smsConfig} setSmsConfig={setSmsConfig} mpesaConfig={mpesaConfig} setMpesaConfig={setMpesaConfig} priceSaved={priceSaved} setPriceSaved={setPriceSaved} handleUpdateSetting={handleUpdateSetting} updatePlatformSetting={updatePlatformSetting} loadData={loadData} setMessage={setMessage} />}
+                {activeTab === 'config'        && <SettingsTab       gwInstructions={gwInstructions} setGwInstructions={setGwInstructions} statusMsg={statusMsg} setStatusMsg={setStatusMsg} subEndDate={subEndDate} setSubEndDate={setSubEndDate} plans={plans} setPlans={setPlans} smsConfig={smsConfig} setSmsConfig={setSmsConfig} mpesaConfig={mpesaConfig} setMpesaConfig={setMpesaConfig} priceSaved={priceSaved} setPriceSaved={setPriceSaved} handleUpdateSetting={handleUpdateSetting} updatePlatformSetting={updatePlatformSetting} loadData={loadData} setMessage={setMessage} onWipeSchools={handleWipeSchools} />}
                 {activeTab === 'recovery'      && <RecoveryTab       discoveryMeta={discoveryMeta} repairingId={repairingId} handleRepair={handleRepair} />}
 
                 {/* Footer */}

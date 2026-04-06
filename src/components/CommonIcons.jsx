@@ -464,3 +464,4 @@ export const ClipboardIcon = ({ size = 24, color = "currentColor", style }) => (
     <rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect>
   </svg>
 );
+

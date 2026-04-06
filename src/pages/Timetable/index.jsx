@@ -281,6 +281,7 @@ export default function Timetable({ currentUser, currentPeriodId, periods = [] }
   // ── Panel / view ──────────────────────────────────────────────────────
   const [panel,  setPanel]  = useState('grid');   // 'grid' | 'req' | 'config'
   const [view,   setView]   = useState('class');  // 'class' | 'teacher'
+  const [mode,   setMode]   = useState('weekly'); // 'weekly' (class) | 'exam'
 
   // ── Period ────────────────────────────────────────────────────────────
   const [periodId, setPeriodId] = useState(currentPeriodId || '');
@@ -382,23 +383,27 @@ export default function Timetable({ currentUser, currentPeriodId, periods = [] }
     (async () => {
       setLoading(true);
       try {
-        const data = await getTimetableSlots(schoolId, periodId, selClass, selStream || null);
+        const type = mode === 'exam' ? 'exam' : 'class';
+        const data = await getTimetableSlots(schoolId, periodId, selClass, selStream || null, type);
         setSlots(data);
       } catch (e) { console.error(e); }
       finally { setLoading(false); }
     })();
-  }, [schoolId, periodId, selClass, selStream, panel, view]);
+  }, [schoolId, periodId, selClass, selStream, panel, view, mode]);
 
   // ── Load teacher slots ────────────────────────────────────────────────
   useEffect(() => {
     if (!schoolId || !periodId || !selTeacher || view !== 'teacher') return;
     (async () => {
       setLoading(true);
-      try { setTeacherSlots(await getTeacherTimetable(schoolId, periodId, selTeacher)); }
+      try { 
+        const type = mode === 'exam' ? 'exam' : 'class';
+        setTeacherSlots(await getTeacherTimetable(schoolId, periodId, selTeacher, type)); 
+      }
       catch (e) { console.error(e); }
       finally { setLoading(false); }
     })();
-  }, [schoolId, periodId, selTeacher, view]);
+  }, [schoolId, periodId, selTeacher, view, mode]);
 
   // ── Load requirements for selected class ──────────────────────────────
   useEffect(() => {
@@ -439,7 +444,8 @@ export default function Timetable({ currentUser, currentPeriodId, periods = [] }
         const clash = await checkTeacherConflict(
           schoolId, periodId, editTeacher,
           editCell.day, editCell.slotIndex,
-          selClass, selStream || null
+          selClass, selStream || null,
+          mode === 'exam' ? 'exam' : 'class'
         );
         if (clash) { setConflictWarning(clash); return; }
       } catch (e) {
@@ -461,8 +467,10 @@ export default function Timetable({ currentUser, currentPeriodId, periods = [] }
         color       : editColor,
         is_double_first  : false,
         is_double_second : false,
+        type: mode === 'exam' ? 'exam' : 'class',
       });
-      setSlots(await getTimetableSlots(schoolId, periodId, selClass, selStream || null));
+      const type = mode === 'exam' ? 'exam' : 'class';
+      setSlots(await getTimetableSlots(schoolId, periodId, selClass, selStream || null, type));
       setEditCell(null);
       setMessage({ type:'ok', text:'Slot saved.' });
     } catch (e) { setMessage({ type:'err', text: e.message }); }
@@ -475,7 +483,8 @@ export default function Timetable({ currentUser, currentPeriodId, periods = [] }
     if (!isAdmin || preview) return;
     try {
       await clearTimetableSlot(schoolId, periodId, selClass, selStream || null, day, slotIndex);
-      setSlots(await getTimetableSlots(schoolId, periodId, selClass, selStream || null));
+      const type = mode === 'exam' ? 'exam' : 'class';
+      setSlots(await getTimetableSlots(schoolId, periodId, selClass, selStream || null, type));
     } catch (e) { setMessage({ type:'err', text: e.message }); }
   };
 
@@ -629,20 +638,42 @@ export default function Timetable({ currentUser, currentPeriodId, periods = [] }
       {/* ── Header ── */}
       <div className="tt-header">
         <div className="tt-title-group">
-          <div className="tt-icon"><CalendarIcon size={24} /></div>
+          <div className="tt-icon">{mode === 'exam' ? <AlertIcon size={24} color="#F59E0B" /> : <CalendarIcon size={24} />}</div>
           <div>
-            <div className="tt-title">Timetable</div>
+            <div className="tt-title">{mode === 'exam' ? 'Exam Scheduling' : 'Timetable'}</div>
             <div className="tt-sub">
               {selClass || '—'}
               {selClass && <span className={`tt-level-badge ${levelBadge.cls}`}>{levelBadge.label}</span>}
+              {mode === 'exam' && <span className="tt-mode-badge">EXAM MODE</span>}
             </div>
           </div>
         </div>
+
+        {/* Mode Switcher */}
+        <div className="tt-mode-toggle">
+          <button 
+            className={`tt-mode-btn ${mode === 'weekly' ? 'active' : ''}`}
+            onClick={() => setMode('weekly')}
+          >
+            Weekly Class
+          </button>
+          <button 
+            className={`tt-mode-btn ${mode === 'exam' ? 'active' : ''}`}
+            onClick={() => {
+              setMode('exam');
+              setPanel('grid'); // Default to grid for exams
+            }}
+          >
+            Exam Schedule
+          </button>
+        </div>
+
         <div className="tt-header-actions">
           {panel === 'grid' && view === 'class' && !preview && (
             <button className="tt-btn" onClick={() => printClassTimetable({
               school: { name: currentUser?.schoolName }, classGrade: selClass,
               stream: selStream, period: activePeriod, config, slots, activeDays,
+              isExam: mode === 'exam'
             })}><PrintIcon size={14} /> Print</button>
           )}
           {panel === 'grid' && view === 'teacher' && selTeacher && (
@@ -650,6 +681,7 @@ export default function Timetable({ currentUser, currentPeriodId, periods = [] }
               school: { name: currentUser?.schoolName },
               teacher: teachers.find(t => t.id === selTeacher),
               period: activePeriod, config, slots: teacherSlots, activeDays,
+              isExam: mode === 'exam'
             })}><PrintIcon size={14} /> Print</button>
           )}
           {/* Period selector always visible */}

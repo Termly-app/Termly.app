@@ -24,7 +24,18 @@ export default function Register() {
     async function loadSettings() {
       const s = await getPlatformSettings();
       setSettings(s);
-      // If the URL plan isn't in settings, use the first active plan from DB
+      
+      // Ownership Check: If already signed in, check if they own a school
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session?.user) {
+        const { data: existing } = await supabase.from('schools').select('id').eq('owner_id', session.user.id).maybeSingle();
+        if (existing) {
+          setError("You already own a school workspace. Multi-school registration is restricted.");
+          setStep(3); // Go to success/info screen
+          setSuccess(true);
+        }
+      }
+
       if (s?.pricing && !s.pricing[formData.plan]) {
         const firstPlan = Object.entries(s.pricing).find(([_, p]) => p.active !== false)?.[0];
         if (firstPlan) setFormData(prev => ({ ...prev, plan: firstPlan }));
@@ -73,26 +84,66 @@ export default function Register() {
     setError(null);
 
     try {
-      // 1. Sign up the user in Supabase Auth
+      let authUserId = null;
+
+      // 1. Attempt to sign up the user in Supabase Auth
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email: formData.schoolEmail,
         password: formData.password,
         options: {
-          data: {
-            full_name: formData.adminName
-          },
+          data: { full_name: formData.adminName },
           emailRedirectTo: `${window.location.origin}/login`
         }
       });
 
-      if (authError) throw authError;
+      if (authError) {
+        // If user already exists in Auth, try signing in instead
+        if (authError.message?.toLowerCase().includes('already registered') || 
+            authError.message?.toLowerCase().includes('already been registered') ||
+            authError.message?.toLowerCase().includes('user already exists')) {
+          
+          const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
+            email: formData.schoolEmail,
+            password: formData.password,
+          });
 
-      // 2. Register with Sandbox plan
+          if (signInError) {
+            throw new Error('An account with this email already exists with a different password. Please use the correct password or reset it.');
+          }
+          authUserId = signInData.user.id;
+        } else {
+          throw authError;
+        }
+      } else {
+        authUserId = authData?.user?.id;
+      }
+
+      if (!authUserId) {
+        throw new Error('Could not establish authentication session. Please try again.');
+      }
+
+      // 2. Check if a school already exists for this user (by owner_id)
+      const { data: existingSchool, error: findSchoolErr } = await supabase
+        .from('schools')
+        .select('id')
+        .eq('owner_id', authUserId)
+        .maybeSingle();
+
+      if (findSchoolErr) throw findSchoolErr;
+
+      if (existingSchool) {
+        // School already exists — take them to success or redirect
+        setSuccess(true);
+        setStep(3);
+        return;
+      }
+
+      // 3. Register the school workspace (Creates school, profile, logic)
       await registerSchool(
         formData.schoolName,
         formData.schoolEmail,
         'Sandbox',
-        authData.user.id,
+        authUserId,
         formData.adminName,
         formData.schoolEmail,
         formData.phone,
@@ -100,9 +151,9 @@ export default function Register() {
       );
 
       setSuccess(true);
-      setStep(3); // Success screen is now step 3
+      setStep(3); // Success screen
     } catch (err) {
-      setError(err.message);
+      setError(err.message || 'An unexpected error occurred during registration.');
     } finally {
       setLoading(false);
     }
@@ -325,12 +376,22 @@ export default function Register() {
           {step === 3 && (
             <div className="res-sv active success-screen">
               <div className="success-icon"><RocketIcon size={64} color="var(--primary)" /></div>
-              <div className="res-ftitle">Registration Successful!</div>
-              <p className="res-fsub">Your school <strong>{formData.schoolName}</strong> has been registered on ShuleSoft.</p>
-              <div className="success-box" style={{ textAlign: 'left' }}>
-                <p>An activation email has been sent to your <strong>School Email:</strong><br/><strong>{formData.schoolEmail}</strong></p>
-                
-                <div style={{ marginTop: 20, padding: 16, background: 'rgba(91, 62, 245, 0.05)', borderRadius: 12, border: '1px solid rgba(91, 62, 245, 0.1)' }}>
+              <div className="res-ftitle">{error ? 'Workspace Exists' : 'Registration Successful!'}</div>
+              <p className="res-fsub">
+                {error 
+                  ? 'You already have an active school workspace. Please proceed to your dashboard.' 
+                  : <>Your school <strong>{formData.schoolName}</strong> has been registered on ShuleSoft.</>
+                }
+              </p>
+              
+              <div className="success-box" style={{ textAlign: 'center' }}>
+                {error ? (
+                  <Link to="/dashboard" className="res-cta success-cta">Go to Dashboard</Link>
+                ) : (
+                  <>
+                    <p style={{ textAlign: 'left' }}>An activation email has been sent to your <strong>School Email:</strong><br/><strong>{formData.schoolEmail}</strong></p>
+                    
+                    <div style={{ marginTop: 20, padding: 16, background: 'rgba(91, 62, 245, 0.05)', borderRadius: 12, border: '1px solid rgba(91, 62, 245, 0.1)', textAlign: 'left' }}>
                   <div style={{ fontWeight: 700, fontSize: '0.85rem', color: 'var(--primary)', marginBottom: 8, display: 'flex', alignItems: 'center', gap: 6 }}>
                     <span>💡</span> Didn't get the email?
                   </div>
@@ -358,8 +419,10 @@ export default function Register() {
                   </button>
                 </div>
 
-                <p style={{ marginTop: 16, opacity: 0.8, fontSize: '0.85rem' }}>This school email will be your <strong>Super Admin</strong> login ID.</p>
-                <Link to="/login" className="res-cta success-cta">Proceed to Login</Link>
+                    <p style={{ marginTop: 16, opacity: 0.8, fontSize: '0.85rem' }}>This school email will be your <strong>Super Admin</strong> login ID.</p>
+                    <Link to="/login" className="res-cta success-cta">Proceed to Login</Link>
+                  </>
+                )}
               </div>
             </div>
           )}

@@ -2001,12 +2001,87 @@ export async function updatePlatformSetting(key, value) {
  * Delete a school permanently
  */
 export async function deleteSchool(schoolId) {
+  // Deep delete: Clear all associated data for this school
+  const tables = [
+    'school_profiles',
+    'users',
+    'academic_periods',
+    'students',
+    'fees',
+    'marks',
+    'attendance',
+    'timetable_slots',
+    'timetable_configs',
+    'lesson_requirements',
+    'subject_assignments',
+    'sms_messages',
+    'mpesa_callbacks',
+    'lms_assignments',
+    'fee_structure',
+    'payments',
+    'teachers',
+    'library_books',
+    'library_borrows',
+    'activity_logs'
+  ];
+
+  for (const table of tables) {
+    try {
+      await supabase.from(table).delete().eq('school_id', schoolId);
+    } catch (e) {
+      // Some tables might not exist or might not have a school_id column
+      console.warn(`Clean-up: Failed to delete from ${table} for school ${schoolId}`, e.message);
+    }
+  }
+
+  // Finally delete the school record itself
   const { error } = await supabase
     .from('schools')
     .delete()
     .eq('id', schoolId);
+    
   if (error) throw error;
   await logPlatformActivity('SCHOOL_DELETE', `Terminated school workspace: ${schoolId}`);
+}
+
+/**
+ * CRITICAL: DESTRUCTIVE CLEANUP
+ * Deletes all school workspaces and associated data from the system,
+ * PROTECTING only the ShuleSoft HQ / Super Admin school.
+ */
+export async function wipeAllNonAdminSchools() {
+  const PLATFORM_ADMINS = ['admin@shulesoft.com', 'shulesoft8@gmail.com'];
+  
+  // 1. Fetch all schools
+  const { data: schools, error } = await supabase.from('schools').select('id, name, owner_id');
+  if (error) throw error;
+
+  console.log(`Starting cleanup of ${schools.length} schools...`);
+  let deletedCount = 0;
+
+  for (const school of schools) {
+    // PROTECT the platform owner/HQ workspace or schools owned by core admins
+    const isSuperAdminSchool = school.name?.toLowerCase().includes('shulesoft hq');
+    const isOwnedByAdmin = PLATFORM_ADMINS.includes(school.owner_id);
+
+    if (isSuperAdminSchool || isOwnedByAdmin) {
+      console.log(`>>> PROTECTING: ${school.name} (${school.id})`);
+      continue;
+    }
+
+    try {
+      console.log(`Deleting: ${school.name} (${school.id})...`);
+      await deleteSchool(school.id);
+      deletedCount++;
+    } catch (err) {
+      console.error(`Failed to delete school ${school.id}:`, err.message);
+    }
+  }
+
+  // 2. Also clear global activity logs that aren't linked to a specific school (optional, but good for reset)
+  // await supabase.from('platform_activity').delete().neq('user_email', 'admin@shulesoft.com');
+
+  return { success: true, totalDeleted: deletedCount };
 }
 
 /**
@@ -2464,13 +2539,14 @@ export async function saveTimetableConfig(schoolId, periodId, slots) {
   if (error) throw error;
 }
 
-export async function getTimetableSlots(schoolId, periodId, classGrade, stream = null) {
+export async function getTimetableSlots(schoolId, periodId, classGrade, stream = null, type = 'class') {
   let query = supabase
     .from('timetable_slots')
     .select('*, teachers(id, name)')
     .eq('school_id', schoolId)
     .eq('period_id', periodId)
-    .eq('class_grade', classGrade);
+    .eq('class_grade', classGrade)
+    .eq('type', type); // Filter by mode (class vs exam)
   
   if (stream) query = query.eq('stream', stream);
   else query = query.is('stream', null);
@@ -2490,13 +2566,14 @@ export async function getAllTimetableSlots(schoolId, periodId) {
   return data || [];
 }
 
-export async function getTeacherTimetable(schoolId, periodId, teacherId) {
+export async function getTeacherTimetable(schoolId, periodId, teacherId, type = 'class') {
   const { data, error } = await supabase
     .from('timetable_slots')
     .select('*, teachers(id, name)')
     .eq('school_id', schoolId)
     .eq('period_id', periodId)
     .eq('teacher_id', teacherId)
+    .eq('type', type)
     .order('slot_index', { ascending: true });
   if (error) throw error;
   return data || [];
@@ -2517,9 +2594,11 @@ export async function saveTimetableSlot(schoolId, periodId, slot) {
       room: slot.room || null,
       color: slot.color || null,
       is_double_first: slot.is_double_first || false,
-      is_double_second: slot.is_double_second || false
-    }, { onConflict: 'school_id,period_id,class_grade,stream,day_of_week,slot_index' });
+      is_double_second: slot.is_double_second || false,
+      type: slot.type || 'class' // Default to class schedule
+    }, { onConflict: 'school_id,period_id,class_grade,stream,day_of_week,slot_index,type' });
   if (error) throw error;
+  return true;
 }
 
 export async function clearTimetableSlot(schoolId, periodId, classGrade, stream, day, slotIndex) {
@@ -2632,16 +2711,18 @@ export async function deleteRequirement(schoolId, periodId, classGrade, stream, 
   if (error) throw error;
 }
 
-export async function checkTeacherConflict(schoolId, periodId, teacherId, day, slotIndex, currentClass, currentStream) {
+export async function checkTeacherConflict(schoolId, periodId, teacherId, day, slotIndex, currentClass, currentStream, type = 'class') {
   if (!teacherId) return null;
+  
   const { data, error } = await supabase
     .from('timetable_slots')
-    .select('class_grade, stream, subject')
+    .select('class_grade, stream, subject, type')
     .eq('school_id', schoolId)
     .eq('period_id', periodId)
     .eq('teacher_id', teacherId)
     .eq('day_of_week', day)
-    .eq('slot_index', slotIndex);
+    .eq('slot_index', slotIndex)
+    .eq('type', type);
   
   if (error) throw error;
   if (!data || data.length === 0) return null;
