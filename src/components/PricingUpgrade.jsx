@@ -1,146 +1,209 @@
-import { RocketIcon, CheckIcon, CardIcon, GraduationIcon, ClockIcon, BookIcon, MessageIcon } from './CommonIcons';
+import React from 'react';
+import { RocketIcon, CheckIcon, CardIcon, GraduationIcon, ClockIcon, BookIcon, MessageIcon, UsersIcon, TeacherIcon } from './CommonIcons';
 import { useNavigate } from 'react-router-dom';
 
 /**
- * PricingUpgrade Component
- * Shown when a Sandbox user attempts to access a premium feature.
+ * Redesigned PricingUpgrade Component
+ * Provides a high-end, 'WOW' experience for Sandbox users encountering locked features.
  */
-export default function PricingUpgrade({ featureName, requiredPlan = "Starter Plan" }) {
+export default function PricingUpgrade({ featureName, requiredPlan = "Professional Plan" }) {
   const navigate = useNavigate();
 
   const featureDetails = {
     'Fees': {
-      icon: <CardIcon size={48} />,
+      icon: <CardIcon size={56} />,
       title: 'Automate Fee Collection',
-      desc: 'Connect M-Pesa STK push, track partial payments, and generate professional receipts instantly.',
-      benefits: ['Real-time fee balances', 'Automated SMS reminders', 'M-Pesa reconciliation', 'Bulk receipt printing']
+      desc: 'Seamlessly track every shilling. From M-Pesa STK push to automated balancing, eliminate manual accounting forever.',
+      benefits: ['Real-time fee tracking & balances', 'Automated SMS receipt notifications', 'Instant financial trend reports', 'One-click bulk receipt printing'],
+      color: '#0EA5E9'
     },
     'Grading': {
-      icon: <GraduationIcon size={48} />,
-      title: 'KNEC-Aligned Grading',
-      desc: 'Generate CBC assessment sheets and 8-4-4 report cards without manual calculations.',
-      benefits: ['CBC Competency tracking', 'Automated ranking', 'Email/SMS report cards', 'Performance analytics']
+      icon: <GraduationIcon size={56} />,
+      title: 'KNEC-Ready Report Cards',
+      desc: 'Let our engine handle the math. Generate CBC competency reports and 8-4-4 ranking in seconds, not weeks.',
+      benefits: ['CBC Competency assessment sheets', 'Automated student rankings', 'PDF report card generation', 'Performance curve analytics'],
+      color: '#8B5CF6'
     },
     'Attendance': {
-      icon: <CheckIcon size={48} />,
-      title: 'Smart Attendance',
-      desc: 'Mark daily registers on mobile and notify parents instantly if a child is absent or late.',
-      benefits: ['Mobile teacher portal', 'Instant parent alerts', 'Monthly trend reports', 'Export to NEMIS']
+      icon: <CheckIcon size={56} />,
+      title: 'Instant Absentee Alerts',
+      desc: 'Modern roll-call for modern schools. Notify parents via SMS the second their child is marked absent or late.',
+      benefits: ['Mobile register management', 'One-tap SMS parent alerts', 'Monthly attendance summaries', 'Safe-arrival timestamps'],
+      color: '#10B981'
     },
     'Timetable': {
-      icon: <ClockIcon size={48} />,
+      icon: <ClockIcon size={56} />,
       title: 'Conflict-Free Scheduling',
-      desc: 'Build complex school timetables in minutes. Handles teacher workloads and room conflicts automatically.',
-      benefits: ['Auto-generation', 'Staff workload tracking', 'Print-ready schedules', 'Classroom optimization']
+      desc: 'Optimize your staff and space. Build complex school schedules without teacher overwork or room collisions.',
+      benefits: ['Auto-generation algorithms', 'Teacher workload oversight', 'Print-ready class schedules', 'Substitution management'],
+      color: '#F59E0B'
+    },
+    'Communications': {
+      icon: <MessageIcon size={56} />,
+      title: 'Unified School SMS',
+      desc: 'Communicate with authority. Reach every parent and guardian at scale with professional, school-branded updates.',
+      benefits: ['Bulk SMS broadcasting', 'Scheduled school alerts', 'Delivery report tracking', 'Template-based messaging'],
+      color: '#EF4444'
     }
   };
 
   const current = featureDetails[featureName] || {
-    icon: <RocketIcon size={48} />,
-    title: `Unlock ${featureName}`,
-    desc: 'Power up your school with advanced modules designed to save your staff hours of manual work.',
-    benefits: ['Increased efficiency', 'Data-driven decisions', 'Professional school reports', 'Better parent engagement']
+    icon: <RocketIcon size={56} />,
+    title: `Upgrade to Unlock ${featureName}`,
+    desc: 'Take your school management to the next level with advanced modules designed to minimize administrative work.',
+    benefits: ['Unlock advanced analytics', 'Automate manual staff tasks', 'Expand portal capabilities', 'Dedicated priority support'],
+    color: '#6366F1'
   };
 
   return (
-    <div className="animate-fade-up" style={{ 
-      maxWidth: 900, 
-      margin: '40px auto', 
+    <div className="upgrade-container animate-in" style={{
+      minHeight: '80vh',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
       padding: '40px 20px',
-      textAlign: 'center' 
+      background: 'transparent'
     }}>
-      <div style={{ 
-        background: 'linear-gradient(135deg, #4A32E0 0%, #6155FF 100%)',
-        borderRadius: 24,
-        padding: '60px 40px',
-        color: '#fff',
-        position: 'relative',
+      <div className="upgrade-glass-card" style={{
+        maxWidth: 820,
+        width: '100%',
+        background: 'rgba(255, 255, 255, 0.85)',
+        backdropFilter: 'blur(20px) saturate(180%)',
+        WebkitBackdropFilter: 'blur(20px) saturate(180%)',
+        borderRadius: 32,
+        border: '1px solid rgba(255, 255, 255, 0.4)',
+        boxShadow: '0 25px 60px rgba(0,0,0,0.12)',
         overflow: 'hidden',
-        boxShadow: '0 20px 50px rgba(74, 50, 224, 0.2)'
+        position: 'relative',
+        display: 'flex',
+        flexDirection: 'column'
       }}>
-        <div style={{ position: 'relative', zIndex: 2 }}>
-          <div style={{ 
-            width: 80, height: 80, 
-            background: 'rgba(255,255,255,0.15)', 
-            borderRadius: 20, 
-            display: 'flex', 
-            alignItems: 'center', 
-            justifyContent: 'center',
-            margin: '0 auto 24px',
-            color: '#fff',
-            backdropFilter: 'blur(10px)',
-            border: '1px solid rgba(255,255,255,0.2)'
-          }}>
-            {current.icon}
-          </div>
-          
-          <div style={{ 
-            fontSize: '0.75rem', 
-            fontWeight: 800, 
-            textTransform: 'uppercase', 
-            letterSpacing: '0.1em', 
-            marginBottom: 12,
-            opacity: 0.8
-          }}>
-            Premium Module
-          </div>
-          
-          <h1 style={{ fontSize: '2.5rem', fontWeight: 900, marginBottom: 16 }}>{current.title}</h1>
-          <p style={{ fontSize: '1.1rem', maxWidth: 600, margin: '0 auto 40px', opacity: 0.9, lineHeight: 1.6 }}>
-            {current.desc}
-          </p>
+        {/* Dynamic color accent bar */}
+        <div style={{ height: 8, background: current.color, width: '100%' }}></div>
 
-          <div style={{ 
+        <div style={{ padding: '60px 50px', position: 'relative', zIndex: 10 }}>
+          <div className="upgrade-header" style={{ textAlign: 'center', marginBottom: 48 }}>
+            <div style={{
+              width: 96, height: 96,
+              background: `${current.color}15`,
+              color: current.color,
+              borderRadius: 24,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              margin: '0 auto 28px',
+              border: `1.5px solid ${current.color}25`,
+              boxShadow: `0 12px 30px ${current.color}15`
+            }}>
+              {current.icon}
+            </div>
+            
+            <div style={{
+              display: 'inline-block',
+              padding: '6px 14px',
+              background: `${current.color}10`,
+              color: current.color,
+              borderRadius: 20,
+              fontSize: '0.72rem',
+              fontWeight: 800,
+              textTransform: 'uppercase',
+              letterSpacing: '0.12em',
+              marginBottom: 16
+            }}>
+              Premium Feature
+            </div>
+            
+            <h1 style={{ 
+              fontSize: '2.75rem', 
+              fontWeight: 900, 
+              color: '#0F172A', 
+              letterSpacing: '-1.5px',
+              marginBottom: 16
+            }}>
+              {current.title}
+            </h1>
+            
+            <p style={{ 
+              fontSize: '1.15rem', 
+              lineHeight: 1.6, 
+              color: '#475569', 
+              maxWidth: 580, 
+              margin: '0 auto' 
+            }}>
+              {current.desc}
+            </p>
+          </div>
+
+          <div className="upgrade-benefits" style={{ 
             display: 'grid', 
-            gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', 
-            gap: 20, 
-            marginBottom: 50,
-            textAlign: 'left'
+            gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', 
+            gap: 16,
+            marginBottom: 48
           }}>
             {current.benefits.map((b, i) => (
-              <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 12, background: 'rgba(255,255,255,0.1)', padding: '12px 16px', borderRadius: 12 }}>
-                <div style={{ color: '#0DD88A' }}><CheckIcon size={16} /></div>
-                <div style={{ fontSize: '0.88rem', fontWeight: 600 }}>{b}</div>
+              <div key={i} style={{ 
+                background: '#F8FAFC',
+                padding: '16px 20px',
+                borderRadius: 16,
+                display: 'flex',
+                alignItems: 'center',
+                gap: 12,
+                border: '1px solid #F1F5F9'
+              }}>
+                <div style={{ color: '#10B981', flexShrink: 0 }}><CheckIcon size={18} /></div>
+                <div style={{ fontSize: '0.9rem', fontWeight: 600, color: '#334155' }}>{b}</div>
               </div>
             ))}
           </div>
 
-          <div style={{ display: 'flex', gap: 16, justifyContent: 'center' }}>
+          <div className="upgrade-actions" style={{ 
+            display: 'flex', 
+            gap: 16, 
+            justifyContent: 'center', 
+            flexWrap: 'wrap'
+          }}>
             <button 
               onClick={() => navigate('/billing')}
-              className="btn" 
-              style={{ 
-                background: '#fff', 
-                color: '#4A32E0', 
-                padding: '16px 32px', 
-                fontSize: '1rem', 
-                fontWeight: 800,
-                boxShadow: '0 10px 20px rgba(0,0,0,0.1)'
+              className="btn"
+              style={{
+                background: current.color,
+                color: '#fff',
+                padding: '16px 36px',
+                fontSize: '1.05rem',
+                fontWeight: 700,
+                borderRadius: 16,
+                boxShadow: `0 10px 25px ${current.color}40`,
+                transition: 'all 0.2s ease'
               }}
             >
-              Upgrade to {requiredPlan}
+              Upgrade to Unlock Now
             </button>
             <button 
-              onClick={() => navigate('/help')}
-              className="btn btn-ghost" 
-              style={{ 
-                color: '#fff', 
-                border: '1px solid rgba(255,255,255,0.3)',
-                padding: '16px 32px'
+              onClick={() => navigate('/support')}
+              className="btn btn-ghost"
+              style={{
+                padding: '16px 36px',
+                fontSize: '1.05rem',
+                fontWeight: 600,
+                borderRadius: 16,
+                border: '2px solid #E2E8F0',
+                color: '#64748B'
               }}
             >
-              Learn How it Works
+              Speak to an Agent
             </button>
           </div>
         </div>
 
-        {/* Decorative elements */}
-        <div style={{ position: 'absolute', top: -100, right: -100, width: 300, height: 300, background: 'rgba(255,255,255,0.05)', borderRadius: '50%' }}></div>
-        <div style={{ position: 'absolute', bottom: -50, left: -50, width: 200, height: 200, background: 'rgba(0,0,0,0.1)', borderRadius: '50%' }}></div>
-      </div>
-
-      <div style={{ marginTop: 40, color: 'var(--text-muted)', fontSize: '0.9rem' }}>
-        Currently on <strong>Sandbox Plan</strong>. Exploration mode allows you to view documentation and setup wizards for all modules.
+        {/* Decorative background gradients */}
+        <div style={{
+          position: 'absolute',
+          top: -150, left: -150,
+          width: 300, height: 300,
+          background: `${current.color}10`,
+          filter: 'blur(100px)',
+          borderRadius: '50%'
+        }}></div>
       </div>
     </div>
   );

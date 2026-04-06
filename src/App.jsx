@@ -80,16 +80,16 @@ function SbLink({ to, icon: Icon, label, onClick, exact = false, locked = false,
 
   return (
     <NavLink
-      to={locked ? '#' : to}
+      to={to}
       end={exact}
       className={finalClass}
-      onClick={locked ? (e) => { e.preventDefault(); } : onClick}
+      onClick={onClick}
     >
       <span className="nav-icon">
-        {locked ? <SecurityIcon size={16} strokeWidth={1.75} /> : <Icon size={16} strokeWidth={1.75} />}
+        <Icon size={16} strokeWidth={1.75} />
       </span>
       <span className="nav-label">{label}</span>
-      {locked && <span className="nav-lock-badge" style={{ fontSize:'0.55rem', background:'var(--primary)', color:'white', padding:'2px 6px', borderRadius:10, marginLeft:'auto', fontWeight: 800 }}>UPGRADE</span>}
+      {locked && <span className="nav-lock-badge" style={{ fontSize:'0.55rem', background:'var(--danger)', color:'white', padding:'2px 6px', borderRadius:10, marginLeft:'auto', fontWeight: 800 }}>UPGRADE</span>}
     </NavLink>
   );
 }
@@ -211,7 +211,7 @@ function Sidebar({ isOpen, onClose, onLogout, currentUser, subscriptionActive })
   const isFinance   = role === 'finance';
 
   // Sandbox plan: show all modules in sidebar but locked with UPGRADE badge
-  const isSandbox   = profile?.subscriptionPlan?.toLowerCase() === 'sandbox';
+  const isSandbox   = profile?.subscriptionPlan?.toLowerCase() === 'sandbox' || !subscriptionActive;
 
   const isPlatformAdmin = currentUser?.email === 'admin@shulesoft.com'
     || currentUser?.email === 'shulesoft8@gmail.com';
@@ -600,7 +600,7 @@ function App() {
 
   // ── School portal ───────────────────────────────────────────────────────
   return (
-    <div className="app-layout app-shell animate-pop">
+    <div className="app-layout app-shell">
       {/* Mobile hamburger */}
       <button
         className="mobile-toggle"
@@ -660,7 +660,7 @@ function App() {
         </div>
 
         {/* Page content */}
-        <div className="page-content animate-slide">
+        <div className="page-content">
           <ErrorBoundary>
             <Routes>
               {!subscriptionActive ? (
