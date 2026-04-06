@@ -221,7 +221,7 @@ export default function Students({ currentUser, currentPeriodId }) {
       }} onClose={() => setShowImportModal(false)} />}
       {selectedStudent&&<StudentDetail student={selectedStudent} feeData={fees[selectedStudent.id]||{}} onClose={()=>setSelectedStudent(null)} onEdit={()=>{setSelectedStudent(null);setEditingStudent(selectedStudent);setShowModal(true);}} currentUser={currentUser} profile={profile}/>}
       {showTransitionModal&&<TransitionModal students={students} profile={profile} onTransfer={handleTransfer} onClose={()=>setShowTransitionModal(false)} confirm={confirm}/>}
-      {confirmModal}
+      <ConfirmModal {...confirmModal} />
     </div>
   );
 }

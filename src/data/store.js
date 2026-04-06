@@ -292,7 +292,7 @@ const DEFAULT_PROFILE = {
   }
 };
 
-const SAFE_PROFILE_COLUMNS = 'id, school_name, motto, phone, email, address, logo, subscription_plan, streams_per_class, custom_subjects, active_classes, grade_fees, subscription_status, subscription_expiry, last_payment_status, mpesa_config, sms_config';
+const SAFE_PROFILE_COLUMNS = 'id, school_name, motto, phone, email, address, logo, subscription_plan, streams_per_class, custom_subjects, active_classes, grade_fees, subscription_status, subscription_expiry, last_payment_status, mpesa_config, sms_config, grading_systems, custom_exams';
 
 export async function getSchoolProfile() {
   if (!_currentSchoolId) return { ...DEFAULT_PROFILE };
@@ -1613,9 +1613,18 @@ export async function addTeacher(teacher) {
 
   const { data, error } = await supabase
     .from('teachers')
-    .insert({ school_id: _currentSchoolId, name: teacher.name, phone: teacher.phone || '', status: teacher.status || 'Active', tsc_number: teacher.tsc_number || null })
+    .insert({ 
+      school_id: _currentSchoolId, 
+      name: teacher.name, 
+      email: teacher.email || null,
+      phone: teacher.phone || '', 
+      subjects: teacher.subjects || [],
+      status: teacher.status || 'Active', 
+      tsc_number: teacher.tsc_number || null 
+    })
     .select()
     .single();
+    
   if (error) throw error;
   
   // Increment staff_count in profile
@@ -1629,7 +1638,15 @@ export async function addTeacher(teacher) {
 export async function updateTeacher(id, updates) {
   const { error } = await supabase
     .from('teachers')
-    .update({ name: updates.name, phone: updates.phone, status: updates.status, tsc_number: updates.tsc_number || null })
+    .update({ 
+      name: updates.name, 
+      email: updates.email,
+      phone: updates.phone, 
+      subjects: updates.subjects,
+      status: updates.status, 
+      on_leave: updates.on_leave,
+      tsc_number: updates.tsc_number || null 
+    })
     .eq('id', id);
   if (error) throw error;
 }
