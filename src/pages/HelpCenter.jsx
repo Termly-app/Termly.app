@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { 
   RocketIcon, BookIcon, CardIcon, GraduationIcon, ClockIcon, 
-  SMSIcon, LeafIcon, StudentIcon, SearchIcon, ArrowRightIcon,
+  MessageIcon, LeafIcon, StudentIcon, SearchIcon, ArrowRightIcon,
   CheckIcon, InfoIcon, ShieldIcon, CalendarIcon
 } from '../components/CommonIcons';
 import { Link } from 'react-router-dom';
@@ -16,7 +16,7 @@ const HELP_CATEGORIES = [
   { id: 'cbc', name: 'CBC & Grading', icon: <GraduationIcon size={24} />, color: '#8B5CF6' },
   { id: 'fees', name: 'Fees & Payments', icon: <CardIcon size={24} />, color: '#10B981' },
   { id: 'timetable', name: 'Timetabling', icon: <ClockIcon size={24} />, color: '#F59E0B' },
-  { id: 'comms', name: 'Communication', icon: <SMSIcon size={24} />, color: '#EF4444' }
+  { id: 'comms', name: 'Communication', icon: <MessageIcon size={24} />, color: '#EF4444' }
 ];
 
 const ARTICLES = {

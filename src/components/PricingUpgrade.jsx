@@ -1,4 +1,4 @@
-import { RocketIcon, CheckIcon, CardIcon, GraduationIcon, ClockIcon, BookIcon, SMSIcon } from './CommonIcons';
+import { RocketIcon, CheckIcon, CardIcon, GraduationIcon, ClockIcon, BookIcon, MessageIcon } from './CommonIcons';
 import { useNavigate } from 'react-router-dom';
 
 /**
