@@ -21,6 +21,7 @@ export default function Dashboard({ currentUser, onLogout, currentPeriodId }) {
   const [loading, setLoading] = useState(true);
   const [periods, setPeriods] = useState([]);
   const [isAccountActive, setIsAccountActive] = useState(true);
+  const [showWizard, setShowWizard] = useState(false);
 
   useEffect(() => {
     const loadData = async () => {
@@ -51,12 +52,14 @@ export default function Dashboard({ currentUser, onLogout, currentPeriodId }) {
         allPayments.sort((a, b) => new Date(b.date) - new Date(a.date));
         const collectionRate = feeSummary.totalExpected > 0
           ? ((feeSummary.totalCollected / feeSummary.totalExpected) * 100).toFixed(1) : 0;
-        setData({
+        const newData = {
           totalStudents: students.length, totalTeachers: teachers.length,
           collectionRate: Number(collectionRate), feeSummary,
           attendance: todayAtt, recentPayments: allPayments.slice(0, 5),
           schoolStructure, profile: prof, adminUsers: adminUsers || [], platformSettings: platformSettings || {},
-        });
+        };
+        setData(newData);
+        setShowWizard(newData.totalStudents === 0 && !prof?.phone);
       } catch (err) {
         console.error(err);
         setData({
@@ -155,8 +158,6 @@ export default function Dashboard({ currentUser, onLogout, currentPeriodId }) {
     if (!plan?.features) return false;
     return plan.features.some(f => f.toLowerCase().includes(featureName.toLowerCase()));
   };
-
-  const [showWizard, setShowWizard] = useState(data.totalStudents === 0 && !data.profile?.phone);
 
   return (
     <div className="animate-fade-up">
@@ -454,7 +455,7 @@ export default function Dashboard({ currentUser, onLogout, currentPeriodId }) {
                   Add your students to sessions to see the CBC structure and academic analytics.
                 </p>
                 <Link to="/students" className="btn btn-primary">
-                  <PlusIcon size={16} /> Add Students Now
+                  + Add Students Now
                 </Link>
               </div>
             ) : (

@@ -211,6 +211,9 @@ function Sidebar({ isOpen, onClose, onLogout, currentUser, subscriptionActive })
   const isLibrarian = role === 'librarian';
   const isFinance   = role === 'finance';
 
+  // Sandbox plan: show all modules in sidebar but locked with UPGRADE badge
+  const isSandbox   = profile?.subscriptionPlan?.toLowerCase() === 'sandbox';
+
   const isPlatformAdmin = currentUser?.email === 'admin@shulesoft.com'
     || currentUser?.email === 'shulesoft8@gmail.com';
 
@@ -313,55 +316,55 @@ function Sidebar({ isOpen, onClose, onLogout, currentUser, subscriptionActive })
         )}
 
         {/* Librarians and Admins manage library */}
-        {(isLibrarian || isAdmin) && features.library && (
-          <SbLink to="/library" icon={BookIcon} label="Library" onClick={onClose} locked={!subscriptionActive} />
+        {(isLibrarian || isAdmin) && (features.library || isSandbox) && (
+          <SbLink to="/library" icon={BookIcon} label="Library" onClick={onClose} locked={!subscriptionActive || (isSandbox && !features.library)} />
         )}
 
-        {/* Academic section for Teachers and Admins */}
-        {(isTeacher || isAdmin) && (features.attendance || features.grading || features.timetable || features.lms) && (
+        {/* Academic section — always visible for Sandbox, else gated */}
+        {(isTeacher || isAdmin) && (isSandbox || features.attendance || features.grading || features.timetable || features.lms) && (
           <SbSection label="Academics" />
         )}
         
-        {(isTeacher || isAdmin) && features.attendance && (
-          <SbLink to="/attendance" icon={AttendanceIcon} label="Attendance" onClick={onClose} locked={!subscriptionActive} />
+        {(isTeacher || isAdmin) && (features.attendance || isSandbox) && (
+          <SbLink to="/attendance" icon={AttendanceIcon} label="Attendance" onClick={onClose} locked={!subscriptionActive || (isSandbox && !features.attendance)} />
         )}
         
-        {(isTeacher || isAdmin) && features.grading && (
-          <SbLink to="/grading"   icon={GradingIcon}   label="Grading"    onClick={onClose} locked={!subscriptionActive} />
+        {(isTeacher || isAdmin) && (features.grading || isSandbox) && (
+          <SbLink to="/grading"   icon={GradingIcon}   label="Grading"    onClick={onClose} locked={!subscriptionActive || (isSandbox && !features.grading)} />
         )}
         
-        {(isTeacher || isAdmin) && features.timetable && (
-          <SbLink to="/timetable" icon={TimetableIcon} label={features.exam_scheduling ? "Scheduling" : "Timetable"} onClick={onClose} locked={!subscriptionActive} />
+        {(isTeacher || isAdmin) && (features.timetable || isSandbox) && (
+          <SbLink to="/timetable" icon={TimetableIcon} label={features.exam_scheduling ? "Scheduling" : "Timetable"} onClick={onClose} locked={!subscriptionActive || (isSandbox && !features.timetable)} />
         )}
 
-        {(isTeacher || isAdmin) && features.lms && (
-          <SbLink to="/lms" icon={ClipboardIcon} label="E-Learning" onClick={onClose} locked={!subscriptionActive} />
+        {(isTeacher || isAdmin) && (features.lms || isSandbox) && (
+          <SbLink to="/lms" icon={ClipboardIcon} label="E-Learning" onClick={onClose} locked={!subscriptionActive || (isSandbox && !features.lms)} />
         )}
 
-        {/* Administration/Finance section */}
-        {(isAdmin || isFinance) && (features.fees || isAdmin) && (
+        {/* Administration/Finance section — always visible for Sandbox, else gated */}
+        {(isAdmin || isFinance) && (isSandbox || features.fees || isAdmin) && (
           <SbSection label="Administration" />
         )}
         
-        {(isAdmin || isFinance) && features.fees && (
-          <SbLink to="/fees" icon={FeesIcon} label="Fees & Billing" onClick={onClose} locked={!subscriptionActive} />
+        {(isAdmin || isFinance) && (features.fees || isSandbox) && (
+          <SbLink to="/fees" icon={FeesIcon} label="Fees & Billing" onClick={onClose} locked={!subscriptionActive || (isSandbox && !features.fees)} />
         )}
 
         
-        {isAdmin && features.fees && (
-          <SbLink to="/fee-structure" icon={FeeStructureIcon} label="Fee Structure" onClick={onClose} locked={!subscriptionActive} />
+        {isAdmin && (features.fees || isSandbox) && (
+          <SbLink to="/fee-structure" icon={FeeStructureIcon} label="Fee Structure" onClick={onClose} locked={!subscriptionActive || (isSandbox && !features.fees)} />
         )}
 
-        {isAdmin && features.sms && (
-          <SbLink to="/communications" icon={MessageIcon} label="Comm. Center" onClick={onClose} locked={!subscriptionActive} />
+        {isAdmin && (features.sms || isSandbox) && (
+          <SbLink to="/communications" icon={MessageIcon} label="Comm. Center" onClick={onClose} locked={!subscriptionActive || (isSandbox && !features.sms)} />
         )}
 
-        {(isAdmin || isTeacher) && features.teacher_portal && (
-          <SbLink to="/portal/teacher" icon={TeacherIcon} label="Teacher Portal" onClick={onClose} locked={!subscriptionActive} />
+        {(isAdmin || isTeacher) && (features.teacher_portal || isSandbox) && (
+          <SbLink to="/portal/teacher" icon={TeacherIcon} label="Teacher Portal" onClick={onClose} locked={!subscriptionActive || (isSandbox && !features.teacher_portal)} />
         )}
 
-        {isAdmin && features.parent_portal && (
-          <SbLink to="/portal/parent" icon={UsersIcon} label="Parent Portal" onClick={onClose} locked={!subscriptionActive} />
+        {isAdmin && (features.parent_portal || isSandbox) && (
+          <SbLink to="/portal/parent" icon={UsersIcon} label="Parent Portal" onClick={onClose} locked={!subscriptionActive || (isSandbox && !features.parent_portal)} />
         )}
         
         {/* Strictly Admin-only settings */}
@@ -681,7 +684,7 @@ function App() {
                       <Route path="/grading"      element={<SectionGate featureSlug="grading" featureName="Grading" profile={profile}><Grading currentUser={currentUser} currentPeriodId={currentPeriodId} /></SectionGate>} />
                       <Route path="/attendance"   element={<SectionGate featureSlug="attendance" featureName="Attendance" profile={profile}><Attendance currentUser={currentUser} currentPeriodId={currentPeriodId} /></SectionGate>} />
                       <Route path="/timetable"    element={<SectionGate featureSlug="timetable" featureName="Timetable" profile={profile}><Timetable currentUser={currentUser} currentPeriodId={currentPeriodId} periods={periods} /></SectionGate>} />
-                      <Route path="/lms"          element={<LMS currentUser={currentUser} />} />
+                      <Route path="/lms"          element={<SectionGate featureSlug="lms" featureName="E-Learning" profile={profile}><LMS currentUser={currentUser} /></SectionGate>} />
                     </>
                   )}
 
@@ -691,13 +694,15 @@ function App() {
                       <Route path="/fees"      element={<SectionGate featureSlug="fees" featureName="Fees" profile={profile}><Fees currentUser={currentUser} currentPeriodId={currentPeriodId} /></SectionGate>} />
                       {isAdmin && (
                         <Route path="/fee-structure" element={
-                          <FeeStructure
-                            schoolId={currentUser?.school_id}
-                            schoolName={currentUser?.schoolName}
-                            getFeeStructure={getFeeStructure}
-                            saveFeeStructure={saveFeeStructure}
-                            deleteFeeItem={deleteFeeItem}
-                          />
+                          <SectionGate featureSlug="fees" featureName="Fee Structure" profile={profile}>
+                            <FeeStructure
+                              schoolId={currentUser?.school_id}
+                              schoolName={currentUser?.schoolName}
+                              getFeeStructure={getFeeStructure}
+                              saveFeeStructure={saveFeeStructure}
+                              deleteFeeItem={deleteFeeItem}
+                            />
+                          </SectionGate>
                         } />
                       )}
                     </>
@@ -705,12 +710,12 @@ function App() {
 
                   {/* Communications Routes: Admin */}
                   {isAdmin && (
-                    <Route path="/communications" element={<Communications currentUser={currentUser} />} />
+                    <Route path="/communications" element={<SectionGate featureSlug="sms" featureName="Communications" profile={profile}><Communications currentUser={currentUser} /></SectionGate>} />
                   )}
 
                   {/* Library Routes: Admin & Librarian */}
                   {(isAdmin || isLibrarian) && (
-                    <Route path="/library" element={<Library currentUser={currentUser} currentPeriodId={currentPeriodId} />} />
+                    <Route path="/library" element={<SectionGate featureSlug="library" featureName="Library" profile={profile}><Library currentUser={currentUser} currentPeriodId={currentPeriodId} /></SectionGate>} />
                   )}
 
                   {/* Admin-Only Routes */}
