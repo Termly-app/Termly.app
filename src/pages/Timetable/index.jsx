@@ -126,9 +126,10 @@ function getLevelBadge(grade) {
  * @param {Array}  config       — time slot config [{slot_index, is_break, ...}]
  * @param {Array}  requirements — all lesson requirements for all classes
  * @param {Array}  activeDays   — ['Monday','Tuesday',...]
+ * @param {Number} maxPerDay    — maximum lessons of any subject per day (for exams)
  * @returns {{ slots: Array, unplaced: Array }}
  */
-function generateTimetable(config, requirements, activeDays) {
+function generateTimetable(config, requirements, activeDays, maxPerDay = 999) {
   const sorted = [...config].sort((a, b) => a.slot_index - b.slot_index);
   const teachingSlots = sorted.filter(c => !c.is_break);
 
@@ -221,6 +222,9 @@ function generateTimetable(config, requirements, activeDays) {
           if (placed[gk])           continue; // class busy
           if (tk && teacherBusy[tk]) continue; // teacher busy
 
+          // Enforce max exams/lessons per day for this class
+          if ((dayLoad[dKey(clsK, day)] || 0) >= maxPerDay) continue;
+
           if (lesson._double) {
             // Need next consecutive slot too
             const nextSi = consecutiveNext[si];
@@ -281,7 +285,8 @@ export default function Timetable({ currentUser, currentPeriodId, periods = [] }
   // ── Panel / view ──────────────────────────────────────────────────────
   const [panel,  setPanel]  = useState('grid');   // 'grid' | 'req' | 'config'
   const [view,   setView]   = useState('class');  // 'class' | 'teacher'
-  const [mode,   setMode]   = useState('weekly'); // 'weekly' (class) | 'exam'
+  const [mode,   setMode]   = useState('weekly'); // 'weekly' | 'CAT 1' | 'End Term' etc.
+  const [examTypes, setExamTypes] = useState([]); // from profile
 
   // ── Period ────────────────────────────────────────────────────────────
   const [periodId, setPeriodId] = useState(currentPeriodId || '');
@@ -323,6 +328,7 @@ export default function Timetable({ currentUser, currentPeriodId, periods = [] }
   const [preview,      setPreview]      = useState(null); // { slots, unplaced } or null
   const [generating,   setGenerating]   = useState(false);
   const [savingGen,    setSavingGen]    = useState(false);
+  const [maxExamsPerDay, setMaxExamsPerDay] = useState(2); 
 
   // ── Cell edit modal ───────────────────────────────────────────────────
   const [editCell,        setEditCell]        = useState(null);
@@ -357,6 +363,7 @@ export default function Timetable({ currentUser, currentPeriodId, periods = [] }
         setClasses(cls);
         setStreams(profile?.streamsPerClass || {});
         setTeachers(tList);
+        setExamTypes(profile?.custom_exams || ['CAT 1', 'CAT 2', 'Mid Term', 'End Term']);
         if (cls.length > 0 && !selClass) setSelClass(cls[0]);
       } catch (e) { console.error(e); }
     })();
@@ -367,7 +374,7 @@ export default function Timetable({ currentUser, currentPeriodId, periods = [] }
     if (!schoolId || !periodId) return;
     (async () => {
       try {
-        const cfg = await getTimetableConfig(schoolId, periodId);
+        const cfg = await getTimetableConfig(schoolId, periodId, mode);
         const resolved = cfg.length > 0
           ? cfg
           : DEFAULT_SLOTS.map((s, i) => ({ ...s, slot_index: i }));
@@ -375,7 +382,7 @@ export default function Timetable({ currentUser, currentPeriodId, periods = [] }
         setDraftConfig(resolved.map(c => ({ ...c })));
       } catch (e) { console.error(e); }
     })();
-  }, [schoolId, periodId]);
+  }, [schoolId, periodId, mode]);
 
   // ── Load slots for selected class ─────────────────────────────────────
   useEffect(() => {
@@ -383,8 +390,7 @@ export default function Timetable({ currentUser, currentPeriodId, periods = [] }
     (async () => {
       setLoading(true);
       try {
-        const type = mode === 'exam' ? 'exam' : 'class';
-        const data = await getTimetableSlots(schoolId, periodId, selClass, selStream || null, type);
+        const data = await getTimetableSlots(schoolId, periodId, selClass, selStream || null, mode);
         setSlots(data);
       } catch (e) { console.error(e); }
       finally { setLoading(false); }
@@ -397,8 +403,7 @@ export default function Timetable({ currentUser, currentPeriodId, periods = [] }
     (async () => {
       setLoading(true);
       try { 
-        const type = mode === 'exam' ? 'exam' : 'class';
-        setTeacherSlots(await getTeacherTimetable(schoolId, periodId, selTeacher, type)); 
+        setTeacherSlots(await getTeacherTimetable(schoolId, periodId, selTeacher, mode)); 
       }
       catch (e) { console.error(e); }
       finally { setLoading(false); }
@@ -410,11 +415,11 @@ export default function Timetable({ currentUser, currentPeriodId, periods = [] }
     if (!schoolId || !periodId || !selClass || panel !== 'req') return;
     (async () => {
       try {
-        const data = await getRequirements(schoolId, periodId, selClass, selStream || undefined);
+        const data = await getRequirements(schoolId, periodId, selClass, selStream || undefined, mode);
         setReqs(data);
       } catch (e) { console.error(e); }
     })();
-  }, [schoolId, periodId, selClass, selStream, panel]);
+  }, [schoolId, periodId, selClass, selStream, panel, mode]);
 
   // ── Slot lookup helper ────────────────────────────────────────────────
   const slotLookup = useCallback((day, slotIndex, src) => {
@@ -445,7 +450,7 @@ export default function Timetable({ currentUser, currentPeriodId, periods = [] }
           schoolId, periodId, editTeacher,
           editCell.day, editCell.slotIndex,
           selClass, selStream || null,
-          mode === 'exam' ? 'exam' : 'class'
+          mode
         );
         if (clash) { setConflictWarning(clash); return; }
       } catch (e) {
@@ -467,10 +472,9 @@ export default function Timetable({ currentUser, currentPeriodId, periods = [] }
         color       : editColor,
         is_double_first  : false,
         is_double_second : false,
-        type: mode === 'exam' ? 'exam' : 'class',
+        type: mode,
       });
-      const type = mode === 'exam' ? 'exam' : 'class';
-      setSlots(await getTimetableSlots(schoolId, periodId, selClass, selStream || null, type));
+      setSlots(await getTimetableSlots(schoolId, periodId, selClass, selStream || null, mode));
       setEditCell(null);
       setMessage({ type:'ok', text:'Slot saved.' });
     } catch (e) { setMessage({ type:'err', text: e.message }); }
@@ -482,9 +486,8 @@ export default function Timetable({ currentUser, currentPeriodId, periods = [] }
     e.stopPropagation();
     if (!isAdmin || preview) return;
     try {
-      const type = mode === 'exam' ? 'exam' : 'class';
-      await clearTimetableSlot(schoolId, periodId, selClass, selStream || null, day, slotIndex, type);
-      setSlots(await getTimetableSlots(schoolId, periodId, selClass, selStream || null, type));
+      await clearTimetableSlot(schoolId, periodId, selClass, selStream || null, day, slotIndex, mode);
+      setSlots(await getTimetableSlots(schoolId, periodId, selClass, selStream || null, mode));
     } catch (e) { setMessage({ type:'err', text: e.message }); }
   };
 
@@ -492,7 +495,7 @@ export default function Timetable({ currentUser, currentPeriodId, periods = [] }
   const handleSaveConfig = async () => {
     setConfigSaving(true);
     try {
-      await saveTimetableConfig(schoolId, periodId, draftConfig);
+      await saveTimetableConfig(schoolId, periodId, draftConfig, mode);
       setConfig(draftConfig.map((s, i) => ({ ...s, slot_index: i })));
       setMessage({ type:'ok', text:'Time slot configuration saved.' });
       setPanel('grid');
@@ -519,8 +522,9 @@ export default function Timetable({ currentUser, currentPeriodId, periods = [] }
         periods_per_week : Number(reqPerWeek) || 1,
         allow_double     : reqDouble,
         color            : reqColor,
+        type             : mode,
       });
-      const updated = await getRequirements(schoolId, periodId, selClass, selStream || undefined);
+      const updated = await getRequirements(schoolId, periodId, selClass, selStream || undefined, mode);
       setReqs(updated);
       setReqSubject(''); setReqTeacher(''); setReqPerWeek(1); setReqDouble(false);
       setReqColor(COLORS[updated.length % COLORS.length]);
@@ -532,7 +536,7 @@ export default function Timetable({ currentUser, currentPeriodId, periods = [] }
 
   const handleDeleteReq = async (subject) => {
     try {
-      await deleteRequirement(schoolId, periodId, selClass, selStream || null, subject);
+      await deleteRequirement(schoolId, periodId, selClass, selStream || null, subject, mode);
       setReqs(p => p.filter(r => r.subject !== subject));
     } catch (e) { setMessage({ type:'err', text: e.message }); }
   };
@@ -556,10 +560,11 @@ export default function Timetable({ currentUser, currentPeriodId, periods = [] }
           periods_per_week : 5,
           allow_double     : false,
           color            : COLORS[count % COLORS.length],
+          type             : mode,
         });
         count++;
       }
-      setReqs(await getRequirements(schoolId, periodId, selClass, selStream || undefined));
+      setReqs(await getRequirements(schoolId, periodId, selClass, selStream || undefined, mode));
       setMessage({ type:'ok', text:`Imported ${count} subject${count !== 1 ? 's' : ''}.` });
     } catch (e) { setMessage({ type:'err', text: e.message }); }
   };
@@ -572,8 +577,8 @@ export default function Timetable({ currentUser, currentPeriodId, periods = [] }
     }
     setGenerating(true);
     try {
-      // Load all requirements across all classes
-      const all = await getAllRequirements(schoolId, periodId);
+      // Load all requirements across all classes for THIS mode
+      const all = await getAllRequirements(schoolId, periodId, mode);
       setAllReqs(all);
 
       if (all.length === 0) {
@@ -582,7 +587,8 @@ export default function Timetable({ currentUser, currentPeriodId, periods = [] }
       }
 
       const configSorted = [...config].sort((a, b) => a.slot_index - b.slot_index);
-      const result = generateTimetable(configSorted, all, activeDays);
+      const limitPerDay = (mode === 'weekly') ? 999 : (maxExamsPerDay || 2);
+      const result = generateTimetable(configSorted, all, activeDays, limitPerDay);
 
       setPreview(result);
       setPanel('grid');
@@ -601,10 +607,9 @@ export default function Timetable({ currentUser, currentPeriodId, periods = [] }
     setSavingGen(true);
     try {
       const classGrades = [...new Set(preview.slots.map(s => s.class_grade))];
-      const type = mode === 'exam' ? 'exam' : 'class';
-      await clearAndSaveTimetable(schoolId, periodId, preview.slots, classGrades, type);
+      await clearAndSaveTimetable(schoolId, periodId, preview.slots, classGrades, mode);
       // Reload current class view
-      const updated = await getTimetableSlots(schoolId, periodId, selClass, selStream || null, type);
+      const updated = await getTimetableSlots(schoolId, periodId, selClass, selStream || null, mode);
       setSlots(updated);
       setPreview(null);
       setMessage({ type:'ok', text: `Timetable saved for all classes in ${mode} mode!` });
@@ -645,7 +650,7 @@ export default function Timetable({ currentUser, currentPeriodId, periods = [] }
             <div className="tt-sub">
               {selClass || '—'}
               {selClass && <span className={`tt-level-badge ${levelBadge.cls}`}>{levelBadge.label}</span>}
-              {mode === 'exam' && <span className="tt-mode-badge">EXAM MODE</span>}
+              {mode !== 'weekly' && <span className="tt-mode-badge">{mode.toUpperCase()}</span>}
             </div>
           </div>
         </div>
@@ -656,17 +661,21 @@ export default function Timetable({ currentUser, currentPeriodId, periods = [] }
             className={`tt-mode-btn ${mode === 'weekly' ? 'active' : ''}`}
             onClick={() => setMode('weekly')}
           >
-            Weekly Class
+            Weekly
           </button>
-          <button 
-            className={`tt-mode-btn ${mode === 'exam' ? 'active' : ''}`}
-            onClick={() => {
-              setMode('exam');
-              setPanel('grid'); // Default to grid for exams
-            }}
-          >
-            Exam Schedule
-          </button>
+          
+          {examTypes.map(et => (
+            <button 
+              key={et}
+              className={`tt-mode-btn ${mode === et ? 'active' : ''}`}
+              onClick={() => {
+                setMode(et);
+                setPanel('grid');
+              }}
+            >
+              {et}
+            </button>
+          ))}
         </div>
 
         <div className="tt-header-actions">
@@ -716,12 +725,28 @@ export default function Timetable({ currentUser, currentPeriodId, periods = [] }
         <>
           {/* Generate Button (Admin only) */}
           {isAdmin && !preview && (
-            <div style={{ marginBottom: 16, display: 'flex', justifyContent: 'flex-end' }}>
+            <div style={{ marginBottom: 16, display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: 12 }}>
+              {mode !== 'weekly' && (
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <label style={{ fontSize: '.75rem', fontWeight: 600, color: '#5A6B5C' }}>
+                    Max {mode.includes('CAT') ? 'CATs' : 'Exams'} per day:
+                  </label>
+                  <input 
+                    type="number" 
+                    min={1} 
+                    max={5} 
+                    className="tt-select" 
+                    style={{ width: 60 }}
+                    value={maxExamsPerDay}
+                    onChange={e => setMaxExamsPerDay(Number(e.target.value))}
+                  />
+                </div>
+              )}
               <button className="tt-generate-btn" disabled={generating} onClick={handleGenerate}>
                 {generating ? (
                   <><div className="tt-spin" style={{ width: 14, height: 14, borderWidth: 2, margin: 0, marginRight: 8 }} /> Generating...</>
                 ) : (
-                  <><SparklesIcon size={16} /> Auto-Generate Timetable</>
+                  <><SparklesIcon size={16} /> Auto-Generate {mode === 'weekly' ? 'Timetable' : 'Schedule'}</>
                 )}
               </button>
             </div>
@@ -1078,8 +1103,8 @@ export default function Timetable({ currentUser, currentPeriodId, periods = [] }
         <div className="tt-config">
           <div className="tt-config-hd">
             <div>
-              <div className="tt-config-title">Time Slot Configuration</div>
-              <div className="tt-config-sub">Set the periods, breaks, and times for your school day. These apply to all classes.</div>
+              <div className="tt-config-title">{mode === 'weekly' ? 'Weekly' : mode} Slot Configuration</div>
+              <div className="tt-config-sub">Set the periods, breaks, and times for your {mode === 'weekly' ? 'regular school day' : mode + ' schedule'}.</div>
             </div>
             <button className="tt-btn tt-btn-primary" disabled={configSaving} onClick={handleSaveConfig}>
               {configSaving ? 'Saving...' : <><SaveIcon size={14} /> Save Configuration</>}

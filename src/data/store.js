@@ -2509,23 +2509,25 @@ export function subscribeToSchoolChanges(onSettingsChange, onProfileChange) {
 
 // ============= TIMETABLE =============
 
-export async function getTimetableConfig(schoolId, periodId) {
+export async function getTimetableConfig(schoolId, periodId, type = 'class') {
   const { data, error } = await supabase
     .from('timetable_configs')
     .select('*')
     .eq('school_id', schoolId)
     .eq('period_id', periodId)
+    .eq('type', type) // Isolated by mode
     .order('slot_index', { ascending: true });
   if (error) throw error;
   return data || [];
 }
 
-export async function saveTimetableConfig(schoolId, periodId, slots) {
+export async function saveTimetableConfig(schoolId, periodId, slots, type = 'class') {
   const { error: delErr } = await supabase
     .from('timetable_configs')
     .delete()
     .eq('school_id', schoolId)
-    .eq('period_id', periodId);
+    .eq('period_id', periodId)
+    .eq('type', type);
   if (delErr) throw delErr;
 
   if (!slots || slots.length === 0) return;
@@ -2533,6 +2535,7 @@ export async function saveTimetableConfig(schoolId, periodId, slots) {
   const rows = slots.map((s, i) => ({
     school_id: schoolId,
     period_id: periodId,
+    type: type,
     slot_index: i,
     label: s.label,
     start_time: s.start_time,
@@ -2659,12 +2662,13 @@ export async function clearAndSaveTimetable(schoolId, periodId, slots, classGrad
   }
 }
 
-export async function getRequirements(schoolId, periodId, classGrade, stream = null) {
+export async function getRequirements(schoolId, periodId, classGrade, stream = null, type = 'class') {
   let query = supabase
     .from('timetable_requirements')
     .select('*, teachers(id, name)')
     .eq('school_id', schoolId)
-    .eq('period_id', periodId);
+    .eq('period_id', periodId)
+    .eq('type', type);
   
   if (classGrade) query = query.eq('class_grade', classGrade);
   if (stream !== undefined) {
@@ -2676,12 +2680,13 @@ export async function getRequirements(schoolId, periodId, classGrade, stream = n
   return data || [];
 }
 
-export async function getAllRequirements(schoolId, periodId) {
+export async function getAllRequirements(schoolId, periodId, type = 'class') {
   const { data, error } = await supabase
     .from('timetable_requirements')
     .select('*, teachers(id, name)')
     .eq('school_id', schoolId)
-    .eq('period_id', periodId);
+    .eq('period_id', periodId)
+    .eq('type', type);
   if (error) throw error;
   return data || [];
 }
@@ -2698,19 +2703,21 @@ export async function saveRequirement(schoolId, periodId, req) {
       teacher_id: req.teacher_id || null,
       periods_per_week: req.periods_per_week || 1,
       allow_double: req.allow_double || false,
-      color: req.color || null
-    }, { onConflict: 'school_id,period_id,class_grade,stream,subject' });
+      color: req.color || null,
+      type: req.type || 'class'
+    }, { onConflict: 'school_id,period_id,class_grade,stream,subject,type' });
   if (error) throw error;
 }
 
-export async function deleteRequirement(schoolId, periodId, classGrade, stream, subject) {
+export async function deleteRequirement(schoolId, periodId, classGrade, stream, subject, type = 'class') {
   let query = supabase
     .from('timetable_requirements')
     .delete()
     .eq('school_id', schoolId)
     .eq('period_id', periodId)
     .eq('class_grade', classGrade)
-    .eq('subject', subject);
+    .eq('subject', subject)
+    .eq('type', type || 'class');
   
   if (stream) query = query.eq('stream', stream);
   else query = query.is('stream', null);
