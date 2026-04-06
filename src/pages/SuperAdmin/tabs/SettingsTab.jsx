@@ -33,28 +33,58 @@ import { calcExpiry } from '../superAdminUtils';
 import { 
   CrossIcon, CheckIcon, AttendanceIcon, GradingIcon, FeesIcon, TimetableIcon, BookIcon, 
   SendIcon, FlagIcon, PhoneIcon, TeacherIcon, UsersIcon, ChartBarIcon, SchoolIcon, 
-  DiamondIcon, ZapIcon, SubscriptionsIcon
+  DiamondIcon, ZapIcon, SubscriptionsIcon, ReceiptIcon, UploadIcon, CalendarIcon,
+  RefreshIcon, StarIcon
 } from '../../../components/CommonIcons';
 
 // ── Master registry of ALL system modules ────────────────────────────────
 // Each entry maps a backend slug to a human label + SVG icon component.
 // The SuperAdmin toggles these ON/OFF per plan to control hard access.
+// EVERY platform feature is listed here so plans can be fully configured.
 const ALL_SYSTEM_MODULES = [
-  { slug: 'attendance',    label: 'Attendance Tracking',        icon: AttendanceIcon, desc: 'Daily class attendance register' },
-  { slug: 'grading',       label: 'Academic Grading & Reports', icon: GradingIcon,    desc: 'CBC/8-4-4 report cards, competency scoring' },
-  { slug: 'fees',          label: 'Fee & Billing Engine',       icon: FeesIcon,       desc: 'Student balances, payments, fee structure' },
-  { slug: 'timetable',     label: 'Timetable Builder',          icon: TimetableIcon,  desc: 'Manual & automated class scheduling' },
-  { slug: 'lms',           label: 'E-Learning / LMS',           icon: BookIcon,       desc: 'Homework assignments, student submissions' },
-  { slug: 'sms',           label: 'SMS & Communications',       icon: SendIcon,       desc: 'Bulk SMS, fee reminders, WhatsApp' },
-  { slug: 'library',       label: 'Library Management',         icon: BookIcon,       desc: 'Book catalogue, borrowing, returns' },
-  { slug: 'nemis',         label: 'NEMIS Data Export',           icon: FlagIcon,       desc: 'Ministry of Education compliance export' },
-  { slug: 'mpesa',         label: 'M-Pesa STK Push',            icon: PhoneIcon,      desc: 'Zero-touch automated fee collection' },
-  { slug: 'teacher_portal',label: 'Teacher Mobile Portal',      icon: TeacherIcon,    desc: 'Mobile grading from personal devices' },
-  { slug: 'parent_portal', label: 'Parent & Student Portal',    icon: UsersIcon,      desc: 'Self-service portal for parents/students' },
-  { slug: 'analytics',     label: 'Smart Analytics & Insights', icon: ChartBarIcon,   desc: 'Prediction, defaulter lists, trend alerts' },
-  { slug: 'multi_stream',  label: 'Multi-Stream Support',       icon: SchoolIcon,     desc: 'A, B, C streams per class' },
-  { slug: 'custom_brand',  label: 'Custom Branding',            icon: DiamondIcon,    desc: 'School logo, colors on reports' },
-  { slug: 'api_access',    label: 'API Access',                 icon: ZapIcon,        desc: 'External system integrations' },
+  // ── Core Management ──
+  { slug: 'student_mgmt',   label: 'Student Management',          icon: UsersIcon,       desc: 'Student profiles, enrolment, class assignment' },
+  { slug: 'staff_mgmt',     label: 'Staff Management',            icon: TeacherIcon,     desc: 'Teacher & admin records, roles, permissions' },
+  { slug: 'attendance',      label: 'Attendance Tracking',         icon: AttendanceIcon,  desc: 'Daily class attendance register' },
+  { slug: 'dashboard',       label: 'Dashboard & Analytics',       icon: ChartBarIcon,    desc: 'KPIs, charts, school overview at a glance' },
+  // ── Academics ──
+  { slug: 'grading',         label: 'Academic Grading & Reports',  icon: GradingIcon,     desc: 'CBC/8-4-4 report cards, competency scoring' },
+  { slug: 'cbc_reports',     label: 'CBC Report Cards (PP1–G9)',   icon: GradingIcon,     desc: 'CBC competency-based learner portfolios' },
+  { slug: '844_reports',     label: 'KCSE / KCPE Report Cards',    icon: GradingIcon,     desc: '8-4-4 curriculum grading and report generation' },
+  { slug: 'cbc_competency',  label: 'CBC Competency Grading',      icon: CheckIcon,       desc: 'Strand-level rubric scoring for CBC' },
+  { slug: 'exam_scheduling', label: 'Exam Scheduling',             icon: CalendarIcon,    desc: 'Plan and publish exam timetables per class' },
+  // ── Timetable ──
+  { slug: 'timetable',       label: 'Timetable Builder',           icon: TimetableIcon,   desc: 'Manual class schedule creation' },
+  { slug: 'auto_timetable',  label: 'Automated Timetable',         icon: TimetableIcon,   desc: 'AI-powered schedule generation' },
+  // ── Finance ──
+  { slug: 'fees',            label: 'Fee & Billing Engine',        icon: FeesIcon,        desc: 'Student balances, payments, tracking' },
+  { slug: 'fee_structure',   label: 'Fee Structure Builder',       icon: FeesIcon,        desc: 'Define per-class, per-term fee schedules' },
+  { slug: 'fee_statements',  label: 'Student Fee Statements',      icon: ReceiptIcon,     desc: 'Printable per-student payment history' },
+  { slug: 'mpesa',           label: 'M-Pesa STK Push',             icon: PhoneIcon,       desc: 'Zero-touch automated fee collection' },
+  { slug: 'mpesa_paybill',   label: 'M-Pesa Paybill Integration',  icon: PhoneIcon,       desc: 'Lipa Na M-Pesa paybill reconciliation' },
+  { slug: 'mpesa_receipts',  label: 'M-Pesa Receipt Generation',   icon: ReceiptIcon,     desc: 'Auto-generate payment receipts from M-Pesa' },
+  { slug: 'airtel_money',    label: 'Airtel Money Integration',    icon: PhoneIcon,       desc: 'Airtel Money fee payment channel' },
+  // ── Communications ──
+  { slug: 'sms',             label: 'SMS & Communications',        icon: SendIcon,        desc: 'Bulk SMS, fee reminders' },
+  { slug: 'parent_sms',      label: 'Parent SMS Notifications',    icon: SendIcon,        desc: 'Automated parent alerts for fees & reports' },
+  { slug: 'whatsapp',        label: 'WhatsApp Fee Reminders',      icon: SendIcon,        desc: 'WhatsApp-based payment reminders' },
+  // ── Learning ──
+  { slug: 'lms',             label: 'E-Learning / LMS',            icon: BookIcon,        desc: 'Homework assignments, student submissions' },
+  { slug: 'library',         label: 'Library Management',          icon: BookIcon,        desc: 'Book catalogue, borrowing, returns' },
+  // ── Compliance & Export ──
+  { slug: 'nemis',           label: 'NEMIS Data Export',            icon: FlagIcon,        desc: 'Ministry of Education compliance export' },
+  { slug: 'bulk_import',     label: 'Bulk Student Import (CSV)',    icon: UploadIcon,      desc: 'Import students from spreadsheet files' },
+  // ── Portals ──
+  { slug: 'teacher_portal',  label: 'Teacher Mobile Portal',       icon: TeacherIcon,     desc: 'Mobile grading from personal devices' },
+  { slug: 'parent_portal',   label: 'Parent & Student Portal',     icon: UsersIcon,       desc: 'Self-service portal for parents/students' },
+  // ── Advanced ──
+  { slug: 'analytics',       label: 'Smart Analytics & Insights',  icon: ChartBarIcon,    desc: 'Prediction, defaulter lists, trend alerts' },
+  { slug: 'multi_stream',    label: 'Multi-Stream Support',        icon: SchoolIcon,      desc: 'A, B, C streams per class' },
+  { slug: 'multi_period',    label: 'Multiple Academic Periods',   icon: CalendarIcon,    desc: 'Manage several terms/years simultaneously' },
+  { slug: 'data_recovery',   label: 'Data Recovery Tools',         icon: RefreshIcon,     desc: 'Restore accidentally deleted records' },
+  { slug: 'custom_brand',    label: 'Custom Branding',             icon: DiamondIcon,     desc: 'School logo, colors on reports' },
+  { slug: 'api_access',      label: 'API Access',                  icon: ZapIcon,         desc: 'External system integrations' },
+  { slug: 'priority_support',label: 'Priority Support',            icon: StarIcon,        desc: 'Dedicated account manager, fast response' },
 ];
 
 // ── Suggested features to quickly add (marketing text) ───────────────────
