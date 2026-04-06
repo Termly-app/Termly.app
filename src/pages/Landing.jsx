@@ -452,13 +452,18 @@ export default function Landing() {
                   {(() => {
                     const displayFeatures = getPlanDisplayFeatures(p);
                     return displayFeatures.length > 0 ? (
-                      displayFeatures.map((f, i) => <li key={i}>{f.replace(/_/g, ' ')}</li>)
+                      displayFeatures.map((f, i) => (
+                        <li key={i} style={{ display:'flex', alignItems:'flex-start', gap:8, marginBottom:8 }}>
+                          <CheckIcon size={14} color="var(--te)" style={{ marginTop:2, flexShrink:0 }} />
+                          <span>{f.replace(/_/g, ' ')}</span>
+                        </li>
+                      ))
                     ) : (
                       <>
-                        <li>Core management features</li>
-                        <li>Student & staff profiles</li>
-                        <li>M-PESA integration</li>
-                        <li>Support included</li>
+                        <li style={{ display:'flex', alignItems:'flex-start', gap:8, marginBottom:8 }}><CheckIcon size={14} color="var(--te)" style={{ marginTop:2, flexShrink:0 }} /><span>Core management features</span></li>
+                        <li style={{ display:'flex', alignItems:'flex-start', gap:8, marginBottom:8 }}><CheckIcon size={14} color="var(--te)" style={{ marginTop:2, flexShrink:0 }} /><span>Student & staff profiles</span></li>
+                        <li style={{ display:'flex', alignItems:'flex-start', gap:8, marginBottom:8 }}><CheckIcon size={14} color="var(--te)" style={{ marginTop:2, flexShrink:0 }} /><span>M-PESA integration</span></li>
+                        <li style={{ display:'flex', alignItems:'flex-start', gap:8, marginBottom:8 }}><CheckIcon size={14} color="var(--te)" style={{ marginTop:2, flexShrink:0 }} /><span>Support included</span></li>
                       </>
                     );
                   })()}

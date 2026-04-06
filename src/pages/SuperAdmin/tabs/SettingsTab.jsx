@@ -30,27 +30,31 @@
 
 import { useState } from 'react';
 import { calcExpiry } from '../superAdminUtils';
-import { CrossIcon, CheckIcon } from '../../../components/CommonIcons';
+import { 
+  CrossIcon, CheckIcon, AttendanceIcon, GradingIcon, FeesIcon, TimetableIcon, BookIcon, 
+  SendIcon, FlagIcon, PhoneIcon, TeacherIcon, UsersIcon, ChartBarIcon, SchoolIcon, 
+  DiamondIcon, ZapIcon, SubscriptionsIcon
+} from '../../../components/CommonIcons';
 
 // ── Master registry of ALL system modules ────────────────────────────────
-// Each entry maps a backend slug to a human label + icon character.
+// Each entry maps a backend slug to a human label + SVG icon component.
 // The SuperAdmin toggles these ON/OFF per plan to control hard access.
 const ALL_SYSTEM_MODULES = [
-  { slug: 'attendance',    label: 'Attendance Tracking',        icon: '📋', desc: 'Daily class attendance register' },
-  { slug: 'grading',       label: 'Academic Grading & Reports', icon: '📊', desc: 'CBC/8-4-4 report cards, competency scoring' },
-  { slug: 'fees',          label: 'Fee & Billing Engine',       icon: '💰', desc: 'Student balances, payments, fee structure' },
-  { slug: 'timetable',     label: 'Timetable Builder',          icon: '🗓️', desc: 'Manual & automated class scheduling' },
-  { slug: 'lms',           label: 'E-Learning / LMS',           icon: '📚', desc: 'Homework assignments, student submissions' },
-  { slug: 'sms',           label: 'SMS & Communications',       icon: '📩', desc: 'Bulk SMS, fee reminders, WhatsApp' },
-  { slug: 'library',       label: 'Library Management',         icon: '📖', desc: 'Book catalogue, borrowing, returns' },
-  { slug: 'nemis',         label: 'NEMIS Data Export',           icon: '🏛️', desc: 'Ministry of Education compliance export' },
-  { slug: 'mpesa',         label: 'M-Pesa STK Push',            icon: '📱', desc: 'Zero-touch automated fee collection' },
-  { slug: 'teacher_portal',label: 'Teacher Mobile Portal',      icon: '👨‍🏫', desc: 'Mobile grading from personal devices' },
-  { slug: 'parent_portal', label: 'Parent & Student Portal',    icon: '👨‍👩‍👧', desc: 'Self-service portal for parents/students' },
-  { slug: 'analytics',     label: 'Smart Analytics & Insights', icon: '🧠', desc: 'Prediction, defaulter lists, trend alerts' },
-  { slug: 'multi_stream',  label: 'Multi-Stream Support',       icon: '🏫', desc: 'A, B, C streams per class' },
-  { slug: 'custom_brand',  label: 'Custom Branding',            icon: '🎨', desc: 'School logo, colors on reports' },
-  { slug: 'api_access',    label: 'API Access',                 icon: '🔌', desc: 'External system integrations' },
+  { slug: 'attendance',    label: 'Attendance Tracking',        icon: AttendanceIcon, desc: 'Daily class attendance register' },
+  { slug: 'grading',       label: 'Academic Grading & Reports', icon: GradingIcon,    desc: 'CBC/8-4-4 report cards, competency scoring' },
+  { slug: 'fees',          label: 'Fee & Billing Engine',       icon: FeesIcon,       desc: 'Student balances, payments, fee structure' },
+  { slug: 'timetable',     label: 'Timetable Builder',          icon: TimetableIcon,  desc: 'Manual & automated class scheduling' },
+  { slug: 'lms',           label: 'E-Learning / LMS',           icon: BookIcon,       desc: 'Homework assignments, student submissions' },
+  { slug: 'sms',           label: 'SMS & Communications',       icon: SendIcon,       desc: 'Bulk SMS, fee reminders, WhatsApp' },
+  { slug: 'library',       label: 'Library Management',         icon: BookIcon,       desc: 'Book catalogue, borrowing, returns' },
+  { slug: 'nemis',         label: 'NEMIS Data Export',           icon: FlagIcon,       desc: 'Ministry of Education compliance export' },
+  { slug: 'mpesa',         label: 'M-Pesa STK Push',            icon: PhoneIcon,      desc: 'Zero-touch automated fee collection' },
+  { slug: 'teacher_portal',label: 'Teacher Mobile Portal',      icon: TeacherIcon,    desc: 'Mobile grading from personal devices' },
+  { slug: 'parent_portal', label: 'Parent & Student Portal',    icon: UsersIcon,      desc: 'Self-service portal for parents/students' },
+  { slug: 'analytics',     label: 'Smart Analytics & Insights', icon: ChartBarIcon,   desc: 'Prediction, defaulter lists, trend alerts' },
+  { slug: 'multi_stream',  label: 'Multi-Stream Support',       icon: SchoolIcon,     desc: 'A, B, C streams per class' },
+  { slug: 'custom_brand',  label: 'Custom Branding',            icon: DiamondIcon,    desc: 'School logo, colors on reports' },
+  { slug: 'api_access',    label: 'API Access',                 icon: ZapIcon,        desc: 'External system integrations' },
 ];
 
 // ── Suggested features to quickly add (marketing text) ───────────────────
@@ -304,7 +308,7 @@ export default function SettingsTab({
 
           {plans.length === 0 ? (
             <div className="empty" style={{ flex:1 }}>
-              <div style={{ fontSize:'1.4rem', marginBottom:8, opacity:.4 }}>◫</div>
+              <div style={{ marginBottom:8, opacity:.4, color:'var(--sub)' }}><SubscriptionsIcon size={32} /></div>
               <div style={{ fontSize:'.8rem', color:'var(--sub)' }}>No plans yet. Add your first plan.</div>
             </div>
           ) : (
@@ -420,7 +424,9 @@ export default function SettingsTab({
                                     background: enabled ? 'rgba(13,216,138,.06)' : 'var(--bg)',
                                     border: `1px solid ${enabled ? 'rgba(13,216,138,.25)' : 'var(--edge)'}`,
                                   }}>
-                                  <div style={{ fontSize:'1.1rem', flexShrink:0 }}>{mod.icon}</div>
+                                  <div style={{ flexShrink:0, display:'flex', alignItems:'center', color: enabled ? 'var(--te)' : 'var(--sub)' }}>
+                                    <mod.icon size={18} />
+                                  </div>
                                   <div style={{ flex:1, minWidth:0 }}>
                                     <div style={{ fontSize:'.68rem', fontWeight:700, color: enabled ? 'var(--te)' : 'var(--sub)', whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis' }}>
                                       {mod.label}
@@ -586,7 +592,7 @@ export default function SettingsTab({
               <div style={{ fontSize:'.6rem', color:'var(--te)', marginBottom:8, display:'flex', alignItems:'center', gap:4 }}><CheckIcon size={10} /> {tier.trial}</div>
               {tier.features.map(f => (
                 <div key={f} style={{ display:'flex', alignItems:'flex-start', gap:6, marginBottom:4 }}>
-                  <span style={{ color:'var(--sub)', fontSize:'.6rem', flexShrink:0, marginTop:1 }}>–</span>
+                  <CheckIcon size={12} color="var(--sub)" style={{ flexShrink:0, marginTop:1, opacity:.6 }} />
                   <span style={{ fontSize:'.63rem', color:'var(--sub)' }}>{f}</span>
                 </div>
               ))}
