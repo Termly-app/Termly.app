@@ -206,15 +206,21 @@ export default function SuperAdmin({ currentUser, isPlatformAdmin, sidebarOpen, 
 
           // Optional profile merge (catches anything the join missed)
           try {
-            const { data: profiles } = await supabase.from('school_profiles').select('*');
+            // Using safe columns to avoid 400 mismatch errors
+            const cols = 'id, school_id, school_name, motto, phone, email, address, logo, subscription_plan, subscription_status, subscription_expiry, last_payment_status';
+            const { data: profiles } = await supabase.from('school_profiles').select(cols);
+            
             if (profiles?.length > 0) {
-              setSchools(enriched.map(s => {
-                const existing = s.school_profiles || [];
+              setSchools(prevSchools => prevSchools.map(s => {
+                const existing = Array.isArray(s.school_profiles) ? s.school_profiles : [];
                 const extra    = profiles.filter(p => p.school_id === s.id);
-                const merged   = [...existing, ...extra].reduce((acc, curr) => {
+                
+                // Merge without duplicates
+                const merged = [...existing, ...extra].reduce((acc, curr) => {
                   if (!acc.find(p => p.id === curr.id)) acc.push(curr);
                   return acc;
                 }, []);
+                
                 return { ...s, school_profiles: merged };
               }));
             }

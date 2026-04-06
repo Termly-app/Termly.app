@@ -144,6 +144,7 @@ export default function SettingsTab({
   priceSaved, setPriceSaved,
   handleUpdateSetting,
   updatePlatformSetting,
+  loadData,
   setMessage,
   onWipeSchools, // New prop for bulk cleanup
 }) {
