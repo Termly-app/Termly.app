@@ -3,14 +3,14 @@ import Dexie from 'dexie';
 export const db = new Dexie('ShuleSoftOffline');
 
 // Schema definition
-db.version(5).stores({
+db.version(6).stores({
   students: 'id, school_id, name, adm_no, parent_phone, class, status, residence_type',
   teachers: 'id, school_id, name, pin, phone, on_leave',
   marks: '[period_id+student_id+subject], period_id, student_id, school_id',
   attendance: 'id, date, school_id, class_id',
   communications: '++id, type, target, timestamp, user',
-  assignments: '++id, class, subject, title, deadline, timestamp, teacher',
-  submissions: '++id, assignment_id, student_id, student_name, class, status, timestamp, [assignment_id+student_id]',
+  assignments: '++id, class, stream, subject, title, dueDate, timestamp, teacher',
+  submissions: '++id, assignment_id, student_id, student_name, workflow_status, timestamp, [assignment_id+student_id]',
   syncQueue: '++id, type, payload, status, created_at'
 });
 
@@ -119,4 +119,11 @@ export async function getSubmissions(assignment_id) {
 
 export async function getStudentSubmissions(student_id) {
   return await db.submissions.where('student_id').equals(student_id).toArray();
+}
+
+/**
+ * Update a student's submission with a grade and workflow status.
+ */
+export async function updateSubmissionGrade(submissionId, data) {
+  return await db.submissions.update(submissionId, data);
 }

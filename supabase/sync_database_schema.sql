@@ -26,3 +26,39 @@ ALTER TABLE marks DROP CONSTRAINT IF EXISTS marks_exam_unique;
 ALTER TABLE marks DROP CONSTRAINT IF EXISTS marks_period_unique;
 ALTER TABLE marks DROP CONSTRAINT IF EXISTS marks_school_id_student_id_subject_key;
 ALTER TABLE marks ADD CONSTRAINT marks_exam_unique UNIQUE(school_id, student_id, subject, period_id, exam_type);
+
+-- 4. LMS (Assignments & Submissions) Sync
+-- Create tables to support Moodle-inspired assignment hub
+CREATE TABLE IF NOT EXISTS assignments (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    school_id UUID REFERENCES school_profiles(id),
+    teacher_id UUID REFERENCES teachers(id),
+    title TEXT NOT NULL,
+    description TEXT,
+    class TEXT NOT NULL,
+    stream TEXT,
+    subject TEXT NOT NULL,
+    allow_from TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    due_date TIMESTAMP WITH TIME ZONE,
+    cutoff_date TIMESTAMP WITH TIME ZONE,
+    links TEXT,
+    status TEXT DEFAULT 'Active',
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS submissions (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    assignment_id UUID REFERENCES assignments(id) ON DELETE CASCADE,
+    student_id UUID NOT NULL,
+    student_name TEXT,
+    payload TEXT,
+    timestamp TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    workflow_status TEXT DEFAULT 'Submitted',
+    grade TEXT,
+    feedback TEXT,
+    synced_at TIMESTAMP WITH TIME ZONE
+);
+
+-- Enable RLS for new tables (Basic policy - assuming user identification logic elsewhere)
+ALTER TABLE assignments ENABLE ROW LEVEL SECURITY;
+ALTER TABLE submissions ENABLE ROW LEVEL SECURITY;

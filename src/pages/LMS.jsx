@@ -60,8 +60,8 @@ export default function LMS({ currentUser }) {
     setSelectedSubmissions({ assignment, subs });
   };
 
-  const handleUpdateGrade = async (submissionId, grade, feedback) => {
-    await updateSubmissionGrade(submissionId, grade, feedback);
+  const handleUpdateGrade = async (submissionId, data) => {
+    await updateSubmissionGrade(submissionId, data);
     // Refresh current view
     if (selectedSubmissions) {
       const updatedSubs = await getSubmissions(selectedSubmissions.assignment.id);
@@ -242,7 +242,7 @@ export default function LMS({ currentUser }) {
                               className="form-select sm" 
                               style={{ padding: '5px 24px 5px 8px', fontSize: '0.75rem' }}
                               value={sub.workflow_status || 'Submitted'}
-                              onChange={(e) => handleUpdateGrade(sub.id, sub.grade, e.target.value)}
+                              onChange={(e) => handleUpdateGrade(sub.id, { workflow_status: e.target.value })}
                             >
                               <option value="Submitted">Submitted</option>
                               <option value="In Grading">In Grading</option>
@@ -257,7 +257,7 @@ export default function LMS({ currentUser }) {
                               style={{ width: 60, padding: '5px 8px', textAlign: 'center', fontWeight: 700 }}
                               placeholder="-"
                               value={sub.grade || ''}
-                              onChange={(e) => handleUpdateGrade(sub.id, e.target.value, sub.workflow_status)}
+                              onChange={(e) => handleUpdateGrade(sub.id, { grade: e.target.value })}
                             />
                           </td>
                           <td>
@@ -265,7 +265,10 @@ export default function LMS({ currentUser }) {
                               <button className="topbar-icon-btn" title="Review Submission" onClick={() => alert(`Reviewing: ${sub.student_name}\n\nContent: ${sub.payload}`)}>
                                 <DownloadIcon size={14} />
                               </button>
-                               <button className="topbar-icon-btn" title="Send Feedback Message" onClick={() => prompt(`Feedback for ${sub.student_name}:`, sub.feedback || '')}>
+                               <button className="topbar-icon-btn" title="Send Feedback Message" onClick={async () => {
+                                 const f = prompt(`Feedback for ${sub.student_name}:`, sub.feedback || '');
+                                 if (f !== null) await handleUpdateGrade(sub.id, { feedback: f });
+                               }}>
                                 <MessageIcon size={14} />
                               </button>
                             </div>

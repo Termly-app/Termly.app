@@ -244,7 +244,7 @@ export default function Landing() {
           <div className="hs-frame">
             <div className="hs-bar">
               <div className="tls"><div className="tl tl-r"></div><div className="tl tl-y"></div><div className="tl tl-g"></div></div>
-              <div className="hs-url">app.shulesoft.com / dashboard</div>
+              <div className="hs-url">shulesoft-app.vercel.app / dashboard</div>
               <div style={{ width: 60 }}></div>
             </div>
             <div className="hs-body">
