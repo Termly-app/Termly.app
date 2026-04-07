@@ -11,10 +11,47 @@ import Select from '../components/Common/Select';
  * Moodle-Inspired LMS Module (Assignment Hub)
  * Handles the full lifecycle of an assignment: Setup -> Targeting -> Submissions -> Grading.
  */
+// Sub-component for individual assignment stats
+function SubmissionProgress({ ast }) {
+  const [stats, setStats] = useState({ submitted: 0, total: 10 });
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function getStats() {
+      const { getAssignmentStats } = await import('../data/store');
+      try {
+        const res = await getAssignmentStats(ast.id, ast.class, ast.stream);
+        setStats(res);
+      } catch (e) {
+        console.warn('Stats fetch failed', e);
+      } finally {
+        setLoading(false);
+      }
+    }
+    getStats();
+  }, [ast.id]);
+
+  if (loading) return <div style={{ height: 4, background: '#f1f5f9', borderRadius: 2, marginTop: 8 }}></div>;
+
+  const pct = Math.min((stats.submitted / stats.total) * 100, 100);
+  return (
+    <div style={{ marginTop: 12 }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.75rem', fontWeight: 700, marginBottom: 6 }}>
+        <span style={{ color: 'var(--text-muted)' }}>Submission Progress</span>
+        <span style={{ color: 'var(--primary)' }}>{stats.submitted} / {stats.total} Students</span>
+      </div>
+      <div style={{ height: 6, background: '#f1f5f9', borderRadius: 10, overflow: 'hidden' }}>
+        <div style={{ height: '100%', width: `${pct}%`, background: 'var(--primary)', transition: 'width 0.5s ease' }}></div>
+      </div>
+    </div>
+  );
+}
+
 export default function LMS({ currentUser }) {
   const [profile, setProfile] = useState(null);
   const [assignments, setAssignments] = useState([]);
   const [selectedSubmissions, setSelectedSubmissions] = useState(null);
+  const [gradingSubmission, setGradingSubmission] = useState(null);
   const [loading, setLoading] = useState(false);
 
   // Form State (Moodle-inspired Setup)
@@ -27,7 +64,9 @@ export default function LMS({ currentUser }) {
     dueDate: '',
     cutoffDate: '',
     description: '',
-    links: ''
+    links: '',
+    maxScore: 100,
+    submissionType: 'online_text'
   });
 
   useEffect(() => {
@@ -53,7 +92,8 @@ export default function LMS({ currentUser }) {
       setFormData({ 
         title: '', class: '', stream: '', subject: '', 
         allowFrom: new Date().toISOString().split('T')[0], 
-        dueDate: '', cutoffDate: '', description: '', links: '' 
+        dueDate: '', cutoffDate: '', description: '', links: '',
+        maxScore: 100, submissionType: 'online_text'
       });
       await loadData();
     } catch (err) {
@@ -78,7 +118,7 @@ export default function LMS({ currentUser }) {
 
   const activeClasses = profile?.activeClasses || ['1', '2', '3', '4', '5', '6', '7', '8'];
   const streams = ['North', 'South', 'East', 'West', 'Central'];
-  const subjects = ['Mathematics', 'English', 'Kiswahili', 'Science', 'Social Studies', 'CRE/IRE', 'ICT', 'Arts'];
+  const subjects = profile?.customSubjects ? Object.keys(profile.customSubjects) : ['Mathematics', 'English', 'Kiswahili', 'Science', 'Social Studies', 'CRE/IRE', 'ICT', 'Arts'];
 
   return (
     <div className="section-card animate-in" style={{ display: 'grid', gridTemplateColumns: '380px 1fr', gap: 24, minHeight: 'calc(100vh - 120px)' }}>
@@ -153,6 +193,26 @@ export default function LMS({ currentUser }) {
             </div>
           </div>
 
+          <div className="form-row" style={{ gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+            <div className="form-group">
+              <label>Max Score</label>
+              <input type="number" className="form-input" value={formData.maxScore} onChange={e => setFormData({ ...formData, maxScore: parseInt(e.target.value) })} />
+            </div>
+            <div className="form-group">
+              <label>Submission Type</label>
+              <Select 
+                value={formData.submissionType}
+                onChange={e => setFormData({ ...formData, submissionType: e.target.value })}
+                options={[
+                  { id: 'online_text', label: 'Online Text' },
+                  { id: 'file_upload', label: 'File Upload (Link)' },
+                  { id: 'both', label: 'Both' }
+                ]}
+                style={{ width: '100%' }}
+              />
+            </div>
+          </div>
+
           <div className="form-group">
              <label>Task Instructions</label>
              <textarea 
@@ -201,8 +261,9 @@ export default function LMS({ currentUser }) {
                     </div>
                     <div style={{ fontSize: '1.15rem', fontWeight: 800, color: 'var(--text-main)', marginTop: 12, marginBottom: 4 }}>{ast.title}</div>
                     <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: 5 }}>
-                       <ClockIcon size={14} /> Due {new Date(ast.dueDate).toLocaleDateString()}
+                       <ClockIcon size={14} /> Due {new Date(ast.due_date || ast.dueDate).toLocaleDateString()}
                     </div>
+                    <SubmissionProgress ast={ast} />
                   </div>
                   
                   <div style={{ borderTop: '1px solid #f1f5f9', paddingTop: 14 }}>
@@ -254,8 +315,8 @@ export default function LMS({ currentUser }) {
                       {selectedSubmissions.subs.map(sub => (
                         <tr key={sub.id}>
                           <td>
-                            <div style={{ fontWeight: 700, color: 'var(--text-main)' }}>{sub.student_name}</div>
-                            <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Sent: {new Date(sub.timestamp).toLocaleString()}</div>
+                            <div style={{ fontWeight: 700, color: 'var(--text-main)' }}>{sub.students?.name || sub.student_name}</div>
+                            <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Sent: {new Date(sub.submitted_at || sub.timestamp).toLocaleString()}</div>
                           </td>
                           <td>
                             <Select 
@@ -272,30 +333,25 @@ export default function LMS({ currentUser }) {
                             />
                           </td>
                           <td>
-                            <input 
-                              type="text" 
-                              className="form-input sm" 
-                              style={{ width: 60, padding: '5px 8px', textAlign: 'center', fontWeight: 700 }}
-                              placeholder="-"
-                              value={sub.grade || ''}
-                              onChange={(e) => handleUpdateGrade(sub.id, { grade: e.target.value })}
-                            />
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                              <input 
+                                type="text" 
+                                className="form-input sm" 
+                                style={{ width: 60, padding: '5px 8px', textAlign: 'center', fontWeight: 700 }}
+                                placeholder="-"
+                                value={sub.grade_numeric ?? ''}
+                                onChange={(e) => handleUpdateGrade(sub.id, { grade_numeric: e.target.value ? parseFloat(e.target.value) : null })}
+                              />
+                              <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>/ {selectedSubmissions.assignment.max_score || 100}</span>
+                            </div>
+                            {sub.is_late && <div style={{ fontSize: '0.65rem', color: 'var(--danger)', fontWeight: 700, marginTop: 2 }}>LATE SUBMISSION</div>}
                           </td>
                           <td>
                             <div style={{ display: 'flex', gap: 6 }}>
-                              <button className="topbar-icon-btn" title="Review Submission" onClick={async () => {
-                                 const content = await fetchLmsContent(sub.content_url);
-                                 alert(`Reviewing: ${sub.student_name}\n\nContent:\n${typeof content === 'object' ? JSON.stringify(content, null, 2) : content}`);
-                               }}>
-                                <DownloadIcon size={14} />
+                               <button className="topbar-icon-btn" title="Review & Grade" onClick={() => setGradingSubmission(sub)}>
+                                <CheckIcon size={14} />
                               </button>
-                               <button className="topbar-icon-btn" title="Send Feedback Message" onClick={async () => {
-                                 const f = prompt(`Feedback for ${sub.student_name}:`, sub.feedback || '');
-                                 if (f !== null) await handleUpdateGrade(sub.id, { feedback: f });
-                               }}>
-                                <MessageIcon size={14} />
-                              </button>
-                            </div>
+                             </div>
                           </td>
                         </tr>
                       ))}
@@ -308,6 +364,113 @@ export default function LMS({ currentUser }) {
         )}
       </div>
 
+      {/* MOODLE-STYLE GRADING MODAL */}
+      {gradingSubmission && (
+        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(15, 23, 42, 0.7)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: 40 }}>
+          <div style={{ background: 'white', borderRadius: 24, width: '100%', maxWidth: 960, height: '80vh', display: 'grid', gridTemplateColumns: '1fr 340px', overflow: 'hidden', animation: 'sIn 0.3s ease-out', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.5)' }}>
+            
+            {/* CONTENT AREA */}
+            <div style={{ padding: 40, overflowY: 'auto', background: '#f8fafc', borderRight: '1px solid var(--border)' }}>
+               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
+                 <div>
+                   <div style={{ display:'flex', gap:8, marginBottom: 8 }}>
+                     <span className="badge badge-info">{gradingSubmission.workflow_status}</span>
+                     {gradingSubmission.is_late && <span className="badge badge-danger">LATE SUBMISSION</span>}
+                   </div>
+                   <h3 style={{ margin: 0, fontSize: '1.6rem', fontWeight: 800, color: 'var(--text-main)' }}>{gradingSubmission.students?.name || gradingSubmission.student_name}</h3>
+                   <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginTop: 4 }}>
+                     Submitted: {new Date(gradingSubmission.submitted_at || gradingSubmission.timestamp).toLocaleString()}
+                   </div>
+                 </div>
+               </div>
+
+               <div style={{ position: 'relative' }}>
+                 <div style={{ position: 'absolute', top: -10, left: 20, background: 'white', padding: '2px 10px', fontSize: '0.7rem', fontWeight: 800, color: 'var(--primary)', border: '1px solid var(--border)', borderRadius: 4 }}>STUDENT SUBMISSION</div>
+                 <div style={{ background: 'white', padding: 32, borderRadius: 16, border: '1px solid var(--border)', minHeight: 400, boxShadow: 'var(--shadow-sm)', whiteSpace: 'pre-wrap', color: '#1e293b', lineHeight: 1.6, fontSize: '1rem' }}>
+                   <LmsContentFetcher url={gradingSubmission.content_url} />
+                 </div>
+               </div>
+            </div>
+
+            {/* GRADING SIDEBAR */}
+            <div style={{ padding: 32, display: 'flex', flexDirection: 'column', gap: 24, background: 'white' }}>
+               <div style={{ display: 'flex', alignItems: 'center', gap: 10, color: 'var(--primary)' }}>
+                 <GraduationIcon size={20} />
+                 <h4 style={{ margin: 0, fontSize: '1.1rem', fontWeight: 800 }}>Grading & Feedback</h4>
+               </div>
+               
+               <div className="form-group">
+                 <label style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-muted)' }}>
+                   Numerical Grade (out of {selectedSubmissions.assignment.max_score || 100})
+                 </label>
+                 <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginTop: 8 }}>
+                   <input 
+                     type="number" 
+                     className="form-input" 
+                     style={{ fontSize: '1.5rem', fontWeight: 800, textAlign: 'center', color: 'var(--primary)', height: 60 }}
+                     value={gradingSubmission.grade_numeric ?? ''}
+                     onChange={(e) => setGradingSubmission({ ...gradingSubmission, grade_numeric: e.target.value ? parseFloat(e.target.value) : null })}
+                   />
+                   <span style={{ fontSize: '1.2rem', fontWeight: 700, color: 'var(--text-muted)' }}>/ {selectedSubmissions.assignment.max_score || 100}</span>
+                 </div>
+               </div>
+
+               <div className="form-group" style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+                 <label style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-muted)', marginBottom: 8 }}>Feedback to Student</label>
+                 <textarea 
+                   className="form-input" 
+                   style={{ flex: 1, minHeight: 200, resize: 'none', padding: 16, fontSize: '0.95rem' }}
+                   placeholder="Enter constructive feedback..."
+                   value={gradingSubmission.feedback || ''}
+                   onChange={(e) => setGradingSubmission({ ...gradingSubmission, feedback: e.target.value })}
+                 />
+               </div>
+
+               <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginTop: 'auto' }}>
+                  <button 
+                    className="btn btn-primary" 
+                    style={{ padding: '16px', fontWeight: 800, fontSize: '1rem', boxShadow: '0 4px 12px rgba(14,165,233,0.3)' }} 
+                    onClick={async () => {
+                      setLoading(true);
+                      await handleUpdateGrade(gradingSubmission.id, { 
+                        grade_numeric: gradingSubmission.grade_numeric, 
+                        feedback: gradingSubmission.feedback,
+                        workflow_status: 'released' 
+                      });
+                      setGradingSubmission(null);
+                      setLoading(false);
+                    }}
+                  >
+                    {loading ? 'Releasing...' : 'Release Grade'}
+                  </button>
+                  <button className="btn btn-ghost" style={{ padding: 12, fontWeight: 600 }} onClick={() => setGradingSubmission(null)}>
+                    Close Editor
+                  </button>
+               </div>
+            </div>
+
+          </div>
+        </div>
+      )}
     </div>
   );
+}
+
+// Child component to fetch content on load inside the modal
+function LmsContentFetcher({ url }) {
+  const [content, setContent] = useState('Loading...');
+  useEffect(() => {
+    async function getIt() {
+      if (!url) { setContent('No submission content found.'); return; }
+      const { fetchLmsContent } = await import('../data/store');
+      try {
+        const res = await fetchLmsContent(url);
+        setContent(typeof res === 'object' ? JSON.stringify(res, null, 2) : res || 'No content found.');
+      } catch (e) {
+        setContent('Error loading content.');
+      }
+    }
+    getIt();
+  }, [url]);
+  return <div style={{ whiteSpace: 'pre-wrap' }}>{content}</div>;
 }

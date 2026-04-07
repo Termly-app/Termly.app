@@ -2311,22 +2311,28 @@ export async function getPlatformStats() {
     const cf     = settingsRes || {};
 
     // 2. Auxiliary Metrics (Graceful Failure)
-    let studCount = 0, examCount = 0, portCount = 0, attTotal = 0, attPresent = 0;
+    let studCount = 0, examCount = 0, portCount = 0, attTotal = 0, attPresent = 0, totalRows = 0;
     try {
-      const [sRes, eRes, oRes, aRes, apRes] = await Promise.all([
+      const [sRes, eRes, oRes, aRes, apRes, lmsARes, lmsSRes, actRes] = await Promise.all([
         supabase.from('students').select('*', { count: 'exact', head: true }),
         supabase.from('exam_results').select('*', { count: 'exact', head: true }),
         supabase.from('student_portfolios').select('*', { count: 'exact', head: true }),
         supabase.from('attendance').select('*', { count: 'exact', head: true }),
-        supabase.from('attendance').select('*', { count: 'exact', head: true }).eq('status', 'Present')
+        supabase.from('attendance').select('*', { count: 'exact', head: true }).eq('status', 'Present'),
+        supabase.from('lms_assignments').select('*', { count: 'exact', head: true }),
+        supabase.from('lms_submissions').select('*', { count: 'exact', head: true }),
+        supabase.from('platform_activity').select('*', { count: 'exact', head: true })
       ]);
       studCount = sRes.count || 0;
       examCount = eRes.count || 0;
       portCount = oRes.count || 0;
       attTotal = aRes.count || 0;
       attPresent = apRes.count || 0;
+      
+      // Calculate Platform Health (Row Counts)
+      totalRows = (sRes.count || 0) + (eRes.count || 0) + (oRes.count || 0) + (aRes.count || 0) + (lmsARes.count || 0) + (lmsSRes.count || 0) + (actRes.count || 0);
     } catch (e) {
-      console.warn('Auxiliary stats fetch failed partically', e);
+      console.warn('Auxiliary stats fetch failed partially', e);
     }
 
     const attendanceRate = attTotal > 0 ? Math.round((attPresent / attTotal) * 100) : 0;
@@ -2405,7 +2411,9 @@ export async function getPlatformStats() {
       studCount: studCount || 0,
       examCount: examCount || 0,
       portCount: portCount || 0,
-      attendanceRate: attendanceRate || 0
+      attendanceRate: attendanceRate || 0,
+      totalRows: totalRows || 0,
+      dbCapacity: (totalRows / 500000) * 100 // Estimate relative usage based on ~500k row limit guideline for free tier
     };
   } catch (err) {
     console.error('getPlatformStats error:', err);
@@ -3623,7 +3631,11 @@ export async function createAssignment(assignment) {
     title: assignment.title,
     description_url: contentUrl,
     due_date: assignment.dueDate,
+    cutoff_date: assignment.cutoffDate,
+    allow_from: assignment.allowFrom,
     teacher_id: getCurrentAuthUser()?.id,
+    max_score: assignment.maxScore || 100,
+    submission_type: assignment.submissionType || 'online_text',
     status: 'published'
   }]).select().single();
   
@@ -3631,23 +3643,51 @@ export async function createAssignment(assignment) {
   return data;
 }
 
+export async function getAssignmentStats(assignmentId, className, stream) {
+  const { count: submitted, error: e1 } = await supabase.from('lms_submissions')
+    .select('*', { count: 'exact', head: true })
+    .eq('assignment_id', assignmentId);
+    
+  let query = supabase.from('students').select('*', { count: 'exact', head: true }).eq('class', className);
+  if (stream && stream !== 'General' && stream !== '') {
+    query = query.eq('stream', stream);
+  }
+  
+  const { count: total, error: e2 } = await query;
+  return { submitted: submitted || 0, total: total || Math.max(submitted || 0, 1) };
+}
+
 export async function submitAssignment(assignmentId, student, payload) {
   const school_id = getCurrentSchoolId();
   const fileId = `submissions/${school_id}/${assignmentId}_${student.id}_${Date.now()}.json`;
   
-  // 1. Upload student response to Storage
+  // 1. Check if late
+  const { data: ast } = await supabase.from('lms_assignments').select('due_date, cutoff_date').eq('id', assignmentId).single();
+  const isLate = ast && new Date() > new Date(ast.due_date);
+  
+  // 2. Upload student response to Storage
   const contentUrl = await uploadToLmsStorage(fileId, payload);
   
-  // 2. Save record to DB
-  const { data, error } = await supabase.from('lms_submissions').insert([{
+  // 3. Save record to DB (Upsert to prevent duplicates)
+  const { data, error } = await supabase.from('lms_submissions').upsert({
     assignment_id: assignmentId,
     student_id: student.id,
     content_url: contentUrl,
-    workflow_status: 'submitted'
-  }]).select().single();
+    workflow_status: 'submitted',
+    is_late: isLate,
+    submitted_at: new Date().toISOString()
+  }, { onConflict: 'assignment_id, student_id' }).select().single();
   
   if (error) throw error;
   return data;
+}
+
+export async function getStudentSubmissions(studentId) {
+  const { data, error } = await supabase.from('lms_submissions')
+    .select('*, lms_assignments(title, subject, due_date, max_score)')
+    .eq('student_id', studentId);
+  if (error) throw error;
+  return data || [];
 }
 
 export async function getSubmissions(assignmentId) {
@@ -3691,26 +3731,6 @@ export async function getCommunicationLogs() {
 // PLATFORM HEALTH (SUPERADMIN USAGE)
 // ==========================================
 
-export async function getPlatformStats() {
-  // Estimated for Supabase Free Tier Monitoring
-  const [schools, students, activities, assignments, submissions] = await Promise.all([
-    supabase.from('schools').select('id', { count: 'exact', head: true }),
-    supabase.from('students').select('id', { count: 'exact', head: true }),
-    supabase.from('platform_activities').select('id', { count: 'exact', head: true }),
-    supabase.from('lms_assignments').select('id', { count: 'exact', head: true }),
-    supabase.from('lms_submissions').select('id', { count: 'exact', head: true })
-  ]);
-  
-  // Estimate total rows (simplified proxy for DB size)
-  const totalRows = (schools.count || 0) + (students.count || 0) + (activities.count || 0) + (assignments.count || 0) + (submissions.count || 0);
-  
-  return {
-    schools: schools.count || 0,
-    students: students.count || 0,
-    totalRows,
-    dbCapacity: (totalRows / 500000) * 100 // Estimate relative usage based on ~500k row limit guideline for free tier
-  };
-}
 
 // Auto-sync every 60s if online
 setInterval(triggerSync, 60000);

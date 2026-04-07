@@ -16,6 +16,7 @@ export default function PortalDashboard({ user, onLogout }) {
   const [showSubmitModal, setShowSubmitModal] = useState(null);
   const [submissionPayload, setSubmissionPayload] = useState('');
   const [academic, setAcademic] = useState({ average: 0, grade: '—', color: '#64748b', rank: '—' });
+  const [mySubmissions, setMySubmissions] = useState({});
 
   useEffect(() => {
     async function init() {
@@ -26,6 +27,13 @@ export default function PortalDashboard({ user, onLogout }) {
       ]);
       setAssignments(asts);
       
+      try {
+        const { getStudentSubmissions } = await import('../../data/store');
+        const subs = await getStudentSubmissions(user.id);
+        const subMap = {};
+        subs.forEach(s => { subMap[s.assignment_id] = s; });
+        setMySubmissions(subMap);
+      } catch (e) { console.warn('LMS Submissions fetch failed', e); }
       const myMarks = allMarks[user.id] || {};
       const values = Object.values(myMarks);
       if (values.length > 0) {
@@ -148,23 +156,70 @@ export default function PortalDashboard({ user, onLogout }) {
           </div>
         ) : (
           <div style={{ display: 'grid', gap: 16 }}>
-            {assignments.map(ast => (
-              <div key={ast.id} style={{ padding: 20, background: '#fffbeb', borderRadius: 16, border: '1px solid #fde68a', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <div>
-                  <div style={{ fontWeight: 800, color: '#b45309', fontSize: '1.05rem', marginBottom: 4 }}>{ast.title}</div>
-                  <div style={{ fontSize: '0.85rem', color: '#d97706', marginBottom: 8 }}>Subject: {ast.subject} • Due: {new Date(ast.deadline).toLocaleDateString()}</div>
-                  <div style={{ fontSize: '0.9rem', color: '#92400e', background: 'rgba(253, 230, 138, 0.5)', padding: 12, borderRadius: 8, whiteSpace: 'pre-wrap' }}>
-                    {ast.description}
+            {assignments.map(ast => {
+              const mySub = mySubmissions[ast.id];
+              const isOverdue = !mySub && new Date() > new Date(ast.due_date || ast.deadline);
+              const isGraded = mySub?.workflow_status === 'released' || mySub?.grade_numeric !== null;
+              
+              return (
+                <div key={ast.id} style={{ 
+                  padding: 24, 
+                  background: isOverdue ? '#fff1f2' : isGraded ? '#f0fdf4' : '#fffbeb', 
+                  borderRadius: 16, 
+                  border: `1px solid ${isOverdue ? '#fecdd3' : isGraded ? '#bbf7d0' : '#fde68a'}`,
+                  transition: 'transform 0.2s'
+                }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 12 }}>
+                    <div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+                        <span className="badge" style={{ background: 'rgba(0,0,0,0.05)', color: 'var(--text-main)', fontSize: '0.65rem' }}>{ast.subject}</span>
+                        {isGraded ? (
+                          <span className="badge badge-success">Graded: {mySub.grade_numeric} / {ast.max_score || 100}</span>
+                        ) : mySub ? (
+                          <span className="badge badge-info">Submitted {mySub.is_late ? '(Late)' : ''}</span>
+                        ) : isOverdue ? (
+                          <span className="badge badge-danger">Overdue</span>
+                        ) : (
+                          <span className="badge badge-warning">Pending</span>
+                        )}
+                      </div>
+                      <div style={{ fontWeight: 800, color: '#0f172a', fontSize: '1.1rem' }}>{ast.title}</div>
+                    </div>
+                    <div style={{ textAlign: 'right', fontSize: '0.8rem', color: '#64748b' }}>
+                       <div style={{ fontWeight: 700, color: isOverdue ? 'var(--danger)' : '#64748b' }}>
+                         {isOverdue ? 'Overdue' : `Due in ${Math.ceil((new Date(ast.due_date || ast.deadline) - new Date()) / 3600000)}h`}
+                       </div>
+                       <div style={{ fontSize: '0.7rem opacity: 0.8' }}>{new Date(ast.due_date || ast.deadline).toLocaleDateString()}</div>
+                       {mySub && <div style={{ color: '#10b981', fontWeight: 600, marginTop: 2 }}>Sent {new Date(mySub.submitted_at).toLocaleDateString()}</div>}
+                    </div>
+                  </div>
+
+                  <div style={{ fontSize: '0.9rem', color: '#475569', background: 'rgba(255,255,255,0.5)', padding: 16, borderRadius: 12, marginBottom:16, border: '1px solid rgba(0,0,0,0.03)' }}>
+                    {ast.description || "No description provided."}
+                  </div>
+
+                  <div style={{ display: 'flex', gap: 10 }}>
+                    {!isGraded && (
+                      <button 
+                        onClick={() => setShowSubmitModal(ast)}
+                        disabled={ast.cutoff_date && new Date() > new Date(ast.cutoff_date)}
+                        style={{ background: 'var(--primary)', color: 'white', border: 'none', padding: '10px 20px', borderRadius: 8, fontWeight: 700, cursor: 'pointer' }}
+                      >
+                        {mySub ? 'Resubmit Work' : 'Turn In Work'}
+                      </button>
+                    )}
+                    {mySub?.feedback && (
+                      <button 
+                        onClick={() => alert(`Teacher Feedback for ${ast.title}:\n\n"${mySub.feedback}"`)}
+                        style={{ background: 'white', border: '1.5px solid var(--border)', padding: '10px 20px', borderRadius: 8, fontWeight: 700, color: 'var(--text-main)', cursor: 'pointer' }}
+                      >
+                        View Feedback
+                      </button>
+                    )}
                   </div>
                 </div>
-                <button 
-                  onClick={() => setShowSubmitModal(ast)}
-                  style={{ background: '#f59e0b', color: 'white', border: 'none', padding: '10px 16px', borderRadius: 8, fontWeight: 700, cursor: 'pointer', flexShrink: 0, marginLeft: 20 }}
-                >
-                  Submit Work
-                </button>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </div>

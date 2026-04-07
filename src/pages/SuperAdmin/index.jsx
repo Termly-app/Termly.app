@@ -27,6 +27,7 @@ import {
 // Components
 import Loader          from '../../components/Common/Loader';
 import SuperAdminLoader from '../../components/Common/SuperAdminLoader';
+import Select           from '../../components/Common/Select';
 
 // Tabs
 import OverviewTab        from './tabs/OverviewTab';
@@ -202,8 +203,8 @@ export default function SuperAdmin({ currentUser, isPlatformAdmin, sidebarOpen, 
 
           // Optional profile merge (catches anything the join missed)
           try {
-            // Using safe columns to avoid 400 mismatch errors
-            const cols = 'id, school_id, school_name, motto, phone, email, address, logo, subscription_plan, subscription_status, subscription_expiry, last_payment_status';
+            // Using safe columns to avoid 400 mismatch errors (matched to migration.sql)
+            const cols = 'id, school_id, school_name, motto, phone, email, address, logo, subscription_plan';
             const { data: profiles } = await supabase.from('school_profiles').select(cols);
             
             if (profiles?.length > 0) {
