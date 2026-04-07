@@ -9,6 +9,8 @@ import {
 } from '../components/CommonIcons';
 import ConfirmModal from '../components/Common/ConfirmModal';
 import { useConfirm } from '../components/Common/useConfirm';
+import Select from '../components/Common/Select';
+import { Helmet } from 'react-helmet-async';
 
 function getCurrentTermLabel() {
   const now = new Date();
@@ -106,6 +108,10 @@ export default function Students({ currentUser, currentPeriodId }) {
 
   return (
     <div className="animate-in">
+      <Helmet>
+        <title>Learner Records | ShuleSoft — Student Management</title>
+        <meta name="description" content="Manage student profiles, class transfers, and fee balances." />
+      </Helmet>
       {/* Header */}
       <div className="page-header">
         <div className="page-header-actions">
@@ -141,19 +147,30 @@ export default function Students({ currentUser, currentPeriodId }) {
               <span className="search-icon"><SearchIcon size={16} /></span>
               <input type="text" placeholder="Search students..." value={search} onChange={e=>setSearch(e.target.value)}/>
             </div>
-            <select className="form-select" style={{width:'auto'}} value={classFilter}
-              onChange={e=>{setClassFilter(e.target.value);setStreamFilter('All');}}>
-              <option value="All">All Classes</option>
-              {Object.entries(CBC_STRUCTURE).map(([ln,ld])=>{
-                const a=ld.grades.filter(g=>(profile.activeClasses||[]).includes(g));
-                if(!a.length)return null;
-                return <optgroup key={ln} label={ln}>{a.map(g=><option key={g} value={g}>{g}</option>)}</optgroup>;
-              })}
-            </select>
-            <select className="form-select" style={{width:'auto'}} value={streamFilter} onChange={e=>setStreamFilter(e.target.value)}>
-              <option value="All">All Streams</option>
-              {(classFilter!=='All'?(profile.streamsPerClass?.[classFilter]||[]):Object.values(profile.streamsPerClass||{}).flat().filter((v,i,a)=>a.indexOf(v)===i)).map((s,i)=><option key={i} value={s}>{s}</option>)}
-            </select>
+            <Select 
+              value={classFilter}
+              onChange={e => { setClassFilter(e.target.value); setStreamFilter('All'); }}
+              options={[
+                { id: 'All', label: 'All Classes' },
+                ...Object.entries(CBC_STRUCTURE).flatMap(([ln, ld]) => {
+                  const active = ld.grades.filter(g => (profile.activeClasses || []).includes(g));
+                  return active.map(g => ({ id: g, label: g }));
+                })
+              ]}
+              style={{ minWidth: 150 }}
+            />
+            <Select 
+              value={streamFilter}
+              onChange={e => setStreamFilter(e.target.value)}
+              options={[
+                { id: 'All', label: 'All Streams' },
+                ...(classFilter !== 'All' 
+                  ? (profile.streamsPerClass?.[classFilter] || []) 
+                  : Object.values(profile.streamsPerClass || {}).flat().filter((v, i, a) => a.indexOf(v) === i)
+                ).map(s => ({ id: s, label: s }))
+              ]}
+              style={{ minWidth: 140 }}
+            />
           </div>
         </div>
         <div style={{opacity:loading?0.6:1}}>
@@ -243,20 +260,67 @@ function StudentModal({ student, profile, onSave, onClose }) {
           <div className="form-group"><label>Full Name *</label><input className="form-input" name="name" value={form.name} onChange={hc} required placeholder="e.g. John Kamau"/></div>
           <div className="form-row">
             <div className="form-group"><label>Admission No</label><input className="form-input" name="admNo" value={form.admNo} onChange={hc} placeholder="Auto if blank"/></div>
-            <div className="form-group"><label>Gender</label><select className="form-select" name="gender" value={form.gender} onChange={hc}><option>Male</option><option>Female</option></select></div>
-            <div className="form-group"><label>Residence Type</label><select className="form-select" name="residenceType" value={form.residenceType} onChange={hc}><option value="day">Day Student</option><option value="boarding">Boarding Student</option></select></div>
-            {form.residenceType==='boarding'&&(
-              <div className="form-group"><label>House</label><select className="form-select" name="house" value={form.house||''} onChange={hc}><option value="">Select House...</option>{(profile.boardingHouses||[]).map(h=><option key={h} value={h}>{h}</option>)}</select></div>
+            <div className="form-group">
+              <label>Gender</label>
+              <Select 
+                name="gender" 
+                value={form.gender} 
+                onChange={hc}
+                options={[{ id: 'Male', label: 'Male' }, { id: 'Female', label: 'Female' }]}
+              />
+            </div>
+            <div className="form-group">
+              <label>Residence Type</label>
+              <Select 
+                name="residenceType" 
+                value={form.residenceType} 
+                onChange={hc}
+                options={[
+                  { id: 'day', label: 'Day Student' }, 
+                  { id: 'boarding', label: 'Boarding Student' }
+                ]}
+              />
+            </div>
+            {form.residenceType === 'boarding' && (
+              <div className="form-group">
+                <label>House</label>
+                <Select 
+                  name="house" 
+                  value={form.house || ''} 
+                  onChange={hc}
+                  options={[
+                    { id: '', label: 'Select House...' },
+                    ...(profile.boardingHouses || []).map(h => ({ id: h, label: h }))
+                  ]}
+                />
+              </div>
             )}
           </div>
-          <div className="form-row">
-            <div className="form-group"><label>Class *</label>
-              <select className="form-select" name="class" value={form.class} onChange={hc}>
-                {Object.entries(CBC_STRUCTURE).map(([ln,ld])=>{const a=ld.grades.filter(g=>profile.activeClasses?.includes(g));if(!a.length)return null;return<optgroup key={ln} label={ln}>{a.map(g=><option key={g} value={g}>{g}</option>)}</optgroup>;})}
-              </select>
+            <div className="form-group">
+              <label>Class *</label>
+              <Select 
+                name="class" 
+                value={form.class} 
+                onChange={hc}
+                options={Object.entries(CBC_STRUCTURE).flatMap(([ln, ld]) => {
+                  const a = ld.grades.filter(g => profile.activeClasses?.includes(g));
+                  if (!a.length) return [];
+                  return a.map(g => ({ id: g, label: g }));
+                })}
+              />
             </div>
-            <div className="form-group"><label>Stream</label><select className="form-select" name="stream" value={form.stream} onChange={hc}><option value="">General</option>{(profile.streamsPerClass?.[form.class]||[]).map(s=><option key={s} value={s}>{s}</option>)}</select></div>
-          </div>
+            <div className="form-group">
+              <label>Stream</label>
+              <Select 
+                name="stream" 
+                value={form.stream} 
+                onChange={hc}
+                options={[
+                  { id: '', label: 'General' },
+                  ...(profile.streamsPerClass?.[form.class] || []).map(s => ({ id: s, label: s }))
+                ]}
+              />
+            </div>
           <div className="form-row">
             <div className="form-group"><label>Parent / Guardian *</label><input className="form-input" name="parent" value={form.parent} onChange={hc} required/></div>
             <div className="form-group"><label>Parent Phone *</label><input className="form-input" name="parentPhone" value={form.parentPhone} onChange={hc} required/></div>
@@ -365,13 +429,17 @@ function TransitionModal({ students, profile, onTransfer, onClose }) {
               <button className={`btn btn-sm ${dir==='demote'?'btn-primary':'btn-ghost'}`} onClick={()=>setDir('demote')}>↓ Demote</button>
             </div>
           </div>
-          <div style={{flex:1}}>
-            <label style={{display:'block',fontSize:'0.72rem',fontWeight:700,color:'var(--text-light)',textTransform:'uppercase',letterSpacing:'0.06em',marginBottom:8}}>Filter Class</label>
-            <select className="form-select" value={cf} onChange={e=>setCf(e.target.value)}>
-              <option value="All">All Students</option>
-              {profile.activeClasses?.map(c=><option key={c} value={c}>{c}</option>)}
-            </select>
-          </div>
+            <div style={{ flex: 1 }}>
+              <label style={{ display: 'block', fontSize: '0.72rem', fontWeight: 700, color: 'var(--text-light)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 8 }}>Filter Class</label>
+              <Select 
+                value={cf} 
+                onChange={e => setCf(e.target.value)}
+                options={[
+                  { id: 'All', label: 'All Students' },
+                  ...(profile.activeClasses || []).map(c => ({ id: c, label: c }))
+                ]}
+              />
+            </div>
         </div>
         <table className="data-table">
           <thead><tr><th style={{width:36}}><input type="checkbox" checked={filtered.length>0&&filtered.every(s=>sel.includes(s.id))} onChange={toggleAll}/></th><th>Student</th><th>Current</th><th>Target</th><th style={{textAlign:'right'}}>Status</th></tr></thead>

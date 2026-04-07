@@ -1,4 +1,5 @@
 import { fmtMoney } from '../superAdminUtils';
+import Select from '../../../components/Common/Select';
 
 export default function PaymentHistoryTab({
   allPayments,
@@ -29,10 +30,16 @@ export default function PaymentHistoryTab({
             </button>
           ))}
           <span style={{ fontSize:'.6rem', color:'var(--sub)', textTransform:'uppercase', letterSpacing:'.08em', marginLeft:12 }}>School:</span>
-          <select className="act-sel" value={historySchoolFilter} onChange={e => setHistorySchoolFilter(e.target.value)}>
-            <option value="all">All Schools</option>
-            {schoolNames.map(nm => <option key={nm} value={nm}>{nm}</option>)}
-          </select>
+          <Select 
+            value={historySchoolFilter} 
+            onChange={e => setHistorySchoolFilter(e.target.value)}
+            options={[
+              { id: 'all', label: 'All Schools' },
+              ...schoolNames.map(nm => ({ id: nm, label: nm }))
+            ]}
+            variant="minimal"
+            style={{ minWidth: 160 }}
+          />
         </div>
 
         {/* ── Table ── */}

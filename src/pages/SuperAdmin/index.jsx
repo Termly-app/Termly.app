@@ -855,13 +855,15 @@ export default function SuperAdmin({ currentUser, isPlatformAdmin, sidebarOpen, 
         {/* Academic Period Selector (New Sidebar Position) */}
         <div className="sidebar-dropdown">
           <label>ACADEMIC PERIOD</label>
-          <select 
-            className="custom-select"
+          <Select 
             value={searchQuery} // Temporary or bind to a global period state if available
             onChange={() => {}} // Hook this to period change logic
-          >
-            <option>2026 — Term 1 (Active)</option>
-          </select>
+            options={[
+              { id: '2026-T1', label: '2026 — Term 1 (Active)' }
+            ]}
+            variant="minimal"
+            style={{ width: '100%', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.1)' }}
+          />
         </div>
 
         {/* Nav */}

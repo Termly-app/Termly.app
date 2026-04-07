@@ -1,5 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { getSchoolProfile, saveSchoolProfile, importData, exportData, CBC_STRUCTURE, TERM_FEE, applyFeeStructure, getPeriods, createPeriod, setActivePeriod, testMpesaConnection, testSmsConnection, getCurrentAuthUser, supabase } from '../data/store';
+import Select from '../components/Common/Select';
+import { Helmet } from 'react-helmet-async';
 import {
   ClockIcon, CheckIcon, SaveIcon, SchoolIcon, ImageIcon, FolderIcon,
   BookIcon, CardIcon, DiamondIcon, PhoneIcon, RefreshIcon, CrossIcon, PlusIcon,
@@ -208,6 +210,10 @@ export default function Settings() {
 
   return (
     <div className="animate-in">
+      <Helmet>
+        <title>School Settings & Configuration | ShuleSoft — System Admin</title>
+        <meta name="description" content="Configure school identity, academic structures, grading systems, and gateway integrations." />
+      </Helmet>
       {/* Header */}
       <div className="page-header">
         <div className="page-header-actions">
@@ -652,17 +658,23 @@ export default function Settings() {
                 <div style={{display:'grid',gridTemplateColumns:'1fr 1fr auto',gap:10,alignItems:'flex-end'}}>
                   <div className="form-group" style={{marginBottom:0}}>
                     <label style={{fontSize:'0.65rem'}}>Year</label>
-                    <select className="form-input" value={newPeriod.year} onChange={e=>setNewPeriod({...newPeriod,year:Number(e.target.value)})}>
-                      {[2023,2024,2025,2026,2027].map(y=><option key={y} value={y}>{y}</option>)}
-                    </select>
+                    <Select 
+                      value={newPeriod.year} 
+                      onChange={e=>setNewPeriod({...newPeriod,year:Number(e.target.value)})}
+                      options={[2023,2024,2025,2026,2027].map(y=>({ id: y, label: String(y) }))}
+                      style={{ width: '100%', minWidth: 100 }}
+                    />
                   </div>
                   <div className="form-group" style={{marginBottom:0}}>
                     <label style={{fontSize:'0.65rem'}}>Term</label>
-                    <select className="form-input" value={newPeriod.term} onChange={e=>setNewPeriod({...newPeriod,term:e.target.value})}>
-                      {['Term 1','Term 2','Term 3','Semester 1','Semester 2','Quarter 1','Quarter 2','Quarter 3','Quarter 4'].map(t=><option key={t} value={t}>{t}</option>)}
-                    </select>
+                    <Select 
+                      value={newPeriod.term} 
+                      onChange={e=>setNewPeriod({...newPeriod,term:e.target.value})}
+                      options={['Term 1','Term 2','Term 3','Semester 1','Semester 2','Quarter 1','Quarter 2','Quarter 3','Quarter 4'].map(t=>({ id: t, label: t }))}
+                      style={{ width: '100%', minWidth: 140 }}
+                    />
                   </div>
-                      <button className="btn btn-primary" onClick={handleAddPeriod} disabled={loading} style={{height:40,display:'flex',alignItems:'center',gap:6}}><PlusIcon size={16} /> Add Period</button>
+                  <button className="btn btn-primary" onClick={handleAddPeriod} disabled={loading} style={{height:40,display:'flex',alignItems:'center',gap:6}}><PlusIcon size={16} /> Add Period</button>
                 </div>
               </div>
             </div>

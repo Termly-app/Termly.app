@@ -17,6 +17,8 @@
 import { useState, useEffect, useCallback } from 'react';
 import './Timetable.css';
 import { printClassTimetable, printTeacherTimetable } from '../../utils/timetablePrint';
+import Select from '../../components/Common/Select';
+import { Helmet } from 'react-helmet-async';
 import {
   getTimetableConfig, saveTimetableConfig,
   getTimetableSlots, saveTimetableSlot, clearTimetableSlot,
@@ -26,7 +28,8 @@ import {
 } from '../../data/store';
 import { 
   CalendarIcon, PrintIcon, BookIcon, SettingsIcon, CheckIcon, CrossIcon, 
-  RocketIcon, SaveIcon, AlertIcon, UserIcon, HomeIcon, TeacherIcon, PlusIcon
+  RocketIcon, SaveIcon, AlertIcon, UserIcon, HomeIcon, TeacherIcon, PlusIcon,
+  SparklesIcon
 } from '../../components/CommonIcons';
 
 // ── Colour palette for subjects (Modern, Premium Palette) ────────────────
@@ -640,6 +643,10 @@ export default function Timetable({ currentUser, currentPeriodId, periods = [] }
   // ─────────────────────────────────────────────────────────────────────
   return (
     <div className="tt-root">
+      <Helmet>
+        <title>School Timetable & Scheduling | ShuleSoft — Master Calendar</title>
+        <meta name="description" content="Generate automated school timetables, manage teacher workloads, and schedule exams with ease." />
+      </Helmet>
 
       {/* ── Header ── */}
       <div className="tt-header">
@@ -695,11 +702,15 @@ export default function Timetable({ currentUser, currentPeriodId, periods = [] }
             })}><PrintIcon size={14} /> Print</button>
           )}
           {/* Period selector always visible */}
-          <select className="tt-select" value={periodId} onChange={e => setPeriodId(e.target.value)}>
-            {periods.map(p => (
-              <option key={p.id} value={p.id}>{p.year} — {p.term}{p.is_active ? ' (Active)' : ''}</option>
-            ))}
-          </select>
+          <Select 
+            value={periodId} 
+            onChange={e => setPeriodId(e.target.value)}
+            options={periods.map(p => ({ 
+              id: p.id, 
+              label: `${p.year} — ${p.term}${p.is_active ? ' (Active)' : ''}` 
+            }))}
+            style={{ minWidth: 180 }}
+          />
         </div>
       </div>
 
@@ -798,22 +809,33 @@ export default function Timetable({ currentUser, currentPeriodId, periods = [] }
             <div className="tt-divider" />
             {view === 'class' && (
               <>
-                <select className="tt-select" value={selClass} onChange={e => { setSelClass(e.target.value); setSelStream(''); setPreview(null); }}>
-                  {classes.map(c => <option key={c} value={c}>{c}</option>)}
-                </select>
+                <Select 
+                  value={selClass} 
+                  onChange={e => { setSelClass(e.target.value); setSelStream(''); setPreview(null); }}
+                  options={classes.map(c => ({ id: c, label: c }))}
+                  style={{ minWidth: 120 }}
+                />
                 {classStreams.length > 0 && (
-                  <select className="tt-select" value={selStream} onChange={e => { setSelStream(e.target.value); setPreview(null); }}>
-                    <option value="">All Streams</option>
-                    {classStreams.map(s => <option key={s} value={s}>{s}</option>)}
-                  </select>
+                  <Select 
+                    value={selStream} 
+                    onChange={e => { setSelStream(e.target.value); setPreview(null); }}
+                    options={[
+                      { id: '', label: 'All Streams' },
+                      ...classStreams.map(s => ({ id: s, label: s }))
+                    ]}
+                    style={{ minWidth: 120 }}
+                  />
                 )}
               </>
             )}
             {view === 'teacher' && (
-              <select className="tt-select" value={selTeacher} onChange={e => setSelTeacher(e.target.value)}>
-                <option value="">Select Teacher</option>
-                {teachers.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
-              </select>
+              <Select 
+                value={selTeacher} 
+                onChange={e => setSelTeacher(e.target.value)}
+                options={teachers.map(t => ({ id: t.id, label: t.name }))}
+                placeholder="Select Teacher"
+                style={{ minWidth: 180 }}
+              />
             )}
           </div>
 
@@ -953,14 +975,25 @@ export default function Timetable({ currentUser, currentPeriodId, periods = [] }
           {/* Header with class picker + generate button */}
           <div className="tt-req-header">
             <div className="tt-req-class-picker">
-              <select className="tt-select" value={selClass} onChange={e => { setSelClass(e.target.value); setSelStream(''); }}>
-                {classes.map(c => <option key={c} value={c}>{c}</option>)}
-              </select>
+              <Select 
+                value={selClass} 
+                onChange={e => { setSelClass(e.target.value); setSelStream(''); }}
+                options={[
+                  { id: '', label: 'Select Class...' },
+                  ...classes.map(c => ({ id: c, label: c }))
+                ]}
+                style={{ minWidth: 160 }}
+              />
               {classStreams.length > 0 && (
-                <select className="tt-select" value={selStream} onChange={e => setSelStream(e.target.value)}>
-                  <option value="">All Streams</option>
-                  {classStreams.map(s => <option key={s} value={s}>{s}</option>)}
-                </select>
+                <Select 
+                  value={selStream} 
+                  onChange={e => setSelStream(e.target.value)}
+                  options={[
+                    { id: '', label: 'All Streams' },
+                    ...classStreams.map(s => ({ id: s, label: s }))
+                  ]}
+                  style={{ minWidth: 140 }}
+                />
               )}
               <span className={`tt-level-badge ${levelBadge.cls}`}>{levelBadge.label}</span>
             </div>
@@ -1060,10 +1093,15 @@ export default function Timetable({ currentUser, currentPeriodId, periods = [] }
                 </div>
                 <div>
                   <label className="tt-req-label">Teacher</label>
-                  <select className="tt-req-input" value={reqTeacher} onChange={e => setReqTeacher(e.target.value)}>
-                    <option value="">— Unassigned —</option>
-                    {teachers.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
-                  </select>
+                  <Select 
+                    value={reqTeacher} 
+                    onChange={e => setReqTeacher(e.target.value)}
+                    options={[
+                      { id: '', label: '— Unassigned —' },
+                      ...teachers.map(t => ({ id: t.id, label: t.name }))
+                    ]}
+                    style={{ flex: 1 }}
+                  />
                 </div>
                 <div>
                   <label className="tt-req-label">Lessons / Week</label>
@@ -1196,15 +1234,15 @@ export default function Timetable({ currentUser, currentPeriodId, periods = [] }
 
             {/* Teacher */}
             <label className="tt-field-label">Teacher</label>
-            <select className="tt-field" value={editTeacher}
-              onChange={e => { setEditTeacher(e.target.value); setConflictWarning(null); }}>
-              <option value="">— Unassigned —</option>
-              {teachers.map(t => (
-                <option key={t.id} value={t.id} style={t.on_leave ? {color:'var(--warning)'} : {}}>
-                  {t.name} {t.on_leave ? '(On Leave 🏖️)' : ''}
-                </option>
-              ))}
-            </select>
+            <Select 
+              value={editTeacher} 
+              onChange={e => { setEditTeacher(e.target.value); setConflictWarning(null); }}
+              options={[
+                { id: '', label: '— Unassigned —' },
+                ...teachers.map(t => ({ id: t.id, label: `${t.name}${t.on_leave ? ' (On Leave 🏖️)' : ''}` }))
+              ]}
+              style={{ width: '100%' }}
+            />
 
             {/* Conflict warning */}
             {conflictWarning && (

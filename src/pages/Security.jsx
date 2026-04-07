@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import { getUsers, addUser, deleteUser, getSchoolProfile, getPlatformSettings } from '../data/store';
 import { DiamondIcon, UsersIcon } from '../components/CommonIcons';
+import Select from '../components/Common/Select';
+import { Helmet } from 'react-helmet-async';
 
 export default function Security({ currentUser }) {
   const [users, setUsers] = useState([]);
@@ -97,6 +99,10 @@ export default function Security({ currentUser }) {
 
   return (
     <div className="animate-in">
+      <Helmet>
+        <title>Security & Access Control | ShuleSoft — System Safety</title>
+        <meta name="description" content="Manage staff roles, user permissions, and school security settings. Monitor admin access and platform seats." />
+      </Helmet>
       <div className="page-header">
         <div className="page-header-actions">
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
@@ -265,15 +271,16 @@ function UserModal({ onClose, onSave, error, adminExists }) {
             </div>
             <div className="form-group">
               <label>Role</label>
-              <select 
-                className="form-select" 
+              <Select 
                 value={form.role} 
                 onChange={(e) => setForm({ ...form, role: e.target.value })}
-              >
-                <option value="Teacher">Teacher (Grading, Attendance, Students)</option>
-                <option value="Finance">Finance (Fees, Students List)</option>
-                <option value="Admin" disabled={adminExists}>Admin (Full Access) {adminExists ? '— (Limit: 1)' : ''}</option>
-              </select>
+                options={[
+                  { id: 'Teacher', label: 'Teacher (Grading, Attendance, Students)' },
+                  { id: 'Finance', label: 'Finance (Fees, Students List)' },
+                  { id: 'Admin', label: `Admin (Full Access) ${adminExists ? '— (Limit: 1)' : ''}`, disabled: adminExists }
+                ]}
+                style={{ width: '100%' }}
+              />
             </div>
             <div className="form-group">
               <label>Temporary Password</label>

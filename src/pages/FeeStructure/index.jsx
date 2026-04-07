@@ -19,6 +19,8 @@ import { printFeeStatement } from '../../utils/receiptPrint';
 import { 
   CardIcon, PrintIcon, SaveIcon, BookIcon, EditIcon, CrossIcon, CheckIcon 
 } from '../../components/CommonIcons';
+import Select from '../../components/Common/Select';
+import { Helmet } from 'react-helmet-async';
 
 const CATEGORIES = ['Tuition', 'Activity / Clubs', 'Boarding', 'Transport', 'Development Levy', 'Uniform', 'Computer', 'Library', 'Examination', 'Other'];
 
@@ -152,6 +154,10 @@ export default function FeeStructure({ currentUser, schoolId, schoolName, getFee
 
   return (
     <div className="fs-root">
+      <Helmet>
+        <title>Fee Structure & Billing Setup | ShuleSoft — Financials</title>
+        <meta name="description" content="Define school fee items, assign class-based pricing, and generate terminal fee schedules." />
+      </Helmet>
       <div className="fs-header">
         <div className="fs-title-group">
           <div className="fs-icon"><CardIcon size={24} /></div>
@@ -161,11 +167,12 @@ export default function FeeStructure({ currentUser, schoolId, schoolName, getFee
           </div>
         </div>
         <div className="fs-header-actions">
-          <select className="fs-select" value={term} onChange={e => setTerm(e.target.value)}>
-            {TERMS.flatMap(t => [`${t} ${CURRENT_YEAR}`, `${t} ${CURRENT_YEAR + 1}`]).map(t => (
-              <option key={t} value={t}>{t}</option>
-            ))}
-          </select>
+          <Select 
+            value={term} 
+            onChange={e => setTerm(e.target.value)}
+            options={TERMS.flatMap(t => [`${t} ${CURRENT_YEAR}`, `${t} ${CURRENT_YEAR + 1}`]).map(t => ({ id: t, label: t }))}
+            style={{ minWidth: 160 }}
+          />
           <button className="fs-btn-outline" onClick={handlePrintSchedule} disabled={!items.length}>
             <PrintIcon size={14} /> Print Schedule
           </button>
@@ -243,9 +250,12 @@ export default function FeeStructure({ currentUser, schoolId, schoolName, getFee
                       </div>
                       <div className="fs-edit-field" style={{ flex:1.2 }}>
                         <label className="fs-field-label">Category</label>
-                        <select className="fs-input" value={item.category} onChange={e => updateItem(item.id, 'category', e.target.value)}>
-                          {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
-                        </select>
+                        <Select 
+                          value={item.category} 
+                          onChange={e => updateItem(item.id, 'category', e.target.value)}
+                          options={CATEGORIES.map(c => ({ id: c, label: c }))}
+                          style={{ width: '100%' }}
+                        />
                       </div>
                       <div className="fs-edit-field" style={{ flex:0.9 }}>
                         <label className="fs-field-label">Amount (KSh) *</label>

@@ -4,6 +4,8 @@ import { CBC_STRUCTURE } from '../data/seedData';
 import { 
   CheckIcon, ClockIcon, CrossIcon, PrintIcon, DashboardIcon, FlagIcon 
 } from '../components/CommonIcons';
+import Select from '../components/Common/Select';
+import { Helmet } from 'react-helmet-async';
 
 export default function Attendance({ currentUser, currentPeriodId }) {
   const [selectedClass, setSelectedClass] = useState('All');
@@ -179,6 +181,10 @@ export default function Attendance({ currentUser, currentPeriodId }) {
 
   return (
     <div className="animate-in">
+      <Helmet>
+        <title>Student Attendance Tracking | ShuleSoft — Daily Records</title>
+        <meta name="description" content="Mark daily student attendance, track late arrivals, and generate attendance reports." />
+      </Helmet>
       <div className="page-header">
         <div className="page-header-actions" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 16 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
@@ -221,31 +227,36 @@ export default function Attendance({ currentUser, currentPeriodId }) {
 
       {/* Filters */}
       <div className="filter-bar">
-        <select className="form-select" value={selectedClass} onChange={e => { setSelectedClass(e.target.value); setStreamFilter('All'); }}>
-          <option value="All">All Classes</option>
-          {Object.entries(CBC_STRUCTURE).map(([levelName, levelData]) => {
-            const activeInLevel = levelData.grades.filter(g => profile.activeClasses?.includes(g));
-            if (activeInLevel.length === 0) return null;
-            return (
-              <optgroup key={levelName} label={levelName}>
-                {activeInLevel.map(g => {
-                  const isMyClass = assignments[g] && Object.values(assignments[g]).some(streams => 
-                    typeof streams === 'string' ? streams === currentUser?.id :
-                    Object.values(streams).some(tid => tid === currentUser?.id)
-                  );
-                  return <option key={g} value={g}>{isMyClass && isTeacher ? `[My Class] ${g}` : g}</option>;
-                })}
-              </optgroup>
+        <Select 
+          value={selectedClass} 
+          onChange={e => { setSelectedClass(e.target.value); setStreamFilter('All'); }}
+          options={[
+            { id: 'All', label: 'All Classes' },
+            ...Object.entries(CBC_STRUCTURE).flatMap(([levelName, levelData]) => {
+              const activeInLevel = levelData.grades.filter(g => profile.activeClasses?.includes(g));
+              return activeInLevel.map(g => {
+                const isMyClass = assignments[g] && Object.values(assignments[g]).some(streams => 
+                  typeof streams === 'string' ? streams === currentUser?.id :
+                  Object.values(streams).some(tid => tid === currentUser?.id)
+                );
+                return { id: g, label: isMyClass && isTeacher ? `[My Class] ${g}` : g };
+              });
+            })
+          ]}
+          style={{ minWidth: 160 }}
+        />
+        <Select 
+          value={streamFilter} 
+          onChange={(e) => setStreamFilter(e.target.value)}
+          options={[
+            { id: 'All', label: 'All Streams' },
+            ...(selectedClass !== 'All' 
+               ? (profile.streamsPerClass?.[selectedClass] || []).map(stream => ({ id: stream, label: stream }))
+               : Object.values(profile.streamsPerClass || {}).flat().filter((v,i,a) => a.indexOf(v)===i).map((stream, idx) => ({ id: stream, label: stream }))
             )
-          })}
-        </select>
-        <select className="form-select" value={streamFilter} onChange={(e) => setStreamFilter(e.target.value)}>
-          <option value="All">All Streams</option>
-          {selectedClass !== 'All' 
-             ? (profile.streamsPerClass?.[selectedClass] || []).map(stream => <option key={stream} value={stream}>{stream}</option>)
-             : Object.values(profile.streamsPerClass || {}).flat().filter((v,i,a) => a.indexOf(v)===i).map((stream, idx) => <option key={idx} value={stream}>{stream}</option>)
-          }
-        </select>
+          ]}
+          style={{ minWidth: 140 }}
+        />
         <input type="date" className="form-input" style={{ width: 'auto' }} value={selectedDate} onChange={e => setSelectedDate(e.target.value)} />
         <span className="text-muted" style={{ fontSize: '0.85rem' }}>{students.length} students</span>
       </div>
@@ -307,11 +318,16 @@ export default function Attendance({ currentUser, currentPeriodId }) {
             <div className="modal-body" style={{ padding: 20 }}>
               <div className="form-group" style={{ marginBottom: 15 }}>
                 <label className="form-label" style={{ display: 'block', marginBottom: 8, fontSize: '0.85rem', fontWeight: 600 }}>Report Type</label>
-                <select className="form-select" style={{ width: '100%' }} value={reportType} onChange={e => setReportType(e.target.value)}>
-                  <option value="day">Daily Report (Single Day)</option>
-                  <option value="week">Weekly Report (Mon - Fri)</option>
-                  <option value="month">Monthly Report (Whole Month)</option>
-                </select>
+                <Select 
+                  value={reportType} 
+                  onChange={e => setReportType(e.target.value)}
+                  options={[
+                    { id: 'day', label: 'Daily Report (Single Day)' },
+                    { id: 'week', label: 'Weekly Report (Mon - Fri)' },
+                    { id: 'month', label: 'Monthly Report (Whole Month)' }
+                  ]}
+                  style={{ width: '100%' }}
+                />
                 <p style={{ fontSize: '0.75rem', color: 'var(--text-light)', marginTop: 8, lineHeight: 1.4 }}>
                   The report will be based on the week or month containing the currently selected date: <strong>{selectedDate}</strong>
                 </p>

@@ -3,6 +3,7 @@ import { getSchoolProfile, submitPayment, getPayments, checkIsSubscriptionActive
 import { 
   RocketIcon, ShieldIcon, AlertIcon, CheckIcon, CrossIcon, FolderIcon, DiamondIcon, TargetIcon, HistoryIcon, SubscriptionIcon
 } from '../components/CommonIcons';
+import { Helmet } from 'react-helmet-async';
 import { getPlanDisplayFeatures } from './SuperAdmin/superAdminUtils';
 
 export default function Billing() {
@@ -113,6 +114,10 @@ export default function Billing() {
 
   return (
     <div className="animate-in">
+      <Helmet>
+        <title>Subscription & Billing | ShuleSoft — Managed SaaS</title>
+        <meta name="description" content="View your school's current plan, renew your subscription, and track payment history via M-Pesa." />
+      </Helmet>
       <div className="page-header">
         <div className="page-header-content">
           <div className="page-header-title-area">

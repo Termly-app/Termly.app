@@ -1,4 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
+import Select from '../components/Common/Select';
+import { Helmet } from 'react-helmet-async';
 import { 
   getBooks, saveBook, getBorrows, saveBorrow, returnBook, deleteBook,
   getStudents, getPrintHeader 
@@ -207,6 +209,10 @@ export default function Library({ currentUser, currentPeriodId }) {
 
   return (
     <div className="library-page glass-panel">
+      <Helmet>
+        <title>School Library & Resource Management | ShuleSoft — Digital Catalog</title>
+        <meta name="description" content="Track school books, manage student loans, and audit library resources with our digital catalog system." />
+      </Helmet>
       {/* Header */}
       <div className="lib-header">
         <div className="lib-title-area">
@@ -247,27 +253,47 @@ export default function Library({ currentUser, currentPeriodId }) {
           />
         </div>
         <div className="lib-filters">
-          <select value={filters.subject} onChange={e => setFilters({...filters, subject: e.target.value})}>
-            <option value="">All Subjects</option>
-            {Array.from(new Set(books.map(b => b.subject))).filter(Boolean).sort().map(s => <option key={s} value={s}>{s}</option>)}
-          </select>
+          <Select 
+            value={filters.subject} 
+            onChange={e => setFilters({...filters, subject: e.target.value})}
+            options={[
+              { id: '', label: 'All Subjects' },
+              ...Array.from(new Set(books.map(b => b.subject))).filter(Boolean).sort().map(s => ({ id: s, label: s }))
+            ]}
+            style={{ minWidth: 140 }}
+          />
           {activeTab === 'loans' && (
             <>
-              <select value={filters.grade} onChange={e => setFilters({...filters, grade: e.target.value})}>
-                <option value="">All Classes</option>
-                {Array.from(new Set(students.map(s => s.class))).filter(Boolean).sort().map(c => <option key={c} value={c}>{c}</option>)}
-              </select>
-              <select value={filters.stream} onChange={e => setFilters({...filters, stream: e.target.value})}>
-                <option value="">All Streams</option>
-                {Array.from(new Set(students.map(s => s.stream))).filter(Boolean).sort().map(s => <option key={s} value={s}>{s}</option>)}
-              </select>
+              <Select 
+                value={filters.grade} 
+                onChange={e => setFilters({...filters, grade: e.target.value})}
+                options={[
+                  { id: '', label: 'All Classes' },
+                  ...Array.from(new Set(students.map(s => s.class))).filter(Boolean).sort().map(c => ({ id: c, label: c }))
+                ]}
+                style={{ minWidth: 120 }}
+              />
+              <Select 
+                value={filters.stream} 
+                onChange={e => setFilters({...filters, stream: e.target.value})}
+                options={[
+                  { id: '', label: 'All Streams' },
+                  ...Array.from(new Set(students.map(s => s.stream))).filter(Boolean).sort().map(s => ({ id: s, label: s }))
+                ]}
+                style={{ minWidth: 120 }}
+              />
             </>
           )}
           {activeTab === 'catalog' && (
-            <select value={filters.year} onChange={e => setFilters({...filters, year: e.target.value})}>
-              <option value="">All Years</option>
-              {Array.from(new Set(books.map(b => String(b.year_registered)))).filter(Boolean).sort().map(y => <option key={y} value={y}>{y}</option>)}
-            </select>
+            <Select 
+              value={filters.year} 
+              onChange={e => setFilters({...filters, year: e.target.value})}
+              options={[
+                { id: '', label: 'All Years' },
+                ...Array.from(new Set(books.map(b => String(b.year_registered)))).filter(Boolean).sort().map(y => ({ id: y, label: y }))
+              ]}
+              style={{ minWidth: 110 }}
+            />
           )}
         </div>
       </div>
@@ -430,21 +456,21 @@ export default function Library({ currentUser, currentPeriodId }) {
             <form onSubmit={handleIssueBook} className="modal-form">
               <div className="f-group">
                 <label>Select Book *</label>
-                <select name="book_id" required>
-                  <option value="">-- Choose Book --</option>
-                  {books.filter(b => b.available_copies > 0).map(b => (
-                    <option key={b.id} value={b.id}>{b.title} ({b.book_code})</option>
-                  ))}
-                </select>
+                <Select 
+                  name="book_id"
+                  options={books.filter(b => b.available_copies > 0).map(b => ({ id: b.id, label: `${b.title} (${b.book_code})` }))}
+                  placeholder="-- Choose Book --"
+                  style={{ width: '100%' }}
+                />
               </div>
               <div className="f-group">
                 <label>Select Student *</label>
-                <select name="student_id" required>
-                  <option value="">-- Choose Student --</option>
-                  {students.sort((a,b) => a.name.localeCompare(b.name)).map(s => (
-                    <option key={s.id} value={s.id}>{s.name} ({s.adm_no}) - {s.class}</option>
-                  ))}
-                </select>
+                <Select 
+                  name="student_id"
+                  options={students.sort((a,b) => a.name.localeCompare(b.name)).map(s => ({ id: s.id, label: `${s.name} (${s.adm_no}) - ${s.class}` }))}
+                  placeholder="-- Choose Student --"
+                  style={{ width: '100%' }}
+                />
               </div>
               <div className="f-group">
                 <label>Due Date</label>

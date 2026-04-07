@@ -7,6 +7,7 @@ import {
   FlagIcon, RocketIcon, TeacherIcon, SchoolIcon, SaveIcon,
   SparklesIcon, TrendUpIcon, ChartBarIcon
 } from '../components/CommonIcons';
+import Select from '../components/Common/Select';
 
 export default function Grading({ currentUser, currentPeriodId }) {
   const allGrades = Object.values(CBC_STRUCTURE).flatMap(l => l.grades);
@@ -369,9 +370,12 @@ export default function Grading({ currentUser, currentPeriodId }) {
         {isSeniorSecondary && (
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             <label style={{ fontSize: '0.82rem', fontWeight: 600 }}>Pathway:</label>
-            <select className="form-select" style={{ width: 180, padding: '6px 10px', fontSize: '0.85rem' }} value={selectedPathway} onChange={(e) => setSelectedPathway(e.target.value)}>
-              {CBC_STRUCTURE['Senior Secondary'].pathways.map(p => <option key={p} value={p}>{p}</option>)}
-            </select>
+            <Select 
+              value={selectedPathway} 
+              onChange={(e) => setSelectedPathway(e.target.value)}
+              options={CBC_STRUCTURE['Senior Secondary'].pathways.map(p => ({ id: p, label: p }))}
+              style={{ minWidth: 180 }}
+            />
           </div>
         )}
 
@@ -380,10 +384,15 @@ export default function Grading({ currentUser, currentPeriodId }) {
         )}
         
         <div style={{ flex: 1 }} />
-        <select className="form-select" style={{ width: 150, padding: '6px 10px', fontSize: '0.85rem' }} value={streamFilter} onChange={(e) => setStreamFilter(e.target.value)}>
-          <option value="All">All Streams</option>
-          {(profile.streamsPerClass?.[selectedClass] || []).map(stream => <option key={stream} value={stream}>{stream} Stream</option>)}
-        </select>
+        <Select 
+          value={streamFilter} 
+          onChange={(e) => setStreamFilter(e.target.value)}
+          options={[
+            { id: 'All', label: 'All Streams' },
+            ...(profile.streamsPerClass?.[selectedClass] || []).map(stream => ({ id: stream, label: `${stream} Stream` }))
+          ]}
+          style={{ minWidth: 150 }}
+        />
         
         <div style={{ display:'flex', gap:4, padding:'4px', background:'var(--bg)', borderRadius:10, border:'1px solid var(--border)' }}>
           {(profile.customExams || ['CAT 1', 'CAT 2', 'Mid Term', 'End Term']).map(type => (
@@ -514,9 +523,12 @@ export default function Grading({ currentUser, currentPeriodId }) {
         <div className="card">
           <div className="card-header">
             <h3>Subject Rankings — {selectedClass}</h3>
-            <select className="form-select" style={{ width: 'auto' }} value={selectedSubject} onChange={e => setSelectedSubject(e.target.value)}>
-              {subjects.map(s => <option key={s} value={s}>{s}</option>)}
-            </select>
+            <Select 
+              value={selectedSubject} 
+              onChange={e => setSelectedSubject(e.target.value)}
+              options={subjects.map(s => ({ id: s, label: s }))}
+              style={{ minWidth: 160 }}
+            />
           </div>
           <div className="card-body" style={{ padding: 0 }}>
             <table className="data-table">
@@ -562,11 +574,23 @@ export default function Grading({ currentUser, currentPeriodId }) {
                       const lv = (cbcData[s.id] || {})[sub] || 'Meeting Expectation';
                       return (
                         <td key={sub}>
-                          <select value={lv} onChange={e => handleCBCChange(s.id, sub, e.target.value)}
-                            style={{ padding: '3px 5px', fontSize: '0.72rem', border: `2px solid ${cbcColor(lv)}`, borderRadius: 6,
-                              background: `${cbcColor(lv)}15`, color: cbcColor(lv), fontWeight: 600, fontFamily: 'var(--font)', cursor: 'pointer', width: '100%', minWidth: 75 }}>
-                            {CBC_LEVELS.map(l => <option key={l} value={l}>{l.split(' ')[0]}</option>)}
-                          </select>
+                          <Select 
+                            value={lv} 
+                            onChange={e => handleCBCChange(s.id, sub, e.target.value)}
+                            options={CBC_LEVELS.map(l => ({ id: l, label: l.split(' ')[0] }))}
+                            variant="minimal"
+                            style={{ 
+                              padding: '2px 4px', 
+                              fontSize: '0.72rem', 
+                              border: `2px solid ${cbcColor(lv)}`, 
+                              borderRadius: 6,
+                              background: `${cbcColor(lv)}15`, 
+                              color: cbcColor(lv), 
+                              fontWeight: 600, 
+                              width: '100%', 
+                              minWidth: 70 
+                            }}
+                          />
                         </td>
                       );
                     })}

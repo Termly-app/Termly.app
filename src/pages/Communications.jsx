@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { db } from '../data/offlineStore';
 import { MessageIcon, SendIcon, HistoryIcon, UsersIcon, CheckIcon } from '../components/CommonIcons';
 import { getStudents, getSchoolProfile } from '../data/store';
+import Select from '../components/Common/Select';
+import { Helmet } from 'react-helmet-async';
 
 export default function Communications({ currentUser }) {
   const [history, setHistory] = useState([]);
@@ -76,6 +78,10 @@ export default function Communications({ currentUser }) {
 
   return (
     <div className="section-card" style={{ display: 'grid', gridTemplateColumns: 'minmax(350px, 1fr) 2fr', gap: 24, minHeight: 'calc(100vh - 120px)' }}>
+      <Helmet>
+        <title>Bulk Communications & SMS | ShuleSoft — Parent Engagement</title>
+        <meta name="description" content="Send bulk SMS and WhatsApp broadcasts to parents, staff, and students. Improve school-to-home engagement." />
+      </Helmet>
       
       {/* LEFT PANE: History */}
       <div style={{ paddingRight: 24, borderRight: '1px solid var(--border)' }}>
@@ -128,32 +134,45 @@ export default function Communications({ currentUser }) {
           <div className="form-row" style={{ gridTemplateColumns: '1fr 1fr' }}>
             <div className="form-group">
               <label>Communication Channel</label>
-              <select className="form-select" value={channel} onChange={(e) => setChannel(e.target.value)}>
-                <option value="sms">Standard SMS</option>
-                <option value="whatsapp">WhatsApp Business API</option>
-              </select>
+              <Select 
+                value={channel} 
+                onChange={(e) => setChannel(e.target.value)}
+                options={[
+                  { id: 'sms', label: 'Standard SMS' },
+                  { id: 'whatsapp', label: 'WhatsApp Business API' }
+                ]}
+                style={{ width: '100%' }}
+              />
             </div>
             
             <div className="form-group">
               <label>Target Audience</label>
-              <select className="form-select" value={targetAudience} onChange={(e) => setTargetAudience(e.target.value)}>
-                <option value="all">All Parents</option>
-                <option value="defaulters">Fee Defaulters (Balance &gt; 0)</option>
-                <optgroup label="Specific Classes">
-                  {activeClasses.map(c => <option key={c} value={c}>{c} Parents</option>)}
-                </optgroup>
-              </select>
+              <Select 
+                value={targetAudience} 
+                onChange={(e) => setTargetAudience(e.target.value)}
+                options={[
+                  { id: 'all', label: 'All Parents' },
+                  { id: 'defaulters', label: 'Fee Defaulters (Balance > 0)' },
+                  ...activeClasses.map(c => ({ id: c, label: `${c} Parents` }))
+                ]}
+                style={{ width: '100%' }}
+              />
             </div>
           </div>
 
           <div className="form-group" style={{ marginTop: 10 }}>
             <label>Quick Templates</label>
-            <select className="form-select" onChange={handleTemplateChange} defaultValue="">
-              <option value="" disabled>Select a pre-written template...</option>
-              <option value="fee_reminder">Fee Arrears Reminder</option>
-              <option value="holiday">Holiday Announcement</option>
-              <option value="meeting">PTA Meeting Notice</option>
-            </select>
+            <Select 
+              value={''} 
+              placeholder="Select a pre-written template..."
+              onChange={(e) => handleTemplateChange(e)}
+              options={[
+                { id: 'fee_reminder', label: 'Fee Arrears Reminder' },
+                { id: 'holiday', label: 'Holiday Announcement' },
+                { id: 'meeting', label: 'PTA Meeting Notice' }
+              ]}
+              style={{ width: '100%' }}
+            />
           </div>
 
           <div className="form-group" style={{ marginTop: 24 }}>

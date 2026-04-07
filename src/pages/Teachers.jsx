@@ -8,6 +8,8 @@ import {
 } from '../components/CommonIcons';
 import ConfirmModal from '../components/Common/ConfirmModal';
 import { useConfirm } from '../components/Common/useConfirm';
+import Select from '../components/Common/Select';
+import { Helmet } from 'react-helmet-async';
 
 export default function Teachers({ currentUser, currentPeriodId }) {
   const isAdmin = currentUser?.role === 'Owner' || currentUser?.role === 'Admin';
@@ -129,6 +131,10 @@ export default function Teachers({ currentUser, currentPeriodId }) {
 
   return (
     <div className="animate-in">
+      <Helmet>
+        <title>Academic Staff Management | ShuleSoft — Faculty Records</title>
+        <meta name="description" content="Manage teacher profiles, classroom assignments, and performance reports." />
+      </Helmet>
       <div className="page-header">
         <div className="page-header-actions" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 16 }}>
           <div>
@@ -327,26 +333,25 @@ function AssignmentsTab({ assignments, teachers, onAssign, profile }) {
         <div className="card-body" style={{ padding: '12px 16px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
             <strong style={{ fontSize: '0.85rem', whiteSpace: 'nowrap' }}>Select Class:</strong>
-            <select className="form-select" style={{ maxWidth: 200 }} value={selectedClass}
-              onChange={e => setSelectedClass(e.target.value)}>
-              {Object.entries(CBC_STRUCTURE).map(([levelName, levelData]) => {
+            <Select 
+              value={selectedClass} 
+              onChange={e => setSelectedClass(e.target.value)}
+              options={Object.entries(CBC_STRUCTURE).flatMap(([levelName, levelData]) => {
                 const activeInLevel = levelData.grades.filter(g => profile.activeClasses?.includes(g));
-                if (activeInLevel.length === 0) return null;
-                return (
-                  <optgroup key={levelName} label={levelName}>
-                    {activeInLevel.map(g => <option key={g} value={g}>{g}</option>)}
-                  </optgroup>
-                );
+                return activeInLevel.map(g => ({ id: g, label: g }));
               })}
-            </select>
+              style={{ minWidth: 160 }}
+            />
             <span className="badge" style={{ background: levelColors[level] + '20', color: levelColors[level], fontWeight: 600 }}>
               {level}
             </span>
             <strong style={{ fontSize: '0.85rem', whiteSpace: 'nowrap', marginLeft: 10 }}>Stream:</strong>
-            <select className="form-select" style={{ maxWidth: 150 }} value={selectedStream}
-              onChange={e => setSelectedStream(e.target.value)}>
-              {streams.map(s => <option key={s} value={s}>{s}</option>)}
-            </select>
+            <Select 
+              value={selectedStream} 
+              onChange={e => setSelectedStream(e.target.value)}
+              options={streams.map(s => ({ id: s, label: s }))}
+              style={{ minWidth: 120 }}
+            />
           </div>
         </div>
       </div>
@@ -377,11 +382,15 @@ function AssignmentsTab({ assignments, teachers, onAssign, profile }) {
                   <tr key={sub}>
                     <td><strong>{sub}</strong></td>
                     <td>
-                      <select className="form-select" style={{ maxWidth: 220 }} value={teacherId || ''}
-                        onChange={e => onAssign(selectedClass, selectedStream, sub, e.target.value)}>
-                        <option value="">— Unassigned —</option>
-                        {activeTeachers.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
-                      </select>
+                      <Select 
+                        value={teacherId || ''} 
+                        onChange={e => onAssign(selectedClass, selectedStream, sub, e.target.value)}
+                        options={[
+                          { id: '', label: '— Unassigned —' },
+                          ...activeTeachers.map(t => ({ id: t.id, label: t.name }))
+                        ]}
+                        style={{ minWidth: 200 }}
+                      />
                     </td>
                     <td className="text-muted">{teacher ? teacher.phone : '—'}</td>
                   </tr>
@@ -403,11 +412,15 @@ function AssignmentsTab({ assignments, teachers, onAssign, profile }) {
               return (
                 <div key={sub} style={{ marginBottom: 12, padding: 12, background: 'var(--bg)', borderRadius: 8, border: '1px solid var(--border-light)' }}>
                   <div style={{ fontWeight: 600, fontSize: '0.88rem', marginBottom: 8 }}>{sub}</div>
-                  <select className="form-select" style={{ width: '100%' }} value={teacherId || ''}
-                    onChange={e => onAssign(selectedClass, selectedStream, sub, e.target.value)}>
-                    <option value="">— Unassigned —</option>
-                    {activeTeachers.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
-                  </select>
+                  <Select 
+                    value={teacherId || ''} 
+                    onChange={e => onAssign(selectedClass, selectedStream, sub, e.target.value)}
+                    options={[
+                      { id: '', label: '— Unassigned —' },
+                      ...activeTeachers.map(t => ({ id: t.id, label: t.name }))
+                    ]}
+                    style={{ width: '100%' }}
+                  />
                 </div>
               );
             })}
@@ -645,11 +658,15 @@ function ReportsTab() {
         <div className="card-body" style={{ padding: '12px 16px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
             <strong style={{ fontSize: '0.85rem', whiteSpace: 'nowrap' }}>Select Teacher:</strong>
-            <select className="form-select" style={{ maxWidth: 220 }} value={selectedTeacher}
-              onChange={e => setSelectedTeacher(e.target.value)}>
-              <option value="all">Global Summary</option>
-              {activeTeachers.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
-            </select>
+            <Select 
+              value={selectedTeacher} 
+              onChange={e => setSelectedTeacher(e.target.value)}
+              options={[
+                { id: 'all', label: 'Global Summary' },
+                ...activeTeachers.map(t => ({ id: t.id, label: t.name }))
+              ]}
+              style={{ maxWidth: 220 }}
+            />
             <div style={{ marginLeft: 'auto', display: 'flex', gap: 8, flexWrap: 'wrap' }}>
               <div className="btn-group">
                 <button className="btn btn-ghost btn-sm" onClick={() => handlePrintStaff('all')}><BookIcon size={14} /> All List</button>
@@ -888,10 +905,16 @@ function TeacherModal({ teacher, onSave, onClose, isAdmin }) {
               <div className="form-group">
                 <label>Status</label>
                 <div style={{display:'flex', gap:10}}>
-                  <select className="form-select" name="status" value={form.status} onChange={handleChange} style={{flex:1}}>
-                    <option>Active</option>
-                    <option>Left</option>
-                  </select>
+                  <Select 
+                    name="status" 
+                    value={form.status} 
+                    onChange={handleChange}
+                    options={[
+                      { id: 'Active', label: 'Active' },
+                      { id: 'Left', label: 'Left' }
+                    ]}
+                    style={{ flex: 1 }}
+                  />
                   {form.status === 'Active' && (
                     <label style={{display:'flex', alignItems:'center', gap:6, padding:'0 10px', background:'var(--bg)', borderRadius:8, border:'1px solid var(--border)', cursor:'pointer', fontSize:'0.82rem'}}>
                       <input type="checkbox" checked={form.on_leave || false} 

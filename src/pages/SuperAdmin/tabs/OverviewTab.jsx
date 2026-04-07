@@ -1,6 +1,7 @@
 import { useRef } from 'react';
 import { useChart, GC, TC, TIP, fmtDate, fmtMoney, statusLabel, sPill, getStatusRefined } from '../superAdminUtils';
 import { CheckIcon, AlertIcon, ClockIcon, SchoolIcon, GraduationIcon } from '../../../components/CommonIcons';
+import Select from '../../../components/Common/Select';
 
 export default function OverviewTab({
   periodFilter, setPeriodFilter,
@@ -34,11 +35,16 @@ export default function OverviewTab({
           </div>
         </div>
         <div className="ph-right">
-          <select className="act-sel" value={periodFilter} onChange={e => setPeriodFilter(e.target.value)}>
-            <option value="weekly">This Week</option>
-            <option value="monthly">This Month</option>
-            <option value="yearly">This Year</option>
-          </select>
+          <Select 
+            value={periodFilter} 
+            onChange={e => setPeriodFilter(e.target.value)}
+            options={[
+              { id: 'weekly', label: 'This Week' },
+              { id: 'monthly', label: 'This Month' },
+              { id: 'yearly', label: 'This Year' }
+            ]}
+            style={{ minWidth: 140 }}
+          />
           <button className={`act-btn${showFilter ? ' active' : ''}`} onClick={() => setShowFilter(f => !f)}>
             {showFilter ? 'Close' : 'Filter'}
           </button>

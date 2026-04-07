@@ -7,6 +7,8 @@ import {
 } from '../components/CommonIcons';
 import { printReceipt } from '../utils/receiptPrint';
 import MpesaReconciliation from './MpesaReconciliation';
+import Select from '../components/Common/Select';
+import { Helmet } from 'react-helmet-async';
 
 function PaymentModal({ student, fee, onPay, onClose }) {
   const [amount, setAmount] = useState('');
@@ -26,7 +28,19 @@ function PaymentModal({ student, fee, onPay, onClose }) {
             </div>
             <div className="form-group"><label>Amount (KSh) *</label><input className="form-input" type="number" min="1" value={amount} onChange={e=>setAmount(e.target.value)} required placeholder="Enter amount"/></div>
             <div className="form-row">
-              <div className="form-group"><label>Method</label><select className="form-select" value={method} onChange={e=>setMethod(e.target.value)}><option>M-Pesa</option><option>Cash</option><option>Bank Transfer</option></select></div>
+              <div className="form-group">
+                <label>Method</label>
+                <Select 
+                  value={method} 
+                  onChange={e => setMethod(e.target.value)}
+                  options={[
+                    { id: 'M-Pesa', label: 'M-Pesa' },
+                    { id: 'Cash', label: 'Cash' },
+                    { id: 'Bank Transfer', label: 'Bank Transfer' }
+                  ]}
+                  style={{ width: '100%' }}
+                />
+              </div>
               <div className="form-group"><label>Reference</label><input className="form-input" value={reference} onChange={e=>setReference(e.target.value)} placeholder="e.g. MPE1234"/></div>
             </div>
           </div>
@@ -179,6 +193,10 @@ export default function Fees({ currentPeriodId }) {
 
   return (
     <div className="animate-in">
+      <Helmet>
+        <title>Fee Collection & Billing | ShuleSoft — Finance Portal</title>
+        <meta name="description" content="Manage school fee payments, M-Pesa reconciliation, and student financial records." />
+      </Helmet>
       <div className="page-header">
         <div className="page-header-actions" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 16 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
@@ -209,26 +227,41 @@ export default function Fees({ currentPeriodId }) {
         <>
           <div className="filter-bar">
             <div className="search-bar"><span className="search-icon"><SearchIcon size={16} /></span><input type="text" placeholder="Search student..." value={search} onChange={e=>setSearch(e.target.value)}/></div>
-            <select className="form-select" value={classFilter} onChange={e=>{setClassFilter(e.target.value); setStreamFilter('All');}}>
-              <option value="All">All Classes</option>
-              {Object.entries(CBC_STRUCTURE).map(([levelName, levelData]) => {
-                const activeInLevel = levelData.grades.filter(g => profile.activeClasses?.includes(g));
-                if (activeInLevel.length === 0) return null;
-                return (
-                  <optgroup key={levelName} label={levelName}>
-                    {activeInLevel.map(g => <option key={g} value={g}>{g}</option>)}
-                  </optgroup>
+            <Select 
+              value={classFilter} 
+              onChange={e=>{setClassFilter(e.target.value); setStreamFilter('All');}}
+              options={[
+                { id: 'All', label: 'All Classes' },
+                ...Object.entries(CBC_STRUCTURE).flatMap(([levelName, levelData]) => {
+                  const activeInLevel = levelData.grades.filter(g => profile.activeClasses?.includes(g));
+                  return activeInLevel.map(g => ({ id: g, label: g }));
+                })
+              ]}
+              style={{ minWidth: 150 }}
+            />
+            <Select 
+              value={streamFilter} 
+              onChange={e=>setStreamFilter(e.target.value)}
+              options={[
+                { id: 'All', label: 'All Streams' },
+                ...(classFilter !== 'All' 
+                  ? (profile.streamsPerClass?.[classFilter] || []).map(stream => ({ id: stream, label: stream }))
+                  : Object.values(profile.streamsPerClass || {}).flat().filter((v,i,a) => a.indexOf(v)===i).map(stream => ({ id: stream, label: stream }))
                 )
-              })}
-            </select>
-            <select className="form-select" value={streamFilter} onChange={e=>setStreamFilter(e.target.value)}>
-              <option value="All">All Streams</option>
-              {classFilter !== 'All' 
-                ? (profile.streamsPerClass?.[classFilter] || []).map(stream => <option key={stream} value={stream}>{stream}</option>)
-                : Object.values(profile.streamsPerClass || {}).flat().filter((v,i,a) => a.indexOf(v)===i).map((stream, idx) => <option key={idx} value={stream}>{stream}</option>)
-              }
-            </select>
-            <select className="form-select" value={statusFilter} onChange={e=>setStatusFilter(e.target.value)}><option value="All">All Status</option><option value="Paid">Fully Paid</option><option value="Partial">Partial</option><option value="Unpaid">Unpaid</option></select>
+              ]}
+              style={{ minWidth: 140 }}
+            />
+            <Select 
+              value={statusFilter} 
+              onChange={e=>setStatusFilter(e.target.value)}
+              options={[
+                { id: 'All', label: 'All Status' },
+                { id: 'Paid', label: 'Fully Paid' },
+                { id: 'Partial', label: 'Partial' },
+                { id: 'Unpaid', label: 'Unpaid' }
+              ]}
+              style={{ minWidth: 140 }}
+            />
           </div>
           <div className="card"><div className="card-body" style={{padding:0}}>
             <table className="data-table responsive-table"><thead><tr><th>Student</th><th>Class</th><th>Total Fee</th><th>Paid</th><th>Balance</th><th>Status</th><th>Action</th></tr></thead>

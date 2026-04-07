@@ -663,6 +663,30 @@ select:focus, .form-select:focus {
   transform: translateY(-1px);
 }
 
+/* Custom Select Animations & Higher Fidelity Components */
+.custom-select-trigger:hover {
+  border-color: var(--primary-light) !important;
+  box-shadow: 0 4px 10px rgba(14, 165, 233, 0.1) !important;
+  transform: translateY(-1px);
+}
+
+.custom-select-menu {
+  animation: popIn 0.25s cubic-bezier(0.18, 0.89, 0.32, 1.28) forwards;
+  scrollbar-width: thin;
+  scrollbar-color: var(--border) transparent;
+}
+
+.custom-select-menu::-webkit-scrollbar {
+  width: 5px;
+}
+
+.custom-select-menu::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 10px;
+}
+
+/* ─────────────────────────────────────────────────────────────  */
+
 /* Scrollbar Modernization for Premium Feel */
 ::-webkit-scrollbar { width: 8px; height: 8px; }
 ::-webkit-scrollbar-track { background: var(--bg); }

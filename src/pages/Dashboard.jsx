@@ -15,6 +15,7 @@ import {
 import SetupWizard from '../components/SetupWizard';
 import ReferralTool from '../components/ReferralTool';
 import { Helmet } from 'react-helmet-async';
+import Select from '../components/Common/Select';
 
 export default function Dashboard({ currentUser, onLogout, currentPeriodId }) {
   const navigate = useNavigate();
@@ -203,33 +204,15 @@ export default function Dashboard({ currentUser, onLogout, currentPeriodId }) {
                 )}
                 <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '4px 12px', background: 'rgba(0,0,0,0.03)', borderRadius: 10, border: '1px solid var(--border)' }}>
                   <span style={{ fontSize: '0.65rem', fontWeight: 700, textTransform: 'uppercase', color: 'var(--text-muted)', letterSpacing: '0.05em' }}>Period:</span>
-                  <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
-                    <select 
-                      className="form-input" 
-                      style={{ 
-                        width: 'auto', 
-                        height: 28, 
-                        fontSize: '0.75rem', 
-                        padding: '0 24px 0 0', 
-                        background: 'transparent', 
-                        border: 'none',
-                        color: 'var(--primary)',
-                        appearance: 'none',
-                        cursor: 'pointer',
-                        fontWeight: 700,
-                        outline: 'none'
-                      }}
-                      value={currentPeriodId || ''}
-                      onChange={(e) => setActivePeriod(e.target.value)}
-                    >
-                      {periods.map(p => (
-                        <option key={p.id} value={p.id}>{p.year} — {p.term} {p.is_active ? '(Active)' : ''}</option>
-                      ))}
-                    </select>
-                    <div style={{ position: 'absolute', right: 0, pointerEvents: 'none', color: 'var(--primary)' }}>
-                      <ChevronDownIcon size={12} />
-                    </div>
-                  </div>
+                  <Select 
+                    value={currentPeriodId || ''}
+                    onChange={(e) => setActivePeriod(e.target.value)}
+                    options={periods.map(p => ({
+                      id: p.id,
+                      label: `${p.year} — ${p.term} ${p.is_active ? '(Active)' : ''}`
+                    }))}
+                    style={{ minWidth: 180 }}
+                  />
                 </div>
               </div>
               <div className="inline-flex" style={{ gap: 10 }}>

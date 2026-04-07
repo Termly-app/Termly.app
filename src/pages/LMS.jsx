@@ -3,6 +3,7 @@ import { Helmet } from 'react-helmet-async';
 import { getSchoolProfile } from '../data/store';
 import { addAssignment, getAssignments, getSubmissions, updateSubmissionGrade } from '../data/offlineStore';
 import { BookIcon, CheckIcon, UsersIcon, DownloadIcon, ClockIcon, MessageIcon, GraduationIcon } from '../components/CommonIcons';
+import Select from '../components/Common/Select';
 
 /**
  * Moodle-Inspired LMS Module (Assignment Hub)
@@ -99,26 +100,35 @@ export default function LMS({ currentUser }) {
           <div className="form-row" style={{ gridTemplateColumns: '1fr 1fr' }}>
             <div className="form-group">
               <label>Target Class</label>
-              <select className="form-select" required value={formData.class} onChange={e => setFormData({ ...formData, class: e.target.value })}>
-                <option value="">Select Class</option>
-                {activeClasses.map(c => <option key={c} value={c}>Class {c}</option>)}
-              </select>
+              <Select 
+                value={formData.class} 
+                onChange={e => setFormData({ ...formData, class: e.target.value })}
+                options={activeClasses.map(c => ({ id: c, label: `Class ${c}` }))}
+                placeholder="Select Class"
+                style={{ width: '100%' }}
+              />
             </div>
             <div className="form-group">
               <label>Stream</label>
-              <select className="form-select" required value={formData.stream} onChange={e => setFormData({ ...formData, stream: e.target.value })}>
-                <option value="">Select Stream</option>
-                {streams.map(s => <option key={s} value={s}>{s}</option>)}
-              </select>
+              <Select 
+                value={formData.stream} 
+                onChange={e => setFormData({ ...formData, stream: e.target.value })}
+                options={streams.map(s => ({ id: s, label: s }))}
+                placeholder="Select Stream"
+                style={{ width: '100%' }}
+              />
             </div>
           </div>
 
           <div className="form-group">
             <label>Subject</label>
-            <select className="form-select" required value={formData.subject} onChange={e => setFormData({ ...formData, subject: e.target.value })}>
-              <option value="">Select Subject</option>
-              {subjects.map(s => <option key={s} value={s}>{s}</option>)}
-            </select>
+            <Select 
+              value={formData.subject} 
+              onChange={e => setFormData({ ...formData, subject: e.target.value })}
+              options={subjects.map(s => ({ id: s, label: s }))}
+              placeholder="Select Subject"
+              style={{ width: '100%' }}
+            />
           </div>
 
           {/* Moodle Availability Controls */}
@@ -243,17 +253,18 @@ export default function LMS({ currentUser }) {
                             <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Sent: {new Date(sub.timestamp).toLocaleString()}</div>
                           </td>
                           <td>
-                            <select 
-                              className="form-select sm" 
-                              style={{ padding: '5px 24px 5px 8px', fontSize: '0.75rem' }}
+                            <Select 
                               value={sub.workflow_status || 'Submitted'}
                               onChange={(e) => handleUpdateGrade(sub.id, { workflow_status: e.target.value })}
-                            >
-                              <option value="Submitted">Submitted</option>
-                              <option value="In Grading">In Grading</option>
-                              <option value="Ready for Release">Ready for Release</option>
-                              <option value="Released">Released</option>
-                            </select>
+                              options={[
+                                { id: 'Submitted', label: 'Submitted' },
+                                { id: 'In Grading', label: 'In Grading' },
+                                { id: 'Ready for Release', label: 'Ready for Release' },
+                                { id: 'Released', label: 'Released' }
+                              ]}
+                              variant="minimal"
+                              style={{ padding: '2px 8px', fontSize: '0.75rem', minWidth: 120 }}
+                            />
                           </td>
                           <td>
                             <input 
