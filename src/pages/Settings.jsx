@@ -5,7 +5,7 @@ import { Helmet } from 'react-helmet-async';
 import {
   ClockIcon, CheckIcon, SaveIcon, SchoolIcon, ImageIcon, FolderIcon,
   BookIcon, CardIcon, DiamondIcon, PhoneIcon, RefreshIcon, CrossIcon, PlusIcon,
-  CalendarIcon, DownloadIcon, UploadIcon, ZapIcon, ShieldIcon
+  CalendarIcon, DownloadIcon, UploadIcon, PlatformZapIcon, ShieldIcon
 } from '../components/CommonIcons';
 
 export default function Settings() {
@@ -495,7 +495,7 @@ export default function Settings() {
           <div className="card">
             <div className="card-header">
               <div>
-                <h3><ZapIcon size={20} color="var(--primary)" /> Gateway Integrations</h3>
+                <h3><PlatformZapIcon size={20} color="var(--primary)" /> Gateway Integrations</h3>
                 <p style={{fontSize:'0.78rem',color:'var(--text-light)',margin:'2px 0 0'}}>Connect your school to M-Pesa and SMS networks</p>
               </div>
             </div>

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { getStudents, getSchoolProfile, logCommunication, getCommunicationLogs, getSMSLogs } from '../data/store';
 import { 
-  HistoryIcon, ZapIcon, PhoneIcon, CheckIcon, CrossIcon, ClockIcon, 
+  HistoryIcon, PlatformZapIcon, PhoneIcon, CheckIcon, CrossIcon, ClockIcon, 
   SearchIcon, MessageIcon, SendIcon, UsersIcon 
 } from '../components/CommonIcons';
 import Select from '../components/Common/Select';

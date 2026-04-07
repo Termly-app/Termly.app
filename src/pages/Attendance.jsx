@@ -5,7 +5,7 @@ import {
 } from '../data/store';
 import { CBC_STRUCTURE } from '../data/seedData';
 import { 
-  CheckIcon, ClockIcon, CrossIcon, PrintIcon, DashboardIcon, FlagIcon, ZapIcon 
+  CheckIcon, ClockIcon, CrossIcon, PrintIcon, DashboardIcon, FlagIcon, PlatformZapIcon 
 } from '../components/CommonIcons';
 import Select from '../components/Common/Select';
 import { Helmet } from 'react-helmet-async';
@@ -210,7 +210,7 @@ export default function Attendance({ currentUser, currentPeriodId }) {
                   setAlertModal({ open: true, sending: false });
                 }
               }}>
-                <ZapIcon size={16} /> Notify Parents ({summary.absent})
+                <PlatformZapIcon size={16} /> Notify Parents ({summary.absent})
               </button>
             )}
             <button className="btn btn-ghost" onClick={() => setShowPrintOptions(true)}><PrintIcon size={16} /> Print Report</button>
@@ -364,7 +364,7 @@ export default function Attendance({ currentUser, currentPeriodId }) {
         <div className="modal-overlay">
           <div className="modal-content" style={{ maxWidth: 450 }}>
             <div className="modal-header" style={{ padding: '16px 20px', borderBottom: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <h3 style={{ margin: 0, fontSize: '1.1rem' }}><ZapIcon size={20} color="var(--ro)" /> Absence Alerts</h3>
+              <h3 style={{ margin: 0, fontSize: '1.1rem' }}><PlatformZapIcon size={20} color="var(--ro)" /> Absence Alerts</h3>
               <button className="btn-close" style={{ background: 'none', border: 'none', fontSize: '1.2rem', cursor: 'pointer', display: 'flex', alignItems: 'center' }} onClick={() => setAlertModal({ open: false })}><CrossIcon size={20} /></button>
             </div>
             <div className="modal-body" style={{ padding: 20 }}>

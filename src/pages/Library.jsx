@@ -8,7 +8,7 @@ import {
 import { 
   PlusIcon, SearchIcon, BookIcon, UserIcon, PrintIcon, 
   CheckIcon, CloseIcon, EditIcon, DeleteIcon, ChevronDownIcon,
-  ClockIcon, AlertIcon
+  ClockIcon, AlertIcon, PlatformZapIcon
 } from '../components/CommonIcons';
 import Loader from '../components/Common/Loader';
 
@@ -227,7 +227,7 @@ export default function Library({ currentUser, currentPeriodId }) {
             <PlusIcon size={16} /> Add Book
           </button>
           <button className="btn-s" onClick={() => setBorrowModal({ open: true, data: null })}>
-            <ZapIcon size={16} /> Issue Book
+            <PlatformZapIcon size={16} /> Issue Book
           </button>
           <button className="btn-s" onClick={() => setPrintModal({ open: true })}>
             <PrintIcon size={16} /> Reports

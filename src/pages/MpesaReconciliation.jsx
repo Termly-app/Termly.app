@@ -13,7 +13,7 @@ import {
   CheckIcon, 
   AlertIcon,
   ClockIcon,
-  ZapIcon,
+  PlatformZapIcon,
   RefreshIcon
 } from '../components/CommonIcons';
 import Loader from '../components/Common/Loader';
@@ -169,7 +169,7 @@ export default function MpesaReconciliation({ currentUser }) {
             </div>
           )}
           <button className="auto-process-btn" onClick={handleRunAutoProcess} disabled={autoProcessing}>
-            <ZapIcon size={16} /> {autoProcessing ? 'Processing...' : 'Run Auto-Match'}
+            <PlatformZapIcon size={16} /> {autoProcessing ? 'Processing...' : 'Run Auto-Match'}
           </button>
           {isAdmin && (
             <button className="sim-toggle-btn" onClick={() => setShowSimulator(!showSimulator)}>

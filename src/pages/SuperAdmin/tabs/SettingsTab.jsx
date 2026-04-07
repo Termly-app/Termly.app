@@ -33,7 +33,7 @@ import { calcExpiry } from '../superAdminUtils';
 import { 
   CrossIcon, CheckIcon, AttendanceIcon, GradingIcon, FeesIcon, TimetableIcon, BookIcon, 
   SendIcon, FlagIcon, PhoneIcon, TeacherIcon, UsersIcon, ChartBarIcon, SchoolIcon, 
-  DiamondIcon, ZapIcon, SubscriptionsIcon, ReceiptIcon, UploadIcon, CalendarIcon,
+  DiamondIcon, PlatformZapIcon, SubscriptionsIcon, ReceiptIcon, UploadIcon, CalendarIcon,
   RefreshIcon, StarIcon
 } from '../../../components/CommonIcons';
 
@@ -83,7 +83,7 @@ const ALL_SYSTEM_MODULES = [
   { slug: 'multi_period',    label: 'Multiple Academic Periods',   icon: CalendarIcon,    desc: 'Manage several terms/years simultaneously' },
   { slug: 'data_recovery',   label: 'Data Recovery Tools',         icon: RefreshIcon,     desc: 'Restore accidentally deleted records' },
   { slug: 'custom_brand',    label: 'Custom Branding',             icon: DiamondIcon,     desc: 'School logo, colors on reports' },
-  { slug: 'api_access',      label: 'API Access',                  icon: ZapIcon,         desc: 'External system integrations' },
+  { slug: 'api_access',      label: 'API Access',                  icon: PlatformZapIcon, desc: 'External system integrations' },
   { slug: 'priority_support',label: 'Priority Support',            icon: StarIcon,        desc: 'Dedicated account manager, fast response' },
 ];
 

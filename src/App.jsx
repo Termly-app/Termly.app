@@ -65,7 +65,7 @@ import {
   TimetableIcon, FeesIcon, FeeStructureIcon, SecurityIcon, SettingsIcon,
   BillingIcon, SignOutIcon, MenuIcon, CloseIcon, ChevronDownIcon,
   OverviewIcon, SchoolsIcon, PaymentsIcon, HistoryIcon, RevenueIcon,
-  ActivityIcon, RecoveryIcon, StatusDotIcon, ZapIcon, SubscriptionIcon, MessageIcon,
+  ActivityIcon, RecoveryIcon, StatusDotIcon, PlatformZapIcon, SubscriptionIcon, MessageIcon,
   BookIcon, ClipboardIcon, TeacherIcon, UsersIcon
 } from './components/CommonIcons';
 
