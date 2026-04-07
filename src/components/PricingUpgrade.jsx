@@ -192,6 +192,20 @@ export default function PricingUpgrade({ featureName, requiredPlan = "Profession
             >
               Upgrade to Unlock Now
             </button>
+            <button 
+              onClick={() => navigate('/dashboard')}
+              className="btn btn-ghost"
+              style={{
+                padding: '16px 36px',
+                fontSize: '1.05rem',
+                fontWeight: 600,
+                borderRadius: 16,
+                background: 'rgba(0,0,0,0.05)',
+                color: '#475569'
+              }}
+            >
+              Back to Dashboard
+            </button>
           </div>
         </div>
 

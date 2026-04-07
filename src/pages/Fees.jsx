@@ -98,7 +98,7 @@ function ReceiptModal({ receipt, onClose, profile }) {
   );
 }
 
-export default function Fees({ currentPeriodId }) {
+export default function Fees({ currentUser, currentPeriodId }) {
   const [students, setStudents] = useState([]);
   const [fees, setFees] = useState({});
   const [summary, setSummary] = useState({});

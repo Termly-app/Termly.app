@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { 
   getStudents, getAttendance, markAttendance, getAttendanceSummary, 
-  getTodayStr, getSchoolProfile, getSubjectAssignments, queueSmsBatch 
+  getTodayStr, getSchoolProfile, getSubjectAssignments, queueSmsBatch, isFeatureEnabled 
 } from '../data/store';
 import { CBC_STRUCTURE } from '../data/seedData';
 import { 
@@ -9,6 +9,7 @@ import {
 } from '../components/CommonIcons';
 import Select from '../components/Common/Select';
 import { Helmet } from 'react-helmet-async';
+import PricingUpgrade from '../components/PricingUpgrade';
 
 export default function Attendance({ currentUser, currentPeriodId }) {
   const [selectedClass, setSelectedClass] = useState('All');
@@ -23,6 +24,7 @@ export default function Attendance({ currentUser, currentPeriodId }) {
   const [assignments, setAssignments] = useState({});
   const [loading, setLoading] = useState(true);
   const [alertModal, setAlertModal] = useState({ open: false, sending: false });
+  const [showUpgrade, setShowUpgrade] = useState(false);
 
   const userRole = currentUser?.role?.toLowerCase() || 'teacher';
   const isTeacher = userRole === 'teacher';
@@ -200,7 +202,14 @@ export default function Attendance({ currentUser, currentPeriodId }) {
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
             {summary.absent > 0 && (
-              <button className="btn btn-warning" onClick={() => setAlertModal({ open: true, sending: false })}>
+              <button className="btn btn-warning" onClick={async () => {
+                const enabled = await isFeatureEnabled('sms');
+                if (!enabled) {
+                  setShowUpgrade(true);
+                } else {
+                  setAlertModal({ open: true, sending: false });
+                }
+              }}>
                 <ZapIcon size={16} /> Notify Parents ({summary.absent})
               </button>
             )}
@@ -414,6 +423,20 @@ export default function Attendance({ currentUser, currentPeriodId }) {
               </div>
             </div>
           </div>
+        </div>
+      )}
+
+      {showUpgrade && (
+        <div style={{
+          position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+          zIndex: 9999, background: 'rgba(255,255,255,0.95)',
+          overflowY: 'auto',
+          backdropFilter: 'blur(10px)'
+        }}>
+          <div style={{ position: 'absolute', top: 30, right: 30, zIndex: 10001 }}>
+            <button className="btn btn-ghost" onClick={() => setShowUpgrade(false)} style={{ fontSize: '1.5rem' }}>&times;</button>
+          </div>
+          <PricingUpgrade featureName="Communications" />
         </div>
       )}
     </div>

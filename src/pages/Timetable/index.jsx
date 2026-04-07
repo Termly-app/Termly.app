@@ -25,12 +25,14 @@ import {
   getTeacherTimetable, clearAndSaveTimetable,
   getRequirements, getAllRequirements, saveRequirement, deleteRequirement,
   getClassSubjectAssignments, getTeachers, checkTeacherConflict, getSchoolProfile,
+  isFeatureEnabled,
 } from '../../data/store';
 import { 
   CalendarIcon, PrintIcon, BookIcon, SettingsIcon, CheckIcon, CrossIcon, 
   RocketIcon, SaveIcon, AlertIcon, UserIcon, HomeIcon, TeacherIcon, PlusIcon,
   SparklesIcon
 } from '../../components/CommonIcons';
+import PricingUpgrade from '../../components/PricingUpgrade';
 
 // ── Colour palette for subjects (Modern, Premium Palette) ────────────────
 const COLORS = [
@@ -332,6 +334,7 @@ export default function Timetable({ currentUser, currentPeriodId, periods = [] }
   const [generating,   setGenerating]   = useState(false);
   const [savingGen,    setSavingGen]    = useState(false);
   const [maxExamsPerDay, setMaxExamsPerDay] = useState(2); 
+  const [showUpgrade,    setShowUpgrade]   = useState(false);
 
   // ── Cell edit modal ───────────────────────────────────────────────────
   const [editCell,        setEditCell]        = useState(null);
@@ -578,6 +581,13 @@ export default function Timetable({ currentUser, currentPeriodId, periods = [] }
       setMessage({ type:'err', text:'Configure time slots first.' });
       return;
     }
+
+    const enabled = await isFeatureEnabled('auto_timetable');
+    if (!enabled) {
+      setShowUpgrade(true);
+      return;
+    }
+
     setGenerating(true);
     try {
       // Load all requirements across all classes for THIS mode
@@ -1298,6 +1308,19 @@ export default function Timetable({ currentUser, currentPeriodId, periods = [] }
         </div>
       )}
 
+      {showUpgrade && (
+        <div style={{
+          position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+          zIndex: 9999, background: 'rgba(255,255,255,0.95)',
+          overflowY: 'auto',
+          backdropFilter: 'blur(10px)'
+        }}>
+          <div style={{ position: 'absolute', top: 30, right: 30, zIndex: 10001 }}>
+            <button className="tt-btn tt-btn-ghost" onClick={() => setShowUpgrade(false)} style={{ fontSize: '1.5rem' }}>&times;</button>
+          </div>
+          <PricingUpgrade featureName="Timetable" />
+        </div>
+      )}
     </div>
   );
 }
