@@ -915,7 +915,7 @@ export default function Timetable({ currentUser, currentPeriodId, periods = [] }
                                     {view === 'class' && (cell.teachers?.name || teacherName(cell.teacher_id)) && !isDoubleSecond && (
                                       <div style={{display:'flex', flexDirection:'column', gap:2}}>
                                         <div className="tt-cell-teacher">
-                                          <UserIcon size={12} /> {cell.teachers?.name || teacherName(cell.teacher_id)}
+                                          <UserIcon size={12} /> {cell.teachers?.staff_code || teachers.find(t => t.id === cell.teacher_id)?.staff_code || cell.teachers?.name || teacherName(cell.teacher_id)}
                                         </div>
                                         {teachers.find(t => t.id === cell.teacher_id)?.on_leave && (
                                           <div className="tt-leave-warning" style={{fontSize:'0.6rem', background:'var(--warning-light)', color:'var(--warning)', padding:'1px 4px', borderRadius:4, fontWeight:700, display:'inline-flex', alignItems:'center', gap:2}}>

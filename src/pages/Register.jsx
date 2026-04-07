@@ -52,6 +52,7 @@ export default function Register() {
     password: '',
     phone: '',
     location: '',
+    curriculum: 'CBC Only', 
     termsAccepted: true // Auto-accept terms for smoother PLG flow
   });
 
@@ -153,7 +154,8 @@ export default function Register() {
         formData.adminName,
         formData.schoolEmail,
         formData.phone,
-        formData.location
+        formData.location,
+        formData.curriculum
       );
 
       setSuccess(true);
@@ -305,6 +307,26 @@ export default function Register() {
                 </div>
                 <input type="text" name="location" placeholder="Physical Location (e.g. Nairobi, CBD)" value={formData.location} onChange={handleChange} required />
                 <div className="res-uline"></div>
+              </div>
+
+              <div className="res-sec-lbl">Curriculum Focus</div>
+              <div className="res-field">
+                <div className="res-fico">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+                  </svg>
+                </div>
+                <select 
+                  name="curriculum" 
+                  value={formData.curriculum} 
+                  onChange={handleChange}
+                  style={{ width: '100%', padding: '10px 0 10px 30px', border: 'none', borderBottom: '1.5px solid #E8E8F0', background: 'transparent', fontFamily: 'Inter, sans-serif', fontSize: '.95rem', outline: 'none', cursor: 'pointer' }}
+                >
+                  <option value="CBC Only">CBC Only (Primary)</option>
+                  <option value="8-4-4 Only">8-4-4 Only (Legacy)</option>
+                  <option value="Mixed/Dual Mode">Mixed/Dual Mode (Secondary)</option>
+                </select>
+                <div className="res-uline" style={{ width: '100%' }}></div>
               </div>
 
               <button className="res-cta" onClick={() => handleNext(2)}>

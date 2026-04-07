@@ -289,6 +289,14 @@ export const CloseIcon = ({ size = 18, color = 'currentColor', className = '' })
   </svg>
 );
 
+export const XIcon = CloseIcon;
+
+export const FileIcon = ({ size = 18, color = 'currentColor', className = '' }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={iconStyle} className={className}>
+    <path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><polyline points="13 2 13 9 20 9"/>
+  </svg>
+);
+
 export const OverviewIcon = ({ size = 18, color = 'currentColor', className = '' }) => (
   <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={iconStyle} className={className}>
     <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>

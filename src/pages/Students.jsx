@@ -10,6 +10,7 @@ import {
 import ConfirmModal from '../components/Common/ConfirmModal';
 import { useConfirm } from '../components/Common/useConfirm';
 import Select from '../components/Common/Select';
+import StudentImporter from '../components/StudentImporter';
 import { Helmet } from 'react-helmet-async';
 
 function getCurrentTermLabel() {
@@ -229,7 +230,7 @@ export default function Students({ currentUser, currentPeriodId }) {
       </div>
 
       {showModal&&<StudentModal student={editingStudent} profile={profile} onSave={handleSave} onClose={()=>{setShowModal(false);setEditingStudent(null);}}/>}
-      {showImportModal && <ImportModal profile={profile} onImport={async(students) => { 
+      {showImportModal && <StudentImporter profile={profile} onImport={async(students) => { 
         setLoading(true); 
         for(let s of students) await addStudent(s); 
         await refresh(); 
@@ -471,158 +472,4 @@ function TransitionModal({ students, profile, onTransfer, onClose }) {
   );
 }
 
-function ImportModal({ profile, onImport, onClose }) {
-  const [csvContent, setCsvContent] = useState('');
-  const [error, setError] = useState(null);
-  const [drafts, setDrafts] = useState([]);
-  const [step, setStep] = useState(1);
 
-  const handleFileUpload = (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = (evt) => {
-      setCsvContent(evt.target.result);
-      processRawCsv(evt.target.result);
-    };
-    reader.readAsText(file);
-  };
-
-  const processRawCsv = (content) => {
-    if (!content.trim()) {
-      setError('Please provide CSV content.');
-      return;
-    }
-    try {
-      setError(null);
-      const lines = content.split('\n').map(l => l.trim()).filter(l => l);
-      if (lines.length <= 1) throw new Error("CSV must have a header row and at least one data row.");
-      
-      const headers = lines[0].split(',').map(h => h.trim().toLowerCase());
-      
-      const nameIdx = headers.findIndex(h => h.includes('name'));
-      const admIdx = headers.findIndex(h => h.includes('adm') || h.includes('reg'));
-      const classIdx = headers.findIndex(h => h.includes('class') || h.includes('grade'));
-      const streamIdx = headers.findIndex(h => h.includes('stream'));
-      const genderIdx = headers.findIndex(h => h.includes('gender'));
-      const parentIdx = headers.findIndex(h => h.includes('parent'));
-      const phoneIdx = headers.findIndex(h => h.includes('phone') || h.includes('contact'));
-
-      if (nameIdx === -1) throw new Error("Could not find a 'Name' column in header.");
-
-      const students = [];
-      const defaultClass = profile.activeClasses?.[0] || 'Grade 1';
-
-      for (let i = 1; i < lines.length; i++) {
-        // very basic comma split, ignores commas in quotes
-        const row = lines[i].split(',').map(c => c.trim());
-        if (row.length < 2) continue; // skip blank/invalid
-        
-        students.push({
-          id: 'draft_' + i, // temp id
-          name: row[nameIdx] || 'Unknown',
-          admNo: (admIdx !== -1 ? row[admIdx] : '') || '',
-          class: (classIdx !== -1 ? row[classIdx] : '') || defaultClass,
-          stream: (streamIdx !== -1 ? row[streamIdx] : '') || '',
-          gender: (genderIdx !== -1 ? row[genderIdx] : '') || 'Male',
-          parent: (parentIdx !== -1 ? row[parentIdx] : '') || '',
-          parentPhone: (phoneIdx !== -1 ? row[phoneIdx] : '') || '',
-          residenceType: 'day',
-          joinDate: new Date().toISOString().split('T')[0]
-        });
-      }
-      setDrafts(students);
-      setStep(2);
-    } catch (err) {
-      setError(err.message);
-    }
-  };
-
-  const updateDraft = (idx, field, value) => {
-    const updated = [...drafts];
-    updated[idx][field] = value;
-    setDrafts(updated);
-  };
-  
-  const removeDraft = (idx) => {
-    setDrafts(drafts.filter((_, i) => i !== idx));
-  };
-
-  return (
-    <div className="modal-overlay" onClick={onClose}>
-      <div className="modal" onClick={e => e.stopPropagation()} style={{maxWidth: step === 1 ? 600 : 900}}>
-        <div className="modal-header">
-          <h3 style={{display:'flex',alignItems:'center',gap:8}}><UploadIcon size={18} /> {step === 1 ? 'Bulk Import Students' : 'Review & Edit Students'}</h3>
-          <button className="modal-close" onClick={onClose}>×</button>
-        </div>
-        
-        {step === 1 ? (
-          <div className="modal-body">
-            {error && <div className="badge badge-danger" style={{marginBottom: 16, width: '100%', padding: 12, justifyContent:'flex-start'}}>{error}</div>}
-            <div style={{background: 'var(--bg-main)', borderRadius: 8, padding: 16, marginBottom: 16, border: '1px solid var(--edge)', fontSize: '0.85rem', color: 'var(--text-light)'}}>
-              <strong style={{color:'var(--text)',display:'block',marginBottom:8}}>CSV Format Guide</strong>
-              Your CSV must contain a header row. Include columns like: <code>Name, Adm No, Class, Stream, Gender, Parent, Phone</code>. The system maps the columns automatically based on header names.
-            </div>
-            
-            <div className="form-group" style={{marginBottom: 24}}>
-              <label style={{fontSize:'0.75rem',fontWeight:700,textTransform:'uppercase',letterSpacing:1,color:'var(--text-light)',marginBottom:8,display:'block'}}>1. Upload File</label>
-              <input type="file" accept=".csv" className="form-input" style={{padding: '12px', background: 'var(--bg)'}} onClick={(e) => e.target.value = null} onChange={handleFileUpload} />
-            </div>
-            
-            <div style={{textAlign: 'center', margin: '16px 0', color: 'var(--text-muted)', fontSize: '0.75rem', fontWeight:600}}>— OR PASTE RAW CSV —</div>
-            
-            <div className="form-group">
-              <textarea className="form-input" rows="6" value={csvContent} onChange={e => setCsvContent(e.target.value)} placeholder={`Name, Adm No, Class, Stream, Gender, Parent, Phone\nJohn Kamau, 1001, Grade 1, East, Male, Peter Kamau, 0700000000`} style={{fontFamily:'monospace',fontSize:'0.8rem',whiteSpace:'pre'}}></textarea>
-            </div>
-          </div>
-        ) : (
-          <div className="modal-body" style={{maxHeight:'60vh', overflowY:'auto'}}>
-             <div style={{marginBottom: 16, fontSize: '0.85rem', color: 'var(--text-light)'}}>
-               Found <strong>{drafts.length}</strong> students. Review their details and fix any errors before importing.
-             </div>
-             <table className="data-table" style={{minWidth: 800}}>
-               <thead>
-                 <tr>
-                   <th>Name</th>
-                   <th style={{width:80}}>AdmNo</th>
-                   <th style={{width:100}}>Class</th>
-                   <th style={{width:80}}>Stream</th>
-                   <th>Parent Phone</th>
-                   <th style={{width:40}}></th>
-                 </tr>
-               </thead>
-               <tbody>
-                 {drafts.map((d, i) => (
-                   <tr key={d.id}>
-                     <td><input className="form-input" value={d.name} onChange={e => updateDraft(i, 'name', e.target.value)} style={{padding:'4px 8px'}} /></td>
-                     <td><input className="form-input" value={d.admNo} onChange={e => updateDraft(i, 'admNo', e.target.value)} style={{padding:'4px 8px'}} /></td>
-                     <td><input className="form-input" value={d.class} onChange={e => updateDraft(i, 'class', e.target.value)} style={{padding:'4px 8px'}} /></td>
-                     <td><input className="form-input" value={d.stream} onChange={e => updateDraft(i, 'stream', e.target.value)} style={{padding:'4px 8px'}} /></td>
-                     <td><input className="form-input" value={d.parentPhone} onChange={e => updateDraft(i, 'parentPhone', e.target.value)} style={{padding:'4px 8px'}} /></td>
-                     <td><button className="btn btn-ghost btn-sm" onClick={() => removeDraft(i)} style={{color:'var(--danger)'}}><DeleteIcon size={14}/></button></td>
-                   </tr>
-                 ))}
-               </tbody>
-             </table>
-          </div>
-        )}
-
-        <div className="modal-footer" style={{display:'flex',justifyContent:'space-between'}}>
-          <button className="btn btn-ghost" onClick={() => step === 2 ? setStep(1) : onClose()}>{step === 2 ? 'Back' : 'Cancel'}</button>
-          
-          {step === 1 ? (
-             <button className="btn btn-primary" onClick={() => processRawCsv(csvContent)}>Preview Data</button>
-          ) : (
-             <button className="btn btn-primary" onClick={() => {
-                // remove temp ids
-                const final = drafts.map(({id, ...rest}) => rest);
-                onImport(final);
-             }} disabled={drafts.length === 0}>
-               Confirm Import ({drafts.length})
-             </button>
-          )}
-        </div>
-      </div>
-    </div>
-  );
-}

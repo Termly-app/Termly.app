@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { getTeachers, addTeacher, updateTeacher, deleteTeacher, getSubjectAssignments, setAssignment, getTeacherWorkload, getTeacherPerformance, getPrintHeader, getSchoolProfile, getPlatformSettings, getUsers, setTeacherLeaveStatus } from '../data/store';
+import { getTeachers, addTeacher, updateTeacher, deleteTeacher, getSubjectAssignments, setAssignment, getTeacherWorkload, getTeacherPerformance, getPrintHeader, getSchoolProfile, getPlatformSettings, getUsers, setTeacherLeaveStatus, isStaffCodeAvailable } from '../data/store';
 import Loader from '../components/Common/Loader';
 import { CBC_STRUCTURE, getSubjectsForGrade, getLevelForGrade } from '../data/seedData';
 import { 
@@ -235,7 +235,7 @@ function RecordsTab({ teachers, search, setSearch, total, getTeacherSubjects, ge
         <div className="card-body" style={{ padding: 0 }}>
           <table className="data-table responsive-table">
             <thead>
-              <tr><th>Name</th>{isAdmin && <th>TSC No.</th>}<th>Phone</th><th>Subjects</th><th>Classes</th><th>Status</th><th>Actions</th></tr>
+              <tr><th>Code</th><th>Name</th>{isAdmin && <th>TSC No.</th>}<th>Phone</th><th>Subjects</th><th>Classes</th><th>Status</th><th>Actions</th></tr>
             </thead>
             <tbody>
               {teachers.length === 0 ? (
@@ -245,6 +245,7 @@ function RecordsTab({ teachers, search, setSearch, total, getTeacherSubjects, ge
                 const cls = getTeacherClasses(t.id);
                 return (
                   <tr key={t.id}>
+                    <td data-label="Code"><code style={{ color: 'var(--text-light)', fontSize: '0.75rem' }}>{t.staff_code || '—'}</code></td>
                     <td data-label="Name"><strong>{t.name}</strong></td>
                     {isAdmin && <td data-label="TSC No.">{t.tsc_number || '—'}</td>}
                     <td data-label="Phone">{t.phone}</td>
@@ -875,8 +876,33 @@ function ReportsTab() {
 
 // ========== TEACHER MODAL ==========
 function TeacherModal({ teacher, onSave, onClose, isAdmin }) {
-  const [form, setForm] = useState(teacher || { name: '', phone: '', status: 'Active' });
+  const [form, setForm] = useState(teacher || { name: '', phone: '', status: 'Active', staff_code: '' });
+  const [error, setError] = useState(null);
+  const [validating, setValidating] = useState(false);
+
   const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setValidating(true);
+    setError(null);
+
+    try {
+      if (form.staff_code) {
+        const available = await isStaffCodeAvailable(form.staff_code, teacher?.id);
+        if (!available) {
+          setError(`Staff Code "${form.staff_code}" is already in use by another active teacher.`);
+          setValidating(false);
+          return;
+        }
+      }
+      onSave(form);
+    } catch (err) {
+      setError("Validation failed. Please try again.");
+    } finally {
+      setValidating(false);
+    }
+  };
 
   return (
     <div className="modal-overlay" onClick={onClose}>
@@ -885,11 +911,19 @@ function TeacherModal({ teacher, onSave, onClose, isAdmin }) {
           <h3>{teacher ? <><EditIcon size={18} /> Edit Teacher</> : <><PlusIcon size={18} /> Add New Teacher</>}</h3>
           <button className="modal-close" onClick={onClose}>×</button>
         </div>
-        <form onSubmit={e => { e.preventDefault(); onSave(form); }}>
+        <form onSubmit={handleSubmit}>
           <div className="modal-body">
-            <div className="form-group">
-              <label>Full Name *</label>
-              <input className="form-input" name="name" value={form.name} onChange={handleChange} required placeholder="e.g. John Mwangi" />
+            {error && <div className="badge badge-danger" style={{ marginBottom: 16, width: '100%', padding: '10px 12px' }}>{error}</div>}
+            
+            <div className="form-row">
+              <div className="form-group" style={{ flex: 1 }}>
+                <label>Staff Code / Index</label>
+                <input className="form-input" name="staff_code" value={form.staff_code || ''} onChange={handleChange} placeholder="e.g. T-001" />
+              </div>
+              <div className="form-group" style={{ flex: 2 }}>
+                <label>Full Name *</label>
+                <input className="form-input" name="name" value={form.name} onChange={handleChange} required placeholder="e.g. John Mwangi" />
+              </div>
             </div>
             {isAdmin && (
               <div className="form-group">
@@ -929,7 +963,9 @@ function TeacherModal({ teacher, onSave, onClose, isAdmin }) {
           </div>
           <div className="modal-footer">
             <button type="button" className="btn btn-ghost" onClick={onClose}>Cancel</button>
-            <button type="submit" className="btn btn-primary">{teacher ? 'Save Changes' : 'Add Teacher'}</button>
+            <button type="submit" className="btn btn-primary" disabled={validating}>
+              {validating ? 'Validating...' : teacher ? 'Save Changes' : 'Add Teacher'}
+            </button>
           </div>
         </form>
       </div>

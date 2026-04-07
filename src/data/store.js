@@ -98,7 +98,7 @@ export async function getRegisteredSchools() {
   return data || [];
 }
 
-export async function registerSchool(name, email, plan, authUserId, adminName, adminEmail, phone = '', location = '') {
+export async function registerSchool(name, email, plan, authUserId, adminName, adminEmail, phone = '', location = '', curriculum = 'CBC Only') {
   // 1. Create the school row
   const { data: school, error: schoolErr } = await supabase
     .from('schools')
@@ -117,7 +117,8 @@ export async function registerSchool(name, email, plan, authUserId, adminName, a
       subscription_status: plan === 'Sandbox' ? 'Active' : 'Inactive', 
       subscription_expiry: plan === 'Sandbox' ? '2099-12-31T23:59:59Z' : new Date().toISOString(),
       phone,
-      address: location
+      address: location,
+      curriculum: curriculum
     });
   if (profileErr) throw profileErr;
 
@@ -280,6 +281,7 @@ const DEFAULT_PROFILE = {
   lastPaymentStatus: 'none',
   mpesa_config: { shortcode: '', consumer_key: '', consumer_secret: '' },
   sms_config: { sender_id: '', api_key: '' },
+  curriculum: 'CBC Only',
   customExams: ['CAT 1', 'CAT 2', 'Mid Term', 'End Term'],
   gradingSystems: { 
     default: [
@@ -292,7 +294,7 @@ const DEFAULT_PROFILE = {
   }
 };
 
-const SAFE_PROFILE_COLUMNS = 'id, school_name, motto, phone, email, address, logo, subscription_plan, streams_per_class, custom_subjects, active_classes, grade_fees, subscription_status, subscription_expiry, last_payment_status, mpesa_config, sms_config, grading_systems, custom_exams';
+const SAFE_PROFILE_COLUMNS = 'id, school_name, motto, phone, email, address, logo, subscription_plan, streams_per_class, custom_subjects, active_classes, grade_fees, subscription_status, subscription_expiry, last_payment_status, mpesa_config, sms_config, grading_systems, custom_exams, curriculum';
 
 export async function getSchoolProfile() {
   if (!_currentSchoolId) return { ...DEFAULT_PROFILE };
@@ -373,6 +375,7 @@ function mapProfileData(data) {
       api_key: maskSecret(data.sms_config?.api_key),
       _encrypted: data.sms_config
     },
+    curriculum: data.curriculum || 'CBC Only',
     _dbId: data.id,
     schoolId: data.school_id,
   };
@@ -556,6 +559,7 @@ export async function saveSchoolProfile(profile) {
     custom_subjects: { ...(profile.customSubjects || {}), __boarding_houses: profile.boardingHouses || [] },
     custom_exams: profile.customExams || DEFAULT_PROFILE.customExams,
     grading_systems: profile.gradingSystems || DEFAULT_PROFILE.gradingSystems,
+    curriculum: profile.curriculum || 'CBC Only',
     updated_at: new Date().toISOString(),
   };
 
@@ -1453,7 +1457,7 @@ export async function getTeachers() {
     try {
       const { data, error } = await supabase
         .from('teachers')
-        .select('id, name, email, phone, subjects, school_id, on_leave')
+        .select('id, name, email, phone, subjects, school_id, on_leave, staff_code')
         .eq('school_id', _currentSchoolId);
       if (error) throw error;
       if (data) {
@@ -1471,7 +1475,7 @@ export async function getTeachers() {
 
   const { data, error } = await supabase
     .from('teachers')
-    .select('id, name, email, phone, subjects, school_id, on_leave')
+    .select('id, name, email, phone, subjects, school_id, on_leave, staff_code')
     .eq('school_id', _currentSchoolId);
   if (error) throw error;
   if (data) await db.teachers.bulkPut(data.map(t => ({ ...t, school_id: _currentSchoolId })));
@@ -1699,7 +1703,8 @@ export async function addTeacher(teacher) {
       phone: teacher.phone || '', 
       subjects: teacher.subjects || [],
       status: teacher.status || 'Active', 
-      tsc_number: teacher.tsc_number || null 
+      tsc_number: teacher.tsc_number || null,
+      staff_code: teacher.staff_code || null
     })
     .select()
     .single();
@@ -1724,7 +1729,8 @@ export async function updateTeacher(id, updates) {
       subjects: updates.subjects,
       status: updates.status, 
       on_leave: updates.on_leave,
-      tsc_number: updates.tsc_number || null 
+      tsc_number: updates.tsc_number || null,
+      staff_code: updates.staff_code || null
     })
     .eq('id', id);
   if (error) throw error;
@@ -1744,6 +1750,22 @@ export async function deleteTeacher(id) {
       await supabase.from('school_profiles').update({ staff_count: pData.staff_count - 1 }).eq('school_id', schoolId);
     }
   }
+  await logPlatformActivity('TEACHER_DELETE', `Deleted teacher: ${id}`);
+}
+
+export async function isStaffCodeAvailable(code, excludeId = null) {
+  if (!code || !_currentSchoolId) return true;
+  const { data, error } = await supabase
+    .from('teachers')
+    .select('id')
+    .eq('school_id', _currentSchoolId)
+    .eq('staff_code', code)
+    .eq('status', 'Active');
+  
+  if (error) return true;
+  if (!data || data.length === 0) return true;
+  if (excludeId && data.length === 1 && data[0].id === excludeId) return true;
+  return false;
 }
 
 // ============= SUBJECT ASSIGNMENTS =============
@@ -2646,7 +2668,7 @@ export async function saveTimetableConfig(schoolId, periodId, slots, type = 'cla
 export async function getTimetableSlots(schoolId, periodId, classGrade, stream = null, type = 'class') {
   let query = supabase
     .from('timetable_slots')
-    .select('*, teachers(id, name)')
+    .select('*, teachers(id, name, staff_code)')
     .eq('school_id', schoolId)
     .eq('period_id', periodId)
     .eq('class_grade', classGrade)
@@ -2663,7 +2685,7 @@ export async function getTimetableSlots(schoolId, periodId, classGrade, stream =
 export async function getAllTimetableSlots(schoolId, periodId) {
   const { data, error } = await supabase
     .from('timetable_slots')
-    .select('*, teachers(id, name)')
+    .select('*, teachers(id, name, staff_code)')
     .eq('school_id', schoolId)
     .eq('period_id', periodId);
   if (error) throw error;
@@ -2673,7 +2695,7 @@ export async function getAllTimetableSlots(schoolId, periodId) {
 export async function getTeacherTimetable(schoolId, periodId, teacherId, type = 'class') {
   const { data, error } = await supabase
     .from('timetable_slots')
-    .select('*, teachers(id, name)')
+    .select('*, teachers(id, name, staff_code)')
     .eq('school_id', schoolId)
     .eq('period_id', periodId)
     .eq('teacher_id', teacherId)
