@@ -584,3 +584,64 @@ body {
   background: rgba(34,197,94,0.1) !important;
   opacity: 1;
 }
+
+/* 
+   ULTIMATE PREMIUM DROPDOWN RESET 
+   Definitively eliminates "Windows-like" UI across all browsers/OS.
+*/
+html body select, 
+html body .form-select, 
+html body .tt-select, 
+html body .act-sel, 
+html body .fs-select,
+html body .tt-field,
+html body .tt-req-input,
+html body .custom-select {
+  appearance: none !important;
+  -webkit-appearance: none !important;
+  -moz-appearance: none !important;
+  padding: 10px 40px 10px 16px !important;
+  border: 1.5px solid var(--border, #e2e8f0) !important;
+  border-radius: var(--radius-sm, 10px) !important;
+  background-color: var(--bg-card, #ffffff) !important;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%230EA5E9' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E") !important;
+  background-repeat: no-repeat !important;
+  background-position: right 14px center !important;
+  font-size: 0.875rem !important; 
+  color: var(--text-main, #0f172a) !important;
+  font-weight: 500 !important;
+  outline: none !important;
+  cursor: pointer !important;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06) !important;
+}
+
+/* Kill the IE/Edge default arrow */
+html body select::-ms-expand {
+  display: none !important;
+}
+
+html body select:hover, 
+html body .form-select:hover,
+html body .tt-select:hover {
+  border-color: var(--primary-light, #6366f1) !important;
+  box-shadow: 0 4px 12px rgba(14, 165, 233, 0.12) !important;
+  background-color: #fafbfc !important;
+}
+
+html body select:focus, 
+html body .form-select:focus,
+html body .tt-select:focus {
+  border-color: var(--primary, #4f46e5) !important;
+  box-shadow: 0 0 0 4px rgba(14, 165, 233, 0.18) !important;
+  transform: translateY(-1px);
+}
+
+/* Dark Theme Overrides for Dropdowns */
+.theme-onyx select,
+.theme-onyx .form-select,
+.theme-onyx .custom-select {
+  background-color: #121212 !important;
+  border-color: rgba(255,255,255,0.1) !important;
+  color: #e4e4e7 !important;
+}
