@@ -199,7 +199,7 @@ export default function OverviewTab({
           <div className="panel">
             <div className="panel-lbl"> Student Overview</div>
             {[
-              { c:'ni-v', e:<GraduationIcon size={14} />, n:'Total Students',  s:'Across all active schools', v:pStats?.studCount !== undefined ? pStats.studCount.toLocaleString()  : '—', st:'' },
+              { c:'ni-v', e:<GraduationIcon size={14} />, n:'Total Students',  s:'Across all active schools', v:pStats?.students !== undefined ? pStats.students.toLocaleString()  : (pStats?.studCount !== undefined ? pStats.studCount.toLocaleString() : '—'), st:'' },
               { c:'ni-t', e:<CheckIcon size={14} />, n:'CBC Portfolios',  s:'Generated this term',       v:pStats?.portCount !== undefined ? pStats.portCount.toLocaleString()  : '—', st:'is-ok' },
               { c:'ni-a', e:<CheckIcon size={14} />, n:'Exams Recorded',  s:'Results entered',           v:pStats?.examCount !== undefined ? pStats.examCount.toLocaleString()  : '—', st:'is-ok' },
               { c:'ni-s', e:<CheckIcon size={14} />, n:'Attendance Rate', s:'Platform-wide average',     v:pStats?.attendanceRate ? `${pStats.attendanceRate}%`            : '85%', st:'is-ok' },
@@ -220,6 +220,35 @@ export default function OverviewTab({
                 </span>
               </div>
             ))}
+          </div>
+
+          {/* NEW: Platform Health (Supabase Monitor) */}
+          <div className="panel" style={{ border: '1px solid var(--border)', background: 'rgba(16,185,129,0.02)' }}>
+            <div className="panel-hd">
+              <div>
+                <div className="panel-lbl" style={{ color: 'var(--te)' }}>Supabase Health</div>
+                <div className="panel-val" style={{ fontSize: '0.9rem' }}>
+                  {pStats?.totalRows?.toLocaleString() || '0'} Total Rows
+                </div>
+              </div>
+              <div className="panel-per" style={{ color: (pStats?.dbCapacity > 80 ? 'var(--ro)' : 'var(--te)') }}>
+                {Math.round(pStats?.dbCapacity || 0)}% CAPACITY
+              </div>
+            </div>
+            
+            <div style={{ height: 6, background: 'var(--bg)', borderRadius: 3, marginTop: 12, overflow: 'hidden' }}>
+              <div style={{ 
+                height: '100%', 
+                width: `${Math.min(pStats?.dbCapacity || 0, 100)}%`, 
+                background: pStats?.dbCapacity > 80 ? 'var(--ro)' : 'var(--te)',
+                transition: 'width 1s ease-in-out'
+              }} />
+            </div>
+            
+            <div style={{ fontSize: '0.58rem', color: 'var(--sub)', marginTop: 10, lineHeight: 1.5 }}>
+              Estimated row count towards Supabase Free Tier (500MB DB). 
+              LMS content is stored as files to save database space.
+            </div>
           </div>
         </div>
       </div>

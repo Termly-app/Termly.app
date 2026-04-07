@@ -1292,24 +1292,13 @@ export async function getAttendance() {
 }
 
 export async function markAttendance(date, studentId, status) {
-  await supabase
+  const { error } = await supabase
     .from('attendance')
     .upsert(
       { school_id: _currentSchoolId, date, student_id: studentId, status, period_id: _currentPeriodId },
       { onConflict: 'school_id,date,student_id,period_id' }
     );
-
-  // Trigger Absence SMS
-  if (status === 'absent') {
-    const student = (await getStudents()).find(s => s.id === studentId);
-    if (student && student.parent_phone) {
-      await queueSMS(
-        student.parent_phone,
-        `ShuleSoft Alert: ${student.name} is marked ABSENT today (${date}). Please contact the school for details.`,
-        'attendance'
-      );
-    }
-  }
+  if (error) throw error;
 }
 
 export async function getAttendanceSummary(date, preFetchedAttendance = null) {
@@ -3240,6 +3229,20 @@ export async function getSMSLogs() {
   return data || [];
 }
 
+export async function queueSmsBatch(messages) {
+  if (!_currentSchoolId || !messages.length) return;
+  const { error } = await supabase
+    .from('sms_messages')
+    .insert(messages.map(m => ({
+      school_id: _currentSchoolId,
+      phone_number: m.phone,
+      message: m.message,
+      type: m.type || 'general',
+      status: 'queued'
+    })));
+  if (error) throw error;
+}
+
 /**
  * Validate M-Pesa credentials (Mock/Local validation for now)
  */
@@ -3561,6 +3564,152 @@ export async function simulateMpesaSTKPush(student, amount, phone) {
   });
 
   return payment;
+}
+
+// ==========================================
+// SUPABASE STORAGE HELPERS (LMS OPTIMZATION)
+// ==========================================
+
+/**
+ * Uploads a text or JSON blob to Supabase Storage and returns the public URL.
+ * Used to keep large assignment/submission content OUT of the Postgres database.
+ */
+async function uploadToLmsStorage(path, content) {
+  const blob = new Blob([typeof content === 'string' ? content : JSON.stringify(content)], { type: 'application/json' });
+  const { data, error } = await supabase.storage.from('lms-content').upload(path, blob, { upsert: true });
+  if (error) throw error;
+  
+  const { data: { publicUrl } } = supabase.storage.from('lms-content').getPublicUrl(data.path);
+  return publicUrl;
+}
+
+/**
+ * Fetches text content from a Supabase Storage URL.
+ */
+export async function fetchLmsContent(url) {
+  if (!url) return null;
+  const res = await fetch(url);
+  if (!res.ok) return null;
+  const text = await res.text();
+  try { return JSON.parse(text); } catch (e) { return text; }
+}
+
+// ==========================================
+// LMS (ACADEMIC LEARNING)
+// ==========================================
+
+export async function getAssignments(className = null) {
+  let query = supabase.from('lms_assignments').select('*').order('created_at', { ascending: false });
+  if (className) query = query.eq('class', className);
+  
+  const { data, error } = await query;
+  if (error) throw error;
+  return data;
+}
+
+export async function createAssignment(assignment) {
+  const school_id = getCurrentSchoolId();
+  const fileId = `assignments/${school_id}/${Date.now()}_desc.json`;
+  
+  // 1. Upload description/content to Storage
+  const contentUrl = await uploadToLmsStorage(fileId, assignment.description || assignment.content || '');
+  
+  // 2. Save metadata + URL to DB
+  const { data, error } = await supabase.from('lms_assignments').insert([{
+    school_id,
+    class: assignment.class,
+    stream: assignment.stream,
+    subject: assignment.subject,
+    title: assignment.title,
+    description_url: contentUrl,
+    due_date: assignment.dueDate,
+    teacher_id: getCurrentAuthUser()?.id,
+    status: 'published'
+  }]).select().single();
+  
+  if (error) throw error;
+  return data;
+}
+
+export async function submitAssignment(assignmentId, student, payload) {
+  const school_id = getCurrentSchoolId();
+  const fileId = `submissions/${school_id}/${assignmentId}_${student.id}_${Date.now()}.json`;
+  
+  // 1. Upload student response to Storage
+  const contentUrl = await uploadToLmsStorage(fileId, payload);
+  
+  // 2. Save record to DB
+  const { data, error } = await supabase.from('lms_submissions').insert([{
+    assignment_id: assignmentId,
+    student_id: student.id,
+    content_url: contentUrl,
+    workflow_status: 'submitted'
+  }]).select().single();
+  
+  if (error) throw error;
+  return data;
+}
+
+export async function getSubmissions(assignmentId) {
+  const { data, error } = await supabase.from('lms_submissions').select('*, students(name, adm_no)').eq('assignment_id', assignmentId);
+  if (error) throw error;
+  return data;
+}
+
+export async function updateSubmission(submissionId, updates) {
+  const { data, error } = await supabase.from('lms_submissions').update(updates).eq('id', submissionId).select().single();
+  if (error) throw error;
+  return data;
+}
+
+// ==========================================
+// COMMUNICATIONS (SMS BROADCAST LOGS)
+// ==========================================
+
+export async function logCommunication(comm) {
+  const { data, error } = await supabase.from('communications_log').insert([{
+    school_id: getCurrentSchoolId(),
+    type: comm.type,
+    target: comm.target,
+    message: comm.message,
+    sender_id: getCurrentAuthUser()?.id,
+    recipient_count: comm.recipientCount,
+    status: 'dispatched'
+  }]).select().single();
+  
+  if (error) throw error;
+  return data;
+}
+
+export async function getCommunicationLogs() {
+  const { data, error } = await supabase.from('communications_log').select('*').order('timestamp', { ascending: false });
+  if (error) throw error;
+  return data;
+}
+
+// ==========================================
+// PLATFORM HEALTH (SUPERADMIN USAGE)
+// ==========================================
+
+export async function getPlatformStats() {
+  // Estimated for Supabase Free Tier Monitoring
+  const [schools, students, activities, assignments, submissions] = await Promise.all([
+    supabase.from('schools').select('id', { count: 'exact', head: true }),
+    supabase.from('students').select('id', { count: 'exact', head: true }),
+    supabase.from('platform_activities').select('id', { count: 'exact', head: true }),
+    supabase.from('lms_assignments').select('id', { count: 'exact', head: true }),
+    supabase.from('lms_submissions').select('id', { count: 'exact', head: true })
+  ]);
+  
+  // Estimate total rows (simplified proxy for DB size)
+  const totalRows = (schools.count || 0) + (students.count || 0) + (activities.count || 0) + (assignments.count || 0) + (submissions.count || 0);
+  
+  return {
+    schools: schools.count || 0,
+    students: students.count || 0,
+    totalRows,
+    dbCapacity: (totalRows / 500000) * 100 // Estimate relative usage based on ~500k row limit guideline for free tier
+  };
 }
 
 // Auto-sync every 60s if online

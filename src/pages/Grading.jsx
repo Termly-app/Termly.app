@@ -320,7 +320,17 @@ export default function Grading({ currentUser, currentPeriodId }) {
               <><button className="btn btn-ghost" onClick={() => { setEditMode(false); loadResults(); }}>Cancel</button>
               <button className="btn btn-success" onClick={saveAllMarks}><SaveIcon size={16} /> Save Marks</button></>
             ) : (
-              <button className="btn btn-primary" onClick={() => setEditMode(true)}><EditIcon size={16} /> Enter Marks</button>
+              (isAdmin || (isTeacher && Object.keys(assignments[selectedClass] || {}).some(str => 
+                typeof assignments[selectedClass][str] === 'string' ? assignments[selectedClass][str] === currentUser?.id :
+                Object.values(assignments[selectedClass][str]).some(tid => tid === currentUser?.id)
+              ))) && (
+                <button className="btn btn-primary" onClick={() => {
+                  const initial = {};
+                  results.forEach(s => { initial[s.id] = { ...s.marks }; });
+                  setEditMarks(initial);
+                  setEditMode(true);
+                }}><EditIcon size={16} /> Enter Marks</button>
+              )
             ))}
           </div>
         </div>
@@ -498,12 +508,26 @@ export default function Grading({ currentUser, currentPeriodId }) {
                       <tr key={s.id}>
                         <td><span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 28, height: 28, borderRadius: '50%', background: s.rank <= 3 ? '#fef3c7' : '#f1f5f9', color: s.rank <= 3 ? '#d97706' : '#64748b', fontSize: '0.82rem', fontWeight: 700 }}>{s.rank}</span></td>
                         <td><strong style={{ cursor: 'pointer', color: 'var(--primary)' }} onClick={() => !editMode && setShowReport(s)}>{s.name}</strong></td>
-                        {subjects.map(sub => (
-                          <td key={sub}>{editMode ? (
-                            <input type="number" min="0" max="100" value={marks[sub] || ''} onChange={e => handleMarkChange(s.id, sub, e.target.value)}
-                              style={{ width: 50, padding: '3px 5px', border: '1px solid var(--border)', borderRadius: 4, textAlign: 'center', fontFamily: 'var(--font)', fontSize: '0.82rem' }} />
-                          ) : <span style={{ color: (marks[sub] || 0) < 50 ? '#ef4444' : 'inherit' }}>{marks[sub] || '—'}</span>}</td>
-                        ))}
+                        {subjects.map(sub => {
+                          // Check if this teacher is assigned to this subject in THIS stream
+                          const teacherAssigned = (assignments[selectedClass]?.[s.stream || 'General']?.[sub] === currentUser?.id) || 
+                                                 (assignments[selectedClass]?.['General']?.[sub] === currentUser?.id);
+                          const canEdit = isAdmin || teacherAssigned;
+                          
+                          return (
+                            <td key={sub}>
+                              {editMode && canEdit ? (
+                                <input type="number" min="0" max="100" value={marks[sub] !== undefined ? marks[sub] : ''} 
+                                  onChange={e => handleMarkChange(s.id, sub, e.target.value)}
+                                  style={{ width: 50, padding: '3px 5px', border: '2px solid var(--primary)', borderRadius: 4, textAlign: 'center', fontFamily: 'var(--font)', fontSize: '0.82rem', background: 'rgba(59,130,246,0.05)' }} />
+                              ) : (
+                                <span style={{ color: (marks[sub] || 0) < 50 && marks[sub] !== undefined ? '#ef4444' : 'inherit', opacity: editMode && !canEdit ? 0.5 : 1 }}>
+                                  {marks[sub] !== undefined ? marks[sub] : '—'}
+                                </span>
+                              )}
+                            </td>
+                          );
+                        })}
                         <td className="font-bold">{total}</td>
                         <td className="font-bold">{typeof avg === 'number' ? avg.toFixed(1) : avg}</td>
                         <td><span style={{ color, fontWeight: 700 }}>{grade}</span></td>

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { LogoutIcon, UserIcon, CardIcon, MessageIcon, StatusDotIcon, ActivityIcon, ClipboardIcon, CheckIcon } from '../../components/CommonIcons';
+import { getFees, simulateMpesaSTKPush, getMarks, getGradeForScore, getSchoolProfile } from '../../data/store';
 import { getAssignments, submitAssignment } from '../../data/offlineStore';
-import { getFees, simulateMpesaSTKPush } from '../../data/store';
 
 export default function PortalDashboard({ user, onLogout }) {
   const [feeBalance, setFeeBalance] = useState(0);
@@ -15,20 +15,33 @@ export default function PortalDashboard({ user, onLogout }) {
   const [assignments, setAssignments] = useState([]);
   const [showSubmitModal, setShowSubmitModal] = useState(null);
   const [submissionPayload, setSubmissionPayload] = useState('');
+  const [academic, setAcademic] = useState({ average: 0, grade: '—', color: '#64748b', rank: '—' });
 
   useEffect(() => {
     async function init() {
-      const asts = await getAssignments(user.class);
+      const [asts, profile, allMarks] = await Promise.all([
+        getAssignments(user.class),
+        getSchoolProfile(),
+        getMarks()
+      ]);
       setAssignments(asts);
       
+      const myMarks = allMarks[user.id] || {};
+      const values = Object.values(myMarks);
+      if (values.length > 0) {
+        const avg = values.reduce((a, b) => a + b, 0) / values.length;
+        const { grade, color } = getGradeForScore(avg, user.class, profile);
+        setAcademic({ average: avg.toFixed(1), grade, color });
+      }
+
       const fees = await getFees();
       const myFee = fees[user.id];
       if (myFee) {
         setFeeBalance(myFee.balance);
         setMpesaAmount(myFee.balance > 0 ? myFee.balance : 0);
       } else {
-        setFeeBalance(15000);
-        setMpesaAmount(15000);
+        setFeeBalance(0);
+        setMpesaAmount(0);
       }
     }
     init();
@@ -105,14 +118,18 @@ export default function PortalDashboard({ user, onLogout }) {
           </h3>
           
           <div style={{ background: '#f8fafc', borderRadius: 12, padding: 20, textAlign: 'center' }}>
-            <div style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 64, height: 64, borderRadius: '50%', border: '4px solid #10b981', color: '#10b981', fontSize: '1.5rem', fontWeight: 800, marginBottom: 12 }}>
-              A-
+            <div style={{ 
+              display: 'inline-flex', alignItems: 'center', justifyContent: 'center', 
+              width: 64, height: 64, borderRadius: '50%', border: `4px solid ${academic.color}`, 
+              color: academic.color, fontSize: '1.5rem', fontWeight: 800, marginBottom: 12 
+            }}>
+              {academic.grade}
             </div>
-            <div style={{ fontWeight: 700, color: '#0f172a' }}>Term 1 Mid-Term Score</div>
-            <div style={{ color: '#64748b', fontSize: '0.85rem', marginTop: 4 }}>Top 15% of Class {user.class}</div>
+            <div style={{ fontWeight: 700, color: '#0f172a' }}>Current Term Average: {academic.average}%</div>
+            <div style={{ color: '#64748b', fontSize: '0.85rem', marginTop: 4 }}>Last updated by your teacher recently</div>
             
-            <button style={{ marginTop: 20, background: 'white', border: '1px solid #e2e8f0', padding: '8px 16px', borderRadius: 8, fontSize: '0.85rem', fontWeight: 600, color: '#0f172a', cursor: 'pointer' }}>
-              View Full Report Card
+            <button style={{ marginTop: 20, background: 'white', border: '1px solid #e2e8f0', padding: '8px 16px', borderRadius: 8, fontSize: '0.85rem', fontWeight: 600, color: '#0f172a', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, margin: '20px auto 0' }}>
+              <ClipboardIcon size={14} /> Full Performance Report
             </button>
           </div>
         </div>

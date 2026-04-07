@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { Helmet } from 'react-helmet-async';
-import { getSchoolProfile } from '../data/store';
-import { addAssignment, getAssignments, getSubmissions, updateSubmissionGrade } from '../data/offlineStore';
+import { 
+  getSchoolProfile, getAssignments, createAssignment, 
+  getSubmissions, updateSubmission, fetchLmsContent 
+} from '../data/store';
 import { BookIcon, CheckIcon, UsersIcon, DownloadIcon, ClockIcon, MessageIcon, GraduationIcon } from '../components/CommonIcons';
 import Select from '../components/Common/Select';
 
@@ -42,18 +44,21 @@ export default function LMS({ currentUser }) {
   const handleCreate = async (e) => {
     e.preventDefault();
     setLoading(true);
-    await addAssignment({
-      ...formData,
-      teacher: currentUser?.name || 'Staff',
-      status: 'Active'
-    });
-    // Reset form
-    setFormData({ 
-      title: '', class: '', stream: '', subject: '', 
-      allowFrom: new Date().toISOString().split('T')[0], 
-      dueDate: '', cutoffDate: '', description: '', links: '' 
-    });
-    await loadData();
+    try {
+      await createAssignment({
+        ...formData,
+        teacher: currentUser?.name || 'Staff'
+      });
+      // Reset form
+      setFormData({ 
+        title: '', class: '', stream: '', subject: '', 
+        allowFrom: new Date().toISOString().split('T')[0], 
+        dueDate: '', cutoffDate: '', description: '', links: '' 
+      });
+      await loadData();
+    } catch (err) {
+      alert(`Error creating assignment: ${err.message}`);
+    }
     setLoading(false);
   };
 
@@ -63,7 +68,7 @@ export default function LMS({ currentUser }) {
   };
 
   const handleUpdateGrade = async (submissionId, data) => {
-    await updateSubmissionGrade(submissionId, data);
+    await updateSubmission(submissionId, data);
     // Refresh current view
     if (selectedSubmissions) {
       const updatedSubs = await getSubmissions(selectedSubmissions.assignment.id);
@@ -278,7 +283,10 @@ export default function LMS({ currentUser }) {
                           </td>
                           <td>
                             <div style={{ display: 'flex', gap: 6 }}>
-                              <button className="topbar-icon-btn" title="Review Submission" onClick={() => alert(`Reviewing: ${sub.student_name}\n\nContent: ${sub.payload}`)}>
+                              <button className="topbar-icon-btn" title="Review Submission" onClick={async () => {
+                                 const content = await fetchLmsContent(sub.content_url);
+                                 alert(`Reviewing: ${sub.student_name}\n\nContent:\n${typeof content === 'object' ? JSON.stringify(content, null, 2) : content}`);
+                               }}>
                                 <DownloadIcon size={14} />
                               </button>
                                <button className="topbar-icon-btn" title="Send Feedback Message" onClick={async () => {

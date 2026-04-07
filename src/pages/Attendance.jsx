@@ -1,8 +1,11 @@
 import { useState, useEffect } from 'react';
-import { getStudents, getAttendance, markAttendance, getAttendanceSummary, getTodayStr, getSchoolProfile, getSubjectAssignments } from '../data/store';
+import { 
+  getStudents, getAttendance, markAttendance, getAttendanceSummary, 
+  getTodayStr, getSchoolProfile, getSubjectAssignments, queueSmsBatch 
+} from '../data/store';
 import { CBC_STRUCTURE } from '../data/seedData';
 import { 
-  CheckIcon, ClockIcon, CrossIcon, PrintIcon, DashboardIcon, FlagIcon 
+  CheckIcon, ClockIcon, CrossIcon, PrintIcon, DashboardIcon, FlagIcon, ZapIcon 
 } from '../components/CommonIcons';
 import Select from '../components/Common/Select';
 import { Helmet } from 'react-helmet-async';
@@ -19,6 +22,7 @@ export default function Attendance({ currentUser, currentPeriodId }) {
   const [profile, setProfile] = useState({ streams: [], activeClasses: [] });
   const [assignments, setAssignments] = useState({});
   const [loading, setLoading] = useState(true);
+  const [alertModal, setAlertModal] = useState({ open: false, sending: false });
 
   const userRole = currentUser?.role?.toLowerCase() || 'teacher';
   const isTeacher = userRole === 'teacher';
@@ -195,6 +199,11 @@ export default function Attendance({ currentUser, currentPeriodId }) {
             {loading && <span className="text-muted" style={{ fontSize: '0.85rem' }}>Loading...</span>}
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            {summary.absent > 0 && (
+              <button className="btn btn-warning" onClick={() => setAlertModal({ open: true, sending: false })}>
+                <ZapIcon size={16} /> Notify Parents ({summary.absent})
+              </button>
+            )}
             <button className="btn btn-ghost" onClick={() => setShowPrintOptions(true)}><PrintIcon size={16} /> Print Report</button>
             <button className="btn btn-success" onClick={markAllPresent}><CheckIcon size={16} /> Mark All Present</button>
           </div>
@@ -335,6 +344,73 @@ export default function Attendance({ currentUser, currentPeriodId }) {
               <div style={{ display: 'flex', gap: 10, marginTop: 24 }}>
                 <button className="btn btn-primary" style={{ flex: 1, justifyContent: 'center' }} onClick={handlePrint}>Generate Printout</button>
                 <button className="btn btn-ghost" style={{ flex: 1, justifyContent: 'center' }} onClick={() => setShowPrintOptions(false)}>Cancel</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Manual SMS Alerts Modal */}
+      {alertModal.open && (
+        <div className="modal-overlay">
+          <div className="modal-content" style={{ maxWidth: 450 }}>
+            <div className="modal-header" style={{ padding: '16px 20px', borderBottom: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <h3 style={{ margin: 0, fontSize: '1.1rem' }}><ZapIcon size={20} color="var(--ro)" /> Absence Alerts</h3>
+              <button className="btn-close" style={{ background: 'none', border: 'none', fontSize: '1.2rem', cursor: 'pointer', display: 'flex', alignItems: 'center' }} onClick={() => setAlertModal({ open: false })}><CrossIcon size={20} /></button>
+            </div>
+            <div className="modal-body" style={{ padding: 20 }}>
+              <p style={{ fontSize: '0.875rem', color: 'var(--text-main)', marginBottom: 15 }}>
+                You are about to send <strong>{summary.absent}</strong> SMS alerts to parents of absent students for <strong>{selectedDate}</strong>.
+              </p>
+              
+              <div style={{ maxHeight: 200, overflowY: 'auto', background: 'var(--bg)', padding: 12, borderRadius: 8, border: '1px solid var(--border)', marginBottom: 20 }}>
+                {students.filter(s => attendance[s.id] === 'absent').map(s => (
+                  <div key={s.id} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.78rem', padding: '4px 0', borderBottom: '1px solid var(--border)' }}>
+                    <span>{s.name} ({s.class})</span>
+                    <span style={{ color: 'var(--text-light)' }}>{s.parent_phone || 'No Phone'}</span>
+                  </div>
+                ))}
+              </div>
+
+              <div style={{ padding: 12, borderRadius: 8, background: 'rgba(59,130,246,0.05)', border: '1px solid var(--primary)', marginBottom: 20 }}>
+                <p style={{ margin: 0, fontSize: '0.75rem', color: 'var(--primary)', fontWeight: 600 }}>Message Preview:</p>
+                <p style={{ margin: '6px 0 0', fontSize: '0.8rem', fontStyle: 'italic', color: 'var(--text-main)' }}>
+                  "ShuleSoft Alert: [Student Name] is marked ABSENT today ({selectedDate}). Please contact the school for details."
+                </p>
+              </div>
+
+              <div style={{ display: 'flex', gap: 10 }}>
+                <button 
+                  className="btn btn-primary" 
+                  style={{ flex: 2, justifyContent: 'center' }}
+                  disabled={alertModal.sending || summary.absent === 0}
+                  onClick={async () => {
+                    setAlertModal(prev => ({ ...prev, sending: true }));
+                    try {
+                      const messages = students
+                        .filter(s => attendance[s.id] === 'absent' && s.parent_phone)
+                        .map(s => ({
+                          phone: s.parent_phone,
+                          message: `ShuleSoft Alert: ${s.name} is marked ABSENT today (${selectedDate}). Please contact the school for details.`,
+                          type: 'attendance'
+                        }));
+                      
+                      if (messages.length > 0) {
+                        await queueSmsBatch(messages);
+                        alert(`Successfully queued ${messages.length} alerts.`);
+                      } else {
+                        alert("No valid parent phone numbers found.");
+                      }
+                      setAlertModal({ open: false, sending: false });
+                    } catch (err) {
+                      alert(err.message);
+                      setAlertModal(prev => ({ ...prev, sending: false }));
+                    }
+                  }}
+                >
+                  {alertModal.sending ? 'Sending...' : 'Confirm & Send Alerts'}
+                </button>
+                <button className="btn btn-ghost" style={{ flex: 1, justifyContent: 'center' }} onClick={() => setAlertModal({ open: false })}>Cancel</button>
               </div>
             </div>
           </div>
