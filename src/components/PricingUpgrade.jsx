@@ -192,20 +192,6 @@ export default function PricingUpgrade({ featureName, requiredPlan = "Profession
             >
               Upgrade to Unlock Now
             </button>
-            <button 
-              onClick={() => navigate('/support')}
-              className="btn btn-ghost"
-              style={{
-                padding: '16px 36px',
-                fontSize: '1.05rem',
-                fontWeight: 600,
-                borderRadius: 16,
-                border: '2px solid #E2E8F0',
-                color: '#64748B'
-              }}
-            >
-              Speak to an Agent
-            </button>
           </div>
         </div>
 

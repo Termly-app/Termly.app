@@ -365,6 +365,9 @@ function Sidebar({ isOpen, onClose, onLogout, currentUser, subscriptionActive })
         {isAdmin && (features.parent_portal || isSandbox) && (
           <SbLink to="/portal/parent" icon={UsersIcon} label="Parent Portal" onClick={onClose} locked={!subscriptionActive || (isSandbox && !features.parent_portal)} />
         )}
+
+        <SbSection label="Resources" />
+        <SbLink to="/help" icon={BookIcon} label="Help Center" onClick={onClose} />
         
         {/* Strictly Admin-only settings */}
         {isAdmin && (
@@ -673,6 +676,7 @@ function App() {
                 <>
                   {/* Shared Dashboard */}
                   <Route path="/dashboard" element={<Dashboard currentUser={currentUser} onLogout={handleLogout} currentPeriodId={currentPeriodId} />} />
+                  <Route path="/help"      element={<HelpCenter />} />
                   
                   {/* Academic Routes: Admin & Teacher */}
                   {(isAdmin || isTeacher) && (
@@ -722,7 +726,6 @@ function App() {
                       <Route path="/security" element={<Security currentUser={currentUser} />} />
                       <Route path="/settings" element={<Settings currentUser={currentUser} />} />
                       <Route path="/billing"  element={<Billing currentUser={currentUser} />} />
-                      <Route path="/help"     element={<HelpCenter />} />
                       <Route path="/portal/teacher" element={<SectionGate featureSlug="teacher_portal" featureName="Teacher Portal" profile={profile}><div style={{padding:40}}>Teacher Portal Management (Coming Soon)</div></SectionGate>} />
                       <Route path="/portal/parent"  element={<SectionGate featureSlug="parent_portal"  featureName="Parent Portal"  profile={profile}><div style={{padding:40}}>Parent Portal Management (Coming Soon)</div></SectionGate>} />
                     </>
