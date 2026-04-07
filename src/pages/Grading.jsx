@@ -343,7 +343,7 @@ export default function Grading({ currentUser, currentPeriodId }) {
         return (
           <div key={levelName} style={{ marginBottom: 8 }}>
             <div style={{ fontSize: '0.65rem', textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 700, marginBottom: 5, marginLeft: 2, color: 'var(--text-muted)' }}>{levelName}</div>
-            <div style={{ display:'flex', flexWrap:'wrap', gap:5 }}>
+            <div className="scroll-x-hide" style={{ paddingBottom: '4px' }}>
               {activeInLevel.map(g => {
                 const isMyClass = assignments[g] && Object.values(assignments[g]).some(streams => 
                   typeof streams === 'string' ? streams === currentUser?.id :
@@ -425,7 +425,7 @@ export default function Grading({ currentUser, currentPeriodId }) {
       </div>
 
       {/* View Tabs — pill strip */}
-      <div style={{ display:'flex', alignItems:'center', gap:6, marginBottom:20, padding:'4px 5px', background:'var(--bg)', borderRadius:12, border:'1px solid var(--border)', width:'fit-content', flexWrap:'wrap' }}>
+      <div className="scroll-x-hide" style={{ alignItems:'center', marginBottom:20, padding:'4px 5px', background:'var(--bg)', borderRadius:12, border:'1px solid var(--border)', width:'max-content', maxWidth: '100%' }}>
         {[
           { key:'marks',       icon: isEarlyYears ? <FlagIcon /> : <BookIcon />, label: isEarlyYears ? 'Competency Focus' : 'Marks & Rankings' },
           ...(!isEarlyYears ? [{ key:'subjects', icon:<DashboardIcon />, label:'Subject Rankings' }] : []),
@@ -690,7 +690,7 @@ export default function Grading({ currentUser, currentPeriodId }) {
           <div className="card">
             <div className="card-header"><h3><TeacherIcon size={20} /> Subject Teacher Engagement</h3></div>
             <div className="card-body">
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 16 }}>
+              <div className="responsive-grid-stack">
                 {subjects.slice(0, 4).map(sub => (
                   <div key={sub} style={{ padding: 16, border: '1px solid var(--border)', borderRadius: 12 }}>
                     <div className="text-muted" style={{ fontSize: '0.75rem' }}>{sub}</div>

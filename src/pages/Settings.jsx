@@ -231,7 +231,7 @@ export default function Settings() {
       <div style={{display:'flex',flexDirection:'column',gap:24}}>
 
         {/* Identity & Branding */}
-        <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:20}}>
+        <div className="responsive-grid-stack">
 
           {/* Identity */}
           <div className="card">
@@ -287,8 +287,8 @@ export default function Settings() {
               <h3>📐 Academic Configuration</h3>
               <p style={{fontSize:'0.78rem',color:'var(--text-light)',margin:'2px 0 0'}}>Classes, streams, subjects, and fee structure per level</p>
             </div>
-            {/* Level tab switcher */}
-            <div style={{display:'flex',gap:4,padding:'4px',background:'var(--bg)',borderRadius:10,border:'1px solid var(--border)'}}>
+            {/* Level tab switcher - FIXED: Scrollable on mobile */}
+            <div className="scroll-x-hide" style={{padding:'4px',background:'var(--bg)',borderRadius:10,border:'1px solid var(--border)',maxWidth:'100%'}}>
               {levels.map(lv=>(
                 <button key={lv} onClick={()=>setActiveLevel(lv)} style={levelBtn(lv)}>{lv}</button>
               ))}
@@ -296,7 +296,7 @@ export default function Settings() {
           </div>
 
           <div className="card-body">
-            <div style={{display:'grid',gridTemplateColumns:'190px 1fr',gap:24}}>
+            <div className="settings-grid-stack">
 
               {/* Active grades */}
               <div>
@@ -353,7 +353,7 @@ export default function Settings() {
                   {profile.activeClasses?.filter(g=>CBC_STRUCTURE[activeLevel].grades.includes(g)).length===0?(
                     <p style={{fontSize:'0.875rem',color:'var(--text-muted)',fontStyle:'italic',textAlign:'center',padding:'16px 0'}}>Select active grades on the left to manage streams.</p>
                   ):(
-                    <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12}}>
+                    <div className="responsive-grid-stack" style={{ gap: 12 }}>
                       {CBC_STRUCTURE[activeLevel].grades.filter(g=>profile.activeClasses?.includes(g)).map(grade=>(
                         <div key={grade} style={{background:'var(--bg-card)',padding:12,borderRadius:10,border:'1px solid var(--border)'}}>
                           <div style={{fontSize:'0.7rem',fontWeight:700,color:'var(--primary)',textTransform:'uppercase',letterSpacing:'0.07em',marginBottom:8}}>{grade} Streams</div>
@@ -400,7 +400,7 @@ export default function Settings() {
                 <div style={sectionBox}>
                   <div style={{fontWeight:700,fontSize:'0.9rem',color:'var(--text-main)',marginBottom:15}}><BookIcon size={20} /> Grading & Exam Types</div>
                   
-                  <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:20}}>
+                  <div className="responsive-grid-stack">
                     {/* Exam Names */}
                     <div>
                       <div style={{fontSize:'0.72rem',fontWeight:700,color:'var(--text-light)',textTransform:'uppercase',marginBottom:8}}>Exam Types</div>
@@ -500,7 +500,7 @@ export default function Settings() {
               </div>
             </div>
             <div className="card-body">
-              <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:24}}>
+              <div className="responsive-grid-stack">
                 
                 {/* M-Pesa Daraja */}
                 <div style={sectionBox}>
@@ -599,7 +599,7 @@ export default function Settings() {
         )}
 
         {/* Subscription + Data Node */}
-        <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:20}}>
+        <div className="responsive-grid-stack">
 
           {/* Subscription */}
           <div style={{borderRadius:16,padding:28,background:'linear-gradient(135deg,#1e3a5f 0%,#0369a1 100%)',color:'#fff',position:'relative',overflow:'hidden'}}>

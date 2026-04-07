@@ -113,14 +113,14 @@ export default function SetupWizard({ profile, onComplete, totalStudents }) {
               <div className="wizard-hero-icon"><RocketIcon size={64} color="var(--primary)" /></div>
               <h1>Revolutionize Your School</h1>
               <p>Welcome to ShuleSoft. Let's build your school's digital architecture together. This 6-step setup will prepare your system for registration, grading, and fee management.</p>
-              <div className="wizard-stats-preview">
-                <div className="stat-mini">
-                  <strong>{profile?.subscription_plan || 'Starter'}</strong>
-                  <span>Platform Tier</span>
+              <div className="wizard-stats-preview" style={{ display: 'flex', gap: 16, justifyContent: 'center', marginBottom: 24, flexWrap: 'wrap' }}>
+                <div className="stat-mini" style={{ background: 'var(--bg)', padding: '12px 20px', borderRadius: 12, border: '1px solid var(--border)' }}>
+                  <strong style={{ display: 'block', fontSize: '1.2rem', color: 'var(--primary)' }}>{profile?.subscription_plan || 'Starter'}</strong>
+                  <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Platform Tier</span>
                 </div>
-                <div className="stat-mini">
-                  <strong>Active</strong>
-                  <span>Cloud Instance</span>
+                <div className="stat-mini" style={{ background: 'var(--bg)', padding: '12px 20px', borderRadius: 12, border: '1px solid var(--border)' }}>
+                  <strong style={{ display: 'block', fontSize: '1.2rem', color: 'var(--success)' }}>Active</strong>
+                  <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Cloud Instance</span>
                 </div>
               </div>
               <button className="btn btn-primary btn-lg" onClick={handleNext}>
@@ -165,7 +165,7 @@ export default function SetupWizard({ profile, onComplete, totalStudents }) {
                   <h2>School Architecture</h2>
                   <p>Select active grades and define streams for each. Streams are used to group students within a grade.</p>
                 </div>
-                <div style={{ display: 'flex', gap: 4, padding: 4, background: 'var(--bg)', borderRadius: 10, border: '1px solid var(--border)' }}>
+                <div className="scroll-x-hide" style={{ gap: 4, padding: 4, background: 'var(--bg)', borderRadius: 10, border: '1px solid var(--border)', maxWidth: '100%' }}>
                   {Object.keys(CBC_STRUCTURE).map(lv => (
                     <button key={lv} className={`btn-tab ${activeLevel === lv ? 'on' : ''}`} onClick={() => setActiveLevel(lv)}>
                       {lv.split(' ')[0]}
@@ -174,9 +174,9 @@ export default function SetupWizard({ profile, onComplete, totalStudents }) {
                 </div>
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '200px 1fr', gap: 24, marginTop: 20 }}>
-                <div className="grades-selector">
-                  <div className="label-sec">Active Grades</div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: 24, marginTop: 20 }}>
+                <div className="grades-selector" style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+                  <div className="label-sec" style={{ width: '100%' }}>Active Grades</div>
                   {CBC_STRUCTURE[activeLevel].grades.map(g => (
                     <label key={g} className={`grade-item ${formData.activeClasses.includes(g) ? 'on' : ''}`}>
                       <span>{g}</span>
@@ -186,7 +186,7 @@ export default function SetupWizard({ profile, onComplete, totalStudents }) {
                 </div>
                 <div className="streams-manager">
                   <div className="label-sec">Stream Management</div>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                  <div className="responsive-grid-stack" style={{ gap: 12 }}>
                     {formData.activeClasses.filter(g => CBC_STRUCTURE[activeLevel].grades.includes(g)).map(g => (
                       <div key={g} className="stream-box">
                         <div className="stream-box-hd">{g} Streams</div>
@@ -217,7 +217,7 @@ export default function SetupWizard({ profile, onComplete, totalStudents }) {
               <h2>Learning Areas (Subjects)</h2>
               <p>Review and customize the subjects offered at each level. We've pre-filled these based on KICD requirements.</p>
               
-              <div style={{ display: 'flex', gap: 10, marginBottom: 20 }}>
+              <div className="scroll-x-hide" style={{ gap: 10, marginBottom: 20, maxWidth: '100%' }}>
                 {Object.keys(CBC_STRUCTURE).map(lv => (
                   <button key={lv} className={`btn-pill ${activeLevel === lv ? 'on' : ''}`} onClick={() => setActiveLevel(lv)}>
                     {lv}

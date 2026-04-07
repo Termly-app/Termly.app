@@ -484,7 +484,43 @@ body {
   .sidebar-overlay { display: block; }
 }
 
-/* Utilities */
+/* ====== RESPONSIVE UTILITY SUITE ====== */
+
+/* Horizontal scroll container with hidden scrollbar for a clean feel */
+.scroll-x-hide {
+  display: flex !important;
+  overflow-x: auto !important;
+  white-space: nowrap !important;
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+  cursor: grab;
+  gap: 8px;
+}
+.scroll-x-hide::-webkit-scrollbar {
+  display: none;
+}
+
+/* Stacks 2-column grids on mobile/tablet */
+.responsive-grid-stack {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 20px;
+}
+
+/* Specific for the Settings layout (sidebar + content) */
+.settings-grid-stack {
+  display: grid;
+  grid-template-columns: 190px 1fr;
+  gap: 24px;
+}
+
+@media (max-width: 1024px) {
+  .responsive-grid-stack, .settings-grid-stack {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+/* Global Utilities */
 .text-center { text-align: center; }
 .text-danger { color: var(--danger); }
 .p-8 { padding: 32px; }
