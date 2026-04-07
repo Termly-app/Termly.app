@@ -1,4 +1,7 @@
+Sitemap: https://shulesoft-app.vercel.app/sitemap.xml
+
 User-agent: *
 Allow: /
-
-Sitemap: https://shulesoft-app.vercel.app/sitemap.xml
+Disallow: /api/
+Disallow: /admin/
+Disallow: /superadmin/

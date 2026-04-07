@@ -14,6 +14,7 @@ import {
 } from '../components/CommonIcons';
 import SetupWizard from '../components/SetupWizard';
 import ReferralTool from '../components/ReferralTool';
+import { Helmet } from 'react-helmet-async';
 
 export default function Dashboard({ currentUser, onLogout, currentPeriodId }) {
   const navigate = useNavigate();
@@ -161,6 +162,10 @@ export default function Dashboard({ currentUser, onLogout, currentPeriodId }) {
 
   return (
     <div className="animate-fade-up">
+      <Helmet>
+        <title>Dashboard | ShuleSoft — High Performance School Management</title>
+        <meta name="description" content="View school-wide performance, student count, and attendance at a glance." />
+      </Helmet>
       {showWizard && (
         <SetupWizard 
           profile={data.profile} 

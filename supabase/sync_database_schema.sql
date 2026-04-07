@@ -62,3 +62,58 @@ CREATE TABLE IF NOT EXISTS submissions (
 -- Enable RLS for new tables (Basic policy - assuming user identification logic elsewhere)
 ALTER TABLE assignments ENABLE ROW LEVEL SECURITY;
 ALTER TABLE submissions ENABLE ROW LEVEL SECURITY;
+
+-- 5. ACADEMIC & FINANCIAL SCALING (Sprint 2)
+-- Zeraki-style Performance Trends
+CREATE TABLE IF NOT EXISTS academic_trends (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    school_id UUID REFERENCES school_profiles(id),
+    student_id UUID NOT NULL,
+    subject TEXT NOT NULL,
+    period_id TEXT NOT NULL,
+    mean_mark DECIMAL(5,2),
+    deviation DECIMAL(5,2),
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Gradelink-style Incidental Charges (Lunch, Transport, etc.)
+CREATE TABLE IF NOT EXISTS incidental_charges (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    school_id UUID REFERENCES school_profiles(id),
+    student_id UUID NOT NULL,
+    item_name TEXT NOT NULL,
+    amount DECIMAL(12,2) NOT NULL,
+    category TEXT DEFAULT 'Other',
+    date_charged DATE DEFAULT CURRENT_DATE,
+    status TEXT DEFAULT 'Unpaid'
+);
+
+-- Enterprise Invoicing History
+CREATE TABLE IF NOT EXISTS invoice_logs (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    school_id UUID REFERENCES school_profiles(id),
+    period_id TEXT NOT NULL,
+    generated_by UUID REFERENCES teachers(id),
+    total_amount DECIMAL(15,2),
+    student_count INTEGER,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Platform-wide Notification Audit Log
+CREATE TABLE IF NOT EXISTS notifications_log (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    school_id UUID REFERENCES school_profiles(id),
+    recipient_id TEXT NOT NULL,
+    recipient_type TEXT NOT NULL, 
+    channel TEXT NOT NULL, 
+    subject TEXT,
+    message TEXT NOT NULL,
+    status TEXT DEFAULT 'Sent',
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Enable RLS for new scaling tables
+ALTER TABLE academic_trends ENABLE ROW LEVEL SECURITY;
+ALTER TABLE incidental_charges ENABLE ROW LEVEL SECURITY;
+ALTER TABLE invoice_logs ENABLE ROW LEVEL SECURITY;
+ALTER TABLE notifications_log ENABLE ROW LEVEL SECURITY;

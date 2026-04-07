@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { Helmet } from 'react-helmet-async';
 import { getClassResults, setStudentAllMarks, getSubjectRankings, getClassList, getCBC, setCBC, getTeacherPerformance, getCoreCompetencies, getPrintHeader, getSchoolProfile, subscribeToChanges, getGradeForScore } from '../data/store';
 import { CBC_STRUCTURE, CBC_LEVELS, CBC_CORE_COMPETENCIES, STREAMS, getSubjectsForGrade, getLevelForGrade } from '../data/seedData';
 import { 
@@ -297,6 +298,10 @@ export default function Grading({ currentUser, currentPeriodId }) {
 
   return (
     <div className="animate-in">
+      <Helmet>
+        <title>Grading & Academic Performance | ShuleSoft</title>
+        <meta name="description" content="Manage student marks, CBC assessments, and generate professional report cards instantly." />
+      </Helmet>
       <div className="page-header">
         <div className="page-header-actions" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 16 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>

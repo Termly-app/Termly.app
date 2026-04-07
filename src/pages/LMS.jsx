@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Helmet } from 'react-helmet-async';
 import { getSchoolProfile } from '../data/store';
 import { addAssignment, getAssignments, getSubmissions, updateSubmissionGrade } from '../data/offlineStore';
 import { BookIcon, CheckIcon, UsersIcon, DownloadIcon, ClockIcon, MessageIcon, GraduationIcon } from '../components/CommonIcons';
@@ -75,6 +76,10 @@ export default function LMS({ currentUser }) {
 
   return (
     <div className="section-card animate-in" style={{ display: 'grid', gridTemplateColumns: '380px 1fr', gap: 24, minHeight: 'calc(100vh - 120px)' }}>
+      <Helmet>
+        <title>Assignments Hub | ShuleSoft LMS</title>
+        <meta name="description" content="Create, target, and grade assignments in the ShuleSoft digital classroom." />
+      </Helmet>
       
       {/* LEFT PANE: Professional Assignment Setup */}
       <div style={{ paddingRight: 24, borderRight: '1px solid var(--border)', background: '#fcfcfc', padding: 20, borderRadius: '12px 0 0 12px' }}>
