@@ -86,8 +86,7 @@ export const sPill = (s) => {
 export const getStatusRefined = (p, isActive) => {
   const s = p.subscription_status || 'Inactive';
   // If functionally active (HQ override or future expiry), show as Active in UI
-  if (isActive && s === 'Inactive') return 'Active';
-  if (isActive) return s;
+  if (isActive) return 'Active';
   
   // If conceptually active/trial but the date-check (isActive) failed
   if (s === 'Active' || s === 'Trial') return 'Expired';

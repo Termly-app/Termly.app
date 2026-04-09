@@ -262,7 +262,10 @@ export default function SuperAdmin({ currentUser, isPlatformAdmin, sidebarOpen, 
       // 2. Explicit deactivation/suspension wins for this profile
       if (p.subscription_status === 'Deactivated' || p.subscription_status === 'Suspended') return false;
 
-      // 3. INDIVIDUAL FUTURE OVERRIDE - Future expiry always wins
+      // 3. Status 'Active' always wins unless deactivated/suspended
+      if (p.subscription_status === 'Active') return true;
+
+      // 4. INDIVIDUAL FUTURE OVERRIDE - Future expiry always wins
       if (p.subscription_expiry) {
         const pExp = new Date(p.subscription_expiry);
         if (isNaN(pExp.getTime()) === false) {
@@ -271,17 +274,16 @@ export default function SuperAdmin({ currentUser, isPlatformAdmin, sidebarOpen, 
         }
       }
 
-      // 4. GLOBAL CUTOFF
+      // 5. GLOBAL CUTOFF (Grace Period)
       if (subEndDate) {
         const gExp = new Date(subEndDate);
         if (isNaN(gExp.getTime()) === false) {
           gExp.setHours(23, 59, 59, 999);
-          if (gExp < now) return false;
+          if (gExp > now) return true;
         }
       }
 
-      // 5. Status check
-      return (p.subscription_status || 'Inactive') === 'Active';
+      return false;
     });
   };
 
