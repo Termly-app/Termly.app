@@ -600,39 +600,7 @@ export default function Settings() {
           </div>
         )}
 
-        {/* Subscription + Data Node */}
-        <div className="responsive-grid-stack">
-
-          {/* Subscription */}
-          <div style={{borderRadius:16,padding:28,background:'linear-gradient(135deg,#1e3a5f 0%,#0369a1 100%)',color:'#fff',position:'relative',overflow:'hidden'}}>
-            <div style={{position:'absolute',top:-35,right:-35,width:130,height:130,borderRadius:'50%',background:'rgba(255,255,255,0.07)'}}/>
-            <div style={{position:'absolute',bottom:-25,left:-25,width:90,height:90,borderRadius:'50%',background:'rgba(255,255,255,0.05)'}}/>
-            <div style={{position:'relative'}}>
-              <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',marginBottom:22}}>
-                <div>
-                  <div style={{fontSize:'0.65rem',fontWeight:700,textTransform:'uppercase',letterSpacing:'0.1em',opacity:0.65,marginBottom:7}}>Platform Subscription</div>
-                  <div style={{fontSize:'1.4rem',fontWeight:900,letterSpacing:'-0.3px',marginBottom:6}}>ShuleSoft</div>
-                  <div style={{display:'inline-flex',alignItems:'center',gap:6,padding:'4px 12px',borderRadius:20,background:'rgba(255,255,255,0.15)',fontSize:'0.75rem',fontWeight:700}}>
-                    <span style={{width:6,height:6,borderRadius:'50%',background:'#4ade80',display:'inline-block'}}/>
-                    Active Subscription
-                  </div>
-                </div>
-                <div style={{width:50,height:50,borderRadius:14,background:'rgba(255,255,255,0.14)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:'1.4rem'}}><DiamondIcon size={24} color="#fff" /></div>
-              </div>
-              <div style={ {background:'rgba(255,255,255,0.12)',borderRadius:12,padding:16} }>
-                <div style={{fontSize:'0.62rem',fontWeight:700,textTransform:'uppercase',letterSpacing:'0.1em',opacity:0.6,marginBottom:10}}>Payment Details</div>
-                <div style={{display:'flex',alignItems:'center',gap:14}}>
-                  <div style={{width:42,height:42,borderRadius:'50%',background:'#fff',display:'flex',alignItems:'center',justifyContent:'center',fontSize:'1.2rem',flexShrink:0}}><PhoneIcon size={20} color="var(--primary)" /></div>
-                  <div>
-                    <div style={{fontSize:'1.05rem',fontWeight:800,letterSpacing:'-0.2px'}}>M-PESA: 0712260057</div>
-                    <div style={{fontSize:'0.75rem',opacity:0.8,marginTop:2,fontWeight:500}}>Payee: Peter Kaulani</div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Academic Eras & Terms */}
+        {/* Academic Eras & Terms */}
           <div className="card">
             <div className="card-header">
               <div>

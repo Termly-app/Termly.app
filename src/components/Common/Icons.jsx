@@ -509,3 +509,12 @@ export const LogoMark = ({ size = 28 }) => (
     </defs>
   </svg>
 );
+
+export const LogoMarkBW = ({ size = 28, color = "#FFFFFF" }) => (
+  <svg width={size} height={size} viewBox="0 0 13 13" fill="none" aria-label="ShuleSoft">
+    <rect x="1" y="1" width="4.5" height="4.5" rx="1" fill={color}/>
+    <rect x="7.5" y="1" width="4.5" height="4.5" rx="1" fill={color} fillOpacity="0.4"/>
+    <rect x="1" y="7.5" width="4.5" height="4.5" rx="1" fill={color} fillOpacity="0.4"/>
+    <rect x="7.5" y="7.5" width="4.5" height="4.5" rx="1" fill={color} fillOpacity="0.2"/>
+  </svg>
+);

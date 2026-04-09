@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+﻿import { useState, useEffect } from 'react';
 import { Link, Navigate, useNavigate } from 'react-router-dom';
 import {
   getStudents, getFeeSummary, getAttendanceSummary, getTodayStr,
@@ -164,7 +164,7 @@ export default function Dashboard({ currentUser, onLogout, currentPeriodId }) {
   return (
     <div className="animate-fade-up">
       <Helmet>
-        <title>Dashboard | ShuleSoft ΓÇö High Performance School Management</title>
+        <title>Dashboard | ShuleSoft Î“Ã‡Ã¶ High Performance School Management</title>
         <meta name="description" content="View school-wide performance, student count, and attendance at a glance." />
       </Helmet>
       {showWizard && (
@@ -209,7 +209,7 @@ export default function Dashboard({ currentUser, onLogout, currentPeriodId }) {
                     onChange={(e) => setActivePeriod(e.target.value)}
                     options={periods.map(p => ({
                       id: p.id,
-                      label: `${p.year} ΓÇö ${p.term} ${p.is_active ? '(Active)' : ''}`
+                      label: `${p.year} Î“Ã‡Ã¶ ${p.term} ${p.is_active ? '(Active)' : ''}`
                     }))}
                     style={{ minWidth: 180 }}
                   />
@@ -228,7 +228,7 @@ export default function Dashboard({ currentUser, onLogout, currentPeriodId }) {
                 )}
               </div>
             </div>
-            <p style={{ marginTop: 8, color: 'var(--text-secondary)' }}>Welcome back, <strong>{currentUser?.name || 'User'}</strong> ΓÇö here's what's happening today.</p>
+            <p style={{ marginTop: 8, color: 'var(--text-secondary)' }}>Welcome back, <strong>{currentUser?.name || 'User'}</strong> Î“Ã‡Ã¶ here's what's happening today.</p>
           </div>
         </div>
       </div>
@@ -249,7 +249,7 @@ export default function Dashboard({ currentUser, onLogout, currentPeriodId }) {
       </div>
 
 
-      {/* Main Grid ΓÇö Recent Activity + Quick Actions */}
+      {/* Main Grid Î“Ã‡Ã¶ Recent Activity + Quick Actions */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: 18, marginBottom: 24 }}>
 
         {/* Recent Activity / Payments */}
@@ -273,7 +273,7 @@ export default function Dashboard({ currentUser, onLogout, currentPeriodId }) {
                   <div className="activity-icon"><CardIcon size={18} /></div>
                   <div className="activity-body">
                     <div className="activity-title">{p.studentName}</div>
-                    <div className="activity-sub">{p.studentClass} ┬╖ {p.method}</div>
+                    <div className="activity-sub">{p.studentClass} â”¬â•– {p.method}</div>
                   </div>
                   <div className="activity-time">{p.date}</div>
                 </div>
@@ -378,7 +378,7 @@ export default function Dashboard({ currentUser, onLogout, currentPeriodId }) {
         </div>
       </div>
 
-      {/* Bottom row ΓÇö Attendance + Fee summary */}
+      {/* Bottom row â€” Attendance + Fee summary */}
       <div className="dashboard-grid-2">
 
         {/* Attendance */}
@@ -510,3 +510,4 @@ export default function Dashboard({ currentUser, onLogout, currentPeriodId }) {
     </div>
   );
 }
+
