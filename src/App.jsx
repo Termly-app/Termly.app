@@ -1,4 +1,4 @@
-﻿import { useState, useEffect, Component } from 'react';
+import { useState, useEffect, Component } from 'react';
 import { Routes, Route, NavLink, useLocation, Navigate } from 'react-router-dom';
 import { supabase } from './lib/supabase';
 import {
@@ -64,7 +64,7 @@ import {
   TimetableIcon, FeesIcon, FeeStructureIcon, SecurityIcon, SettingsIcon,
   BillingIcon, SignOutIcon, MenuIcon, CloseIcon, ChevronDownIcon,
   OverviewIcon, SchoolsIcon, PaymentsIcon, HistoryIcon, RevenueIcon,
-  ActivityIcon, RecoveryIcon, StatusDotIcon, PlatformZapIcon, SubscriptionIcon, MessageIcon,
+  ActivityIcon, RecoveryIcon, StatusDotIcon, PlatformZapIcon, SubscriptionsIcon, MessageIcon,
   DownloadIcon, UploadIcon, RefreshIcon, ShieldIcon, LogoMarkBW
 } from './components/Common/Icons';
 
@@ -370,7 +370,7 @@ function Sidebar({ isOpen, onClose, onLogout, currentUser, subscriptionActive })
           <>
             <SbSection label="System" />
             <SbLink to="/security" icon={SecurityIcon} label="Security" onClick={onClose} />
-            <SbLink to="/billing"  icon={SubscriptionIcon}  label="Subscription" onClick={onClose} red={!subscriptionActive} />
+            <SbLink to="/billing"  icon={SubscriptionsIcon}  label="Subscription" onClick={onClose} red={!subscriptionActive} />
             <SbLink to="/settings" icon={SettingsIcon} label="Settings" onClick={onClose} />
           </>
         )}
