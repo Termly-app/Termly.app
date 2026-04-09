@@ -288,7 +288,7 @@ function Sidebar({ isOpen, onClose, onLogout, currentUser, subscriptionActive })
     <aside className={`sidebar ${isOpen ? 'open' : ''}`}>
       {/* Brand */}
       <div className="sidebar-logo">
-        <LogoMark size={34} />
+        <LogoMarkBW size={34} />
         <div className="sidebar-logo-txt">
           <div className="sidebar-logo-name">ShuleSoft</div>
           <div className="sidebar-logo-sub">School Portal</div>
