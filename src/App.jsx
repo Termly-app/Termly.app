@@ -652,7 +652,7 @@ function App() {
                   options={periods}
                   onChange={async (e) => { await setActivePeriod(e.target.value); }}
                   className="topbar-period-select"
-                  style={{ minWidth: 140 }}
+                  style={{ minWidth: 220, whiteSpace: 'nowrap' }}
                 />
               </div>
             <div

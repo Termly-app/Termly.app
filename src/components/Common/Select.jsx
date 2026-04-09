@@ -138,7 +138,7 @@ export default function Select({
                     if (!isSelected) e.currentTarget.style.background = 'transparent';
                   }}
                 >
-                  <span>{opt.label || opt.name || (opt.year && opt.term ? `${opt.year} — ${opt.term}` : '') || 'Option'}</span>
+                  <span style={{ whiteSpace: 'nowrap' }}>{opt.label || opt.name || (opt.year && opt.term ? `${opt.year} — ${opt.term}` : '') || 'Option'}</span>
                   {isSelected && <CheckIcon size={14} color="var(--primary)" />}
                 </div>
               );
