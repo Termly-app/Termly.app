@@ -127,7 +127,9 @@ export default function Grading({ currentUser, currentPeriodId }) {
   };
 
   const handleMarkChange = (sid, sub, val) => {
-    setEditMarks(prev => ({ ...prev, [sid]: { ...prev[sid], [sub]: Number(val) || 0 } }));
+    const num = Number(val);
+    const clamped = isNaN(num) ? 0 : Math.max(0, Math.min(100, num));
+    setEditMarks(prev => ({ ...prev, [sid]: { ...prev[sid], [sub]: clamped } }));
   };
 
   const saveAllMarks = async () => {
@@ -631,38 +633,87 @@ export default function Grading({ currentUser, currentPeriodId }) {
       {/* PERFORMANCE ANALYTICS TAB */}
       {activeTab === 'performance' && (
         <div className="animate-in">
-          <div className="kpi-grid" style={{ marginBottom: 24 }}>
-            <div className="card kpi-card">
-              <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start' }}>
-                <span className="kpi-label">Class Mean Score</span>
-                <div style={{ padding:6, borderRadius:8, background:'rgba(14,165,233,0.1)', color:'var(--primary)' }}><ChartBarIcon size={16} /></div>
-              </div>
-              <div className="kpi-value">
-                {(results.reduce((acc, s) => acc + s.average, 0) / (results.length || 1)).toFixed(1)}%
-              </div>
-              <span className="kpi-trend text-success"><TrendUpIcon size={12} /> Overall Avg</span>
+          <div className="card" style={{ marginBottom: 24 }}>
+            <div className="card-header" style={{ background: 'linear-gradient(135deg, var(--primary), var(--purple))', color: '#fff' }}>
+              <h3 style={{ color: '#fff' }}><RocketIcon size={20} /> Academic Competition Leaderboard</h3>
+              <p style={{ fontSize: '0.8rem', opacity: 0.9 }}>Celebrating our top performers this term</p>
             </div>
-            <div className="card kpi-card">
-              <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start' }}>
-                <span className="kpi-label">Top Performer</span>
-                <div style={{ padding:6, borderRadius:8, background:'rgba(16,185,129,0.1)', color:'#10b981' }}><SparklesIcon size={16} /></div>
+            <div className="card-body">
+              <div className="responsive-grid-stack">
+                {/* Overall Top 5 */}
+                <div style={{ padding: 16, border: '1.5px solid var(--border)', borderRadius: 12, background: 'var(--bg-card)' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
+                    <FlagIcon size={18} color="var(--warning)" />
+                    <div style={{ fontWeight: 800, fontSize: '0.9rem' }}>Top 5 Overall</div>
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                    {results.slice(0, 5).map((s, idx) => (
+                      <div key={s.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                          <span style={{ fontSize: '0.8rem', fontWeight: 800, color: 'var(--text-muted)' }}>#{idx + 1}</span>
+                          <span style={{ fontSize: '0.85rem', fontWeight: 600 }}>{s.name}</span>
+                        </div>
+                        <span className="badge badge-success" style={{ fontSize: '0.75rem' }}>{s.average.toFixed(1)}%</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Subject Champions */}
+                <div style={{ padding: 16, border: '1.5px solid var(--border)', borderRadius: 12, background: 'var(--bg-card)' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
+                    <SparklesIcon size={18} color="var(--primary)" />
+                    <div style={{ fontWeight: 800, fontSize: '0.9rem' }}>Subject Champions</div>
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                    {subjects.slice(0, 5).map(sub => {
+                      const top = (subjectRankings[sub] || [])[0];
+                      if (!top) return null;
+                      return (
+                        <div key={sub} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                          <div>
+                            <div style={{ fontSize: '0.65rem', textTransform: 'uppercase', fontWeight: 700, color: 'var(--text-muted)' }}>{sub}</div>
+                            <div style={{ fontSize: '0.8rem', fontWeight: 600 }}>{top.name}</div>
+                          </div>
+                          <span style={{ fontWeight: 800, color: 'var(--primary)', fontSize: '0.85rem' }}>{top.mark}%</span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Class Strength */}
+                <div style={{ padding: 16, border: '1.5px solid var(--border)', borderRadius: 12, background: 'var(--bg-card)' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
+                    <TrendUpIcon size={18} color="var(--success)" />
+                    <div style={{ fontWeight: 800, fontSize: '0.9rem' }}>Academic Health</div>
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+                    <div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem', marginBottom: 4 }}>
+                        <span>Pass Rate (Above 50%)</span>
+                        <span style={{ fontWeight: 700 }}>{((results.filter(s => s.average >= 50).length / (results.length || 1)) * 100).toFixed(0)}%</span>
+                      </div>
+                      <div style={{ height: 6, background: 'var(--bg)', borderRadius: 3 }}>
+                        <div style={{ width: `${(results.filter(s => s.average >= 50).length / (results.length || 1)) * 100}%`, height: '100%', background: 'var(--success)', borderRadius: 3 }} />
+                      </div>
+                    </div>
+                    <div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem', marginBottom: 4 }}>
+                        <span>Distinction Rate (Above 80%)</span>
+                        <span style={{ fontWeight: 700 }}>{((results.filter(s => s.average >= 80).length / (results.length || 1)) * 100).toFixed(0)}%</span>
+                      </div>
+                      <div style={{ height: 6, background: 'var(--bg)', borderRadius: 3 }}>
+                        <div style={{ width: `${(results.filter(s => s.average >= 80).length / (results.length || 1)) * 100}%`, height: '100%', background: 'var(--primary)', borderRadius: 3 }} />
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </div>
-              <div className="kpi-value" style={{ fontSize: '1.4rem' }}>{results[0]?.name || '—'}</div>
-              <span className="kpi-trend">Score: {results[0]?.average}%</span>
-            </div>
-            <div className="card kpi-card">
-              <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start' }}>
-                <span className="kpi-label">Grade C+ & Above</span>
-                <div style={{ padding:6, borderRadius:8, background:'rgba(245,158,11,0.1)', color:'#f59e0b' }}><FlagIcon size={16} /></div>
-              </div>
-              <div className="kpi-value">
-                {results.filter(s => ['A', 'B+', 'B', 'B-', 'C+'].includes(getGrade(s.average).grade)).length}
-              </div>
-              <span className="kpi-trend">Pass Rate: {((results.filter(s => s.average >= 50).length / (results.length || 1)) * 100).toFixed(0)}%</span>
             </div>
           </div>
-
-          <div className="card" style={{ marginBottom: 24 }}>
+          
+          <div className="card">
             <div className="card-header"><h3><DashboardIcon size={20} /> Subject Performance Analysis — {selectedClass}</h3></div>
             <div className="card-body" style={{ padding: 0 }}>
               <table className="data-table">

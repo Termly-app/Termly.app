@@ -57,7 +57,29 @@ export default function Settings() {
 
   const handleSave=async(e)=>{
     if(e)e.preventDefault(); setLoading(true);
-    try{await saveSchoolProfile(profile);setSaved(true);setTimeout(()=>setSaved(false),3000);}
+    // Sanitize negative values from configuration
+    const sanitizedProfile = { ...profile };
+    if (sanitizedProfile.gradingSystems) {
+      Object.keys(sanitizedProfile.gradingSystems).forEach(lv => {
+        sanitizedProfile.gradingSystems[lv] = sanitizedProfile.gradingSystems[lv].map(g => ({
+          ...g,
+          min: Math.max(0, Math.min(100, g.min)),
+          max: Math.max(0, Math.min(100, g.max))
+        }));
+      });
+    }
+    if (sanitizedProfile.gradeFees) {
+      Object.keys(sanitizedProfile.gradeFees).forEach(g => {
+        if (typeof sanitizedProfile.gradeFees[g] === 'object') {
+          sanitizedProfile.gradeFees[g].day = Math.max(0, sanitizedProfile.gradeFees[g].day);
+          sanitizedProfile.gradeFees[g].boarding = Math.max(0, sanitizedProfile.gradeFees[g].boarding || 0);
+        } else {
+          sanitizedProfile.gradeFees[g] = Math.max(0, sanitizedProfile.gradeFees[g]);
+        }
+      });
+    }
+
+    try{await saveSchoolProfile(sanitizedProfile);setSaved(true);setTimeout(()=>setSaved(false),3000);}
     catch(err){alert({ title: 'Save Error', message: err.message, variant: 'danger' });}finally{setLoading(false);}
   };
   const handleChange=(e)=>{const{name,value}=e.target;setProfile(p=>({...p,[name]:value}));setSaved(false);};
@@ -143,6 +165,10 @@ export default function Settings() {
   };
   const addGradeItem=()=>{
     if(!newGradeItem.symbol) return;
+    if(newGradeItem.min >= newGradeItem.max) {
+      alert({ title: 'Invalid Range', message: 'Min value must be less than max value.', variant: 'warning' });
+      return;
+    }
     const cur = profile.gradingSystems?.[activeLevel] || profile.gradingSystems?.default || [];
     setProfile({
       ...profile,
@@ -437,8 +463,18 @@ export default function Settings() {
                       </div>
                       <div style={{display:'grid',gridTemplateColumns:'40px 1fr 1fr 30px',gap:5,alignItems:'center'}}>
                         <input className="form-input" style={{padding:'4px',fontSize:'0.75rem',textAlign:'center'}} value={newGradeItem.symbol} onChange={e=>setNewGradeItem({...newGradeItem,symbol:e.target.value.toUpperCase()})} placeholder="A"/>
-                        <input className="form-input" type="number" style={{padding:'4px',fontSize:'0.75rem'}} value={newGradeItem.min} onChange={e=>setNewGradeItem({...newGradeItem,min:Number(e.target.value)})} placeholder="Min"/>
-                        <input className="form-input" type="number" style={{padding:'4px',fontSize:'0.75rem'}} value={newGradeItem.max} onChange={e=>setNewGradeItem({...newGradeItem,max:Number(e.target.value)})} placeholder="Max"/>
+                        <Select 
+                          value={newGradeItem.min} 
+                          onChange={e=>setNewGradeItem({...newGradeItem,min:Number(e.target.value)})}
+                          options={[...Array(101).keys()].map(n=>({ id: n, label: String(n) }))}
+                          style={{ padding: '0px', height: 32, minWidth: 60 }}
+                        />
+                        <Select 
+                          value={newGradeItem.max} 
+                          onChange={e=>setNewGradeItem({...newGradeItem,max:Number(e.target.value)})}
+                          options={[...Array(101).keys()].sort((a,b)=>b-a).map(n=>({ id: n, label: String(n) }))}
+                          style={{ padding: '0px', height: 32, minWidth: 60 }}
+                        />
                         <input type="color" style={{width:'100%',height:24,border:'none',background:'none',cursor:'pointer'}} value={newGradeItem.color} onChange={e=>setNewGradeItem({...newGradeItem,color:e.target.value})}/>
                         <button onClick={addGradeItem} className="btn btn-primary btn-sm" style={{gridColumn:'1 / span 4',marginTop:5}}>Add Grade Boundary</button>
                       </div>

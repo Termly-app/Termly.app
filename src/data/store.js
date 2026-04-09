@@ -604,6 +604,27 @@ export async function saveSchoolProfile(profile) {
     api_key: await encryptIfNew(sms.api_key, sms._encrypted?.api_key),
   };
 
+  // FINAL DEFENSIVE SANITIZATION
+  if (row.grading_systems) {
+    Object.keys(row.grading_systems).forEach(lv => {
+      row.grading_systems[lv] = row.grading_systems[lv].map(g => ({
+        ...g,
+        min: Math.max(0, Math.min(100, Number(g.min) || 0)),
+        max: Math.max(0, Math.min(100, Number(g.max) || 0))
+      }));
+    });
+  }
+  if (row.grade_fees) {
+    Object.keys(row.grade_fees).forEach(g => {
+      if (typeof row.grade_fees[g] === 'object') {
+        row.grade_fees[g].day = Math.max(0, Number(row.grade_fees[g].day) || 0);
+        row.grade_fees[g].boarding = Math.max(0, Number(row.grade_fees[g].boarding) || 0);
+      } else {
+        row.grade_fees[g] = Math.max(0, Number(row.grade_fees[g]) || 0);
+      }
+    });
+  }
+
   const attemptSave = async (payload) => {
     const { error } = await supabase
       .from('school_profiles')
@@ -1083,7 +1104,7 @@ export async function setStudentAllMarks(studentId, subjectMarks, examType = _cu
     school_id: _currentSchoolId,
     student_id: studentId,
     subject,
-    mark: Number(mark),
+    mark: Math.max(0, Math.min(100, Number(mark) || 0)),
     period_id: _currentPeriodId,
     exam_type: examType,
   }));
@@ -1167,7 +1188,10 @@ export async function getFees() {
     };
   });
   return fees;
-}export async function recordPayment(studentId, amount, method, reference) {
+}
+export async function recordPayment(studentId, amount, method, reference) {
+  const numAmount = Math.max(0, Number(amount) || 0);
+  if (numAmount === 0) throw new Error('Payment amount must be greater than zero.');
   const fees = await getFees();
   let feeRecord = fees[studentId];
 
