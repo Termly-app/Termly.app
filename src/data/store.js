@@ -27,6 +27,12 @@ let _currentSchoolId = null;
 let _currentAuthUser = null;
 let _currentPeriodId = null;
 
+// MEMORY CACHE (Performance Optimization)
+let _profileCache  = null;
+let _settingsCache = null;
+let _profilePromise = null;
+let _settingsPromise = null;
+
 export const SEAT_LIMITS = {
   Basic:   { students: 5, admins: 1,   price: 5999 },
   Standard: { students: 300, admins: 1,  price: 15000 },
@@ -59,6 +65,8 @@ export async function getPlanLimits(planName) {
 export function setCurrentSchoolContext(schoolId, authUser) {
   _currentSchoolId = schoolId;
   _currentAuthUser = authUser;
+  _profileCache    = null; // Invalidate cache on school switch
+  _profilePromise  = null;
 }
 
 export function setCurrentPeriodId(periodId) {
@@ -298,8 +306,11 @@ const SAFE_PROFILE_COLUMNS = 'id, school_name, motto, phone, email, address, log
 
 export async function getSchoolProfile() {
   if (!_currentSchoolId) return { ...DEFAULT_PROFILE };
-  
-  try {
+  if (_profileCache) return _profileCache;
+  if (_profilePromise) return _profilePromise;
+
+  _profilePromise = (async () => {
+    try {
     // Attempt to get all columns first
     const { data, error } = await supabase
       .from('school_profiles')
@@ -319,17 +330,26 @@ export async function getSchoolProfile() {
         
         if (safeError && safeError.code !== 'PGRST116') throw safeError;
         if (!safeData) return { ...DEFAULT_PROFILE };
-        return mapProfileData(safeData);
+        const mapped = mapProfileData(safeData);
+        _profileCache = mapped;
+        return mapped;
       }
       throw error;
     }
     
     if (!data) return { ...DEFAULT_PROFILE };
-    return mapProfileData(data);
+    const mapped = mapProfileData(data);
+    _profileCache = mapped;
+    return mapped;
   } catch (err) {
     console.error('getSchoolProfile critical failure:', err);
     return { ...DEFAULT_PROFILE };
+  } finally {
+    _profilePromise = null;
   }
+})();
+
+  return _profilePromise;
 }
 
 // Helper to map DB columns to frontend shape with robust fallbacks
@@ -616,6 +636,7 @@ export async function saveSchoolProfile(profile) {
   };
 
   await attemptSave(row);
+  _profileCache = null; // Invalidate cache
 
   // Update school name and contact in schools table too
   await supabase.from('schools').update({ 
@@ -2009,61 +2030,71 @@ export async function getPlatformActivities(limit = 50) {
  * Get platform settings with robust defaults
  */
 export async function getPlatformSettings() {
-  try {
-    const { data, error } = await supabase
-    .from('platform_settings')
-    .select('key, value, updated_at');
-    
-    if (error) throw error;
+  if (_settingsCache) return _settingsCache;
+  if (_settingsPromise) return _settingsPromise;
 
-    const settings = data.reduce((acc, curr) => {
-      acc[curr.key] = curr.value;
-      return acc;
-    }, {});
+  _settingsPromise = (async () => {
+    try {
+      const { data, error } = await supabase
+      .from('platform_settings')
+      .select('key, value, updated_at');
+      
+      if (error) throw error;
 
-    const result = {
-      billing: settings.billing || { 
-        mpesa_number: "+254712260057", 
-        mpesa_name: "Peter Kaulani",
-        instructions: "Send money to +254712260057 (Peter Kaulani)", 
-        term_price: 5000, 
-        trial_days: 30,
-        expiry_date: null
-      },
-      support: settings.support || { 
-        email: "shulesoft8@gmail.com", 
-        phone: "+254712260057" 
-      },
-      pricing: (settings.pricing && Object.keys(settings.pricing).length > 0) ? settings.pricing : {
-        "Sandbox":      { "price": 0,      "active": true, "limit": 10,  "admins": 1,  "features": ["Student Management", "Feature Exploration"], "modules": ["students", "dashboard"] },
-        "Starter Plan": { "price": 4000,  "active": true, "limit": 150,  "admins": 5,  "features": ["Student Management", "Attendance Tracking", "CBC Grading (PP1–Grade 6)", "M-PESA Fee Tracking", "Basic Report Cards"], "modules": ["students", "attendance", "grading", "fees"] },
-        "Growth Plan":  { "price": 10000, "active": true, "limit": 400,  "admins": 10, "features": ["Everything in Starter", "Timetable Builder", "Fee Structure Builder", "NEMIS Data Export", "CBC & 8-4-4 Support", "SMS Notifications"], "modules": ["students", "attendance", "grading", "fees", "timetable", "nemis", "sms"] },
-        "Pro Plan":     { "price": 20000, "active": true, "limit": 800,  "admins": 20, "features": ["Everything in Growth", "Multi-Campus Support", "Parent Portal", "WhatsApp Integration", "Custom Branding", "Exam Scheduling"], "modules": ["students", "attendance", "grading", "fees", "timetable", "nemis", "sms", "lms", "parent_portal", "custom_brand"] },
-        "Enterprise":   { "price": 35000, "active": true, "limit": 100000, "admins": 100, "features": ["Everything Pro", "Dedicated Account Manager", "Custom Features", "Unlimited Staff", "Priority 24/7 Support"] }
-      },
-      platform: settings.platform || {
-        status_message: "",
-        maintenance: false
-      }
-    };
-    
-    console.log('Final Platform Settings Loaded:', result);
-    return result;
-  } catch (err) {
-    console.warn("platform_settings fetch failed, using fallback defaults", err);
-    return {
-      billing: { instructions: 'Pay via Business Till 908070 (ShuleSoft LTD)', term_price: 8400, trial_days: 30 },
-      support: { email: "support@shulesoft.com", phone: "+254 700 000000" },
-      pricing: { 
-        "Sandbox":      { "price": 0,      "active": true, "limit": 10,   "admins": 1,  "features": ["Student Management", "Feature Exploration"], "modules": ["students", "dashboard"] },
-        "Starter Plan": { "price": 4000,  "active": true, "limit": 150,  "admins": 5,  "features": ["Student Management", "Attendance Tracking", "CBC Grading (PP1–Grade 6)", "M-PESA Fee Tracking", "Basic Report Cards"], "modules": ["students", "attendance", "grading", "fees"] },
-        "Growth Plan":  { "price": 10000, "active": true, "limit": 400,  "admins": 10, "features": ["Everything in Starter", "Timetable Builder", "Fee Structure Builder", "NEMIS Data Export", "CBC & 8-4-4 Support", "SMS Notifications"], "modules": ["students", "attendance", "grading", "fees", "timetable", "nemis", "sms"] },
-        "Pro Plan":     { "price": 20000, "active": true, "limit": 800,  "admins": 20, "features": ["Everything in Growth", "Multi-Campus Support", "Parent Portal", "WhatsApp Integration", "Custom Branding", "Exam Scheduling"], "modules": ["students", "attendance", "grading", "fees", "timetable", "nemis", "sms", "lms", "parent_portal", "custom_brand"] },
-        "Enterprise":   { "price": 35000, "active": true, "limit": 100000, "admins": 100, "features": ["Everything Pro", "Dedicated Account Manager", "Custom Features", "Unlimited Staff", "Priority 24/7 Support"] }
-      },
-      platform: { status_message: "", maintenance: false }
-    };
-  }
+      const settings = data.reduce((acc, curr) => {
+        acc[curr.key] = curr.value;
+        return acc;
+      }, {});
+
+      const result = {
+        billing: settings.billing || { 
+          mpesa_number: "+254712260057", 
+          mpesa_name: "Peter Kaulani",
+          instructions: "Send money to +254712260057 (Peter Kaulani)", 
+          term_price: 5000, 
+          trial_days: 30,
+          expiry_date: null
+        },
+        support: settings.support || { 
+          email: "shulesoft8@gmail.com", 
+          phone: "+254712260057" 
+        },
+        pricing: (settings.pricing && Object.keys(settings.pricing).length > 0) ? settings.pricing : {
+          "Sandbox":      { "price": 0,      "active": true, "limit": 10,  "admins": 1,  "features": ["Student Management", "Feature Exploration"], "modules": ["students", "dashboard"] },
+          "Starter Plan": { "price": 4000,  "active": true, "limit": 150,  "admins": 5,  "features": ["Student Management", "Attendance Tracking", "CBC Grading (PP1–Grade 6)", "M-PESA Fee Tracking", "Basic Report Cards"], "modules": ["students", "attendance", "grading", "fees"] },
+          "Growth Plan":  { "price": 10000, "active": true, "limit": 400,  "admins": 10, "features": ["Everything in Starter", "Timetable Builder", "Fee Structure Builder", "NEMIS Data Export", "CBC & 8-4-4 Support", "SMS Notifications"], "modules": ["students", "attendance", "grading", "fees", "timetable", "nemis", "sms"] },
+          "Pro Plan":     { "price": 20000, "active": true, "limit": 800,  "admins": 20, "features": ["Everything in Growth", "Multi-Campus Support", "Parent Portal", "WhatsApp Integration", "Custom Branding", "Exam Scheduling"], "modules": ["students", "attendance", "grading", "fees", "timetable", "nemis", "sms", "lms", "parent_portal", "custom_brand"] },
+          "Enterprise":   { "price": 35000, "active": true, "limit": 100000, "admins": 100, "features": ["Everything Pro", "Dedicated Account Manager", "Custom Features", "Unlimited Staff", "Priority 24/7 Support"] }
+        },
+        platform: settings.platform || {
+          status_message: "",
+          maintenance: false
+        }
+      };
+      
+      console.log('Final Platform Settings Loaded:', result);
+      _settingsCache = result;
+      return result;
+    } catch (err) {
+      console.warn("platform_settings fetch failed, using fallback defaults", err);
+      return {
+        billing: { instructions: 'Pay via Business Till 908070 (ShuleSoft LTD)', term_price: 8400, trial_days: 30 },
+        support: { email: "support@shulesoft.com", phone: "+254 700 000000" },
+        pricing: { 
+          "Sandbox":      { "price": 0,      "active": true, "limit": 10,   "admins": 1,  "features": ["Student Management", "Feature Exploration"], "modules": ["students", "dashboard"] },
+          "Starter Plan": { "price": 4000,  "active": true, "limit": 150,  "admins": 5,  "features": ["Student Management", "Attendance Tracking", "CBC Grading (PP1–Grade 6)", "M-PESA Fee Tracking", "Basic Report Cards"], "modules": ["students", "attendance", "grading", "fees"] },
+          "Growth Plan":  { "price": 10000, "active": true, "limit": 400,  "admins": 10, "features": ["Everything in Starter", "Timetable Builder", "Fee Structure Builder", "NEMIS Data Export", "CBC & 8-4-4 Support", "SMS Notifications"], "modules": ["students", "attendance", "grading", "fees", "timetable", "nemis", "sms"] },
+          "Pro Plan":     { "price": 20000, "active": true, "limit": 800,  "admins": 20, "features": ["Everything in Growth", "Multi-Campus Support", "Parent Portal", "WhatsApp Integration", "Custom Branding", "Exam Scheduling"], "modules": ["students", "attendance", "grading", "fees", "timetable", "nemis", "sms", "lms", "parent_portal", "custom_brand"] },
+          "Enterprise":   { "price": 35000, "active": true, "limit": 100000, "admins": 100, "features": ["Everything Pro", "Dedicated Account Manager", "Custom Features", "Unlimited Staff", "Priority 24/7 Support"] }
+        },
+        platform: { status_message: "", maintenance: false }
+      };
+    } finally {
+      _settingsPromise = null;
+    }
+  })();
+
+  return _settingsPromise;
 }
 
 /**
@@ -2101,6 +2132,8 @@ export async function updatePlatformSetting(key, value) {
     .from('platform_settings')
     .upsert({ key, value, updated_at: new Date().toISOString() });
   if (error) throw error;
+  _settingsCache = null; 
+  _settingsPromise = null;
   await logPlatformActivity('SETTING_UPDATE', `Updated platform setting: ${key}`);
 }
 

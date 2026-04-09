@@ -176,22 +176,19 @@ function Sidebar({ isOpen, onClose, onLogout, currentUser, subscriptionActive })
 
   useEffect(() => {
     const checkFeatures = async () => {
-      const f = {
-        library: await isFeatureEnabled('library'),
-        timetable: await isFeatureEnabled('timetable'),
-        attendance: await isFeatureEnabled('attendance'),
-        grading: await isFeatureEnabled('grading'),
-        fees: await isFeatureEnabled('fees'),
-        sms: await isFeatureEnabled('sms'),
-        lms: await isFeatureEnabled('lms'),
-        exam_scheduling: await isFeatureEnabled('exam_scheduling'),
-        teacher_portal: await isFeatureEnabled('teacher_portal'),
-        parent_portal: await isFeatureEnabled('parent_portal'),
-        mpesa: await isFeatureEnabled('mpesa'),
-        whatsapp: await isFeatureEnabled('whatsapp'),
-        nemis: await isFeatureEnabled('nemis'),
-      };
-      setFeatures(f);
+      const keys = [
+        'library', 'timetable', 'attendance', 'grading', 'fees', 'sms', 'lms', 
+        'exam_scheduling', 'teacher_portal', 'parent_portal', 'mpesa', 'whatsapp', 'nemis'
+      ];
+      
+      try {
+        const results = await Promise.all(keys.map(k => isFeatureEnabled(k)));
+        const f = {};
+        keys.forEach((k, i) => { f[k] = results[i]; });
+        setFeatures(f);
+      } catch (err) {
+        console.error("Feature check failed:", err);
+      }
     };
     if (currentUser) checkFeatures();
 
