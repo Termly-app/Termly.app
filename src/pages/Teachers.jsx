@@ -6,8 +6,7 @@ import {
   TeacherIcon, RocketIcon, AlertIcon, LogoutIcon, ClockIcon, SearchIcon, DashboardIcon,
   LeafIcon, GraduationIcon, PlusIcon, EditIcon, DeleteIcon, SchoolIcon, PrintIcon, PhoneIcon, BookIcon
 } from '../components/CommonIcons';
-import ConfirmModal from '../components/Common/ConfirmModal';
-import { useConfirm } from '../components/Common/useConfirm';
+import { useDialog } from '../contexts/DialogContext';
 import Select from '../components/Common/Select';
 import { Helmet } from 'react-helmet-async';
 
@@ -23,7 +22,7 @@ export default function Teachers({ currentUser, currentPeriodId }) {
   const [settings, setSettings] = useState({});
   const [registeredUsers, setRegisteredUsers] = useState([]);
   const [loading, setLoading] = useState(true);
-  const { confirm, confirmModal } = useConfirm();
+  const { alert, confirm } = useDialog();
 
   const loadData = async () => {
     setLoading(true);
@@ -63,7 +62,7 @@ export default function Teachers({ currentUser, currentPeriodId }) {
       if (editingTeacher) await updateTeacher(editingTeacher.id, t);
       else await addTeacher(t);
       await refresh(); setShowModal(false); setEditingTeacher(null);
-    } catch(err) { alert(err.message); } finally { setLoading(false); }
+    } catch(err) { alert({ title: 'Save Error', message: err.message, variant: 'danger' }); } finally { setLoading(false); }
   };
 
   const handleDelete = async (id) => {
@@ -75,15 +74,15 @@ export default function Teachers({ currentUser, currentPeriodId }) {
     if (ok) { 
       setLoading(true);
       try { await deleteTeacher(id); await refresh(); } 
-      catch(err){ alert(err.message); } finally { setLoading(false); }
+      catch(err){ alert({ title: 'Delete Error', message: err.message, variant: 'danger' }); } finally { setLoading(false); }
     }
   };
 
   const handleAssign = async (cls, stream, sub, teacherId) => {
-    try { await setAssignment(cls, stream, sub, teacherId); await refresh(); } catch(err){ alert(err.message); }
+    try { await setAssignment(cls, stream, sub, teacherId); await refresh(); } catch(err){ alert({ title: 'Assignment Error', message: err.message, variant: 'danger' }); }
   };
   const handleLeaveToggle = async (id, status) => {
-    try { await setTeacherLeaveStatus(id, status); await refresh(); } catch(err){ alert(err.message); }
+    try { await setTeacherLeaveStatus(id, status); await refresh(); } catch(err){ alert({ title: 'Leave Update Error', message: err.message, variant: 'danger' }); }
   };
 
   const getTeacherSubjects = (teacherId) => {
@@ -211,7 +210,6 @@ export default function Teachers({ currentUser, currentPeriodId }) {
         <TeacherModal teacher={editingTeacher} onSave={handleSave}
           onClose={() => { setShowModal(false); setEditingTeacher(null); }} isAdmin={isAdmin} />
       )}
-      <ConfirmModal {...confirmModal} />
     </div>
   );
 }
@@ -542,7 +540,7 @@ function ReportsTab() {
       </body></html>`);
       printWin.document.close();
       printWin.print();
-    } catch(err) { alert(err.message); }
+    } catch(err) { alert({ title: 'Print Error', message: "Print failed: " + err.message, variant: 'danger' }); }
   };
 
   if (loading) {

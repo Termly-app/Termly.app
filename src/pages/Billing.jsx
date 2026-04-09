@@ -5,8 +5,10 @@ import {
 } from '../components/CommonIcons';
 import { Helmet } from 'react-helmet-async';
 import { getPlanDisplayFeatures } from './SuperAdmin/superAdminUtils';
+import { useDialog } from '../contexts/DialogContext';
 
 export default function Billing() {
+  const { alert, confirm } = useDialog();
   const [profile, setProfile] = useState(null);
   const [payments, setPayments] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -83,7 +85,7 @@ export default function Billing() {
   };
 
   const handleCancel = async () => {
-    if (!window.confirm('Are you sure you want to cancel your subscription? This will restrict your access immediately.')) return;
+    if (!await confirm({ title: 'Cancel Subscription', message: 'Are you sure you want to cancel your subscription? This will restrict your access immediately.', variant: 'danger' })) return;
     try {
       await cancelSubscription();
       setMessage({ type: 'success', text: 'Subscription canceled.' });

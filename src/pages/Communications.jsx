@@ -6,8 +6,10 @@ import {
 } from '../components/CommonIcons';
 import Select from '../components/Common/Select';
 import { Helmet } from 'react-helmet-async';
+import { useDialog } from '../contexts/DialogContext';
 
 export default function Communications({ currentUser }) {
+  const { alert } = useDialog();
   const [history, setHistory] = useState([]);
   const [students, setStudents] = useState([]);
   const [profile, setProfile] = useState(null);
@@ -73,7 +75,7 @@ export default function Communications({ currentUser }) {
       
       setTimeout(() => setShowSuccess(false), 3000);
     } catch (err) {
-      alert(`Failed to log broadcast: ${err.message}`);
+      alert({ title: 'Broadcast Failed', message: `Failed to log broadcast: ${err.message}`, variant: 'danger' });
       setIsSending(false);
     }
   };

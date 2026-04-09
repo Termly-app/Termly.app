@@ -11,8 +11,10 @@ import {
   ClockIcon, AlertIcon, PlatformZapIcon, FilterIcon, GraduationIcon
 } from '../components/CommonIcons';
 import Loader from '../components/Common/Loader';
+import { useDialog } from '../contexts/DialogContext';
 
 export default function Library({ currentUser, currentPeriodId }) {
+  const { alert, confirm, prompt } = useDialog();
   const [loading, setLoading] = useState(true);
   const [books, setBooks] = useState([]);
   const [borrows, setBorrows] = useState([]);
@@ -108,7 +110,7 @@ export default function Library({ currentUser, currentPeriodId }) {
       await saveBook(data);
       setBookModal({ open: false, data: null });
       loadData();
-    } catch (err) { alert(err.message); }
+    } catch (err) { alert({ message: err.message, variant: 'danger' }); }
   };
 
   const handleIssueBook = async (e) => {
@@ -124,15 +126,20 @@ export default function Library({ currentUser, currentPeriodId }) {
       await saveBorrow(data);
       setBorrowModal({ open: false, data: null });
       loadData();
-    } catch (err) { alert(err.message); }
+    } catch (err) { alert({ message: err.message, variant: 'danger' }); }
   };
 
   const handleReturn = async (borrow) => {
-    if (!window.confirm(`Mark "${borrow.library_books?.title}" as returned?`)) return;
+    const ok = await confirm({ 
+      title: 'Return Book', 
+      message: `Mark "${borrow.library_books?.title}" as returned?`,
+      variant: 'warning'
+    });
+    if (!ok) return;
     try {
       await returnBook(borrow.id, borrow.book_id);
       loadData();
-    } catch (err) { alert(err.message); }
+    } catch (err) { alert({ message: err.message, variant: 'danger' }); }
   };
 
   const printReport = async (type) => {
@@ -561,15 +568,15 @@ export default function Library({ currentUser, currentPeriodId }) {
                  <div className="r-icon"><PrintIcon size={20} /></div>
                  <div className="r-txt">All Outstanding Loans</div>
                </button>
-               <button onClick={() => {
-                 const adm = window.prompt("Enter Student Admission Number");
+               <button onClick={async () => {
+                 const adm = await prompt({ title: 'Student Ledger', message: 'Enter Student Admission Number', inputPlaceholder: 'e.g. ADM-001' });
                  if(adm) { setFilters({...filters, searchTerm: adm}); printReport('student'); }
                }}>
                  <div className="r-icon"><UserIcon size={20} /></div>
                  <div className="r-txt">Specific Student Ledger</div>
                </button>
                <button onClick={() => {
-                 if(!filters.grade) return alert("Select a class in filters first");
+                 if(!filters.grade) return alert({ message: "Select a class in filters first", variant: 'warning' });
                  printReport('class');
                }}>
                  <div className="r-icon"><GraduationIcon size={20} /></div>

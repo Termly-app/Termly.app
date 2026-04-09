@@ -6,6 +6,7 @@ import {
 } from '../data/store';
 import { BookIcon, CheckIcon, UsersIcon, DownloadIcon, ClockIcon, MessageIcon, GraduationIcon } from '../components/CommonIcons';
 import Select from '../components/Common/Select';
+import { useDialog } from '../contexts/DialogContext';
 
 /**
  * Moodle-Inspired LMS Module (Assignment Hub)
@@ -48,6 +49,7 @@ function SubmissionProgress({ ast }) {
 }
 
 export default function LMS({ currentUser }) {
+  const { alert } = useDialog();
   const [profile, setProfile] = useState(null);
   const [assignments, setAssignments] = useState([]);
   const [selectedSubmissions, setSelectedSubmissions] = useState(null);
@@ -97,7 +99,7 @@ export default function LMS({ currentUser }) {
       });
       await loadData();
     } catch (err) {
-      alert(`Error creating assignment: ${err.message}`);
+      alert({ title: 'Creation Error', message: `Error creating assignment: ${err.message}`, variant: 'danger' });
     }
     setLoading(false);
   };

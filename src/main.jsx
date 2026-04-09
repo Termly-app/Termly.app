@@ -7,6 +7,7 @@ import { initStore } from './data/store'
 import { BrowserRouter } from 'react-router-dom';
 import { HelmetProvider } from 'react-helmet-async';
 import ScrollToTop from './components/ScrollToTop';
+import { DialogProvider } from './contexts/DialogContext';
 
 console.log(">>> BOOTING SHULESOFT MAIN.JSX - SEO READY");
 
@@ -18,8 +19,10 @@ if (rootElement) {
     <React.StrictMode>
       <HelmetProvider>
         <BrowserRouter>
-          <ScrollToTop />
-          <App />
+          <DialogProvider>
+            <ScrollToTop />
+            <App />
+          </DialogProvider>
         </BrowserRouter>
       </HelmetProvider>
     </React.StrictMode>

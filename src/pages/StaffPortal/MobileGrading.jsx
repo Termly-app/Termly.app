@@ -2,8 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { getSchoolProfile, getClassResults, setStudentAllMarks, getSubjectAssignments } from '../../data/store';
 import { CBC_STRUCTURE } from '../../data/seedData';
 import { BookIcon, CheckIcon, SignOutIcon, SaveIcon, UserIcon } from '../../components/CommonIcons';
+import { useDialog } from '../../contexts/DialogContext';
 
 export default function MobileGrading({ user, onLogout }) {
+  const { alert } = useDialog();
   const [profile, setProfile] = useState({});
   const [assignments, setAssignments] = useState({});
   const [selectedClass, setSelectedClass] = useState('');
@@ -70,9 +72,9 @@ export default function MobileGrading({ user, onLogout }) {
           await setStudentAllMarks(s.id, updatedMarks, examType);
         }
       }
-      alert('Marks Synchronized successfully!');
+      alert({ title: 'Success', message: 'Marks Synchronized successfully!', variant: 'success' });
     } catch(err) {
-      alert('Error saving marks.');
+      alert({ title: 'Sync Error', message: 'Error saving marks.', variant: 'danger' });
     }
     setSaving(false);
   };

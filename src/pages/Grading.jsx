@@ -8,8 +8,10 @@ import {
   SparklesIcon, TrendUpIcon, ChartBarIcon
 } from '../components/CommonIcons';
 import Select from '../components/Common/Select';
+import { useDialog } from '../contexts/DialogContext';
 
 export default function Grading({ currentUser, currentPeriodId }) {
+  const { alert, confirm } = useDialog();
   const allGrades = Object.values(CBC_STRUCTURE).flatMap(l => l.grades);
   const [selectedClass, setSelectedClass] = useState('');
   const [streamFilter, setStreamFilter] = useState('All');
@@ -134,14 +136,14 @@ export default function Grading({ currentUser, currentPeriodId }) {
       await Promise.all(Object.entries(editMarks).map(([sid, m]) => setStudentAllMarks(sid, m, examType)));
       setEditMode(false); 
       await loadResults();
-    } catch(err) { alert(err.message); } finally { setLoading(false); }
+    } catch(err) { alert({ title: 'Save Error', message: err.message, variant: 'danger' }); } finally { setLoading(false); }
   };
 
   const handleCBCChange = async (sid, sub, lv) => { 
     try {
       await setCBC(sid, sub, lv); 
       setCbcData(await getCBC()); 
-    } catch(err) { alert(err.message); }
+    } catch(err) { alert({ title: 'Assessment Error', message: err.message, variant: 'danger' }); }
   };
 
   const getGrade = (avg) => {
@@ -175,7 +177,7 @@ export default function Grading({ currentUser, currentPeriodId }) {
       <tbody>${list.map((s, i) => `<tr><td>${i + 1}</td><td>${s.admNo}</td><td>${s.name}</td><td>${s.gender}</td><td>${s.parent}</td><td>${s.parentPhone}</td></tr>`).join('')}</tbody></table>
       <div class="footer">Printed on ${new Date().toLocaleDateString()} | ${profileStr.school_name || 'ShuleSoft Academy'} | ${level}</div></body></html>`);
       w.document.close(); w.print();
-    } catch (err) { alert("Print failed: " + err.message); }
+    } catch (err) { alert({ title: 'Print Error', message: "Print failed: " + err.message, variant: 'danger' }); }
   };
 
   // Print entire class results as one sheet
@@ -224,7 +226,7 @@ export default function Grading({ currentUser, currentPeriodId }) {
     <div class="footer">Printed on ${new Date().toLocaleDateString()} | ${profileStr.school_name || 'ShuleSoft Academy'} | ${level} | Class Teacher: _______________</div>
     </body></html>`);
       w.document.close(); w.print();
-    } catch(err) { alert("Print failed: " + err.message); }
+    } catch(err) { alert({ title: 'Print Error', message: "Print failed: " + err.message, variant: 'danger' }); }
   };
 
   // Print all individual report cards for the class
@@ -294,7 +296,7 @@ export default function Grading({ currentUser, currentPeriodId }) {
       @media print{.report-page{padding:15px}}
       </style></head><body>${reportCards}</body></html>`);
       w.document.close(); w.print();
-    } catch(err) { alert("Print failed: " + err.message); }
+    } catch(err) { alert({ title: 'Print Error', message: "Print failed: " + err.message, variant: 'danger' }); }
   };
 
   return (
@@ -714,6 +716,7 @@ export default function Grading({ currentUser, currentPeriodId }) {
 }
 
 function ReportCardModal({ student, cbcData, coreCompData, onClose, getGrade, cbcLabel, cbcColor, classSize, subjects, level, isEarlyYears, profile }) {
+  const { alert } = useDialog();
   const { grade } = getGrade(student.average);
   const studentCBC = cbcData[student.id] || {};
   const studentCC = coreCompData[student.id] || {};
@@ -771,7 +774,7 @@ function ReportCardModal({ student, cbcData, coreCompData, onClose, getGrade, cb
       <div class="sigs"><div><div class="ln"></div>Class Teacher</div><div><div class="ln"></div>Principal</div><div><div class="ln"></div>Parent/Guardian</div></div>
       </body></html>`);
       w.document.close(); w.print();
-    } catch(err) { alert("Print failed: " + err.message); }
+    } catch(err) { alert({ title: 'Print Error', message: "Print failed: " + err.message, variant: 'danger' }); }
   };
 
   return (

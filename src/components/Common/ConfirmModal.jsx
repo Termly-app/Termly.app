@@ -119,19 +119,21 @@ export default function ConfirmModal({
 
         {/* ── Actions ── */}
         <div style={{ display:'flex', gap:10 }}>
-          <button
-            onClick={onCancel}
-            style={{
-              flex:1, padding:'10px 0', borderRadius:8,
-              background:'transparent', border:'1px solid rgba(255,255,255,.1)',
-              color:'#5A6B5C', fontFamily:"'Inter',sans-serif", fontSize:'.82rem',
-              fontWeight:500, cursor:'pointer', transition:'all .18s',
-            }}
-            onMouseOver={e => { e.currentTarget.style.color='#D4DDD6'; e.currentTarget.style.borderColor='rgba(255,255,255,.2)'; }}
-            onMouseOut={e  => { e.currentTarget.style.color='#5A6B5C'; e.currentTarget.style.borderColor='rgba(255,255,255,.1)'; }}
-          >
-            {cancelText}
-          </button>
+          {cancelText && (
+            <button
+              onClick={onCancel}
+              style={{
+                flex:1, padding:'10px 0', borderRadius:8,
+                background:'transparent', border:'1px solid rgba(255,255,255,.1)',
+                color:'#5A6B5C', fontFamily:"'Inter',sans-serif", fontSize:'.82rem',
+                fontWeight:500, cursor:'pointer', transition:'all .18s',
+              }}
+              onMouseOver={e => { e.currentTarget.style.color='#D4DDD6'; e.currentTarget.style.borderColor='rgba(255,255,255,.2)'; }}
+              onMouseOut={e  => { e.currentTarget.style.color='#5A6B5C'; e.currentTarget.style.borderColor='rgba(255,255,255,.1)'; }}
+            >
+              {cancelText}
+            </button>
+          )}
           <button
             onClick={handleConfirm}
             disabled={withInput && !inputValue.trim()}

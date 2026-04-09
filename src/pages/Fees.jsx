@@ -9,6 +9,7 @@ import { printReceipt } from '../utils/receiptPrint';
 import MpesaReconciliation from './MpesaReconciliation';
 import Select from '../components/Common/Select';
 import { Helmet } from 'react-helmet-async';
+import { useDialog } from '../contexts/DialogContext';
 
 function PaymentModal({ student, fee, onPay, onClose }) {
   const [amount, setAmount] = useState('');
@@ -99,6 +100,7 @@ function ReceiptModal({ receipt, onClose, profile }) {
 }
 
 export default function Fees({ currentUser, currentPeriodId }) {
+  const { alert, confirm } = useDialog();
   const [students, setStudents] = useState([]);
   const [fees, setFees] = useState({});
   const [summary, setSummary] = useState({});
@@ -174,7 +176,7 @@ export default function Fees({ currentUser, currentPeriodId }) {
     }).join('')}</tbody></table>
     <div class="footer">Printed on ${new Date().toLocaleDateString()}</div></body></html>`);
       w.document.close(); w.print();
-    } catch(err){ alert("Print failed: " + err.message); }
+    } catch(err){ alert({ title: 'Print Error', message: "Print failed: " + err.message, variant: 'danger' }); }
   };
   const handlePayment = async (sid,amount,method,ref) => {
     setLoading(true);
@@ -185,7 +187,7 @@ export default function Fees({ currentUser, currentPeriodId }) {
       setShowReceipt({...p,studentName:s.name,studentClass:s.class,admNo:s.admNo,balance:fee.balance});
       setShowPayment(null); 
       await refresh();
-    } catch (err) { alert(err.message); }
+    } catch (err) { alert({ title: 'Payment Error', message: err.message, variant: 'danger' }); }
     finally { setLoading(false); }
   };
 

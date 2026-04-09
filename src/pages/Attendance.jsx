@@ -10,8 +10,10 @@ import {
 import Select from '../components/Common/Select';
 import { Helmet } from 'react-helmet-async';
 import PricingUpgrade from '../components/PricingUpgrade';
+import { useDialog } from '../contexts/DialogContext';
 
 export default function Attendance({ currentUser, currentPeriodId }) {
+  const { alert, confirm } = useDialog();
   const [selectedClass, setSelectedClass] = useState('All');
   const [streamFilter, setStreamFilter] = useState('All');
   const [selectedDate, setSelectedDate] = useState(getTodayStr());
@@ -71,7 +73,7 @@ export default function Attendance({ currentUser, currentPeriodId }) {
     try {
       await markAttendance(selectedDate, studentId, status);
       await refresh();
-    } catch(err) { alert(err.message); }
+    } catch(err) { alert({ title: 'Attendance Error', message: err.message, variant: 'danger' }); }
   };
 
   const markAllPresent = async () => {
@@ -79,7 +81,7 @@ export default function Attendance({ currentUser, currentPeriodId }) {
     try {
       await Promise.all(students.map(s => markAttendance(selectedDate, s.id, 'present')));
       await refresh();
-    } catch(err) { alert(err.message); }
+    } catch(err) { alert({ title: 'Attendance Error', message: err.message, variant: 'danger' }); }
     finally { setLoading(false); }
   };
 
@@ -181,7 +183,7 @@ export default function Attendance({ currentUser, currentPeriodId }) {
       </body></html>`);
       printWin.document.close();
       printWin.print();
-    } catch(err) { alert(err.message); }
+    } catch(err) { alert({ title: 'Print Error', message: err.message, variant: 'danger' }); }
     finally { setLoading(false); setShowPrintOptions(false); }
   };
 
@@ -406,13 +408,13 @@ export default function Attendance({ currentUser, currentPeriodId }) {
                       
                       if (messages.length > 0) {
                         await queueSmsBatch(messages);
-                        alert(`Successfully queued ${messages.length} alerts.`);
+                        alert({ title: 'Success', message: `Successfully queued ${messages.length} alerts.`, variant: 'success' });
                       } else {
-                        alert("No valid parent phone numbers found.");
+                        alert({ title: 'No Numbers', message: "No valid parent phone numbers found.", variant: 'warning' });
                       }
                       setAlertModal({ open: false, sending: false });
                     } catch (err) {
-                      alert(err.message);
+                      alert({ title: 'SMS Error', message: err.message, variant: 'danger' });
                       setAlertModal(prev => ({ ...prev, sending: false }));
                     }
                   }}

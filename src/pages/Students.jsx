@@ -7,8 +7,7 @@ import {
   PrintIcon, RefreshIcon, SearchIcon, StudentIcon, EditIcon, 
   DeleteIcon, PlusIcon, FlagIcon, UploadIcon
 } from '../components/CommonIcons';
-import ConfirmModal from '../components/Common/ConfirmModal';
-import { useConfirm } from '../components/Common/useConfirm';
+import { useDialog } from '../contexts/DialogContext';
 import Select from '../components/Common/Select';
 import StudentImporter from '../components/StudentImporter';
 import { Helmet } from 'react-helmet-async';
@@ -37,7 +36,7 @@ export default function Students({ currentUser, currentPeriodId }) {
   const [profile, setProfile] = useState({ activeClasses: [], streamsPerClass: {}, gradeFees: {} });
   const [loading, setLoading] = useState(true);
   const [showTransitionModal, setShowTransitionModal] = useState(false);
-  const { confirm, prompt, confirmModal } = useConfirm();
+  const { confirm, prompt, alert } = useDialog();
 
   const loadData = async () => {
     setLoading(true);
@@ -239,7 +238,6 @@ export default function Students({ currentUser, currentPeriodId }) {
       }} onClose={() => setShowImportModal(false)} />}
       {selectedStudent&&<StudentDetail student={selectedStudent} feeData={fees[selectedStudent.id]||{}} onClose={()=>setSelectedStudent(null)} onEdit={()=>{setSelectedStudent(null);setEditingStudent(selectedStudent);setShowModal(true);}} currentUser={currentUser} profile={profile}/>}
       {showTransitionModal&&<TransitionModal students={students} profile={profile} onTransfer={handleTransfer} onClose={()=>setShowTransitionModal(false)} confirm={confirm}/>}
-      <ConfirmModal {...confirmModal} />
     </div>
   );
 }

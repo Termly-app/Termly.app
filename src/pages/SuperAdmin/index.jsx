@@ -50,9 +50,8 @@ import DeleteModal      from './modals/DeleteModal';
 import StaffModal       from './modals/StaffModal';
 import NEMISExportModal from './modals/NEMISExportModal';
 
-// Shared confirm dialog — replaces all window.confirm / window.prompt
-import ConfirmModal from '../../components/Common/ConfirmModal';
-import { useConfirm } from '../../components/Common/useConfirm';
+// Shared dialog hook
+import { useDialog } from '../../contexts/DialogContext';
 
 // Utilities
 import {
@@ -134,8 +133,8 @@ export default function SuperAdmin({ currentUser, isPlatformAdmin, sidebarOpen, 
 
   const isSuperOwner = isPlatformAdmin;
 
-  // ── Styled confirm dialogs (replaces window.confirm / window.prompt) ─────
-  const { confirmModal, confirm, prompt } = useConfirm();
+  // ── Styled dialogs ─────
+  const { alert, confirm, prompt } = useDialog();
 
   // ── NEMIS export modal ────────────────────────────────────────────────────
   const [nemisSchool, setNemisSchool] = useState(null);
@@ -1027,7 +1026,6 @@ export default function SuperAdmin({ currentUser, isPlatformAdmin, sidebarOpen, 
               onClose={() => setNemisSchool(null)}
               getStudentsBySchool={getStudentsBySchool}
             />
-            <ConfirmModal {...confirmModal} />
 
           </div>
         </div>

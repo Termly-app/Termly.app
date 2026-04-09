@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { getSchoolProfile, saveSchoolProfile, importData, exportData, CBC_STRUCTURE, TERM_FEE, applyFeeStructure, getPeriods, createPeriod, setActivePeriod, testMpesaConnection, testSmsConnection, getCurrentAuthUser, supabase } from '../data/store';
 import Select from '../components/Common/Select';
 import { Helmet } from 'react-helmet-async';
+import { useDialog } from '../contexts/DialogContext';
 import {
   ClockIcon, CheckIcon, SaveIcon, SchoolIcon, ImageIcon, FolderIcon,
   BookIcon, CardIcon, DiamondIcon, PhoneIcon, RefreshIcon, CrossIcon, PlusIcon,
@@ -9,6 +10,7 @@ import {
 } from '../components/CommonIcons';
 
 export default function Settings() {
+  const { alert, confirm } = useDialog();
   const [profile, setProfile] = useState({
     schoolName:'',motto:'',phone:'',email:'',address:'',
     logo:'',subscriptionPlan:'Basic',
@@ -56,12 +58,12 @@ export default function Settings() {
   const handleSave=async(e)=>{
     if(e)e.preventDefault(); setLoading(true);
     try{await saveSchoolProfile(profile);setSaved(true);setTimeout(()=>setSaved(false),3000);}
-    catch(err){alert(err.message);}finally{setLoading(false);}
+    catch(err){alert({ title: 'Save Error', message: err.message, variant: 'danger' });}finally{setLoading(false);}
   };
   const handleChange=(e)=>{const{name,value}=e.target;setProfile(p=>({...p,[name]:value}));setSaved(false);};
   const handleLogoUpload=(e)=>{
     const f=e.target.files[0];if(!f)return;
-    if(f.size>512000){alert('Max 500KB');return;}
+    if(f.size>512000){alert({ title: 'Upload Limit', message: 'Logo file is too large. Max size is 500KB.', variant: 'warning' });return;}
     const r=new FileReader();
     r.onload=ev=>{setLogoPreview(ev.target.result);setProfile(p=>({...p,logo:ev.target.result}));};
     r.readAsDataURL(f);
@@ -90,8 +92,8 @@ export default function Settings() {
     const cur=getLevelSubjects(lv);
     setProfile({...profile,customSubjects:{...profile.customSubjects,[lv]:cur.filter(s=>s!==sub)}});
   };
-  const resetSubjects=(lv)=>{
-    if(!confirm(`Reset ${lv} subjects to defaults?`))return;
+  const resetSubjects=async(lv)=>{
+    if(!await confirm({ title: 'Reset Subjects', message: `Reset ${lv} subjects to defaults?`, variant: 'warning' }))return;
     const newCustom = { ...profile.customSubjects };
     delete newCustom[lv];
     setProfile({...profile,customSubjects:newCustom});
@@ -125,8 +127,8 @@ export default function Settings() {
   };
   const runFeeApplication=async()=>{
     setLoading(true);
-    try{await saveSchoolProfile(profile);await applyFeeStructure();alert('Fee structure applied to students.');}
-    catch(err){alert(err.message);}finally{setLoading(false);}
+    try{await saveSchoolProfile(profile);await applyFeeStructure();alert({ title: 'Success', message: 'Fee structure applied to students.', variant: 'success' });}
+    catch(err){alert({ title: 'Application Error', message: err.message, variant: 'danger' });}finally{setLoading(false);}
   };
   const addExam=()=>{
     const val=newExam.trim();if(!val)return;
@@ -156,8 +158,8 @@ export default function Settings() {
     setProfile({...profile, gradingSystems: {...profile.gradingSystems, [activeLevel]: cur.filter((_,i)=>i!==idx)}});
     setSaved(false);
   };
-  const resetGrading=()=>{
-    if(!confirm('Reset grading to default?'))return;
+  const resetGrading=async()=>{
+    if(!await confirm({ title: 'Reset Grading', message: 'Reset grading to default?', variant: 'warning' }))return;
     const {[activeLevel]:_, ...rest} = profile.gradingSystems;
     setProfile({...profile, gradingSystems: rest}); setSaved(false);
   };
@@ -167,7 +169,7 @@ export default function Settings() {
       await createPeriod(newPeriod.year, newPeriod.term);
       const per = await getPeriods();
       setPeriods(per);
-    } catch (err) { alert(err.message); }
+    } catch (err) { alert({ title: 'Configuration Error', message: err.message, variant: 'danger' }); }
     finally { setLoading(false); }
   };
   const handleSetActivePeriod = async (id) => {
@@ -176,7 +178,7 @@ export default function Settings() {
       await setActivePeriod(id);
       const per = await getPeriods();
       setPeriods(per);
-    } catch (err) { alert(err.message); }
+    } catch (err) { alert({ title: 'Period Error', message: err.message, variant: 'danger' }); }
     finally { setLoading(false); }
   };
 
@@ -184,7 +186,7 @@ export default function Settings() {
     setTestingMpesa(true);
     try {
       const res = await testMpesaConnection(profile.mpesa_config);
-      alert(res.message);
+      alert({ title: 'Connection Test', message: res.message, variant: res.success ? 'success' : 'danger' });
     } finally { setTestingMpesa(false); }
   };
 
@@ -192,7 +194,7 @@ export default function Settings() {
     setTestingSms(true);
     try {
       const res = await testSmsConnection(profile.sms_config);
-      alert(res.message);
+      alert({ title: 'Connection Test', message: res.message, variant: res.success ? 'success' : 'danger' });
     } finally { setTestingSms(false); }
   };
 
@@ -702,8 +704,8 @@ export default function Settings() {
               <input ref={backupRef} type="file" hidden accept=".json" onChange={e=>{
                 const file=e.target.files[0];if(!file)return;
                 const r=new FileReader();
-                r.onload=ev=>{
-                  if(confirm('Overwrite all local data with this backup? This is irreversible.')){
+                r.onload=async(ev)=>{
+                  if(await confirm({ title: 'Confirm Restore', message: 'Overwrite all local data with this backup? This is irreversible.', variant: 'danger' })){
                     importData(ev.target.result); window.location.reload();
                   }
                 };
