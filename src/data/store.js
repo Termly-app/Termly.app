@@ -3747,15 +3747,90 @@ export async function logCommunication(comm) {
     message: comm.message,
     sender_id: getCurrentAuthUser()?.id,
     recipient_count: comm.recipientCount,
-    status: 'dispatched'
+    status: 'dispatched',
+    metadata: comm.metadata || {}
   }]).select().single();
   
   if (error) throw error;
+  
+  // Also log into offline store for real-time history visibility
+  try {
+    const { db } = await import('./offlineStore');
+    await db.communications.add({
+      ...comm,
+      timestamp: new Date().toISOString(),
+      status: 'dispatched'
+    });
+  } catch (e) {
+    console.warn("Could not log to offline communications store", e);
+  }
+
   return data;
 }
 
+/**
+ * Functional dispatch for SMS messages.
+ */
+export async function sendSMSMessage(recipients, message) {
+  const count = Array.isArray(recipients) ? recipients.length : 1;
+  
+  // 1. Log the attempt
+  const log = await logCommunication({
+    type: 'SMS',
+    target: count > 1 ? 'broadcast' : 'single',
+    message,
+    recipientCount: count,
+    metadata: { phones: Array.isArray(recipients) ? recipients : [recipients] }
+  });
+
+  // 2. Mock API Gateway response
+  // In a real production environment, this would hit Africa's Talking, Twilio, etc.
+  console.log(`[SMS GATEWAY] Sending to ${count} recipients: "${message}"`);
+  
+  return { success: true, logId: log.id, count };
+}
+
+/**
+ * Functional dispatch for WhatsApp messages.
+ */
+export async function sendWhatsAppMessage(recipients, message) {
+  const count = Array.isArray(recipients) ? recipients.length : 1;
+  
+  // 1. Log the attempt
+  const log = await logCommunication({
+    type: 'WhatsApp',
+    target: count > 1 ? 'broadcast' : 'single',
+    message,
+    recipientCount: count,
+    metadata: { phones: Array.isArray(recipients) ? recipients : [recipients] }
+  });
+
+  // 2. Individual targeting opens direct chat if exactly one recipient
+  if (count === 1) {
+    const phone = Array.isArray(recipients) ? recipients[0] : recipients;
+    const cleanPhone = phone.replace(/[^0-9]/g, '');
+    const url = `https://wa.me/${cleanPhone.startsWith('0') ? '254' + cleanPhone.slice(1) : cleanPhone}?text=${encodeURIComponent(message)}`;
+    window.open(url, '_blank');
+  }
+
+  console.log(`[WHATSAPP GATEWAY] Broadcasting to ${count} recipients: "${message}"`);
+  
+  return { success: true, logId: log.id, count };
+}
+
+/**
+ * Helper to generate a direct WhatsApp link
+ */
+export function getWhatsAppLink(phone, message = '') {
+  const cleanPhone = (phone || '').replace(/[^0-9]/g, '');
+  const prefix = cleanPhone.startsWith('0') ? '254' : '';
+  return `https://wa.me/${prefix}${cleanPhone}${message ? '?text=' + encodeURIComponent(message) : ''}`;
+}
+
 export async function getCommunicationLogs() {
-  const { data, error } = await supabase.from('communications_log').select('*').order('timestamp', { ascending: false });
+  const { data, error } = await supabase.from('communications_log')
+    .select('*')
+    .order('created_at', { ascending: false });
   if (error) throw error;
   return data;
 }

@@ -76,7 +76,7 @@ function SbLink({ to, icon: Icon, label, onClick, exact = false, locked = false,
     ? location.pathname === to && location.search === ''
     : location.pathname === to || (to.includes('?') && location.search.includes(to.split('?')[1]));
 
-  const finalClass = `nav-item${isActive ? ' active' : ''}${locked ? ' nav-locked' : ''}${red ? ' nav-red' : ''}`;
+  const finalClass = `sb-nav-item${isActive ? ' on' : ''}${locked ? ' locked' : ''}${red ? ' danger' : ''}`;
 
   return (
     <NavLink
@@ -85,18 +85,18 @@ function SbLink({ to, icon: Icon, label, onClick, exact = false, locked = false,
       className={finalClass}
       onClick={onClick}
     >
-      <span className="nav-icon">
-        <Icon size={16} strokeWidth={1.75} />
+      <div className="sb-nav-glow" />
+      <span className="sb-nav-ico">
+        <Icon size={18} strokeWidth={isActive ? 2.5 : 2} />
       </span>
-      <span className="nav-label">{label}</span>
-      {locked && <span className="nav-lock-badge" style={{ fontSize:'0.55rem', background:'var(--danger)', color:'white', padding:'2px 6px', borderRadius:10, marginLeft:'auto', fontWeight: 800 }}>UPGRADE</span>}
+      <span className="sb-nav-lbl">{label}</span>
+      {locked && <span className="sb-nav-lock">LOCKED</span>}
     </NavLink>
   );
 }
 
-// ── Sidebar section label ─────────────────────────────────────────────────
 function SbSection({ label }) {
-  return <div className="sidebar-section">{label}</div>;
+  return <div className="sb-nav-section">{label}</div>;
 }
 
 // ══ SIDEBAR ════════════════════════════════════════════════════════════════
@@ -213,110 +213,76 @@ function Sidebar({ isOpen, onClose, onLogout, currentUser, subscriptionActive })
   const isPlatformAdmin = currentUser?.email === 'admin@shulesoft.com'
     || currentUser?.email === 'shulesoft8@gmail.com';
 
-  // ── Platform Admin sidebar ──────────────────────────────────────────────
+  // ── Platform Admin sidebar (Onyx Modern) ────────────────────────────────
   if (isPlatformAdmin) {
     return (
-      <aside className={`sidebar sidebar--admin ${isOpen ? 'open' : ''}`}>
-        {/* Brand */}
-        <div className="sb-brand">
-          <LogoMark size={32} />
-          <div className="sb-brand-txt">
-            <div className="sb-name">ShuleSoft</div>
-            <div className="sb-tag">Platform Admin</div>
+      <aside className={`sb-shell onyx ${isOpen ? 'open' : ''}`}>
+        <div className="sb-header">
+          <div className="sb-brand">
+            <LogoMark size={28} />
+            <div className="sb-brand-info">
+              <div className="sb-name">ShuleSoft</div>
+              <div className="sb-tag">Platform HQ</div>
+            </div>
           </div>
         </div>
 
-        {/* Period picker */}
-        <div className="sidebar-period">
-          <label className="sidebar-period-label">Academic Period</label>
-          <div className="sidebar-period-select-wrap">
-            <select
-              className="sidebar-period-select"
-              value={selectedPeriod || ''}
-              onChange={handlePeriodChange}
-            >
-              {periods.map(p => (
-                <option key={p.id} value={p.id} style={{ color: '#000' }}>
-                  {p.year} — Term {p.term}{p.is_active ? '  ·  Active' : ''}
-                </option>
-              ))}
-            </select>
-            <ChevronDownIcon size={12} color="var(--text-muted, #6B7280)" />
-          </div>
-        </div>
-
-        {/* Nav */}
-        <nav className="sidebar-nav">
-          <SbSection label="Overview" />
-          <SbLink to="/super-admin"                          icon={OverviewIcon}   label="Dashboard"        onClick={onClose} exact />
-          <SbLink to="/super-admin?tab=schools"              icon={SchoolsIcon}    label="Schools"          onClick={onClose} />
-          <SbLink to="/super-admin?tab=payments"             icon={PaymentsIcon}   label="Payments"         onClick={onClose} />
-          <SbLink to="/super-admin?tab=history"              icon={HistoryIcon}    label="Payment History"  onClick={onClose} />
-          <SbSection label="Analytics" />
-          <SbLink to="/super-admin?tab=subscriptions"        icon={BillingIcon}    label="Subscriptions"    onClick={onClose} />
+        <nav className="sb-nav">
+          <SbSection label="Core Engine" />
+          <SbLink to="/super-admin" icon={DashboardIcon} label="Intelligence" onClick={onClose} exact />
+          <SbLink to="/super-admin?tab=schools" icon={SchoolsIcon} label="Entities" onClick={onClose} />
+          <SbLink to="/super-admin?tab=payments" icon={PaymentsIcon} label="Finances" onClick={onClose} />
+          
+          <SbSection label="Ecosystem" />
           <SbLink to="/super-admin?tab=revenue"              icon={RevenueIcon}    label="Revenue"          onClick={onClose} />
-          <SbLink to="/super-admin?tab=activity"             icon={ActivityIcon}   label="Activity Log"     onClick={onClose} />
-          <SbSection label="System" />
-          <SbLink to="/super-admin?tab=config"               icon={SettingsIcon}   label="Settings"         onClick={onClose} />
-          <SbLink to="/super-admin?tab=recovery"             icon={RecoveryIcon}   label="Data Recovery"    onClick={onClose} />
+          <SbLink to="/super-admin?tab=activity"             icon={ActivityIcon}   label="Telemetry"        onClick={onClose} />
+          
+          <SbSection label="Kernel" />
+          <SbLink to="/super-admin?tab=config" icon={SettingsIcon} label="System" onClick={onClose} />
         </nav>
 
-        {/* Footer */}
-        <div className="sb-footer">
-          <div className="sb-status-card">
-            <div className="sb-status-row">
-              <span className="sb-status-label">System Status</span>
-              <div className="sb-status-live">
-                <StatusDotIcon size={6} color="#0DD88A" />
-                <span>Operational</span>
-              </div>
+        <div className="sb-bottom">
+          <button className="sb-user-card" onClick={onLogout}>
+            <div className="sb-user-avatar">HQ</div>
+            <div className="sb-user-meta">
+              <div className="sb-user-n">Sign Out</div>
+              <div className="sb-user-r">System Admin</div>
             </div>
-            <div className="sb-status-name">
-              {profile?.schoolName || 'ShuleSoft HQ'}
-            </div>
-          </div>
-          <button className="sb-signout-btn" onClick={onLogout}>
-            <SignOutIcon size={15} strokeWidth={1.75} />
-            <span>Sign Out</span>
+            <SignOutIcon size={14} />
           </button>
         </div>
       </aside>
     );
   }
 
-  // ── School Admin / Teacher sidebar ──────────────────────────────────────
   return (
-    <aside className={`sidebar ${isOpen ? 'open' : ''}`}>
-      {/* Brand */}
-      <div className="sidebar-logo">
-        <LogoMark size={34} />
-        <div className="sidebar-logo-txt">
-          <div className="sidebar-logo-name">ShuleSoft</div>
-          <div className="sidebar-logo-sub">School Portal</div>
+    <aside className={`sb-shell ${isOpen ? 'open' : ''}`}>
+      <div className="sb-header">
+        <div className="sb-brand">
+          <LogoMark size={30} />
+          <div className="sb-brand-info">
+            <div className="sb-name">ShuleSoft</div>
+            <div className="sb-tag">Empowering Education</div>
+          </div>
         </div>
       </div>
 
-      {/* Nav */}
-      <nav className="sidebar-nav">
-        <SbSection label="General" />
+      <nav className="sb-nav">
+        <SbSection label="Control" />
         <SbLink to="/dashboard" icon={DashboardIcon} label="Dashboard" onClick={onClose} locked={!subscriptionActive} />
         
-        {/* Teachers and Admins manage students */}
         {(isTeacher || isAdmin) && (
-          <SbLink to="/students"  icon={StudentsIcon}  label="Students"  onClick={onClose} locked={!subscriptionActive} />
+          <SbLink to="/students" icon={StudentsIcon} label="Students" onClick={onClose} locked={!subscriptionActive} />
         )}
         
-        {/* Only Admins manage staff */}
         {isAdmin && (
           <SbLink to="/teachers" icon={StaffIcon} label="Staff" onClick={onClose} locked={!subscriptionActive} />
         )}
 
-        {/* Librarians and Admins manage library */}
         {(isLibrarian || isAdmin) && (features.library || isSandbox) && (
           <SbLink to="/library" icon={BookIcon} label="Library" onClick={onClose} locked={!subscriptionActive || (isSandbox && !features.library)} />
         )}
 
-        {/* Academic section — always visible for Sandbox, else gated */}
         {(isTeacher || isAdmin) && (isSandbox || features.attendance || features.grading || features.timetable || features.lms) && (
           <SbSection label="Academics" />
         )}
@@ -326,80 +292,43 @@ function Sidebar({ isOpen, onClose, onLogout, currentUser, subscriptionActive })
         )}
         
         {(isTeacher || isAdmin) && (features.grading || isSandbox) && (
-          <SbLink to="/grading"   icon={GradingIcon}   label="Grading"    onClick={onClose} locked={!subscriptionActive || (isSandbox && !features.grading)} />
+          <SbLink to="/grading" icon={GradingIcon} label="Assessment" onClick={onClose} locked={!subscriptionActive || (isSandbox && !features.grading)} />
         )}
         
         {(isTeacher || isAdmin) && (features.timetable || isSandbox) && (
-          <SbLink to="/timetable" icon={TimetableIcon} label={features.exam_scheduling ? "Scheduling" : "Timetable"} onClick={onClose} locked={!subscriptionActive || (isSandbox && !features.timetable)} />
+          <SbLink to="/timetable" icon={TimetableIcon} label="Scheduling" onClick={onClose} locked={!subscriptionActive || (isSandbox && !features.timetable)} />
         )}
 
-        {(isTeacher || isAdmin) && (features.lms || isSandbox) && (
-          <SbLink to="/lms" icon={ClipboardIcon} label="E-Learning" onClick={onClose} locked={!subscriptionActive || (isSandbox && !features.lms)} />
-        )}
-
-        {/* Administration/Finance section — always visible for Sandbox, else gated */}
-        {(isAdmin || isFinance) && (isSandbox || features.fees || isAdmin) && (
-          <SbSection label="Administration" />
-        )}
-        
+        <SbSection label="Management" />
         {(isAdmin || isFinance) && (features.fees || isSandbox) && (
-          <SbLink to="/fees" icon={FeesIcon} label="Fees & Billing" onClick={onClose} locked={!subscriptionActive || (isSandbox && !features.fees)} />
+          <SbLink to="/fees" icon={FeesIcon} label="Financials" onClick={onClose} locked={!subscriptionActive || (isSandbox && !features.fees)} />
         )}
-
         
-        {isAdmin && (features.fees || isSandbox) && (
-          <SbLink to="/fee-structure" icon={FeeStructureIcon} label="Fee Structure" onClick={onClose} locked={!subscriptionActive || (isSandbox && !features.fees)} />
-        )}
-
         {isAdmin && (features.sms || isSandbox) && (
-          <SbLink to="/communications" icon={MessageIcon} label="Comm. Center" onClick={onClose} locked={!subscriptionActive || (isSandbox && !features.sms)} />
+          <SbLink to="/communications" icon={MessageIcon} label="Comm. Hub" onClick={onClose} locked={!subscriptionActive || (isSandbox && !features.sms)} />
         )}
 
-        {(isAdmin || isTeacher) && (features.teacher_portal || isSandbox) && (
-          <SbLink to="/portal/teacher" icon={TeacherIcon} label="Teacher Portal" onClick={onClose} locked={!subscriptionActive || (isSandbox && !features.teacher_portal)} />
-        )}
-
-        {isAdmin && (features.parent_portal || isSandbox) && (
-          <SbLink to="/portal/parent" icon={UsersIcon} label="Parent Portal" onClick={onClose} locked={!subscriptionActive || (isSandbox && !features.parent_portal)} />
-        )}
-
-        <SbSection label="Resources" />
-        <SbLink to="/help" icon={BookIcon} label="Help Center" onClick={onClose} />
-        
-        {/* Strictly Admin-only settings */}
+        <SbSection label="System" />
         {isAdmin && (
           <>
-            <SbSection label="System" />
-            <SbLink to="/security" icon={SecurityIcon} label="Security" onClick={onClose} />
-            <SbLink to="/billing"  icon={SubscriptionIcon}  label="Subscription" onClick={onClose} red={!subscriptionActive} />
+            <SbLink to="/billing" icon={SubscriptionIcon} label="Account" onClick={onClose} red={!subscriptionActive} />
             <SbLink to="/settings" icon={SettingsIcon} label="Settings" onClick={onClose} />
           </>
         )}
+        <SbLink to="/help" icon={BookIcon} label="Help Center" onClick={onClose} />
       </nav>
 
-      {/* Footer */}
-      <div className="sidebar-bottom">
-        <div className="sidebar-school-badge">
-          <div className="school-avatar">{schoolName.charAt(0)}</div>
-          <div className="school-info">
-            <div className="school-name">{schoolName}</div>
-            <div className="school-plan">
-              <span
-                className="school-plan-badge"
-                style={{
-                  background : subscriptionActive ? 'rgba(16,185,129,0.08)' : 'rgba(239,68,68,0.08)',
-                  color      : subscriptionActive ? '#10B981'               : '#EF4444',
-                  border     : `1px solid ${subscriptionActive ? 'rgba(16,185,129,0.2)' : 'rgba(239,68,68,0.2)'}`,
-                }}
-              >
-                {profile?.subscriptionPlan || (subscriptionActive ? 'Active' : 'Restricted')}
-              </span>
-            </div>
+      <div className="sb-bottom">
+        <div className="sb-school-card">
+          <div className="sb-sch-av">{schoolName.charAt(0)}</div>
+          <div className="sb-sch-info">
+            <div className="sb-sch-name">{schoolName}</div>
+            <div className="sb-sch-plan">{profile?.subscriptionPlan || 'Foundation Tier'}</div>
           </div>
         </div>
-        <button className="sb-logout-btn" onClick={onLogout}>
-          <SignOutIcon size={15} strokeWidth={1.75} />
-          <span>Sign Out</span>
+        <button className="sb-logout-action" onClick={onLogout}>
+          <SignOutIcon size={14} />
+          <span>Exit Portal</span>
         </button>
       </div>
     </aside>
@@ -641,39 +570,44 @@ function App() {
         subscriptionActive={subscriptionActive}
       />
 
-      <main className="main-content">
-        {/* Top bar */}
-        <div className="topbar">
-          <div className="topbar-left">
-            <div className="topbar-title desktop-only">Administration</div>
-            <div className="topbar-title mobile-only">ShuleSoft</div>
+      <main className="sb-main">
+        <header className="sb-topbar">
+          <div className="sb-topbar-left">
+            <h2 className="sb-topbar-title desktop-only">Command Tower</h2>
+            <h2 className="sb-topbar-title mobile-only">ShuleSoft</h2>
           </div>
-          <div className="topbar-actions">
+          
+          <div className="sb-topbar-actions">
             <SyncIndicator />
-            <div className="topbar-period">
-              <span className="topbar-period-label">Period</span>
+            <div className="sb-period-pill">
+              <span className="sb-period-ico"><ClockIcon size={14} /></span>
               <select
-                className="topbar-program-select"
+                className="sb-period-select"
                 value={currentPeriodId || ''}
                 onChange={async (e) => { await setActivePeriod(e.target.value); }}
               >
                 <option value="">Select Period</option>
                 {periods.map(p => (
                   <option key={p.id} value={p.id}>
-                    {p.year} — {p.term}{p.is_active ? ' (Active)' : ''}
+                    {p.year} — Term {p.term}{p.is_active ? ' (Active)' : ''}
                   </option>
                 ))}
               </select>
             </div>
-            <div
-              className="topbar-avatar"
-              title={currentUser?.name}
-              style={{ border: '2px solid var(--primary-light)' }}
-            >
-              {currentUser?.name?.charAt(0)?.toUpperCase() || 'U'}
+            
+            <div className="sb-topbar-divider" />
+            
+            <div className="sb-profile-pill">
+              <div className="sb-profile-info">
+                <span className="sb-profile-name">{currentUser?.name || 'User'}</span>
+                <span className="sb-profile-role">{currentUser?.role || 'Staff'}</span>
+              </div>
+              <div className="sb-profile-avatar">
+                {currentUser?.name?.charAt(0)?.toUpperCase()}
+              </div>
             </div>
           </div>
-        </div>
+        </header>
 
         {/* Page content */}
         <div className="page-content">
