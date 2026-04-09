@@ -64,8 +64,8 @@ import {
   TimetableIcon, FeesIcon, FeeStructureIcon, SecurityIcon, SettingsIcon,
   BillingIcon, SignOutIcon, MenuIcon, CloseIcon, ChevronDownIcon,
   OverviewIcon, SchoolsIcon, PaymentsIcon, HistoryIcon, RevenueIcon,
-  ActivityIcon, RecoveryIcon, StatusDotIcon, PlatformZapIcon, SubscriptionsIcon, MessageIcon,
-  DownloadIcon, UploadIcon, RefreshIcon, ShieldIcon, LogoMarkBW, BookIcon
+  ActivityIcon, RecoveryIcon, StatusDotIcon, ZapIcon, SubscriptionsIcon, MessageIcon,
+  DownloadIcon, UploadIcon, RefreshIcon, LogoMarkBW, BookIcon
 } from './components/Common/Icons';
 
 // --- Sidebar nav link helper ------------------------------------------------
@@ -333,7 +333,7 @@ function Sidebar({ isOpen, onClose, onLogout, currentUser, subscriptionActive })
         )}
 
         {(isTeacher || isAdmin) && (features.lms || isSandbox) && (
-          <SbLink to="/lms" icon={ClipboardIcon} label="E-Learning" onClick={onClose} locked={!subscriptionActive || (isSandbox && !features.lms)} />
+          <SbLink to="/lms" icon={ActivityIcon} label="E-Learning" onClick={onClose} locked={!subscriptionActive || (isSandbox && !features.lms)} />
         )}
 
         {/* Administration/Finance section Î“Ã‡Ã¶ always visible for Sandbox, else gated */}
@@ -355,11 +355,11 @@ function Sidebar({ isOpen, onClose, onLogout, currentUser, subscriptionActive })
         )}
 
         {(isAdmin || isTeacher) && (features.teacher_portal || isSandbox) && (
-          <SbLink to="/portal/teacher" icon={TeacherIcon} label="Teacher Portal" onClick={onClose} locked={!subscriptionActive || (isSandbox && !features.teacher_portal)} />
+          <SbLink to="/portal/teacher" icon={StaffIcon} label="Teacher Portal" onClick={onClose} locked={!subscriptionActive || (isSandbox && !features.teacher_portal)} />
         )}
 
         {isAdmin && (features.parent_portal || isSandbox) && (
-          <SbLink to="/portal/parent" icon={UsersIcon} label="Parent Portal" onClick={onClose} locked={!subscriptionActive || (isSandbox && !features.parent_portal)} />
+          <SbLink to="/portal/parent" icon={UserIcon} label="Parent Portal" onClick={onClose} locked={!subscriptionActive || (isSandbox && !features.parent_portal)} />
         )}
 
         <SbSection label="Resources" />
