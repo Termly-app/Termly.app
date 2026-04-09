@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { getFeaturedPartners } from '../data/store';
-import { SchoolIcon, FlagIcon, StarIcon } from '../components/CommonIcons';
+import { SchoolIcon, FlagIcon, StarIcon, HomeIcon } from '../components/CommonIcons';
 import './Partners.css';
 
 export default function Partners() {
@@ -18,6 +19,19 @@ export default function Partners() {
 
   return (
     <div className="partners-container animate-in">
+      <nav style={{ 
+        position: 'sticky', top: 0, zIndex: 100, 
+        padding: '14px 32px', 
+        background: 'rgba(255,255,255,0.85)', 
+        backdropFilter: 'blur(16px)', 
+        borderBottom: '1px solid rgba(0,0,0,0.06)',
+        display: 'flex', alignItems: 'center', justifyContent: 'space-between'
+      }}>
+        <Link to="/" style={{ display: 'flex', alignItems: 'center', gap: 8, textDecoration: 'none', color: '#5B3EF5', fontWeight: 700, fontSize: '0.9rem' }}>
+          <HomeIcon size={16} /> ← Back to Home
+        </Link>
+        <Link to="/register" className="btn btn-primary" style={{ padding: '8px 20px', fontSize: '0.8rem', borderRadius: 100 }}>Get Started</Link>
+      </nav>
       <header className="partners-hero">
         <h1 className="hero-title">Our <span className="text-gradient">Partners</span></h1>
         <p className="hero-subtitle">Trusted by over 500+ leading institutions across Kenya. Join the community of schools transforming education.</p>

@@ -43,6 +43,26 @@ export default function Register() {
     }
     loadSettings();
   }, []);
+
+  // 1. Persistence: Restore state from sessionStorage on mount
+  useEffect(() => {
+    const savedData = sessionStorage.getItem('shulesoft_reg_form');
+    const savedStep = sessionStorage.getItem('shulesoft_reg_step');
+    if (savedData) setFormData(prev => ({ ...prev, ...JSON.parse(savedData) }));
+    if (savedStep) setStep(Number(savedStep));
+  }, []);
+
+  // 2. Persistence: Save state to sessionStorage when it changes
+  useEffect(() => {
+    if (step < 3) {
+      sessionStorage.setItem('shulesoft_reg_form', JSON.stringify(formData));
+      sessionStorage.setItem('shulesoft_reg_step', step.toString());
+    } else {
+      // Clear storage on success or if we reach the end
+      sessionStorage.removeItem('shulesoft_reg_form');
+      sessionStorage.removeItem('shulesoft_reg_step');
+    }
+  }, [formData, step]);
   
   const [formData, setFormData] = useState({
     schoolName: '',
@@ -389,6 +409,19 @@ export default function Register() {
                 <div style={{ fontSize: '0.65rem', color: 'var(--primary)', fontWeight: 700, textTransform: 'uppercase', marginBottom: 4 }}>Access Tier</div>
                 <div style={{ fontSize: '0.85rem', fontWeight: 700, color: '#111118' }}>Free Sandbox Workspace</div>
                 <div style={{ fontSize: '0.75rem', color: '#6B7280', marginTop: 2 }}>Exploration mode enabled. Add your students & test all features immediately.</div>
+              </div>
+
+              <div className="res-check-row" style={{ marginTop: 20 }}>
+                <input 
+                  type="checkbox" 
+                  name="termsAccepted" 
+                  id="termsAccepted"
+                  checked={formData.termsAccepted} 
+                  onChange={handleChange} 
+                />
+                <label htmlFor="termsAccepted" style={{ cursor: 'pointer' }}>
+                  <span>I agree to the <Link to="/legal/terms" target="_blank" rel="noopener noreferrer">Terms of Service</Link> and <Link to="/legal/privacy" target="_blank" rel="noopener noreferrer">Privacy Policy</Link>.</span>
+                </label>
               </div>
 
               <div className="res-btn-row" style={{ marginTop: 24 }}>

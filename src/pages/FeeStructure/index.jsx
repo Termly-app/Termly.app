@@ -162,8 +162,8 @@ export default function FeeStructure({ currentUser, schoolId, schoolName, getFee
         <div className="fs-title-group">
           <div className="fs-icon"><CardIcon size={24} /></div>
           <div>
-            <div className="fs-title">Fee Structure</div>
-            <div className="fs-sub">Define itemised fees per term and class</div>
+            <div className="fs-title">Fee Structure Management</div>
+            <div className="fs-sub">Standardize student invoicing with itemized terms and class targeting.</div>
           </div>
         </div>
         <div className="fs-header-actions">
@@ -174,42 +174,42 @@ export default function FeeStructure({ currentUser, schoolId, schoolName, getFee
             style={{ minWidth: 160 }}
           />
           <button className="fs-btn-outline" onClick={handlePrintSchedule} disabled={!items.length}>
-            <PrintIcon size={14} /> Print Schedule
+            <PrintIcon size={14} /> Export Schedule
           </button>
           <button className="fs-btn-primary" onClick={handleSave} disabled={saving || !items.length}>
-            {saving ? 'Saving...' : <><SaveIcon size={14} /> Save Structure</>}
+            {saving ? 'Syncing...' : <><SaveIcon size={14} /> Update Financials</>}
           </button>
         </div>
       </div>
 
-      {/* Toast */}
-      {message && (
-        <div className={`fs-toast ${message.type === 'success' ? 'fs-toast-ok' : 'fs-toast-err'}`}>
-          {message.type === 'success' ? <CheckIcon size={14} /> : <CrossIcon size={14} />} {message.text}
-        </div>
-      )}
+      <div className="fs-info-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 300px', gap: 30, marginBottom: 30 }}>
+         {/* Summary bar */}
+         {items.length > 0 ? (
+           <div className="fs-summary" style={{ margin: 0 }}>
+             <div className="fs-sum-item">
+               <div className="fs-sum-label">Active Items</div>
+               <div className="fs-sum-val">{items.length}</div>
+             </div>
+             <div className="fs-sum-item">
+               <div className="fs-sum-label">Standard Total</div>
+               <div className="fs-sum-val" style={{ color:'var(--te)' }}>KSh {totalAmount.toLocaleString()}</div>
+             </div>
+             <div className="fs-sum-item">
+               <div className="fs-sum-label">Distribution</div>
+               <div className="fs-sum-val">{items.filter(i => i.is_mandatory).length} Mandatory • {items.filter(i => !i.is_mandatory).length} Optional</div>
+             </div>
+           </div>
+         ) : <div />}
 
-      {/* Summary bar */}
-      {items.length > 0 && (
-        <div className="fs-summary">
-          <div className="fs-sum-item">
-            <div className="fs-sum-label">Fee Items</div>
-            <div className="fs-sum-val">{items.length}</div>
-          </div>
-          <div className="fs-sum-item">
-            <div className="fs-sum-label">Total per Student</div>
-            <div className="fs-sum-val" style={{ color:'var(--te)' }}>KSh {totalAmount.toLocaleString()}</div>
-          </div>
-          <div className="fs-sum-item">
-            <div className="fs-sum-label">Mandatory</div>
-            <div className="fs-sum-val">{items.filter(i => i.is_mandatory).length}</div>
-          </div>
-          <div className="fs-sum-item">
-            <div className="fs-sum-label">Optional</div>
-            <div className="fs-sum-val">{items.filter(i => !i.is_mandatory).length}</div>
-          </div>
-        </div>
-      )}
+         <div style={{ background: 'rgba(91, 62, 245, 0.05)', padding: 20, borderRadius: 20, border: '1px solid rgba(91, 62, 245, 0.1)' }}>
+            <h4 style={{ fontSize: '0.85rem', fontWeight: 800, color: 'var(--primary)', marginBottom: 10, display: 'flex', alignItems: 'center', gap: 8 }}>
+              <BookIcon size={16} /> How it works
+            </h4>
+            <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', lineHeight: 1.5, margin: 0 }}>
+              Fees defined here are <strong>automatically applied</strong> to students in the selected classes for the specific term. Mandatory items generate invoices immediately upon student registration or term migration.
+            </p>
+         </div>
+      </div>
 
       {/* Fee items */}
       <div className="fs-body">

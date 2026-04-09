@@ -147,6 +147,7 @@ export default function SchoolsTab({
 
                       <td data-label="Action" className="col-act">
                         <div className="act-group">
+                          <button className="act-btn b" onClick={() => handleLoginAs(s)}>Login As</button>
                           {isActive ? (
                             <button className="act-btn" onClick={() => handleDeactivate(s.id, s.name)}>Deactivate</button>
                           ) : (

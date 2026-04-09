@@ -248,80 +248,6 @@ export default function Dashboard({ currentUser, onLogout, currentPeriodId }) {
         ))}
       </div>
 
-      {/* GUIDED SETUP (ONBOARDING) */}
-      {(data.totalStudents < 5 || !data.profile?.phone) && (
-        <div className="card-premium animate-fade-up" style={{ marginBottom: 24, padding: '24px 30px', position: 'relative', overflow: 'hidden' }}>
-          <div style={{ position: 'relative', zIndex: 2 }}>
-            <h2 className="hero-title white" style={{ fontSize: '1.5rem', marginBottom: 8, display:'flex', alignItems:'center', gap:10 }}>{plan === 'Sandbox' ? 'Welcome to your Sandbox' : 'Start Here'} <RocketIcon size={22} color="#fff" /></h2>
-            <p className="hero-subtitle white" style={{ opacity: 0.9, marginBottom: 24, maxWidth: 600 }}>
-              {plan === 'Sandbox' 
-                ? "You're in exploration mode! Follow these steps to set up your school and see how ShuleSoft automates your daily tasks."
-                : "Welcome to ShuleSoft! Let's get your school system ready in 4 easy steps. Follow this guide to go live today."}
-            </p>
-            
-            <div className="guided-steps" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 16 }}>
-              {[
-                { 
-                  id: 'profile', 
-                  icon: <SchoolIcon size={32} />, 
-                  title: 'Complete School Info', 
-                  desc: 'Add your logo, motto, and contact details for official reports.',
-                  to: '/settings', 
-                  done: !!(data.profile?.phone && data.profile?.address)
-                },
-                { 
-                  id: 'classes', 
-                  icon: <BookIcon size={32} />, 
-                  title: 'Setup Classes', 
-                  desc: 'Configure which grades and streams are active in your school.',
-                  to: '/settings?tab=classes', 
-                  done: !!(data.profile?.activeClasses?.length < 15) // If they modified the default 15
-                },
-                { 
-                  id: 'students', 
-                  icon: <GraduationIcon size={32} />, 
-                  title: 'Add Your Students', 
-                  desc: 'Import or manually add students to their respective classes.',
-                  to: '/students', 
-                  done: data.totalStudents > 0
-                },
-                { 
-                  id: 'finance', 
-                  icon: <CardIcon size={32} />, 
-                  title: 'Setup Fee Structure', 
-                  desc: 'Define how much each class pays per term.',
-                  to: '/fees', 
-                  done: Object.keys(data.profile?.gradeFees || {}).length > 0
-                }
-              ].map((step, idx) => (
-                <Link to={step.to} key={step.id} className={`guided-step-box ${step.done ? 'done' : ''}`} style={{ 
-                  background: 'rgba(255,255,255,0.08)',
-                  backdropFilter: 'blur(10px)',
-                  border: `1px solid ${step.done ? 'rgba(34,197,94,0.4)' : 'rgba(255,255,255,0.1)'}`,
-                  padding: 18,
-                  borderRadius: 12,
-                  textDecoration: 'none',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  transition: 'all 0.2s',
-                  position: 'relative'
-                }}>
-                  {step.done && (
-                    <div style={{ position: 'absolute', top: 12, right: 12, color: '#22c55e', fontSize: '1.2rem' }}><CheckIcon size={16} /></div>
-                  )}
-                  <div style={{ marginBottom: 12, color: '#fff' }}>{step.icon}</div>
-                  <h4 style={{ color: '#fff', fontSize: '0.95rem', fontWeight: 700, margin: '0 0 6px 0' }}>{idx + 1}. {step.title}</h4>
-                  <p style={{ color: 'rgba(255,255,255,0.7)', fontSize: '0.75rem', margin: 0, lineHeight: 1.4 }}>{step.desc}</p>
-                  {!step.done && <div style={{ marginTop: 'auto', paddingTop: 14, color: '#fff', fontSize: '0.7rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: 4 }}>
-                    Start Setup <span style={{ fontSize: '1rem' }}>→</span>
-                  </div>}
-                </Link>
-              ))}
-            </div>
-          </div>
-          <div style={{ position: 'absolute', top: -20, right: -20, fontSize: '12rem', opacity: 0.1, pointerEvents: 'none', color:'#fff' }}><SchoolIcon size={200} /></div>
-        </div>
-      )}
 
       {/* Main Grid — Recent Activity + Quick Actions */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: 18, marginBottom: 24 }}>
@@ -384,42 +310,7 @@ export default function Dashboard({ currentUser, onLogout, currentPeriodId }) {
           </div>
         </div>
 
-        {/* Learning Center Widget (New for PLG) */}
-        <div className="card" style={{ background: 'linear-gradient(135deg, #F8FAFC 0%, #F1F5F9 100%)', border: '1px dashed var(--primary)' }}>
-          <div className="card-header">
-            <h3><BookIcon size={18} /> Learning Center</h3>
-            <Link to="/help" className="btn btn-ghost btn-sm" style={{ color: 'var(--primary)' }}>Open Guides</Link>
-          </div>
-          <div className="card-body" style={{ padding: '0 20px 20px' }}>
-            <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: 16 }}>New to ShuleSoft? Explore these popular guides to master the system.</p>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-              {[
-                { title: 'How to Import Students', to: '/help?cat=students', icon: <StudentIcon size={14} /> },
-                { title: 'Setting up M-Pesa Fees', to: '/help?cat=fees', icon: <CardIcon size={14} /> },
-                { title: 'Generating CBC Report Cards', to: '/help?cat=cbc', icon: <GraduationIcon size={14} /> },
-                { title: 'System Setup Checklist', to: '/help?cat=onboarding', icon: <RocketIcon size={14} /> }
-              ].map((link, i) => (
-                <Link key={i} to={link.to} style={{ 
-                  display: 'flex', 
-                  alignItems: 'center', 
-                  gap: 10, 
-                  padding: '10px 14px', 
-                  background: '#fff', 
-                  borderRadius: 10, 
-                  fontSize: '0.85rem', 
-                  fontWeight: 600, 
-                  color: 'var(--text)',
-                  textDecoration: 'none',
-                  border: '1px solid var(--edge)',
-                  transition: 'all 0.2s'
-                }} className="hover-lift">
-                  <span style={{ color: 'var(--primary)' }}>{link.icon}</span>
-                  {link.title}
-                </Link>
-              ))}
-            </div>
-          </div>
-        </div>
+
       </div>
 
       {/* CBC Structure */}

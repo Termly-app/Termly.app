@@ -22,6 +22,7 @@ import {
   deleteSchool, repairSchoolProfile, getDiscoveryMetrics, deactivateSchool,
   getTeachersBySchool, deleteTeacher, SEAT_LIMITS,
   wipeAllNonAdminSchools,
+  setCurrentSchoolContext, setCurrentPeriodId
 } from '../../data/store';
 
 // Components
@@ -777,6 +778,34 @@ export default function SuperAdmin({ currentUser, isPlatformAdmin, sidebarOpen, 
     }
   };
 
+  const handleLoginAs = async (school) => {
+    try {
+      // 1. Get the current active period for this school
+      const { data: period } = await supabase
+        .from('academic_periods')
+        .select('id')
+        .eq('school_id', school.id)
+        .eq('is_active', true)
+        .maybeSingle();
+
+      // 2. Set the context in store
+      setCurrentSchoolContext(school.id, currentUser);
+      if (period) {
+        setCurrentPeriodId(period.id);
+      }
+
+      // 3. Persist in session for the app to pick up on reload
+      sessionStorage.setItem('shulesoft_school_id', school.id);
+      if (period) sessionStorage.setItem('shulesoft_period_id', period.id);
+      sessionStorage.setItem('shulesoft_acting_as_admin', 'true');
+
+      // 4. Force redirect to dashboard
+      window.location.href = '/dashboard';
+    } catch (err) {
+      setMessage({ type: 'error', text: 'Login As failed: ' + err.message });
+    }
+  };
+
   const handleSignOut = () => { if (onSignOut) onSignOut(); else window.location.href = '/'; };
 
   // ══ ACCESS GUARD ══════════════════════════════════════════════════════
@@ -952,7 +981,7 @@ export default function SuperAdmin({ currentUser, isPlatformAdmin, sidebarOpen, 
             {loading ? <SuperAdminLoader /> : (
               <>
                 {activeTab === 'overview'      && <OverviewTab       {...commonProps} revChartRef={revChartRef} growChartRef={growChartRef} subChartRef={subChartRef} weekChartRef={weekChartRef} />}
-                {activeTab === 'schools'       && <SchoolsTab        {...commonProps} handleBulkActivate={handleBulkActivate} handleBulkDeactivate={handleBulkDeactivate} handleDeactivate={handleDeactivate} handleRowDeleteSchool={handleRowDeleteSchool} handleOpenStaffModal={handleOpenStaffModal} setActivateModal={setActivateModal} setPayMethod={setPayMethod} setPayRef={setPayRef} setActivateSuccess={setActivateSuccess} setPlanModal={setPlanModal} setChosenPlan={setChosenPlan} onNEMISExport={setNemisSchool} />}
+                {activeTab === 'schools'       && <SchoolsTab        {...commonProps} handleBulkActivate={handleBulkActivate} handleBulkDeactivate={handleBulkDeactivate} handleDeactivate={handleDeactivate} handleRowDeleteSchool={handleRowDeleteSchool} handleOpenStaffModal={handleOpenStaffModal} setActivateModal={setActivateModal} setPayMethod={setPayMethod} setPayRef={setPayRef} setActivateSuccess={setActivateSuccess} setPlanModal={setPlanModal} setChosenPlan={setChosenPlan} onNEMISExport={setNemisSchool} handleLoginAs={handleLoginAs} />}
                 {activeTab === 'payments'      && <PaymentsTab       {...commonProps} handleApprove={handleApprove} handleReject={handleReject} payChartRef={payChartRef} />}
                 {activeTab === 'history'       && <PaymentHistoryTab allPayments={allPayments} historyStatusFilter={historyStatusFilter} setHistoryStatusFilter={setHistoryStatusFilter} historySchoolFilter={historySchoolFilter} setHistorySchoolFilter={setHistorySchoolFilter} />}
                 {activeTab === 'subscriptions' && <SubscriptionsTab  {...commonProps} settings={settings} subBreakRef={subBreakRef} />}

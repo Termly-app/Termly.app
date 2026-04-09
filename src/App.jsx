@@ -475,23 +475,39 @@ function App() {
         if (session?.user) {
           const userRecord = await getUserByAuthId(session.user.id);
           if (userRecord) {
-            setCurrentSchoolContext(userRecord.school_id, session.user);
-            const activePeriod = await initActivePeriod();
+            const realIsPlatAdmin = await checkIsPlatformAdmin(session.user.email);
+            setIsPlatformAdmin(realIsPlatAdmin);
+
+            // Override context if acting-as from Super Admin
+            const overrideSchoolId = sessionStorage.getItem('shulesoft_school_id');
+            const overridePeriodId = sessionStorage.getItem('shulesoft_period_id');
+            const isActingAs = sessionStorage.getItem('shulesoft_acting_as_admin') === 'true';
+
+            if (realIsPlatAdmin && isActingAs && overrideSchoolId) {
+              setCurrentSchoolContext(overrideSchoolId, session.user);
+              if (overridePeriodId) {
+                setCurrentPeriodId(overridePeriodId);
+                setPeriodId(overridePeriodId);
+              }
+            } else {
+              setCurrentSchoolContext(userRecord.school_id, session.user);
+              const activePeriod = await initActivePeriod();
+              setPeriodId(activePeriod?.id);
+            }
+
             const allPeriods   = await getPeriods();
             setPeriods(allPeriods);
-            setPeriodId(activePeriod?.id);
+
             setCurrentUser({
               id         : userRecord.id,
               name       : userRecord.name,
               email      : userRecord.email || session.user.email,
               role       : userRecord.role,
               schoolName : userRecord.schools?.name,
-              school_id  : userRecord.school_id,
+              school_id  : (realIsPlatAdmin && isActingAs && overrideSchoolId) ? overrideSchoolId : userRecord.school_id,
             });
             const profileData = await getSchoolProfile();
             setProfile(profileData);
-            const realIsPlatAdmin = await checkIsPlatformAdmin(session.user.email);
-            setIsPlatformAdmin(realIsPlatAdmin);
 
             const isSubActive = await checkIsSubscriptionActive(profileData);
             setSubscriptionActive(realIsPlatAdmin || isSubActive);
