@@ -63,7 +63,7 @@ import {
   LogoMark,
   DashboardIcon, StudentsIcon, StaffIcon, AttendanceIcon, GradingIcon,
   TimetableIcon, FeesIcon, FeeStructureIcon, SecurityIcon, SettingsIcon,
-  BillingIcon, SignOutIcon, MenuIcon, CloseIcon, ChevronDownIcon,
+  BillingIcon, SignOutIcon, MenuIcon, CloseIcon, ChevronDownIcon, ClockIcon,
   OverviewIcon, SchoolsIcon, PaymentsIcon, HistoryIcon, RevenueIcon,
   ActivityIcon, RecoveryIcon, StatusDotIcon, PlatformZapIcon, SubscriptionIcon, MessageIcon,
   BookIcon, ClipboardIcon, TeacherIcon, UsersIcon
