@@ -9,6 +9,7 @@ import {
 } from '../components/CommonIcons';
 import Select from '../components/Common/Select';
 import { useDialog } from '../contexts/DialogContext';
+import { getProfessionalRemark } from '../utils/remarkUtils';
 
 export default function Grading({ currentUser, currentPeriodId }) {
   const { alert, confirm } = useDialog();
@@ -268,7 +269,7 @@ export default function Grading({ currentUser, currentPeriodId }) {
         const cbcCls = cbcLv.startsWith('Exceeding') ? 'ee' : cbcLv.startsWith('Meeting') ? 'me' : cbcLv.startsWith('Approaching') ? 'ae' : 'be';
         const remark = isEarlyYears
           ? (cbcLv.startsWith('Exceeding') ? 'Outstanding progress' : cbcLv.startsWith('Meeting') ? 'Good progress' : cbcLv.startsWith('Approaching') ? 'Developing well' : 'Needs support')
-          : (mark >= 80 ? 'Excellent' : mark >= 70 ? 'Good' : mark >= 60 ? 'Average' : mark >= 50 ? 'Below Avg' : 'Needs Improvement');
+          : getProfessionalRemark(mark, student.id);
         return `<tr><td>${sub}</td>${!isEarlyYears ? `<td style="font-weight:700">${mark}</td><td style="color:${g.color};font-weight:700">${g.grade}</td>` : ''}<td class="${cbcCls}">${cbcLv}</td><td>${remark}</td></tr>`;
       }).join('')}
       ${!isEarlyYears ? `<tr style="font-weight:700;background:#f8fafc"><td>Total</td><td colspan="4">${student.total} / ${subjects.length * 100} — Average: ${student.average}% (Grade ${grade})</td></tr>` : ''}
@@ -277,6 +278,7 @@ export default function Grading({ currentUser, currentPeriodId }) {
       <table><thead><tr><th>Competency</th><th>Rating</th></tr></thead><tbody>${ccHtmlFor(student.id)}</tbody></table>
       <div class="strengths"><strong>Learner Strengths:</strong> ___________________________________</div>
       <div class="strengths"><strong>Areas for Improvement:</strong> ___________________________________</div>
+      <div class="strengths"><strong>Overall Academic Remark:</strong> ${getProfessionalRemark(student.average, student.id)}</div>
       <div class="strengths"><strong>Class Teacher Remarks:</strong> ___________________________________</div>
       <div class="strengths"><strong>Principal Remarks:</strong> ___________________________________</div>
       <div class="sigs"><div><div class="ln"></div>Class Teacher</div><div><div class="ln"></div>Principal</div><div><div class="ln"></div>Parent/Guardian</div></div>

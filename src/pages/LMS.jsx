@@ -68,7 +68,8 @@ export default function LMS({ currentUser }) {
     description: '',
     links: '',
     maxScore: 100,
-    submissionType: 'online_text'
+    submissionType: 'online_text',
+    questions: []
   });
 
   useEffect(() => {
@@ -97,7 +98,8 @@ export default function LMS({ currentUser }) {
         dueDate: new Date(Date.now() + 7 * 86400000).toISOString().slice(0, 16), 
         cutoffDate: new Date(Date.now() + 8 * 86400000).toISOString().slice(0, 16), 
         description: '', links: '',
-        maxScore: 100, submissionType: 'online_text'
+        maxScore: 100, submissionType: 'online_text',
+        questions: []
       });
       await loadData();
     } catch (err) {
@@ -106,18 +108,34 @@ export default function LMS({ currentUser }) {
     setLoading(false);
   };
 
-  const viewSubmissions = async (assignment) => {
-    const subs = await getSubmissions(assignment.id);
-    setSelectedSubmissions({ assignment, subs });
+  const [showQuestionModal, setShowQuestionModal] = useState(false);
+
+  const handleAddQuestion = () => {
+    setFormData({
+      ...formData,
+      questions: [...(formData.questions || []), { 
+        id: Date.now(), 
+        text: '', 
+        type: 'multiple_choice', 
+        options: ['', '', '', ''], 
+        correctIndex: 0, 
+        points: 1 
+      }]
+    });
   };
 
-  const handleUpdateGrade = async (submissionId, data) => {
-    await updateSubmission(submissionId, data);
-    // Refresh current view
-    if (selectedSubmissions) {
-      const updatedSubs = await getSubmissions(selectedSubmissions.assignment.id);
-      setSelectedSubmissions({ ...selectedSubmissions, subs: updatedSubs });
-    }
+  const updateQuestion = (id, fields) => {
+    setFormData({
+      ...formData,
+      questions: formData.questions.map(q => q.id === id ? { ...q, ...fields } : q)
+    });
+  };
+
+  const removeQuestion = (id) => {
+    setFormData({
+      ...formData,
+      questions: formData.questions.filter(q => q.id !== id)
+    });
   };
 
   const activeClasses = profile?.activeClasses || ['1', '2', '3', '4', '5', '6', '7', '8'];
@@ -203,19 +221,78 @@ export default function LMS({ currentUser }) {
               <input type="number" className="form-input" value={formData.maxScore} onChange={e => setFormData({ ...formData, maxScore: parseInt(e.target.value) })} />
             </div>
             <div className="form-group">
-              <label>Submission Type</label>
+              <label>Submission Method</label>
               <Select 
-                value={formData.submissionType}
+                value={formData.submissionType} 
                 onChange={e => setFormData({ ...formData, submissionType: e.target.value })}
                 options={[
-                  { id: 'online_text', label: 'Online Text' },
-                  { id: 'file_upload', label: 'File Upload (Link)' },
-                  { id: 'both', label: 'Both' }
+                  { id: 'online_text', label: 'Online Text Response' },
+                  { id: 'file_upload', label: 'File Upload (PDF/Scan)' },
+                  { id: 'quiz', label: 'Interactive Quiz (Auto-graded)' }
                 ]}
                 style={{ width: '100%' }}
               />
             </div>
           </div>
+
+          {formData.submissionType === 'quiz' && (
+            <div style={{ background: 'var(--primary-light)', padding: 16, borderRadius: 12, border: '1.5px solid var(--primary)' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+                <div style={{ fontWeight: 800, fontSize: '0.85rem' }}>Quiz Questions ({formData.questions.length})</div>
+                <button type="button" className="btn btn-primary btn-sm" onClick={handleAddQuestion}>+ Add Question</button>
+              </div>
+              
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 12, maxHeight: 300, overflowY: 'auto', paddingRight: 4 }}>
+                {formData.questions.map((q, qidx) => (
+                  <div key={q.id} style={{ background: 'white', padding: 12, borderRadius: 8, border: '1px solid var(--border)' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
+                      <span style={{ fontWeight: 700, fontSize: '0.75rem' }}>Q{qidx+1}</span>
+                      <button type="button" onClick={() => removeQuestion(q.id)} style={{ border: 'none', background: 'none', color: 'var(--danger)', cursor: 'pointer', fontSize: '1rem' }}>&times;</button>
+                    </div>
+                    <input 
+                      className="form-input" 
+                      placeholder="Question text..." 
+                      value={q.text} 
+                      onChange={e => updateQuestion(q.id, { text: e.target.value })}
+                      style={{ marginBottom: 8, fontSize: '0.8rem' }}
+                    />
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+                      {q.options.map((opt, oidx) => (
+                        <div key={oidx} style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                          <input 
+                            type="radio" 
+                            name={`correct-${q.id}`} 
+                            checked={q.correctIndex === oidx} 
+                            onChange={() => updateQuestion(q.id, { correctIndex: oidx })} 
+                          />
+                          <input 
+                            className="form-input" 
+                            placeholder={`Option ${oidx+1}`} 
+                            value={opt} 
+                            onChange={e => {
+                              const newOpts = [...q.options];
+                              newOpts[oidx] = e.target.value;
+                              updateQuestion(q.id, { options: newOpts });
+                            }}
+                            style={{ padding: '4px 8px', fontSize: '0.75rem' }}
+                          />
+                        </div>
+                      ))}
+                    </div>
+                    <div style={{ marginTop: 8, fontSize: '0.7rem', display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: 6 }}>
+                      <span>Points:</span>
+                      <input 
+                        type="number" 
+                        value={q.points} 
+                        onChange={e => updateQuestion(q.id, { points: parseInt(e.target.value) || 1 })}
+                        style={{ width: 40, border: '1px solid var(--border)', textAlign: 'center' }}
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
 
           <div className="form-group">
              <label>Task Instructions</label>

@@ -17,6 +17,8 @@ export default function PortalDashboard({ user, onLogout }) {
   const [submissionPayload, setSubmissionPayload] = useState('');
   const [academic, setAcademic] = useState({ average: 0, grade: '—', color: '#64748b', rank: '—' });
   const [mySubmissions, setMySubmissions] = useState({});
+  const [quizData, setQuizData] = useState(null);
+  const [quizAnswers, setQuizAnswers] = useState({});
 
   useEffect(() => {
     async function init() {
@@ -55,19 +57,60 @@ export default function PortalDashboard({ user, onLogout }) {
     init();
   }, [user]);
 
+  const handleStartWork = async (ast) => {
+    if (ast.submission_type === 'quiz') {
+      try {
+        const content = await fetchLmsContent(ast.description_url);
+        const data = typeof content === 'string' ? JSON.parse(content) : content;
+        setQuizData(data);
+      } catch (e) {
+        console.error('Quiz data load failed', e);
+        alert('Could not load quiz questions. Please contact your teacher.');
+        return;
+      }
+    }
+    setShowSubmitModal(ast);
+  };
+
   const handleSubmitWork = async (e) => {
-    e.preventDefault();
-    if (!submissionPayload) return;
+    if (e) e.preventDefault();
+    if (!submissionPayload && showSubmitModal?.submission_type !== 'quiz') return;
     
     const ast = showSubmitModal;
     const isLate = new Date() > new Date(ast.due_date || ast.deadline);
     
-    await submitAssignment(ast.id, user, submissionPayload, { is_late: isLate });
-    alert("Assignment Submitted successfully!" + (isLate ? " (Note: This is a late submission)" : ""));
+    let grade_numeric = null;
+    let finalPayload = submissionPayload;
+    
+    if (ast.submission_type === 'quiz') {
+      // Calculate quiz score
+      let correctCount = 0;
+      let totalPoints = 0;
+      quizData.questions.forEach((q, idx) => {
+        if (quizAnswers[q.id] === q.correctIndex) {
+          correctCount += q.points || 1;
+        }
+        totalPoints += q.points || 1;
+      });
+      grade_numeric = Math.round((correctCount / totalPoints) * 100);
+      finalPayload = JSON.stringify({ answers: quizAnswers, score: grade_numeric });
+    }
+    
+    await submitAssignment(ast.id, user, finalPayload, { 
+      is_late: isLate,
+      grade_numeric: grade_numeric,
+      workflow_status: grade_numeric !== null ? 'released' : 'submitted'
+    });
+    
+    alert(ast.submission_type === 'quiz' 
+      ? `Quiz completed! Your score: ${grade_numeric}%` 
+      : "Assignment Submitted successfully!" + (isLate ? " (Note: This is a late submission)" : "")
+    );
     
     setShowSubmitModal(null);
     setSubmissionPayload('');
-    // Refresh submissions
+    setQuizAnswers({});
+    // Refresh submissions...
     try {
       const { getStudentSubmissions } = await import('../../data/store');
       const subs = await getStudentSubmissions(user.id);
@@ -247,10 +290,10 @@ export default function PortalDashboard({ user, onLogout }) {
                   <div style={{ display: 'flex', gap: 10 }}>
                     {!isGraded && !isLocked && !isExpired && (
                       <button 
-                        onClick={() => setShowSubmitModal(ast)}
+                        onClick={() => handleStartWork(ast)}
                         style={{ background: 'var(--primary)', color: 'white', border: 'none', padding: '10px 20px', borderRadius: 8, fontWeight: 700, cursor: 'pointer' }}
                       >
-                        {mySub ? 'Resubmit Work' : 'Turn In Work'}
+                        {mySub ? (ast.submission_type === 'quiz' ? 'Retake Quiz' : 'Resubmit Work') : (ast.submission_type === 'quiz' ? 'Start Quiz' : 'Turn In Work')}
                       </button>
                     )}
                     {isLocked && (
@@ -311,29 +354,61 @@ export default function PortalDashboard({ user, onLogout }) {
         )}
       </div>
 
-      {/* Submit Assignment Modal */}
+      {/* Submit Assignment Modal / Quiz Player */}
       {showSubmitModal && (
         <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(15, 23, 42, 0.7)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: 20 }}>
-          <div style={{ background: 'white', padding: 32, borderRadius: 24, width: '100%', maxWidth: 500, animation: 'sIn 0.3s ease-out' }}>
-            <h3 style={{ margin: '0 0 8px', fontSize: '1.25rem', color: '#0f172a' }}>Submit Homework</h3>
+          <div style={{ background: 'white', padding: 32, borderRadius: 24, width: '100%', maxWidth: 600, maxHeight: '90vh', overflowY: 'auto', animation: 'sIn 0.3s ease-out' }}>
+            <h3 style={{ margin: '0 0 8px', fontSize: '1.25rem', color: '#0f172a' }}>
+              {showSubmitModal.submission_type === 'quiz' ? 'Interactive Quiz' : 'Submit Homework'}
+            </h3>
             <p style={{ margin: '0 0 24px', color: '#64748b', fontSize: '0.9rem' }}>{showSubmitModal.title}</p>
             
-            <form onSubmit={handleSubmitWork}>
-              <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 700, color: '#64748b', marginBottom: 8 }}>Paste your work or Google Doc link</label>
-              <textarea 
-                required 
-                value={submissionPayload} 
-                onChange={e => setSubmissionPayload(e.target.value)} 
-                style={{ width: '100%', minHeight: 120, padding: 16, border: '1.5px solid #cbd5e1', borderRadius: 12, fontSize: '1rem', boxSizing: 'border-box', marginBottom: 24, resize: 'vertical' }}
-                placeholder="https://docs.google.com/document/d/...&#10;OR write your answers directly here..."
-              />
-              <div style={{ display: 'flex', gap: 12 }}>
-                <button type="button" onClick={() => setShowSubmitModal(null)} style={{ flex: 1, padding: 14, background: '#f1f5f9', color: '#475569', border: 'none', borderRadius: 12, fontWeight: 700, cursor: 'pointer' }}>Cancel</button>
-                <button type="submit" style={{ flex: 2, padding: 14, background: '#10b981', color: 'white', border: 'none', borderRadius: 12, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
-                  <CheckIcon size={18} /> Turn In
-                </button>
+            {showSubmitModal.submission_type === 'quiz' ? (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
+                {quizData?.questions?.map((q, idx) => (
+                  <div key={q.id} style={{ padding: 20, background: '#f8fafc', borderRadius: 16, border: '1px solid #e2e8f0' }}>
+                    <div style={{ fontWeight: 800, marginBottom: 12, display: 'flex', gap: 10 }}>
+                      <span style={{ color: 'var(--primary)' }}>{idx + 1}.</span>
+                      <span>{q.text}</span>
+                    </div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                      {q.options.map((opt, oidx) => (
+                        <label key={oidx} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 16px', background: 'white', border: `2px solid ${quizAnswers[q.id] === oidx ? 'var(--primary)' : '#e2e8f0'}`, borderRadius: 12, cursor: 'pointer', transition: 'all 0.2s' }}>
+                          <input 
+                            type="radio" 
+                            name={`q-${q.id}`} 
+                            checked={quizAnswers[q.id] === oidx} 
+                            onChange={() => setQuizAnswers({ ...quizAnswers, [q.id]: oidx })} 
+                          />
+                          <span style={{ fontSize: '0.95rem', fontWeight: quizAnswers[q.id] === oidx ? 600 : 400 }}>{opt}</span>
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+                <div style={{ display: 'flex', gap: 12, marginTop: 12 }}>
+                  <button type="button" onClick={() => setShowSubmitModal(null)} style={{ flex: 1, padding: 14, background: '#f1f5f9', color: '#475569', border: 'none', borderRadius: 12, fontWeight: 700, cursor: 'pointer' }}>Cancel</button>
+                  <button type="button" onClick={handleSubmitWork} style={{ flex: 2, padding: 14, background: 'var(--primary)', color: 'white', border: 'none', borderRadius: 12, fontWeight: 700, cursor: 'pointer' }}>Submit Quiz</button>
+                </div>
               </div>
-            </form>
+            ) : (
+              <form onSubmit={handleSubmitWork}>
+                <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 700, color: '#64748b', marginBottom: 8 }}>Paste your work or Google Doc link</label>
+                <textarea 
+                  required 
+                  value={submissionPayload} 
+                  onChange={e => setSubmissionPayload(e.target.value)} 
+                  style={{ width: '100%', minHeight: 120, padding: 16, border: '1.5px solid #cbd5e1', borderRadius: 12, fontSize: '1rem', boxSizing: 'border-box', marginBottom: 24, resize: 'vertical' }}
+                  placeholder="https://docs.google.com/document/d/...&#10;OR write your answers directly here..."
+                />
+                <div style={{ display: 'flex', gap: 12 }}>
+                  <button type="button" onClick={() => setShowSubmitModal(null)} style={{ flex: 1, padding: 14, background: '#f1f5f9', color: '#475569', border: 'none', borderRadius: 12, fontWeight: 700, cursor: 'pointer' }}>Cancel</button>
+                  <button type="submit" style={{ flex: 2, padding: 14, background: '#10b981', color: 'white', border: 'none', borderRadius: 12, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+                    <CheckIcon size={18} /> Turn In
+                  </button>
+                </div>
+              </form>
+            )}
           </div>
         </div>
       )}

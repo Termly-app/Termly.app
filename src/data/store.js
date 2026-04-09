@@ -3640,7 +3640,11 @@ export async function createAssignment(assignment) {
   const fileId = `assignments/${school_id}/${Date.now()}_desc.json`;
   
   // 1. Upload description/content to Storage
-  const contentUrl = await uploadToLmsStorage(fileId, assignment.description || assignment.content || '');
+  const payload = assignment.submissionType === 'quiz' 
+    ? JSON.stringify({ description: assignment.description, questions: assignment.questions || [] })
+    : assignment.description || assignment.content || '';
+    
+  const contentUrl = await uploadToLmsStorage(fileId, payload);
   
   // 2. Save metadata + URL to DB
   const { data, error } = await supabase.from('lms_assignments').insert([{
