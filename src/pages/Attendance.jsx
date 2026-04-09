@@ -288,6 +288,7 @@ export default function Attendance({ currentUser, currentPeriodId }) {
             <thead>
               <tr>
                 <th>#</th>
+                <th>Adm No</th>
                 <th>Name</th>
                 <th>Class</th>
                 <th>Stream</th>
@@ -296,13 +297,14 @@ export default function Attendance({ currentUser, currentPeriodId }) {
             </thead>
             <tbody>
               {students.length === 0 ? (
-                <tr><td colSpan="4" className="text-center text-muted" style={{ padding: '40px' }}>No students found</td></tr>
+                <tr><td colSpan="6" className="text-center text-muted" style={{ padding: '40px' }}>No students found</td></tr>
               ) : (
                 students.map((s, i) => {
                   const status = attendance[s.id] || '';
                   return (
                     <tr key={s.id}>
                       <td className="text-muted">{i + 1}</td>
+                      <td><code style={{ fontSize: '0.8rem', color: 'var(--text-light)' }}>{s.admNo}</code></td>
                       <td><strong>{s.name}</strong></td>
                       <td><span className="badge badge-info">{s.class}</span></td>
                       <td>{s.stream || '—'}</td>

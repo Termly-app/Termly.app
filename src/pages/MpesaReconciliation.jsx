@@ -300,8 +300,9 @@ export default function MpesaReconciliation({ currentUser }) {
                       <div className="s-info">
                         <UserIcon size={16} />
                         <div>
+                          <div style={{ fontSize: '0.75rem', fontWeight: 800, color: 'var(--primary)', textTransform: 'uppercase' }}>{s.admNo || s.adm_no}</div>
                           <div className="s-name">{s.name}</div>
-                          <div className="s-meta">{s.admNo || s.adm_no} • {s.class}</div>
+                          <div className="s-meta">{s.class}</div>
                         </div>
                       </div>
                       <button className="link-btn" disabled={processing}>

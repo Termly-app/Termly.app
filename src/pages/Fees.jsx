@@ -326,8 +326,8 @@ export default function Fees({ currentUser, currentPeriodId }) {
                       <td>
                         {log.students ? (
                           <div>
-                            <strong>{log.students.name}</strong><br/>
-                            <span className="text-muted" style={{ fontSize: '0.75rem' }}>{log.students.adm_no} ({log.students.class})</span>
+                            <div style={{ fontSize: '0.75rem', fontWeight: 800, color: 'var(--primary)' }}>{log.students.adm_no}</div>
+                            <strong>{log.students.name}</strong> <span className="text-muted" style={{ fontSize: '0.75rem' }}>({log.students.class})</span>
                           </div>
                         ) : (
                           <div className="text-danger flex-center" style={{ gap: 4 }}>

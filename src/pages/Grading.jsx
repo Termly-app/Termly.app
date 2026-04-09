@@ -202,7 +202,7 @@ export default function Grading({ currentUser, currentPeriodId }) {
       @media print{body{padding:0}}
       </style></head><body>
       ${headerStr}
-      <table><thead><tr><th>Rank</th><th style="text-align:left">Student Name</th><th>Adm No</th>
+      <table><thead><tr><th>Rank</th><th>Adm No</th><th style="text-align:left">Student Name</th>
     ${subjects.map(s => `<th>${s.length > 10 ? s.substring(0, 8) + '..' : s}</th>`).join('')}
     ${!isEarlyYears ? '<th>Total</th><th>Avg</th><th>Grade</th>' : '<th>Overall</th>'}
     </tr></thead><tbody>
@@ -214,13 +214,13 @@ export default function Grading({ currentUser, currentPeriodId }) {
         const avg = score / levels.length;
         const overall = avg >= 3.5 ? 'EE' : avg >= 2.5 ? 'ME' : avg >= 1.5 ? 'AE' : 'BE';
         const overallCls = avg >= 3.5 ? 'ee' : avg >= 2.5 ? 'me' : avg >= 1.5 ? 'ae' : 'be';
-        return `<tr><td>${i + 1}</td><td style="text-align:left;font-weight:600">${s.name}</td><td>${s.admNo}</td>
+        return `<tr><td>${i + 1}</td><td>${s.admNo}</td><td style="text-align:left;font-weight:600">${s.name}</td>
         ${subjects.map(sub => { const lv = studentCbc[sub] || 'ME'; const cls = lv.startsWith('Exceeding') ? 'ee' : lv.startsWith('Meeting') ? 'me' : lv.startsWith('Approaching') ? 'ae' : 'be'; return `<td class="${cls}">${lv.split(' ')[0]}</td>`; }).join('')}
         <td class="${overallCls}" style="font-weight:700">${overall}</td></tr>`;
       } else {
         const { grade: g, color } = getGrade(s.average);
         const gradeCls = g === 'A' ? 'grade-a' : g === 'B' ? 'grade-b' : g === 'C' ? 'grade-c' : g === 'D' ? 'grade-d' : 'grade-e';
-        return `<tr class="${s.rank <= 3 ? 'top3' : ''}"><td style="font-weight:700">${s.rank}</td><td style="text-align:left;font-weight:600">${s.name}</td><td>${s.admNo}</td>
+        return `<tr class="${s.rank <= 3 ? 'top3' : ''}"><td style="font-weight:700">${s.rank}</td><td>${s.admNo}</td><td style="text-align:left;font-weight:600">${s.name}</td>
         ${subjects.map(sub => `<td>${s.marks[sub] || '—'}</td>`).join('')}
         <td style="font-weight:700">${s.total}</td><td style="font-weight:700">${s.average}</td><td class="${gradeCls}">${g}</td></tr>`;
       }
@@ -257,7 +257,7 @@ export default function Grading({ currentUser, currentPeriodId }) {
           <div class="level" style="background:var(--accent);color:white;margin-left:8px">${examType}</div>
         </div>
       <div class="info">
-        <div><strong>Student:</strong> ${student.name}</div><div><strong>Adm No:</strong> ${student.admNo}</div>
+        <div style="font-size: 1.1rem; color: var(--primary); font-weight: 800; border-bottom: 2px solid var(--border); margin-bottom: 12px; padding-bottom: 8px;">ADM NO: ${student.admNo} — ${student.name}</div>
         <div><strong>Class:</strong> ${student.class}</div>${!isEarlyYears ? `<div><strong>Position:</strong> ${student.rank} of ${classSize}</div>` : ''}
       </div>
       <div class="section-title">${isEarlyYears ? 'Learning Areas & Development' : 'Academic Performance'}</div>
@@ -501,7 +501,7 @@ export default function Grading({ currentUser, currentPeriodId }) {
             ) : (
               /* Upper Primary / Junior Secondary: marks-based view */
               <table className="data-table">
-                <thead><tr><th>Rank</th><th>Name</th>{subjects.map(s => <th key={s} style={{ fontSize: '0.72rem' }}>{s.length > 10 ? s.substring(0, 8) + '..' : s}</th>)}<th>Total</th><th>Avg</th><th>Grade</th><th>Action</th></tr></thead>
+                <thead><tr><th>Rank</th><th>Adm No</th><th>Name</th>{subjects.map(s => <th key={s} style={{ fontSize: '0.72rem' }}>{s.length > 10 ? s.substring(0, 8) + '..' : s}</th>)}<th>Total</th><th>Avg</th><th>Grade</th><th>Action</th></tr></thead>
                 <tbody>
                   {results.length === 0 ? (
                     <tr><td colSpan={subjects.length + 5} className="text-center text-muted" style={{ padding: 40 }}>No students in this class</td></tr>
@@ -513,6 +513,7 @@ export default function Grading({ currentUser, currentPeriodId }) {
                     return (
                       <tr key={s.id}>
                         <td><span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 28, height: 28, borderRadius: '50%', background: s.rank <= 3 ? '#fef3c7' : '#f1f5f9', color: s.rank <= 3 ? '#d97706' : '#64748b', fontSize: '0.82rem', fontWeight: 700 }}>{s.rank}</span></td>
+                        <td style={{ fontSize: '0.85rem', fontWeight: 600 }}>{s.admNo}</td>
                         <td><strong style={{ cursor: 'pointer', color: 'var(--primary)' }} onClick={() => !editMode && setShowReport(s)}>{s.name}</strong></td>
                         {subjects.map(sub => {
                           // Check if this teacher is assigned to this subject in THIS stream
@@ -801,7 +802,7 @@ function ReportCardModal({ student, cbcData, coreCompData, onClose, getGrade, cb
         <div class="level" style="background:#f59e0b;color:white;margin-left:8px">${examType}</div>
       </div>
     <div class="info">
-      <div><strong>Student:</strong> ${student.name}</div><div><strong>Adm No:</strong> ${student.admNo}</div>
+      <div style="font-size: 1.1rem; color: var(--primary); font-weight: 800; border-bottom: 2px solid var(--border); margin-bottom: 12px; padding-bottom: 8px;">ADM NO: ${student.admNo} — ${student.name}</div>
       <div><strong>Class:</strong> ${student.class}</div>${!isEarlyYears ? `<div><strong>Position:</strong> ${student.rank} of ${classSize}</div>` : ''}
     </div>
     <div class="section-title">${isEarlyYears ? 'Learning Areas & Development' : 'Academic Performance'}</div>
@@ -840,7 +841,7 @@ function ReportCardModal({ student, cbcData, coreCompData, onClose, getGrade, cb
               <span className="badge badge-info" style={{ marginTop: 6 }}>{level}</span>
             </div>
             <div className="report-card-info">
-              <div><strong>Student:</strong> {student.name}</div><div><strong>Adm No:</strong> {student.admNo}</div>
+              <div><strong>Adm No:</strong> {student.admNo}</div><div><strong>Student:</strong> {student.name}</div>
               <div><strong>Class:</strong> {student.class}</div>{!isEarlyYears && <div><strong>Position:</strong> {student.rank} of {classSize}</div>}
             </div>
 

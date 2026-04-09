@@ -179,8 +179,8 @@ export default function Library({ currentUser, currentPeriodId }) {
           <table>
             <thead>
               <tr>
-                <th>Student</th>
                 <th>Admission</th>
+                <th>Student</th>
                 <th>Book Title</th>
                 <th>Code</th>
                 <th>Borrowed On</th>
@@ -190,8 +190,8 @@ export default function Library({ currentUser, currentPeriodId }) {
             <tbody>
               ${reportData.map(r => `
                 <tr>
-                  <td>${r.students?.name}</td>
                   <td>${r.students?.adm_no}</td>
+                  <td>${r.students?.name}</td>
                   <td>${r.library_books?.title}</td>
                   <td>${r.library_books?.book_code || '-'}</td>
                   <td>${r.borrow_date}</td>
@@ -408,7 +408,8 @@ export default function Library({ currentUser, currentPeriodId }) {
                  <table className="lib-table">
                    <thead>
                      <tr>
-                       <th className="lib-th">Student Detail</th>
+                       <th className="lib-th">Adm No</th>
+                       <th className="lib-th">Student Name</th>
                        <th className="lib-th">Resource Title</th>
                        <th className="lib-th">Dates</th>
                        <th className="lib-th">Status</th>
@@ -419,8 +420,11 @@ export default function Library({ currentUser, currentPeriodId }) {
                      {filteredBorrows.map(borrow => (
                        <tr key={borrow.id} className="lib-tr">
                          <td className="lib-td">
+                            <div className="row-main">{borrow.students?.adm_no}</div>
+                         </td>
+                         <td className="lib-td">
                            <div className="row-main">{borrow.students?.name}</div>
-                           <div className="row-sub">{borrow.students?.adm_no} • {borrow.students?.class}</div>
+                           <div className="row-sub">{borrow.students?.class}</div>
                          </td>
                          <td className="lib-td">
                            <div className="row-main">{borrow.library_books?.title}</div>
@@ -532,7 +536,7 @@ export default function Library({ currentUser, currentPeriodId }) {
                  <label>Select Student</label>
                  <Select 
                    name="student_id"
-                   options={students.sort((a,b) => a.name.localeCompare(b.name)).map(s => ({ id: s.id, label: `${s.name} (${s.adm_no}) - ${s.class}` }))}
+                   options={students.sort((a,b) => a.name.localeCompare(b.name)).map(s => ({ id: s.id, label: `(${s.adm_no}) ${s.name} - ${s.class}` }))}
                    placeholder="-- Search student --"
                    style={{ width: '100%' }}
                  />

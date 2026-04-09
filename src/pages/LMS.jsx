@@ -391,6 +391,7 @@ export default function LMS({ currentUser }) {
                   <table className="data-table">
                     <thead>
                       <tr>
+                        <th>Adm No</th>
                         <th>Student</th>
                         <th>Workflow Status</th>
                         <th>Grade</th>
@@ -400,6 +401,7 @@ export default function LMS({ currentUser }) {
                     <tbody>
                       {selectedSubmissions.subs.map(sub => (
                         <tr key={sub.id}>
+                          <td style={{ fontWeight: 600, fontSize: '0.85rem' }}>{sub.students?.adm_no || '—'}</td>
                           <td>
                             <div style={{ fontWeight: 700, color: 'var(--text-main)' }}>{sub.students?.name || sub.student_name}</div>
                             <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Sent: {new Date(sub.submitted_at || sub.timestamp).toLocaleString()}</div>
@@ -463,6 +465,7 @@ export default function LMS({ currentUser }) {
                      <span className="badge badge-info">{gradingSubmission.workflow_status}</span>
                      {gradingSubmission.is_late && <span className="badge badge-danger">LATE SUBMISSION</span>}
                    </div>
+                   <div style={{ fontSize: '0.8rem', fontWeight: 800, color: 'var(--primary)', marginBottom: 2 }}>{gradingSubmission.students?.adm_no || 'No ID'}</div>
                    <h3 style={{ margin: 0, fontSize: '1.6rem', fontWeight: 800, color: 'var(--text-main)' }}>{gradingSubmission.students?.name || gradingSubmission.student_name}</h3>
                    <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginTop: 4 }}>
                      Submitted: {new Date(gradingSubmission.submitted_at || gradingSubmission.timestamp).toLocaleString()}

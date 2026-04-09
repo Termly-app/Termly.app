@@ -141,10 +141,9 @@ export default function PortalDashboard({ user, onLogout }) {
             {user.name.charAt(0)}
           </div>
           <div>
+            <div style={{ fontWeight: 800, color: '#10b981', fontSize: '1rem', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: 2 }}>{user.adm_no}</div>
             <h2 style={{ margin: 0, fontSize: '1.4rem', color: '#0f172a', fontWeight: 800 }}>{user.name}</h2>
             <div style={{ color: '#64748b', fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: 8, marginTop: 4 }}>
-              <span style={{ fontWeight: 600, color: '#10b981' }}>{user.adm_no}</span>
-              <span>•</span>
               <span>Class {user.class}</span>
               <span>•</span>
               <span style={{ textTransform: 'capitalize' }}>{user.residence_type.replace('_', ' ')} Student</span>

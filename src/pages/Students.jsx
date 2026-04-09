@@ -177,7 +177,7 @@ export default function Students({ currentUser, currentPeriodId }) {
           <table className="data-table responsive-table">
             <thead>
               <tr>
-                <th>Full Name</th><th>Adm No</th><th>Class</th><th>Level</th><th>Stream</th>
+                <th>Adm No</th><th>Full Name</th><th>Class</th><th>Level</th><th>Stream</th>
                 <th>Category</th><th>Parent</th><th>Phone</th>
                 {!isTeacher&&<th>Fee Balance</th>}
                 {isAdmin&&<th style={{textAlign:'center'}}>Actions</th>}
@@ -193,6 +193,7 @@ export default function Students({ currentUser, currentPeriodId }) {
                 const lb=getLb(s.class);
                 return(
                   <tr key={s.id}>
+                    <td data-label="Adm No"><code style={{fontSize:'0.78rem',color:'var(--text-light)'}}>{s.admNo}</code></td>
                     <td data-label="Full Name">
                       <div style={{display:'flex',alignItems:'center',gap:10,justifyContent:'inherit'}}>
                         <div style={{width:32,height:32,borderRadius:'50%',background:avBg(s.name),color:'#fff',display:'flex',alignItems:'center',justifyContent:'center',fontSize:'0.72rem',fontWeight:700,flexShrink:0}}>{initials(s.name)}</div>
@@ -202,7 +203,6 @@ export default function Students({ currentUser, currentPeriodId }) {
                         </div>
                       </div>
                     </td>
-                    <td data-label="Adm No"><code style={{fontSize:'0.78rem',color:'var(--text-light)'}}>{s.admNo}</code></td>
                     <td data-label="Class"><span className="badge badge-info">{s.class}</span></td>
                     <td data-label="Level"><span className={`level-badge ${lb.cls}`}>{lb.ico} {getLevelForGrade(s.class)}</span></td>
                     <td data-label="Stream">{s.stream||<span className="text-muted">—</span>}</td>
