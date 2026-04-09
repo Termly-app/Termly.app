@@ -65,7 +65,7 @@ import {
   BillingIcon, SignOutIcon, MenuIcon, CloseIcon, ChevronDownIcon,
   OverviewIcon, SchoolsIcon, PaymentsIcon, HistoryIcon, RevenueIcon,
   ActivityIcon, RecoveryIcon, StatusDotIcon, PlatformZapIcon, SubscriptionsIcon, MessageIcon,
-  DownloadIcon, UploadIcon, RefreshIcon, ShieldIcon, LogoMarkBW
+  DownloadIcon, UploadIcon, RefreshIcon, ShieldIcon, LogoMarkBW, BookIcon
 } from './components/Common/Icons';
 
 // --- Sidebar nav link helper ------------------------------------------------
