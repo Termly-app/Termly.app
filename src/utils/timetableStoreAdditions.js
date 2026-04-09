@@ -1,9 +1,9 @@
 /**
  * timetableStoreAdditions.js
  *
- * ─────────────────────────────────────────────────────────────────────────
+// -------------------------------------------------------------------------
  * STEP 1 — Run this SQL in Supabase SQL Editor (in order):
- * ─────────────────────────────────────────────────────────────────────────
+// -------------------------------------------------------------------------
  *
  * -- 1. Time slot configuration per school per period
  * CREATE TABLE IF NOT EXISTS timetable_config (
@@ -66,14 +66,12 @@
  * CREATE POLICY "School manages own requirements" ON timetable_requirements
  *   USING (school_id = (SELECT school_id FROM users WHERE id = auth.uid()));
  *
- * ─────────────────────────────────────────────────────────────────────────
- * STEP 2 — Copy ALL functions below into src/data/store.js
- * ─────────────────────────────────────────────────────────────────────────
+// -------------------------------------------------------------------------
  */
 
 import { supabase } from './store';
 
-// ══ TIMETABLE CONFIG ══════════════════════════════════════════════════════
+// == TIMETABLE CONFIG ======================================================
 
 export async function getTimetableConfig(schoolId, periodId) {
   const { data, error } = await supabase
@@ -107,7 +105,7 @@ export async function saveTimetableConfig(schoolId, periodId, slots) {
   if (error) throw error;
 }
 
-// ══ TIMETABLE SLOTS ════════════════════════════════════════════════════════
+// == TIMETABLE SLOTS ========================================================
 
 export async function getTimetableSlots(schoolId, periodId, classGrade, stream) {
   let query = supabase
@@ -218,7 +216,7 @@ export async function clearAndSaveTimetable(schoolId, periodId, slots, classGrad
   }
 }
 
-// ══ REQUIREMENTS ═══════════════════════════════════════════════════════════
+// == REQUIREMENTS ===========================================================
 
 export async function getRequirements(schoolId, periodId, classGrade, stream) {
   let query = supabase
@@ -278,7 +276,7 @@ export async function deleteRequirement(schoolId, periodId, classGrade, stream, 
   if (error) throw error;
 }
 
-// ══ SUBJECT ASSIGNMENTS (for auto-import into requirements) ════════════════
+// == SUBJECT ASSIGNMENTS (for auto-import into requirements) ================
 
 export async function getSubjectAssignments(schoolId, periodId, classGrade, stream) {
   let query = supabase
@@ -293,7 +291,7 @@ export async function getSubjectAssignments(schoolId, periodId, classGrade, stre
   return data || [];
 }
 
-// ══ TEACHERS ══════════════════════════════════════════════════════════════
+// == TEACHERS ==============================================================
 
 export async function getTeachers(schoolId) {
   const { data, error } = await supabase
@@ -305,7 +303,7 @@ export async function getTeachers(schoolId) {
   return data || [];
 }
 
-// ══ CONFLICT CHECK ════════════════════════════════════════════════════════
+// == CONFLICT CHECK ========================================================
 
 /**
  * Returns the conflicting slot if a teacher is already booked at

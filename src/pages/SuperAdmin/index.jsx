@@ -242,11 +242,7 @@ export default function SuperAdmin({ currentUser, isPlatformAdmin, sidebarOpen, 
     return () => clearTimeout(t);
   }, [message]);
 
-  // ══ DATE HELPERS ══════════════════════════════════════════════════════════
-  useEffect(() => {
-    document.body.classList.add('theme-onyx');
-    return () => document.body.classList.remove('theme-onyx');
-  }, []);
+  // ════════ DATE HELPERS ══════════════════════════════════════════════════════
 
   const now            = new Date();
   const thirtyDaysAgo  = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
@@ -289,7 +285,7 @@ export default function SuperAdmin({ currentUser, isPlatformAdmin, sidebarOpen, 
     });
   };
 
-  // ══ COMPUTED VALUES ════════════════════════════════════════════════════
+  // ════════ COMPUTED VALUES ════════════════════════════════════════════════════
   const activeSchools        = schools.filter(isSchoolActive);
   const deactSchools         = schools.filter(s => {
     const p = s.school_profiles?.[0];
@@ -847,9 +843,9 @@ export default function SuperAdmin({ currentUser, isPlatformAdmin, sidebarOpen, 
     periodFilter, setPeriodFilter,
   };
 
-  // ══ RENDER ════════════════════════════════════════════════════════════
+  // ════════ RENDER ════════════════════════════════════════════════════════════
   return (
-    <div className="sa-root theme-onyx" style={{ background: '#050505' }}>
+    <div className="sa-root">
 
       {/* ── Mobile overlay ── */}
       <div
