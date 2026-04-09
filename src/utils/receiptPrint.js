@@ -125,8 +125,8 @@ export function printReceipt({ school, student, payment, feeItems = [] }) {
       <div class="receipt-no">Receipt No: <strong>${rNo}</strong></div>
 
       <!-- Student info -->
+      <div class="info-row"><span class="info-label">Adm No:</span><span class="info-value"><strong>${student?.admission_number || '—'}</strong></span></div>
       <div class="info-row"><span class="info-label">Student:</span><span class="info-value">${student?.name || '—'}</span></div>
-      <div class="info-row"><span class="info-label">Adm No:</span><span class="info-value">${student?.admission_number || '—'}</span></div>
       <div class="info-row"><span class="info-label">Class:</span><span class="info-value">${student?.grade || student?.class || '—'}</span></div>
       <div class="info-row"><span class="info-label">Date:</span><span class="info-value">${fmt(payment?.created_at || new Date())}</span></div>
 
@@ -225,8 +225,8 @@ export function printFeeStatement({ school, student, payments = [], feeStructure
       <!-- Student info grid -->
       <table style="margin-bottom:12px">
         <tr>
-          <td><span style="color:#555">Student Name:</span> <strong>${student?.name || '—'}</strong></td>
           <td><span style="color:#555">Admission No:</span> <strong>${student?.admission_number || '—'}</strong></td>
+          <td><span style="color:#555">Student Name:</span> <strong>${student?.name || '—'}</strong></td>
         </tr>
         <tr>
           <td><span style="color:#555">Class:</span> <strong>${student?.grade || student?.class || '—'}</strong></td>

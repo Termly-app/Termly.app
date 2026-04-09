@@ -49,7 +49,7 @@ export default function Dashboard({ currentUser, onLogout, currentPeriodId }) {
         const allPayments = [];
         students.forEach(s => {
           const f = fees[s.id];
-          if (f?.payments) f.payments.forEach(p => allPayments.push({ ...p, studentName: s.name, studentClass: s.class }));
+          if (f?.payments) f.payments.forEach(p => allPayments.push({ ...p, studentName: s.name, studentClass: s.class, admNo: s.admNo }));
         });
         allPayments.sort((a, b) => new Date(b.date) - new Date(a.date));
         const collectionRate = feeSummary.totalExpected > 0
@@ -272,6 +272,7 @@ export default function Dashboard({ currentUser, onLogout, currentPeriodId }) {
                 <div className="activity-item" key={i} style={{ padding: '11px 18px' }}>
                   <div className="activity-icon"><CardIcon size={18} /></div>
                   <div className="activity-body">
+                    <div style={{ fontSize: '0.7rem', fontWeight: 800, color: 'var(--primary)' }}>{p.admNo}</div>
                     <div className="activity-title">{p.studentName}</div>
                     <div className="activity-sub">{p.studentClass} - {p.method}</div>
                   </div>

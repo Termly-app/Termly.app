@@ -24,6 +24,7 @@ function PaymentModal({ student, fee, onPay, onClose }) {
         <form onSubmit={handleSubmit}>
           <div className="modal-body">
             <div style={{background:'#f8fafc',borderRadius:8,padding:16,marginBottom:20}}>
+              <div style={{ fontSize: '0.75rem', fontWeight: 800, color: 'var(--primary)', marginBottom: 2 }}>{student.admNo}</div>
               <div className="flex-between"><span><strong>{student.name}</strong></span><span className="badge badge-info">{student.class}</span></div>
               <div className="flex-between mt-1" style={{fontSize:'0.85rem'}}><span className="text-muted">Balance:</span><span className="text-danger font-bold">{formatKSh(fee?.balance)}</span></div>
             </div>
@@ -86,6 +87,7 @@ function ReceiptModal({ receipt, onClose, profile }) {
             <div className="receipt-header"><h2>{profile?.schoolName || ''}</h2><p className="text-muted" style={{fontSize:'0.82rem'}}>Payment Receipt</p></div>
             <div className="receipt-row"><span>Receipt No:</span><strong>{receipt.id}</strong></div>
             <div className="receipt-row"><span>Date:</span><strong>{receipt.date}</strong></div>
+            <div className="receipt-row"><span>Adm No:</span><strong>{receipt.admNo}</strong></div>
             <div className="receipt-row"><span>Student:</span><strong>{receipt.studentName}</strong></div>
             <div className="receipt-row"><span>Class:</span><strong>{receipt.studentClass}</strong></div>
             <div className="receipt-row"><span>Method:</span><strong>{receipt.method}</strong></div>
@@ -165,11 +167,11 @@ export default function Fees({ currentUser, currentPeriodId }) {
       th{background:#1e3a5f;color:white}.footer{margin-top:30px;font-size:12px;color:#64748b}
       .text-success{color:#10b981}.text-danger{color:#ef4444}.font-bold{font-weight:700}</style></head><body>
       ${headerStr}
-    <table><thead><tr><th>Student</th><th>Class</th><th>Stream</th><th>Total Fee</th><th>Paid</th><th>Balance</th><th>Status</th></tr></thead>
+    <table><thead><tr><th>Adm No</th><th>Student</th><th>Class</th><th>Stream</th><th>Total Fee</th><th>Paid</th><th>Balance</th><th>Status</th></tr></thead>
     <tbody>${list.map(s => {
       const f = fees[s.id] || {totalFee:15000,paid:0,balance:15000};
       const st = f.balance<=0?'Paid':f.paid>0?'Partial':'Unpaid';
-      return `<tr><td><strong>${s.name}</strong><br/>${s.admNo}</td><td>${s.class}</td><td>${s.stream||'—'}</td>
+      return `<tr><td>${s.admNo}</td><td><strong>${s.name}</strong></td><td>${s.class}</td><td>${s.stream||'—'}</td>
         <td>${formatKSh(f.totalFee)}</td><td class="text-success font-bold">${formatKSh(f.paid)}</td>
         <td class="${f.balance>0?'text-danger':'text-success'} font-bold">${formatKSh(f.balance)}</td>
         <td>${st}</td></tr>`;
@@ -266,7 +268,7 @@ export default function Fees({ currentUser, currentPeriodId }) {
             />
           </div>
           <div className="card"><div className="card-body" style={{padding:0}}>
-            <table className="data-table responsive-table"><thead><tr><th>Student</th><th>Class</th><th>Total Fee</th><th>Paid</th><th>Balance</th><th>Status</th><th>Action</th></tr></thead>
+            <table className="data-table responsive-table"><thead><tr><th>Adm No</th><th>Student</th><th>Class</th><th>Total Fee</th><th>Paid</th><th>Balance</th><th>Status</th><th>Action</th></tr></thead>
               <tbody>{filtered.map(s=>{
                 const classFees = profile.gradeFees?.[s.class] || {};
                 const resType = (s.residenceType || 'day').toLowerCase();
@@ -278,7 +280,8 @@ export default function Fees({ currentUser, currentPeriodId }) {
                 const st=f.balance<=0?'Paid':f.paid>0?'Partial':'Unpaid';
                 return(
                   <tr key={s.id}>
-                    <td data-label="Student"><strong>{s.name}</strong><br/><span className="text-muted" style={{fontSize:'0.78rem'}}>{s.admNo}</span></td>
+                    <td data-label="Adm No"><code style={{ fontSize: '0.85rem', color: 'var(--primary)', fontWeight: 700 }}>{s.admNo}</code></td>
+                    <td data-label="Student"><strong>{s.name}</strong></td>
                     <td data-label="Class">{s.class}</td>
                     <td data-label="Total Fee">{formatKSh(f.totalFee)}</td>
                     <td data-label="Paid" className="text-success font-bold">{formatKSh(f.paid)}</td>
