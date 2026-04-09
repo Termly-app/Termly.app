@@ -555,7 +555,9 @@ export default function Library({ currentUser, currentPeriodId }) {
             </div>
           </div>
         </div>
-            <style>{`
+      )}
+
+      <style>{`
         .library-modern { padding: 40px; background: #f8fafc; min-height: 100vh; animation: libFadeIn 0.5s ease-out; }
         @keyframes libFadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
@@ -677,7 +679,6 @@ export default function Library({ currentUser, currentPeriodId }) {
         .report-options-modern button:hover { border-color: #5b3ef5; background: #fff; transform: translateX(8px); }
         .r-icon { width: 44px; height: 44px; background: #fff; border-radius: 12px; display: flex; align-items: center; justify-content: center; color: #5b3ef5; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
         .r-txt { font-weight: 700; color: #0f172a; font-size: 0.95rem; }
-; }
       `}</style>
     </div>
   );
