@@ -300,6 +300,33 @@ h1,h2,h3,h4,h5,h6 { line-height: 1.25; }
   background-position: right 8px center;
 }
 
+.topbar-period {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-right: 8px;
+}
+
+.topbar-period-label {
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: var(--text-light);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  white-space: nowrap;
+}
+
+/* Compact version for topbar */
+.topbar-period-select .custom-select-trigger {
+  padding: 6px 12px !important;
+  font-size: 0.8rem !important;
+  background: transparent !important;
+}
+
+.topbar-period-select .custom-select-trigger:hover {
+  background: var(--bg-hover) !important;
+}
+
 /* ── Page Content ───────────────────────────────────────────────  */
 .page-content {
   flex: 1;
@@ -1436,6 +1463,13 @@ select:focus, .form-select:focus {
    }
    
    .topbar-actions { gap: 6px; }
+    .topbar-period-select { 
+      padding: 4px 18px 4px 6px !important; 
+      font-size: 0.72rem !important; 
+      max-width: 100px;
+    }
+    .topbar-period-label { display: none !important; }
+
    .topbar-program-select { 
      padding: 5px 22px 5px 8px; 
      font-size: 0.72rem; 

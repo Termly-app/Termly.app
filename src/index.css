@@ -430,7 +430,8 @@ body {
 @media (max-width: 480px) {
   .kpi-grid, .theme-onyx .kpi-grid { grid-template-columns: 1fr !important; }
   .topbar-actions { gap: 4px !important; }
-  .topbar-program-select { width: 100px !important; font-size: 0.65rem !important; }
+  .topbar-period-select { width: 120px !important; }
+  .topbar-period-label { display: none; }
 }
 
 .kpi-grid {

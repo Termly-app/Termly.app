@@ -645,17 +645,16 @@ function App() {
           </div>
           <div className="topbar-actions">
             <SyncIndicator />
-            <div className="topbar-period">
-              <span className="topbar-period-label">Period</span>
-              <Select
-                value={currentPeriodId || ''}
-                options={periods}
-                onChange={async (e) => { await setActivePeriod(e.target.value); }}
-                className="topbar-program-select-custom"
-                style={{ width: 170 }}
-                placeholder="Select Period"
-              />
-            </div>
+              <div className="topbar-period">
+                <span className="topbar-period-label">Period:</span>
+                <Select
+                  value={currentPeriodId || ''}
+                  options={periods}
+                  onChange={async (e) => { await setActivePeriod(e.target.value); }}
+                  className="topbar-period-select"
+                  style={{ minWidth: 140 }}
+                />
+              </div>
             <div
               className="topbar-avatar"
               title={currentUser?.name}
