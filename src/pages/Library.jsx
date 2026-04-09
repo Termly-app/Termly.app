@@ -214,39 +214,62 @@ export default function Library({ currentUser, currentPeriodId }) {
         <meta name="description" content="Manage school library books, track loans, and generate resource reports." />
       </Helmet>
 
-      {/* Modern Glass Header */}
-      <div className="lib-hero-card">
-        <div className="lib-hero-content">
-          <div className="lib-badge-top">Academic Resources</div>
-          <h1>Digital Library Catalog</h1>
-          <p>Search over {books.length} resources in your school's inventory. Track borrowings and returns with instant digital receipts.</p>
-          
-          <div className="lib-action-pills">
-            <button className="pill-btn primary" onClick={() => setBookModal({ open: true, data: null })}>
-              <PlusIcon size={18} /> New Entry
-            </button>
-            <button className="pill-btn secondary" onClick={() => setBorrowModal({ open: true, data: null })}>
-              <PlatformZapIcon size={18} /> Loan Book
-            </button>
-            <button className="pill-btn ghost" onClick={() => setPrintModal({ open: true })}>
-              <PrintIcon size={18} /> Reports
-            </button>
+      {/* Page Header */}
+      <div className="page-header">
+        <div className="page-header-actions">
+          <div>
+            <h2>Library & Resources</h2>
+            <div style={{display:'flex',alignItems:'center',gap:10,marginTop:4}}>
+              <span style={{fontSize:'0.875rem',color:'var(--text-light)'}}>
+                {books.length} resources cataloged
+              </span>
+              <span style={{display:'inline-flex',alignItems:'center',gap:5,padding:'3px 11px',borderRadius:20,background:'var(--primary-light)',color:'var(--primary)',fontSize:'0.75rem',fontWeight:600}}>
+                <BookIcon size={12} /> Digital Inventory
+              </span>
+            </div>
           </div>
-        </div>
-        <div className="lib-hero-stats">
-          <div className="h-stat">
-            <div className="h-stat-label">Total Books</div>
-            <div className="h-stat-val">{books.length}</div>
-          </div>
-          <div className="h-stat">
-            <div className="h-stat-label">Active Loans</div>
-            <div className="h-stat-val text-orange">{borrows.filter(b => b.status === 'borrowed').length}</div>
+          <div style={{display:'flex',gap:8,flexWrap:'wrap'}}>
+            <button className="btn btn-ghost btn-sm" onClick={() => setPrintModal({ open: true })}>
+              <PrintIcon size={14} /> Reports
+            </button>
+            <button className="btn btn-ghost btn-sm" onClick={() => setBorrowModal({ open: true, data: null })}>
+              <PlatformZapIcon size={14} /> Loan Book
+            </button>
+            <button className="btn btn-primary btn-sm" onClick={() => setBookModal({ open: true, data: null })}>
+              <PlusIcon size={14} /> New Entry
+            </button>
           </div>
         </div>
       </div>
 
-      {/* Toolbar & Filters */}
       <div className="lib-main-wrap">
+        <div className="stats-header-grid" style={{
+           display: 'grid', 
+           gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', 
+           gap: '20px', 
+           marginBottom: '32px'
+        }}>
+          <div className="card" style={{ padding: '24px', display: 'flex', alignItems: 'center', gap: '16px' }}>
+            <div style={{ width: '48px', height: '48px', borderRadius: '12px', background: 'var(--primary-light)', color: '#fff', display: 'flex', alignItems: 'center', justifySelf: 'center', justifyContent: 'center' }}>
+              <BookIcon size={24} />
+            </div>
+            <div>
+              <div style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-light)', textTransform: 'uppercase' }}>Total Books</div>
+              <div style={{ fontSize: '1.5rem', fontWeight: 800 }}>{books.length}</div>
+            </div>
+          </div>
+          <div className="card" style={{ padding: '24px', display: 'flex', alignItems: 'center', gap: '16px' }}>
+            <div style={{ width: '48px', height: '48px', borderRadius: '12px', background: 'var(--warning)', color: '#fff', display: 'flex', alignItems: 'center', justifySelf: 'center', justifyContent: 'center' }}>
+              <ClockIcon size={24} />
+            </div>
+            <div>
+              <div style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-light)', textTransform: 'uppercase' }}>Active Loans</div>
+              <div style={{ fontSize: '1.5rem', fontWeight: 800 }}>{borrows.filter(b => b.status === 'borrowed').length}</div>
+            </div>
+          </div>
+        </div>
+
+      {/* Toolbar & Filters */}
         <div className="lib-nav-bar">
           <div className="lib-tabs-modern">
             <button className={activeTab === 'catalog' ? 'active' : ''} onClick={() => setActiveTab('catalog')}>Inventory View</button>
@@ -558,37 +581,10 @@ export default function Library({ currentUser, currentPeriodId }) {
       )}
 
       <style>{`
-        .library-modern { padding: 40px; background: #f8fafc; min-height: 100vh; animation: libFadeIn 0.5s ease-out; }
+        .library-modern { padding: 0px; background: transparent; min-height: 100vh; animation: libFadeIn 0.5s ease-out; }
         @keyframes libFadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-        .lib-hero-card { 
-          background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
-          padding: 60px 48px; border-radius: 40px; color: #fff; margin-bottom: 40px;
-          display: flex; justify-content: space-between; align-items: center;
-          position: relative; overflow: hidden; box-shadow: 0 40px 80px rgba(15, 23, 42, 0.1);
-        }
-        .lib-hero-content { position: relative; z-index: 2; max-width: 600px; }
-        .lib-badge-top { font-size: 0.7rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.1em; color: #38bdf8; margin-bottom: 16px; }
-        .lib-hero-content h1 { font-size: 3rem; font-weight: 900; margin: 0 0 16px 0; letter-spacing: -0.02em; }
-        .lib-hero-content p { font-size: 1.1rem; opacity: 0.8; line-height: 1.6; margin-bottom: 32px; }
-
-        .lib-action-pills { display: flex; gap: 12px; }
-        .pill-btn { 
-          display: flex; align-items: center; gap: 8px; padding: 12px 24px; border-radius: 100px; 
-          font-weight: 700; font-size: 0.9rem; cursor: pointer; transition: all 0.2s; border: none;
-        }
-        .pill-btn.primary { background: #5b3ef5; color: #fff; box-shadow: 0 10px 20px rgba(91, 62, 245, 0.3); }
-        .pill-btn.primary:hover { background: #4a32d4; transform: translateY(-2px); }
-        .pill-btn.secondary { background: rgba(255,255,255,0.1); color: #fff; backdrop-filter: blur(10px); }
-        .pill-btn.secondary:hover { background: rgba(255,255,255,0.2); }
-        .pill-btn.ghost { background: transparent; color: #fff; border: 1.5px solid rgba(255,255,255,0.2); }
-        .pill-btn.ghost:hover { background: rgba(255,255,255,0.1); }
-
-        .lib-hero-stats { display: flex; gap: 40px; position: relative; z-index: 2; }
-        .h-stat { text-align: right; }
-        .h-stat-label { font-size: 0.75rem; font-weight: 700; text-transform: uppercase; color: rgba(255,255,255,0.5); margin-bottom: 8px; }
-        .h-stat-val { font-size: 2.5rem; font-weight: 900; color: #fff; }
-        .text-orange { color: #f59e0b; }
+        .lib-main-wrap { padding: 0; }
 
         .lib-nav-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 32px; gap: 24px; }
         .lib-tabs-modern { display: flex; background: #eaedf2; padding: 6px; border-radius: 100px; gap: 4px; }
