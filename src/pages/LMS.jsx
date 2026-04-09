@@ -2,9 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { 
   getSchoolProfile, getAssignments, createAssignment, 
-  getSubmissions, updateSubmission, fetchLmsContent 
+  getSubmissions, updateSubmission, fetchLmsContent, getQuizAnalytics 
 } from '../data/store';
-import { BookIcon, CheckIcon, UsersIcon, DownloadIcon, ClockIcon, MessageIcon, GraduationIcon } from '../components/CommonIcons';
+import { 
+  BookIcon, CheckIcon, UsersIcon, DownloadIcon, ClockIcon, MessageIcon, GraduationIcon, 
+  DashboardIcon, TrendingUpIcon, AlertIcon, ArrowRightIcon
+} from '../components/CommonIcons';
 import Select from '../components/Common/Select';
 import { useDialog } from '../contexts/DialogContext';
 
@@ -48,12 +51,120 @@ function SubmissionProgress({ ast }) {
   );
 }
 
+function QuizAnalyticsModal({ assignmentId, onClose }) {
+  const [data, setData] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function load() {
+      try {
+        const res = await getQuizAnalytics(assignmentId);
+        setData(res);
+      } catch (e) {
+        console.error(e);
+      } finally {
+        setLoading(false);
+      }
+    }
+    load();
+  }, [assignmentId]);
+
+  if (loading) return (
+    <div className="modal-overlay" onClick={onClose}>
+      <div className="modal glass-morph" style={{ maxWidth: 400, padding: 40, textAlign: 'center' }}>
+        <div className="spinner" style={{ margin: '0 auto 16px' }}></div>
+        <p style={{ fontWeight: 600, color: 'var(--text-muted)' }}>Analyzing Class Performance...</p>
+      </div>
+    </div>
+  );
+
+  if (!data || data.totalSubmissions === 0) return (
+    <div className="modal-overlay" onClick={onClose}>
+      <div className="modal glass-morph" style={{ maxWidth: 500, padding: 40, textAlign: 'center' }}>
+        <div style={{ color: 'var(--warning)', marginBottom: 20 }}><AlertIcon size={48} /></div>
+        <h3 style={{ fontSize: '1.4rem', fontWeight: 800 }}>No Analytics Yet</h3>
+        <p style={{ color: 'var(--text-muted)', marginBottom: 24 }}>Once students complete this quiz, you'll see a breakdown of question difficulty and score averages here.</p>
+        <button className="btn btn-primary" onClick={onClose}>Close</button>
+      </div>
+    </div>
+  );
+
+  return (
+    <div className="modal-overlay" onClick={onClose}>
+      <div className="modal glass-morph" onClick={e => e.stopPropagation()} style={{ maxWidth: 800, padding: 0 }}>
+        <div className="modal-header" style={{ padding: '24px 32px', background: 'var(--primary)', color: 'white' }}>
+          <div>
+            <div style={{ fontSize: '0.7rem', fontWeight: 800, textTransform: 'uppercase', opacity: 0.8, marginBottom: 4 }}>Teacher Insights</div>
+            <h3 style={{ margin: 0, fontSize: '1.4rem', fontWeight: 800 }}>{data.title} - Analytics</h3>
+          </div>
+          <button className="modal-close" onClick={onClose} style={{ color: 'white' }}>×</button>
+        </div>
+        
+        <div className="modal-body" style={{ padding: 32, maxHeight: '75vh', overflowY: 'auto' }}>
+          {/* Quick Stats Grid */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16, marginBottom: 32 }}>
+            <div style={{ background: '#f8fafc', padding: 18, borderRadius: 16, border: '1px solid var(--border)', textAlign: 'center' }}>
+              <div style={{ fontSize: '1.8rem', fontWeight: 900, color: 'var(--primary)' }}>{data.totalSubmissions}</div>
+              <div style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-muted)', marginTop: 2 }}>Submissions</div>
+            </div>
+            <div style={{ background: '#f8fafc', padding: 18, borderRadius: 16, border: '1px solid var(--border)', textAlign: 'center' }}>
+              <div style={{ fontSize: '1.8rem', fontWeight: 900, color: 'var(--success)' }}>{data.avgScore}%</div>
+              <div style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-muted)', marginTop: 2 }}>Class Average</div>
+            </div>
+            <div style={{ background: '#f8fafc', padding: 18, borderRadius: 16, border: '1px solid var(--border)', textAlign: 'center' }}>
+              <div style={{ fontSize: '1.8rem', fontWeight: 900, color: 'var(--text-main)' }}>{data.highestScore}</div>
+              <div style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-muted)', marginTop: 2 }}>High Score</div>
+            </div>
+            <div style={{ background: '#f8fafc', padding: 18, borderRadius: 16, border: '1px solid var(--border)', textAlign: 'center' }}>
+              <div style={{ fontSize: '1.8rem', fontWeight: 900, color: 'var(--danger)' }}>{data.lowestScore}</div>
+              <div style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-muted)', marginTop: 2 }}>Low Score</div>
+            </div>
+          </div>
+
+          <h4 style={{ fontSize: '1.1rem', fontWeight: 800, marginBottom: 20, display: 'flex', alignItems: 'center', gap: 10 }}>
+            <TrendingUpIcon size={20} color="var(--primary)" />
+            Question Difficulty Breakdown
+          </h4>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+            {data.questionStats.map((q, idx) => {
+              const color = q.successRate > 80 ? '#10b981' : q.successRate > 50 ? '#f59e0b' : '#ef4444';
+              return (
+                <div key={idx} style={{ padding: 20, background: 'white', border: '1px solid var(--border)', borderRadius: 16 }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 12 }}>
+                    <div style={{ flex: 1, paddingRight: 20 }}>
+                      <div style={{ fontSize: '0.75rem', fontWeight: 800, color: 'var(--text-muted)', marginBottom: 4 }}>QUESTION {idx + 1}</div>
+                      <div style={{ fontSize: '0.95rem', fontWeight: 700, color: 'var(--text-main)', lineHeight: 1.4 }}>{q.text}</div>
+                    </div>
+                    <div style={{ textAlign: 'right' }}>
+                      <div style={{ fontSize: '1.1rem', fontWeight: 900, color }}>{q.successRate.toFixed(0)}%</div>
+                      <div style={{ fontSize: '0.7rem', fontWeight: 700, color: 'var(--text-light)', textTransform: 'uppercase' }}>Success Rate</div>
+                    </div>
+                  </div>
+                  <div style={{ height: 10, background: '#f1f5f9', borderRadius: 20, overflow: 'hidden' }}>
+                    <div style={{ height: '100%', width: `${q.successRate}%`, background: color, borderRadius: 20, transition: 'width 1s ease-out' }}></div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+        
+        <div className="modal-footer" style={{ padding: 24, justifyContent: 'center' }}>
+          <button className="btn btn-secondary" style={{ padding: '12px 32px' }} onClick={onClose}>Close Report</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function LMS({ currentUser }) {
   const { alert } = useDialog();
   const [profile, setProfile] = useState(null);
   const [assignments, setAssignments] = useState([]);
   const [selectedSubmissions, setSelectedSubmissions] = useState(null);
   const [gradingSubmission, setGradingSubmission] = useState(null);
+  const [showAnalytics, setShowAnalytics] = useState(null);
   const [loading, setLoading] = useState(false);
 
   // Form State (Moodle-inspired Setup)
@@ -352,14 +463,24 @@ export default function LMS({ currentUser }) {
                     <SubmissionProgress ast={ast} />
                   </div>
                   
-                  <div style={{ borderTop: '1px solid #f1f5f9', paddingTop: 14 }}>
+                  <div style={{ borderTop: '1px solid #f1f5f9', paddingTop: 14, display: 'flex', gap: 10 }}>
                     <button 
                       className="btn btn-secondary" 
-                      style={{ width: '100%', justifyContent: 'center', fontWeight: 700 }}
+                      style={{ flex: 1, justifyContent: 'center', fontWeight: 700, fontSize: '0.85rem' }}
                       onClick={() => viewSubmissions(ast)}
                     >
-                      Process Submissions →
+                      Process →
                     </button>
+                    {ast.submission_type === 'quiz' && (
+                      <button 
+                        className="btn btn-ghost" 
+                        style={{ border: '1.5px solid var(--border)', color: 'var(--primary)', fontWeight: 800, fontSize: '0.85rem' }}
+                        title="View Analytics"
+                        onClick={() => setShowAnalytics(ast.id)}
+                      >
+                        <DashboardIcon size={16} /> Data
+                      </button>
+                    )}
                   </div>
                 </div>
               ))
@@ -388,7 +509,7 @@ export default function LMS({ currentUser }) {
                 </div>
               ) : (
                 <div style={{ overflowX: 'auto' }}>
-                  <table className="data-table">
+                  <table className="data-table responsive-table">
                     <thead>
                       <tr>
                         <th>Adm No</th>
@@ -401,12 +522,12 @@ export default function LMS({ currentUser }) {
                     <tbody>
                       {selectedSubmissions.subs.map(sub => (
                         <tr key={sub.id}>
-                          <td style={{ fontWeight: 600, fontSize: '0.85rem' }}>{sub.students?.adm_no || '—'}</td>
-                          <td>
+                          <td data-label="Adm No" style={{ fontWeight: 600, fontSize: '0.85rem' }}>{sub.students?.adm_no || '—'}</td>
+                          <td data-label="Student">
                             <div style={{ fontWeight: 700, color: 'var(--text-main)' }}>{sub.students?.name || sub.student_name}</div>
                             <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Sent: {new Date(sub.submitted_at || sub.timestamp).toLocaleString()}</div>
                           </td>
-                          <td>
+                          <td data-label="Workflow Status">
                             <Select 
                               value={sub.workflow_status || 'Submitted'}
                               onChange={(e) => handleUpdateGrade(sub.id, { workflow_status: e.target.value })}
@@ -420,7 +541,7 @@ export default function LMS({ currentUser }) {
                               style={{ padding: '2px 8px', fontSize: '0.75rem', minWidth: 120 }}
                             />
                           </td>
-                          <td>
+                          <td data-label="Grade">
                             <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                               <input 
                                 type="text" 
@@ -434,7 +555,7 @@ export default function LMS({ currentUser }) {
                             </div>
                             {sub.is_late && <div style={{ fontSize: '0.65rem', color: 'var(--danger)', fontWeight: 700, marginTop: 2 }}>LATE SUBMISSION</div>}
                           </td>
-                          <td>
+                          <td data-label="Actions">
                             <div style={{ display: 'flex', gap: 6 }}>
                                <button className="topbar-icon-btn" title="Review & Grade" onClick={() => setGradingSubmission(sub)}>
                                 <CheckIcon size={14} />
@@ -541,6 +662,7 @@ export default function LMS({ currentUser }) {
           </div>
         </div>
       )}
+      {showAnalytics && <QuizAnalyticsModal assignmentId={showAnalytics} onClose={() => setShowAnalytics(null)} />}
     </div>
   );
 }

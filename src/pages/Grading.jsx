@@ -410,7 +410,7 @@ export default function Grading({ currentUser, currentPeriodId }) {
           style={{ minWidth: 150 }}
         />
         
-        <div style={{ display:'flex', gap:4, padding:'4px', background:'var(--bg)', borderRadius:10, border:'1px solid var(--border)' }}>
+        <div style={{ display:'flex', gap:4, padding:'4px', background:'var(--bg)', borderRadius:10, border:'1px solid var(--border)', overflowX: 'auto' }}>
           {(profile.customExams || ['CAT 1', 'CAT 2', 'Mid Term', 'End Term']).map(type => (
             <button
               key={type}
@@ -535,10 +535,10 @@ export default function Grading({ currentUser, currentPeriodId }) {
                             </td>
                           );
                         })}
-                        <td className="font-bold">{total}</td>
-                        <td className="font-bold">{typeof avg === 'number' ? avg.toFixed(1) : avg}</td>
-                        <td><span style={{ color, fontWeight: 700 }}>{grade}</span></td>
-                        <td><button className="btn btn-ghost btn-sm" onClick={() => setShowReport(s)}><BookIcon size={14} /></button></td>
+                        <td data-label="Total" className="font-bold">{total}</td>
+                        <td data-label="Avg" className="font-bold">{typeof avg === 'number' ? avg.toFixed(1) : avg}</td>
+                        <td data-label="Grade"><span style={{ color, fontWeight: 700 }}>{grade}</span></td>
+                        <td data-label="Action"><button className="btn btn-ghost btn-sm" onClick={() => setShowReport(s)}><BookIcon size={14} /></button></td>
                       </tr>
                     );
                   })}
@@ -561,19 +561,19 @@ export default function Grading({ currentUser, currentPeriodId }) {
               style={{ minWidth: 160 }}
             />
           </div>
-          <div className="card-body" style={{ padding: 0 }}>
-            <table className="data-table">
+          <div className="card-body" style={{ padding: 0, overflowX: 'auto' }}>
+            <table className="data-table responsive-table">
               <thead><tr><th>Rank</th><th>Student</th><th>Marks</th><th>Grade</th><th>Performance</th></tr></thead>
               <tbody>
                 {(subjectRankings[selectedSubject] || []).map(s => {
                   const { grade, color } = getGrade(s.mark);
                   return (
                     <tr key={s.id}>
-                      <td><span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 28, height: 28, borderRadius: '50%', background: s.rank <= 3 ? '#fef3c7' : '#f1f5f9', color: s.rank <= 3 ? '#d97706' : '#64748b', fontSize: '0.82rem', fontWeight: 700 }}>{s.rank}</span></td>
-                      <td><strong>{s.name}</strong></td>
-                      <td className="font-bold">{s.mark}</td>
-                      <td><span style={{ color, fontWeight: 700 }}>{grade}</span></td>
-                      <td style={{ width: '40%' }}>
+                      <td data-label="Rank"><span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 28, height: 28, borderRadius: '50%', background: s.rank <= 3 ? '#fef3c7' : '#f1f5f9', color: s.rank <= 3 ? '#d97706' : '#64748b', fontSize: '0.82rem', fontWeight: 700 }}>{s.rank}</span></td>
+                      <td data-label="Student"><strong>{s.name}</strong></td>
+                      <td data-label="Marks" className="font-bold">{s.mark}</td>
+                      <td data-label="Grade"><span style={{ color, fontWeight: 700 }}>{grade}</span></td>
+                      <td data-label="Performance" style={{ width: '40%' }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                           <div style={{ flex: 1, background: '#e2e8f0', borderRadius: 6, height: 18, overflow: 'hidden' }}>
                             <div style={{ width: `${s.mark}%`, height: '100%', background: `linear-gradient(90deg, ${color}, ${color}aa)`, borderRadius: 6 }} />

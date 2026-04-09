@@ -3698,15 +3698,64 @@ export async function submitAssignment(assignmentId, student, payload) {
     assignment_id: assignmentId,
     student_id: student.id,
     content_url: contentUrl,
-    workflow_status: extra?.workflow_status || 'submitted',
-    is_late: extra?.is_late || isLate,
-    grade_numeric: extra?.grade_numeric || null,
-    quiz_results: ast && ast.submission_type === 'quiz' ? JSON.parse(payload) : null,
-    submitted_at: new Date().toISOString()
-  }, { onConflict: 'assignment_id, student_id' }).select().single();
+    quiz_results: payload?.quiz_results || null, // Capture quiz data if present
+  }, { onConflict: 'assignment_id,student_id' }).select().single();
   
   if (error) throw error;
   return data;
+}
+
+/**
+ * Aggregates quiz performance for a specific assignment.
+ */
+export async function getQuizAnalytics(assignmentId) {
+  // 1. Get assignment questions
+  const { data: ast, error: e1 } = await supabase
+    .from('lms_assignments')
+    .select('quiz_config, max_score, title')
+    .eq('id', assignmentId)
+    .single();
+    
+  if (e1) throw e1;
+  const questions = ast.quiz_config || [];
+
+  // 2. Get all submissions with quiz_results
+  const { data: subs, error: e2 } = await supabase
+    .from('lms_submissions')
+    .select('quiz_results, grade_numeric, student_id, students(name, adm_no)')
+    .eq('assignment_id', assignmentId);
+    
+  if (e2) throw e2;
+
+  // 3. Aggregate Performance
+  const totalSubmissions = subs.length;
+  if (totalSubmissions === 0) return { totalSubmissions: 0, questionStats: [] };
+
+  const questionStats = questions.map((q, idx) => {
+    let correctCount = 0;
+    subs.forEach(s => {
+      const result = s.quiz_results?.answers?.[idx]; 
+      if (result && result.correct) correctCount++;
+    });
+    return {
+      id: q.id,
+      text: q.text,
+      successRate: (correctCount / totalSubmissions) * 100
+    };
+  });
+
+  const scores = subs.map(s => s.grade_numeric || 0);
+  const avgScore = scores.reduce((a, b) => a + b, 0) / totalSubmissions;
+
+  return {
+    title: ast.title,
+    maxScore: ast.max_score,
+    totalSubmissions,
+    avgScore: avgScore.toFixed(1),
+    highestScore: Math.max(...scores),
+    lowestScore: Math.min(...scores),
+    questionStats
+  };
 }
 
 export async function getStudentSubmissions(studentId) {

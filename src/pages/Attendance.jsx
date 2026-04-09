@@ -284,7 +284,7 @@ export default function Attendance({ currentUser, currentPeriodId }) {
       {/* Attendance Table */}
       <div className="card">
         <div className="card-body" style={{ padding: 0 }}>
-          <table className="data-table">
+          <table className="data-table responsive-table">
             <thead>
               <tr>
                 <th>#</th>
@@ -303,12 +303,12 @@ export default function Attendance({ currentUser, currentPeriodId }) {
                   const status = attendance[s.id] || '';
                   return (
                     <tr key={s.id}>
-                      <td className="text-muted">{i + 1}</td>
-                      <td><code style={{ fontSize: '0.8rem', color: 'var(--text-light)' }}>{s.admNo}</code></td>
-                      <td><strong>{s.name}</strong></td>
-                      <td><span className="badge badge-info">{s.class}</span></td>
-                      <td>{s.stream || '—'}</td>
-                      <td>
+                      <td data-label="#" className="text-muted">{i + 1}</td>
+                      <td data-label="Adm No"><code style={{ fontSize: '0.8rem', color: 'var(--text-light)' }}>{s.admNo}</code></td>
+                      <td data-label="Name"><strong>{s.name}</strong></td>
+                      <td data-label="Class"><span className="badge badge-info">{s.class}</span></td>
+                      <td data-label="Stream">{s.stream || '—'}</td>
+                      <td data-label="Status">
                         <div className="attendance-toggle">
                           <button className={status === 'present' ? 'present' : ''} onClick={() => handleMark(s.id, 'present')}>
                             Present
