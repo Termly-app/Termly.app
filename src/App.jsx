@@ -60,12 +60,12 @@ import HelpCenter from './pages/HelpCenter';
 import PricingUpgrade from './components/PricingUpgrade';
 
 import {
-  DashboardIcon, StudentsIcon, StaffIcon, AttendanceIcon, GradingIcon,
+  DashboardIcon, UserIcon, StudentsIcon, StaffIcon, AttendanceIcon, GradingIcon,
   TimetableIcon, FeesIcon, FeeStructureIcon, SecurityIcon, SettingsIcon,
   BillingIcon, SignOutIcon, MenuIcon, CloseIcon, ChevronDownIcon,
   OverviewIcon, SchoolsIcon, PaymentsIcon, HistoryIcon, RevenueIcon,
   ActivityIcon, RecoveryIcon, StatusDotIcon, ZapIcon, SubscriptionsIcon, MessageIcon,
-  DownloadIcon, UploadIcon, RefreshIcon, LogoMarkBW, BookIcon
+  DownloadIcon, UploadIcon, RefreshIcon, ShieldIcon, LogoMarkBW, BookIcon
 } from './components/Common/Icons';
 
 // --- Sidebar nav link helper ------------------------------------------------
