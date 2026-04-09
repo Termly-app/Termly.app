@@ -58,6 +58,7 @@ import Loader          from './components/Common/Loader';
 import SyncIndicator from './components/Common/SyncIndicator';
 import HelpCenter from './pages/HelpCenter';
 import PricingUpgrade from './components/PricingUpgrade';
+import Select from './components/Common/Select';
 
 import {
   DashboardIcon, UserIcon, StudentsIcon, StaffIcon, AttendanceIcon, GradingIcon,
@@ -229,18 +230,13 @@ function Sidebar({ isOpen, onClose, onLogout, currentUser, subscriptionActive })
         <div className="sidebar-period">
           <label className="sidebar-period-label">Academic Period</label>
           <div className="sidebar-period-select-wrap">
-            <select
-              className="sidebar-period-select"
+            <Select
               value={selectedPeriod || ''}
+              options={periods}
               onChange={handlePeriodChange}
-            >
-              {periods.map(p => (
-                <option key={p.id} value={p.id} style={{ color: '#000' }}>
-                  {p.year} - Term {p.term}{p.is_active ? ' · Active' : ''}
-                </option>
-              ))}
-            </select>
-            <ChevronDownIcon size={12} color="var(--text-muted, #6B7280)" />
+              className="sidebar-period-select-custom"
+              style={{ width: '100%' }}
+            />
           </div>
         </div>
 
@@ -651,18 +647,14 @@ function App() {
             <SyncIndicator />
             <div className="topbar-period">
               <span className="topbar-period-label">Period</span>
-              <select
-                className="topbar-program-select"
+              <Select
                 value={currentPeriodId || ''}
+                options={periods}
                 onChange={async (e) => { await setActivePeriod(e.target.value); }}
-              >
-                <option value="">Select Period</option>
-                {periods.map(p => (
-                  <option key={p.id} value={p.id}>
-                    {p.year} - {p.term}{p.is_active ? ' (Active)' : ''}
-                  </option>
-                ))}
-              </select>
+                className="topbar-program-select-custom"
+                style={{ width: 170 }}
+                placeholder="Select Period"
+              />
             </div>
             <div
               className="topbar-avatar"
