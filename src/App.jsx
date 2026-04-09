@@ -76,7 +76,7 @@ function SbLink({ to, icon: Icon, label, onClick, exact = false, locked = false,
     ? location.pathname === to && location.search === ''
     : location.pathname === to || (to.includes('?') && location.search.includes(to.split('?')[1]));
 
-  const finalClass = `sb-nav-item${isActive ? ' on' : ''}${locked ? ' locked' : ''}${red ? ' danger' : ''}`;
+  const finalClass = `sidebar-link${isActive ? ' active' : ''}${locked ? ' locked' : ''}${red ? ' danger' : ''}`;
 
   return (
     <NavLink
@@ -85,18 +85,17 @@ function SbLink({ to, icon: Icon, label, onClick, exact = false, locked = false,
       className={finalClass}
       onClick={onClick}
     >
-      <div className="sb-nav-glow" />
-      <span className="sb-nav-ico">
+      <span className="sidebar-link-icon">
         <Icon size={18} strokeWidth={isActive ? 2.5 : 2} />
       </span>
-      <span className="sb-nav-lbl">{label}</span>
-      {locked && <span className="sb-nav-lock">LOCKED</span>}
+      <span className="sidebar-link-label">{label}</span>
+      {locked && <span className="sidebar-locked">LOCKED</span>}
     </NavLink>
   );
 }
 
 function SbSection({ label }) {
-  return <div className="sb-nav-section">{label}</div>;
+  return <div className="sidebar-section-title">{label}</div>;
 }
 
 // ══ SIDEBAR ════════════════════════════════════════════════════════════════
@@ -216,18 +215,18 @@ function Sidebar({ isOpen, onClose, onLogout, currentUser, subscriptionActive })
   // ── Platform Admin sidebar (Onyx Modern) ────────────────────────────────
   if (isPlatformAdmin) {
     return (
-      <aside className={`sb-shell onyx ${isOpen ? 'open' : ''}`}>
-        <div className="sb-header">
-          <div className="sb-brand">
+      <aside className={`sidebar super-admin-sidebar ${isOpen ? 'open' : ''}`}>
+        <div className="sidebar-header">
+          <div className="sidebar-logo">
             <LogoMark size={28} />
-            <div className="sb-brand-info">
-              <div className="sb-name">ShuleSoft</div>
-              <div className="sb-tag">Platform HQ</div>
+            <div className="sidebar-logo-text">
+              <div className="sidebar-app-name">ShuleSoft</div>
+              <div className="sidebar-app-tagline">Platform HQ</div>
             </div>
           </div>
         </div>
 
-        <nav className="sb-nav">
+        <nav className="sidebar-nav">
           <SbSection label="Core Engine" />
           <SbLink to="/super-admin" icon={DashboardIcon} label="Intelligence" onClick={onClose} exact />
           <SbLink to="/super-admin?tab=schools" icon={SchoolsIcon} label="Entities" onClick={onClose} />
@@ -241,12 +240,12 @@ function Sidebar({ isOpen, onClose, onLogout, currentUser, subscriptionActive })
           <SbLink to="/super-admin?tab=config" icon={SettingsIcon} label="System" onClick={onClose} />
         </nav>
 
-        <div className="sb-bottom">
-          <button className="sb-user-card" onClick={onLogout}>
-            <div className="sb-user-avatar">HQ</div>
-            <div className="sb-user-meta">
-              <div className="sb-user-n">Sign Out</div>
-              <div className="sb-user-r">System Admin</div>
+        <div className="sidebar-footer">
+          <button className="user-profile-btn" onClick={onLogout}>
+            <div className="user-avatar-small">HQ</div>
+            <div className="user-info-brief">
+              <div className="user-name-brief">Sign Out</div>
+              <div className="user-role-brief">System Admin</div>
             </div>
             <SignOutIcon size={14} />
           </button>
@@ -256,18 +255,18 @@ function Sidebar({ isOpen, onClose, onLogout, currentUser, subscriptionActive })
   }
 
   return (
-    <aside className={`sb-shell ${isOpen ? 'open' : ''}`}>
-      <div className="sb-header">
-        <div className="sb-brand">
+    <aside className={`sidebar ${isOpen ? 'open' : ''}`}>
+      <div className="sidebar-header">
+        <div className="sidebar-logo">
           <LogoMark size={30} />
-          <div className="sb-brand-info">
-            <div className="sb-name">ShuleSoft</div>
-            <div className="sb-tag">Empowering Education</div>
+          <div className="sidebar-logo-text">
+            <div className="sidebar-app-name">ShuleSoft</div>
+            <div className="sidebar-app-tagline">Empowering Education</div>
           </div>
         </div>
       </div>
 
-      <nav className="sb-nav">
+      <nav className="sidebar-nav">
         <SbSection label="Control" />
         <SbLink to="/dashboard" icon={DashboardIcon} label="Dashboard" onClick={onClose} locked={!subscriptionActive} />
         
@@ -318,15 +317,15 @@ function Sidebar({ isOpen, onClose, onLogout, currentUser, subscriptionActive })
         <SbLink to="/help" icon={BookIcon} label="Help Center" onClick={onClose} />
       </nav>
 
-      <div className="sb-bottom">
-        <div className="sb-school-card">
-          <div className="sb-sch-av">{schoolName.charAt(0)}</div>
-          <div className="sb-sch-info">
-            <div className="sb-sch-name">{schoolName}</div>
-            <div className="sb-sch-plan">{profile?.subscriptionPlan || 'Foundation Tier'}</div>
+      <div className="sidebar-footer">
+        <div className="sidebar-school-info">
+          <div className="school-avatar-small">{schoolName.charAt(0)}</div>
+          <div className="school-details-brief">
+            <div className="school-name-brief">{schoolName}</div>
+            <div className="school-plan-brief">{profile?.subscriptionPlan || 'Foundation Tier'}</div>
           </div>
         </div>
-        <button className="sb-logout-action" onClick={onLogout}>
+        <button className="logout-btn" onClick={onLogout}>
           <SignOutIcon size={14} />
           <span>Exit Portal</span>
         </button>
@@ -545,7 +544,7 @@ function App() {
 
   // ── School portal ───────────────────────────────────────────────────────
   return (
-    <div className="app-layout app-shell">
+    <div className="app-layout shulesoft-app">
       {/* Mobile hamburger */}
       <button
         className="mobile-toggle"
@@ -570,19 +569,19 @@ function App() {
         subscriptionActive={subscriptionActive}
       />
 
-      <main className="sb-main">
-        <header className="sb-topbar">
-          <div className="sb-topbar-left">
-            <h2 className="sb-topbar-title desktop-only">Command Tower</h2>
-            <h2 className="sb-topbar-title mobile-only">ShuleSoft</h2>
+      <main className="main-content">
+        <div className="topbar">
+          <div className="topbar-left">
+            <div className="topbar-title desktop-only">Command Tower</div>
+            <div className="topbar-title mobile-only">ShuleSoft</div>
           </div>
           
-          <div className="sb-topbar-actions">
+          <div className="topbar-actions">
             <SyncIndicator />
-            <div className="sb-period-pill">
-              <span className="sb-period-ico"><ClockIcon size={14} /></span>
+            <div className="topbar-period">
+              <span className="topbar-period-label"><ClockIcon size={14} /> Period</span>
               <select
-                className="sb-period-select"
+                className="topbar-program-select"
                 value={currentPeriodId || ''}
                 onChange={async (e) => { await setActivePeriod(e.target.value); }}
               >
@@ -595,19 +594,11 @@ function App() {
               </select>
             </div>
             
-            <div className="sb-topbar-divider" />
-            
-            <div className="sb-profile-pill">
-              <div className="sb-profile-info">
-                <span className="sb-profile-name">{currentUser?.name || 'User'}</span>
-                <span className="sb-profile-role">{currentUser?.role || 'Staff'}</span>
-              </div>
-              <div className="sb-profile-avatar">
-                {currentUser?.name?.charAt(0)?.toUpperCase()}
-              </div>
+            <div className="topbar-avatar" title={currentUser?.name}>
+              {currentUser?.name?.charAt(0)?.toUpperCase()}
             </div>
           </div>
-        </header>
+        </div>
 
         {/* Page content */}
         <div className="page-content">

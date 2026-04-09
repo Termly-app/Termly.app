@@ -1,3 +1,4 @@
+import { useState, useEffect, useMemo } from 'react';
 import { 
   getStudents, getSchoolProfile, logCommunication, getCommunicationLogs, 
   sendSMSMessage, sendWhatsAppMessage, getWhatsAppLink 
@@ -130,7 +131,7 @@ export default function Communications({ currentUser }) {
     : [];
 
   return (
-    <div className="comm-premium-v2 animate-in theme-onyx">
+    <div className="comm-premium-v2 animate-in">
       <Helmet>
         <title>Command Center | ShuleSoft Communications</title>
       </Helmet>

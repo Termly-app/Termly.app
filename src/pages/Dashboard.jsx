@@ -10,7 +10,7 @@ import Loader from '../components/Common/Loader';
 import {
   StudentIcon, TeacherIcon, CardIcon, BookIcon, UserIcon, SchoolIcon,
   RocketIcon, AlertIcon, LogoutIcon, ClockIcon, SearchIcon, DashboardIcon,
-  LeafIcon, GraduationIcon, ChevronDownIcon, CheckIcon
+  LeafIcon, GraduationIcon, ChevronDownIcon, CheckIcon, CloseIcon, PlatformZapIcon
 } from '../components/CommonIcons';
 import SetupWizard from '../components/SetupWizard';
 import ReferralTool from '../components/ReferralTool';
