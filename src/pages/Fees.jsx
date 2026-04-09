@@ -57,7 +57,7 @@ function ReceiptModal({ receipt, onClose, profile }) {
   const handlePrint = () => {
     printReceipt({
       school: {
-        name: profile?.school_name || 'ShuleSoft Academy',
+        name: profile?.schoolName || '',
         location: profile?.address || 'Nairobi, Kenya',
         phone: profile?.phone || '',
         email: profile?.email || ''
@@ -83,7 +83,7 @@ function ReceiptModal({ receipt, onClose, profile }) {
         <div className="modal-header"><h3><ReceiptIcon size={20} /> Receipt</h3><button className="modal-close" onClick={onClose}>×</button></div>
         <div className="modal-body">
           <div className="receipt">
-            <div className="receipt-header"><h2>{profile?.school_name || 'ShuleSoft Academy'}</h2><p className="text-muted" style={{fontSize:'0.82rem'}}>Payment Receipt</p></div>
+            <div className="receipt-header"><h2>{profile?.schoolName || ''}</h2><p className="text-muted" style={{fontSize:'0.82rem'}}>Payment Receipt</p></div>
             <div className="receipt-row"><span>Receipt No:</span><strong>{receipt.id}</strong></div>
             <div className="receipt-row"><span>Date:</span><strong>{receipt.date}</strong></div>
             <div className="receipt-row"><span>Student:</span><strong>{receipt.studentName}</strong></div>

@@ -276,7 +276,7 @@ Object.values(CBC_STRUCTURE).flatMap(l => l.grades).forEach(g => {
 });
 
 const DEFAULT_PROFILE = {
-  schoolName: 'ShuleSoft Academy',
+  schoolName: 'ShuleSoft School',
   motto: '', phone: '', email: '', address: '', logo: '',
   subscriptionPlan: 'Basic',
   streamsPerClass: defaultStreamsPerClass,
@@ -743,7 +743,7 @@ export async function getCurrentPeriodDetails() {
 // Helper: returns HTML snippet for print headers
 export async function getPrintHeader(subtitle) {
   const p = await getSchoolProfile();
-  const name = p.schoolName || 'ShuleSoft Academy';
+  const name = p.schoolName || '';
   const logoHtml = p.logo ? `<img src="${p.logo}" style="height:60px;max-width:120px;object-fit:contain;margin-right:14px" />` : '';
   const mottoHtml = p.motto ? `<div style="font-size:11px;color:#64748b;font-style:italic;margin-top:2px">"${p.motto}"</div>` : '';
   const contactParts = [p.phone, p.email, p.address].filter(Boolean);
@@ -3660,6 +3660,7 @@ export async function createAssignment(assignment) {
     teacher_id: getCurrentAuthUser()?.id,
     max_score: assignment.maxScore || 100,
     submission_type: assignment.submissionType || 'online_text',
+    quiz_config: assignment.submissionType === 'quiz' ? assignment.questions : null,
     status: 'published'
   }]).select().single();
   
@@ -3697,8 +3698,10 @@ export async function submitAssignment(assignmentId, student, payload) {
     assignment_id: assignmentId,
     student_id: student.id,
     content_url: contentUrl,
-    workflow_status: 'submitted',
-    is_late: isLate,
+    workflow_status: extra?.workflow_status || 'submitted',
+    is_late: extra?.is_late || isLate,
+    grade_numeric: extra?.grade_numeric || null,
+    quiz_results: ast && ast.submission_type === 'quiz' ? JSON.parse(payload) : null,
     submitted_at: new Date().toISOString()
   }, { onConflict: 'assignment_id, student_id' }).select().single();
   

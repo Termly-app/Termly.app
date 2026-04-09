@@ -611,7 +611,7 @@ function ReportsTab() {
     <div style="margin:20px 0;font-size:12px"><strong>Principal's Comments:</strong> _______________________________________________</div>
     <div style="margin:10px 0;font-size:12px"><strong>Recommendations:</strong> _______________________________________________</div>
     <div class="sigs"><div><div class="ln"></div>Principal</div><div><div class="ln"></div>Teacher</div></div>
-    <div class="footer">${profileStr.school_name || 'ShuleSoft Academy'} | Teacher Performance Report | Printed ${new Date().toLocaleDateString()}</div>
+    <div class="footer">${profileStr.schoolName || ''} | Teacher Performance Report | Printed ${new Date().toLocaleDateString()}</div>
     </body></html>`);
     w.document.close(); w.print();
     } catch(err) { alert("Print failed: " + err.message); }
@@ -645,7 +645,7 @@ function ReportsTab() {
         })
       )
     ).join('')}</tbody></table>
-    <div class="footer">Printed on ${new Date().toLocaleDateString()} | ${profileStr.school_name || 'ShuleSoft Academy'}</div></body></html>`);
+    <div class="footer">Printed on ${new Date().toLocaleDateString()} | ${profileStr.schoolName || ''}</div></body></html>`);
     w.document.close(); w.print();
     } catch(err) { alert("Print failed: " + err.message); }
   };

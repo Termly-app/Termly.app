@@ -178,7 +178,7 @@ export default function Grading({ currentUser, currentPeriodId }) {
       ${headerStr}
       <table><thead><tr><th>#</th><th>Adm No</th><th>Student Name</th><th>Gender</th><th>Parent</th><th>Phone</th></tr></thead>
       <tbody>${list.map((s, i) => `<tr><td>${i + 1}</td><td>${s.admNo}</td><td>${s.name}</td><td>${s.gender}</td><td>${s.parent}</td><td>${s.parentPhone}</td></tr>`).join('')}</tbody></table>
-      <div class="footer">Printed on ${new Date().toLocaleDateString()} | ${profileStr.school_name || 'ShuleSoft Academy'} | ${level}</div></body></html>`);
+      <div class="footer">Printed on ${new Date().toLocaleDateString()} | ${profileStr.schoolName || ''} | ${level}</div></body></html>`);
       w.document.close(); w.print();
     } catch (err) { alert({ title: 'Print Error', message: "Print failed: " + err.message, variant: 'danger' }); }
   };
@@ -226,7 +226,7 @@ export default function Grading({ currentUser, currentPeriodId }) {
       }
     }).join('')}
     </tbody></table>
-    <div class="footer">Printed on ${new Date().toLocaleDateString()} | ${profileStr.school_name || 'ShuleSoft Academy'} | ${level} | Class Teacher: _______________</div>
+    <div class="footer">Printed on ${new Date().toLocaleDateString()} | ${profileStr.schoolName || ''} | ${level} | Class Teacher: _______________</div>
     </body></html>`);
       w.document.close(); w.print();
     } catch(err) { alert({ title: 'Print Error', message: "Print failed: " + err.message, variant: 'danger' }); }
@@ -836,7 +836,7 @@ function ReportCardModal({ student, cbcData, coreCompData, onClose, getGrade, cb
         <div className="modal-header"><h3><BookIcon size={20} /> Report Card — {student.name}</h3><button className="modal-close" onClick={onClose}>×</button></div>
         <div className="modal-body">
           <div className="report-card">
-            <div className="report-card-header"><h1><SchoolIcon size={24} /> {profile?.school_name || 'ShuleSoft Academy'}</h1><h2>Term 1 {examType} Report Card — 2026</h2>
+            <div className="report-card-header"><h1><SchoolIcon size={24} /> {profile?.schoolName || ''}</h1><h2>Term 1 {examType} Report Card — 2026</h2>
               <span className="badge badge-info" style={{ marginTop: 6 }}>{level}</span>
             </div>
             <div className="report-card-info">
