@@ -659,7 +659,7 @@ h1,h2,h3,h4,h5,h6 { line-height: 1.25; }
 }
 
 /* Universal Premium Select Reset (Eliminates "Windows-like" UI everywhere) */
-select, .form-select, .form-input, .tt-select, .act-sel, .fs-select {
+select, .form-select, .tt-select, .act-sel, .fs-select {
   appearance: none !important;
   -webkit-appearance: none !important;
   -moz-appearance: none !important;

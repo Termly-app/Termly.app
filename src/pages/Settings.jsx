@@ -461,22 +461,36 @@ export default function Settings() {
                           </div>
                         ))}
                       </div>
-                      <div style={{display:'grid',gridTemplateColumns:'40px 1fr 1fr 30px',gap:5,alignItems:'center'}}>
-                        <input className="form-input" style={{padding:'4px',fontSize:'0.75rem',textAlign:'center'}} value={newGradeItem.symbol} onChange={e=>setNewGradeItem({...newGradeItem,symbol:e.target.value.toUpperCase()})} placeholder="A"/>
-                        <Select 
-                          value={newGradeItem.min} 
-                          onChange={e=>setNewGradeItem({...newGradeItem,min:Number(e.target.value)})}
-                          options={[...Array(101).keys()].map(n=>({ id: n, label: String(n) }))}
-                          style={{ padding: '0px', height: 32, minWidth: 60 }}
-                        />
-                        <Select 
-                          value={newGradeItem.max} 
-                          onChange={e=>setNewGradeItem({...newGradeItem,max:Number(e.target.value)})}
-                          options={[...Array(101).keys()].sort((a,b)=>b-a).map(n=>({ id: n, label: String(n) }))}
-                          style={{ padding: '0px', height: 32, minWidth: 60 }}
-                        />
-                        <input type="color" style={{width:'100%',height:24,border:'none',background:'none',cursor:'pointer'}} value={newGradeItem.color} onChange={e=>setNewGradeItem({...newGradeItem,color:e.target.value})}/>
-                        <button onClick={addGradeItem} className="btn btn-primary btn-sm" style={{gridColumn:'1 / span 4',marginTop:5}}>Add Grade Boundary</button>
+                      <div style={{display:'grid',gridTemplateColumns:'65px 1fr 1fr 40px',gap:8,alignItems:'end'}}>
+                        <div style={{display:'flex',flexDirection:'column',gap:4}}>
+                          <label style={{fontSize:'0.65rem',fontWeight:700,color:'var(--text-muted)'}}>GRADE</label>
+                          <input className="form-input" style={{padding:'6px',fontSize:'0.82rem',textAlign:'center',height:32}} value={newGradeItem.symbol} onChange={e=>setNewGradeItem({...newGradeItem,symbol:e.target.value.toUpperCase()})} placeholder="A-"/>
+                        </div>
+                        <div style={{display:'flex',flexDirection:'column',gap:4}}>
+                          <label style={{fontSize:'0.65rem',fontWeight:700,color:'var(--text-muted)'}}>MIN %</label>
+                          <Select 
+                            value={newGradeItem.min} 
+                            onChange={e=>setNewGradeItem({...newGradeItem,min:Number(e.target.value)})}
+                            options={[...Array(101).keys()].map(n=>({ id: n, label: String(n) }))}
+                            style={{ padding: '0px', height: 32, minWidth: 60 }}
+                          />
+                        </div>
+                        <div style={{display:'flex',flexDirection:'column',gap:4}}>
+                          <label style={{fontSize:'0.65rem',fontWeight:700,color:'var(--text-muted)'}}>MAX %</label>
+                          <Select 
+                            value={newGradeItem.max} 
+                            onChange={e=>setNewGradeItem({...newGradeItem,max:Number(e.target.value)})}
+                            options={[...Array(101).keys()].sort((a,b)=>b-a).map(n=>({ id: n, label: String(n) }))}
+                            style={{ padding: '0px', height: 32, minWidth: 60 }}
+                          />
+                        </div>
+                        <div style={{display:'flex',flexDirection:'column',gap:4}}>
+                          <label style={{fontSize:'0.65rem',fontWeight:700,color:'var(--text-muted)'}}>COLOR</label>
+                          <input type="color" style={{width:'100%',height:32,border:'1.5px solid var(--border)',borderRadius:8,background:'none',cursor:'pointer',padding:0}} value={newGradeItem.color} onChange={e=>setNewGradeItem({...newGradeItem,color:e.target.value})}/>
+                        </div>
+                        <button onClick={addGradeItem} className="btn btn-primary btn-sm" style={{gridColumn:'1 / span 4',marginTop:8,height:36,fontWeight:700}}>
+                          <PlusIcon size={16} /> Add Grade Boundary
+                        </button>
                       </div>
                     </div>
                   </div>
