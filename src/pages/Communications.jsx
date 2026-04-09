@@ -200,7 +200,7 @@ export default function Communications({ currentUser }) {
                         <div key={s.id} className="search-item" onClick={() => { setSelectedStudent(s); setSearchQuery(''); }}>
                           <div>
                             <strong>{s.name}</strong>
-                            <div style={{ fontSize: '0.75rem', opacity: 0.7 }}>{s.class} {s.stream} — Parent: {s.parentName}</div>
+                            <div style={{ fontSize: '0.75rem', opacity: 0.7 }}>{s.class} {s.stream} â€” Parent: {s.parentName}</div>
                           </div>
                           <UserIcon size={14} />
                         </div>
