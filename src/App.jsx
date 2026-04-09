@@ -10,9 +10,6 @@ import {
   initActivePeriod,
   getCurrentPeriodId,
   checkIsPlatformAdmin,
-  getFeeStructure,
-  saveFeeStructure,
-  deleteFeeItem,
   isFeatureEnabled,
   checkIsSubscriptionActive,
   subscribeToSchoolChanges,
@@ -24,7 +21,6 @@ import Students     from './pages/Students';
 import Teachers     from './pages/Teachers';
 import Grading      from './pages/Grading';
 import Fees         from './pages/Fees';
-import FeeStructure from './pages/FeeStructure';
 import Timetable    from './pages/Timetable';
 import Attendance   from './pages/Attendance';
 import Library      from './pages/Library';
@@ -62,7 +58,7 @@ import Select from './components/Common/Select';
 
 import {
   DashboardIcon, UserIcon, StudentsIcon, StaffIcon, AttendanceIcon, GradingIcon,
-  TimetableIcon, FeesIcon, FeeStructureIcon, SecurityIcon, SettingsIcon,
+  TimetableIcon, FeesIcon, SecurityIcon, SettingsIcon,
   BillingIcon, SignOutIcon, MenuIcon, CloseIcon, ChevronDownIcon,
   OverviewIcon, SchoolsIcon, PaymentsIcon, HistoryIcon, RevenueIcon,
   ActivityIcon, RecoveryIcon, StatusDotIcon, ZapIcon, SubscriptionsIcon, MessageIcon,
@@ -342,9 +338,6 @@ function Sidebar({ isOpen, onClose, onLogout, currentUser, subscriptionActive })
         )}
 
         
-        {isAdmin && (features.fees || isSandbox) && (
-          <SbLink to="/fee-structure" icon={FeeStructureIcon} label="Fee Structure" onClick={onClose} locked={!subscriptionActive || (isSandbox && !features.fees)} />
-        )}
 
         {isAdmin && (features.sms || isSandbox) && (
           <SbLink to="/communications" icon={MessageIcon} label="Comm. Center" onClick={onClose} locked={!subscriptionActive || (isSandbox && !features.sms)} />
@@ -696,19 +689,6 @@ function App() {
                   {(isAdmin || isFinance) && (
                     <>
                       <Route path="/fees"      element={<SectionGate featureSlug="fees" featureName="Fees" profile={profile}><Fees currentUser={currentUser} currentPeriodId={currentPeriodId} /></SectionGate>} />
-                      {isAdmin && (
-                        <Route path="/fee-structure" element={
-                          <SectionGate featureSlug="fees" featureName="Fee Structure" profile={profile}>
-                            <FeeStructure
-                              schoolId={currentUser?.school_id}
-                              schoolName={currentUser?.schoolName}
-                              getFeeStructure={getFeeStructure}
-                              saveFeeStructure={saveFeeStructure}
-                              deleteFeeItem={deleteFeeItem}
-                            />
-                          </SectionGate>
-                        } />
-                      )}
                     </>
                   )}
 

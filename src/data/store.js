@@ -2958,43 +2958,6 @@ export async function saveClassSubjectAssignment(schoolId, periodId, assignment)
 
 // ============= FEE STRUCTURE =============
 
-export async function getFeeStructure(schoolId, term) {
-  const { data, error } = await supabase
-    .from('fee_structure')
-    .select('id, term, category, amount, notes, school_id')
-    .eq('school_id', schoolId)
-    .eq('term', term)
-    .order('category', { ascending: true });
-  if (error) throw error;
-  return data || [];
-}
-
-export async function saveFeeStructure(schoolId, term, items) {
-  const { error: delErr } = await supabase
-    .from('fee_structure')
-    .delete()
-    .eq('school_id', schoolId)
-    .eq('term', term);
-  if (delErr) throw delErr;
-  if (!items || items.length === 0) return;
-  const rows = items.map(item => ({
-    school_id: schoolId,
-    term: term,
-    category: item.category,
-    amount: item.amount,
-    notes: item.notes || ''
-  }));
-  const { error } = await supabase.from('fee_structure').insert(rows);
-  if (error) throw error;
-}
-
-export async function deleteFeeItem(itemId) {
-  const { error } = await supabase
-    .from('fee_structure')
-    .delete()
-    .eq('id', itemId);
-  if (error) throw error;
-}
 
 // ============= SUPER ADMIN / PLATFORM =============
 
