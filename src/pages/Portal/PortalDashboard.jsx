@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { LogoutIcon, UserIcon, CardIcon, MessageIcon, StatusDotIcon, ActivityIcon, ClipboardIcon, CheckIcon } from '../../components/CommonIcons';
+import { LogoutIcon, UserIcon, CardIcon, MessageIcon, StatusDotIcon, ActivityIcon, CheckIcon } from '../../components/CommonIcons';
 import { getFees, simulateMpesaSTKPush, getMarks, getGradeForScore, getSchoolProfile } from '../../data/store';
 import { getAssignments, submitAssignment } from '../../data/offlineStore';
 
@@ -137,7 +137,7 @@ export default function PortalDashboard({ user, onLogout }) {
             <div style={{ color: '#64748b', fontSize: '0.85rem', marginTop: 4 }}>Last updated by your teacher recently</div>
             
             <button style={{ marginTop: 20, background: 'white', border: '1px solid #e2e8f0', padding: '8px 16px', borderRadius: 8, fontSize: '0.85rem', fontWeight: 600, color: '#0f172a', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, margin: '20px auto 0' }}>
-              <ClipboardIcon size={14} /> Full Performance Report
+              <ActivityIcon size={14} /> Full Performance Report
             </button>
           </div>
         </div>
@@ -146,12 +146,12 @@ export default function PortalDashboard({ user, onLogout }) {
       {/* Homework / LMS Portal */}
       <div style={{ background: 'white', borderRadius: 20, padding: 32, boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05)', border: '1px solid #f1f5f9', marginBottom: 24 }}>
         <h3 style={{ margin: '0 0 24px', fontSize: '1.1rem', fontWeight: 800, color: '#0f172a', display: 'flex', alignItems: 'center', gap: 8 }}>
-          <ClipboardIcon size={20} color="#f59e0b" /> Pending Homework & Assignments
+          <ActivityIcon size={20} color="#f59e0b" /> Pending Homework & Assignments
         </h3>
 
         {assignments.length === 0 ? (
           <div style={{ textAlign: 'center', padding: '30px 20px', color: '#94a3b8' }}>
-            <ClipboardIcon size={40} color="#e2e8f0" style={{ marginBottom: 12 }} />
+            <ActivityIcon size={40} color="#e2e8f0" style={{ marginBottom: 12 }} />
             <div>No active homework for your class. Stay sharp!</div>
           </div>
         ) : (
