@@ -62,9 +62,9 @@ export default function LMS({ currentUser }) {
     class: '',
     stream: '',
     subject: '',
-    allowFrom: new Date().toISOString().split('T')[0],
-    dueDate: '',
-    cutoffDate: '',
+    allowFrom: new Date().toISOString().slice(0, 16),
+    dueDate: new Date(Date.now() + 7 * 86400000).toISOString().slice(0, 16),
+    cutoffDate: new Date(Date.now() + 8 * 86400000).toISOString().slice(0, 16),
     description: '',
     links: '',
     maxScore: 100,
@@ -93,8 +93,10 @@ export default function LMS({ currentUser }) {
       // Reset form
       setFormData({ 
         title: '', class: '', stream: '', subject: '', 
-        allowFrom: new Date().toISOString().split('T')[0], 
-        dueDate: '', cutoffDate: '', description: '', links: '',
+        allowFrom: new Date().toISOString().slice(0, 16), 
+        dueDate: new Date(Date.now() + 7 * 86400000).toISOString().slice(0, 16), 
+        cutoffDate: new Date(Date.now() + 8 * 86400000).toISOString().slice(0, 16), 
+        description: '', links: '',
         maxScore: 100, submissionType: 'online_text'
       });
       await loadData();
@@ -179,19 +181,19 @@ export default function LMS({ currentUser }) {
           </div>
 
           {/* Moodle Availability Controls */}
-          <div style={{ background: '#f1f5f9', padding: 12, borderRadius: 10, display: 'flex', flexDirection: 'column', gap: 10 }}>
-            <div style={{ fontSize: '0.7rem', fontWeight: 800, textTransform: 'uppercase', color: 'var(--text-muted)', marginBottom: 2 }}>Availability</div>
+          <div style={{ background: '#f1f5f9', padding: '16px', borderRadius: 12, display: 'flex', flexDirection: 'column', gap: 12 }}>
+            <div style={{ fontSize: '0.75rem', fontWeight: 800, textTransform: 'uppercase', color: 'var(--text-muted)', marginBottom: 2 }}>Availability Settings</div>
             <div className="form-group">
-              <label style={{ fontSize: '0.65rem' }}>Allow Submissions From</label>
-              <input className="form-input" type="date" required value={formData.allowFrom} onChange={e => setFormData({ ...formData, allowFrom: e.target.value })} />
+              <label style={{ fontSize: '0.7rem' }}>Allow Submissions From</label>
+              <input className="form-input" type="datetime-local" required value={formData.allowFrom} onChange={e => setFormData({ ...formData, allowFrom: e.target.value })} />
             </div>
             <div className="form-group">
-              <label style={{ fontSize: '0.65rem' }}>Due Date</label>
-              <input className="form-input" type="date" required value={formData.dueDate} onChange={e => setFormData({ ...formData, dueDate: e.target.value })} />
+              <label style={{ fontSize: '0.7rem' }}>Due Date (Deadline)</label>
+              <input className="form-input" type="datetime-local" required value={formData.dueDate} onChange={e => setFormData({ ...formData, dueDate: e.target.value })} />
             </div>
             <div className="form-group">
-              <label style={{ fontSize: '0.65rem' }}>Cut-off Date (No uploads after)</label>
-              <input className="form-input" type="date" required value={formData.cutoffDate} onChange={e => setFormData({ ...formData, cutoffDate: e.target.value })} />
+              <label style={{ fontSize: '0.7rem' }}>Hard Cut-off (Locked After)</label>
+              <input className="form-input" type="datetime-local" required value={formData.cutoffDate} onChange={e => setFormData({ ...formData, cutoffDate: e.target.value })} />
             </div>
           </div>
 
@@ -263,7 +265,12 @@ export default function LMS({ currentUser }) {
                     </div>
                     <div style={{ fontSize: '1.15rem', fontWeight: 800, color: 'var(--text-main)', marginTop: 12, marginBottom: 4 }}>{ast.title}</div>
                     <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: 5 }}>
-                       <ClockIcon size={14} /> Due {new Date(ast.due_date || ast.dueDate).toLocaleDateString()}
+                       <ClockIcon size={14} /> 
+                       {new Date(ast.allow_from || ast.allowFrom) > new Date() ? (
+                         <span style={{ color: 'var(--warning)', fontWeight: 700 }}>Starts {new Date(ast.allow_from || ast.allowFrom).toLocaleString()}</span>
+                       ) : (
+                         <span>Due {new Date(ast.due_date || ast.dueDate).toLocaleString()}</span>
+                       )}
                     </div>
                     <SubmissionProgress ast={ast} />
                   </div>

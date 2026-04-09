@@ -101,7 +101,7 @@ export async function getAssignments(className = null) {
   return all;
 }
 
-export async function submitAssignment(assignment_id, student, payload) {
+export async function submitAssignment(assignment_id, student, payload, extra = {}) {
   return await db.submissions.add({
     assignment_id,
     student_id: student.id,
@@ -109,7 +109,8 @@ export async function submitAssignment(assignment_id, student, payload) {
     class: student.class,
     payload,
     status: 'submitted',
-    timestamp: new Date().toISOString()
+    timestamp: new Date().toISOString(),
+    ...extra
   });
 }
 

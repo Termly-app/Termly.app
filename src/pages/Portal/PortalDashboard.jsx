@@ -58,10 +58,34 @@ export default function PortalDashboard({ user, onLogout }) {
   const handleSubmitWork = async (e) => {
     e.preventDefault();
     if (!submissionPayload) return;
-    await submitAssignment(showSubmitModal.id, user, submissionPayload);
-    alert("Assignment Submitted successfully!");
+    
+    const ast = showSubmitModal;
+    const isLate = new Date() > new Date(ast.due_date || ast.deadline);
+    
+    await submitAssignment(ast.id, user, submissionPayload, { is_late: isLate });
+    alert("Assignment Submitted successfully!" + (isLate ? " (Note: This is a late submission)" : ""));
+    
     setShowSubmitModal(null);
     setSubmissionPayload('');
+    // Refresh submissions
+    try {
+      const { getStudentSubmissions } = await import('../../data/store');
+      const subs = await getStudentSubmissions(user.id);
+      const subMap = {};
+      subs.forEach(s => { subMap[s.assignment_id] = s; });
+      setMySubmissions(subMap);
+    } catch (e) {}
+  };
+
+  const getRemainingTime = (date) => {
+    const diff = new Date(date) - new Date();
+    if (diff < 0) return 'Passed';
+    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+    const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+    const mins = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+    if (days > 0) return `${days}d ${hours}h left`;
+    if (hours > 0) return `${hours}h ${mins}m left`;
+    return `${mins}m left`;
   };
 
   return (
@@ -156,18 +180,26 @@ export default function PortalDashboard({ user, onLogout }) {
           </div>
         ) : (
           <div style={{ display: 'grid', gap: 16 }}>
-            {assignments.map(ast => {
+             {assignments.map(ast => {
+              const now = new Date();
+              const openDate = new Date(ast.allow_from || ast.allowFrom);
+              const dueDate  = new Date(ast.due_date || ast.deadline);
+              const cutDate  = ast.cutoff_date || ast.cutoffDate ? new Date(ast.cutoff_date || ast.cutoffDate) : null;
+              
+              const isLocked  = now < openDate;
+              const isExpired = cutDate && now > cutDate;
               const mySub = mySubmissions[ast.id];
-              const isOverdue = !mySub && new Date() > new Date(ast.due_date || ast.deadline);
-              const isGraded = mySub?.workflow_status === 'released' || mySub?.grade_numeric !== null;
+              const isOverdue = !mySub && now > dueDate;
+              const isGraded = mySub?.workflow_status === 'released' || (mySub?.grade_numeric !== null && mySub?.grade_numeric !== undefined);
               
               return (
                 <div key={ast.id} style={{ 
                   padding: 24, 
-                  background: isOverdue ? '#fff1f2' : isGraded ? '#f0fdf4' : '#fffbeb', 
+                  background: isLocked ? '#f8fafc' : isOverdue ? '#fff1f2' : isGraded ? '#f0fdf4' : '#fffbeb', 
                   borderRadius: 16, 
-                  border: `1px solid ${isOverdue ? '#fecdd3' : isGraded ? '#bbf7d0' : '#fde68a'}`,
-                  transition: 'transform 0.2s'
+                  border: `1px solid ${isLocked ? '#e2e8f0' : isOverdue ? '#fecdd3' : isGraded ? '#bbf7d0' : '#fde68a'}`,
+                  transition: 'transform 0.2s',
+                  opacity: isLocked ? 0.7 : 1
                 }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 12 }}>
                     <div>
@@ -177,35 +209,58 @@ export default function PortalDashboard({ user, onLogout }) {
                           <span className="badge badge-success">Graded: {mySub.grade_numeric} / {ast.max_score || 100}</span>
                         ) : mySub ? (
                           <span className="badge badge-info">Submitted {mySub.is_late ? '(Late)' : ''}</span>
+                        ) : isLocked ? (
+                          <span className="badge" style={{ background: '#e2e8f0', color: '#64748b' }}>Scheduled</span>
+                        ) : isExpired ? (
+                          <span className="badge badge-danger">Closed</span>
                         ) : isOverdue ? (
                           <span className="badge badge-danger">Overdue</span>
                         ) : (
                           <span className="badge badge-warning">Pending</span>
                         )}
                       </div>
-                      <div style={{ fontWeight: 800, color: '#0f172a', fontSize: '1.1rem' }}>{ast.title}</div>
+                      <div style={{ fontWeight: 800, color: '#0f172a', fontSize: '1.1rem', display: 'flex', alignItems: 'center', gap: 6 }}>
+                        {isLocked && <ClockIcon size={16} color="#94a3b8" />}
+                        {ast.title}
+                      </div>
                     </div>
                     <div style={{ textAlign: 'right', fontSize: '0.8rem', color: '#64748b' }}>
-                       <div style={{ fontWeight: 700, color: isOverdue ? 'var(--danger)' : '#64748b' }}>
-                         {isOverdue ? 'Overdue' : `Due in ${Math.ceil((new Date(ast.due_date || ast.deadline) - new Date()) / 3600000)}h`}
+                       <div style={{ fontWeight: 700, color: isOverdue || isExpired ? 'var(--danger)' : isLocked ? '#94a3b8' : '#64748b' }}>
+                         {isLocked ? `Opens in ${getRemainingTime(openDate)}` : 
+                          isExpired ? 'Closed' : 
+                          isOverdue ? 'Overdue' : 
+                          getRemainingTime(dueDate)}
                        </div>
-                       <div style={{ fontSize: '0.7rem opacity: 0.8' }}>{new Date(ast.due_date || ast.deadline).toLocaleDateString()}</div>
-                       {mySub && <div style={{ color: '#10b981', fontWeight: 600, marginTop: 2 }}>Sent {new Date(mySub.submitted_at).toLocaleDateString()}</div>}
+                       <div style={{ fontSize: '0.7rem', opacity: 0.8 }}>
+                         {isLocked ? `Starts ${openDate.toLocaleString()}` : `Due ${dueDate.toLocaleString()}`}
+                       </div>
                     </div>
                   </div>
 
                   <div style={{ fontSize: '0.9rem', color: '#475569', background: 'rgba(255,255,255,0.5)', padding: 16, borderRadius: 12, marginBottom:16, border: '1px solid rgba(0,0,0,0.03)' }}>
-                    {ast.description || "No description provided."}
+                    {isLocked ? 
+                      <em style={{ color: '#94a3b8' }}>Instructions will be visible once the assignment opens.</em> : 
+                      (ast.description || "No description provided.")
+                    }
                   </div>
 
                   <div style={{ display: 'flex', gap: 10 }}>
-                    {!isGraded && (
+                    {!isGraded && !isLocked && !isExpired && (
                       <button 
                         onClick={() => setShowSubmitModal(ast)}
-                        disabled={ast.cutoff_date && new Date() > new Date(ast.cutoff_date)}
                         style={{ background: 'var(--primary)', color: 'white', border: 'none', padding: '10px 20px', borderRadius: 8, fontWeight: 700, cursor: 'pointer' }}
                       >
                         {mySub ? 'Resubmit Work' : 'Turn In Work'}
+                      </button>
+                    )}
+                    {isLocked && (
+                      <button disabled style={{ background: '#f1f5f9', color: '#94a3b8', border: 'none', padding: '10px 20px', borderRadius: 8, fontWeight: 700, cursor: 'not-allowed' }}>
+                        Assignment Locked
+                      </button>
+                    )}
+                    {isExpired && !mySub && (
+                      <button disabled style={{ background: '#fee2e2', color: '#ef4444', border: 'none', padding: '10px 20px', borderRadius: 8, fontWeight: 700, cursor: 'not-allowed' }}>
+                        Submissions Closed
                       </button>
                     )}
                     {mySub?.feedback && (
