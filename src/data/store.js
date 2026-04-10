@@ -290,7 +290,8 @@ const DEFAULT_PROFILE = {
   mpesa_config: { shortcode: '', consumer_key: '', consumer_secret: '' },
   sms_config: { sender_id: '', api_key: '' },
   curriculum: 'CBC Only',
-  customExams: ['CAT 1', 'CAT 2', 'Mid Term', 'End Term'],
+  timetable_label: 'Weekly',
+  custom_exams: ['CAT 1', 'CAT 2', 'Mid Term', 'End Term'],
   gradingSystems: { 
     default: [
       {min: 80, max: 100, grade: 'A', color: '#10b981'},
@@ -302,7 +303,7 @@ const DEFAULT_PROFILE = {
   }
 };
 
-const SAFE_PROFILE_COLUMNS = 'id, school_name, motto, phone, email, address, logo, subscription_plan, streams_per_class, custom_subjects, active_classes, grade_fees, subscription_status, subscription_expiry, last_payment_status, mpesa_config, sms_config, grading_systems, custom_exams, curriculum';
+const SAFE_PROFILE_COLUMNS = 'id, school_name, motto, phone, email, address, logo, subscription_plan, streams_per_class, custom_subjects, active_classes, grade_fees, subscription_status, subscription_expiry, last_payment_status, mpesa_config, sms_config, grading_systems, custom_exams, curriculum, timetable_label';
 
 export async function getSchoolProfile() {
   if (!_currentSchoolId) return { ...DEFAULT_PROFILE };
@@ -396,6 +397,8 @@ function mapProfileData(data) {
       _encrypted: data.sms_config
     },
     curriculum: data.curriculum || 'CBC Only',
+    custom_exams: data.custom_exams || DEFAULT_PROFILE.custom_exams,
+    timetable_label: data.timetable_label || DEFAULT_PROFILE.timetable_label,
     _dbId: data.id,
     schoolId: data.school_id,
   };
@@ -577,8 +580,9 @@ export async function saveSchoolProfile(profile) {
     streams_per_class: profile.streamsPerClass || defaultStreamsPerClass,
     active_classes: profile.activeClasses || DEFAULT_PROFILE.activeClasses,
     custom_subjects: { ...(profile.customSubjects || {}), __boarding_houses: profile.boardingHouses || [] },
-    custom_exams: profile.customExams || DEFAULT_PROFILE.customExams,
-    grading_systems: profile.gradingSystems || DEFAULT_PROFILE.gradingSystems,
+    custom_exams: profile.custom_exams || DEFAULT_PROFILE.custom_exams,
+    timetable_label: profile.timetable_label || DEFAULT_PROFILE.timetable_label,
+    grading_systems: profile.grading_systems || DEFAULT_PROFILE.grading_systems,
     curriculum: profile.curriculum || 'CBC Only',
     updated_at: new Date().toISOString(),
   };

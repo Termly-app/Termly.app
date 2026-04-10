@@ -292,6 +292,7 @@ export default function Timetable({ currentUser, currentPeriodId, periods = [] }
   const [view,   setView]   = useState('class');  // 'class' | 'teacher'
   const [mode,   setMode]   = useState('weekly'); // 'weekly' | 'CAT 1' | 'End Term' etc.
   const [examTypes, setExamTypes] = useState([]); // from profile
+  const [ttLabel, setTtLabel]     = useState('Weekly');
 
   // ── Period ────────────────────────────────────────────────────────────
   const [periodId, setPeriodId] = useState(currentPeriodId || '');
@@ -370,6 +371,7 @@ export default function Timetable({ currentUser, currentPeriodId, periods = [] }
         setStreams(profile?.streamsPerClass || {});
         setTeachers(tList);
         setExamTypes(profile?.custom_exams || ['CAT 1', 'CAT 2', 'Mid Term', 'End Term']);
+        setTtLabel(profile?.timetable_label || 'Weekly');
         if (cls.length > 0 && !selClass) setSelClass(cls[0]);
       } catch (e) { console.error(e); }
     })();
@@ -668,6 +670,7 @@ export default function Timetable({ currentUser, currentPeriodId, periods = [] }
               {selClass || '—'}
               {selClass && <span className={`tt-level-badge ${levelBadge.cls}`}>{levelBadge.label}</span>}
               {mode !== 'weekly' && <span className="tt-mode-badge">{mode.toUpperCase()}</span>}
+              {mode === 'weekly' && ttLabel !== 'Weekly' && <span className="tt-mode-badge">{ttLabel.toUpperCase()}</span>}
             </div>
           </div>
         </div>
@@ -678,7 +681,7 @@ export default function Timetable({ currentUser, currentPeriodId, periods = [] }
             className={`tt-mode-btn ${mode === 'weekly' ? 'active' : ''}`}
             onClick={() => setMode('weekly')}
           >
-            Weekly
+            {ttLabel}
           </button>
           
           {examTypes.map(et => (

@@ -411,7 +411,7 @@ export default function Grading({ currentUser, currentPeriodId }) {
         />
         
         <div style={{ display:'flex', gap:4, padding:'4px', background:'var(--bg)', borderRadius:10, border:'1px solid var(--border)', overflowX: 'auto' }}>
-          {(profile.customExams || ['CAT 1', 'CAT 2', 'Mid Term', 'End Term']).map(type => (
+          {(profile.custom_exams || ['CAT 1', 'CAT 2', 'Mid Term', 'End Term']).map(type => (
             <button
               key={type}
               onClick={() => setExamType(type)}

@@ -16,7 +16,8 @@ export default function Settings() {
     logo:'',subscriptionPlan:'Basic',
     activeClasses:[],gradeFees:{},streamsPerClass:{},customSubjects:{},
     mpesa_config: { shortcode: '', consumer_key: '', consumer_secret: '' },
-    sms_config: { sender_id: '', api_key: '' }
+    sms_config: { sender_id: '', api_key: '' },
+    custom_exams:[], timetable_label:''
   });
   const [saved,setSaved]       = useState(false);
   const [loading,setLoading]   = useState(false);
@@ -154,14 +155,14 @@ export default function Settings() {
   };
   const addExam=()=>{
     const val=newExam.trim();if(!val)return;
-    const cur=profile.customExams||['CAT 1','CAT 2','Mid Term','End Term'];
+    const cur=profile.custom_exams||['CAT 1','CAT 2','Mid Term','End Term'];
     if(cur.includes(val))return;
-    setProfile({...profile,customExams:[...cur,val]});
+    setProfile({...profile,custom_exams:[...cur,val]});
     setNewExam('');setSaved(false);
   };
   const removeExam=(exam)=>{
-    const cur=profile.customExams||[];
-    setProfile({...profile,customExams:cur.filter(e=>e!==exam)});setSaved(false);
+    const cur=profile.custom_exams||[];
+    setProfile({...profile,custom_exams:cur.filter(e=>e!==exam)});setSaved(false);
   };
   const addGradeItem=()=>{
     if(!newGradeItem.symbol) return;
@@ -433,7 +434,7 @@ export default function Settings() {
                     <div>
                       <div style={{fontSize:'0.72rem',fontWeight:700,color:'var(--text-light)',textTransform:'uppercase',marginBottom:8}}>Exam Types</div>
                       <div style={{display:'flex',flexWrap:'wrap',gap:6,marginBottom:10,minHeight:36}}>
-                        {(profile.customExams||['CAT 1','CAT 2','Mid Term','End Term']).map(e=>(
+                        {(profile.custom_exams||['CAT 1','CAT 2','Mid Term','End Term']).map(e=>(
                           <div key={e} style={{display:'inline-flex',alignItems:'center',gap:5,padding:'5px 10px',borderRadius:20,background:'var(--bg-card)',border:'1px solid var(--border)',fontSize:'0.82rem'}}>
                             <span>{e}</span>
                             <button onClick={()=>removeExam(e)} style={{background:'none',border:'none',cursor:'pointer',color:'var(--danger)',fontWeight:700}}>×</button>
@@ -443,6 +444,19 @@ export default function Settings() {
                       <div style={{display:'flex',gap:6}}>
                         <input className="form-input" style={{flex:1,fontSize:'0.82rem'}} value={newExam} onChange={e=>setNewExam(e.target.value)} onKeyDown={e=>e.key==='Enter'&&addExam()} placeholder="e.g. Mock Exam"/>
                         <button onClick={addExam} className="btn btn-ghost btn-sm" style={{display:'flex',alignItems:'center',gap:4}}><PlusIcon size={14} /> Add</button>
+                      </div>
+
+                      <div style={{marginTop: 16}}>
+                        <label style={{fontSize:'0.72rem',fontWeight:700,color:'var(--text-light)',textTransform:'uppercase',marginBottom:8,display:'block'}}>Regular Timetable Name</label>
+                        <input 
+                          className="form-input" 
+                          style={{fontSize:'0.82rem'}} 
+                          name="timetable_label"
+                          value={profile.timetable_label} 
+                          onChange={handleChange} 
+                          placeholder="e.g. Weekly, Regular, Core Schedule"
+                        />
+                        <p style={{fontSize:'0.65rem',color:'var(--text-muted)',marginTop:4}}>This label appears on the main scheduling button.</p>
                       </div>
                     </div>
 
