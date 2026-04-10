@@ -50,12 +50,16 @@ export default function Grading({ currentUser, currentPeriodId }) {
         setProfile(p);
         setAssignments(a);
         
-        const activeClassList = p.activeClasses || Object.values(CBC_STRUCTURE).flatMap(l => l.grades);
+        const activeClassList = (p.activeClasses || []).length > 0
+          ? (p.activeClasses || [])
+          : Object.values(CBC_STRUCTURE).flatMap(l => l.grades);
+        
+        const isMatch = (g1, g2) => g1?.toLowerCase().trim() === g2?.toLowerCase().trim();
         
         let defaultClass = selectedClass;
 
         // If no class is selected yet, or current selection is invalid, pick a new default
-        if (!selectedClass || !activeClassList.includes(selectedClass)) {
+        if (!selectedClass || !activeClassList.some(g => isMatch(g, selectedClass))) {
           // Rule 1: If teacher, pick their first assigned class
           if (isTeacher) {
             const assignedGrades = activeClassList.filter(g => 
@@ -342,10 +346,21 @@ export default function Grading({ currentUser, currentPeriodId }) {
         </div>
       </div>
 
-      {/* Level-grouped grade tabs */}
       <div style={{ marginBottom: 20 }}>
+        {Object.entries(CBC_STRUCTURE).every(([ln, ld]) => {
+          const isMatch = (g1, g2) => g1?.toLowerCase().trim() === g2?.toLowerCase().trim();
+          return !ld.grades.some(g => (profile.activeClasses || []).some(ac => isMatch(ac, g)));
+        }) && (
+          <div className="card shadow-sm" style={{ padding: '24px', textAlign: 'center', background: 'var(--primary-light)', color: 'var(--primary)', border: '1px dashed var(--primary)' }}>
+            <p style={{ margin: 0, fontWeight: 600 }}>No active classes found in your configuration.</p>
+            <p style={{ margin: '4px 0 0', fontSize: '0.85rem', opacity: 0.8 }}>Go to <strong>Settings &gt; Academic Configuration</strong> to enable your school's grades.</p>
+          </div>
+        )}
         {Object.entries(CBC_STRUCTURE).map(([levelName, levelData]) => {
-          const activeInLevel = levelData.grades.filter(g => profile.activeClasses?.includes(g));
+          const isMatch = (g1, g2) => g1?.toLowerCase().trim() === g2?.toLowerCase().trim();
+          const activeInLevel = levelData.grades.filter(g => 
+            (profile.activeClasses || []).some(ac => isMatch(ac, g))
+          );
           if (activeInLevel.length === 0) return null;
           return (
             <div key={levelName} style={{ marginBottom: 12 }}>

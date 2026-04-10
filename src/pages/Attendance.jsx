@@ -255,7 +255,10 @@ export default function Attendance({ currentUser, currentPeriodId }) {
           options={[
             { id: 'All', label: 'All Classes' },
             ...Object.entries(CBC_STRUCTURE).flatMap(([levelName, levelData]) => {
-              const activeInLevel = levelData.grades.filter(g => profile.activeClasses?.includes(g));
+              const isMatch = (g1, g2) => g1?.toLowerCase().trim() === g2?.toLowerCase().trim();
+              const activeInLevel = levelData.grades.filter(g => 
+                (profile.activeClasses || []).some(ac => isMatch(ac, g))
+              );
               return activeInLevel.map(g => {
                 const isMyClass = assignments[g] && Object.values(assignments[g]).some(streams => 
                   typeof streams === 'string' ? streams === currentUser?.id :

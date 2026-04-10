@@ -153,7 +153,10 @@ export default function Students({ currentUser, currentPeriodId }) {
               options={[
                 { id: 'All', label: 'All Classes' },
                 ...Object.entries(CBC_STRUCTURE).flatMap(([ln, ld]) => {
-                  const active = ld.grades.filter(g => (profile.activeClasses || []).includes(g));
+                  const isMatch = (g1, g2) => g1?.toLowerCase().trim() === g2?.toLowerCase().trim();
+                  const active = ld.grades.filter(g => 
+                    (profile.activeClasses || []).some(ac => isMatch(ac, g))
+                  );
                   return active.map(g => ({ id: g, label: g }));
                 })
               ]}
@@ -302,7 +305,10 @@ function StudentModal({ student, profile, onSave, onClose }) {
                 value={form.class} 
                 onChange={hc}
                 options={Object.entries(CBC_STRUCTURE).flatMap(([ln, ld]) => {
-                  const a = ld.grades.filter(g => profile.activeClasses?.includes(g));
+                  const isMatch = (g1, g2) => g1?.toLowerCase().trim() === g2?.toLowerCase().trim();
+                  const a = ld.grades.filter(g => 
+                    (profile.activeClasses || []).some(ac => isMatch(ac, g))
+                  );
                   if (!a.length) return [];
                   return a.map(g => ({ id: g, label: g }));
                 })}
