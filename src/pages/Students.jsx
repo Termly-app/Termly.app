@@ -373,11 +373,11 @@ function StudentDetail({ student, feeData, onClose, onEdit, currentUser, profile
         {loading?<p className="text-muted text-center" style={{padding:20}}>Loading...</p>:<>
           <div style={{textAlign:'center',marginBottom:18}}>
             <div style={{width:60,height:60,borderRadius:'50%',background:bg,color:'#fff',display:'flex',alignItems:'center',justifyContent:'center',fontSize:'1.2rem',fontWeight:700,margin:'0 auto 10px'}}>{ini}</div>
-            <h3 style={{fontSize:'1.05rem',marginBottom:6}}>{student.name}</h3>
+            <div style={{fontSize:'0.75rem',fontWeight:800,color:'var(--primary)',letterSpacing:'0.05em',marginBottom:4}}>{student.admNo}</div>
+            <h3 style={{fontSize:'1.15rem',fontWeight:800,marginBottom:6,color:'var(--text-main)'}}>{student.name}</h3>
             <div style={{display:'flex',gap:6,justifyContent:'center',flexWrap:'wrap'}}>
               <span className="badge badge-info">{student.class} {student.stream||''}</span>
               <span className={`level-badge ${lb.cls}`}>{lb.ico} {lv}</span>
-              <code style={{fontSize:'0.72rem',color:'var(--text-muted)'}}>{student.admNo}</code>
             </div>
           </div>
           <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:10,background:'var(--bg)',borderRadius:10,padding:14,marginBottom:12,fontSize:'0.875rem'}}>

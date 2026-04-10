@@ -150,6 +150,7 @@ export default function Attendance({ currentUser, currentPeriodId }) {
           <thead>
             <tr>
               <th rowspan="2">#</th>
+              <th rowspan="2">Adm No</th>
               <th rowspan="2" class="student-name">Student Name</th>
               ${dates.map(d => `<th>${new Date(d).toLocaleDateString(undefined, {weekday:'short', day:'numeric'})}</th>`).join('')}
               <th rowspan="2">Rate</th>
@@ -170,6 +171,7 @@ export default function Attendance({ currentUser, currentPeriodId }) {
               const rate = trackedDays > 0 ? ((presentCount / trackedDays) * 100).toFixed(0) : '0';
               return `<tr>
                 <td>${idx+1}</td>
+                <td><code>${s.admNo}</code></td>
                 <td class="student-name">${s.name}</td>
                 ${row}
                 <td><strong>${rate}%</strong></td>
@@ -178,7 +180,7 @@ export default function Attendance({ currentUser, currentPeriodId }) {
           </tbody>
         </table>
         <div class="footer">
-          ShuleSoft Portal — High Performance School Management — Generated on ${new Date().toLocaleString()}
+          School Management System — Generated on ${new Date().toLocaleString()}
         </div>
       </body></html>`);
       printWin.document.close();

@@ -149,7 +149,6 @@ export default function Dashboard({ currentUser, onLogout, currentPeriodId }) {
     { icon:<BookIcon size={18} />,    label:'Attendance',     sub:'Record daily attendance', to:'/attendance', bg:'#ECFDF5',  color:'#10B981', feature: 'Attendance Tracking' },
     { icon:<CardIcon size={18} />,    label:'Fees',           sub:'Fee collection & tracking', to:'/fees',    bg:'#FFFBEB',  color:'#F59E0B', feature: 'Student Fee Statements' },
     { icon:<BookIcon size={18} />,    label:'Timetable',      sub:'Automated scheduler',    to:'/timetable',  bg:'#F5F3FF',  color:'#6D28D9', feature: 'Timetable Builder' },
-    { icon:<RocketIcon size={18} />,  label:'NEMIS Export',  sub:'Ministry data upload',   to:'/dashboard',  bg:'#FFF1F2',  color:'#BE123C', feature: 'NEMIS Data Export' },
   ];
 
   // Helper to check if a feature is included in the current plan

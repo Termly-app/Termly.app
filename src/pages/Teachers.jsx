@@ -535,7 +535,7 @@ function ReportsTab() {
         </div>
         ${tableContent}
         <div class="footer">
-          ShuleSoft Portal — Advanced School Administration — ${new Date().getFullYear()}
+          Academic Management System — ${new Date().getFullYear()}
         </div>
       </body></html>`);
       printWin.document.close();

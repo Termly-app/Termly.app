@@ -201,7 +201,7 @@ export default function Library({ currentUser, currentPeriodId }) {
             </tbody>
           </table>
           <div style="margin-top: 40px; text-align: center; font-size: 11px; color: #94a3b8;">
-            ShuleSoft Library Management System
+            Library Management System
           </div>
         </body>
       </html>

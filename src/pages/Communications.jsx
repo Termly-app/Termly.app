@@ -199,7 +199,8 @@ export default function Communications({ currentUser }) {
                       {searchedStudents.map(s => (
                         <div key={s.id} className="search-item" onClick={() => { setSelectedStudent(s); setSearchQuery(''); }}>
                           <div>
-                            <strong>{s.name}</strong>
+                            <div style={{ fontSize: '0.65rem', fontWeight: 800, color: 'var(--primary)', marginBottom: 2 }}>{s.admNo}</div>
+                            <strong style={{ fontSize: '0.95rem' }}>{s.name}</strong>
                             <div style={{ fontSize: '0.75rem', opacity: 0.7 }}>{s.class} {s.stream} - Parent: {s.parentName}</div>
                           </div>
                           <UserIcon size={14} />
