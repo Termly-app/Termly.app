@@ -290,21 +290,21 @@ function Sidebar({ isOpen, onClose, onLogout, currentUser, subscriptionActive })
       {/* Nav */}
       <nav className="sidebar-nav">
         <SbSection label="General" />
-        <SbLink to="/dashboard" icon={DashboardIcon} label="Dashboard" onClick={onClose} locked={!subscriptionActive && !isSandbox} />
+        <SbLink to="/dashboard" icon={DashboardIcon} label="Dashboard" onClick={onClose} locked={(!subscriptionActive && !isSandbox) && !isPlatformAdmin} />
         
         {/* Teachers and Admins manage students */}
         {(isTeacher || isAdmin) && (
-          <SbLink to="/students"  icon={StudentsIcon}  label="Students"  onClick={onClose} locked={!subscriptionActive && !isSandbox} />
+          <SbLink to="/students"  icon={StudentsIcon}  label="Students"  onClick={onClose} locked={(!subscriptionActive && !isSandbox) && !isPlatformAdmin} />
         )}
         
         {/* Only Admins manage staff */}
         {isAdmin && (
-          <SbLink to="/teachers" icon={StaffIcon} label="Staff" onClick={onClose} locked={!subscriptionActive && !isSandbox} />
+          <SbLink to="/teachers" icon={StaffIcon} label="Staff" onClick={onClose} locked={(!subscriptionActive && !isSandbox) && !isPlatformAdmin} />
         )}
 
         {/* Librarians and Admins manage library */}
         {(isLibrarian || isAdmin) && (features.library || isSandbox) && (
-          <SbLink to="/library" icon={BookIcon} label="Library" onClick={onClose} locked={!subscriptionActive || (isSandbox && !features.library)} />
+          <SbLink to="/library" icon={BookIcon} label="Library" onClick={onClose} locked={(!subscriptionActive || (isSandbox && !features.library)) && !isPlatformAdmin} />
         )}
 
         {/* Academic section - always visible for Sandbox, else gated */}
@@ -313,19 +313,19 @@ function Sidebar({ isOpen, onClose, onLogout, currentUser, subscriptionActive })
         )}
         
         {(isTeacher || isAdmin) && (features.attendance || isSandbox) && (
-          <SbLink to="/attendance" icon={AttendanceIcon} label="Attendance" onClick={onClose} locked={!subscriptionActive || (isSandbox && !features.attendance)} />
+          <SbLink to="/attendance" icon={AttendanceIcon} label="Attendance" onClick={onClose} locked={(!subscriptionActive || (isSandbox && !features.attendance)) && !isPlatformAdmin} />
         )}
         
         {(isTeacher || isAdmin) && (features.grading || isSandbox) && (
-          <SbLink to="/grading"   icon={GradingIcon}   label="Grading"    onClick={onClose} locked={!subscriptionActive || (isSandbox && !features.grading)} />
+          <SbLink to="/grading"   icon={GradingIcon}   label="Grading"    onClick={onClose} locked={(!subscriptionActive || (isSandbox && !features.grading)) && !isPlatformAdmin} />
         )}
         
         {(isTeacher || isAdmin) && (features.timetable || isSandbox) && (
-          <SbLink to="/timetable" icon={TimetableIcon} label={features.exam_scheduling ? "Scheduling" : "Timetable"} onClick={onClose} locked={!subscriptionActive || (isSandbox && !features.timetable)} />
+          <SbLink to="/timetable" icon={TimetableIcon} label={features.exam_scheduling ? "Scheduling" : "Timetable"} onClick={onClose} locked={(!subscriptionActive || (isSandbox && !features.timetable)) && !isPlatformAdmin} />
         )}
 
         {(isTeacher || isAdmin) && (features.lms || isSandbox) && (
-          <SbLink to="/lms" icon={ActivityIcon} label="E-Learning" onClick={onClose} locked={!subscriptionActive || (isSandbox && !features.lms)} />
+          <SbLink to="/lms" icon={ActivityIcon} label="E-Learning" onClick={onClose} locked={(!subscriptionActive || (isSandbox && !features.lms)) && !isPlatformAdmin} />
         )}
 
         {/* Administration/Finance section - always visible for Sandbox, else gated */}
@@ -334,21 +334,21 @@ function Sidebar({ isOpen, onClose, onLogout, currentUser, subscriptionActive })
         )}
         
         {(isAdmin || isFinance) && (features.fees || isSandbox) && (
-          <SbLink to="/fees" icon={FeesIcon} label="Fees & Billing" onClick={onClose} locked={!subscriptionActive || (isSandbox && !features.fees)} />
+          <SbLink to="/fees" icon={FeesIcon} label="Fees & Billing" onClick={onClose} locked={(!subscriptionActive || (isSandbox && !features.fees)) && !isPlatformAdmin} />
         )}
 
         
 
         {isAdmin && (features.sms || isSandbox) && (
-          <SbLink to="/communications" icon={MessageIcon} label="Comm. Center" onClick={onClose} locked={!subscriptionActive || (isSandbox && !features.sms)} />
+          <SbLink to="/communications" icon={MessageIcon} label="Comm. Center" onClick={onClose} locked={(!subscriptionActive || (isSandbox && !features.sms)) && !isPlatformAdmin} />
         )}
 
         {(isAdmin || isTeacher) && (features.teacher_portal || isSandbox) && (
-          <SbLink to="/portal/teacher" icon={StaffIcon} label="Teacher Portal" onClick={onClose} locked={!subscriptionActive || (isSandbox && !features.teacher_portal)} />
+          <SbLink to="/portal/teacher" icon={StaffIcon} label="Teacher Portal" onClick={onClose} locked={(!subscriptionActive || (isSandbox && !features.teacher_portal)) && !isPlatformAdmin} />
         )}
 
         {isAdmin && (features.parent_portal || isSandbox) && (
-          <SbLink to="/portal/parent" icon={UserIcon} label="Parent Portal" onClick={onClose} locked={!subscriptionActive || (isSandbox && !features.parent_portal)} />
+          <SbLink to="/portal/parent" icon={UserIcon} label="Parent Portal" onClick={onClose} locked={(!subscriptionActive || (isSandbox && !features.parent_portal)) && !isPlatformAdmin} />
         )}
         <SbSection label="Resources" />
         <SbLink to="/help" icon={BookIcon} label="Help Center" onClick={onClose} />

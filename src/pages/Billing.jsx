@@ -114,6 +114,10 @@ export default function Billing() {
     </div>
   );
 
+  const isSandbox = profile?.subscriptionPlan?.toLowerCase() === 'sandbox';
+  const badgeText = isSandbox ? '● FREE WORKSPACE' : (isActive ? '● ACTIVE SUBSCRIPTION' : '● ACCESS RESTRICTED');
+  const badgeClass = (isActive || isSandbox) ? 'badge-success' : 'badge-danger';
+
   return (
     <div className="animate-in">
       <Helmet>
@@ -127,14 +131,14 @@ export default function Billing() {
             <p className="text-muted">Manage your school's platform access and payments</p>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
-            <div className={`badge ${isActive ? 'badge-success' : 'badge-danger'}`} style={{ 
+            <div className={`badge ${badgeClass}`} style={{ 
               fontSize: '0.75rem', 
               padding: '8px 16px', 
               fontWeight: 700,
               letterSpacing: '0.05em',
-              animation: !isActive ? 'pulse 2s infinite' : 'none' 
+              animation: (!isActive && !isSandbox) ? 'pulse 2s infinite' : 'none' 
             }}>
-              {isActive ? '● ACTIVE SUBSCRIPTION' : '● ACCESS RESTRICTED'}
+              {badgeText}
             </div>
           </div>
         </div>
@@ -176,9 +180,13 @@ export default function Billing() {
                 </h4>
                 <div style={{ display: 'flex', gap: 8, marginTop: 4 }}>
                   <p style={{ margin: 0, opacity: 0.7, fontSize: '0.9rem', fontWeight: 500 }}>
-                    {(settings?.billing?.expiry_date || profile.subscriptionExpiry) 
-                      ? `Valid until ${new Date(settings?.billing?.expiry_date || profile.subscriptionExpiry).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}`
-                      : 'No active subscription'}
+                    {isSandbox ? (
+                      'Permanent Access (Free Workspace)'
+                    ) : (settings?.billing?.expiry_date || profile.subscriptionExpiry) ? (
+                      `Valid until ${new Date(settings?.billing?.expiry_date || profile.subscriptionExpiry).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}`
+                    ) : (
+                      'No active subscription'
+                    )}
                   </p>
                 </div>
               </div>
@@ -207,7 +215,7 @@ export default function Billing() {
             <div style={{ paddingTop: 20, borderTop: '1px solid rgba(255,255,255,0.05)' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 12 }}>
                 <span style={{ opacity: 0.6 }}>School Identity:</span>
-                <span style={{ fontWeight: 600 }}>{profile?.school_name}</span>
+                <span style={{ fontWeight: 600 }}>{profile?.schoolName}</span>
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                 <span style={{ opacity: 0.6 }}>Billing Cycle:</span>
