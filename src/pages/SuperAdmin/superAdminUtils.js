@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { MODULE_LABELS } from '../../../data/constants';
+import { MODULE_LABELS } from '../../data/constants';
 
 // ── Chart.js shared constants ──────────────────────────────────────────────
 export const GC  = 'rgba(255,255,255,0.05)';
