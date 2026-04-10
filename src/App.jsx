@@ -1,4 +1,4 @@
-import { useState, useEffect, Component } from 'react';
+import { useState, useEffect, Component, lazy, Suspense } from 'react';
 import { Routes, Route, NavLink, useLocation, Navigate } from 'react-router-dom';
 import { supabase } from './lib/supabase';
 import {
@@ -15,44 +15,45 @@ import {
   subscribeToSchoolChanges,
 } from './data/store';
 
-// Pages
-import Dashboard    from './pages/Dashboard';
-import Students     from './pages/Students';
-import Teachers     from './pages/Teachers';
-import Grading      from './pages/Grading';
-import Fees         from './pages/Fees';
-import Timetable    from './pages/Timetable';
-import Attendance   from './pages/Attendance';
-import Library      from './pages/Library';
-import Settings     from './pages/Settings';
-import Login        from './pages/Login';
-import Security     from './pages/Security';
-import Billing      from './pages/Billing';
-import Communications from './pages/Communications';
-import SuperAdmin   from './pages/SuperAdmin';
-import Landing      from './pages/Landing';
-import Register     from './pages/Register';
-import MpesaReconciliation from './pages/MpesaReconciliation';
-import PortalManager from './pages/Portal';
-import StaffPortalManager from './pages/StaffPortal';
-import LMS          from './pages/LMS';
-import TermsOfService  from './pages/legal/TermsOfService';
-import PrivacyPolicy   from './pages/legal/PrivacyPolicy';
-import AcceptableUse   from './pages/legal/AcceptableUse';
-import RefundPolicy    from './pages/legal/RefundPolicy';
-import ServiceLevel    from './pages/legal/ServiceLevel';
-import ContactSupport  from './pages/ContactSupport';
-import AboutUs         from './pages/AboutUs';
-import FAQ             from './pages/FAQ';
-import SecurityTrust   from './pages/SecurityTrust';
-import Docs            from './pages/Docs';
-import Blog            from './pages/Blog';
-import Partners        from './pages/Partners';
-import ForgotPassword  from './pages/ForgotPassword';
-import ResetPassword   from './pages/ResetPassword';
+// Pages (Lazy Loaded)
+const Dashboard    = lazy(() => import('./pages/Dashboard'));
+const Students     = lazy(() => import('./pages/Students'));
+const Teachers     = lazy(() => import('./pages/Teachers'));
+const Grading      = lazy(() => import('./pages/Grading'));
+const Fees         = lazy(() => import('./pages/Fees'));
+const Timetable    = lazy(() => import('./pages/Timetable'));
+const Attendance   = lazy(() => import('./pages/Attendance'));
+const Library      = lazy(() => import('./pages/Library'));
+const Settings     = lazy(() => import('./pages/Settings'));
+const Login        = lazy(() => import('./pages/Login'));
+const Security     = lazy(() => import('./pages/Security'));
+const Billing      = lazy(() => import('./pages/Billing'));
+const Communications = lazy(() => import('./pages/Communications'));
+const SuperAdmin   = lazy(() => import('./pages/SuperAdmin'));
+const Landing      = lazy(() => import('./pages/Landing'));
+const Register     = lazy(() => import('./pages/Register'));
+const MpesaReconciliation = lazy(() => import('./pages/MpesaReconciliation'));
+const PortalManager = lazy(() => import('./pages/Portal'));
+const StaffPortalManager = lazy(() => import('./pages/StaffPortal'));
+const LMS          = lazy(() => import('./pages/LMS'));
+const TermsOfService  = lazy(() => import('./pages/legal/TermsOfService'));
+const PrivacyPolicy   = lazy(() => import('./pages/legal/PrivacyPolicy'));
+const AcceptableUse   = lazy(() => import('./pages/legal/AcceptableUse'));
+const RefundPolicy    = lazy(() => import('./pages/legal/RefundPolicy'));
+const ServiceLevel    = lazy(() => import('./pages/legal/ServiceLevel'));
+const ContactSupport  = lazy(() => import('./pages/ContactSupport'));
+const AboutUs         = lazy(() => import('./pages/AboutUs'));
+const FAQ             = lazy(() => import('./pages/FAQ'));
+const SecurityTrust   = lazy(() => import('./pages/SecurityTrust'));
+const Docs            = lazy(() => import('./pages/Docs'));
+const Blog            = lazy(() => import('./pages/Blog'));
+const Partners        = lazy(() => import('./pages/Partners'));
+const ForgotPassword  = lazy(() => import('./pages/ForgotPassword'));
+const ResetPassword   = lazy(() => import('./pages/ResetPassword'));
+const HelpCenter      = lazy(() => import('./pages/HelpCenter'));
+
 import Loader          from './components/Common/Loader';
 import SyncIndicator from './components/Common/SyncIndicator';
-import HelpCenter from './pages/HelpCenter';
 import PricingUpgrade from './components/PricingUpgrade';
 import Select from './components/Common/Select';
 
@@ -551,6 +552,7 @@ function App() {
   if (!currentUser) {
     return (
       <>
+      <Suspense fallback={<Loader />}>
         <Routes>
           <Route path="/"                   element={<Landing />} />
           <Route path="/login"              element={<Login onLogin={setCurrentUser} />} />
@@ -573,6 +575,7 @@ function App() {
           <Route path="/staff/*"            element={<StaffPortalManager />} />
           <Route path="*"                   element={<Landing />} />
         </Routes>
+      </Suspense>
       </>
     );
   }
@@ -582,20 +585,22 @@ function App() {
     return (
       <>
         <div className="admin-layout">
-          <Routes>
-            <Route path="/super-admin" element={
-              <ErrorBoundary>
-                <SuperAdmin
-                  currentUser={currentUser}
-                  isPlatformAdmin={isPlatformAdmin}
-                  sidebarOpen={sidebarOpen}
-                  setSidebarOpen={setSidebarOpen}
-                  onSignOut={handleLogout}
-                />
-              </ErrorBoundary>
-            } />
-            <Route path="*" element={<Navigate to="/super-admin" replace />} />
-          </Routes>
+          <Suspense fallback={<Loader />}>
+            <Routes>
+              <Route path="/super-admin" element={
+                <ErrorBoundary>
+                  <SuperAdmin
+                    currentUser={currentUser}
+                    isPlatformAdmin={isPlatformAdmin}
+                    sidebarOpen={sidebarOpen}
+                    setSidebarOpen={setSidebarOpen}
+                    onSignOut={handleLogout}
+                  />
+                </ErrorBoundary>
+              } />
+              <Route path="*" element={<Navigate to="/super-admin" replace />} />
+            </Routes>
+          </Suspense>
         </div>
       </>
     );
@@ -659,65 +664,67 @@ function App() {
 
         {/* Page content */}
         <div className="page-content">
-          <ErrorBoundary>
-            <Routes>
-              {!subscriptionActive ? (
-                <>
-                  <Route path="/billing"  element={<Billing currentUser={currentUser} />} />
-                  <Route path="/support"  element={<ContactSupport />} />
-                  <Route path="*"         element={<Navigate to="/billing" replace />} />
-                </>
-              ) : (
-                <>
-                  {/* Shared Dashboard */}
-                  <Route path="/dashboard" element={<Dashboard currentUser={currentUser} onLogout={handleLogout} currentPeriodId={currentPeriodId} />} />
-                  <Route path="/help"      element={<HelpCenter />} />
-                  
-                  {/* Academic Routes: Admin & Teacher */}
-                  {(isAdmin || isTeacher) && (
-                    <>
-                      <Route path="/students"     element={<Students currentUser={currentUser} currentPeriodId={currentPeriodId} />} />
-                      <Route path="/grading"      element={<SectionGate featureSlug="grading" featureName="Grading" profile={profile}><Grading currentUser={currentUser} currentPeriodId={currentPeriodId} /></SectionGate>} />
-                      <Route path="/attendance"   element={<SectionGate featureSlug="attendance" featureName="Attendance" profile={profile}><Attendance currentUser={currentUser} currentPeriodId={currentPeriodId} /></SectionGate>} />
-                      <Route path="/timetable"    element={<SectionGate featureSlug="timetable" featureName="Timetable" profile={profile}><Timetable currentUser={currentUser} currentPeriodId={currentPeriodId} periods={periods} /></SectionGate>} />
-                      <Route path="/lms"          element={<SectionGate featureSlug="lms" featureName="E-Learning" profile={profile}><LMS currentUser={currentUser} /></SectionGate>} />
-                    </>
-                  )}
+          <Suspense fallback={<Loader />}>
+            <ErrorBoundary>
+              <Routes>
+                {!subscriptionActive ? (
+                  <>
+                    <Route path="/billing"  element={<Billing currentUser={currentUser} />} />
+                    <Route path="/support"  element={<ContactSupport />} />
+                    <Route path="*"         element={<Navigate to="/billing" replace />} />
+                  </>
+                ) : (
+                  <>
+                    {/* Shared Dashboard */}
+                    <Route path="/dashboard" element={<Dashboard currentUser={currentUser} onLogout={handleLogout} currentPeriodId={currentPeriodId} />} />
+                    <Route path="/help"      element={<HelpCenter />} />
+                    
+                    {/* Academic Routes: Admin & Teacher */}
+                    {(isAdmin || isTeacher) && (
+                      <>
+                        <Route path="/students"     element={<Students currentUser={currentUser} currentPeriodId={currentPeriodId} />} />
+                        <Route path="/grading"      element={<SectionGate featureSlug="grading" featureName="Grading" profile={profile}><Grading currentUser={currentUser} currentPeriodId={currentPeriodId} /></SectionGate>} />
+                        <Route path="/attendance"   element={<SectionGate featureSlug="attendance" featureName="Attendance" profile={profile}><Attendance currentUser={currentUser} currentPeriodId={currentPeriodId} /></SectionGate>} />
+                        <Route path="/timetable"    element={<SectionGate featureSlug="timetable" featureName="Timetable" profile={profile}><Timetable currentUser={currentUser} currentPeriodId={currentPeriodId} periods={periods} /></SectionGate>} />
+                        <Route path="/lms"          element={<SectionGate featureSlug="lms" featureName="E-Learning" profile={profile}><LMS currentUser={currentUser} /></SectionGate>} />
+                      </>
+                    )}
 
-                  {/* Finance Routes: Admin & Finance */}
-                  {(isAdmin || isFinance) && (
-                    <>
-                      <Route path="/fees"      element={<SectionGate featureSlug="fees" featureName="Fees" profile={profile}><Fees currentUser={currentUser} currentPeriodId={currentPeriodId} /></SectionGate>} />
-                    </>
-                  )}
+                    {/* Finance Routes: Admin & Finance */}
+                    {(isAdmin || isFinance) && (
+                      <>
+                        <Route path="/fees"      element={<SectionGate featureSlug="fees" featureName="Fees" profile={profile}><Fees currentUser={currentUser} currentPeriodId={currentPeriodId} /></SectionGate>} />
+                      </>
+                    )}
 
-                  {/* Communications Routes: Admin */}
-                  {isAdmin && (
-                    <Route path="/communications" element={<SectionGate featureSlug="sms" featureName="Communications" profile={profile}><Communications currentUser={currentUser} /></SectionGate>} />
-                  )}
+                    {/* Communications Routes: Admin */}
+                    {isAdmin && (
+                      <Route path="/communications" element={<SectionGate featureSlug="sms" featureName="Communications" profile={profile}><Communications currentUser={currentUser} /></SectionGate>} />
+                    )}
 
-                  {/* Library Routes: Admin & Librarian */}
-                  {(isAdmin || isLibrarian) && (
-                    <Route path="/library" element={<SectionGate featureSlug="library" featureName="Library" profile={profile}><Library currentUser={currentUser} currentPeriodId={currentPeriodId} /></SectionGate>} />
-                  )}
+                    {/* Library Routes: Admin & Librarian */}
+                    {(isAdmin || isLibrarian) && (
+                      <Route path="/library" element={<SectionGate featureSlug="library" featureName="Library" profile={profile}><Library currentUser={currentUser} currentPeriodId={currentPeriodId} /></SectionGate>} />
+                    )}
 
-                  {/* Admin-Only Routes */}
-                  {isAdmin && (
-                    <>
-                      <Route path="/teachers" element={<Teachers currentUser={currentUser} currentPeriodId={currentPeriodId} />} />
-                      <Route path="/security" element={<Security currentUser={currentUser} />} />
-                      <Route path="/settings" element={<Settings currentUser={currentUser} />} />
-                      <Route path="/billing"  element={<Billing currentUser={currentUser} />} />
-                      <Route path="/portal/teacher" element={<SectionGate featureSlug="teacher_portal" featureName="Teacher Portal" profile={profile}><div style={{padding:40}}>Teacher Portal Management (Coming Soon)</div></SectionGate>} />
-                      <Route path="/portal/parent"  element={<SectionGate featureSlug="parent_portal"  featureName="Parent Portal"  profile={profile}><div style={{padding:40}}>Parent Portal Management (Coming Soon)</div></SectionGate>} />
-                    </>
-                  )}
+                    {/* Admin-Only Routes */}
+                    {isAdmin && (
+                      <>
+                        <Route path="/teachers" element={<Teachers currentUser={currentUser} currentPeriodId={currentPeriodId} />} />
+                        <Route path="/security" element={<Security currentUser={currentUser} />} />
+                        <Route path="/settings" element={<Settings currentUser={currentUser} />} />
+                        <Route path="/billing"  element={<Billing currentUser={currentUser} />} />
+                        <Route path="/portal/teacher" element={<SectionGate featureSlug="teacher_portal" featureName="Teacher Portal" profile={profile}><div style={{padding:40}}>Teacher Portal Management (Coming Soon)</div></SectionGate>} />
+                        <Route path="/portal/parent"  element={<SectionGate featureSlug="parent_portal"  featureName="Parent Portal"  profile={profile}><div style={{padding:40}}>Parent Portal Management (Coming Soon)</div></SectionGate>} />
+                      </>
+                    )}
 
-                  <Route path="*"         element={<div style={{padding:48, textAlign:'center'}}><h2>403 - Unauthorized</h2><p>You don't have permission to access this module.</p></div>} />
-                </>
-              )}
-            </Routes>
-          </ErrorBoundary>
+                    <Route path="*"         element={<div style={{padding:48, textAlign:'center'}}><h2>403 - Unauthorized</h2><p>You don't have permission to access this module.</p></div>} />
+                  </>
+                )}
+              </Routes>
+            </ErrorBoundary>
+          </Suspense>
         </div>
       </main>
     </div>

@@ -57,6 +57,14 @@ const EMPTY_PLAN = {
   modules     : [],   // <-- Hard feature access control slugs
 };
 
+const S = {
+  label  : { fontSize:'.52rem', color:'var(--sub)', letterSpacing:'.08em', textTransform:'uppercase', marginBottom:5, display:'block' },
+  input  : { width:'100%', background:'var(--bg)', border:'1px solid var(--edge)', borderRadius:7, padding:'8px 11px', color:'var(--txt)', fontFamily:'var(--fb)', fontSize:'.78rem', outline:'none' },
+  numInput: { background:'var(--bg)', border:'1px solid var(--edge)', borderRadius:6, padding:'7px 10px', color:'var(--txt)', fontFamily:"'Space Mono',monospace", fontSize:'.78rem', outline:'none', width:'100%' },
+  chip   : { padding:'3px 9px', borderRadius:5, fontSize:'.65rem', cursor:'pointer', border:'1px solid rgba(255,255,255,.1)', background:'transparent', color:'var(--sub)', fontFamily:'var(--fb)', transition:'all .13s', display:'inline-block', marginRight:5, marginBottom:5 },
+  fChip  : (added) => ({ padding:'2px 8px', borderRadius:4, fontSize:'.62rem', border:`1px solid ${added ? 'rgba(13,216,138,.3)' : 'rgba(255,255,255,.08)'}`, background: added ? 'rgba(13,216,138,.08)' : 'transparent', color: added ? 'var(--te)' : 'var(--sub)', cursor:'pointer', display:'inline-flex', alignItems:'center', gap:4, marginRight:4, marginBottom:4, transition:'all .13s' }),
+};
+
 export default function SettingsTab({
   gwInstructions, setGwInstructions,
   statusMsg, setStatusMsg,
@@ -161,13 +169,6 @@ export default function SettingsTab({
     } finally { setSavingPricing(false); }
   };
 
-  const S = {
-    label  : { fontSize:'.52rem', color:'var(--sub)', letterSpacing:'.08em', textTransform:'uppercase', marginBottom:5, display:'block' },
-    input  : { width:'100%', background:'var(--bg)', border:'1px solid var(--edge)', borderRadius:7, padding:'8px 11px', color:'var(--txt)', fontFamily:'var(--fb)', fontSize:'.78rem', outline:'none' },
-    numInput: { background:'var(--bg)', border:'1px solid var(--edge)', borderRadius:6, padding:'7px 10px', color:'var(--txt)', fontFamily:"'Space Mono',monospace", fontSize:'.78rem', outline:'none', width:'100%' },
-    chip   : { padding:'3px 9px', borderRadius:5, fontSize:'.65rem', cursor:'pointer', border:'1px solid rgba(255,255,255,.1)', background:'transparent', color:'var(--sub)', fontFamily:'var(--fb)', transition:'all .13s', display:'inline-block', marginRight:5, marginBottom:5 },
-    fChip  : (added) => ({ padding:'2px 8px', borderRadius:4, fontSize:'.62rem', border:`1px solid ${added ? 'rgba(13,216,138,.3)' : 'rgba(255,255,255,.08)'}`, background: added ? 'rgba(13,216,138,.08)' : 'transparent', color: added ? 'var(--te)' : 'var(--sub)', cursor:'pointer', display:'inline-flex', alignItems:'center', gap:4, marginRight:4, marginBottom:4, transition:'all .13s' }),
-  };
 
   return (
     <div className="tv">
