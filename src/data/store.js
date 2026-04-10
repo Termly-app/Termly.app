@@ -267,11 +267,8 @@ export async function getDiscoveryMetrics() {
 
 
 // ============= SCHOOL PROFILE =============
-const defaultStreams = ['East', 'West', 'North', 'South'];
+const defaultStreams = [];
 const defaultStreamsPerClass = {};
-Object.values(CBC_STRUCTURE).flatMap(l => l.grades).forEach(g => {
-  defaultStreamsPerClass[g] = [...defaultStreams];
-});
 
 const DEFAULT_PROFILE = {
   schoolName: 'My Institution',
