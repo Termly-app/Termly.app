@@ -79,20 +79,25 @@ var CBC_STRUCTURE = {
 
 // Helper: Get level for a grade
 function getLevelForGrade(grade) {
+  if (!grade) return 'Upper Primary';
+  const cleanGrade = String(grade).trim().toLowerCase();
   for (const [level, data] of Object.entries(CBC_STRUCTURE)) {
-    if (data.grades.includes(grade)) return level;
+    if (data.grades.some(g => g.trim().toLowerCase() === cleanGrade)) return level;
   }
   return 'Upper Primary';
 }
 
 // Helper: Get subjects for a grade
 function getSubjectsForGrade(grade, profile = null, pathway = null) {
+  if (!grade) return [];
   const level = getLevelForGrade(grade);
   const levelData = CBC_STRUCTURE[level];
   
   // Use custom subjects from profile if they exist for this level
-  if (profile?.customSubjects?.[level]) {
-    return profile.customSubjects[level];
+  // Normalizing the level key access
+  const cleanLevel = level.trim();
+  if (profile?.customSubjects?.[cleanLevel]) {
+    return profile.customSubjects[cleanLevel];
   }
   
   // Fallback to default subjects from seedData

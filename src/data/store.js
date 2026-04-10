@@ -352,6 +352,17 @@ export async function getSchoolProfile() {
 function mapProfileData(data) {
   if (!data) return DEFAULT_PROFILE;
   
+  // Normalization utilities
+  const trimArr = (arr) => (Array.isArray(arr) ? arr.map(s => s?.trim()).filter(Boolean) : null);
+  const trimObjKeys = (obj) => {
+    if (!obj) return null;
+    const clean = {};
+    Object.entries(obj).forEach(([k, v]) => {
+      clean[k.trim()] = Array.isArray(v) ? trimArr(v) : v;
+    });
+    return clean;
+  };
+
   // Naming resolution for subscription plan
   let plan = data.subscription_plan || 'Sandbox';
 
@@ -363,11 +374,11 @@ function mapProfileData(data) {
     address: data.address || '',
     logo: data.logo || '',
     subscriptionPlan: plan,
-    streamsPerClass: data.streams_per_class || data.custom_subjects?.__shadow_streams_per_class || DEFAULT_PROFILE.streamsPerClass,
+    streamsPerClass: trimObjKeys(data.streams_per_class || data.custom_subjects?.__shadow_streams_per_class) || DEFAULT_PROFILE.streamsPerClass,
     customSubjects: data.custom_subjects || {},
-    boardingHouses: data.boarding_houses || data.custom_subjects?.__shadow_boarding_houses || DEFAULT_PROFILE.boardingHouses,
-    custom_exams: data.custom_exams || DEFAULT_PROFILE.custom_exams,
-    activeClasses: data.active_classes || data.custom_subjects?.__shadow_active_classes || DEFAULT_PROFILE.activeClasses,
+    boardingHouses: trimArr(data.boarding_houses || data.custom_subjects?.__shadow_boarding_houses) || DEFAULT_PROFILE.boardingHouses,
+    custom_exams: trimArr(data.custom_exams) || DEFAULT_PROFILE.custom_exams,
+    activeClasses: trimArr(data.active_classes || data.custom_subjects?.__shadow_active_classes) || DEFAULT_PROFILE.activeClasses,
     gradeFees: data.grade_fees || {},
     setup_completed: data.setup_completed || data.custom_subjects?.__shadow_setup_completed || false,
     subscriptionStatus: data.subscription_status || 'Inactive',
@@ -386,12 +397,12 @@ function mapProfileData(data) {
       _encrypted: data.sms_config
     },
     curriculum: data.curriculum || 'CBC Only',
-    custom_exams: data.custom_exams || DEFAULT_PROFILE.custom_exams,
+    custom_exams: trimArr(data.custom_exams) || DEFAULT_PROFILE.custom_exams,
     timetable_label: data.timetable_label || DEFAULT_PROFILE.timetable_label,
     _dbId: data.id,
     schoolId: data.school_id,
     schoolType: data.school_type || data.custom_subjects?.__shadow_school_type || 'Day',
-    boardingHouses: data.boarding_houses || data.custom_subjects?.__shadow_boarding_houses || DEFAULT_PROFILE.boardingHouses,
+    boardingHouses: trimArr(data.boarding_houses || data.custom_subjects?.__shadow_boarding_houses) || DEFAULT_PROFILE.boardingHouses,
   };
 }
 

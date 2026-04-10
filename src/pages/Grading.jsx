@@ -28,7 +28,7 @@ export default function Grading({ currentUser, currentPeriodId }) {
   const [coreCompData, setCoreCompData] = useState({});
   const [profile, setProfile] = useState({ streams: [], activeClasses: [] });
   const [selectedPathway, setSelectedPathway] = useState('STEM');
-  const [examType, setExamType] = useState('End Term');
+  const [examType, setExamType] = useState('');
   const [loading, setLoading] = useState(true);
   const [assignments, setAssignments] = useState({});
 
@@ -50,16 +50,21 @@ export default function Grading({ currentUser, currentPeriodId }) {
         setProfile(p);
         setAssignments(a);
         
+        // Initialize examType if not set
+        if (!examType && p.custom_exams?.length > 0) {
+          setExamType(p.custom_exams[0]);
+        } else if (!examType) {
+          setExamType('End Term'); // Final fallback if profile list is somehow empty
+        }
+
         const activeClassList = (p.activeClasses || []).length > 0
           ? (p.activeClasses || [])
           : Object.values(CBC_STRUCTURE).flatMap(l => l.grades);
         
-        const isMatch = (g1, g2) => g1?.toLowerCase().trim() === g2?.toLowerCase().trim();
-        
         let defaultClass = selectedClass;
 
         // If no class is selected yet, or current selection is invalid, pick a new default
-        if (!selectedClass || !activeClassList.some(g => isMatch(g, selectedClass))) {
+        if (!selectedClass || !activeClassList.includes(selectedClass)) {
           // Rule 1: If teacher, pick their first assigned class
           if (isTeacher) {
             const assignedGrades = activeClassList.filter(g => 
@@ -348,8 +353,7 @@ export default function Grading({ currentUser, currentPeriodId }) {
 
       <div style={{ marginBottom: 20 }}>
         {Object.entries(CBC_STRUCTURE).every(([ln, ld]) => {
-          const isMatch = (g1, g2) => g1?.toLowerCase().trim() === g2?.toLowerCase().trim();
-          return !ld.grades.some(g => (profile.activeClasses || []).some(ac => isMatch(ac, g)));
+          return !ld.grades.some(g => (profile.activeClasses || []).includes(g));
         }) && (
           <div className="card shadow-sm" style={{ padding: '24px', textAlign: 'center', background: 'var(--primary-light)', color: 'var(--primary)', border: '1px dashed var(--primary)' }}>
             <p style={{ margin: 0, fontWeight: 600 }}>No active classes found in your configuration.</p>
@@ -357,10 +361,7 @@ export default function Grading({ currentUser, currentPeriodId }) {
           </div>
         )}
         {Object.entries(CBC_STRUCTURE).map(([levelName, levelData]) => {
-          const isMatch = (g1, g2) => g1?.toLowerCase().trim() === g2?.toLowerCase().trim();
-          const activeInLevel = levelData.grades.filter(g => 
-            (profile.activeClasses || []).some(ac => isMatch(ac, g))
-          );
+          const activeInLevel = levelData.grades.filter(g => (profile.activeClasses || []).includes(g));
           if (activeInLevel.length === 0) return null;
           return (
             <div key={levelName} style={{ marginBottom: 12 }}>
@@ -414,7 +415,7 @@ export default function Grading({ currentUser, currentPeriodId }) {
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           <label style={{ fontSize: '0.82rem', fontWeight: 600 }}>Exam:</label>
           <div style={{ display:'flex', gap:4, padding:'4px', background:'var(--bg)', borderRadius:10, border:'1px solid var(--border)' }}>
-            {(profile.custom_exams || ['CAT 1', 'CAT 2', 'Mid Term', 'End Term']).map(type => (
+            {(profile.custom_exams || []).map(type => (
               <button
                 key={type}
                 onClick={() => setExamType(type)}
