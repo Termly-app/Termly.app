@@ -313,20 +313,20 @@ function Sidebar({ isOpen, onClose, onLogout, currentUser, subscriptionActive })
           <SbSection label="Academics" />
         )}
         
-        {(isTeacher || isAdmin) && (features.attendance || isSandbox) && (
-          <SbLink to="/attendance" icon={AttendanceIcon} label="Attendance" onClick={onClose} locked={(!subscriptionActive || (isSandbox && !features.attendance)) && !isPlatformAdmin} />
+        {(isAdmin || isTeacher) && (features.attendance || isSandbox) && (
+          <SbLink to="/attendance" icon={AttendanceIcon} label="Attendance" onClick={onClose} locked={!subscriptionActive && !isPlatformAdmin} />
         )}
         
         {(isTeacher || isAdmin) && (features.grading || isSandbox) && (
-          <SbLink to="/grading"   icon={GradingIcon}   label="Grading"    onClick={onClose} locked={(!subscriptionActive || (isSandbox && !features.grading)) && !isPlatformAdmin} />
+          <SbLink to="/grading"   icon={GradingIcon}   label="Grading"    onClick={onClose} locked={!subscriptionActive && !isPlatformAdmin} />
         )}
         
         {(isTeacher || isAdmin) && (features.timetable || isSandbox) && (
-          <SbLink to="/timetable" icon={TimetableIcon} label={features.exam_scheduling ? "Scheduling" : "Timetable"} onClick={onClose} locked={(!subscriptionActive || (isSandbox && !features.timetable)) && !isPlatformAdmin} />
+          <SbLink to="/timetable" icon={TimetableIcon} label={features.exam_scheduling ? "Scheduling" : "Timetable"} onClick={onClose} locked={!subscriptionActive && !isPlatformAdmin} />
         )}
 
         {(isTeacher || isAdmin) && (features.lms || isSandbox) && (
-          <SbLink to="/lms" icon={ActivityIcon} label="E-Learning" onClick={onClose} locked={(!subscriptionActive || (isSandbox && !features.lms)) && !isPlatformAdmin} />
+          <SbLink to="/lms" icon={ActivityIcon} label="E-Learning" onClick={onClose} locked={!subscriptionActive && !isPlatformAdmin} />
         )}
 
         {/* Administration/Finance section - always visible for Sandbox, else gated */}
@@ -335,17 +335,17 @@ function Sidebar({ isOpen, onClose, onLogout, currentUser, subscriptionActive })
         )}
         
         {(isAdmin || isFinance) && (features.fees || isSandbox) && (
-          <SbLink to="/fees" icon={FeesIcon} label="Fees & Billing" onClick={onClose} locked={(!subscriptionActive || (isSandbox && !features.fees)) && !isPlatformAdmin} />
+          <SbLink to="/fees" icon={FeesIcon} label="Fees & Billing" onClick={onClose} locked={!subscriptionActive && !isPlatformAdmin} />
         )}
 
         
 
         {isAdmin && (features.sms || isSandbox) && (
-          <SbLink to="/communications" icon={MessageIcon} label="Comm. Center" onClick={onClose} locked={(!subscriptionActive || (isSandbox && !features.sms)) && !isPlatformAdmin} />
+          <SbLink to="/communications" icon={MessageIcon} label="Comm. Center" onClick={onClose} locked={!subscriptionActive && !isPlatformAdmin} />
         )}
 
         {(isAdmin || isTeacher) && (features.teacher_portal || isSandbox) && (
-          <SbLink to="/portal/teacher" icon={StaffIcon} label="Teacher Portal" onClick={onClose} locked={(!subscriptionActive || (isSandbox && !features.teacher_portal)) && !isPlatformAdmin} />
+          <SbLink to="/portal/teacher" icon={StaffIcon} label="Teacher Portal" onClick={onClose} locked={!subscriptionActive && !isPlatformAdmin} />
         )}
 
         {isAdmin && (features.parent_portal || isSandbox) && (
@@ -375,9 +375,10 @@ function Sidebar({ isOpen, onClose, onLogout, currentUser, subscriptionActive })
               <span
                 className="school-plan-badge"
                 style={{
-                  background : subscriptionActive ? 'rgba(16,185,129,0.08)' : 'rgba(239,68,68,0.08)',
-                  color      : subscriptionActive ? '#10B981'               : '#EF4444',
-                  border     : `1px solid ${subscriptionActive ? 'rgba(16,185,129,0.2)' : 'rgba(239,68,68,0.2)'}`,
+                  background : isSandbox ? 'rgba(99,102,241,0.08)' : (subscriptionActive ? 'rgba(16,185,129,0.08)' : 'rgba(239,68,68,0.08)'),
+                  color      : isSandbox ? '#6366F1' : (subscriptionActive ? '#10B981' : '#EF4444'),
+                  border     : `1px solid ${isSandbox ? 'rgba(99,102,241,0.2)' : (subscriptionActive ? 'rgba(16,185,129,0.2)' : 'rgba(239,68,68,0.2)')}`,
+                  fontWeight : 700
                 }}
               >
                 {profile?.subscriptionPlan || (subscriptionActive ? 'Active' : 'Restricted')}

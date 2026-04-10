@@ -52,18 +52,28 @@ export default function Security({ currentUser }) {
   
   // Fallbacks in case settings fail or plan isn't found
   const fallbackPlans = {
-    "Starter Plan": { price: 5999, limit: 150 },
-    "Champe": { price: 50000, limit: 5000 }
+    "Sandbox": { price: 0, limit: 150, seats: 10 },
+    "Starter Plan": { price: 5999, limit: 150, seats: 5 },
+    "Champe": { price: 50000, limit: 5000, seats: 20 }
   };
   
   const planDetails = activePlanKey ? pricing[activePlanKey] : (fallbackPlans[planName] || fallbackPlans["Starter Plan"]);
   
   // Seat limit is for STAFF (Admins + Teachers)
-  let seatLimit = activePlanKey ? (pricing[activePlanKey].admins || pricing[activePlanKey].seat_limit || 5) : 5;
+  // Seat limit logic: prioritize pricing config, then fallbackPlans, then static 5
+  let seatLimit = 5;
+  if (activePlanKey && pricing[activePlanKey]) {
+    seatLimit = pricing[activePlanKey].admins || pricing[activePlanKey].seat_limit || 5;
+  } else if (fallbackPlans[planName]) {
+    seatLimit = fallbackPlans[planName].seats || 5;
+  }
   
-  // Strict override for Starter/Fala plans (5 staff seats)
-  if (planName.toLowerCase().includes('starter') || planName.toLowerCase().includes('fala')) {
+  // Explicit overrides based on name
+  const lowerPlan = planName.toLowerCase();
+  if (lowerPlan.includes('starter') || lowerPlan.includes('fala')) {
     seatLimit = 5;
+  } else if (lowerPlan === 'sandbox') {
+    seatLimit = 10;
   }
 
   const actualStaffCount = users.length;
@@ -192,7 +202,13 @@ export default function Security({ currentUser }) {
             
             <div style={{ marginBottom: 16 }}>
               <div className="text-muted" style={{ fontSize: '0.82rem', marginBottom: 4 }}>Price</div>
-              <div style={{ fontWeight: 600 }}>KSh {(planDetails.price || 0).toLocaleString()}/term</div>
+              <div style={{ fontWeight: 600 }}>
+                {planDetails.price > 0 ? (
+                  <>KSh {planDetails.price.toLocaleString()}/term</>
+                ) : (
+                  <span style={{ color: '#10B981' }}>Free / Evaluation</span>
+                )}
+              </div>
             </div>
 
             <div style={{ borderBottom: '1px solid #e2e8f0', margin: '16px 0' }}></div>
