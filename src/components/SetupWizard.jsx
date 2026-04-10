@@ -293,6 +293,7 @@ export default function SetupWizard({ profile, onComplete, totalStudents }) {
                             <input 
                               type="text" 
                               placeholder="New Stream..." 
+                              value={newStream}
                               onKeyDown={e => { if (e.key === 'Enter') addStream(g); }}
                               onChange={e => setNewStream(e.target.value)}
                             />

@@ -267,7 +267,28 @@ export default function Settings() {
             <div className="card-header"><h3><SchoolIcon size={20} /> School Identity</h3></div>
             <div className="card-body">
               <div className="form-group"><label>School Name</label><input className="form-input" name="schoolName" value={profile.schoolName} onChange={handleChange} placeholder="e.g. Greenfield Academy"/></div>
-              <div className="form-group"><label>Motto</label><input className="form-input" name="motto" value={profile.motto} onChange={handleChange} placeholder="Excellence in Education"/></div>
+              <div className="form-group"><label>School Motto</label><input className="form-input" name="motto" value={profile.motto} onChange={handleChange} placeholder="Excellence in Education"/></div>
+              <div className="form-group">
+                <label>School Type / Categorization</label>
+                <div style={{ display: 'flex', gap: 8, marginTop: 4 }}>
+                  {['Day', 'Boarding', 'Mixed'].map(type => (
+                    <button 
+                      key={type} 
+                      type="button"
+                      onClick={() => setProfile({ ...profile, schoolType: type })}
+                      style={{
+                        flex: 1, padding: '8px', fontSize: '0.8rem', borderRadius: 8, border: '1.5px solid',
+                        fontWeight: 700, cursor: 'pointer', transition: 'all 0.15s',
+                        borderColor: profile.schoolType === type ? 'var(--primary)' : 'var(--border)',
+                        background: profile.schoolType === type ? 'var(--primary-light)' : 'var(--bg)',
+                        color: profile.schoolType === type ? 'var(--primary)' : 'var(--text-light)'
+                      }}
+                    >
+                      {type}
+                    </button>
+                  ))}
+                </div>
+              </div>
               <div className="form-row">
                 <div className="form-group"><label>Phone</label><input className="form-input" name="phone" value={profile.phone} onChange={handleChange} placeholder="07xx xxx xxx"/></div>
                 <div className="form-group"><label>Email</label><input className="form-input" name="email" value={profile.email} onChange={handleChange} placeholder="admin@school.com"/></div>

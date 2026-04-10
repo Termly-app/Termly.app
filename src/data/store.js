@@ -583,8 +583,10 @@ export async function saveSchoolProfile(profile) {
     address: profile.address || '',
     logo: profile.logo || '',
     subscription_plan: profile.subscriptionPlan || 'Basic',
+    setup_completed: profile.setup_completed || false,
     streams_per_class: profile.streamsPerClass || defaultStreamsPerClass,
     active_classes: profile.activeClasses || DEFAULT_PROFILE.activeClasses,
+    grade_fees: profile.gradeFees || {},
     custom_subjects: { 
       ...(profile.customSubjects || {}), 
       __boarding_houses: profile.boardingHouses || [],
