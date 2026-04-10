@@ -544,7 +544,7 @@ footer.landing-footer{
   .pc,.pbtn{cursor:auto}
   .pc{padding:32px 24px}
   .fl-1,.fl-2,.fl-3,.fl-4,.fl-5,.fl-6{display:none}
-  .nlink,.nsep{display:none}
+  .nlink:not(.n-login),.nsep{display:none}
   .ft-grid-w{grid-template-columns:1fr 1fr}
   .ft-col-news{grid-column:span 2}
 }

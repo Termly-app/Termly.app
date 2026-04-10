@@ -195,7 +195,7 @@ export default function Landing() {
           <Link to="/partners" className="nlink">Partners</Link>
           <Link to="/docs" className="nlink">Docs</Link>
           <div className="nsep"></div>
-          <Link to="/login" className="nlink">Sign in</Link>
+          <Link to="/login" className="nlink n-login">Sign in</Link>
           <Link to="/register" className="ncta">
             Get access
             <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2.5 7h9M8 3.5l3.5 3.5L8 10.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
