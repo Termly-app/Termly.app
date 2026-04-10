@@ -33,33 +33,33 @@ let _settingsCache = null;
 let _profilePromise = null;
 let _settingsPromise = null;
 
-export const SEAT_LIMITS = {
-  Basic:   { students: 5, admins: 1,   price: 5999 },
-  Standard: { students: 300, admins: 1,  price: 15000 },
-  Premium: { students: 1000, admins: 1, price: 50000 },
-  Starter: { students: 5, admins: 1,   price: 5999 }, // Legacy
-  Fala:    { students: 5, admins: 1,   price: 5999 }, // Kenyan branding
-  Champe:  { students: 1000, admins: 1, price: 50000 },
-  School:  { students: 500, admins: 1,  price: 25000 },
-  "Super Admin": { students: 9999, admins: 999, price: 0 }
-};
+// Consolidated into Super Admin Pricing Table
 
 /**
  * Get limits for a plan, favoring DB settings if available
  */
-export async function getPlanLimits(planName) {
+export async function getPlanLimits(planNameRaw) {
+  const planName = (planNameRaw || 'Sandbox').toLowerCase();
   try {
     const settings = await getPlatformSettings();
-    if (settings?.pricing?.[planName]) {
-      const p = settings.pricing[planName];
-      return {
-        students: p.limit || p.students || 0,
-        admins: p.admins || 0,
-        price: p.price || 0
-      };
+    if (settings?.pricing) {
+      // Case-insensitive lookup in Super Admin Pricing table
+      const pricingKeys = Object.keys(settings.pricing);
+      const matchedKey = pricingKeys.find(k => k.toLowerCase() === planName);
+      const p = matchedKey ? settings.pricing[matchedKey] : settings.pricing['Sandbox'] || settings.pricing['Starter Plan'];
+      
+      if (p) {
+        return {
+          students: p.limit || p.students || 0,
+          admins: p.admins || 0,
+          price: p.price || 0
+        };
+      }
     }
   } catch (e) { console.error("Error fetching plan limits:", e); }
-  return SEAT_LIMITS[planName] || SEAT_LIMITS.Basic;
+  
+  // Final safeguard-defaults if pricing table is empty (Sandbox rules)
+  return { students: 150, admins: 5, price: 0 };
 }
 
 export function setCurrentSchoolContext(schoolId, authUser) {
@@ -278,7 +278,7 @@ Object.values(CBC_STRUCTURE).flatMap(l => l.grades).forEach(g => {
 const DEFAULT_PROFILE = {
   schoolName: 'ShuleSoft School',
   motto: '', phone: '', email: '', address: '', logo: '',
-  subscriptionPlan: 'Basic',
+  subscriptionPlan: 'Sandbox',
   streamsPerClass: defaultStreamsPerClass,
   customSubjects: {},
   boardingHouses: [],
@@ -355,18 +355,10 @@ export async function getSchoolProfile() {
 
 // Helper to map DB columns to frontend shape with robust fallbacks
 function mapProfileData(data) {
-  let plan = data.subscription_plan || 'Starter Plan';
-  // Normalize legacy names to Starter Plan
-  if (['fala', 'starter', 'basic'].includes(plan.toLowerCase())) plan = 'Starter Plan';
-
-  const mapped = {
-    'starter plan': 'Starter Plan',
-    'growth plan':  'Growth Plan',
-    'pro plan':    'Pro Plan',
-    'enterprise':   'Enterprise',
-    'sandbox':      'Sandbox'
-  };
-  if (mapped[plan.toLowerCase()]) plan = mapped[plan.toLowerCase()];
+  if (!data) return DEFAULT_PROFILE;
+  
+  // Naming resolution for subscription plan
+  let plan = data.subscription_plan || 'Sandbox';
 
   return {
     schoolName: data.school_name || DEFAULT_PROFILE.schoolName,
@@ -455,16 +447,27 @@ export async function checkFeatureAccess(featureName, profile) {
   if (!settings?.pricing) return false;
 
   // 3. Resolve the plan name (handling legacy field names)
-  const planName = profile?.subscriptionPlan || profile?.subscription_plan || 'Starter Plan';
+  const planNameRaw = profile?.subscriptionPlan || profile?.subscription_plan || 'Sandbox';
+  const planName = planNameRaw.toLowerCase();
 
-  // 4. Find the plan and check its features array
-  const plan = settings.pricing[planName];
+  // 4. HARD-GATE FOR SANDBOX: New schools only get core management setup modules
+  if (planName === 'sandbox') {
+    const sandboxModules = ['student_mgmt', 'staff_mgmt', 'settings', 'dashboard'];
+    return sandboxModules.includes(featureName.toLowerCase());
+  }
+
+  // 5. Find the plan in the pricing dictionary (Case-Insensitive lookup)
+  const pricingKeys = Object.keys(settings.pricing);
+  const matchedKey = pricingKeys.find(k => k.toLowerCase() === planName);
+  const plan = matchedKey ? settings.pricing[matchedKey] : null;
+
   if (!plan) return false;
 
-  // If the plan has no features array or the feature isn't listed, deny access
-  return Array.isArray(plan.features) && plan.features.some(f => 
-    f.toLowerCase() === featureName.toLowerCase() || 
-    f.toLowerCase().includes(featureName.toLowerCase())
+  // 6. MODULE-BASED GATING: Check if the module slug is enabled for this plan
+  // We check the 'modules' array (hard control) instead of the 'features' array (marketing text)
+  return Array.isArray(plan.modules) && plan.modules.some(m => 
+    m.toLowerCase() === featureName.toLowerCase() || 
+    m.toLowerCase().includes(featureName.toLowerCase())
   );
 }
 
@@ -951,7 +954,7 @@ export async function getStudent(id) {
 export async function addStudent(student) {
   const all = await getStudents();
   const p = await getSchoolProfile();
-  const planName = p.subscriptionPlan || 'Basic';
+  const planName = p.subscriptionPlan || 'Sandbox';
   
   // Robust plan lookup matching other components
   const planLimits = await getPlanLimits(planName);
@@ -3121,31 +3124,14 @@ const FEATURE_MAPPING = {
  *   2. plan.modules[] hard slug check (new authoritative system)
  *   3. Fuzzy FEATURE_MAPPING string match (backward compat for plans without modules[])
  */
+/**
+ * Check if a feature is enabled for the current school.
+ * Consolidates all gating logic into checkFeatureAccess for consistency.
+ */
 export async function isFeatureEnabled(featureSlug) {
   try {
     const profile = await getSchoolProfile();
-    const planName = profile?.subscriptionPlan || profile?.subscription_plan || 'Starter Plan';
-
-    // Platform Admin override
-    const user = getCurrentAuthUser();
-    if (user?.email === 'admin@shulesoft.com' || user?.email === 'shulesoft8@gmail.com') return true;
-
-    // Librarian role specific override for Library module
-    if (featureSlug === 'library' && user?.role?.toLowerCase() === 'librarian') return true;
-
-    const settings = await getPlatformSettings();
-    const plan = settings?.pricing?.[planName];
-    if (!plan) return false;
-
-    // === NEW: Hard module slug check (authoritative) ===
-    if (Array.isArray(plan.modules) && plan.modules.length > 0) {
-      return plan.modules.includes(featureSlug);
-    }
-
-    // === FALLBACK: Legacy fuzzy string matching for plans that haven't been upgraded ===
-    const allowedFeatures = plan.features || [];
-    const keywords = FEATURE_MAPPING[featureSlug] || [];
-    return keywords.some(k => allowedFeatures.some(af => af.includes(k) || k.includes(af)));
+    return await checkFeatureAccess(featureSlug, profile);
   } catch (e) {
     console.error("Feature gating error:", e);
     return false;

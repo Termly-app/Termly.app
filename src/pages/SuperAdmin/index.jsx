@@ -351,7 +351,7 @@ export default function SuperAdmin({ currentUser, isPlatformAdmin, sidebarOpen, 
   const q = searchQuery.toLowerCase();
   const filteredSchools = schools.filter(s => {
     const p      = s.school_profiles?.[0] || {};
-    const sPlan  = (s.plan || p.subscription_plan || 'Starter').toLowerCase();
+    const sPlan  = (s.plan || p.subscription_plan || 'Sandbox').toLowerCase();
     const sStatus = (p.subscription_status || 'Active').toLowerCase();
     const matchQ  = !q || s.name?.toLowerCase().includes(q) || p.location?.toLowerCase().includes(q) || sPlan.includes(q);
     const matchS  = filterStatus === 'all'
@@ -438,7 +438,7 @@ export default function SuperAdmin({ currentUser, isPlatformAdmin, sidebarOpen, 
     // 2. Unique list, prioritizing active plans and normalizing legacy names
     let planLabels = [...new Set([...activePlanNames, ...inUsePlanNames])].map(n => {
       const lower = n?.toLowerCase();
-      if (lower === 'fala' || lower === 'starter' || lower === 'basic') return 'Starter Plan';
+      if (lower === 'fala' || lower === 'starter') return 'Starter Plan';
       return n;
     }).filter(Boolean);
     

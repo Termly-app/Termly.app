@@ -13,7 +13,7 @@ export default function Settings() {
   const { alert, confirm } = useDialog();
   const [profile, setProfile] = useState({
     schoolName:'',motto:'',phone:'',email:'',address:'',
-    logo:'',subscriptionPlan:'Basic',
+    logo:'',subscriptionPlan:'Sandbox',
     activeClasses:[],gradeFees:{},streamsPerClass:{},customSubjects:{},
     mpesa_config: { shortcode: '', consumer_key: '', consumer_secret: '' },
     sms_config: { sender_id: '', api_key: '' },

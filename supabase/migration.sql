@@ -13,7 +13,7 @@ CREATE TABLE IF NOT EXISTS schools (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   name TEXT NOT NULL,
   email TEXT NOT NULL UNIQUE,
-  plan TEXT NOT NULL DEFAULT 'Basic',
+  plan TEXT NOT NULL DEFAULT 'Sandbox',
   owner_id UUID REFERENCES auth.users(id),
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
@@ -30,7 +30,7 @@ CREATE TABLE IF NOT EXISTS school_profiles (
   email TEXT DEFAULT '',
   address TEXT DEFAULT '',
   logo TEXT DEFAULT '',
-  subscription_plan TEXT DEFAULT 'Basic',
+  subscription_plan TEXT DEFAULT 'Sandbox',
   streams_per_class JSONB DEFAULT '{}',
   active_classes JSONB DEFAULT '[]',
   custom_subjects JSONB DEFAULT '{}',

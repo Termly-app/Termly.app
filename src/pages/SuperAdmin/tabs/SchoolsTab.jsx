@@ -86,8 +86,8 @@ export default function SchoolsTab({
                     return prof.subscription_status === 'Active' || isExp;
                   }) || pList[0] || {};
 
-                  let curPlan   = s.plan || p.subscription_plan || 'Starter Plan';
-                  if (['fala', 'starter', 'basic'].includes(curPlan.toLowerCase())) curPlan = 'Starter Plan';
+                  let curPlan   = s.plan || p.subscription_plan || 'Sandbox';
+                  if (['fala', 'starter'].includes(curPlan.toLowerCase())) curPlan = 'Starter Plan';
                   const pricing   = settings?.pricing || {};
                   const planKey   = Object.keys(pricing).find(k => k.toLowerCase() === curPlan.toLowerCase());
                   const planInfo  = planKey ? pricing[planKey] : { price:5999, limit:5 };
