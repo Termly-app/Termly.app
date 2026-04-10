@@ -1,7 +1,7 @@
 // ============= CBC LEVEL STRUCTURE =============
 // Kenya's Competency Based Curriculum (KICD)
 
-const CBC_STRUCTURE = {
+var CBC_STRUCTURE = {
   'Early Years': {
     grades: ['PP1', 'PP2', 'Grade 1', 'Grade 2', 'Grade 3'],
     subjects: [
@@ -110,18 +110,18 @@ function getSubjectsForGrade(grade, profile = null, pathway = null) {
 }
 
 // All grades across all levels
-const ALL_GRADES = Object.values(CBC_STRUCTURE).flatMap(l => l.grades);
-const CLASSES = ALL_GRADES; // alias used by Students, Fees, Attendance pages
+var ALL_GRADES = Object.values(CBC_STRUCTURE).flatMap(l => l.grades);
+var CLASSES = ALL_GRADES; // alias used by Students, Fees, Attendance pages
 
 // CBC Competency levels
-const CBC_LEVELS = [
+var CBC_LEVELS = [
   'Exceeding Expectation',
   'Meeting Expectation',
   'Approaching Expectation',
   'Below Expectation',
 ];
 
-const CBC_CORE_COMPETENCIES = [
+var CBC_CORE_COMPETENCIES = [
   'Communication & Collaboration',
   'Critical Thinking & Problem Solving',
   'Creativity & Imagination',
@@ -131,11 +131,11 @@ const CBC_CORE_COMPETENCIES = [
   'Self-Efficacy',
 ];
 
-const TERM_FEE = 15000; // KSh per term
-const STREAMS = ['East', 'West', 'North', 'South'];
+var TERM_FEE = 15000; // KSh per term
+var STREAMS = ['East', 'West', 'North', 'South'];
 
 // ============= SEED USERS =============
-const seedUsers = [
+var seedUsers = [
   { id: 'U001', name: 'System Admin', email: 'admin@shulesoft.com', role: 'Admin' },
   { id: 'U004', name: 'Platform Owner', email: 'shulesoft8@gmail.com', role: 'Admin' },
   { id: 'U002', name: 'Finance User', email: 'finance@shulesoft.com', role: 'Finance' },
@@ -143,7 +143,7 @@ const seedUsers = [
 ];
 
 // ============= SEED STUDENTS =============
-const students = [
+var students = [
   // Early Years
   { id: '001', admNo: 'SS-2024-001', name: 'Oscar Mwangi', class: 'PP1', stream: 'East', parent: 'Patrick Mwangi', parentPhone: '0755678902', gender: 'Male', dob: '2020-03-05', joinDate: '2025-01-06', notes: '' },
   { id: '002', admNo: 'SS-2024-002', name: 'Yvonne Kemunto', class: 'PP1', stream: 'East', parent: 'Rachel Kemunto', parentPhone: '0740567891', gender: 'Female', dob: '2020-10-14', joinDate: '2025-01-06', notes: '' },
@@ -261,7 +261,7 @@ function generateCoreCompetencies() {
 }
 
 // ============= SEED TEACHERS =============
-const seedTeachers = [
+var seedTeachers = [
   { id: 'T001', name: 'John Mwangi', phone: '0722100200', status: 'Active' },
   { id: 'T002', name: 'Mary Achieng', phone: '0733200300', status: 'Active' },
   { id: 'T003', name: 'Peter Omondi', phone: '0744300400', status: 'Active' },

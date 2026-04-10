@@ -10,16 +10,16 @@ import {
  * Central registry for platform-wide metadata to prevent circular dependencies.
  */
 
-export const SANDBOX_PLAN = 'Sandbox';
+export var SANDBOX_PLAN = 'Sandbox';
 
 // Authority Identities
-export const SUPPORT_EMAIL = 'shulesoft8@gmail.com';
-export const SUPER_ADMIN_EMAIL = 'shulesoft8@gmail.com';
-export const PLATFORM_ADMIN_EMAIL = 'shulesoft8@gmail.com';
+export var SUPPORT_EMAIL = 'shulesoft8@gmail.com';
+export var SUPER_ADMIN_EMAIL = 'shulesoft8@gmail.com';
+export var PLATFORM_ADMIN_EMAIL = 'shulesoft8@gmail.com';
 
 // ── Master Registry of ALL System Modules ────────────────────────────────
 // Migrated from SettingsTab.jsx to break circularity.
-export const ALL_SYSTEM_MODULES = [
+export var ALL_SYSTEM_MODULES = [
   // ── Core Management ──
   { slug: 'student_mgmt',   label: 'Student Management',          icon: UsersIcon,       desc: 'Student profiles, enrolment, class assignment' },
   { slug: 'staff_mgmt',     label: 'Staff Management',            icon: TeacherIcon,     desc: 'Teacher & admin records, roles, permissions' },
@@ -69,7 +69,7 @@ export const ALL_SYSTEM_MODULES = [
  * MODULE_LABELS mapping
  * Migrated from superAdminUtils.js to centrally serve UI displays.
  */
-export const MODULE_LABELS = {
+export var MODULE_LABELS = {
   student_mgmt:    'Student Management',
   staff_mgmt:      'Staff Management',
   attendance:      'Attendance Tracking',
@@ -105,7 +105,7 @@ export const MODULE_LABELS = {
   api_access:      'API Access',
 };
 
-export const FEATURE_SUGGESTIONS = [
+export var FEATURE_SUGGESTIONS = [
   'CBC Report Cards (PP1–Grade 9)',
   'KCSE / KCPE Report Cards (8-4-4)',
   'M-PESA Paybill Integration',

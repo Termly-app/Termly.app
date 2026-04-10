@@ -21,15 +21,15 @@ import { encryptData as encrypt, decryptData as decrypt } from '../utils/securit
 // ============= CURRENT SCHOOL CONTEXT =============
 // Stored in-memory during session (set after login)
 // Triggering fresh build on Vercel...
-let _currentSchoolId = null;
-let _currentAuthUser = null;
-let _currentPeriodId = null;
+var _currentSchoolId = null;
+var _currentAuthUser = null;
+var _currentPeriodId = null;
 
 // MEMORY CACHE (Performance Optimization)
-let _profileCache  = null;
-let _settingsCache = null;
-let _profilePromise = null;
-let _settingsPromise = null;
+var _profileCache  = null;
+var _settingsCache = null;
+var _profilePromise = null;
+var _settingsPromise = null;
 
 // Consolidated into Super Admin Pricing Table
 
@@ -76,7 +76,7 @@ export function getCurrentPeriodId() {
   return _currentPeriodId;
 }
 
-let _currentExamType = 'End Term';
+var _currentExamType = 'End Term';
 export function setCurrentExamType(type) {
   _currentExamType = type;
   window.dispatchEvent(new Event('examTypeChanged'));
