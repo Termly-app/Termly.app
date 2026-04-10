@@ -34,7 +34,7 @@ export default function Select({
   }, []);
 
   const handleSelect = (option) => {
-    onChange({ target: { value: option.value || option.id } });
+    onChange({ target: { name, value: option.value || option.id } });
     setIsOpen(false);
   };
 
