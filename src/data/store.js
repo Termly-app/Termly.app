@@ -456,9 +456,13 @@ export async function checkFeatureAccess(featureName, profile) {
   const planNameRaw = profile?.subscriptionPlan || profile?.subscription_plan || 'Sandbox';
   const planName = planNameRaw.toLowerCase();
 
-  // 4. HARD-GATE FOR SANDBOX: New schools only get core management setup modules
+  // 4. HARD-GATE FOR SANDBOX: Allow evaluation of core modules, but stay restricted on system integrations
   if (planName === 'sandbox') {
-    const sandboxModules = ['student_mgmt', 'staff_mgmt', 'settings', 'dashboard'];
+    const sandboxModules = [
+      'student_mgmt', 'staff_mgmt', 'settings', 'dashboard', 
+      'attendance', 'grading', 'fees', 'library', 'timetable', 
+      'lms', 'sms', 'teacher_portal', 'parent_portal'
+    ];
     return sandboxModules.includes(featureName.toLowerCase());
   }
 
