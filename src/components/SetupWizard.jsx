@@ -56,33 +56,35 @@ export default function SetupWizard({ profile, onComplete, totalStudents }) {
   const handlePrev = () => setStep(s => Math.max(s - 1, 1));
 
   const handleSave = async () => {
-    console.log('SetupWizard: handleSave triggered', { step, formData });
     setSaving(true);
     try {
-      console.log('SetupWizard: Calling saveSchoolProfile...');
-      await saveSchoolProfile({
+      console.log('Wizard Saving Draft...', formData);
+      const result = await saveSchoolProfile({
         ...profile,
         ...formData,
         setup_completed: step === 6
       });
+
+      if (result?.skipped?.length > 0) {
+        const fieldNames = result.skipped.map(c => c.replace(/_/g, ' ').toUpperCase()).join(', ');
+        const msg = `Partial Save: The following fields could NOT be saved yet: [${fieldNames}]. \n\nReason: Your database is missing these columns. Please run the SQL script I provided in the chat!`;
+        if (alert) alert({ title: 'Warning', message: msg, variant: 'warning' });
+        else window.alert(msg);
+      }
+
       if (step === 6) {
         onComplete();
       } else {
         handleNext();
       }
     } catch (err) {
-      console.error('Setup Wizard Error:', err);
-      const msg = err.message || 'Unknown Error';
+      console.error('Wizard Save Error:', err);
+      const msg = `SAVE FAILED: ${err.message || 'Unknown database error'}. \n\nPlease make sure you have run the SQL migration in Supabase.`;
       
-      // Try custom alert first
       try {
-        alert({ 
-          title: 'Save Encountered an Error', 
-          message: msg + '. \n\nPlease ensure you have applied the SQL migration in Supabase.', 
-          variant: 'danger' 
-        });
+        if (alert) alert({ title: 'Database Error', message: msg, variant: 'danger' });
+        else window.alert(msg);
       } catch (alertErr) {
-        // Fallback to native alert if DialogProvider is failed/missing
         window.alert('CRITICAL SAVE ERROR: ' + msg);
       }
     } finally {
