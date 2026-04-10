@@ -277,7 +277,7 @@ const DEFAULT_PROFILE = {
   streamsPerClass: defaultStreamsPerClass,
   customSubjects: {},
   boardingHouses: [],
-  activeClasses: Object.values(CBC_STRUCTURE).flatMap(l => l.grades),
+  activeClasses: [],
   gradeFees: {},
   subscriptionStatus: 'Trial',
   subscriptionExpiry: null,
