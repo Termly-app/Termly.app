@@ -343,7 +343,13 @@ function Sidebar({ isOpen, onClose, onLogout, currentUser, subscriptionActive })
           <SbLink to="/communications" icon={MessageIcon} label="Comm. Center" onClick={onClose} locked={!subscriptionActive || (isSandbox && !features.sms)} />
         )}
 
+        {(isAdmin || isTeacher) && (features.teacher_portal || isSandbox) && (
+          <SbLink to="/portal/teacher" icon={StaffIcon} label="Teacher Portal" onClick={onClose} locked={!subscriptionActive || (isSandbox && !features.teacher_portal)} />
+        )}
 
+        {isAdmin && (features.parent_portal || isSandbox) && (
+          <SbLink to="/portal/parent" icon={UserIcon} label="Parent Portal" onClick={onClose} locked={!subscriptionActive || (isSandbox && !features.parent_portal)} />
+        )}
         <SbSection label="Resources" />
         <SbLink to="/help" icon={BookIcon} label="Help Center" onClick={onClose} />
         
@@ -702,6 +708,8 @@ function App() {
                       <Route path="/security" element={<Security currentUser={currentUser} />} />
                       <Route path="/settings" element={<Settings currentUser={currentUser} />} />
                       <Route path="/billing"  element={<Billing currentUser={currentUser} />} />
+                      <Route path="/portal/teacher" element={<SectionGate featureSlug="teacher_portal" featureName="Teacher Portal" profile={profile}><div style={{padding:40}}>Teacher Portal Management (Coming Soon)</div></SectionGate>} />
+                      <Route path="/portal/parent"  element={<SectionGate featureSlug="parent_portal"  featureName="Parent Portal"  profile={profile}><div style={{padding:40}}>Parent Portal Management (Coming Soon)</div></SectionGate>} />
                     </>
                   )}
 
