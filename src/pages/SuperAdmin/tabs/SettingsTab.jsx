@@ -57,7 +57,7 @@ const EMPTY_PLAN = {
   modules     : [],   // <-- Hard feature access control slugs
 };
 
-const S = {
+var S = {
   label  : { fontSize:'.52rem', color:'var(--sub)', letterSpacing:'.08em', textTransform:'uppercase', marginBottom:5, display:'block' },
   input  : { width:'100%', background:'var(--bg)', border:'1px solid var(--edge)', borderRadius:7, padding:'8px 11px', color:'var(--txt)', fontFamily:'var(--fb)', fontSize:'.78rem', outline:'none' },
   numInput: { background:'var(--bg)', border:'1px solid var(--edge)', borderRadius:6, padding:'7px 10px', color:'var(--txt)', fontFamily:"'Space Mono',monospace", fontSize:'.78rem', outline:'none', width:'100%' },

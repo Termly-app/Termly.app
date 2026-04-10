@@ -12,7 +12,7 @@ import { useState } from 'react';
 import { exportNEMIS, downloadCSV, validateNEMISData, nemisFilename, ALL_GRADES } from '../../../utils/nemisExport';
 import { FlagIcon, CheckIcon, AlertIcon, CrossIcon } from '../../../components/CommonIcons';
 
-const S = {
+var S = {
   overlay : { position:'fixed', inset:0, zIndex:99999, background:'rgba(0,0,0,.75)', display:'flex', alignItems:'center', justifyContent:'center', padding:20 },
   box     : { background:'#161A17', border:'1px solid rgba(255,255,255,.1)', borderRadius:14, padding:28, width:'100%', maxWidth:500, maxHeight:'90vh', overflowY:'auto', position:'relative' },
   close   : { position:'absolute', top:14, right:14, background:'#0C0E0D', border:'1px solid rgba(255,255,255,.08)', borderRadius:6, width:28, height:28, color:'#5A6B5C', cursor:'pointer', fontSize:14, display:'flex', alignItems:'center', justifyContent:'center' },
