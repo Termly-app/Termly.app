@@ -1,9 +1,7 @@
-import { createClient } from '@supabase/supabase-js';
+import { supabase } from '../lib/supabase';
 import { db, queueChange, getPendingSync, updateSyncStatus, syncTypes } from './offlineStore';
-
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
-export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+import { SANDBOX_PLAN } from './constants';
+export { supabase };
  
 function maskSecret(val) {
   if (!val || val.length < 4) return val;
@@ -402,7 +400,8 @@ export async function checkIsSubscriptionActive(profile) {
   
   // 1. Sandbox Authority: If the plan is Sandbox, it never expires.
   // Access is controlled by feature-gating (checkFeatureAccess), not by lockout.
-  if (profile.subscriptionPlan?.toLowerCase() === 'sandbox' || profile.subscription_plan?.toLowerCase() === 'sandbox') {
+  const plan = (profile.subscriptionPlan || profile.subscription_plan || '').toLowerCase();
+  if (plan === SANDBOX_PLAN.toLowerCase()) {
     return true;
   }
 

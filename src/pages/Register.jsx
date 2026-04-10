@@ -5,6 +5,7 @@ import { registerSchool, getPlatformSettings } from '../data/store';
 import { 
   BookIcon, CardIcon, SchoolIcon, FlagIcon, ClockIcon, RocketIcon, CheckIcon, HomeIcon 
 } from '../components/CommonIcons';
+import { SANDBOX_PLAN } from '../data/constants';
 
 export default function Register() {
   const [searchParams] = useSearchParams();
@@ -67,7 +68,7 @@ export default function Register() {
   const [formData, setFormData] = useState({
     schoolName: '',
     schoolEmail: '',
-    plan: 'Sandbox', 
+    plan: SANDBOX_PLAN, 
     adminName: '',
     password: '',
     phone: '',
@@ -169,7 +170,7 @@ export default function Register() {
       await registerSchool(
         formData.schoolName,
         formData.schoolEmail,
-        'Sandbox',
+        SANDBOX_PLAN,
         authUserId,
         formData.adminName,
         formData.schoolEmail,

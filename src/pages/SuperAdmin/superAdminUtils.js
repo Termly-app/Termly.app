@@ -1,4 +1,5 @@
 import { useEffect } from 'react';
+import { MODULE_LABELS } from '../../../data/constants';
 
 // ── Chart.js shared constants ──────────────────────────────────────────────
 export const GC  = 'rgba(255,255,255,0.05)';
@@ -93,43 +94,7 @@ export const getStatusRefined = (p, isActive) => {
   return s;
 };
 
-// ── Module slug → human-friendly label for display ──────────────────────
-const MODULE_LABELS = {
-  student_mgmt:    'Student Management',
-  staff_mgmt:      'Staff Management',
-  attendance:      'Attendance Tracking',
-  dashboard:       'Dashboard & Analytics',
-  grading:         'Academic Grading & Reports',
-  cbc_reports:     'CBC Report Cards (PP1–G9)',
-  '844_reports':   'KCSE / KCPE Report Cards',
-  cbc_competency:  'CBC Competency Grading',
-  exam_scheduling: 'Exam Scheduling',
-  timetable:       'Timetable Builder',
-  auto_timetable:  'Automated Timetable Generation',
-  fees:            'Fee & Billing Engine',
-  fee_structure:   'Fee Structure Builder',
-  fee_statements:  'Student Fee Statements',
-  mpesa:           'M-Pesa STK Push',
-  mpesa_paybill:   'M-Pesa Paybill Integration',
-  mpesa_receipts:  'M-Pesa Receipt Generation',
-  airtel_money:    'Airtel Money Integration',
-  sms:             'SMS & Communications',
-  parent_sms:      'Parent SMS Notifications',
-  whatsapp:        'WhatsApp Fee Reminders',
-  lms:             'E-Learning / LMS',
-  library:         'Library Management',
-  nemis:           'NEMIS Data Export',
-  bulk_import:     'Bulk Student Import (CSV)',
-  teacher_portal:  'Teacher Mobile Portal',
-  parent_portal:   'Parent & Student Portal',
-  analytics:       'Smart Analytics & Insights',
-  multi_stream:    'Multi-Stream Support',
-  multi_period:    'Multiple Academic Periods',
-  data_recovery:   'Data Recovery Tools',
-  custom_brand:    'Custom Branding',
-  api_access:      'API Access',
-  priority_support:'Priority Support',
-};
+
 
 /**
  * Get the final display-ready feature list for a plan.
