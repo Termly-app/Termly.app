@@ -363,10 +363,11 @@ function mapProfileData(data) {
     address: data.address || '',
     logo: data.logo || '',
     subscriptionPlan: plan,
-    streamsPerClass: data.streams_per_class || DEFAULT_PROFILE.streamsPerClass,
+    streamsPerClass: data.streams_per_class || data.custom_subjects?.__shadow_streams_per_class || DEFAULT_PROFILE.streamsPerClass,
     customSubjects: data.custom_subjects || {},
-    boardingHouses: data.boarding_houses || data.custom_subjects?.__boarding_houses || DEFAULT_PROFILE.boardingHouses,
-    activeClasses: data.active_classes || DEFAULT_PROFILE.activeClasses,
+    boardingHouses: data.boarding_houses || data.custom_subjects?.__shadow_boarding_houses || DEFAULT_PROFILE.boardingHouses,
+    custom_exams: data.custom_exams || DEFAULT_PROFILE.custom_exams,
+    activeClasses: data.active_classes || data.custom_subjects?.__shadow_active_classes || DEFAULT_PROFILE.activeClasses,
     gradeFees: data.grade_fees || {},
     setup_completed: data.setup_completed || data.custom_subjects?.__shadow_setup_completed || false,
     subscriptionStatus: data.subscription_status || 'Inactive',
@@ -690,6 +691,8 @@ export async function saveSchoolProfile(profile) {
       shadowBlob.__shadow_setup_completed = profile.setup_completed === true;
       shadowBlob.__shadow_school_type = profile.schoolType || 'Day';
       shadowBlob.__shadow_boarding_houses = profile.boardingHouses || [];
+      shadowBlob.__shadow_active_classes = profile.activeClasses || [];
+      shadowBlob.__shadow_streams_per_class = profile.streamsPerClass || {};
       
       await supabase
         .from('school_profiles')

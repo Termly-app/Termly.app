@@ -14,6 +14,8 @@ export default function ConfirmModal({
   variant = 'default', withInput, inputLabel, inputPlaceholder,
   onConfirm, onCancel,
 }) {
+  const [inputValue, setInputValue] = useState('');
+
   const VARIANTS = {
     danger  : { accent: '#ef4444', btnBg: 'linear-gradient(135deg,#ef4444,#b91c1c)', shadow: 'rgba(239,68,68,.3)'  },
     warning : { accent: '#f59e0b', btnBg: 'linear-gradient(135deg,#f59e0b,#d97706)', shadow: 'rgba(245,158,11,.3)'  },
