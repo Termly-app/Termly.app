@@ -13,7 +13,6 @@ import {
   LeafIcon, GraduationIcon, ChevronDownIcon, CheckIcon
 } from '../components/CommonIcons';
 import SetupWizard from '../components/SetupWizard';
-import ReferralTool from '../components/ReferralTool';
 import { Helmet } from 'react-helmet-async';
 import Select from '../components/Common/Select';
 
@@ -485,10 +484,6 @@ export default function Dashboard({ currentUser, onLogout, currentPeriodId }) {
 
       </div>
 
-      {/* SaaS Growth: Referral Tool */}
-      <div className="animate-fade-up" style={{ marginBottom: 40 }}>
-        <ReferralTool />
-      </div>
 
       <style>{`
         @media (max-width: 768px) {
