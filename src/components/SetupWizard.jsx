@@ -139,6 +139,7 @@ export default function SetupWizard({ profile, onComplete, totalStudents }) {
         {/* Header/Progress */}
         <div className="wizard-header">
           <div className="wizard-steps-nav">
+            <div className="active-progress-line" style={{ width: `${((step - 1) / (steps.length - 1)) * 100}%` }}></div>
             {steps.map(s => (
               <div key={s.id} className={`step-item ${step >= s.id ? 'active' : ''} ${step > s.id ? 'done' : ''}`}>
                 <div className="step-point">{step > s.id ? <CheckIcon size={12} /> : s.id}</div>
@@ -470,6 +471,27 @@ export default function SetupWizard({ profile, onComplete, totalStudents }) {
           position: relative;
           max-width: 600px;
           margin: 0 auto;
+        }
+
+        .wizard-steps-nav::before {
+          content: "";
+          position: absolute;
+          top: 14px;
+          left: 5%;
+          right: 5%;
+          height: 2px;
+          background: #e2e8f0;
+          z-index: 1;
+        }
+
+        .active-progress-line {
+          position: absolute;
+          top: 14px;
+          left: 5%;
+          height: 2px;
+          background: #3b82f6;
+          z-index: 1;
+          transition: width 0.4s ease;
         }
 
         .step-item {
