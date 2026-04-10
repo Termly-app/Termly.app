@@ -274,7 +274,7 @@ Object.values(CBC_STRUCTURE).flatMap(l => l.grades).forEach(g => {
 });
 
 const DEFAULT_PROFILE = {
-  schoolName: 'ShuleSoft School',
+  schoolName: 'My Institution',
   motto: '', phone: '', email: '', address: '', logo: '',
   subscriptionPlan: 'Sandbox',
   streamsPerClass: defaultStreamsPerClass,
