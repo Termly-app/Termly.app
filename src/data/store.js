@@ -368,7 +368,7 @@ function mapProfileData(data) {
     boardingHouses: data.boarding_houses || data.custom_subjects?.__boarding_houses || DEFAULT_PROFILE.boardingHouses,
     activeClasses: data.active_classes || DEFAULT_PROFILE.activeClasses,
     gradeFees: data.grade_fees || {},
-    setup_completed: data.setup_completed || false,
+    setup_completed: data.setup_completed || data.custom_subjects?.__shadow_setup_completed || false,
     subscriptionStatus: data.subscription_status || 'Inactive',
     subscriptionExpiry: data.subscription_expiry || null,
     lastPaymentStatus: data.last_payment_status || 'none',
@@ -389,7 +389,8 @@ function mapProfileData(data) {
     timetable_label: data.timetable_label || DEFAULT_PROFILE.timetable_label,
     _dbId: data.id,
     schoolId: data.school_id,
-    schoolType: data.school_type || data.custom_subjects?.__school_type || 'Day',
+    schoolType: data.school_type || data.custom_subjects?.__shadow_school_type || 'Day',
+    boardingHouses: data.boarding_houses || data.custom_subjects?.__shadow_boarding_houses || DEFAULT_PROFILE.boardingHouses,
   };
 }
 
@@ -644,14 +645,14 @@ export async function saveSchoolProfile(profile) {
     });
   }
 
+  const skippedColumns = [];
+
   const attemptSave = async (payload) => {
     const { error } = await supabase
       .from('school_profiles')
       .upsert(payload, { onConflict: 'school_id' });
     
     if (error) {
-      // Emergency Resilience: If a column is missing, identify it and retry without it
-      // This prevents the "Stuck Button" issue while the user prepares to run the SQL migration.
       if (error.message?.includes('column') || error.hint?.includes('column')) {
         const quotedMatches = error.message.match(/["']([^"']+)["']/g) || [];
         let foundCol = null;
@@ -665,9 +666,7 @@ export async function saveSchoolProfile(profile) {
         }
 
         if (foundCol) {
-          const userFriendlyName = foundCol.replace(/_/g, ' ').toUpperCase();
-          console.error(`DB ERROR: The field "${userFriendlyName}" cannot be saved because the database column is missing. Please run fix_wizard_persistence.sql in Supabase.`);
-          
+          skippedColumns.push(foundCol);
           const newPayload = { ...payload };
           delete newPayload[foundCol];
           return attemptSave(newPayload);
@@ -677,7 +676,28 @@ export async function saveSchoolProfile(profile) {
     }
   };
 
+  if (!_currentSchoolId) {
+    throw new Error("School Identification Lost. Please refresh your browser or log in again.");
+  }
+
   await attemptSave(row);
+
+  // If columns were skipped, save them as shadow data in custom_subjects as a fallback
+  if (skippedColumns.length > 0) {
+    console.warn("Retrying save as shadow data for missing columns:", skippedColumns);
+    const shadowBlob = { ...(row.custom_subjects || {}) };
+    if (skippedColumns.includes('setup_completed')) shadowBlob.__shadow_setup_completed = row.setup_completed;
+    if (skippedColumns.includes('school_type')) shadowBlob.__shadow_school_type = row.school_type;
+    if (skippedColumns.includes('boarding_houses')) shadowBlob.__shadow_boarding_houses = row.boarding_houses;
+    
+    await supabase
+      .from('school_profiles')
+      .update({ custom_subjects: shadowBlob })
+      .eq('school_id', _currentSchoolId);
+  }
+
+  return { success: true, skipped: skippedColumns };
+}
   _profileCache = null; // Invalidate cache
 
   // Update school name and contact in schools table too
