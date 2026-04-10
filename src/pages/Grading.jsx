@@ -343,91 +343,83 @@ export default function Grading({ currentUser, currentPeriodId }) {
       </div>
 
       {/* Level-grouped grade tabs */}
-      {Object.entries(CBC_STRUCTURE).map(([levelName, levelData]) => {
-        const activeInLevel = levelData.grades.filter(g => profile.activeClasses?.includes(g));
-        if (activeInLevel.length === 0) return null;
-        return (
-          <div key={levelName} style={{ marginBottom: 8 }}>
-            <div style={{ fontSize: '0.65rem', textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 700, marginBottom: 5, marginLeft: 2, color: 'var(--text-muted)' }}>{levelName}</div>
-            <div className="scroll-x-hide" style={{ paddingBottom: '4px' }}>
-              {activeInLevel.map(g => {
-                const isMyClass = assignments[g] && Object.values(assignments[g]).some(streams => 
-                  typeof streams === 'string' ? streams === currentUser?.id :
-                  Object.values(streams).some(tid => tid === currentUser?.id)
-                );
-                return (
-                  <button key={g}
-                    onClick={() => { setSelectedClass(g); setActiveTab('marks'); }}
-                    style={{
-                      padding: '6px 14px', borderRadius: 8, border: '1.5px solid',
-                      borderColor: selectedClass === g ? 'var(--primary)' : 'var(--border)',
-                      background: selectedClass === g ? 'var(--primary-light)' : 'var(--bg-card)',
-                      color: selectedClass === g ? 'var(--primary)' : 'var(--text-light)',
-                      fontWeight: selectedClass === g ? 700 : 500,
-                      fontSize: '0.82rem', cursor: 'pointer', fontFamily: 'inherit',
-                      transition: 'all 0.15s',
-                      position: 'relative'
-                    }}>
-                    {g}
-                    {isMyClass && isTeacher && <span title="My Class" style={{ position: 'absolute', top: -10, right: -4, fontSize: '0.9rem' }}><FlagIcon size={14} /></span>}
-                  </button>
-                );
-              })}
+      <div style={{ marginBottom: 20 }}>
+        {Object.entries(CBC_STRUCTURE).map(([levelName, levelData]) => {
+          const activeInLevel = levelData.grades.filter(g => profile.activeClasses?.includes(g));
+          if (activeInLevel.length === 0) return null;
+          return (
+            <div key={levelName} style={{ marginBottom: 12 }}>
+              <div style={{ fontSize: '0.65rem', textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 700, marginBottom: 8, marginLeft: 2, color: 'var(--text-muted)' }}>{levelName}</div>
+              <div className="scroll-x-hide" style={{ display: 'flex', gap: 8, paddingBottom: '4px' }}>
+                {activeInLevel.map(g => {
+                  const isMyClass = assignments[g] && Object.values(assignments[g]).some(streams => 
+                    typeof streams === 'string' ? streams === currentUser?.id :
+                    Object.values(streams).some(tid => tid === currentUser?.id)
+                  );
+                  return (
+                    <button key={g}
+                      onClick={() => { setSelectedClass(g); setActiveTab('marks'); }}
+                      style={{
+                        padding: '8px 18px', borderRadius: 10, border: '2px solid',
+                        borderColor: selectedClass === g ? 'var(--primary)' : 'var(--border)',
+                        background: selectedClass === g ? 'var(--primary-light)' : 'var(--bg-card)',
+                        color: selectedClass === g ? 'var(--primary)' : 'var(--text-light)',
+                        fontWeight: selectedClass === g ? 700 : 500,
+                        fontSize: '0.85rem', cursor: 'pointer', fontFamily: 'inherit',
+                        transition: 'all 0.15s',
+                        position: 'relative',
+                        whiteSpace: 'nowrap'
+                      }}>
+                      {g}
+                      {isMyClass && isTeacher && <span title="My Class" style={{ position: 'absolute', top: -10, right: -4, fontSize: '0.9rem' }}><FlagIcon size={14} /></span>}
+                    </button>
+                  );
+                })}
+              </div>
             </div>
-          </div>
-        );
-      })}
+          );
+        })}
+      </div>
 
-      {/* Current level info badge & Stream Filter */}
-      <div style={{ display: 'flex', gap: 12, alignItems: 'center', margin: '16px 0', flexWrap: 'wrap' }}>
-        <span className="badge badge-info" style={{ fontSize: '0.8rem', padding: '6px 14px' }}>{level}</span>
-        <span className="text-muted" style={{ fontSize: '0.82rem' }}>{CBC_STRUCTURE[level].description}</span>
-        
-        {isSeniorSecondary && (
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <label style={{ fontSize: '0.82rem', fontWeight: 600 }}>Pathway:</label>
-            <Select 
-              value={selectedPathway} 
-              onChange={(e) => setSelectedPathway(e.target.value)}
-              options={CBC_STRUCTURE['Senior Secondary'].pathways.map(p => ({ id: p, label: p }))}
-              style={{ minWidth: 180 }}
-            />
-          </div>
-        )}
-
-        {selectedClass === 'Grade 6' && (
-          <span className="badge badge-accent" style={{ fontSize: '0.75rem' }}><RocketIcon size={14} /> KPSEA Exam Candidate</span>
-        )}
-        
-        <div style={{ flex: 1 }} />
-        <Select 
-          value={streamFilter} 
-          onChange={(e) => setStreamFilter(e.target.value)}
-          options={[
-            { id: 'All', label: 'All Streams' },
-            ...(profile.streamsPerClass?.[selectedClass] || []).map(stream => ({ id: stream, label: `${stream} Stream` }))
-          ]}
-          style={{ minWidth: 150 }}
-        />
-        
-        <div style={{ display:'flex', gap:4, padding:'4px', background:'var(--bg)', borderRadius:10, border:'1px solid var(--border)', overflowX: 'auto' }}>
-          {(profile.custom_exams || ['CAT 1', 'CAT 2', 'Mid Term', 'End Term']).map(type => (
-            <button
-              key={type}
-              onClick={() => setExamType(type)}
-              style={{
-                padding:'6px 14px', borderRadius:8, border:'none',
-                fontFamily:'inherit', fontSize:'0.8rem',
-                fontWeight: examType===type ? 700 : 500,
-                cursor:'pointer', transition:'all 0.15s', whiteSpace:'nowrap',
-                background: examType===type ? 'var(--primary)' : 'transparent',
-                color: examType===type ? '#fff' : 'var(--text-light)',
-                boxShadow: examType===type ? '0 2px 6px rgba(14,165,233,0.3)' : 'none',
-              }}>
-              {type}
-            </button>
-          ))}
+      {/* Filter Row */}
+      <div className="filter-bar" style={{ marginBottom: 20, display: 'flex', gap: 16, alignItems: 'center', flexWrap: 'wrap' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <label style={{ fontSize: '0.82rem', fontWeight: 600 }}>Stream:</label>
+          <Select 
+            value={streamFilter} 
+            onChange={(e) => setStreamFilter(e.target.value)}
+            options={[
+              { id: 'All', label: 'All Streams' },
+              ...(profile.streamsPerClass?.[selectedClass] || []).map(stream => ({ id: stream, label: stream }))
+            ]}
+            style={{ minWidth: 140 }}
+          />
         </div>
+
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <label style={{ fontSize: '0.82rem', fontWeight: 600 }}>Exam:</label>
+          <div style={{ display:'flex', gap:4, padding:'4px', background:'var(--bg)', borderRadius:10, border:'1px solid var(--border)' }}>
+            {(profile.custom_exams || ['CAT 1', 'CAT 2', 'Mid Term', 'End Term']).map(type => (
+              <button
+                key={type}
+                onClick={() => setExamType(type)}
+                style={{
+                  padding:'6px 14px', borderRadius:8, border:'none',
+                  fontFamily:'inherit', fontSize:'0.8rem',
+                  fontWeight: examType===type ? 700 : 500,
+                  cursor:'pointer', transition:'all 0.15s', whiteSpace:'nowrap',
+                  background: examType===type ? 'var(--primary)' : 'transparent',
+                  color: examType===type ? '#fff' : 'var(--text-light)',
+                }}>
+                {type}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div style={{ flex: 1 }} />
+        <span className="badge badge-info" style={{ fontSize: '0.8rem', padding: '6px 14px' }}>{selectedClass}</span>
+        <span className="badge badge-outline" style={{ fontSize: '0.8rem', padding: '6px 14px' }}>{level}</span>
       </div>
 
       {/* View Tabs — pill strip */}
