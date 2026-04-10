@@ -41,14 +41,8 @@ export default function SetupWizard({ profile, onComplete, totalStudents }) {
     { id: 6, title: 'Launch', icon: <CheckIcon size={20} /> }
   ];
 
-  const handleNext = () => {
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-    setStep(s => Math.min(s + 1, steps.length));
-  };
-  const handlePrev = () => {
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-    setStep(s => Math.max(s - 1, 1));
-  };
+  const handleNext = () => setStep(s => Math.min(s + 1, steps.length));
+  const handlePrev = () => setStep(s => Math.max(s - 1, 1));
 
   const handleSave = async () => {
     setSaving(true);
@@ -109,153 +103,123 @@ export default function SetupWizard({ profile, onComplete, totalStudents }) {
   };
 
   return (
-    <div className="setup-wizard-overlay animate-fade-in">
-      <div className="setup-wizard-card">
-        {/* Progress Bar with Glow */}
-        <div className="wizard-progress">
-          {steps.map(s => (
-            <div key={s.id} className={`progress-step ${step >= s.id ? 'active' : ''} ${step > s.id ? 'done' : ''}`}>
-              <div className="step-number">{step > s.id ? <CheckIcon size={14} /> : s.id}</div>
-              <span className="step-title">{s.title}</span>
-            </div>
-          ))}
-          <div className="progress-bg-line"></div>
-          <div className="progress-fill-line" style={{ width: `${((step - 1) / (steps.length - 1)) * 100}%` }}></div>
+    <div className="wizard-overlay">
+      <div className="wizard-modal">
+        {/* Header/Progress */}
+        <div className="wizard-header">
+          <div className="wizard-steps-nav">
+            {steps.map(s => (
+              <div key={s.id} className={`step-item ${step >= s.id ? 'active' : ''} ${step > s.id ? 'done' : ''}`}>
+                <div className="step-point">{step > s.id ? <CheckIcon size={12} /> : s.id}</div>
+                <span className="step-label">{s.title}</span>
+              </div>
+            ))}
+          </div>
         </div>
 
-        <div className="wizard-content scroll-y">
+        <div className="wizard-body scroll-y">
           {step === 1 && (
-            <div className="wizard-step-inner animate-fade-up">
-              <div className="wizard-hero-box">
-                <div className="wizard-hero-icon"><RocketIcon size={58} color="#fff" /></div>
-                <div className="hero-glow"></div>
-              </div>
-              <h1 className="premium-title">Revolutionize Your School</h1>
-              <p className="premium-desc">Welcome to ShuleSoft. Let's build your school's digital architecture together. This configuration will prepare your system for registration, grading, and fee management.</p>
+            <div className="wizard-welcome text-center animate-fade-in">
+              <div className="hero-icon-box"><RocketIcon size={48} /></div>
+              <h1>Welcome to ShuleSoft</h1>
+              <p>Let's get your school set up in 5 minutes. We'll configure your branding, classes, and fee structure to get you ready for the term.</p>
               
-              <div className="wizard-intro-grid">
-                <div className="intro-card">
-                  <div className="intro-val">{profile?.subscriptionPlan || 'Sandbox'}</div>
-                  <div className="intro-lbl">Academic Plan</div>
+              <div className="info-grid">
+                <div className="info-card">
+                  <div className="info-val">{profile?.subscriptionPlan || 'Sandbox'}</div>
+                  <div className="info-lbl">Active Plan</div>
                 </div>
-                <div className="intro-card accent">
-                  <div className="intro-val">Ready</div>
-                  <div className="intro-lbl">Cloud Instance</div>
+                <div className="info-card">
+                  <div className="info-val">Active</div>
+                  <div className="info-lbl">System Status</div>
                 </div>
               </div>
               
-              <button className="btn-premium-lg" onClick={handleNext}>
-                Get Started
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M5 12h14m-7-7 7 7-7 7" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+              <button className="btn btn-primary btn-lg" onClick={handleNext}>
+                Start Configuration <ChevronRightIcon size={18} />
               </button>
             </div>
           )}
 
           {step === 2 && (
-            <div className="wizard-step-inner animate-fade-up text-left">
-              <h2 className="step-heading">Institution Identity</h2>
-              <p className="step-subheading">Verify your official details. These will appear on all reports, invoices, and certificates.</p>
+            <div className="wizard-step-content animate-fade-in">
+              <h2>School Identity</h2>
+              <p className="step-desc">Enter your school's official details for reports and invoices.</p>
               
-              <div className="setup-form-v2">
-                <div className="form-field-v2 full">
+              <div className="form-grid">
+                <div className="form-group full">
                   <label>Official School Name</label>
-                  <div className="input-wrap-v2">
-                    <SchoolIcon size={18} className="f-ico" />
-                    <input type="text" placeholder="e.g. Alliance High School" value={formData.schoolName} onChange={e => updateField('schoolName', e.target.value)} />
-                  </div>
+                  <input type="text" placeholder="Enter school name" value={formData.schoolName} onChange={e => updateField('schoolName', e.target.value)} />
                 </div>
-                
-                <div className="form-field-v2">
-                  <label>Contact Phone</label>
-                  <div className="input-wrap-v2">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="f-ico" style={{width:18, height:18}}><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
-                    <input type="text" placeholder="07xx xxx xxx" value={formData.phone} onChange={e => updateField('phone', e.target.value)} />
-                  </div>
+                <div className="form-group">
+                  <label>Phone Number</label>
+                  <input type="text" placeholder="07xx xxx xxx" value={formData.phone} onChange={e => updateField('phone', e.target.value)} />
                 </div>
-
-                <div className="form-field-v2">
+                <div className="form-group">
                   <label>Official Email</label>
-                  <div className="input-wrap-v2">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="f-ico" style={{width:18, height:18}}><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/><rect x="2" y="5" width="20" height="14" rx="2"/></svg>
-                    <input type="email" placeholder="info@school.ac.ke" value={formData.email} onChange={e => updateField('email', e.target.value)} />
-                  </div>
+                  <input type="email" placeholder="info@school.com" value={formData.email} onChange={e => updateField('email', e.target.value)} />
                 </div>
-
-                <div className="form-field-v2 full">
-                  <label>Physical Address / Location</label>
-                  <div className="input-wrap-v2">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="f-ico" style={{width:18, height:18}}><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
-                    <input type="text" placeholder="Nairobi, Kenya" value={formData.address} onChange={e => updateField('address', e.target.value)} />
-                  </div>
+                <div className="form-group full">
+                  <label>Physical Address</label>
+                  <input type="text" placeholder="e.g. Nairobi, Kenya" value={formData.address} onChange={e => updateField('address', e.target.value)} />
                 </div>
-
-                <div className="form-field-v2 full">
+                <div className="form-group full">
                   <label>School Motto</label>
-                  <div className="input-wrap-v2">
-                    <ShieldIcon size={18} className="f-ico" />
-                    <input type="text" placeholder="e.g. Strive for Excellence" value={formData.motto} onChange={e => updateField('motto', e.target.value)} />
-                  </div>
+                  <input type="text" placeholder="Optional" value={formData.motto} onChange={e => updateField('motto', e.target.value)} />
                 </div>
               </div>
             </div>
           )}
 
           {step === 3 && (
-            <div className="wizard-step-inner animate-fade-up text-left">
-              <div className="step-header-flex">
+            <div className="wizard-step-content animate-fade-in">
+              <div className="flex-between" style={{ marginBottom: 20 }}>
                 <div>
-                  <h2 className="step-heading">School Architecture</h2>
-                  <p className="step-subheading">Define your grades and streams. This builds your core database structure.</p>
+                  <h2>School Structure</h2>
+                  <p className="step-desc">Select your grades and define streams (branches).</p>
                 </div>
-                <div className="level-tabs-v2">
+                <div className="tab-switcher">
                   {Object.keys(CBC_STRUCTURE).map(lv => (
-                    <button key={lv} className={`tab-v2 ${activeLevel === lv ? 'active' : ''}`} onClick={() => setActiveLevel(lv)}>
+                    <button key={lv} className={`tab-btn ${activeLevel === lv ? 'active' : ''}`} onClick={() => setActiveLevel(lv)}>
                       {lv.split(' ')[0]}
                     </button>
                   ))}
                 </div>
               </div>
 
-              <div className="arch-grid-v2">
-                <div className="arch-col">
-                  <div className="col-label">Select Active Grades</div>
-                  <div className="grades-grid-v2">
+              <div className="arch-layout">
+                <div className="arch-left">
+                  <div className="label-sm">SELECT GRADES</div>
+                  <div className="grade-selector">
                     {CBC_STRUCTURE[activeLevel].grades.map(g => (
-                      <button 
+                      <div 
                         key={g} 
-                        className={`grade-pill-v2 ${formData.activeClasses.includes(g) ? 'active' : ''}`}
+                        className={`grade-chip ${formData.activeClasses.includes(g) ? 'active' : ''}`}
                         onClick={() => toggleGrade(g)}
                       >
                         {g}
-                      </button>
+                        {formData.activeClasses.includes(g) && <CheckIcon size={12} />}
+                      </div>
                     ))}
                   </div>
                 </div>
-                
-                <div className="arch-col">
-                  <div className="col-label">Stream Management</div>
-                  <div className="streams-stack-v2">
+                <div className="arch-right">
+                  <div className="label-sm">STREAMS & SECTIONS</div>
+                  <div className="stream-manager">
                     {formData.activeClasses.filter(g => CBC_STRUCTURE[activeLevel].grades.includes(g)).map(g => (
-                      <div key={g} className="stream-card-v2">
-                        <div className="s-card-hd">{g}</div>
-                        <div className="s-card-body">
-                          <div className="s-tags-v2">
-                            {(formData.streamsPerClass[g] || []).map(s => (
-                              <span key={s} className="s-tag-v2">
-                                {s} <button onClick={() => removeStream(g, s)}><CrossIcon size={10} /></button>
-                              </span>
-                            ))}
-                          </div>
-                          <div className="s-add-wrap">
+                      <div key={g} className="class-section">
+                        <div className="class-name">{g}</div>
+                        <div className="streams-list">
+                          {(formData.streamsPerClass[g] || []).map(s => (
+                            <span key={s} className="tag">
+                              {s} <button onClick={() => removeStream(g, s)}><CrossIcon size={10} /></button>
+                            </span>
+                          ))}
+                          <div className="add-tag">
                             <input 
                               type="text" 
-                              placeholder="Add Stream..." 
-                              onKeyDown={e => {
-                                if (e.key === 'Enter') {
-                                  addStream(g);
-                                  e.target.value = '';
-                                }
-                              }}
+                              placeholder="New Stream..." 
+                              onKeyDown={e => { if (e.key === 'Enter') addStream(g); }}
                               onChange={e => setNewStream(e.target.value)}
                             />
                             <button onClick={() => addStream(g)}><PlusIcon size={14} /></button>
@@ -263,9 +227,6 @@ export default function SetupWizard({ profile, onComplete, totalStudents }) {
                         </div>
                       </div>
                     ))}
-                    {formData.activeClasses.filter(g => CBC_STRUCTURE[activeLevel].grades.includes(g)).length === 0 && (
-                      <div className="empty-v2">Select grades on the left to configure streams.</div>
-                    )}
                   </div>
                 </div>
               </div>
@@ -273,360 +234,277 @@ export default function SetupWizard({ profile, onComplete, totalStudents }) {
           )}
 
           {step === 4 && (
-            <div className="wizard-step-inner animate-fade-up text-left">
-              <h2 className="step-heading">Learning Areas</h2>
-              <p className="step-subheading">Verify the subjects offered at each level. We've pre-filled these based on KICD requirements.</p>
+            <div className="wizard-step-content animate-fade-in">
+              <h2>Learning Areas (Subjects)</h2>
+              <p className="step-desc">Verify subjects per level. Pre-filled based on KICD standards.</p>
               
-              <div className="level-pills-v2">
+              <div className="level-tabs-scroll">
                 {Object.keys(CBC_STRUCTURE).map(lv => (
-                  <button key={lv} className={`pill-v2 ${activeLevel === lv ? 'active' : ''}`} onClick={() => setActiveLevel(lv)}>
+                  <button key={lv} className={`pill-btn ${activeLevel === lv ? 'active' : ''}`} onClick={() => setActiveLevel(lv)}>
                     {lv}
                   </button>
                 ))}
               </div>
 
-              <div className="subjects-list-v2">
+              <div className="subject-grid">
                 {getLevelSubjects(activeLevel).map(sub => (
-                  <div key={sub} className="subject-row-v2">
+                  <div key={sub} className="subject-item">
                     <span>{sub}</span>
-                    <button onClick={() => removeSubject(activeLevel, sub)}><CrossIcon size={14} /></button>
+                    <button onClick={() => removeSubject(activeLevel, sub)} className="remove-btn"><CrossIcon size={14} /></button>
                   </div>
                 ))}
-                <div className="subject-add-v2">
-                  <input type="text" placeholder="Add custom learning area..." />
-                  <button className="btn-add-v2"><PlusIcon size={16} /> Add</button>
-                </div>
               </div>
             </div>
           )}
 
           {step === 5 && (
-            <div className="wizard-step-inner animate-fade-up text-left">
-              <h2 className="step-heading">Finance & Fee Structure</h2>
-              <p className="step-subheading">Define base tuition fees per grade. These can be customized for specific students later.</p>
+            <div className="wizard-step-content animate-fade-in">
+              <h2>Fees Management</h2>
+              <p className="step-desc">Set the baseline tuition fees for each grade.</p>
               
-              <div className="fees-grid-v2">
+              <div className="fees-layout">
                 {formData.activeClasses.map(g => (
-                  <div key={g} className="fee-field-v2">
+                  <div key={g} className="fee-card">
                     <label>{g}</label>
-                    <div className="fee-input-v2">
-                      <span className="cur">KSh</span>
+                    <div className="input-with-cur">
+                      <span>KSh</span>
                       <input 
                         type="number" 
                         value={formData.gradeFees[g] || ''} 
-                        onChange={e => {
-                          const newFees = { ...formData.gradeFees, [g]: Number(e.target.value) };
-                          updateField('gradeFees', newFees);
-                        }}
+                        onChange={e => updateField('gradeFees', { ...formData.gradeFees, [g]: Number(e.target.value) })}
                         placeholder="0.00"
                       />
                     </div>
                   </div>
                 ))}
                 {formData.activeClasses.length === 0 && (
-                  <div className="empty-v2" style={{ gridColumn: 'span 2' }}>No active grades selected. Please go back to Architecture.</div>
+                  <div className="empty-notice">No grades selected. Go back to Architecture Step.</div>
                 )}
               </div>
             </div>
           )}
 
           {step === 6 && (
-            <div className="wizard-step-inner animate-fade-up">
-              <div className="success-lottie-wrap">
-                <CheckIcon size={80} color="#10B981" />
-              </div>
-              <h1 className="premium-title">Architecture Verified</h1>
-              <p className="premium-desc">Your school's digital foundation is now ready. You can now start onboarding students and generating invoices.</p>
+            <div className="wizard-success text-center animate-fade-in">
+              <div className="success-icon"><CheckIcon size={48} /></div>
+              <h1>Configuration Ready!</h1>
+              <p>Your school architecture is verified. You can now access your dashboard and start managing students.</p>
               
-              <div className="wizard-summary-v2">
-                <div className="sum-item">
-                  <span className="sum-k">Institution</span>
-                  <span className="sum-v">{formData.schoolName}</span>
-                </div>
-                <div className="sum-item">
-                  <span className="sum-k">Active Grades</span>
-                  <span className="sum-v">{formData.activeClasses.length} Levels</span>
-                </div>
-                <div className="sum-item">
-                  <span className="sum-k">Data Security</span>
-                  <span className="sum-v">AES-256 Encrypted</span>
-                </div>
+              <div className="summary-box">
+                <div className="sum-row"><strong>Institution:</strong> <span>{formData.schoolName}</span></div>
+                <div className="sum-row"><strong>Structure:</strong> <span>{formData.activeClasses.length} Grades Enabled</span></div>
+                <div className="sum-row"><strong>Status:</strong> <span className="text-success">Ready for Term</span></div>
               </div>
-
-              <div className="trust-badge-v2">
-                <ShieldIcon size={16} /> ShuleSoft Cloud-Native Security Active
-              </div>
+              
+              <div className="security-tag"><ShieldIcon size={14} /> Encrypted Cloud Instance Active</div>
             </div>
           )}
         </div>
 
-        <div className="wizard-footer-v2">
+        <div className="wizard-footer">
           {step > 1 && (
-            <button className="btn-v2-ghost" onClick={handlePrev} disabled={saving}>
+            <button className="btn btn-ghost" onClick={handlePrev} disabled={saving}>
               <ChevronLeftIcon size={18} /> Back
             </button>
           )}
           <div style={{ flex: 1 }} />
           <button 
-            className="btn-v2-primary" 
+            className="btn btn-primary" 
             onClick={handleSave} 
             disabled={saving || (step === 2 && !formData.schoolName)}
           >
-            {saving ? 'Processing...' : step === 6 ? 'Launch Dashboard' : 'Save & Continue'}
+            {saving ? 'Saving...' : step === 6 ? 'Go to Dashboard' : 'Save & Continue'}
             {!saving && <ChevronRightIcon size={18} />}
           </button>
         </div>
       </div>
 
       <style>{`
-        .setup-wizard-overlay {
+        .wizard-overlay {
           position: fixed;
           top: 0; left: 0; right: 0; bottom: 0;
-          background: rgba(10, 10, 15, 0.94);
-          backdrop-filter: blur(12px);
+          background: rgba(15, 23, 42, 0.45);
+          backdrop-filter: blur(8px);
           z-index: 9999;
           display: flex;
           align-items: center;
           justify-content: center;
-          padding: 24px;
+          padding: 20px;
         }
 
-        .setup-wizard-card {
-          background: #111118;
+        .wizard-modal {
+          background: #ffffff;
           width: 100%;
-          max-width: 900px;
-          border-radius: 32px;
-          border: 1px solid rgba(255, 255, 255, 0.12);
-          box-shadow: 0 40px 120px rgba(0,0,0,0.6);
+          max-width: 860px;
+          border-radius: 24px;
+          box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+          overflow: hidden;
           display: flex;
           flex-direction: column;
-          overflow: hidden;
-          position: relative;
+          border: 1px solid rgba(0,0,0,0.05);
         }
 
-        /* PROGRESS BAR */
-        .wizard-progress {
+        .wizard-header {
+          padding: 24px 40px;
+          background: #f8fafc;
+          border-bottom: 1px solid #e2e8f0;
+        }
+
+        .wizard-steps-nav {
           display: flex;
-          padding: 32px 40px;
-          background: rgba(255, 255, 255, 0.02);
-          border-bottom: 1px solid rgba(255, 255, 255, 0.08);
           justify-content: space-between;
           position: relative;
         }
-        .progress-bg-line {
-          position: absolute;
-          top: 48px; left: 60px; right: 60px;
-          height: 3px; background: rgba(255,255,255,0.05);
-          border-radius: 10px; z-index: 1;
-        }
-        .progress-fill-line {
-          position: absolute;
-          top: 48px; left: 60px;
-          height: 3px; background: linear-gradient(90deg, #5B3EF5, #29C6D4);
-          box-shadow: 0 0 12px rgba(91, 62, 245, 0.5);
-          border-radius: 10px; z-index: 2;
-          transition: width 0.6s cubic-bezier(0.16, 1, 0.3, 1);
-        }
-        .progress-step {
-          display: flex; flex-direction: column; align-items: center; gap: 8px; flex: 1; z-index: 3;
-        }
-        .step-number {
-          width: 34px; height: 34px; border-radius: 50%;
-          background: #1A1A24; border: 2px solid rgba(255,255,255,0.1);
-          display: flex; align-items: center; justify-content: center;
-          font-size: 0.85rem; font-weight: 800; color: rgba(255,255,255,0.4);
-          transition: all 0.4s;
-        }
-        .progress-step.active .step-number {
-          border-color: #5B3EF5; color: #5B3EF5; transform: scale(1.15);
-          box-shadow: 0 0 20px rgba(91, 62, 245, 0.4); background: #fff;
-        }
-        .progress-step.done .step-number {
-          background: linear-gradient(135deg, #5B3EF5, #29C6D4);
-          border-color: transparent; color: #fff;
-        }
-        .step-title {
-          font-size: 0.65rem; font-weight: 900; text-transform: uppercase;
-          letter-spacing: 0.1em; color: rgba(255,255,255,0.3);
-          transition: color 0.4s;
-        }
-        .progress-step.active .step-title { color: #fff; }
 
-        .wizard-content {
-          padding: 48px 64px;
-          min-height: 520px;
-          max-height: 75vh;
+        .step-item {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          gap: 8px;
+          flex: 1;
+          z-index: 2;
+          position: relative;
+        }
+
+        .step-point {
+          width: 28px;
+          height: 28px;
+          border-radius: 50%;
+          background: #fff;
+          border: 2px solid #e2e8f0;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 0.75rem;
+          font-weight: 700;
+          color: #94a3b8;
+          transition: all 0.3s;
+        }
+
+        .step-item.active .step-point {
+          border-color: #3b82f6;
+          color: #3b82f6;
+          background: #eff6ff;
+        }
+
+        .step-item.done .step-point {
+          background: #3b82f6;
+          border-color: #3b82f6;
+          color: #fff;
+        }
+
+        .step-label {
+          font-size: 0.65rem;
+          font-weight: 700;
+          text-transform: uppercase;
+          letter-spacing: 0.05em;
+          color: #94a3b8;
+        }
+
+        .step-item.active .step-label { color: #1e293b; }
+
+        .wizard-body {
+          padding: 40px 64px;
+          min-height: 480px;
+          max-height: 70vh;
           overflow-y: auto;
-          scrollbar-width: thin;
-          scrollbar-color: rgba(255,255,255,0.1) transparent;
         }
-        .animate-fade-up { animation: fadeUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) both; }
-        @keyframes fadeUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
 
-        .wizard-hero-box { position: relative; width: 120px; height: 120px; margin: 0 auto 32px; }
-        .wizard-hero-icon {
-          width: 100%; height: 100%; border-radius: 36px;
-          background: linear-gradient(145deg, #5B3EF5, #29C6D4);
-          display: flex; align-items: center; justify-content: center;
-          position: relative; z-index: 2; box-shadow: 0 20px 40px rgba(91, 62, 245, 0.4);
-        }
-        .hero-glow {
-          position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-          background: #5B3EF5; filter: blur(40px); opacity: 0.4; z-index: 1;
-        }
-        .premium-title { font-size: 2.2rem; font-weight: 900; color: #fff; margin-bottom: 12px; letter-spacing: -0.02em; }
-        .premium-desc { font-size: 1.05rem; color: rgba(255,255,255,0.6); line-height: 1.6; margin-bottom: 40px; }
+        .wizard-welcome h1 { font-size: 2rem; color: #1e293b; margin-bottom: 12px; }
+        .wizard-welcome p { color: #64748b; line-height: 1.6; margin-bottom: 32px; }
         
-        .wizard-intro-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 48px; }
-        .intro-card {
-          background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06);
-          padding: 24px; border-radius: 20px; text-align: left;
+        .hero-icon-box {
+          width: 90px; height: 90px; background: #eff6ff; color: #3b82f6;
+          border-radius: 24px; display: flex; align-items: center; justify-content: center;
+          margin: 0 auto 24px; box-shadow: 0 10px 20px rgba(59, 130, 246, 0.1);
         }
-        .intro-card.accent { border-color: rgba(41, 198, 212, 0.2); }
-        .intro-val { font-size: 1.4rem; font-weight: 900; color: #fff; margin-bottom: 4px; }
-        .intro-lbl { font-size: 0.75rem; color: rgba(255,255,255,0.4); text-transform: uppercase; font-weight: 800; letter-spacing: 0.05em; }
 
-        .btn-premium-lg {
-          background: #fff; color: #111; padding: 18px 40px; border-radius: 100px;
-          border: none; font-size: 1.1rem; font-weight: 800; cursor: pointer;
-          display: inline-flex; align-items: center; gap: 12px; transition: all 0.3s;
+        .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 40px; }
+        .info-card { background: #f8fafc; padding: 20px; border-radius: 16px; border: 1px solid #e2e8f0; }
+        .info-val { font-size: 1.25rem; font-weight: 800; color: #1e293b; }
+        .info-lbl { font-size: 0.7rem; color: #64748b; text-transform: uppercase; font-weight: 700; }
+
+        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        .form-group.full { grid-column: span 2; }
+        .form-group label { display: block; font-size: 0.8rem; font-weight: 700; color: #475569; margin-bottom: 8px; }
+        .form-group input {
+          width: 100%; padding: 12px 16px; border-radius: 12px; border: 1.5px solid #e2e8f0;
+          font-size: 0.95rem; transition: border-color 0.2s; outline: none;
         }
-        .btn-premium-lg:hover { transform: translateY(-4px); box-shadow: 0 15px 30px rgba(255,255,255,0.2), 0 0 20px rgba(91, 62, 245, 0.3); }
+        .form-group input:focus { border-color: #3b82f6; }
 
-        .step-heading { font-size: 1.8rem; font-weight: 900; color: #fff; margin-bottom: 8px; letter-spacing: -0.01em; }
-        .step-subheading { color: rgba(255,255,255,0.5); font-size: 0.95rem; margin-bottom: 32px; }
+        .arch-layout { display: grid; grid-template-columns: 1fr 1.2fr; gap: 32px; }
+        .label-sm { font-size: 0.65rem; font-weight: 800; color: #94a3b8; margin-bottom: 16px; letter-spacing: 0.1em; }
         
-        .setup-form-v2 { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
-        .form-field-v2.full { grid-column: span 2; }
-        .form-field-v2 label { display: block; font-size: 0.75rem; font-weight: 800; color: rgba(255,255,255,0.4); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 10px; }
-        .input-wrap-v2 {
-          position: relative; display: flex; align-items: center;
-          background: rgba(255,255,255,0.03); border: 1.5px solid rgba(255,255,255,0.08);
-          border-radius: 14px; transition: all 0.2s;
+        .grade-selector { display: flex; flex-wrap: wrap; gap: 8px; }
+        .grade-chip {
+          padding: 8px 16px; background: #f1f5f9; border-radius: 10px; cursor: pointer;
+          font-size: 0.85rem; font-weight: 600; color: #475569; border: 1px solid transparent;
+          display: flex; align-items: center; gap: 6px; transition: all 0.2s;
         }
-        .input-wrap-v2:focus-within { border-color: #5B3EF5; background: rgba(91, 62, 245, 0.04); }
-        .input-wrap-v2 .f-ico { position: absolute; left: 16px; color: rgba(255,255,255,0.3); }
-        .input-wrap-v2 input {
-          width: 100%; background: transparent; border: none; padding: 14px 14px 14px 48px;
-          color: #fff; font-size: 1rem; font-weight: 500; outline: none;
-        }
-        .input-wrap-v2 input::placeholder { color: rgba(255,255,255,0.2); }
+        .grade-chip.active { background: #eff6ff; color: #3b82f6; border-color: #3b82f6; }
 
-        .step-header-flex { display: flex; justify-content: space-between; align-items: flex-start; gap: 20px; margin-bottom: 32px; }
-        .level-tabs-v2 { display: flex; gap: 6px; padding: 5px; background: rgba(255,255,255,0.05); border-radius: 12px; }
-        .tab-v2 {
-          background: transparent; border: none; color: rgba(255,255,255,0.4);
-          padding: 8px 16px; font-size: 0.8rem; font-weight: 800; cursor: pointer; border-radius: 8px; transition: all 0.2s;
-        }
-        .tab-v2.active { background: #fff; color: #111; box-shadow: 0 4px 12px rgba(0,0,0,0.2); }
+        .class-section { background: #f8fafc; border-radius: 12px; padding: 16px; margin-bottom: 12px; border: 1px solid #e2e8f0; }
+        .class-name { font-weight: 800; color: #1e293b; font-size: 0.85rem; margin-bottom: 12px; }
+        .streams-list { display: flex; flex-wrap: wrap; gap: 8px; }
+        .tag { background: #fff; border: 1px solid #cbd5e1; padding: 4px 10px; border-radius: 6px; font-size: 0.8rem; font-weight: 600; display: flex; align-items: center; gap: 6px; }
+        .tag button { background: none; border: none; color: #ef4444; cursor: pointer; padding: 0; }
+        .add-tag { display: flex; align-items: center; gap: 4px; background: #fff; border: 1px dashed #cbd5e1; border-radius: 6px; padding: 2px 6px; }
+        .add-tag input { border: none; width: 80px; font-size: 0.8rem; outline: none; }
+        .add-tag button { background: none; border: none; color: #3b82f6; cursor: pointer; }
 
-        .arch-grid-v2 { display: grid; grid-template-columns: 1fr 1.2fr; gap: 32px; margin-top: 24px; }
-        .col-label { font-size: 0.75rem; font-weight: 800; color: #5B3EF5; text-transform: uppercase; margin-bottom: 16px; letter-spacing: 0.05em; }
-        
-        .grades-grid-v2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-        .grade-pill-v2 {
-          background: rgba(255,255,255,0.03); border: 1.5px solid rgba(255,255,255,0.06);
-          padding: 12px; border-radius: 12px; color: rgba(255,255,255,0.6);
-          font-weight: 700; text-align: left; cursor: pointer; transition: all 0.2s;
-        }
-        .grade-pill-v2.active { border-color: #5B3EF5; background: rgba(91, 62, 245, 0.12); color: #fff; }
+        .tab-switcher { display: flex; background: #f1f5f9; padding: 4px; border-radius: 10px; }
+        .tab-btn { background: none; border: none; padding: 6px 14px; font-size: 0.75rem; font-weight: 800; color: #64748b; cursor: pointer; border-radius: 7px; }
+        .tab-btn.active { background: #fff; color: #1e293b; box-shadow: 0 2px 6px rgba(0,0,0,0.05); }
 
-        .stream-card-v2 {
-          background: rgba(255,255,255,0.03); border-radius: 16px; padding: 16px; margin-bottom: 12px;
-          border: 1px solid rgba(255,255,255,0.05);
-        }
-        .s-card-hd { font-weight: 900; color: #29C6D4; font-size: 0.75rem; margin-bottom: 12px; text-transform: uppercase; }
-        .s-tags-v2 { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
-        .s-tag-v2 {
-          background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);
-          padding: 6px 10px; border-radius: 8px; font-size: 0.8rem; font-weight: 700;
-          display: flex; align-items: center; gap: 6px; color: #fff;
-        }
-        .s-tag-v2 button { background: none; border: none; color: #EF4444; cursor: pointer; padding: 0; }
-        
-        .s-add-wrap { display: flex; background: rgba(0,0,0,0.2); border-radius: 8px; padding: 4px; }
-        .s-add-wrap input { flex: 1; background: transparent; border: none; padding: 8px 10px; color: #fff; font-size: 0.85rem; outline: none; }
-        .s-add-wrap button {
-          width: 32px; height: 32px; border-radius: 6px; border: none;
-          background: #5B3EF5; color: #fff; cursor: pointer;
+        .subject-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 10px; }
+        .subject-item { background: #f8fafc; padding: 12px 16px; border-radius: 10px; border: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center; font-size: 0.85rem; font-weight: 600; }
+        .remove-btn { background: none; border: none; color: #ef4444; cursor: pointer; }
+
+        .fees-layout { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+        .fee-card { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 16px; }
+        .fee-card label { display: block; font-size: 0.8rem; font-weight: 800; color: #64748b; margin-bottom: 10px; }
+        .input-with-cur { display: flex; align-items: center; background: #fff; border: 1.5px solid #e2e8f0; border-radius: 8px; overflow: hidden; }
+        .input-with-cur span { background: #f1f5f9; padding: 0 12px; color: #94a3b8; font-size: 0.7rem; font-weight: 800; border-right: 1px solid #e2e8f0; height: 40px; display: flex; align-items: center; }
+        .input-with-cur input { border: none; background: transparent; padding: 0 12px; width: 100%; height: 40px; font-weight: 700; outline: none; }
+
+        .wizard-success h1 { font-size: 1.75rem; color: #1e293b; margin-bottom: 12px; }
+        .success-icon { width: 80px; height: 80px; background: #dcfce7; color: #22c55e; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 24px; }
+        .summary-box { background: #f8fafc; border-radius: 16px; padding: 24px; max-width: 400px; margin: 0 auto 24px; text-align: left; }
+        .sum-row { display: flex; justify-content: space-between; margin-bottom: 12px; font-size: 0.9rem; }
+        .sum-row strong { color: #64748b; font-weight: 600; }
+        .sum-row span { color: #1e293b; font-weight: 700; }
+        .security-tag { font-size: 0.75rem; color: #10b981; font-weight: 700; display: flex; align-items: center; justify-content: center; gap: 6px; }
+
+        .wizard-footer {
+          padding: 24px 40px;
+          background: #f8fafc;
+          border-top: 1px solid #e2e8f0;
+          display: flex;
+          align-items: center;
         }
 
-        .level-pills-v2 { display: flex; gap: 10px; margin-bottom: 24px; overflow-x: auto; padding-bottom: 4px; }
-        .pill-v2 {
-          white-space: nowrap; background: rgba(255,255,255,0.03); border: 1.5px solid rgba(255,255,255,0.08);
-          color: rgba(255,255,255,0.4); padding: 10px 20px; border-radius: 50px; font-weight: 800; font-size: 0.8rem; cursor: pointer;
-        }
-        .pill-v2.active { border-color: #29C6D4; color: #fff; background: rgba(41, 198, 212, 0.1); }
-        
-        .subjects-list-v2 {
-          display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 12px;
-        }
-        .subject-row-v2 {
-          background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06);
-          padding: 16px; border-radius: 14px; display: flex; justify-content: space-between; align-items: center;
-          font-weight: 600; color: #fff; font-size: 0.9rem;
-        }
-        .subject-row-v2 button { background: none; border: none; color: #EF4444; cursor: pointer; }
-        
-        .subject-add-v2 { grid-column: 1 / -1; display: flex; gap: 12px; margin-top: 12px; }
-        .subject-add-v2 input { flex: 1; background: rgba(0,0,0,0.2); border-radius: 12px; border: 1.5px solid rgba(255,255,255,0.08); padding: 14px 20px; color: #fff; }
-        .btn-add-v2 { background: #5B3EF5; color: #fff; border: none; padding: 0 24px; border-radius: 12px; font-weight: 800; cursor: pointer; display: flex; align-items: center; gap: 8px; }
+        .btn { padding: 10px 20px; border-radius: 10px; font-weight: 700; font-size: 0.875rem; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; border: none; transition: all 0.2s; }
+        .btn-primary { background: #3b82f6; color: #fff; }
+        .btn-primary:hover { background: #2563eb; }
+        .btn-ghost { background: transparent; color: #64748b; }
+        .btn-ghost:hover { background: #f1f5f9; color: #1e293b; }
+        .btn-lg { padding: 14px 28px; font-size: 1rem; }
 
-        .fees-grid-v2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
-        .fee-field-v2 label { display: block; font-size: 0.85rem; font-weight: 900; color: #fff; margin-bottom: 12px; }
-        .fee-input-v2 {
-          display: flex; align-items: center; background: rgba(255,255,255,0.03);
-          border: 1.5px solid rgba(255,255,255,0.08); border-radius: 14px; overflow: hidden;
-        }
-        .fee-input-v2 .cur { padding: 0 16px; font-size: 0.75rem; font-weight: 900; color: rgba(255,255,255,0.3); border-right: 1px solid rgba(255,255,255,0.1); }
-        .fee-input-v2 input { width: 100%; height: 50px; background: transparent; border: none; color: #fff; padding: 0 16px; font-size: 1.1rem; font-weight: 700; outline: none; }
-
-        .success-lottie-wrap { width: 100px; height: 100px; border-radius: 50%; background: rgba(16, 185, 129, 0.1); margin: 0 auto 32px; display: flex; align-items: center; justify-content: center; position: relative; }
-        .wizard-summary-v2 {
-          background: rgba(255,255,255,0.03); border-radius: 20px; border: 1px solid rgba(255,255,255,0.08);
-          max-width: 440px; margin: 0 auto 32px; padding: 24px;
-        }
-        .sum-item { display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid rgba(255,255,255,0.05); }
-        .sum-item:last-child { border: none; }
-        .sum-k { font-size: 0.85rem; color: rgba(255,255,255,0.4); }
-        .sum-v { font-size: 0.95rem; font-weight: 800; color: #fff; }
-        
-        .trust-badge-v2 { display: flex; align-items: center; gap: 8px; color: #10B981; font-size: 0.8rem; font-weight: 800; justify-content: center; }
-
-        .wizard-footer-v2 {
-          padding: 32px 64px; background: rgba(0, 0, 0, 0.2); border-top: 1px solid rgba(255, 255, 255, 0.08);
-          display: flex; align-items: center; gap: 20px;
-        }
-        .btn-v2-ghost {
-          background: transparent; border: 1.5px solid rgba(255,255,255,0.1);
-          color: rgba(255,255,255,0.6); padding: 14px 28px; border-radius: 100px;
-          font-weight: 800; font-size: 0.9rem; cursor: pointer; transition: all 0.2s;
-          display: flex; align-items: center; gap: 8px;
-        }
-        .btn-v2-ghost:hover { border-color: #fff; color: #fff; }
-        .btn-v2-primary {
-          background: linear-gradient(135deg, #5B3EF5, #4A32D4); color: #fff; padding: 14px 32px;
-          border-radius: 100px; border: none; font-weight: 800; font-size: 0.95rem; cursor: pointer;
-          display: flex; align-items: center; gap: 10px; transition: all 0.2s;
-          box-shadow: 0 8px 20px rgba(91, 62, 245, 0.4);
-        }
-        .btn-v2-primary:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 12px 28px rgba(91, 62, 245, 0.5); }
-        .btn-v2-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+        .animate-fade-in { animation: fadeIn 0.4s ease-out both; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
         @media (max-width: 768px) {
-          .setup-wizard-overlay { padding: 0; }
-          .setup-wizard-card { height: 100vh; max-height: 100vh; border-radius: 0; }
-          .wizard-progress { padding: 20px; }
-          .step-title { display: none; }
-          .progress-bg-line, .progress-fill-line { left: 20px; right: 20px; }
-          .wizard-content { padding: 32px 20px; }
-          .setup-form-v2 { grid-template-columns: 1fr; gap: 16px; }
-          .form-field-v2.full { grid-column: span 1; }
-          .arch-grid-v2 { grid-template-columns: 1fr; gap: 40px; }
-          .fees-grid-v2 { grid-template-columns: 1fr; }
-          .wizard-footer-v2 { padding: 20px; }
-          .premium-title { font-size: 1.6rem; }
-          .btn-v2-primary { flex: 1; justify-content: center; }
+          .wizard-overlay { padding: 0; align-items: flex-end; }
+          .wizard-modal { height: 90vh; border-radius: 20px 20px 0 0; }
+          .wizard-header { padding: 20px; }
+          .step-label { display: none; }
+          .wizard-body { padding: 32px 20px; }
+          .form-grid { grid-template-columns: 1fr; }
+          .arch-layout { grid-template-columns: 1fr; }
+          .info-grid { grid-template-columns: 1fr; }
+          .wizard-footer { padding: 16px 20px; }
+          .btn-primary { flex: 1; justify-content: center; }
         }
       `}</style>
     </div>
