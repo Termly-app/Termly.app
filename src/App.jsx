@@ -598,7 +598,9 @@ function App() {
                   />
                 </ErrorBoundary>
               } />
-              <Route path="*" element={<Navigate to="/super-admin" replace />} />
+              <Route path="/login" element={<Navigate to="/super-admin" replace />} />
+              <Route path="/"     element={<Navigate to="/super-admin" replace />} />
+              <Route path="*"     element={<Navigate to="/super-admin" replace />} />
             </Routes>
           </Suspense>
         </div>
@@ -671,10 +673,16 @@ function App() {
                   <>
                     <Route path="/billing"  element={<Billing currentUser={currentUser} />} />
                     <Route path="/support"  element={<ContactSupport />} />
-                    <Route path="*"         element={<Navigate to="/billing" replace />} />
+                    <Route path="/login"    element={<Navigate to="/billing" replace />} />
+                    <Route path="/"        element={<Navigate to="/billing" replace />} />
+                    <Route path="*"        element={<Navigate to="/billing" replace />} />
                   </>
                 ) : (
                   <>
+                    {/* Redirects for logged-in users */}
+                    <Route path="/login"     element={<Navigate to="/dashboard" replace />} />
+                    <Route path="/"         element={<Navigate to="/dashboard" replace />} />
+
                     {/* Shared Dashboard */}
                     <Route path="/dashboard" element={<Dashboard currentUser={currentUser} onLogout={handleLogout} currentPeriodId={currentPeriodId} />} />
                     <Route path="/help"      element={<HelpCenter />} />
