@@ -399,17 +399,23 @@ function mapProfileData(data) {
 // ============= SUBSCRIPTIONS & PAYMENTS =============
 export async function checkIsSubscriptionActive(profile) {
   if (!profile) return false;
+  
+  // 1. Sandbox Authority: If the plan is Sandbox, it never expires.
+  // Access is controlled by feature-gating (checkFeatureAccess), not by lockout.
+  if (profile.subscriptionPlan?.toLowerCase() === 'sandbox' || profile.subscription_plan?.toLowerCase() === 'sandbox') {
+    return true;
+  }
 
-  // 1. PLATFORM OVERRIDE: ShuleSoft HQ or Platform Admins are always active
+  // 2. PLATFORM OVERRIDE: ShuleSoft HQ or Platform Admins are always active
   const isAdmin = await checkIsPlatformAdmin(_currentAuthUser?.email);
   if (isAdmin || profile.schoolName?.toLowerCase().includes('shulesoft hq')) return true;
 
   const now = new Date();
 
-  // 2. Explicit deactivation/suspension wins
+  // 3. Explicit deactivation/suspension wins
   if (profile.subscriptionStatus === 'Deactivated' || profile.subscriptionStatus === 'Suspended') return false;
 
-  // 3. INDIVIDUAL FUTURE OVERRIDE - If school has an explicit future expiry, respect it above all
+  // 4. INDIVIDUAL FUTURE OVERRIDE - If school has an explicit future expiry, respect it above all
   if (profile.subscriptionExpiry) {
     const pExp = new Date(profile.subscriptionExpiry);
     if (!isNaN(pExp.getTime())) {
@@ -419,7 +425,7 @@ export async function checkIsSubscriptionActive(profile) {
     }
   }
 
-  // 4. GLOBAL TERM EXPIRY - Platform-wide cutoff for schools without an individual extension
+  // 5. GLOBAL TERM EXPIRY - Platform-wide cutoff set by Super Admin (master source of truth)
   const globalExpiry = await getGlobalTermExpiry();
   if (globalExpiry) {
     const expDate = new Date(globalExpiry);

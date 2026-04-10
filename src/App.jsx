@@ -204,7 +204,7 @@ function Sidebar({ isOpen, onClose, onLogout, currentUser, subscriptionActive })
   const isFinance   = role === 'finance';
 
   // Sandbox plan: show all modules in sidebar but locked with UPGRADE badge
-  const isSandbox   = profile?.subscriptionPlan?.toLowerCase() === 'sandbox' || !subscriptionActive;
+  const isSandbox   = profile?.subscriptionPlan?.toLowerCase() === 'sandbox';
 
   const isPlatformAdmin = currentUser?.email === 'admin@shulesoft.com'
     || currentUser?.email === 'shulesoft8@gmail.com';
@@ -290,16 +290,16 @@ function Sidebar({ isOpen, onClose, onLogout, currentUser, subscriptionActive })
       {/* Nav */}
       <nav className="sidebar-nav">
         <SbSection label="General" />
-        <SbLink to="/dashboard" icon={DashboardIcon} label="Dashboard" onClick={onClose} locked={!subscriptionActive} />
+        <SbLink to="/dashboard" icon={DashboardIcon} label="Dashboard" onClick={onClose} locked={!subscriptionActive && !isSandbox} />
         
         {/* Teachers and Admins manage students */}
         {(isTeacher || isAdmin) && (
-          <SbLink to="/students"  icon={StudentsIcon}  label="Students"  onClick={onClose} locked={!subscriptionActive} />
+          <SbLink to="/students"  icon={StudentsIcon}  label="Students"  onClick={onClose} locked={!subscriptionActive && !isSandbox} />
         )}
         
         {/* Only Admins manage staff */}
         {isAdmin && (
-          <SbLink to="/teachers" icon={StaffIcon} label="Staff" onClick={onClose} locked={!subscriptionActive} />
+          <SbLink to="/teachers" icon={StaffIcon} label="Staff" onClick={onClose} locked={!subscriptionActive && !isSandbox} />
         )}
 
         {/* Librarians and Admins manage library */}
