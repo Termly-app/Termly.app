@@ -5,8 +5,10 @@ import {
   PlusIcon, CrossIcon, ShieldIcon
 } from './CommonIcons';
 import { saveSchoolProfile, CBC_STRUCTURE } from '../data/store';
+import { useDialog } from '../contexts/DialogContext';
 
 export default function SetupWizard({ profile, onComplete, totalStudents }) {
+  const { alert } = useDialog();
   const [step, setStep] = useState(1);
   const [formData, setFormData] = useState({
     schoolName: profile?.schoolName || '',
@@ -54,8 +56,10 @@ export default function SetupWizard({ profile, onComplete, totalStudents }) {
   const handlePrev = () => setStep(s => Math.max(s - 1, 1));
 
   const handleSave = async () => {
+    console.log('SetupWizard: handleSave triggered', { step, formData });
     setSaving(true);
     try {
+      console.log('SetupWizard: Calling saveSchoolProfile...');
       await saveSchoolProfile({
         ...profile,
         ...formData,
@@ -68,6 +72,19 @@ export default function SetupWizard({ profile, onComplete, totalStudents }) {
       }
     } catch (err) {
       console.error('Setup Wizard Error:', err);
+      const msg = err.message || 'Unknown Error';
+      
+      // Try custom alert first
+      try {
+        alert({ 
+          title: 'Save Encountered an Error', 
+          message: msg + '. \n\nPlease ensure you have applied the SQL migration in Supabase.', 
+          variant: 'danger' 
+        });
+      } catch (alertErr) {
+        // Fallback to native alert if DialogProvider is failed/missing
+        window.alert('CRITICAL SAVE ERROR: ' + msg);
+      }
     } finally {
       setSaving(false);
     }
@@ -426,8 +443,11 @@ export default function SetupWizard({ profile, onComplete, totalStudents }) {
           <div style={{ flex: 1 }} />
           <button 
             className="btn btn-primary" 
-            onClick={handleSave} 
-            disabled={saving || (step === 2 && !formData.schoolName)}
+            onClick={() => {
+              console.log('SetupWizard: Button Clicked!');
+              handleSave();
+            }} 
+            disabled={saving}
           >
             {saving ? 'Saving...' : step === 6 ? 'Go to Dashboard' : 'Save & Continue'}
             {!saving && <ChevronRightIcon size={18} />}

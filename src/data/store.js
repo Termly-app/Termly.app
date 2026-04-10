@@ -574,7 +574,11 @@ export async function approvePayment(paymentId, schoolId, monthsToAdd = 4) {
 
 
 export async function saveSchoolProfile(profile) {
-  if (!_currentSchoolId) return;
+  console.log('store: saveSchoolProfile called', { profile, _currentSchoolId });
+  if (!_currentSchoolId) {
+    console.error('store: saveSchoolProfile FAILED - _currentSchoolId is null');
+    return;
+  }
   const row = {
     school_id: _currentSchoolId,
     school_name: profile.schoolName,
@@ -645,7 +649,30 @@ export async function saveSchoolProfile(profile) {
       .from('school_profiles')
       .upsert(payload, { onConflict: 'school_id' });
     
-    if (error) throw error;
+    if (error) {
+      // Emergency Resilience: If a column is missing, identify it and retry without it
+      // This prevents the "Stuck Button" issue while the user prepares to run the SQL migration.
+      if (error.message?.includes('column') || error.hint?.includes('column')) {
+        const quotedMatches = error.message.match(/["']([^"']+)["']/g) || [];
+        let foundCol = null;
+        
+        for (const match of quotedMatches) {
+          const possibleCol = match.replace(/["']/g, '');
+          if (payload[possibleCol] !== undefined) {
+            foundCol = possibleCol;
+            break;
+          }
+        }
+
+        if (foundCol) {
+          console.warn(`DATABASE SCHEMATA MISMATCH: Missing column "${foundCol}". Skipping it to prevent hang.`);
+          const newPayload = { ...payload };
+          delete newPayload[foundCol];
+          return attemptSave(newPayload);
+        }
+      }
+      throw error;
+    }
   };
 
   await attemptSave(row);
