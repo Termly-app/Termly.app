@@ -365,9 +365,10 @@ function mapProfileData(data) {
     subscriptionPlan: plan,
     streamsPerClass: data.streams_per_class || DEFAULT_PROFILE.streamsPerClass,
     customSubjects: data.custom_subjects || {},
-    boardingHouses: data.custom_subjects?.__boarding_houses || DEFAULT_PROFILE.boardingHouses,
+    boardingHouses: data.boarding_houses || data.custom_subjects?.__boarding_houses || DEFAULT_PROFILE.boardingHouses,
     activeClasses: data.active_classes || DEFAULT_PROFILE.activeClasses,
     gradeFees: data.grade_fees || {},
+    setup_completed: data.setup_completed || false,
     subscriptionStatus: data.subscription_status || 'Inactive',
     subscriptionExpiry: data.subscription_expiry || null,
     lastPaymentStatus: data.last_payment_status || 'none',
@@ -388,7 +389,7 @@ function mapProfileData(data) {
     timetable_label: data.timetable_label || DEFAULT_PROFILE.timetable_label,
     _dbId: data.id,
     schoolId: data.school_id,
-    schoolType: data.custom_subjects?.__school_type || 'Day',
+    schoolType: data.school_type || data.custom_subjects?.__school_type || 'Day',
   };
 }
 
@@ -587,11 +588,9 @@ export async function saveSchoolProfile(profile) {
     streams_per_class: profile.streamsPerClass || defaultStreamsPerClass,
     active_classes: profile.activeClasses || DEFAULT_PROFILE.activeClasses,
     grade_fees: profile.gradeFees || {},
-    custom_subjects: { 
-      ...(profile.customSubjects || {}), 
-      __boarding_houses: profile.boardingHouses || [],
-      __school_type: profile.schoolType || 'Day'
-    },
+    boarding_houses: profile.boardingHouses || [],
+    school_type: profile.schoolType || 'Day',
+    custom_subjects: profile.customSubjects || {},
     custom_exams: profile.custom_exams || DEFAULT_PROFILE.custom_exams,
     timetable_label: profile.timetable_label || DEFAULT_PROFILE.timetable_label,
     grading_systems: profile.grading_systems || DEFAULT_PROFILE.grading_systems,
@@ -646,30 +645,7 @@ export async function saveSchoolProfile(profile) {
       .from('school_profiles')
       .upsert(payload, { onConflict: 'school_id' });
     
-    if (error) {
-      // Resilience: If a column is missing, identify it and retry without it
-      if (error.message?.includes('column') || error.hint?.includes('column')) {
-        // Robust scanning: look for any quoted text that matches a key in our payload
-        const quotedMatches = error.message.match(/["']([^"']+)["']/g) || [];
-        let foundCol = null;
-        
-        for (const match of quotedMatches) {
-          const possibleCol = match.replace(/["']/g, '');
-          if (payload[possibleCol] !== undefined) {
-            foundCol = possibleCol;
-            break;
-          }
-        }
-
-        if (foundCol) {
-          console.warn(`Saving failed due to missing column "${foundCol}", retrying without it...`);
-          const newPayload = { ...payload };
-          delete newPayload[foundCol];
-          return attemptSave(newPayload);
-        }
-      }
-      throw error;
-    }
+    if (error) throw error;
   };
 
   await attemptSave(row);

@@ -60,7 +60,7 @@ export default function Dashboard({ currentUser, onLogout, currentPeriodId }) {
           schoolStructure, profile: prof, adminUsers: adminUsers || [], platformSettings: platformSettings || {},
         };
         setData(newData);
-        setShowWizard(newData.totalStudents === 0 && !prof?.phone);
+        setShowWizard(!prof?.setup_completed);
       } catch (err) {
         console.error(err);
         setData({
