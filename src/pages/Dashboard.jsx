@@ -77,7 +77,12 @@ export default function Dashboard({ currentUser, onLogout, currentPeriodId }) {
       setLoading(true);
       loadData();
     };
+    const handleProfileChange = () => {
+      setLoading(true);
+      loadData();
+    };
     window.addEventListener('periodChanged', handlePeriodChange);
+    window.addEventListener('schoolProfileChanged', handleProfileChange);
     const unsubs = [
       subscribeToChanges('students', loadData), subscribeToChanges('teachers', loadData),
       subscribeToChanges('payments', loadData), subscribeToChanges('attendance', loadData),
@@ -85,6 +90,8 @@ export default function Dashboard({ currentUser, onLogout, currentPeriodId }) {
       subscribeToChanges('users', loadData)
     ];
     return () => {
+      window.removeEventListener('periodChanged', handlePeriodChange);
+      window.removeEventListener('schoolProfileChanged', handleProfileChange);
       unsubs.forEach(u => u());
     };
   }, [currentPeriodId, currentUser]);
@@ -171,7 +178,6 @@ export default function Dashboard({ currentUser, onLogout, currentPeriodId }) {
           totalStudents={data.totalStudents} 
           onComplete={() => {
             setShowWizard(false);
-            navigate('/billing');
           }} 
         />
       )}

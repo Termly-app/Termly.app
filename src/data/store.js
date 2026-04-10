@@ -680,19 +680,38 @@ export async function saveSchoolProfile(profile) {
     throw new Error("School Identification Lost. Please refresh your browser or log in again.");
   }
 
-  await attemptSave(row);
+  // Shadow Sync: Fetch latest custom_subjects to merge shadow keys and prevent stale state overwrites
+  let currentShadows = {};
+  try {
+    const { data: latest } = await supabase
+      .from('school_profiles')
+      .select('custom_subjects')
+      .eq('school_id', _currentSchoolId)
+      .single();
+    if (latest?.custom_subjects) currentShadows = latest.custom_subjects;
+  } catch (e) { /* ignore refetch error */ }
 
-  // If columns were skipped, save them as shadow data in custom_subjects as a fallback
+  // Only override current shadows if the incoming values are actually provided/changed
+  const finalShadowBlob = {
+    ...currentShadows,
+    ...(profile.customSubjects || {}),
+    __shadow_setup_completed: (profile.setup_completed === true) ? true : (currentShadows.__shadow_setup_completed || false),
+    __shadow_school_type: profile.schoolType || currentShadows.__shadow_school_type || 'Day',
+    __shadow_boarding_houses: (profile.boardingHouses && profile.boardingHouses.length > 0) ? profile.boardingHouses : (currentShadows.__shadow_boarding_houses || [])
+  };
+
+  const rowWithShadows = { 
+    ...row, 
+    custom_subjects: finalShadowBlob 
+  };
+
+  await attemptSave(rowWithShadows);
+
+  // Re-verify shadow data was persisted if columns were skipped
   if (skippedColumns.length > 0) {
-    console.warn("Retrying save as shadow data for missing columns:", skippedColumns);
-    const shadowBlob = { ...(row.custom_subjects || {}) };
-    if (skippedColumns.includes('setup_completed')) shadowBlob.__shadow_setup_completed = row.setup_completed;
-    if (skippedColumns.includes('school_type')) shadowBlob.__shadow_school_type = row.school_type;
-    if (skippedColumns.includes('boarding_houses')) shadowBlob.__shadow_boarding_houses = row.boarding_houses;
-    
     await supabase
       .from('school_profiles')
-      .update({ custom_subjects: shadowBlob })
+      .update({ custom_subjects: finalShadowBlob })
       .eq('school_id', _currentSchoolId);
   }
 
