@@ -665,7 +665,9 @@ export async function saveSchoolProfile(profile) {
         }
 
         if (foundCol) {
-          console.warn(`DATABASE SCHEMATA MISMATCH: Missing column "${foundCol}". Skipping it to prevent hang.`);
+          const userFriendlyName = foundCol.replace(/_/g, ' ').toUpperCase();
+          console.error(`DB ERROR: The field "${userFriendlyName}" cannot be saved because the database column is missing. Please run fix_wizard_persistence.sql in Supabase.`);
+          
           const newPayload = { ...payload };
           delete newPayload[foundCol];
           return attemptSave(newPayload);
