@@ -680,50 +680,37 @@ export async function saveSchoolProfile(profile) {
     throw new Error("School Identification Lost. Please refresh your browser or log in again.");
   }
 
-  // Shadow Sync: Fetch latest custom_subjects to merge shadow keys and prevent stale state overwrites
-  let currentShadows = {};
+  // Linearize the save process to prevent hangs
+  await attemptSave(row);
+
+  // Perform Shadow Save in the background (Non-blocking fallback)
+  const performShadowSave = async () => {
+    try {
+      const shadowBlob = { ...(profile.customSubjects || {}) };
+      shadowBlob.__shadow_setup_completed = profile.setup_completed === true;
+      shadowBlob.__shadow_school_type = profile.schoolType || 'Day';
+      shadowBlob.__shadow_boarding_houses = profile.boardingHouses || [];
+      
+      await supabase
+        .from('school_profiles')
+        .update({ custom_subjects: shadowBlob })
+        .eq('school_id', _currentSchoolId);
+    } catch (e) { console.error('Background Shadow Save failed:', e); }
+  };
+
+  performShadowSave(); // Don't await this if it might hang
+
+  _profileCache = null;
+
+  // Update schools table (secondary priority)
   try {
-    const { data: latest } = await supabase
-      .from('school_profiles')
-      .select('custom_subjects')
-      .eq('school_id', _currentSchoolId)
-      .single();
-    if (latest?.custom_subjects) currentShadows = latest.custom_subjects;
-  } catch (e) { /* ignore refetch error */ }
-
-  // Only override current shadows if the incoming values are actually provided/changed
-  const finalShadowBlob = {
-    ...currentShadows,
-    ...(profile.customSubjects || {}),
-    __shadow_setup_completed: (profile.setup_completed === true) ? true : (currentShadows.__shadow_setup_completed || false),
-    __shadow_school_type: profile.schoolType || currentShadows.__shadow_school_type || 'Day',
-    __shadow_boarding_houses: (profile.boardingHouses && profile.boardingHouses.length > 0) ? profile.boardingHouses : (currentShadows.__shadow_boarding_houses || [])
-  };
-
-  const rowWithShadows = { 
-    ...row, 
-    custom_subjects: finalShadowBlob 
-  };
-
-  await attemptSave(rowWithShadows);
-
-  // Re-verify shadow data was persisted if columns were skipped
-  if (skippedColumns.length > 0) {
-    await supabase
-      .from('school_profiles')
-      .update({ custom_subjects: finalShadowBlob })
-      .eq('school_id', _currentSchoolId);
-  }
-
-  _profileCache = null; // Invalidate cache
-
-  // Update school name and contact in schools table too
-  await supabase.from('schools').update({ 
-    name: profile.schoolName, 
-    plan: profile.subscriptionPlan,
-    phone: profile.phone,
-    location: profile.address
-  }).eq('id', _currentSchoolId);
+    await supabase.from('schools').update({ 
+      name: profile.schoolName, 
+      plan: profile.subscriptionPlan,
+      phone: profile.phone,
+      location: profile.address
+    }).eq('id', _currentSchoolId);
+  } catch (e) { console.warn('Secondary schools table update failed:', e); }
 
   window.dispatchEvent(new Event('schoolProfileChanged'));
 
