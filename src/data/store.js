@@ -696,8 +696,6 @@ export async function saveSchoolProfile(profile) {
       .eq('school_id', _currentSchoolId);
   }
 
-  return { success: true, skipped: skippedColumns };
-}
   _profileCache = null; // Invalidate cache
 
   // Update school name and contact in schools table too
@@ -709,6 +707,8 @@ export async function saveSchoolProfile(profile) {
   }).eq('id', _currentSchoolId);
 
   window.dispatchEvent(new Event('schoolProfileChanged'));
+
+  return { success: true, skipped: skippedColumns };
 }
 
 // ============= ACADEMIC PERIODS =============
