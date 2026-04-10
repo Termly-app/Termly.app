@@ -103,6 +103,7 @@ export const MODULE_LABELS = {
   data_recovery:   'Data Recovery Tools',
   custom_brand:    'Custom Branding',
   api_access:      'API Access',
+};
 
 export const FEATURE_SUGGESTIONS = [
   'CBC Report Cards (PP1–Grade 9)',
