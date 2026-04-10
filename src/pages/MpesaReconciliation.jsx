@@ -18,14 +18,14 @@ import {
 } from '../components/CommonIcons';
 import Loader from '../components/Common/Loader';
 
-const PAYMENT_STATUS_COLORS = {
-  pending: '#F59E0B',
-  orphaned: '#EF4444',
-  failed: '#9CA3AF',
-  processed: '#10B981'
-};
 
 export default function MpesaReconciliation({ currentUser }) {
+  const PAYMENT_STATUS_COLORS = {
+    pending: '#F59E0B',
+    orphaned: '#EF4444',
+    failed: '#9CA3AF',
+    processed: '#10B981'
+  };
   const [callbacks, setCallbacks] = useState([]);
   const [students, setStudents] = useState([]);
   const [loading, setLoading] = useState(true);

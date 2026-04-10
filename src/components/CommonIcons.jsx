@@ -1,6 +1,6 @@
 import React from 'react';
 
-const iconStyle = { display: 'inline-block', verticalAlign: 'middle', flexShrink: 0 };
+var iconStyle = { display: 'inline-block', verticalAlign: 'middle', flexShrink: 0 };
 
 export const SchoolIcon = ({ size = 18, color = 'currentColor', className = '' }) => (
   <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={iconStyle} className={className}>

@@ -10,47 +10,48 @@ import { Link } from 'react-router-dom';
  * HelpCenter Component
  * A comprehensive knowledge base for ShuleSoft features.
  */
-const HELP_CATEGORIES = [
-  { id: 'onboarding', name: 'Getting Started', icon: <RocketIcon size={24} />, color: '#5B3EF5' },
-  { id: 'students', name: 'Student Management', icon: <StudentIcon size={24} />, color: '#0EA5E9' },
-  { id: 'cbc', name: 'CBC & Grading', icon: <GraduationIcon size={24} />, color: '#8B5CF6' },
-  { id: 'fees', name: 'Fees & Payments', icon: <CardIcon size={24} />, color: '#10B981' },
-  { id: 'timetable', name: 'Timetabling', icon: <ClockIcon size={24} />, color: '#F59E0B' },
-  { id: 'comms', name: 'Communication', icon: <MessageIcon size={24} />, color: '#EF4444' }
-];
-
-const ARTICLES = {
-  onboarding: [
-    { title: 'Sandbox Plan: Exploration Mode', content: 'The Sandbox plan allows you to test ALL features with a limit of 10 students. No credit card required. Explore how ShuleSoft can transform your school administration before committing to a paid plan.' },
-    { title: 'Initial Setup Checklist', content: '1. Update your School Profile. 2. Add your Classes and Streams. 3. Import your student list via CSV. 4. Configure your Academic Term.' },
-    { title: 'User Roles & Permissions', content: 'System Admins have full control. Teachers can mark attendance and input marks. Accountants manage fees. Learn how to invite your staff and assign roles.' }
-  ],
-  students: [
-    { title: 'Bulk Student Import (CSV)', content: 'Save hours by importing your entire student list at once. Use our CSV template with columns for Name, Adm No, Class, and Parent Phone. You can edit data directly in the browser before final import.' },
-    { title: 'Managing Student Profiles', content: 'Track everything from birth certificates to KCPE scores. Upload student photos and manage parent contact details for instant communication.' },
-    { title: 'Promotions & Transitions', content: 'Automatically move students to the next grade at the end of the year. The system handles graduations and transfers between streams seamlessly.' }
-  ],
-  cbc: [
-    { title: 'CBC Assessment Framework', content: 'Record Learner Progress across all core competencies. Generate Professional Assessment Sheets and Report Cards aligned with the latest KNEC requirements for PP1 through Grade 9.' },
-    { title: '8-4-4 Grading System', content: 'For older classes, use our traditional 8-4-4 grading engine. Configure custom mean score calculations and automated ranking.' },
-    { title: 'Portfolio Management', content: 'Attach evidence of learning directly to student profiles. Build a digital portfolio for every learner over their entire primary school journey.' }
-  ],
-  fees: [
-    { title: 'M-Pesa Integration', content: 'Enable automated fee tracking with our M-Pesa STK Push technology. Parents receive a prompt on their phone, and the system records the payment instantly.' },
-    { title: 'Fee Structure Builder', content: 'Set different fees for different classes (e.g., Boarding vs Day, Grade 1 vs Grade 6). Auto-generate invoices for the entire school with one click.' },
-    { title: 'Defaulter Management', content: 'Identify students with outstanding balances instantly. Send bulk SMS reminders to parents and track payment plans over time.' }
-  ],
-  timetable: [
-    { title: 'Master Timetable Generation', content: 'Input your subjects and teacher assignments. Our smart engine detects conflicts and ensures no teacher or room is double-booked.' },
-    { title: 'Staff Workload Analysis', content: 'Balance teaching loads across your staff. View reports on teaching hours per week for every teacher.' }
-  ],
-  comms: [
-    { title: 'Bulk SMS Notifications', content: 'Send urgent alerts, fee reminders, or exam results to all parents or filtered groups instantly.' },
-    { title: 'Email Reports', content: 'Automatically send digital report cards and fee statements to parent emails, saving on printing costs.' }
-  ]
-};
 
 export default function HelpCenter() {
+  const HELP_CATEGORIES = [
+    { id: 'onboarding', name: 'Getting Started', icon: <RocketIcon size={24} />, color: '#5B3EF5' },
+    { id: 'students', name: 'Student Management', icon: <StudentIcon size={24} />, color: '#0EA5E9' },
+    { id: 'cbc', name: 'CBC & Grading', icon: <GraduationIcon size={24} />, color: '#8B5CF6' },
+    { id: 'fees', name: 'Fees & Payments', icon: <CardIcon size={24} />, color: '#10B981' },
+    { id: 'timetable', name: 'Timetabling', icon: <ClockIcon size={24} />, color: '#F59E0B' },
+    { id: 'comms', name: 'Communication', icon: <MessageIcon size={24} />, color: '#EF4444' }
+  ];
+
+  const ARTICLES = {
+    onboarding: [
+      { title: 'Sandbox Plan: Exploration Mode', content: 'The Sandbox plan allows you to test ALL features with a limit of 10 students. No credit card required. Explore how ShuleSoft can transform your school administration before committing to a paid plan.' },
+      { title: 'Initial Setup Checklist', content: '1. Update your School Profile. 2. Add your Classes and Streams. 3. Import your student list via CSV. 4. Configure your Academic Term.' },
+      { title: 'User Roles & Permissions', content: 'System Admins have full control. Teachers can mark attendance and input marks. Accountants manage fees. Learn how to invite your staff and assign roles.' }
+    ],
+    students: [
+      { title: 'Bulk Student Import (CSV)', content: 'Save hours by importing your entire student list at once. Use our CSV template with columns for Name, Adm No, Class, and Parent Phone. You can edit data directly in the browser before final import.' },
+      { title: 'Managing Student Profiles', content: 'Track everything from birth certificates to KCPE scores. Upload student photos and manage parent contact details for instant communication.' },
+      { title: 'Promotions & Transitions', content: 'Automatically move students to the next grade at the end of the year. The system handles graduations and transfers between streams seamlessly.' }
+    ],
+    cbc: [
+      { title: 'CBC Assessment Framework', content: 'Record Learner Progress across all core competencies. Generate Professional Assessment Sheets and Report Cards aligned with the latest KNEC requirements for PP1 through Grade 9.' },
+      { title: '8-4-4 Grading System', content: 'For older classes, use our traditional 8-4-4 grading engine. Configure custom mean score calculations and automated ranking.' },
+      { title: 'Portfolio Management', content: 'Attach evidence of learning directly to student profiles. Build a digital portfolio for every learner over their entire primary school journey.' }
+    ],
+    fees: [
+      { title: 'M-Pesa Integration', content: 'Enable automated fee tracking with our M-Pesa STK Push technology. Parents receive a prompt on their phone, and the system records the payment instantly.' },
+      { title: 'Fee Structure Builder', content: 'Set different fees for different classes (e.g., Boarding vs Day, Grade 1 vs Grade 6). Auto-generate invoices for the entire school with one click.' },
+      { title: 'Defaulter Management', content: 'Identify students with outstanding balances instantly. Send bulk SMS reminders to parents and track payment plans over time.' }
+    ],
+    timetable: [
+      { title: 'Master Timetable Generation', content: 'Input your subjects and teacher assignments. Our smart engine detects conflicts and ensures no teacher or room is double-booked.' },
+      { title: 'Staff Workload Analysis', content: 'Balance teaching loads across your staff. View reports on teaching hours per week for every teacher.' }
+    ],
+    comms: [
+      { title: 'Bulk SMS Notifications', content: 'Send urgent alerts, fee reminders, or exam results to all parents or filtered groups instantly.' },
+      { title: 'Email Reports', content: 'Automatically send digital report cards and fee statements to parent emails, saving on printing costs.' }
+    ]
+  };
+
   const [activeCategory, setActiveCategory] = useState('onboarding');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedArticle, setSelectedArticle] = useState(null);

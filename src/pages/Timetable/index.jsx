@@ -35,66 +35,8 @@ import {
 import PricingUpgrade from '../../components/PricingUpgrade';
 
 // ── Colour palette for subjects (Modern, Premium Palette) ────────────────
-const COLORS = [
-  'hsla(250, 84%, 63%, 0.85)', // Indigo
-  'hsla(158, 82%, 40%, 0.85)', // Emerald
-  'hsla(38, 92%, 50%, 0.85)',  // Amber
-  'hsla(341, 89%, 60%, 0.85)', // Rose
-  'hsla(199, 89%, 48%, 0.85)', // Sky
-  'hsla(271, 91%, 65%, 0.85)', // Violet
-  'hsla(11, 90%, 63%, 0.85)',  // Orange/Coral
-  'hsla(170, 78%, 45%, 0.85)', // Teal
-  'hsla(320, 80%, 60%, 0.85)', // Pink
-  'hsla(45, 93%, 47%, 0.85)',  // Yellow/Gold
-];
-
-const ALL_DAYS = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
-
-const DEFAULT_SLOTS = [
-  { label:'Assembly',  start_time:'07:50', end_time:'08:00', is_break:true  },
-  { label:'Period 1',  start_time:'08:00', end_time:'08:40', is_break:false },
-  { label:'Period 2',  start_time:'08:40', end_time:'09:20', is_break:false },
-  { label:'Period 3',  start_time:'09:20', end_time:'10:00', is_break:false },
-  { label:'Break',     start_time:'10:00', end_time:'10:20', is_break:true  },
-  { label:'Period 4',  start_time:'10:20', end_time:'11:00', is_break:false },
-  { label:'Period 5',  start_time:'11:00', end_time:'11:40', is_break:false },
-  { label:'Period 6',  start_time:'11:40', end_time:'12:20', is_break:false },
-  { label:'Lunch',     start_time:'12:20', end_time:'13:00', is_break:true  },
-  { label:'Period 7',  start_time:'13:00', end_time:'13:40', is_break:false },
-  { label:'Period 8',  start_time:'13:40', end_time:'14:20', is_break:false },
-];
 
 // ── Subject suggestions by school level ──────────────────────────────────
-const SUBJECT_SUGGESTIONS = {
-  'Early Years': [
-    'English Activities','Kiswahili Activities','Mathematical Activities',
-    'Environmental Activities','Psychomotor & Creative Activities','Religious Education','Music',
-  ],
-  'Lower Primary': [
-    'English','Kiswahili','Mathematics','Environmental Activities',
-    'Creative Arts','Physical Education','Religious Education',
-  ],
-  'Upper Primary': [
-    'English','Kiswahili','Mathematics','Science & Technology','Social Studies',
-    'Creative Arts','Agriculture','Home Science','Physical Education','Religious Education',
-  ],
-  'Junior Secondary (CBC)': [
-    'English','Kiswahili','Mathematics','Integrated Science','Social Studies',
-    'Business Studies','Agriculture & Nutrition','Home Science','Pre-Technical Studies',
-    'Creative Arts & Sports','Computer Science','Religious Education','Life Skills',
-  ],
-  'Senior Secondary (CBC)': [
-    'English','Kiswahili','Mathematics','Biology','Chemistry','Physics',
-    'History & Government','Geography','CRE','IRE','Business Studies',
-    'Computer Science','Agriculture','Home Science','Art & Design','Music','PE',
-  ],
-  '8-4-4 Form 1–4': [
-    'English','Kiswahili','Mathematics','Biology','Chemistry','Physics',
-    'History & Government','Geography','CRE','IRE','Home Science',
-    'Agriculture','Business Studies','Computer Studies','Art & Design',
-    'Music','Physical Education','French','German','Arabic',
-  ],
-};
 
 function getLevel(grade) {
   if (['PP1','PP2'].includes(grade))                                   return 'Early Years';
@@ -284,9 +226,67 @@ function generateTimetable(config, requirements, activeDays, maxPerDay = 999) {
 // ═══════════════════════════════════════════════════════════════════════════
 // COMPONENT
 // ═══════════════════════════════════════════════════════════════════════════
+const ALL_DAYS = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
 const todayName = ALL_DAYS[new Date().getDay() - 1] || 'Monday';
 
 export default function Timetable({ currentUser, currentPeriodId, periods = [] }) {
+  const COLORS = [
+    'hsla(250, 84%, 63%, 0.85)', // Indigo
+    'hsla(158, 82%, 40%, 0.85)', // Emerald
+    'hsla(38, 92%, 50%, 0.85)',  // Amber
+    'hsla(341, 89%, 60%, 0.85)', // Rose
+    'hsla(199, 89%, 48%, 0.85)', // Sky
+    'hsla(271, 91%, 65%, 0.85)', // Violet
+    'hsla(11, 90%, 63%, 0.85)',  // Orange/Coral
+    'hsla(170, 78%, 45%, 0.85)', // Teal
+    'hsla(320, 80%, 60%, 0.85)', // Pink
+    'hsla(45, 93%, 47%, 0.85)',  // Yellow/Gold
+  ];
+
+  const DEFAULT_SLOTS = [
+    { label:'Assembly',  start_time:'07:50', end_time:'08:00', is_break:true  },
+    { label:'Period 1',  start_time:'08:00', end_time:'08:40', is_break:false },
+    { label:'Period 2',  start_time:'08:40', end_time:'09:20', is_break:false },
+    { label:'Period 3',  start_time:'09:20', end_time:'10:00', is_break:false },
+    { label:'Break',     start_time:'10:00', end_time:'10:20', is_break:true  },
+    { label:'Period 4',  start_time:'10:20', end_time:'11:00', is_break:false },
+    { label:'Period 5',  start_time:'11:00', end_time:'11:40', is_break:false },
+    { label:'Period 6',  start_time:'11:40', end_time:'12:20', is_break:false },
+    { label:'Lunch',     start_time:'12:20', end_time:'13:00', is_break:true  },
+    { label:'Period 7',  start_time:'13:00', end_time:'13:40', is_break:false },
+    { label:'Period 8',  start_time:'13:40', end_time:'14:20', is_break:false },
+  ];
+
+  const SUBJECT_SUGGESTIONS = {
+    'Early Years': [
+      'English Activities','Kiswahili Activities','Mathematical Activities',
+      'Environmental Activities','Psychomotor & Creative Activities','Religious Education','Music',
+    ],
+    'Lower Primary': [
+      'English','Kiswahili','Mathematics','Environmental Activities',
+      'Creative Arts','Physical Education','Religious Education',
+    ],
+    'Upper Primary': [
+      'English','Kiswahili','Mathematics','Science & Technology','Social Studies',
+      'Creative Arts','Agriculture','Home Science','Physical Education','Religious Education',
+    ],
+    'Junior Secondary (CBC)': [
+      'English','Kiswahili','Mathematics','Integrated Science','Social Studies',
+      'Business Studies','Agriculture & Nutrition','Home Science','Pre-Technical Studies',
+      'Creative Arts & Sports','Computer Science','Religious Education','Life Skills',
+    ],
+    'Senior Secondary (CBC)': [
+      'English','Kiswahili','Mathematics','Biology','Chemistry','Physics',
+      'History & Government','Geography','CRE','IRE','Business Studies',
+      'Computer Science','Agriculture','Home Science','Art & Design','Music','PE',
+    ],
+    '8-4-4 Form 1–4': [
+      'English','Kiswahili','Mathematics','Biology','Chemistry','Physics',
+      'History & Government','Geography','CRE','IRE','Home Science',
+      'Agriculture','Business Studies','Computer Studies','Art & Design',
+      'Music','Physical Education','French','German','Arabic',
+    ],
+  };
   // ── Panel / view ──────────────────────────────────────────────────────
   const [panel,  setPanel]  = useState('grid');   // 'grid' | 'req' | 'config'
   const [view,   setView]   = useState('class');  // 'class' | 'teacher'

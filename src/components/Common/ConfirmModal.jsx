@@ -8,18 +8,17 @@
 import { useState, useEffect } from 'react';
 import { DeleteIcon, AlertIcon, DashboardIcon } from '../CommonIcons';
 
-const VARIANTS = {
-  danger  : { accent: '#ef4444', btnBg: 'linear-gradient(135deg,#ef4444,#b91c1c)', shadow: 'rgba(239,68,68,.3)'  },
-  warning : { accent: '#f59e0b', btnBg: 'linear-gradient(135deg,#f59e0b,#d97706)', shadow: 'rgba(245,158,11,.3)'  },
-  default : { accent: '#ffffff', btnBg: 'linear-gradient(135deg,#71717a,#3f3f46)', shadow: 'rgba(255,255,255,.1)' },
-};
 
 export default function ConfirmModal({
   open, title, message, confirmText, cancelText,
   variant = 'default', withInput, inputLabel, inputPlaceholder,
   onConfirm, onCancel,
 }) {
-  const [inputValue, setInputValue] = useState('');
+  const VARIANTS = {
+    danger  : { accent: '#ef4444', btnBg: 'linear-gradient(135deg,#ef4444,#b91c1c)', shadow: 'rgba(239,68,68,.3)'  },
+    warning : { accent: '#f59e0b', btnBg: 'linear-gradient(135deg,#f59e0b,#d97706)', shadow: 'rgba(245,158,11,.3)'  },
+    default : { accent: '#ffffff', btnBg: 'linear-gradient(135deg,#71717a,#3f3f46)', shadow: 'rgba(255,255,255,.1)' },
+  };
   const v = VARIANTS[variant] || VARIANTS.default;
 
   // Reset input when modal opens
