@@ -50,21 +50,21 @@ export default function Grading({ currentUser, currentPeriodId }) {
         setProfile(p);
         setAssignments(a);
         
+        const examsList = p.custom_exams?.length > 0 ? p.custom_exams : ['CAT 1','CAT 2','Mid Term','End Term'];
         // Initialize examType if not set
-        if (!examType && p.custom_exams?.length > 0) {
-          setExamType(p.custom_exams[0]);
-        } else if (!examType) {
-          setExamType('End Term'); // Final fallback if profile list is somehow empty
+        if (!examType) {
+          setExamType(examsList[0]);
         }
 
+        const isMatch = (g1, g2) => g1?.toLowerCase().trim() === g2?.toLowerCase().trim();
         const activeClassList = (p.activeClasses || []).length > 0
-          ? (p.activeClasses || [])
+          ? Object.values(CBC_STRUCTURE).flatMap(l => l.grades).filter(g => (p.activeClasses || []).some(ac => isMatch(ac, g)))
           : Object.values(CBC_STRUCTURE).flatMap(l => l.grades);
         
         let defaultClass = selectedClass;
 
         // If no class is selected yet, or current selection is invalid, pick a new default
-        if (!selectedClass || !activeClassList.includes(selectedClass)) {
+        if (!selectedClass || !activeClassList.some(ac => isMatch(ac, selectedClass))) {
           // Rule 1: If teacher, pick their first assigned class
           if (isTeacher) {
             const assignedGrades = activeClassList.filter(g => 
@@ -351,87 +351,54 @@ export default function Grading({ currentUser, currentPeriodId }) {
         </div>
       </div>
 
-      <div style={{ marginBottom: 20 }}>
+      {/* Filter Row */}
+      <div className="filter-bar" style={{ marginBottom: 20 }}>
         {Object.entries(CBC_STRUCTURE).every(([ln, ld]) => {
-          return !ld.grades.some(g => (profile.activeClasses || []).includes(g));
+          const isMatch = (g1, g2) => g1?.toLowerCase().trim() === g2?.toLowerCase().trim();
+          return !ld.grades.some(g => (profile.activeClasses || []).some(ac => isMatch(ac, g)));
         }) && (
-          <div className="card shadow-sm" style={{ padding: '24px', textAlign: 'center', background: 'var(--primary-light)', color: 'var(--primary)', border: '1px dashed var(--primary)' }}>
+          <div className="card shadow-sm" style={{ padding: '24px', textAlign: 'center', background: 'var(--primary-light)', color: 'var(--primary)', border: '1px dashed var(--primary)', width: '100%', marginBottom: 20 }}>
             <p style={{ margin: 0, fontWeight: 600 }}>No active classes found in your configuration.</p>
             <p style={{ margin: '4px 0 0', fontSize: '0.85rem', opacity: 0.8 }}>Go to <strong>Settings &gt; Academic Configuration</strong> to enable your school's grades.</p>
           </div>
         )}
-        {Object.entries(CBC_STRUCTURE).map(([levelName, levelData]) => {
-          const activeInLevel = levelData.grades.filter(g => (profile.activeClasses || []).includes(g));
-          if (activeInLevel.length === 0) return null;
-          return (
-            <div key={levelName} style={{ marginBottom: 12 }}>
-              <div style={{ fontSize: '0.65rem', textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 700, marginBottom: 8, marginLeft: 2, color: 'var(--text-muted)' }}>{levelName}</div>
-              <div className="scroll-x-hide" style={{ display: 'flex', gap: 8, paddingBottom: '4px' }}>
-                {activeInLevel.map(g => {
-                  const isMyClass = assignments[g] && Object.values(assignments[g]).some(streams => 
-                    typeof streams === 'string' ? streams === currentUser?.id :
-                    Object.values(streams).some(tid => tid === currentUser?.id)
-                  );
-                  return (
-                    <button key={g}
-                      onClick={() => { setSelectedClass(g); setActiveTab('marks'); }}
-                      style={{
-                        padding: '8px 18px', borderRadius: 10, border: '2px solid',
-                        borderColor: selectedClass === g ? 'var(--primary)' : 'var(--border)',
-                        background: selectedClass === g ? 'var(--primary-light)' : 'var(--bg-card)',
-                        color: selectedClass === g ? 'var(--primary)' : 'var(--text-light)',
-                        fontWeight: selectedClass === g ? 700 : 500,
-                        fontSize: '0.85rem', cursor: 'pointer', fontFamily: 'inherit',
-                        transition: 'all 0.15s',
-                        position: 'relative',
-                        whiteSpace: 'nowrap'
-                      }}>
-                      {g}
-                      {isMyClass && isTeacher && <span title="My Class" style={{ position: 'absolute', top: -10, right: -4, fontSize: '0.9rem' }}><FlagIcon size={14} /></span>}
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-          );
-        })}
-      </div>
+        <Select 
+          value={selectedClass} 
+          onChange={e => { setSelectedClass(e.target.value); setStreamFilter('All'); setActiveTab('marks'); }}
+          options={Object.entries(CBC_STRUCTURE).flatMap(([levelName, levelData]) => {
+            const isMatch = (g1, g2) => g1?.toLowerCase().trim() === g2?.toLowerCase().trim();
+            const activeInLevel = levelData.grades.filter(g => 
+              (profile.activeClasses || []).some(ac => isMatch(ac, g))
+            );
+            return activeInLevel.map(g => {
+              const isMyClass = assignments[g] && Object.values(assignments[g]).some(streams => 
+                typeof streams === 'string' ? streams === currentUser?.id :
+                Object.values(streams).some(tid => tid === currentUser?.id)
+              );
+              return { id: g, label: isMyClass && isTeacher ? `[My Class] ${g}` : g };
+            });
+          })}
+          style={{ minWidth: 160 }}
+        />
 
-      {/* Filter Row */}
-      <div className="filter-bar" style={{ marginBottom: 20, display: 'flex', gap: 16, alignItems: 'center', flexWrap: 'wrap' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <label style={{ fontSize: '0.82rem', fontWeight: 600 }}>Stream:</label>
-          <Select 
-            value={streamFilter} 
-            onChange={(e) => setStreamFilter(e.target.value)}
-            options={[
-              { id: 'All', label: 'All Streams' },
-              ...(profile.streamsPerClass?.[selectedClass] || []).map(stream => ({ id: stream, label: stream }))
-            ]}
-            style={{ minWidth: 140 }}
-          />
-        </div>
+        <Select 
+          value={streamFilter} 
+          onChange={(e) => setStreamFilter(e.target.value)}
+          options={[
+            { id: 'All', label: 'All Streams' },
+            ...(profile.streamsPerClass?.[selectedClass] || []).map(stream => ({ id: stream, label: stream }))
+          ]}
+          style={{ minWidth: 140 }}
+        />
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <label style={{ fontSize: '0.82rem', fontWeight: 600 }}>Exam:</label>
-          <div style={{ display:'flex', gap:4, padding:'4px', background:'var(--bg)', borderRadius:10, border:'1px solid var(--border)' }}>
-            {(profile.custom_exams || []).map(type => (
-              <button
-                key={type}
-                onClick={() => setExamType(type)}
-                style={{
-                  padding:'6px 14px', borderRadius:8, border:'none',
-                  fontFamily:'inherit', fontSize:'0.8rem',
-                  fontWeight: examType===type ? 700 : 500,
-                  cursor:'pointer', transition:'all 0.15s', whiteSpace:'nowrap',
-                  background: examType===type ? 'var(--primary)' : 'transparent',
-                  color: examType===type ? '#fff' : 'var(--text-light)',
-                }}>
-                {type}
-              </button>
-            ))}
-          </div>
-        </div>
+        <Select 
+          value={examType}
+          onChange={(e) => setExamType(e.target.value)}
+          options={(profile.custom_exams?.length > 0 ? profile.custom_exams : ['CAT 1','CAT 2','Mid Term','End Term']).map(type => ({
+            id: type, label: type
+          }))}
+          style={{ minWidth: 150 }}
+        />
 
         <div style={{ flex: 1 }} />
         <span className="badge badge-info" style={{ fontSize: '0.8rem', padding: '6px 14px' }}>{selectedClass}</span>
