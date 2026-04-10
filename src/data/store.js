@@ -391,6 +391,7 @@ function mapProfileData(data) {
     timetable_label: data.timetable_label || DEFAULT_PROFILE.timetable_label,
     _dbId: data.id,
     schoolId: data.school_id,
+    schoolType: data.custom_subjects?.__school_type || 'Day',
   };
 }
 
@@ -587,7 +588,11 @@ export async function saveSchoolProfile(profile) {
     subscription_plan: profile.subscriptionPlan || 'Basic',
     streams_per_class: profile.streamsPerClass || defaultStreamsPerClass,
     active_classes: profile.activeClasses || DEFAULT_PROFILE.activeClasses,
-    custom_subjects: { ...(profile.customSubjects || {}), __boarding_houses: profile.boardingHouses || [] },
+    custom_subjects: { 
+      ...(profile.customSubjects || {}), 
+      __boarding_houses: profile.boardingHouses || [],
+      __school_type: profile.schoolType || 'Day'
+    },
     custom_exams: profile.custom_exams || DEFAULT_PROFILE.custom_exams,
     timetable_label: profile.timetable_label || DEFAULT_PROFILE.timetable_label,
     grading_systems: profile.grading_systems || DEFAULT_PROFILE.grading_systems,
