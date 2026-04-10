@@ -78,7 +78,8 @@ export default function Dashboard({ currentUser, onLogout, currentPeriodId }) {
       loadData();
     };
     const handleProfileChange = () => {
-      setLoading(true);
+      // Fetch data in background without showing full-page loader
+      // This prevents the SetupWizard from unmounting and resetting its local step state.
       loadData();
     };
     window.addEventListener('periodChanged', handlePeriodChange);
