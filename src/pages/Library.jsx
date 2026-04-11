@@ -5,7 +5,7 @@ import {
   getBooks, saveBook, getBorrows, saveBorrow, returnBook, deleteBook,
   getStudents, getPrintHeader, getSchoolProfile
 } from '../data/store';
-import { CBC_STRUCTURE } from '../data/seedData';
+import { CBC_STRUCTURE, getSubjectsForGrade } from '../data/seedData';
 import { 
   PlusIcon, SearchIcon, BookIcon, UserIcon, PrintIcon, 
   CheckIcon, CloseIcon, EditIcon, DeleteIcon, ChevronDownIcon,
@@ -36,6 +36,20 @@ export default function Library({ currentUser, currentPeriodId }) {
     stream: '',
     year: '',
   });
+
+  const availableSubjects = useMemo(() => {
+    if (!profile.activeClasses || profile.activeClasses.length === 0) return [];
+    const subs = new Set();
+    profile.activeClasses.forEach(grade => {
+      const gSubs = getSubjectsForGrade(grade, profile);
+      if (Array.isArray(gSubs)) {
+        gSubs.forEach(s => subs.add(s));
+      } else if (typeof gSubs === 'object') {
+        Object.values(gSubs).flat().forEach(s => subs.add(s));
+      }
+    });
+    return Array.from(subs).sort();
+  }, [profile]);
 
   const loadData = async () => {
     setLoading(true);
@@ -293,7 +307,7 @@ export default function Library({ currentUser, currentPeriodId }) {
               onChange={e => setFilters({...filters, subject: e.target.value})}
               options={[
                 { id: '', label: 'All Subjects' },
-                ...Array.from(new Set(books.map(b => b.subject))).filter(Boolean).sort().map(s => ({ id: s, label: s }))
+                ...availableSubjects.map(s => ({ id: s, label: s }))
               ]}
               variant="minimal"
             />
