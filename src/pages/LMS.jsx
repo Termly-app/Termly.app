@@ -251,15 +251,32 @@ export default function LMS({ currentUser }) {
 
   const activeClasses = profile?.activeClasses || [];
   
-  // Dynamic Stream logic based on selected class
-  const classStreams = (profile?.streamsPerClass && formData.class) 
-    ? (profile.streamsPerClass[formData.class] || []) 
-    : [];
 
-  // Filtered Subject Logic (Excluding internal __ system keys)
-  const subjects = profile?.customSubjects 
-    ? Object.keys(profile.customSubjects).filter(k => !k.startsWith('__'))
-    : ['Mathematics', 'English', 'Kiswahili', 'Science', 'Social Studies', 'CRE/IRE', 'ICT', 'Arts'];
+  // Robust Subject Filtering (Exclude curriculum names & hidden keys)
+  const curriculumNames = ['Secondary (8-4-4)', 'CBC Only', 'CBC & 8-4-4', 'Day', 'Boarding', 'Day & Boarding'];
+  
+  const subjects = (() => {
+    if (!profile?.customSubjects) return ['Mathematics', 'English', 'Kiswahili', 'Science', 'Social Studies', 'CRE/IRE', 'ICT', 'Arts'];
+    
+    const filtered = Object.keys(profile.customSubjects).filter(k => 
+      !k.startsWith('__') && !curriculumNames.includes(k)
+    );
+    
+    // If filtering leaves us with nothing, use the standard list as fallback
+    return filtered.length > 0 
+      ? filtered 
+      : ['Mathematics', 'English', 'Kiswahili', 'Science', 'Social Studies', 'CRE/IRE', 'ICT', 'Arts'];
+  })();
+
+  // Dynamic Stream logic with robust fallback for Sandbox/Incomplete setup
+  const classStreams = (() => {
+    if (!formData.class) return [];
+    const fromProfile = profile?.streamsPerClass?.[formData.class] || [];
+    if (fromProfile.length > 0) return fromProfile;
+    
+    // Fallback to standard streams if none configured (prevents "broken" UI)
+    return ['North', 'South', 'East', 'West', 'Central'];
+  })();
 
   // Effect to reset stream if class changes and it's no longer valid
   useEffect(() => {
