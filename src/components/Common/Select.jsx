@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useLayoutEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { ChevronDownIcon, CheckIcon } from '../CommonIcons';
+import { ChevronDownIcon, CheckIcon, SearchIcon, XIcon } from '../CommonIcons';
 
 /**
  * Premium Portalized Select Component
@@ -15,9 +15,12 @@ export default function Select({
   className = "",
   style = {},
   variant = "premium",
-  name
+  name,
+  searchable = false
 }) {
   const [isOpen, setIsOpen] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
+  const searchInputRef = useRef(null);
   const [coords, setCoords] = useState({ top: 0, left: 0, width: 0, placement: 'bottom' });
   const containerRef = useRef(null);
   const menuRef = useRef(null);
@@ -56,6 +59,15 @@ export default function Select({
       updateCoords();
       window.addEventListener('scroll', updateCoords, true);
       window.addEventListener('resize', updateCoords);
+      
+      // Auto-focus search input if searchable
+      if (searchable) {
+        setTimeout(() => {
+          searchInputRef.current?.focus();
+        }, 50);
+      }
+    } else {
+      setSearchTerm(''); // Reset search when closed
     }
     return () => {
       window.removeEventListener('scroll', updateCoords, true);
@@ -100,18 +112,86 @@ export default function Select({
         borderRadius: '14px',
         boxShadow: '0 20px 40px rgba(0,0,0,0.15), 0 0 0 1px rgba(0,0,0,0.05)',
         zIndex: 99999,
-        maxHeight: '260px',
+        maxHeight: '340px',
         overflowY: 'auto',
         padding: '6px',
         pointerEvents: 'auto'
       }}
     >
-      {options.length === 0 ? (
-        <div style={{ padding: '16px', fontSize: '0.8rem', color: 'var(--text-light)', textAlign: 'center' }}>
-          No options available
+      {searchable && (
+        <div style={{ 
+          padding: '8px', 
+          position: 'sticky', 
+          top: -6, 
+          background: 'rgba(255, 255, 255, 0.9)', 
+          backdropFilter: 'blur(10px)',
+          borderBottom: '1px solid var(--border)',
+          marginBottom: '6px',
+          zIndex: 1
+        }}>
+          <div style={{ position: 'relative' }}>
+            <div style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-light)' }}>
+              <SearchIcon size={14} />
+            </div>
+            <input
+              ref={searchInputRef}
+              type="text"
+              placeholder="Search..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              style={{
+                width: '100%',
+                padding: '10px 32px',
+                border: '1.5px solid var(--border)',
+                borderRadius: '8px',
+                fontSize: '0.875rem',
+                outline: 'none',
+                background: '#fff'
+              }}
+              onKeyDown={(e) => {
+                if (e.key === 'Escape') setIsOpen(false);
+              }}
+            />
+            {searchTerm && (
+              <button 
+                onClick={() => setSearchTerm('')}
+                style={{ 
+                  position: 'absolute', 
+                  right: '10px', 
+                  top: '50%', 
+                  transform: 'translateY(-50%)', 
+                  border: 'none', 
+                  background: 'none', 
+                  cursor: 'pointer',
+                  color: 'var(--text-light)',
+                  padding: 4
+                }}
+              >
+                <XIcon size={12} />
+              </button>
+            )}
+          </div>
         </div>
-      ) : (
-        options.map((opt, idx) => {
+      )}
+
+      {(() => {
+        const filteredOptions = searchable 
+          ? options.filter(opt => {
+              const label = (opt.label || opt.name || '').toLowerCase();
+              const val = (opt.value || opt.id || '').toLowerCase();
+              return label.includes(searchTerm.toLowerCase()) || val.includes(searchTerm.toLowerCase());
+            })
+          : options;
+
+        if (filteredOptions.length === 0) {
+          return (
+            <div style={{ padding: '16px', fontSize: '0.8rem', color: 'var(--text-light)', textAlign: 'center' }}>
+              {searchTerm ? 'No matches found' : 'No options available'}
+            </div>
+          );
+        }
+
+        return filteredOptions.map((opt, idx) => {
           const isSelected = (opt.value === value || opt.id === value);
           return (
             <div
@@ -149,8 +229,8 @@ export default function Select({
               {isSelected && <CheckIcon size={14} color="var(--primary)" />}
             </div>
           );
-        })
-      )}
+        });
+      })()}
     </div>
   );
 

@@ -589,20 +589,16 @@ export default function Library({ currentUser, currentPeriodId }) {
                  </div>
                </div>
                <div className="form-row">
-                 <div className="form-group">
-                   <label>Catalog Code</label>
-                   <input className="form-input" name="book_code" defaultValue={bookModal.data?.book_code} required placeholder="e.g. BK-4412" />
-                 </div>
-                 <div className="form-group">
+                  <div className="form-group">
+                    <label>Catalog Code</label>
+                    <input className="form-input" name="book_code" defaultValue={bookModal.data?.book_code} required placeholder="e.g. BK-4412" />
+                  </div>
+                  <div className="form-group">
                     <label>Total Inventory</label>
                     <input className="form-input" type="number" name="total_copies" defaultValue={bookModal.data?.total_copies || 1} min="1" />
-                 </div>
-               </div>
+                  </div>
+                </div>
                <div className="form-row">
-                 <div className="form-group">
-                   <label>Total Inventory</label>
-                   <input className="form-input" type="number" name="total_copies" defaultValue={bookModal.data?.total_copies || 1} min="1" />
-                 </div>
                  <div className="form-group">
                    <label>Placement (Shelf/Room)</label>
                    <input className="form-input" name="location" defaultValue={bookModal.data?.location} placeholder="e.g. Shelf A-1" />
@@ -629,22 +625,30 @@ export default function Library({ currentUser, currentPeriodId }) {
             <form onSubmit={handleIssueBook} className="form-group">
                <div className="form-group">
                  <label>Select Resource</label>
-                 <Select 
-                   name="book_id"
-                   defaultValue={borrowModal.data?.book_id}
-                   options={books.filter(b => b.available_copies > 0).map(b => ({ id: b.id, label: `${b.title} (${b.book_code})` }))}
-                   placeholder="-- Choose available book --"
-                   style={{ width: '100%' }}
-                 />
+                  <Select 
+                    name="book_id"
+                    defaultValue={borrowModal.data?.book_id}
+                    options={books.filter(b => b.available_copies > 0).map(b => ({ 
+                      id: b.id, 
+                      label: `${b.title} [Code: ${b.book_code}]` 
+                    }))}
+                    placeholder="-- Search by Title or Book Code --"
+                    style={{ width: '100%' }}
+                    searchable={true}
+                  />
                </div>
                <div className="form-group">
                  <label>Select Student</label>
-                 <Select 
-                   name="student_id"
-                   options={students.sort((a,b) => a.name.localeCompare(b.name)).map(s => ({ id: s.id, label: `(${s.adm_no}) ${s.name} - ${s.class}` }))}
-                   placeholder="-- Search student --"
-                   style={{ width: '100%' }}
-                 />
+                  <Select 
+                    name="student_id"
+                    options={students.sort((a,b) => a.name.localeCompare(b.name)).map(s => ({ 
+                      id: s.id, 
+                      label: `${s.adm_no} - ${s.name} (${s.class})` 
+                    }))}
+                    placeholder="-- Search by Name or Admission No --"
+                    style={{ width: '100%' }}
+                    searchable={true}
+                  />
                </div>
                <div className="form-row">
                  <div className="form-group">
