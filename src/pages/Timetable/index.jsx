@@ -640,6 +640,56 @@ export default function Timetable({ currentUser, currentPeriodId, periods = [] }
     setMessage({ type:'ok', text: `${teachCount} lessons at ${stdDuration}min each. School day: ${stdStart} → ${lastEnd}.` });
   };
 
+  const loadTemplate = (level) => {
+    let template = [];
+    if (level === 'secondary') {
+      template = [
+        { label:'Assembly',  start_time:'08:00', end_time:'08:20', is_break:true  },
+        { label:'Period 1',  start_time:'08:20', end_time:'09:00', is_break:false },
+        { label:'Period 2',  start_time:'09:00', end_time:'09:40', is_break:false },
+        { label:'Tea Break', start_time:'09:40', end_time:'10:00', is_break:true  },
+        { label:'Period 3',  start_time:'10:00', end_time:'10:40', is_break:false },
+        { label:'Period 4',  start_time:'10:40', end_time:'11:20', is_break:false },
+        { label:'Period 5',  start_time:'11:20', end_time:'12:00', is_break:false },
+        { label:'Lunch',     start_time:'12:00', end_time:'12:40', is_break:true  },
+        { label:'Period 6',  start_time:'12:40', end_time:'13:20', is_break:false },
+        { label:'Period 7',  start_time:'13:20', end_time:'14:00', is_break:false },
+        { label:'Period 8',  start_time:'14:00', end_time:'14:40', is_break:false },
+      ];
+      setStdStart('08:20'); setStdDuration(40); setStdShortBreak(20); setStdLongBreak(40);
+    } else if (level === 'primary-upper') {
+      template = [
+        { label:'Assembly',  start_time:'08:00', end_time:'08:20', is_break:true  },
+        { label:'Period 1',  start_time:'08:20', end_time:'08:55', is_break:false },
+        { label:'Period 2',  start_time:'08:55', end_time:'09:30', is_break:false },
+        { label:'Health Break', start_time:'09:30', end_time:'09:50', is_break:true  },
+        { label:'Period 3',  start_time:'09:50', end_time:'10:25', is_break:false },
+        { label:'Period 4',  start_time:'10:25', end_time:'11:00', is_break:false },
+        { label:'Tea Break', start_time:'11:00', end_time:'11:30', is_break:true  },
+        { label:'Period 5',  start_time:'11:30', end_time:'12:05', is_break:false },
+        { label:'Period 6',  start_time:'12:05', end_time:'12:40', is_break:false },
+        { label:'Lunch',     start_time:'12:40', end_time:'13:40', is_break:true  },
+        { label:'Period 7',  start_time:'13:40', end_time:'14:15', is_break:false },
+      ];
+      setStdStart('08:20'); setStdDuration(35); setStdShortBreak(20); setStdLongBreak(60);
+    } else if (level === 'primary-lower') {
+      template = [
+        { label:'Assembly',  start_time:'08:00', end_time:'08:20', is_break:true  },
+        { label:'Period 1',  start_time:'08:20', end_time:'08:50', is_break:false },
+        { label:'Period 2',  start_time:'08:50', end_time:'09:20', is_break:false },
+        { label:'Health Break', start_time:'09:20', end_time:'09:30', is_break:true  },
+        { label:'Period 3',  start_time:'09:30', end_time:'10:00', is_break:false },
+        { label:'Period 4',  start_time:'10:00', end_time:'10:30', is_break:false },
+        { label:'Tea Break', start_time:'10:30', end_time:'11:00', is_break:true  },
+        { label:'Period 5',  start_time:'11:00', end_time:'11:30', is_break:false },
+        { label:'Period 6',  start_time:'11:30', end_time:'12:00', is_break:false },
+      ];
+      setStdStart('08:20'); setStdDuration(30); setStdShortBreak(10); setStdLongBreak(30);
+    }
+    setDraftConfig(template);
+    setMessage({ type:'ok', text: `Loaded standard ${level.replace('-',' ')} day template.` });
+  };
+
   // ── Manual Exam Scheduler Logic ──────────────────────────────────────
   useEffect(() => {
     if (mode === 'weekly' || !newExam.subject) return;
@@ -1119,20 +1169,37 @@ export default function Timetable({ currentUser, currentPeriodId, periods = [] }
                         />
                       </div>
                       <div className="tt-exam-field">
-                        <label>Start Time *</label>
-                        <input 
-                          type="time" 
-                          value={newExam.start_time} 
-                          onChange={e => setNewExam({ ...newExam, start_time: e.target.value })} 
-                        />
-                      </div>
-                      <div className="tt-exam-field">
-                        <label>End Time *</label>
-                        <input 
-                          type="time" 
-                          value={newExam.end_time} 
-                          onChange={e => setNewExam({ ...newExam, end_time: e.target.value })} 
-                        />
+                        <label>Start / End Time *</label>
+                        <div style={{ display:'flex', gap:6, marginBottom:8 }}>
+                          <button 
+                            className="tt-chip" 
+                            style={{ fontSize:'.62rem', padding:'2px 8px' }}
+                            onClick={() => setNewExam({ ...newExam, start_time:'08:00', end_time:'10:30' })}
+                          >
+                            Morning (8:00 - 10:30)
+                          </button>
+                          <button 
+                            className="tt-chip" 
+                            style={{ fontSize:'.62rem', padding:'2px 8px' }}
+                            onClick={() => setNewExam({ ...newExam, start_time:'14:00', end_time:'16:30' })}
+                          >
+                            Afternoon (14:00 - 16:30)
+                          </button>
+                        </div>
+                        <div style={{ display:'flex', gap:8 }}>
+                          <input 
+                            type="time" 
+                            value={newExam.start_time} 
+                            onChange={e => setNewExam({ ...newExam, start_time: e.target.value })} 
+                            style={{ flex:1 }}
+                          />
+                          <input 
+                            type="time" 
+                            value={newExam.end_time} 
+                            onChange={e => setNewExam({ ...newExam, end_time: e.target.value })} 
+                            style={{ flex:1 }}
+                          />
+                        </div>
                       </div>
                       <div className="tt-exam-field">
                         <label>Subject *</label>
@@ -1587,6 +1654,11 @@ export default function Timetable({ currentUser, currentPeriodId, periods = [] }
           <div style={{ marginBottom:20, padding:12, borderRadius:8, background:'rgba(111,82,232,0.05)', border:'1px solid rgba(111,82,232,0.1)' }}>
             <div style={{ fontSize:'.6rem', color:'#6F52E8', textTransform:'uppercase', letterSpacing:'.07em', marginBottom:12, fontWeight:700 }}>
               Standardize Day Structure (Ministry Guidelines)
+            </div>
+            <div style={{ display:'flex', gap:10, marginBottom:15 }}>
+              <button className="tt-chip" onClick={() => loadTemplate('secondary')}>8-4-4 / Secondary Structure</button>
+              <button className="tt-chip" onClick={() => loadTemplate('primary-upper')}>Upper Primary Template</button>
+              <button className="tt-chip" onClick={() => loadTemplate('primary-lower')}>Lower Primary Template</button>
             </div>
             <div style={{ display:'flex', gap:15, alignItems:'flex-end', flexWrap:'wrap' }}>
               <div className="tt-exam-field" style={{ width:100 }}>
