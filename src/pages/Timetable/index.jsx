@@ -28,7 +28,10 @@ import {
   getRequirements, getAllRequirements, saveRequirement, deleteRequirement,
   getClassSubjectAssignments, getTeachers, checkTeacherConflict, checkRoomConflict, getSchoolProfile,
   isFeatureEnabled, getTimetableRooms, saveTimetableRoom, deleteTimetableRoom,
-  getAllTimetableSlots, checkExamConflict
+  getAllTimetableSlots, checkExamConflict,
+  getTimetableConfig, saveTimetableConfig,
+  getTimetableSlots, saveTimetableSlot, clearTimetableSlot,
+  getTeacherTimetable, clearAndSaveTimetable
 } from '../../data/store';
 import { 
   CalendarIcon, PrintIcon, BookIcon, SettingsIcon, CheckIcon, CrossIcon, 
@@ -247,17 +250,17 @@ export default function Timetable({ currentUser, currentPeriodId, periods = [] }
   ];
 
   const DEFAULT_SLOTS = [
-    { label:'Assembly',  start_time:'07:50', end_time:'08:00', is_break:true  },
-    { label:'Period 1',  start_time:'08:00', end_time:'08:40', is_break:false },
-    { label:'Period 2',  start_time:'08:40', end_time:'09:20', is_break:false },
-    { label:'Period 3',  start_time:'09:20', end_time:'10:00', is_break:false },
-    { label:'Break',     start_time:'10:00', end_time:'10:20', is_break:true  },
-    { label:'Period 4',  start_time:'10:20', end_time:'11:00', is_break:false },
-    { label:'Period 5',  start_time:'11:00', end_time:'11:40', is_break:false },
-    { label:'Period 6',  start_time:'11:40', end_time:'12:20', is_break:false },
-    { label:'Lunch',     start_time:'12:20', end_time:'13:00', is_break:true  },
-    { label:'Period 7',  start_time:'13:00', end_time:'13:40', is_break:false },
-    { label:'Period 8',  start_time:'13:40', end_time:'14:20', is_break:false },
+    { label:'Assembly',  start_time:'08:00', end_time:'08:20', is_break:true  },
+    { label:'Period 1',  start_time:'08:20', end_time:'09:00', is_break:false },
+    { label:'Period 2',  start_time:'09:00', end_time:'09:40', is_break:false },
+    { label:'Tea Break', start_time:'09:40', end_time:'10:00', is_break:true  },
+    { label:'Period 3',  start_time:'10:00', end_time:'10:40', is_break:false },
+    { label:'Period 4',  start_time:'10:40', end_time:'11:20', is_break:false },
+    { label:'Period 5',  start_time:'11:20', end_time:'12:00', is_break:false },
+    { label:'Lunch',     start_time:'12:00', end_time:'12:40', is_break:true  },
+    { label:'Period 6',  start_time:'12:40', end_time:'13:20', is_break:false },
+    { label:'Period 7',  start_time:'13:20', end_time:'14:00', is_break:false },
+    { label:'Period 8',  start_time:'14:00', end_time:'14:40', is_break:false },
   ];
 
   const SUBJECT_SUGGESTIONS = {
@@ -318,8 +321,10 @@ export default function Timetable({ currentUser, currentPeriodId, periods = [] }
   const [draftConfig,  setDraftConfig]  = useState([]);
   const [activeDays,   setActiveDays]   = useState(['Monday','Tuesday','Wednesday','Thursday','Friday']);
   const [configSaving, setConfigSaving] = useState(false);
-  const [stdStart,     setStdStart]     = useState('08:00');
+  const [stdStart,     setStdStart]     = useState('08:20');
   const [stdDuration,  setStdDuration]  = useState(40);
+  const [stdShortBreak, setStdShortBreak] = useState(20);
+  const [stdLongBreak,  setStdLongBreak]  = useState(40);
 
   // ── Grid slots ────────────────────────────────────────────────────────
   const [slots,        setSlots]        = useState([]);
@@ -604,24 +609,35 @@ export default function Timetable({ currentUser, currentPeriodId, periods = [] }
   };
 
   const handleStandardizeTimes = () => {
-    let currentStart = stdStart;
+    // Helper: add minutes to a HH:MM string
+    const addMins = (timeStr, mins) => {
+      const [h, m] = timeStr.split(':').map(Number);
+      const total = h * 60 + m + parseInt(mins);
+      return `${String(Math.floor(total / 60)).padStart(2,'0')}:${String(total % 60).padStart(2,'0')}`;
+    };
+
+    let currentTime = stdStart;
     const newDraft = draftConfig.map(slot => {
-      if (slot.is_break) return slot; // Skip breaks for duration scaling, or keep as is
-      
-      const [h, m] = currentStart.split(':').map(Number);
-      const startMinutes = h * 60 + m;
-      const endMinutes = startMinutes + parseInt(stdDuration);
-      
-      const endH = Math.floor(endMinutes / 60);
-      const endM = endMinutes % 60;
-      const formattedEnd = `${String(endH).padStart(2,'0')}:${String(endM).padStart(2,'0')}`;
-      
-      const updated = { ...slot, start_time: currentStart, end_time: formattedEnd };
-      currentStart = formattedEnd; // Next lesson starts when this ends
-      return updated;
+      const startTime = currentTime;
+      let duration;
+
+      if (slot.is_break) {
+        // Determine break type: "Lunch" gets long break, everything else gets short
+        const isLong = slot.label.toLowerCase().includes('lunch');
+        duration = isLong ? parseInt(stdLongBreak) : parseInt(stdShortBreak);
+      } else {
+        duration = parseInt(stdDuration);
+      }
+
+      const endTime = addMins(startTime, duration);
+      currentTime = endTime; // Next slot starts when this one ends
+      return { ...slot, start_time: startTime, end_time: endTime };
     });
+
     setDraftConfig(newDraft);
-    setMessage({ type:'ok', text: `Recalculated ${newDraft.length} periods using ${stdDuration}min duration.` });
+    const teachCount = newDraft.filter(s => !s.is_break).length;
+    const lastEnd = newDraft.length > 0 ? newDraft[newDraft.length - 1].end_time : '--:--';
+    setMessage({ type:'ok', text: `${teachCount} lessons at ${stdDuration}min each. School day: ${stdStart} → ${lastEnd}.` });
   };
 
   // ── Manual Exam Scheduler Logic ──────────────────────────────────────
@@ -691,9 +707,21 @@ export default function Timetable({ currentUser, currentPeriodId, periods = [] }
     } catch (e) { setMessage({ type:'err', text: e.message }); }
   };
 
-  const addDraftSlot = () => setDraftConfig(p => [...p, {
-    label:'Period', start_time:'14:00', end_time:'14:40', is_break:false,
-  }]);
+  const addDraftSlot = () => {
+    setDraftConfig(p => {
+      const last = p[p.length - 1];
+      const start = last ? last.end_time : '14:00';
+      const [h, m] = start.split(':').map(Number);
+      const total = h * 60 + m + 40;
+      const end = `${String(Math.floor(total/60)).padStart(2,'0')}:${String(total%60).padStart(2,'0')}`;
+      return [...p, {
+        label: p.filter(s => !s.is_break).length > 0 ? `Period ${p.filter(s => !s.is_break).length + 1}` : 'Period 1',
+        start_time: start,
+        end_time: end,
+        is_break: false,
+      }];
+    });
+  };
   const updateDraft = (i, f, v) => setDraftConfig(p => p.map((s, idx) => idx === i ? { ...s, [f]: v } : s));
   const removeDraft = (i) => setDraftConfig(p => p.filter((_, idx) => idx !== i));
 
@@ -1557,27 +1585,35 @@ export default function Timetable({ currentUser, currentPeriodId, periods = [] }
 
           {/* Quick Scale Tool */}
           <div style={{ marginBottom:20, padding:12, borderRadius:8, background:'rgba(111,82,232,0.05)', border:'1px solid rgba(111,82,232,0.1)' }}>
-            <div style={{ fontSize:'.6rem', color:'#6F52E8', textTransform:'uppercase', letterSpacing:'.07em', marginBottom:10, fontWeight:700 }}>
-              Standardize Lesson Durations
+            <div style={{ fontSize:'.6rem', color:'#6F52E8', textTransform:'uppercase', letterSpacing:'.07em', marginBottom:12, fontWeight:700 }}>
+              Standardize Day Structure (Ministry Guidelines)
             </div>
-            <div style={{ display:'flex', gap:10, alignItems:'flex-end', flexWrap:'wrap' }}>
+            <div style={{ display:'flex', gap:15, alignItems:'flex-end', flexWrap:'wrap' }}>
               <div className="tt-exam-field" style={{ width:100 }}>
                 <label style={{ fontSize:'.55rem' }}>First Lesson Start</label>
                 <input type="time" value={stdStart} onChange={e => setStdStart(e.target.value)} style={{ padding: '6px 8px', fontSize: '.75rem' }} />
               </div>
               <div className="tt-exam-field" style={{ width:100 }}>
-                <label style={{ fontSize:'.55rem' }}>Duration (Mins)</label>
+                <label style={{ fontSize:'.55rem' }}>Lesson (Mins)</label>
                 <input type="number" value={stdDuration} onChange={e => setStdDuration(e.target.value)} style={{ padding: '6px 8px', fontSize: '.75rem' }} />
+              </div>
+              <div className="tt-exam-field" style={{ width:110 }}>
+                <label style={{ fontSize:'.55rem' }}>Short Break (Mins)</label>
+                <input type="number" value={stdShortBreak} onChange={e => setStdShortBreak(e.target.value)} style={{ padding: '6px 8px', fontSize: '.75rem' }} />
+              </div>
+              <div className="tt-exam-field" style={{ width:110 }}>
+                <label style={{ fontSize:'.55rem' }}>Long Break (Mins)</label>
+                <input type="number" value={stdLongBreak} onChange={e => setStdLongBreak(e.target.value)} style={{ padding: '6px 8px', fontSize: '.75rem' }} />
               </div>
               <button 
                 className="tt-btn tt-btn-primary" 
                 onClick={handleStandardizeTimes}
-                style={{ height:34, fontSize:'.7rem' }}
+                style={{ height:34, fontSize:'.7rem', padding:'0 16px' }}
               >
-                Apply to All Slots
+                Apply Correct Timing
               </button>
-              <div style={{ fontSize:'.62rem', color: 'var(--text-muted)', flex:1, minWidth:200, lineHeight:1.4 }}>
-                * This will auto-adjust all non-break periods. Breaks will be skipped but their fixed start/end times will remain.
+              <div style={{ fontSize:'.62rem', color: 'var(--text-muted)', flex:1, minWidth:250, lineHeight:1.4 }}>
+                * Standardizes the entire day. Short breaks (Tea/Health) and Long breaks (Lunch) are calculated using separate durations based on Ministry guidelines.
               </div>
             </div>
           </div>
