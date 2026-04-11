@@ -29,10 +29,17 @@ export default function Library({ currentUser, currentPeriodId }) {
   const [borrowModal, setBorrowModal] = useState({ open: false, data: null });
   const [printModal, setPrintModal] = useState({ open: false });
   const [modalGrade, setModalGrade] = useState('');
+  const [modalCategory, setModalCategory] = useState('');
+
+  const LIB_CATEGORIES = [
+    'Textbook', 'Setbook', 'Storybook', 'Revision Kit', 
+    'Reference Work', 'Teacher Manual', 'Periodical', 'Visual Aid'
+  ];
 
   // Filters for search
   const [filters, setFilters] = useState({
     subject: '',
+    category: '',
     grade: '',
     stream: '',
     year: '',
@@ -85,11 +92,13 @@ export default function Library({ currentUser, currentPeriodId }) {
         b.isbn?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         b.author?.toLowerCase().includes(searchTerm.toLowerCase());
       
+      const isGlobal = ['Storybook', 'Reference Work', 'Periodical', 'Visual Aid'].includes(b.category);
+      const matchesCategory = !filters.category || b.category === filters.category;
       const matchesSubject = !filters.subject || b.subject === filters.subject;
-      const matchesGrade = !filters.grade || b.grade === filters.grade;
+      const matchesGrade = !filters.grade || b.grade === filters.grade || (isGlobal && !filters.category);
       const matchesYear = !filters.year || String(b.year_registered) === filters.year;
       
-      return matchesSearch && matchesSubject && matchesGrade && matchesYear;
+      return matchesSearch && matchesCategory && matchesSubject && matchesGrade && matchesYear;
     });
   }, [books, searchTerm, filters]);
 
@@ -117,6 +126,7 @@ export default function Library({ currentUser, currentPeriodId }) {
       id: bookModal.data?.id,
       title: formData.get('title'),
       author: formData.get('author'),
+      category: formData.get('category'),
       isbn: formData.get('isbn'),
       book_code: formData.get('book_code'),
       subject: formData.get('subject'),
@@ -262,7 +272,7 @@ export default function Library({ currentUser, currentPeriodId }) {
             <button className="btn btn-ghost btn-sm" onClick={() => setBorrowModal({ open: true, data: null })}>
               <PlatformZapIcon size={14} /> Loan Book
             </button>
-            <button className="btn btn-primary btn-sm" onClick={() => { setModalGrade(''); setBookModal({ open: true, data: null }); }}>
+            <button className="btn btn-primary btn-sm" onClick={() => { setModalGrade(''); setModalCategory(''); setBookModal({ open: true, data: null }); }}>
               <PlusIcon size={14} /> New Entry
             </button>
           </div>
@@ -304,12 +314,13 @@ export default function Library({ currentUser, currentPeriodId }) {
         <div className="filter-bar" style={{ padding: "0 20px" }}>
           <div className="filter-group">
             <FilterIcon size={14} />
+            
             <Select 
-              value={filters.subject} 
-              onChange={e => setFilters({...filters, subject: e.target.value})}
+              value={filters.category} 
+              onChange={e => setFilters({...filters, category: e.target.value})}
               options={[
-                { id: '', label: 'All Subjects' },
-                ...availableSubjects.map(s => ({ id: s, label: s }))
+                { id: '', label: 'All Categories' },
+                ...LIB_CATEGORIES.map(c => ({ id: c, label: c }))
               ]}
               variant="minimal"
             />
@@ -329,38 +340,29 @@ export default function Library({ currentUser, currentPeriodId }) {
               ]}
               variant="minimal"
             />
-            {activeTab === 'loans' && (
-              <>
-                <Select 
-                  value={filters.grade} 
-                  onChange={e => setFilters({...filters, grade: e.target.value, stream: ''})}
-                  options={[
-                    { id: '', label: 'All Classes' },
-                    ...Object.entries(CBC_STRUCTURE).flatMap(([ln, ld]) => {
-                      const isMatch = (g1, g2) => g1?.toLowerCase().trim() === g2?.toLowerCase().trim();
-                      const active = ld.grades.filter(g => 
-                        (profile.activeClasses || []).some(ac => isMatch(ac, g))
-                      );
-                      return active.map(g => ({ id: g, label: g }));
-                    })
-                  ]}
-                  variant="minimal"
-                />
-                
-                <Select 
-                  value={filters.stream} 
-                  onChange={e => setFilters({...filters, stream: e.target.value})}
-                  options={[
-                    { id: '', label: 'All Streams' },
-                    ...(filters.grade 
-                      ? (profile.streamsPerClass?.[filters.grade] || []) 
-                      : Object.values(profile.streamsPerClass || {}).flat().filter((v, i, a) => a.indexOf(v) === i)
-                    ).map(stream => ({ id: stream, label: stream }))
-                  ]}
-                  variant="minimal"
-                />
-              </>
-            )}
+            
+            <Select 
+              value={filters.stream} 
+              onChange={e => setFilters({...filters, stream: e.target.value})}
+              options={[
+                { id: '', label: 'All Streams' },
+                ...(filters.grade 
+                  ? (profile.streamsPerClass?.[filters.grade] || []) 
+                  : Object.values(profile.streamsPerClass || {}).flat().filter((v, i, a) => a.indexOf(v) === i)
+                ).map(stream => ({ id: stream, label: stream }))
+              ]}
+              variant="minimal"
+            />
+
+            <Select 
+              value={filters.subject} 
+              onChange={e => setFilters({...filters, subject: e.target.value})}
+              options={[
+                { id: '', label: 'All Subjects' },
+                ...availableSubjects.map(s => ({ id: s, label: s }))
+              ]}
+              variant="minimal"
+            />
           </div>
           <div className="results-count">
             Showing {activeTab === 'catalog' ? filteredBooks.length : filteredBorrows.length} records
@@ -399,6 +401,7 @@ export default function Library({ currentUser, currentPeriodId }) {
                     <div className="text-muted" style={{ marginBottom: 16, fontSize: "0.85rem" }}>by {book.author || 'Unknown'}</div>
                     
                     <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap', marginBottom: 20 }}>
+                      <span className="badge badge-info" style={{ fontSize: '0.7rem' }}>{book.category || 'Book'}</span>
                       {book.grade && <span className="badge badge-primary" style={{ fontSize: '0.7rem' }}>{book.grade}</span>}
                       <span className="badge" style={{ background: '#f1f5f9', color: '#64748b', fontSize: '0.7rem' }}>{book.subject || 'General'}</span>
                     </div>
@@ -429,7 +432,11 @@ export default function Library({ currentUser, currentPeriodId }) {
                         Issue Book
                       </button>
                       <button 
-                        onClick={() => { setModalGrade(book.grade || ''); setBookModal({ open: true, data: book }); }}
+                        onClick={() => { 
+                          setModalGrade(book.grade || ''); 
+                          setModalCategory(book.category || 'Textbook');
+                          setBookModal({ open: true, data: book }); 
+                        }}
                         className="btn btn-ghost" 
                         style={{ padding: '10px', borderRadius: 12, border: '1px solid #e2e8f0', background: '#fff', cursor: 'pointer' }}
                       >
@@ -523,15 +530,26 @@ export default function Library({ currentUser, currentPeriodId }) {
             <form onSubmit={handleSaveBook} className="form-group">
                <div className="form-row">
                  <div className="form-group">
-                   <label>Book Title</label>
+                   <label>Resource Title</label>
                    <input className="form-input" name="title" defaultValue={bookModal.data?.title} required placeholder="e.g. Peak Physics Form 4" />
                  </div>
+                 <div className="form-group">
+                   <label>Resource Category</label>
+                   <Select 
+                      name="category"
+                      value={modalCategory}
+                      onChange={e => setModalCategory(e.target.value)}
+                      options={LIB_CATEGORIES.map(c => ({ id: c, label: c }))}
+                      style={{ width: '100%' }}
+                      required
+                   />
+                 </div>
+               </div>
+               <div className="form-row">
                  <div className="form-group">
                    <label>Author / Publisher</label>
                    <input className="form-input" name="author" defaultValue={bookModal.data?.author} placeholder="e.g. Oxford Press" />
                  </div>
-               </div>
-               <div className="form-row">
                  <div className="form-group">
                    <label>Class / Grade</label>
                    <Select
@@ -539,7 +557,7 @@ export default function Library({ currentUser, currentPeriodId }) {
                      value={modalGrade}
                      onChange={e => setModalGrade(e.target.value)}
                      options={[
-                       { id: '', label: '-- Select Class --' },
+                       { id: '', label: '-- Select Class (Optional) --' },
                        ...Object.entries(CBC_STRUCTURE).flatMap(([ln, ld]) => {
                          const isMatch = (g1, g2) => g1?.toLowerCase().trim() === g2?.toLowerCase().trim();
                          const active = ld.grades.filter(g => 
@@ -549,32 +567,35 @@ export default function Library({ currentUser, currentPeriodId }) {
                        })
                      ]}
                      style={{ width: '100%' }}
-                     required
                    />
                  </div>
+               </div>
+               <div className="form-row">
                  <div className="form-group">
                    <label>Subject</label>
                    <Select
                      name="subject"
                      defaultValue={bookModal.data?.subject}
                      options={[
-                       { id: '', label: '-- Select Subject --' },
-                       ...getSubjectsForGrade(modalGrade, profile).map(s => ({ id: s, label: s }))
+                       { id: '', label: '-- Select Subject (Optional) --' },
+                       ...(modalGrade ? getSubjectsForGrade(modalGrade, profile) : availableSubjects).map(s => ({ id: s, label: s }))
                      ]}
                      style={{ width: '100%' }}
-                     disabled={!modalGrade}
-                     required
                    />
                  </div>
-               </div>
-               <div className="form-row">
                  <div className="form-group">
                    <label>ISBN</label>
                    <input className="form-input" name="isbn" defaultValue={bookModal.data?.isbn} placeholder="e.g. 978-3-16..." />
                  </div>
+               </div>
+               <div className="form-row">
                  <div className="form-group">
                    <label>Catalog Code</label>
                    <input className="form-input" name="book_code" defaultValue={bookModal.data?.book_code} required placeholder="e.g. BK-4412" />
+                 </div>
+                 <div className="form-group">
+                    <label>Total Inventory</label>
+                    <input className="form-input" type="number" name="total_copies" defaultValue={bookModal.data?.total_copies || 1} min="1" />
                  </div>
                </div>
                <div className="form-row">
