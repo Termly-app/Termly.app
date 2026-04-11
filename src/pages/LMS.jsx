@@ -249,9 +249,32 @@ export default function LMS({ currentUser }) {
     });
   };
 
-  const activeClasses = profile?.activeClasses || ['1', '2', '3', '4', '5', '6', '7', '8'];
-  const streams = ['North', 'South', 'East', 'West', 'Central'];
-  const subjects = profile?.customSubjects ? Object.keys(profile.customSubjects) : ['Mathematics', 'English', 'Kiswahili', 'Science', 'Social Studies', 'CRE/IRE', 'ICT', 'Arts'];
+  const activeClasses = profile?.activeClasses || [];
+  
+  // Dynamic Stream logic based on selected class
+  const classStreams = (profile?.streamsPerClass && formData.class) 
+    ? (profile.streamsPerClass[formData.class] || []) 
+    : [];
+
+  // Filtered Subject Logic (Excluding internal __ system keys)
+  const subjects = profile?.customSubjects 
+    ? Object.keys(profile.customSubjects).filter(k => !k.startsWith('__'))
+    : ['Mathematics', 'English', 'Kiswahili', 'Science', 'Social Studies', 'CRE/IRE', 'ICT', 'Arts'];
+
+  // Effect to reset stream if class changes and it's no longer valid
+  useEffect(() => {
+    if (formData.class) {
+      const validStreams = profile?.streamsPerClass?.[formData.class] || [];
+      if (validStreams.length > 0) {
+        if (!validStreams.includes(formData.stream)) {
+          // If only one stream, auto-select it
+          setFormData(prev => ({ ...prev, stream: validStreams.length === 1 ? validStreams[0] : '' }));
+        }
+      } else {
+        setFormData(prev => ({ ...prev, stream: '' }));
+      }
+    }
+  }, [formData.class, profile]);
 
   return (
     <div className="section-card animate-in" style={{ display: 'grid', gridTemplateColumns: '380px 1fr', gap: 24, minHeight: 'calc(100vh - 120px)' }}>
@@ -281,7 +304,7 @@ export default function LMS({ currentUser }) {
               <Select 
                 value={formData.class} 
                 onChange={e => setFormData({ ...formData, class: e.target.value })}
-                options={activeClasses.map(c => ({ id: c, label: `Class ${c}` }))}
+                options={activeClasses.map(c => ({ id: c, label: c.toLowerCase().includes('grade') || c.toLowerCase().includes('form') ? c : `Class ${c}` }))}
                 placeholder="Select Class"
                 style={{ width: '100%' }}
               />
@@ -291,7 +314,7 @@ export default function LMS({ currentUser }) {
               <Select 
                 value={formData.stream} 
                 onChange={e => setFormData({ ...formData, stream: e.target.value })}
-                options={streams.map(s => ({ id: s, label: s }))}
+                options={classStreams.map(s => ({ id: s, label: s }))}
                 placeholder="Select Stream"
                 style={{ width: '100%' }}
               />
