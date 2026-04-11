@@ -95,7 +95,7 @@ export default function Library({ currentUser, currentPeriodId }) {
       const isGlobal = ['Storybook', 'Reference Work', 'Periodical', 'Visual Aid'].includes(b.category);
       const matchesCategory = !filters.category || b.category === filters.category;
       const matchesSubject = !filters.subject || b.subject === filters.subject;
-      const matchesGrade = !filters.grade || b.grade === filters.grade || (isGlobal && !filters.category);
+      const matchesGrade = isGlobal || !filters.grade || b.grade === filters.grade;
       const matchesYear = !filters.year || String(b.year_registered) === filters.year;
       
       return matchesSearch && matchesCategory && matchesSubject && matchesGrade && matchesYear;
@@ -114,8 +114,9 @@ export default function Library({ currentUser, currentPeriodId }) {
       const matchesClass = !filters.grade || student.class === filters.grade;
       const matchesStream = !filters.stream || student.stream === filters.stream;
       const matchesSubject = !filters.subject || b.library_books?.subject === filters.subject;
+      const matchesCategory = !filters.category || b.library_books?.category === filters.category;
       
-      return matchesSearch && matchesClass && matchesStream && matchesSubject;
+      return matchesSearch && matchesClass && matchesStream && matchesSubject && matchesCategory;
     });
   }, [borrows, searchTerm, filters]);
 
@@ -300,13 +301,22 @@ export default function Library({ currentUser, currentPeriodId }) {
             <button className={`tab-btn ${activeTab === 'catalog' ? 'active' : ''}`} onClick={() => setActiveTab('catalog')}>Inventory View</button>
             <button className={`tab-btn ${activeTab === 'loans' ? 'active' : ''}`} onClick={() => setActiveTab('loans')}>Circulation Desk</button>
           </div>
-          <div className="search-bar" style={{ maxWidth: 300 }}>
-            <span className="search-icon"><SearchIcon size={16} /></span>
+          <div className="search-bar" style={{ 
+            maxWidth: 320, 
+            background: 'var(--bg)', 
+            borderRadius: '12px', 
+            border: '1.5px solid var(--border)', 
+            transition: 'var(--transition)' 
+          }}>
+            <span className="search-icon" style={{ color: 'var(--text-light)' }}><SearchIcon size={16} /></span>
             <input className="form-input" 
               type="text" 
-              placeholder={activeTab === 'catalog' ? "Search..." : "Search..."}
+              placeholder={activeTab === 'catalog' ? "Search resources..." : "Find loan records..."}
               value={searchTerm}
               onChange={e => setSearchTerm(e.target.value)}
+              style={{ background: 'transparent', border: 'none', boxShadow: 'none' }}
+              onFocus={(e) => e.target.parentElement.style.borderColor = 'var(--primary)'}
+              onBlur={(e) => e.target.parentElement.style.borderColor = 'var(--border)'}
             />
           </div>
         </div>
@@ -456,6 +466,15 @@ export default function Library({ currentUser, currentPeriodId }) {
             </div>
           ) : (
             <div className="table-wrapper">
+              {filteredBorrows.length === 0 ? (
+              <div style={{ padding: '80px 20px', textAlign: 'center', background: 'rgba(248, 250, 252, 0.5)', borderRadius: 20, border: '2px dashed var(--border)' }}>
+                <div style={{ width: 64, height: 64, borderRadius: '50%', background: 'var(--bg)', display: 'flex', alignItems: 'center', justifySelf: 'center', justifyContent: 'center', margin: '0 auto 20px', color: 'var(--text-light)' }}>
+                  <ClockIcon size={32} />
+                </div>
+                <h3 style={{ color: 'var(--text-main)', marginBottom: 8 }}>No active loans</h3>
+                <p style={{ color: 'var(--text-light)', maxWidth: 300, margin: '0 auto' }}>Loan records will appear here once you issue books to students.</p>
+              </div>
+            ) : (
                  <table className="data-table">
                    <thead>
                      <tr>
@@ -678,27 +697,69 @@ export default function Library({ currentUser, currentPeriodId }) {
               <button className="modal-close" onClick={() => setPrintModal({ open: false })}>×</button>
             </div>
             <div className="modal-body">
-            <div className="form-group" style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-               <button onClick={() => printReport('all')}>
-                 <div className="r-icon"><PrintIcon size={20} /></div>
-                 <div className="r-txt">All Outstanding Loans</div>
-               </button>
-               <button onClick={async () => {
-                 const adm = await prompt({ title: 'Student Ledger', message: 'Enter Student Admission Number', inputPlaceholder: 'e.g. ADM-001' });
-                 if(adm) { setFilters({...filters, searchTerm: adm}); printReport('student'); }
-               }}>
-                 <div className="r-icon"><UserIcon size={20} /></div>
-                 <div className="r-txt">Specific Student Ledger</div>
-               </button>
-               <button onClick={() => {
-                 if(!filters.grade) return alert({ message: "Select a class in filters first", variant: 'warning' });
-                 printReport('class');
-               }}>
-                 <div className="r-icon"><GraduationIcon size={20} /></div>
-                 <div className="r-txt">Class Report: {filters.grade}</div>
-               </button>
+              <div className="form-group" style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                {[
+                  { id: 'all', title: 'All Outstanding Loans', sub: 'List of all unreturned resources', icon: <PrintIcon size={20} />, onClick: () => printReport('all') },
+                  { id: 'student', title: 'Specific Student Ledger', sub: 'Loan history for a particular student', icon: <UserIcon size={20} />, onClick: async () => {
+                    const adm = await prompt({ title: 'Student Ledger', message: 'Enter Student Admission Number', inputPlaceholder: 'e.g. ADM-001' });
+                    if(adm) { setFilters({...filters, searchTerm: adm}); printReport('student'); }
+                  }},
+                  { id: 'class', title: `Class Report: ${filters.grade || 'None'}`, sub: 'Library usage summary for this class', icon: <GraduationIcon size={20} />, onClick: () => {
+                    if(!filters.grade) return alert({ message: "Select a class in filters first", title: "Class Required", variant: 'warning' });
+                    printReport('class');
+                  }}
+                ].map(item => (
+                  <button 
+                    key={item.id}
+                    onClick={item.onClick}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 16,
+                      padding: '16px 20px',
+                      background: 'rgba(255, 255, 255, 0.7)',
+                      border: '1.5px solid rgba(0, 0, 0, 0.05)',
+                      borderRadius: '16px',
+                      cursor: 'pointer',
+                      textAlign: 'left',
+                      transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
+                      width: '100%',
+                      boxShadow: '0 4px 12px rgba(0, 0, 0, 0.03)'
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.background = '#fff';
+                      e.currentTarget.style.borderColor = 'var(--primary)';
+                      e.currentTarget.style.transform = 'translateY(-2px)';
+                      e.currentTarget.style.boxShadow = '0 8px 24px rgba(14, 165, 233, 0.12)';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.background = 'rgba(255, 255, 255, 0.7)';
+                      e.currentTarget.style.borderColor = 'rgba(0, 0, 0, 0.05)';
+                      e.currentTarget.style.transform = 'translateY(0)';
+                      e.currentTarget.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.03)';
+                    }}
+                  >
+                    <div style={{ 
+                      width: 44, 
+                      height: 44, 
+                      borderRadius: 12, 
+                      background: 'var(--primary-50)', 
+                      display: 'flex', 
+                      alignItems: 'center', 
+                      justifyContent: 'center',
+                      color: 'var(--primary)',
+                      flexShrink: 0
+                    }}>
+                      {item.icon}
+                    </div>
+                    <div style={{ flex: 1 }}>
+                      <div style={{ fontWeight: 600, color: 'var(--text-main)', fontSize: '0.95rem' }}>{item.title}</div>
+                      <div style={{ fontSize: '0.75rem', color: 'var(--text-light)', marginTop: 2 }}>{item.sub}</div>
+                    </div>
+                  </button>
+                ))}
+              </div>
             </div>
-          </div>
           </div>
         </div>
       )}
