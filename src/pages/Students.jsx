@@ -142,38 +142,44 @@ export default function Students({ currentUser, currentPeriodId }) {
             <h3 style={{margin:0}}>All Students</h3>
             <span style={{background:'var(--primary)',color:'#fff',fontSize:'0.65rem',fontWeight:700,padding:'2px 8px',borderRadius:12}}>{filtered.length}</span>
           </div>
-          <div style={{display:'flex',gap:8,flexWrap:'wrap',alignItems:'center'}}>
+          <div style={{display:'flex',gap:16,flexWrap:'wrap',alignItems:'center'}}>
             <div className="search-bar" style={{maxWidth:240}}>
               <span className="search-icon"><SearchIcon size={16} /></span>
               <input type="text" placeholder="Search students..." value={search} onChange={e=>setSearch(e.target.value)}/>
             </div>
-            <Select 
-              value={classFilter}
-              onChange={e => { setClassFilter(e.target.value); setStreamFilter('All'); }}
-              options={[
-                { id: 'All', label: 'All Classes' },
-                ...Object.entries(CBC_STRUCTURE).flatMap(([ln, ld]) => {
-                  const isMatch = (g1, g2) => g1?.toLowerCase().trim() === g2?.toLowerCase().trim();
-                  const active = ld.grades.filter(g => 
-                    (profile.activeClasses || []).some(ac => isMatch(ac, g))
-                  );
-                  return active.map(g => ({ id: g, label: g }));
-                })
-              ]}
-              style={{ minWidth: 150 }}
-            />
-            <Select 
-              value={streamFilter}
-              onChange={e => setStreamFilter(e.target.value)}
-              options={[
-                { id: 'All', label: 'All Streams' },
-                ...(classFilter !== 'All' 
-                  ? (profile.streamsPerClass?.[classFilter] || []) 
-                  : Object.values(profile.streamsPerClass || {}).flat().filter((v, i, a) => a.indexOf(v) === i)
-                ).map(s => ({ id: s, label: s }))
-              ]}
-              style={{ minWidth: 140 }}
-            />
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <label style={{ fontSize: '0.82rem', fontWeight: 600 }}>Class:</label>
+              <Select 
+                value={classFilter}
+                onChange={e => { setClassFilter(e.target.value); setStreamFilter('All'); }}
+                options={[
+                  { id: 'All', label: 'All Classes' },
+                  ...Object.entries(CBC_STRUCTURE).flatMap(([ln, ld]) => {
+                    const isMatch = (g1, g2) => g1?.toLowerCase().trim() === g2?.toLowerCase().trim();
+                    const active = ld.grades.filter(g => 
+                      (profile.activeClasses || []).some(ac => isMatch(ac, g))
+                    );
+                    return active.map(g => ({ id: g, label: g }));
+                  })
+                ]}
+                style={{ minWidth: 150 }}
+              />
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <label style={{ fontSize: '0.82rem', fontWeight: 600 }}>Stream:</label>
+              <Select 
+                value={streamFilter}
+                onChange={e => setStreamFilter(e.target.value)}
+                options={[
+                  { id: 'All', label: 'All Streams' },
+                  ...(classFilter !== 'All' 
+                    ? (profile.streamsPerClass?.[classFilter] || []) 
+                    : Object.values(profile.streamsPerClass || {}).flat().filter((v, i, a) => a.indexOf(v) === i)
+                  ).map(s => ({ id: s, label: s }))
+                ]}
+                style={{ minWidth: 140 }}
+              />
+            </div>
           </div>
         </div>
         <div style={{opacity:loading?0.6:1}}>

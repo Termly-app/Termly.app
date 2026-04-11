@@ -352,53 +352,54 @@ export default function Grading({ currentUser, currentPeriodId }) {
       </div>
 
       {/* Filter Row */}
-      <div className="filter-bar" style={{ marginBottom: 20 }}>
-        {Object.entries(CBC_STRUCTURE).every(([ln, ld]) => {
-          const isMatch = (g1, g2) => g1?.toLowerCase().trim() === g2?.toLowerCase().trim();
-          return !ld.grades.some(g => (profile.activeClasses || []).some(ac => isMatch(ac, g)));
-        }) && (
-          <div className="card shadow-sm" style={{ padding: '24px', textAlign: 'center', background: 'var(--primary-light)', color: 'var(--primary)', border: '1px dashed var(--primary)', width: '100%', marginBottom: 20 }}>
-            <p style={{ margin: 0, fontWeight: 600 }}>No active classes found in your configuration.</p>
-            <p style={{ margin: '4px 0 0', fontSize: '0.85rem', opacity: 0.8 }}>Go to <strong>Settings &gt; Academic Configuration</strong> to enable your school's grades.</p>
-          </div>
-        )}
-        <Select 
-          value={selectedClass} 
-          onChange={e => { setSelectedClass(e.target.value); setStreamFilter('All'); setActiveTab('marks'); }}
-          options={Object.entries(CBC_STRUCTURE).flatMap(([levelName, levelData]) => {
-            const isMatch = (g1, g2) => g1?.toLowerCase().trim() === g2?.toLowerCase().trim();
-            const activeInLevel = levelData.grades.filter(g => 
-              (profile.activeClasses || []).some(ac => isMatch(ac, g))
-            );
-            return activeInLevel.map(g => {
-              const isMyClass = assignments[g] && Object.values(assignments[g]).some(streams => 
-                typeof streams === 'string' ? streams === currentUser?.id :
-                Object.values(streams).some(tid => tid === currentUser?.id)
-              );
-              return { id: g, label: isMyClass && isTeacher ? `[My Class] ${g}` : g };
-            });
-          })}
-          style={{ minWidth: 160 }}
-        />
+      <div className="filter-bar" style={{ marginBottom: 20, display: 'flex', gap: 16, alignItems: 'center', flexWrap: 'wrap' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <label style={{ fontSize: '0.82rem', fontWeight: 600 }}>Class:</label>
+          <Select 
+            value={selectedClass} 
+            onChange={e => { setSelectedClass(e.target.value); setStreamFilter('All'); setActiveTab('marks'); }}
+            options={(() => {
+              const activeToUse = (profile.activeClasses || []).length > 0 ? profile.activeClasses : Object.values(CBC_STRUCTURE).flatMap(l => l.grades);
+              return Object.entries(CBC_STRUCTURE).flatMap(([levelName, levelData]) => {
+                const isMatch = (g1, g2) => g1?.toLowerCase().trim() === g2?.toLowerCase().trim();
+                const activeInLevel = levelData.grades.filter(g => activeToUse.some(ac => isMatch(ac, g)));
+                return activeInLevel.map(g => {
+                  const isMyClass = assignments[g] && Object.values(assignments[g]).some(streams => 
+                    typeof streams === 'string' ? streams === currentUser?.id :
+                    Object.values(streams).some(tid => tid === currentUser?.id)
+                  );
+                  return { id: g, label: isMyClass && isTeacher ? `[My Class] ${g}` : g };
+                });
+              });
+            })()}
+            style={{ minWidth: 160 }}
+          />
+        </div>
 
-        <Select 
-          value={streamFilter} 
-          onChange={(e) => setStreamFilter(e.target.value)}
-          options={[
-            { id: 'All', label: 'All Streams' },
-            ...(profile.streamsPerClass?.[selectedClass] || []).map(stream => ({ id: stream, label: stream }))
-          ]}
-          style={{ minWidth: 140 }}
-        />
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <label style={{ fontSize: '0.82rem', fontWeight: 600 }}>Stream:</label>
+          <Select 
+            value={streamFilter} 
+            onChange={(e) => setStreamFilter(e.target.value)}
+            options={[
+              { id: 'All', label: 'All Streams' },
+              ...(profile.streamsPerClass?.[selectedClass] || []).map(stream => ({ id: stream, label: stream }))
+            ]}
+            style={{ minWidth: 140 }}
+          />
+        </div>
 
-        <Select 
-          value={examType}
-          onChange={(e) => setExamType(e.target.value)}
-          options={(profile.custom_exams?.length > 0 ? profile.custom_exams : ['CAT 1','CAT 2','Mid Term','End Term']).map(type => ({
-            id: type, label: type
-          }))}
-          style={{ minWidth: 150 }}
-        />
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <label style={{ fontSize: '0.82rem', fontWeight: 600 }}>Exam:</label>
+          <Select 
+            value={examType}
+            onChange={(e) => setExamType(e.target.value)}
+            options={(profile.custom_exams?.length > 0 ? profile.custom_exams : ['CAT 1','CAT 2','Mid Term','End Term']).map(type => ({
+              id: type, label: type
+            }))}
+            style={{ minWidth: 150 }}
+          />
+        </div>
 
         <div style={{ flex: 1 }} />
         <span className="badge badge-info" style={{ fontSize: '0.8rem', padding: '6px 14px' }}>{selectedClass}</span>

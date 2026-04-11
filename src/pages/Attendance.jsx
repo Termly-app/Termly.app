@@ -248,41 +248,51 @@ export default function Attendance({ currentUser, currentPeriodId }) {
       </div>
 
       {/* Filters */}
-      <div className="filter-bar">
-        <Select 
-          value={selectedClass} 
-          onChange={e => { setSelectedClass(e.target.value); setStreamFilter('All'); }}
-          options={[
-            { id: 'All', label: 'All Classes' },
-            ...Object.entries(CBC_STRUCTURE).flatMap(([levelName, levelData]) => {
-              const isMatch = (g1, g2) => g1?.toLowerCase().trim() === g2?.toLowerCase().trim();
-              const activeInLevel = levelData.grades.filter(g => 
-                (profile.activeClasses || []).some(ac => isMatch(ac, g))
-              );
-              return activeInLevel.map(g => {
-                const isMyClass = assignments[g] && Object.values(assignments[g]).some(streams => 
-                  typeof streams === 'string' ? streams === currentUser?.id :
-                  Object.values(streams).some(tid => tid === currentUser?.id)
+      <div className="filter-bar" style={{ display: 'flex', gap: 16, alignItems: 'center', flexWrap: 'wrap' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <label style={{ fontSize: '0.82rem', fontWeight: 600 }}>Class:</label>
+          <Select 
+            value={selectedClass} 
+            onChange={e => { setSelectedClass(e.target.value); setStreamFilter('All'); }}
+            options={[
+              { id: 'All', label: 'All Classes' },
+              ...Object.entries(CBC_STRUCTURE).flatMap(([levelName, levelData]) => {
+                const isMatch = (g1, g2) => g1?.toLowerCase().trim() === g2?.toLowerCase().trim();
+                const activeInLevel = levelData.grades.filter(g => 
+                  (profile.activeClasses || []).some(ac => isMatch(ac, g))
                 );
-                return { id: g, label: isMyClass && isTeacher ? `[My Class] ${g}` : g };
-              });
-            })
-          ]}
-          style={{ minWidth: 160 }}
-        />
-        <Select 
-          value={streamFilter} 
-          onChange={(e) => setStreamFilter(e.target.value)}
-          options={[
-            { id: 'All', label: 'All Streams' },
-            ...(selectedClass !== 'All' 
-               ? (profile.streamsPerClass?.[selectedClass] || []).map(stream => ({ id: stream, label: stream }))
-               : Object.values(profile.streamsPerClass || {}).flat().filter((v,i,a) => a.indexOf(v)===i).map((stream, idx) => ({ id: stream, label: stream }))
-            )
-          ]}
-          style={{ minWidth: 140 }}
-        />
-        <input type="date" className="form-input" style={{ width: 'auto' }} value={selectedDate} onChange={e => setSelectedDate(e.target.value)} />
+                return activeInLevel.map(g => {
+                  const isMyClass = assignments[g] && Object.values(assignments[g]).some(streams => 
+                    typeof streams === 'string' ? streams === currentUser?.id :
+                    Object.values(streams).some(tid => tid === currentUser?.id)
+                  );
+                  return { id: g, label: isMyClass && isTeacher ? `[My Class] ${g}` : g };
+                });
+              })
+            ]}
+            style={{ minWidth: 160 }}
+          />
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <label style={{ fontSize: '0.82rem', fontWeight: 600 }}>Stream:</label>
+          <Select 
+            value={streamFilter} 
+            onChange={(e) => setStreamFilter(e.target.value)}
+            options={[
+              { id: 'All', label: 'All Streams' },
+              ...(selectedClass !== 'All' 
+                 ? (profile.streamsPerClass?.[selectedClass] || []).map(stream => ({ id: stream, label: stream }))
+                 : Object.values(profile.streamsPerClass || {}).flat().filter((v,i,a) => a.indexOf(v)===i).map((stream, idx) => ({ id: stream, label: stream }))
+              )
+            ]}
+            style={{ minWidth: 140 }}
+          />
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <label style={{ fontSize: '0.82rem', fontWeight: 600 }}>Date:</label>
+          <input type="date" className="form-input" style={{ width: 'auto', padding: '6px 12px' }} value={selectedDate} onChange={e => setSelectedDate(e.target.value)} />
+        </div>
+        <div style={{ flex: 1 }} />
         <span className="text-muted" style={{ fontSize: '0.85rem' }}>{students.length} students</span>
       </div>
 
