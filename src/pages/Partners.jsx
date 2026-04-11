@@ -34,7 +34,7 @@ export default function Partners() {
       </nav>
       <header className="partners-hero">
         <h1 className="hero-title">Our <span className="text-gradient">Partners</span></h1>
-        <p className="hero-subtitle">Trusted by over 500+ leading institutions across Kenya. Join the community of schools transforming education.</p>
+        <p className="hero-subtitle">Trusted by forward-thinking institutions across Kenya. Join the community of schools transforming education with ShuleSoft.</p>
       </header>
 
       {loading ? (

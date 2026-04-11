@@ -68,7 +68,10 @@ export default function Students({ currentUser, currentPeriodId }) {
     try {
       if (editingStudent) await updateStudent(editingStudent.id, st); else await addStudent(st);
       await refresh(); setShowModal(false); setEditingStudent(null);
-    } catch (err) { console.error(err); } finally { setLoading(false); }
+    } catch (err) {
+      console.error('Student save failed:', err);
+      await alert({ title: 'Save Failed', message: err.message || 'Could not save student record. Please try again.', variant: 'danger' });
+    } finally { setLoading(false); }
   };
   const handleDelete = async (id) => {
     const ok = await confirm({ title: 'Remove Student', message: 'Are you sure you want to remove this student record?', variant: 'danger' });

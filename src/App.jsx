@@ -321,13 +321,15 @@ function Sidebar({ isOpen, onClose, onLogout, currentUser, subscriptionActive })
           <SbLink to="/grading"   icon={GradingIcon}   label="Grading"    onClick={onClose} locked={!subscriptionActive && !isPlatformAdmin} />
         )}
         
-        {(isTeacher || isAdmin) && (features.timetable || isSandbox) && (
+        {/* WIP: Timetable — hidden from production, code preserved */}
+        {/* {(isTeacher || isAdmin) && (features.timetable || isSandbox) && (
           <SbLink to="/timetable" icon={TimetableIcon} label={features.exam_scheduling ? "Scheduling" : "Timetable"} onClick={onClose} locked={!subscriptionActive && !isPlatformAdmin} />
-        )}
+        )} */}
 
-        {(isTeacher || isAdmin) && (features.lms || isSandbox) && (
+        {/* WIP: E-Learning — hidden from production, code preserved */}
+        {/* {(isTeacher || isAdmin) && (features.lms || isSandbox) && (
           <SbLink to="/lms" icon={ActivityIcon} label="E-Learning" onClick={onClose} locked={!subscriptionActive && !isPlatformAdmin} />
-        )}
+        )} */}
 
         {/* Administration/Finance section - always visible for Sandbox, else gated */}
         {(isAdmin || isFinance) && (isSandbox || features.fees || isAdmin) && (
@@ -340,17 +342,20 @@ function Sidebar({ isOpen, onClose, onLogout, currentUser, subscriptionActive })
 
         
 
-        {isAdmin && (features.sms || isSandbox) && (
+        {/* WIP: Communications — hidden from production, code preserved */}
+        {/* {isAdmin && (features.sms || isSandbox) && (
           <SbLink to="/communications" icon={MessageIcon} label="Comm. Center" onClick={onClose} locked={!subscriptionActive && !isPlatformAdmin} />
-        )}
+        )} */}
 
-        {(isAdmin || isTeacher) && (features.teacher_portal || isSandbox) && (
+        {/* WIP: Teacher Portal — hidden from production, code preserved */}
+        {/* {(isAdmin || isTeacher) && (features.teacher_portal || isSandbox) && (
           <SbLink to="/portal/teacher" icon={StaffIcon} label="Teacher Portal" onClick={onClose} locked={!subscriptionActive && !isPlatformAdmin} />
-        )}
+        )} */}
 
-        {isAdmin && (features.parent_portal || isSandbox) && (
+        {/* WIP: Parent Portal — hidden from production, code preserved */}
+        {/* {isAdmin && (features.parent_portal || isSandbox) && (
           <SbLink to="/portal/parent" icon={UserIcon} label="Parent Portal" onClick={onClose} locked={(!subscriptionActive || (isSandbox && !features.parent_portal)) && !isPlatformAdmin} />
-        )}
+        )} */}
         <SbSection label="Resources" />
         <SbLink to="/help" icon={BookIcon} label="Help Center" onClick={onClose} />
         
@@ -694,8 +699,10 @@ function App() {
                         <Route path="/students"     element={<Students currentUser={currentUser} currentPeriodId={currentPeriodId} />} />
                         <Route path="/grading"      element={<SectionGate featureSlug="grading" featureName="Grading" profile={profile}><Grading currentUser={currentUser} currentPeriodId={currentPeriodId} /></SectionGate>} />
                         <Route path="/attendance"   element={<SectionGate featureSlug="attendance" featureName="Attendance" profile={profile}><Attendance currentUser={currentUser} currentPeriodId={currentPeriodId} /></SectionGate>} />
-                        <Route path="/timetable"    element={<SectionGate featureSlug="timetable" featureName="Timetable" profile={profile}><Timetable currentUser={currentUser} currentPeriodId={currentPeriodId} periods={periods} /></SectionGate>} />
-                        <Route path="/lms"          element={<SectionGate featureSlug="lms" featureName="E-Learning" profile={profile}><LMS currentUser={currentUser} /></SectionGate>} />
+                        {/* WIP: Timetable route — hidden from production */}
+                        {/* <Route path="/timetable"    element={<SectionGate featureSlug="timetable" featureName="Timetable" profile={profile}><Timetable currentUser={currentUser} currentPeriodId={currentPeriodId} periods={periods} /></SectionGate>} /> */}
+                        {/* WIP: E-Learning route — hidden from production */}
+                        {/* <Route path="/lms"          element={<SectionGate featureSlug="lms" featureName="E-Learning" profile={profile}><LMS currentUser={currentUser} /></SectionGate>} /> */}
                       </>
                     )}
 
@@ -707,9 +714,10 @@ function App() {
                     )}
 
                     {/* Communications Routes: Admin */}
-                    {isAdmin && (
+                    {/* WIP: Communications route — hidden from production */}
+                    {/* {isAdmin && (
                       <Route path="/communications" element={<SectionGate featureSlug="sms" featureName="Communications" profile={profile}><Communications currentUser={currentUser} /></SectionGate>} />
-                    )}
+                    )} */}
 
                     {/* Library Routes: Admin & Librarian */}
                     {(isAdmin || isLibrarian) && (
@@ -723,8 +731,9 @@ function App() {
                         <Route path="/security" element={<Security currentUser={currentUser} />} />
                         <Route path="/settings" element={<Settings currentUser={currentUser} />} />
                         <Route path="/billing"  element={<Billing currentUser={currentUser} />} />
-                        <Route path="/portal/teacher" element={<SectionGate featureSlug="teacher_portal" featureName="Teacher Portal" profile={profile}><div style={{padding:40}}>Teacher Portal Management (Coming Soon)</div></SectionGate>} />
-                        <Route path="/portal/parent"  element={<SectionGate featureSlug="parent_portal"  featureName="Parent Portal"  profile={profile}><div style={{padding:40}}>Parent Portal Management (Coming Soon)</div></SectionGate>} />
+                        {/* WIP: Portal routes — hidden from production */}
+                        {/* <Route path="/portal/teacher" element={<SectionGate featureSlug="teacher_portal" featureName="Teacher Portal" profile={profile}><div style={{padding:40}}>Teacher Portal Management (Coming Soon)</div></SectionGate>} /> */}
+                        {/* <Route path="/portal/parent"  element={<SectionGate featureSlug="parent_portal"  featureName="Parent Portal"  profile={profile}><div style={{padding:40}}>Parent Portal Management (Coming Soon)</div></SectionGate>} /> */}
                       </>
                     )}
 

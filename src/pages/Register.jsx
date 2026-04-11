@@ -21,6 +21,18 @@ export default function Register() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [settings, setSettings] = useState(null);
 
+  const [formData, setFormData] = useState({
+    schoolName: '',
+    schoolEmail: '',
+    plan: SANDBOX_PLAN, 
+    adminName: '',
+    password: '',
+    phone: '',
+    location: '',
+    curriculum: 'CBC Only', 
+    termsAccepted: true // Auto-accept terms for smoother PLG flow
+  });
+
   useEffect(() => {
     async function loadSettings() {
       const s = await getPlatformSettings();
@@ -64,18 +76,7 @@ export default function Register() {
       sessionStorage.removeItem('shulesoft_reg_step');
     }
   }, [formData, step]);
-  
-  const [formData, setFormData] = useState({
-    schoolName: '',
-    schoolEmail: '',
-    plan: SANDBOX_PLAN, 
-    adminName: '',
-    password: '',
-    phone: '',
-    location: '',
-    curriculum: 'CBC Only', 
-    termsAccepted: true // Auto-accept terms for smoother PLG flow
-  });
+
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;

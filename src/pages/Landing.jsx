@@ -318,10 +318,10 @@ export default function Landing() {
       </div>
 
       <div className="stats-row">
-        <div className="sc reveal"><div className="sn"><span className="sn-num" data-count="200">0</span><sup>+</sup></div><div className="sl-">Schools using ShuleSoft across Kenya</div></div>
-        <div className="sc reveal reveal-delay-1"><div className="sn"><span className="sn-num" data-count="48">0</span><sup>K</sup></div><div className="sl-">Student records managed daily</div></div>
+        <div className="sc reveal"><div className="sn"><span className="sn-num" data-count="5">0</span><sup>+</sup></div><div className="sl-">Schools onboarded and growing</div></div>
+        <div className="sc reveal reveal-delay-1"><div className="sn"><span className="sn-num" data-count="12">0</span></div><div className="sl-">Modules built for Kenyan schools</div></div>
         <div className="sc reveal reveal-delay-2"><div className="sn"><span className="sn-num" data-count="99">0</span><sup>%</sup></div><div className="sl-">Uptime SLA guaranteed</div></div>
-        <div className="sc reveal reveal-delay-3"><div className="sn"><span className="sn-num" data-count-dec="4.9">0</span><sup>★</sup></div><div className="sl-">Rated by school administrators</div></div>
+        <div className="sc reveal reveal-delay-3"><div className="sn"><span className="sn-num" data-count="2">0</span></div><div className="sl-">Curricula supported (CBC & 8-4-4)</div></div>
       </div>
 
       <section className="section" id="features">
@@ -479,7 +479,7 @@ export default function Landing() {
         <div className="cta-in reveal">
           <div className="eyebrow" style={{ margin: '0 auto 24px' }}>Get started today</div>
           <h2 className="landing-h2">Your school,<br/>finally organised.</h2>
-          <p>Join 200+ Kenyan schools that replaced spreadsheets,<br/>paper registers, and group chats with ShuleSoft.</p>
+          <p>Join a growing community of Kenyan schools that replaced spreadsheets,<br/>paper registers, and group chats with ShuleSoft.</p>
           <div className="cta-btns">
             <Link to="/register" className="btn-p" style={{ padding: '16px 38px', borderRadius: 100, fontSize: '1rem' }}>
               Get access now

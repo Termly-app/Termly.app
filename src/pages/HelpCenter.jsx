@@ -23,32 +23,64 @@ export default function HelpCenter() {
 
   const ARTICLES = {
     onboarding: [
-      { title: 'Sandbox Plan: Exploration Mode', content: 'The Sandbox plan allows you to test ALL features with a limit of 10 students. No credit card required. Explore how ShuleSoft can transform your school administration before committing to a paid plan.' },
-      { title: 'Initial Setup Checklist', content: '1. Update your School Profile. 2. Add your Classes and Streams. 3. Import your student list via CSV. 4. Configure your Academic Term.' },
-      { title: 'User Roles & Permissions', content: 'System Admins have full control. Teachers can mark attendance and input marks. Accountants manage fees. Learn how to invite your staff and assign roles.' }
+      { title: 'Sandbox Plan: Exploration Mode', content: 'The Sandbox plan allows you to test ALL features with a limit of 10 students. No credit card required. Explore how ShuleSoft can transform your school administration before committing to a paid plan.',
+        steps: ['Register your school at shulesoft-app.vercel.app/register.', 'You will receive a Free Sandbox workspace instantly.', 'Add up to 10 test students to explore the system.', 'When ready, upgrade from Settings → Subscription.'],
+        tip: 'Your Sandbox data is preserved when you upgrade — no need to re-enter anything.' },
+      { title: 'Initial Setup Checklist', content: '1. Update your School Profile. 2. Add your Classes and Streams. 3. Import your student list via CSV. 4. Configure your Academic Term.',
+        steps: ['Go to Settings → School Profile and fill in your school name, motto, and contact info.', 'Under Settings → Classes & Streams, activate the grades your school uses (e.g. Grade 1-6, Form 1-4).', 'Navigate to Students → Import CSV to bulk-upload your student list.', 'Check Dashboard to verify your current Academic Period is correct.'],
+        tip: 'Complete these 4 steps and your school is fully operational. Most schools finish in under 15 minutes.' },
+      { title: 'User Roles & Permissions', content: 'System Admins have full control. Teachers can mark attendance and input marks. Accountants manage fees. Learn how to invite your staff and assign roles.',
+        steps: ['Go to Staff → Add Staff Member.', 'Enter their name, email, and select their role (Admin, Teacher, Finance, Librarian).', 'They will receive a login invitation via email.', 'Each role automatically restricts access to only relevant modules.'],
+        tip: 'Only Admins can see Settings, Security, and Subscription modules. Teachers see only academic modules.' }
     ],
     students: [
-      { title: 'Bulk Student Import (CSV)', content: 'Save hours by importing your entire student list at once. Use our CSV template with columns for Name, Adm No, Class, and Parent Phone. You can edit data directly in the browser before final import.' },
-      { title: 'Managing Student Profiles', content: 'Track everything from birth certificates to KCPE scores. Upload student photos and manage parent contact details for instant communication.' },
-      { title: 'Promotions & Transitions', content: 'Automatically move students to the next grade at the end of the year. The system handles graduations and transfers between streams seamlessly.' }
+      { title: 'Bulk Student Import (CSV)', content: 'Save hours by importing your entire student list at once. Use our CSV template with columns for Name, Adm No, Class, and Parent Phone. You can edit data directly in the browser before final import.',
+        steps: ['Go to Students and click the "Import CSV" button in the toolbar.', 'Download our CSV template or prepare your own with columns: Name, Adm No, Class, Stream, Gender, Parent, Phone.', 'Upload the file — the system will preview all rows for you to verify.', 'Click "Import All" to save all students at once.'],
+        tip: 'You can edit any cell directly in the preview table before importing. Fix typos and missing data right there.' },
+      { title: 'Managing Student Profiles', content: 'Track everything from birth certificates to KCPE scores. Upload student photos and manage parent contact details for instant communication.',
+        steps: ['Click any student name in the Students table to open their detailed profile.', 'Review their personal info, parent contacts, fee balance, and academic history.', 'Click "Edit" to update any field — changes are saved immediately.', 'Use the "Actions" menu to delete or transfer the student.'],
+        tip: 'Parent phone numbers are used for SMS notifications and fee reminders. Keep them up to date.' },
+      { title: 'Promotions & Transitions', content: 'Automatically move students to the next grade at the end of the year. The system handles graduations and transfers between streams seamlessly.',
+        steps: ['Go to Students and click the "Transitions" button in the toolbar.', 'Select the source class (e.g. Grade 3) and the direction (Promote / Demote / Graduate).', 'Review the list of affected students. Uncheck any you want to exclude.', 'Click "Apply Transition" — all selected students move to the next class.'],
+        tip: 'Always create a new Academic Period before running transitions. This preserves historical records.' }
     ],
     cbc: [
-      { title: 'CBC Assessment Framework', content: 'Record Learner Progress across all core competencies. Generate Professional Assessment Sheets and Report Cards aligned with the latest KNEC requirements for PP1 through Grade 9.' },
-      { title: '8-4-4 Grading System', content: 'For older classes, use our traditional 8-4-4 grading engine. Configure custom mean score calculations and automated ranking.' },
-      { title: 'Portfolio Management', content: 'Attach evidence of learning directly to student profiles. Build a digital portfolio for every learner over their entire primary school journey.' }
+      { title: 'CBC Assessment Framework', content: 'Record Learner Progress across all core competencies. Generate Professional Assessment Sheets and Report Cards aligned with the latest KNEC requirements for PP1 through Grade 9.',
+        steps: ['Go to Grading and select a CBC class (e.g. Grade 4 North).', 'Choose the subject and exam type (e.g. End Term).', 'Enter marks for each student — the system auto-calculates grades using the configured grading scale.', 'Click "Save Marks" to persist all entries.'],
+        tip: 'You can configure custom grading scales in Settings → Grading Systems to match your school\'s policy.' },
+      { title: '8-4-4 Grading System', content: 'For older classes, use our traditional 8-4-4 grading engine. Configure custom mean score calculations and automated ranking.',
+        steps: ['Go to Grading and select a Secondary class (e.g. Form 2 East).', 'Select the subject and enter marks for each student.', 'The system auto-ranks students by mean score.', 'Print report cards from the class view using the Print button.'],
+        tip: 'The default grading scale is A-E. You can customize the grade boundaries in Settings → Grading Systems.' },
+      { title: 'Portfolio Management', content: 'Attach evidence of learning directly to student profiles. Build a digital portfolio for every learner over their entire primary school journey.',
+        steps: ['Open a student profile from the Students module.', 'Scroll to the "CBC Portfolio" section.', 'Upload images or documents as evidence of learning for specific competencies.', 'These are preserved across terms and years for longitudinal tracking.'],
+        tip: 'Portfolios are especially important for Grade 6 transition assessments under the CBC framework.' }
     ],
     fees: [
-      { title: 'M-Pesa Integration', content: 'Enable automated fee tracking with our M-Pesa STK Push technology. Parents receive a prompt on their phone, and the system records the payment instantly.' },
-      { title: 'Fee Structure Builder', content: 'Set different fees for different classes (e.g., Boarding vs Day, Grade 1 vs Grade 6). Auto-generate invoices for the entire school with one click.' },
-      { title: 'Defaulter Management', content: 'Identify students with outstanding balances instantly. Send bulk SMS reminders to parents and track payment plans over time.' }
+      { title: 'M-Pesa Integration', content: 'Enable automated fee tracking with our M-Pesa STK Push technology. Parents receive a prompt on their phone, and the system records the payment instantly.',
+        steps: ['Go to Settings → Integrations → M-Pesa Configuration.', 'Enter your Safaricom Business Shortcode, Consumer Key, and Consumer Secret.', 'Test the connection using the "Send Test STK Push" button.', 'Once configured, all fee payments via M-Pesa are automatically recorded.'],
+        tip: 'You need a Safaricom Daraja API account. Register at developer.safaricom.co.ke.' },
+      { title: 'Fee Structure Builder', content: 'Set different fees for different classes (e.g., Boarding vs Day, Grade 1 vs Grade 6). Auto-generate invoices for the entire school with one click.',
+        steps: ['Go to Settings → Fee Structure.', 'Set the base fee for each class/grade (e.g. Grade 1: KSh 15,000, Form 1: KSh 45,000).', 'The system automatically creates fee records for every student based on their class.', 'View fee balances in the Fees & Billing module.'],
+        tip: 'Fee records are created per Academic Period. Configure your fees before the start of each term.' },
+      { title: 'Defaulter Management', content: 'Identify students with outstanding balances instantly. Send bulk SMS reminders to parents and track payment plans over time.',
+        steps: ['Go to Fees & Billing to see all student fee balances.', 'Sort by "Balance" to see the highest defaulters first.', 'Use the filter to isolate a specific class.', 'Click "Record Payment" on any student to log a manual payment.'],
+        tip: 'The Dashboard widget shows a summary of total fees collected vs outstanding for the current term.' }
     ],
     timetable: [
-      { title: 'Master Timetable Generation', content: 'Input your subjects and teacher assignments. Our smart engine detects conflicts and ensures no teacher or room is double-booked.' },
-      { title: 'Staff Workload Analysis', content: 'Balance teaching loads across your staff. View reports on teaching hours per week for every teacher.' }
+      { title: 'Master Timetable Generation', content: 'Input your subjects and teacher assignments. Our smart engine detects conflicts and ensures no teacher or room is double-booked.',
+        steps: ['Navigate to the Timetable module (available in paid plans).', 'Select the class and configure the time slots for the school day.', 'Assign subjects and teachers to each slot.', 'The system checks for conflicts automatically.'],
+        tip: 'This module is currently under development and will be available soon with enhanced features.' },
+      { title: 'Staff Workload Analysis', content: 'Balance teaching loads across your staff. View reports on teaching hours per week for every teacher.',
+        steps: ['Open the Timetable module and switch to the "Teacher View" tab.', 'Select a teacher to see their weekly schedule at a glance.', 'Review total teaching hours to ensure balanced workloads.', 'Adjust assignments directly from the teacher view.'],
+        tip: 'This feature helps principals identify overloaded or underutilized staff members.' }
     ],
     comms: [
-      { title: 'Bulk SMS Notifications', content: 'Send urgent alerts, fee reminders, or exam results to all parents or filtered groups instantly.' },
-      { title: 'Email Reports', content: 'Automatically send digital report cards and fee statements to parent emails, saving on printing costs.' }
+      { title: 'Bulk SMS Notifications', content: 'Send urgent alerts, fee reminders, or exam results to all parents or filtered groups instantly.',
+        steps: ['Navigate to the Communications module (available in paid plans).', 'Select your target audience: All Parents, a specific Class, or individual students.', 'Type your message — the character count is shown in real time.', 'Click "Send" — delivery reports appear within seconds.'],
+        tip: 'This module is under development. SMS integration requires a configured SMS provider in Settings.' },
+      { title: 'Email Reports', content: 'Automatically send digital report cards and fee statements to parent emails, saving on printing costs.',
+        steps: ['Ensure parent email addresses are recorded in student profiles.', 'Go to Grading → select a class → click "Email Report Cards".', 'The system generates PDF report cards and emails them to each parent.', 'A delivery summary shows which emails were sent successfully.'],
+        tip: 'Parents without email addresses on file will be skipped. Use SMS as a fallback for those parents.' }
     ]
   };
 
@@ -145,8 +177,8 @@ export default function HelpCenter() {
             <div style={{ marginTop: 40, padding: 24, background: '#F8FAFC', borderRadius: 20, border: '1px solid #E2E8F0' }}>
               <div style={{ color: 'var(--primary)', marginBottom: 12 }}><InfoIcon size={24} /></div>
               <h5 style={{ margin: '0 0 8px 0', fontSize: '1rem', fontWeight: 800 }}>Need more help?</h5>
-              <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', lineHeight: 1.5, marginBottom: 16 }}>Our support team is available 24/7 to assist with your school setup.</p>
-              <button className="btn btn-primary btn-sm btn-block">Chat with us</button>
+              <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', lineHeight: 1.5, marginBottom: 16 }}>Our support team is available Mon-Fri 8AM-6PM EAT.</p>
+              <Link to="/support" className="btn btn-primary btn-sm btn-block">Contact Support</Link>
             </div>
           </div>
         </div>
@@ -216,22 +248,23 @@ export default function HelpCenter() {
             <div style={{ color: '#475569', lineHeight: 1.7, fontSize: '1.05rem' }}>
               <p style={{ marginBottom: 24 }}>{selectedArticle.content}</p>
               
-              <h4 style={{ fontSize: '1.1rem', fontWeight: 800, color: '#0f172a', marginBottom: 16 }}>Implementation Steps:</h4>
+              <h4 style={{ fontSize: '1.1rem', fontWeight: 800, color: '#0f172a', marginBottom: 16 }}>Step-by-Step Guide:</h4>
               <div style={{ background: '#f8fafc', padding: 20, borderRadius: 16, border: '1px solid #e2e8f0' }}>
                 <ol style={{ margin: 0, paddingLeft: 20, display: 'flex', flexDirection: 'column', gap: 12 }}>
-                  <li>Login to your school workspace.</li>
-                  <li>Click on the relevant module in the sidebar navigation.</li>
-                  <li>Follow the on-screen prompts or look for the "Actions" menu.</li>
-                  <li>Contact support if you need a 1-on-1 walkthrough.</li>
+                  {(selectedArticle.steps || []).map((step, i) => (
+                    <li key={i}>{step}</li>
+                  ))}
                 </ol>
               </div>
 
-              <div style={{ marginTop: 24, padding: 16, background: '#eff6ff', borderRadius: 12, border: '1px solid #bfdbfe', display: 'flex', gap: 12 }}>
-                <span style={{ fontSize: '1.2rem' }}>💡</span>
-                <div style={{ fontSize: '0.9rem', color: '#1e40af' }}>
-                  <strong>Pro Tip:</strong> You can use our CSV templates to speed up data entry for this module.
+              {selectedArticle.tip && (
+                <div style={{ marginTop: 24, padding: 16, background: '#eff6ff', borderRadius: 12, border: '1px solid #bfdbfe', display: 'flex', gap: 12 }}>
+                  <span style={{ fontSize: '1.2rem' }}>💡</span>
+                  <div style={{ fontSize: '0.9rem', color: '#1e40af' }}>
+                    <strong>Pro Tip:</strong> {selectedArticle.tip}
+                  </div>
                 </div>
-              </div>
+              )}
             </div>
 
             <div style={{ marginTop: 32, display: 'flex', justifyContent: 'flex-end' }}>
@@ -245,6 +278,7 @@ export default function HelpCenter() {
           </div>
         </div>
       )}
+
 
       <style>{`
         .modal-overlay {
