@@ -57,14 +57,12 @@ export default function Grading({ currentUser, currentPeriodId }) {
         }
 
         const isMatch = (g1, g2) => g1?.toLowerCase().trim() === g2?.toLowerCase().trim();
-        const activeClassList = (p.activeClasses || []).length > 0
-          ? Object.values(CBC_STRUCTURE).flatMap(l => l.grades).filter(g => (p.activeClasses || []).some(ac => isMatch(ac, g)))
-          : Object.values(CBC_STRUCTURE).flatMap(l => l.grades);
+        const activeClassList = Object.values(CBC_STRUCTURE).flatMap(l => l.grades).filter(g => (p.activeClasses || []).some(ac => isMatch(ac, g)));
         
         let defaultClass = selectedClass;
 
         // If no class is selected yet, or current selection is invalid, pick a new default
-        if (!selectedClass || !activeClassList.some(ac => isMatch(ac, selectedClass))) {
+        if (activeClassList.length > 0 && (!selectedClass || !activeClassList.some(ac => isMatch(ac, selectedClass)))) {
           // Rule 1: If teacher, pick their first assigned class
           if (isTeacher) {
             const assignedGrades = activeClassList.filter(g => 
@@ -79,14 +77,13 @@ export default function Grading({ currentUser, currentPeriodId }) {
           }
           
           // Rule 2: Fallback to first active class if still no default
-          if (!defaultClass && activeClassList.length > 0) {
+          if (!defaultClass || !activeClassList.includes(defaultClass)) {
             defaultClass = activeClassList[0];
           }
           
-          // Rule 3: Global fallback to Grade 7 if all else fails
-          if (!defaultClass) defaultClass = 'Grade 7';
-          
           setSelectedClass(defaultClass);
+        } else if (activeClassList.length === 0) {
+          setSelectedClass('');
         } else {
           await loadResults();
         }
@@ -358,20 +355,19 @@ export default function Grading({ currentUser, currentPeriodId }) {
           <Select 
             value={selectedClass} 
             onChange={e => { setSelectedClass(e.target.value); setStreamFilter('All'); setActiveTab('marks'); }}
-            options={(() => {
-              const activeToUse = (profile.activeClasses || []).length > 0 ? profile.activeClasses : Object.values(CBC_STRUCTURE).flatMap(l => l.grades);
-              return Object.entries(CBC_STRUCTURE).flatMap(([levelName, levelData]) => {
-                const isMatch = (g1, g2) => g1?.toLowerCase().trim() === g2?.toLowerCase().trim();
-                const activeInLevel = levelData.grades.filter(g => activeToUse.some(ac => isMatch(ac, g)));
-                return activeInLevel.map(g => {
-                  const isMyClass = assignments[g] && Object.values(assignments[g]).some(streams => 
-                    typeof streams === 'string' ? streams === currentUser?.id :
-                    Object.values(streams).some(tid => tid === currentUser?.id)
-                  );
-                  return { id: g, label: isMyClass && isTeacher ? `[My Class] ${g}` : g };
-                });
+            options={Object.entries(CBC_STRUCTURE).flatMap(([levelName, levelData]) => {
+              const isMatch = (g1, g2) => g1?.toLowerCase().trim() === g2?.toLowerCase().trim();
+              const activeInLevel = levelData.grades.filter(g => 
+                (profile.activeClasses || []).some(ac => isMatch(ac, g))
+              );
+              return activeInLevel.map(g => {
+                const isMyClass = assignments[g] && Object.values(assignments[g]).some(streams => 
+                  typeof streams === 'string' ? streams === currentUser?.id :
+                  Object.values(streams).some(tid => tid === currentUser?.id)
+                );
+                return { id: g, label: isMyClass && isTeacher ? `[My Class] ${g}` : g };
               });
-            })()}
+            })}
             style={{ minWidth: 160 }}
           />
         </div>
