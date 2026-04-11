@@ -355,18 +355,12 @@ export default function Grading({ currentUser, currentPeriodId }) {
           <Select 
             value={selectedClass} 
             onChange={e => { setSelectedClass(e.target.value); setStreamFilter('All'); setActiveTab('marks'); }}
-            options={Object.entries(CBC_STRUCTURE).flatMap(([levelName, levelData]) => {
+            options={Object.entries(CBC_STRUCTURE).flatMap(([ln, ld]) => {
               const isMatch = (g1, g2) => g1?.toLowerCase().trim() === g2?.toLowerCase().trim();
-              const activeInLevel = levelData.grades.filter(g => 
+              const active = ld.grades.filter(g => 
                 (profile.activeClasses || []).some(ac => isMatch(ac, g))
               );
-              return activeInLevel.map(g => {
-                const isMyClass = assignments[g] && Object.values(assignments[g]).some(streams => 
-                  typeof streams === 'string' ? streams === currentUser?.id :
-                  Object.values(streams).some(tid => tid === currentUser?.id)
-                );
-                return { id: g, label: isMyClass && isTeacher ? `[My Class] ${g}` : g };
-              });
+              return active.map(g => ({ id: g, label: g }));
             })}
             style={{ minWidth: 160 }}
           />
@@ -390,7 +384,7 @@ export default function Grading({ currentUser, currentPeriodId }) {
           <Select 
             value={examType}
             onChange={(e) => setExamType(e.target.value)}
-            options={(profile.custom_exams?.length > 0 ? profile.custom_exams : ['CAT 1','CAT 2','Mid Term','End Term']).map(type => ({
+            options={(profile.custom_exams || []).map(type => ({
               id: type, label: type
             }))}
             style={{ minWidth: 150 }}
