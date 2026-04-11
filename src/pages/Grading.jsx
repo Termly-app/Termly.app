@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Helmet } from 'react-helmet-async';
-import { getClassResults, setStudentAllMarks, getSubjectRankings, getClassList, getCBC, setCBC, getTeacherPerformance, getCoreCompetencies, getPrintHeader, getSchoolProfile, subscribeToChanges, getGradeForScore } from '../data/store';
+import { getClassResults, setStudentAllMarks, getSubjectRankings, getClassList, getCBC, setCBC, getTeacherPerformance, getCoreCompetencies, getPrintHeader, getSchoolProfile, subscribeToChanges, getGradeForScore, getSubjectAssignments } from '../data/store';
 import { CBC_STRUCTURE, CBC_LEVELS, CBC_CORE_COMPETENCIES, STREAMS, getSubjectsForGrade, getLevelForGrade } from '../data/seedData';
 import { 
   LeafIcon, BookIcon, PrintIcon, DashboardIcon, EditIcon, 
