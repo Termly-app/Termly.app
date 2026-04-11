@@ -318,6 +318,8 @@ export default function Timetable({ currentUser, currentPeriodId, periods = [] }
   const [draftConfig,  setDraftConfig]  = useState([]);
   const [activeDays,   setActiveDays]   = useState(['Monday','Tuesday','Wednesday','Thursday','Friday']);
   const [configSaving, setConfigSaving] = useState(false);
+  const [stdStart,     setStdStart]     = useState('08:00');
+  const [stdDuration,  setStdDuration]  = useState(40);
 
   // ── Grid slots ────────────────────────────────────────────────────────
   const [slots,        setSlots]        = useState([]);
@@ -599,6 +601,27 @@ export default function Timetable({ currentUser, currentPeriodId, periods = [] }
       setPanel('grid');
     } catch (e) { setMessage({ type:'err', text: e.message }); }
     finally { setConfigSaving(false); }
+  };
+
+  const handleStandardizeTimes = () => {
+    let currentStart = stdStart;
+    const newDraft = draftConfig.map(slot => {
+      if (slot.is_break) return slot; // Skip breaks for duration scaling, or keep as is
+      
+      const [h, m] = currentStart.split(':').map(Number);
+      const startMinutes = h * 60 + m;
+      const endMinutes = startMinutes + parseInt(stdDuration);
+      
+      const endH = Math.floor(endMinutes / 60);
+      const endM = endMinutes % 60;
+      const formattedEnd = `${String(endH).padStart(2,'0')}:${String(endM).padStart(2,'0')}`;
+      
+      const updated = { ...slot, start_time: currentStart, end_time: formattedEnd };
+      currentStart = formattedEnd; // Next lesson starts when this ends
+      return updated;
+    });
+    setDraftConfig(newDraft);
+    setMessage({ type:'ok', text: `Recalculated ${newDraft.length} periods using ${stdDuration}min duration.` });
   };
 
   // ── Manual Exam Scheduler Logic ──────────────────────────────────────
@@ -1529,6 +1552,33 @@ export default function Timetable({ currentUser, currentPeriodId, periods = [] }
                   {d.slice(0, 3)}
                 </button>
               ))}
+            </div>
+          </div>
+
+          {/* Quick Scale Tool */}
+          <div style={{ marginBottom:20, padding:12, borderRadius:8, background:'rgba(111,82,232,0.05)', border:'1px solid rgba(111,82,232,0.1)' }}>
+            <div style={{ fontSize:'.6rem', color:'#6F52E8', textTransform:'uppercase', letterSpacing:'.07em', marginBottom:10, fontWeight:700 }}>
+              Standardize Lesson Durations
+            </div>
+            <div style={{ display:'flex', gap:10, alignItems:'flex-end', flexWrap:'wrap' }}>
+              <div className="tt-exam-field" style={{ width:100 }}>
+                <label style={{ fontSize:'.55rem' }}>First Lesson Start</label>
+                <input type="time" value={stdStart} onChange={e => setStdStart(e.target.value)} style={{ padding: '6px 8px', fontSize: '.75rem' }} />
+              </div>
+              <div className="tt-exam-field" style={{ width:100 }}>
+                <label style={{ fontSize:'.55rem' }}>Duration (Mins)</label>
+                <input type="number" value={stdDuration} onChange={e => setStdDuration(e.target.value)} style={{ padding: '6px 8px', fontSize: '.75rem' }} />
+              </div>
+              <button 
+                className="tt-btn tt-btn-primary" 
+                onClick={handleStandardizeTimes}
+                style={{ height:34, fontSize:'.7rem' }}
+              >
+                Apply to All Slots
+              </button>
+              <div style={{ fontSize:'.62rem', color: 'var(--text-muted)', flex:1, minWidth:200, lineHeight:1.4 }}>
+                * This will auto-adjust all non-break periods. Breaks will be skipped but their fixed start/end times will remain.
+              </div>
             </div>
           </div>
 
