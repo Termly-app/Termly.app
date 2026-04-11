@@ -61,9 +61,7 @@ export default function Grading({ currentUser, currentPeriodId }) {
         
         let defaultClass = selectedClass;
 
-        // If no class is selected yet, or current selection is invalid, pick a new default
-        if (activeClassList.length > 0 && (!selectedClass || !activeClassList.some(ac => isMatch(ac, selectedClass)))) {
-          // Rule 1: If teacher, pick their first assigned class
+        if (activeClassList.length > 0 && (!selectedClass || (!activeClassList.some(ac => isMatch(ac, selectedClass)) && selectedClass !== 'All'))) {
           if (isTeacher) {
             const assignedGrades = activeClassList.filter(g => 
               a[g] && Object.values(a[g]).some(streams => 
@@ -75,15 +73,12 @@ export default function Grading({ currentUser, currentPeriodId }) {
               defaultClass = assignedGrades[0];
             }
           }
-          
-          // Rule 2: Fallback to first active class if still no default
-          if (!defaultClass || !activeClassList.includes(defaultClass)) {
+          if (!defaultClass || (!activeClassList.includes(defaultClass) && defaultClass !== 'All')) {
             defaultClass = activeClassList[0];
           }
-          
           setSelectedClass(defaultClass);
         } else if (activeClassList.length === 0) {
-          setSelectedClass('');
+          setSelectedClass('All');
         } else {
           await loadResults();
         }
@@ -106,6 +101,14 @@ export default function Grading({ currentUser, currentPeriodId }) {
   }, [selectedClass, streamFilter, selectedPathway, examType, currentUser, currentPeriodId]);
 
   const loadResults = async () => {
+    if (!selectedClass || selectedClass === 'All') {
+      setResults([]);
+      setSubjectRankings([]);
+      setCbcData({});
+      setTeacherPerf([]);
+      setCoreCompData({});
+      return;
+    }
     let r = await getClassResults(selectedClass, examType);
     if (streamFilter !== 'All') r = r.filter(s => s.stream === streamFilter);
     
@@ -355,13 +358,16 @@ export default function Grading({ currentUser, currentPeriodId }) {
           <Select 
             value={selectedClass} 
             onChange={e => { setSelectedClass(e.target.value); setStreamFilter('All'); setActiveTab('marks'); }}
-            options={Object.entries(CBC_STRUCTURE).flatMap(([ln, ld]) => {
-              const isMatch = (g1, g2) => g1?.toLowerCase().trim() === g2?.toLowerCase().trim();
-              const active = ld.grades.filter(g => 
-                (profile.activeClasses || []).some(ac => isMatch(ac, g))
-              );
-              return active.map(g => ({ id: g, label: g }));
-            })}
+            options={[
+              { id: 'All', label: 'All Classes' },
+              ...Object.entries(CBC_STRUCTURE).flatMap(([ln, ld]) => {
+                const isMatch = (g1, g2) => g1?.toLowerCase().trim() === g2?.toLowerCase().trim();
+                const active = ld.grades.filter(g => 
+                  (profile.activeClasses || []).some(ac => isMatch(ac, g))
+                );
+                return active.map(g => ({ id: g, label: g }));
+              })
+            ]}
             style={{ minWidth: 160 }}
           />
         </div>
@@ -373,7 +379,10 @@ export default function Grading({ currentUser, currentPeriodId }) {
             onChange={(e) => setStreamFilter(e.target.value)}
             options={[
               { id: 'All', label: 'All Streams' },
-              ...(profile.streamsPerClass?.[selectedClass] || []).map(stream => ({ id: stream, label: stream }))
+              ...(selectedClass !== 'All' 
+                ? (profile.streamsPerClass?.[selectedClass] || []) 
+                : Object.values(profile.streamsPerClass || {}).flat().filter((v, i, a) => a.indexOf(v) === i)
+              ).map(stream => ({ id: stream, label: stream }))
             ]}
             style={{ minWidth: 140 }}
           />
@@ -384,7 +393,7 @@ export default function Grading({ currentUser, currentPeriodId }) {
           <Select 
             value={examType}
             onChange={(e) => setExamType(e.target.value)}
-            options={(profile.custom_exams || []).map(type => ({
+            options={(profile.custom_exams?.length > 0 ? profile.custom_exams : ['CAT 1','CAT 2','Mid Term','End Term']).map(type => ({
               id: type, label: type
             }))}
             style={{ minWidth: 150 }}
