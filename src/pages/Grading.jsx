@@ -14,7 +14,7 @@ import { getProfessionalRemark } from '../utils/remarkUtils';
 export default function Grading({ currentUser, currentPeriodId }) {
   const { alert, confirm } = useDialog();
   const allGrades = Object.values(CBC_STRUCTURE).flatMap(l => l.grades);
-  const [selectedClass, setSelectedClass] = useState('');
+  const [selectedClass, setSelectedClass] = useState(sessionStorage.getItem('grading_class') || 'All');
   const [streamFilter, setStreamFilter] = useState('All');
   const [results, setResults] = useState([]);
   const [editMode, setEditMode] = useState(false);
@@ -56,32 +56,7 @@ export default function Grading({ currentUser, currentPeriodId }) {
           setExamType(examsList[0]);
         }
 
-        const isMatch = (g1, g2) => g1?.toLowerCase().trim() === g2?.toLowerCase().trim();
-        const activeClassList = Object.values(CBC_STRUCTURE).flatMap(l => l.grades).filter(g => (p.activeClasses || []).some(ac => isMatch(ac, g)));
-        
-        let defaultClass = selectedClass;
-
-        if (activeClassList.length > 0 && (!selectedClass || (!activeClassList.some(ac => isMatch(ac, selectedClass)) && selectedClass !== 'All'))) {
-          if (isTeacher) {
-            const assignedGrades = activeClassList.filter(g => 
-              a[g] && Object.values(a[g]).some(streams => 
-                typeof streams === 'string' ? streams === currentUser?.id :
-                Object.values(streams).some(tid => tid === currentUser?.id)
-              )
-            );
-            if (assignedGrades.length > 0) {
-              defaultClass = assignedGrades[0];
-            }
-          }
-          if (!defaultClass || (!activeClassList.includes(defaultClass) && defaultClass !== 'All')) {
-            defaultClass = activeClassList[0];
-          }
-          setSelectedClass(defaultClass);
-        } else if (activeClassList.length === 0) {
-          setSelectedClass('All');
-        } else {
-          await loadResults();
-        }
+        await loadResults();
       } catch (err) {
         console.error(err);
       } finally {
