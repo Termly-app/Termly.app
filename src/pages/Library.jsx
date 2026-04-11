@@ -524,13 +524,7 @@ export default function Library({ currentUser, currentPeriodId }) {
                      ))}
                    </tbody>
                  </table>
-                 {filteredBorrows.length === 0 && (
-                   <div className="lib-empty-state">
-                     <div className="empty-ico"><PlatformZapIcon size={48} /></div>
-                     <h3>No active loans</h3>
-                     <p>Everything is returned or no records match filters.</p>
-                   </div>
-                 )}
+                )}
             </div>
           )}
         </div>
