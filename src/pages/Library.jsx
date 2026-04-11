@@ -28,6 +28,7 @@ export default function Library({ currentUser, currentPeriodId }) {
   const [bookModal, setBookModal] = useState({ open: false, data: null });
   const [borrowModal, setBorrowModal] = useState({ open: false, data: null });
   const [printModal, setPrintModal] = useState({ open: false });
+  const [modalGrade, setModalGrade] = useState('');
 
   // Filters for search
   const [filters, setFilters] = useState({
@@ -85,9 +86,10 @@ export default function Library({ currentUser, currentPeriodId }) {
         b.author?.toLowerCase().includes(searchTerm.toLowerCase());
       
       const matchesSubject = !filters.subject || b.subject === filters.subject;
+      const matchesGrade = !filters.grade || b.grade === filters.grade;
       const matchesYear = !filters.year || String(b.year_registered) === filters.year;
       
-      return matchesSearch && matchesSubject && matchesYear;
+      return matchesSearch && matchesSubject && matchesGrade && matchesYear;
     });
   }, [books, searchTerm, filters]);
 
@@ -260,7 +262,7 @@ export default function Library({ currentUser, currentPeriodId }) {
             <button className="btn btn-ghost btn-sm" onClick={() => setBorrowModal({ open: true, data: null })}>
               <PlatformZapIcon size={14} /> Loan Book
             </button>
-            <button className="btn btn-primary btn-sm" onClick={() => setBookModal({ open: true, data: null })}>
+            <button className="btn btn-primary btn-sm" onClick={() => { setModalGrade(''); setBookModal({ open: true, data: null }); }}>
               <PlusIcon size={14} /> New Entry
             </button>
           </div>
@@ -308,6 +310,22 @@ export default function Library({ currentUser, currentPeriodId }) {
               options={[
                 { id: '', label: 'All Subjects' },
                 ...availableSubjects.map(s => ({ id: s, label: s }))
+              ]}
+              variant="minimal"
+            />
+
+            <Select 
+              value={filters.grade} 
+              onChange={e => setFilters({...filters, grade: e.target.value, stream: ''})}
+              options={[
+                { id: '', label: 'All Classes' },
+                ...Object.entries(CBC_STRUCTURE).flatMap(([ln, ld]) => {
+                  const isMatch = (g1, g2) => g1?.toLowerCase().trim() === g2?.toLowerCase().trim();
+                  const active = ld.grades.filter(g => 
+                    (profile.activeClasses || []).some(ac => isMatch(ac, g))
+                  );
+                  return active.map(g => ({ id: g, label: g }));
+                })
               ]}
               variant="minimal"
             />
@@ -380,10 +398,12 @@ export default function Library({ currentUser, currentPeriodId }) {
                     <h4 style={{ fontSize: "1.1rem", fontWeight: 800, margin: "0 0 4px 0" }}>{book.title}</h4>
                     <div className="text-muted" style={{ marginBottom: 16, fontSize: "0.85rem" }}>by {book.author || 'Unknown'}</div>
                     
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: '0.8rem', color: '#64748b', marginBottom: 20 }}>
-                      <span className="badge" style={{ background: '#f1f5f9', color: '#64748b' }}>{book.subject || 'General'}</span>
-                      <span>•</span>
-                      <span>Code: {book.book_code || 'N/A'}</span>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap', marginBottom: 20 }}>
+                      {book.grade && <span className="badge badge-primary" style={{ fontSize: '0.7rem' }}>{book.grade}</span>}
+                      <span className="badge" style={{ background: '#f1f5f9', color: '#64748b', fontSize: '0.7rem' }}>{book.subject || 'General'}</span>
+                    </div>
+                    <div style={{ fontSize: '0.8rem', color: 'var(--text-light)', marginBottom: 16 }}>
+                      Code: <code className="font-mono">{book.book_code || 'N/A'}</code>
                     </div>
 
                     <div style={{ display: "flex", gap: 16, marginTop: 16, paddingTop: 16, borderTop: "1px solid var(--border)" }}>
@@ -409,7 +429,7 @@ export default function Library({ currentUser, currentPeriodId }) {
                         Issue Book
                       </button>
                       <button 
-                        onClick={() => setBookModal({ open: true, data: book })}
+                        onClick={() => { setModalGrade(book.grade || ''); setBookModal({ open: true, data: book }); }}
                         className="btn btn-ghost" 
                         style={{ padding: '10px', borderRadius: 12, border: '1px solid #e2e8f0', background: '#fff', cursor: 'pointer' }}
                       >
@@ -513,11 +533,47 @@ export default function Library({ currentUser, currentPeriodId }) {
                </div>
                <div className="form-row">
                  <div className="form-group">
-                   <label>Subject</label>
-                   <input className="form-input" name="subject" defaultValue={bookModal.data?.subject} placeholder="e.g. Science" />
+                   <label>Class / Grade</label>
+                   <Select
+                     name="grade"
+                     value={modalGrade}
+                     onChange={e => setModalGrade(e.target.value)}
+                     options={[
+                       { id: '', label: '-- Select Class --' },
+                       ...Object.entries(CBC_STRUCTURE).flatMap(([ln, ld]) => {
+                         const isMatch = (g1, g2) => g1?.toLowerCase().trim() === g2?.toLowerCase().trim();
+                         const active = ld.grades.filter(g => 
+                           (profile.activeClasses || []).some(ac => isMatch(ac, g))
+                         );
+                         return active.map(g => ({ id: g, label: g }));
+                       })
+                     ]}
+                     style={{ width: '100%' }}
+                     required
+                   />
                  </div>
                  <div className="form-group">
-                   <label>ISBN / Catalog Code</label>
+                   <label>Subject</label>
+                   <Select
+                     name="subject"
+                     defaultValue={bookModal.data?.subject}
+                     options={[
+                       { id: '', label: '-- Select Subject --' },
+                       ...getSubjectsForGrade(modalGrade, profile).map(s => ({ id: s, label: s }))
+                     ]}
+                     style={{ width: '100%' }}
+                     disabled={!modalGrade}
+                     required
+                   />
+                 </div>
+               </div>
+               <div className="form-row">
+                 <div className="form-group">
+                   <label>ISBN</label>
+                   <input className="form-input" name="isbn" defaultValue={bookModal.data?.isbn} placeholder="e.g. 978-3-16..." />
+                 </div>
+                 <div className="form-group">
+                   <label>Catalog Code</label>
                    <input className="form-input" name="book_code" defaultValue={bookModal.data?.book_code} required placeholder="e.g. BK-4412" />
                  </div>
                </div>
