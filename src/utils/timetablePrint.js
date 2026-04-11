@@ -140,7 +140,7 @@ export function printTeacherTimetable({ school, teacher, period, config, slots, 
     <div class="school-header">
       <div class="school-name">${school?.name || 'School'}</div>
       <div class="doc-title">Teacher Timetable</div>
-      <div class="doc-sub">${teacher?.name || 'Teacher'} &nbsp;·&nbsp; ${period?.year || ''} Term ${period?.term || ''}</div>
+      <div class="doc-sub">${teacher?.name || 'Teacher'} ${teacher?.staff_code ? `(${teacher.staff_code})` : ''} &nbsp;·&nbsp; ${period?.year || ''} Term ${period?.term || ''}</div>
     </div>
     <table>
       <thead><tr><th class="time-th">Time</th>${dayHeaders}</tr></thead>
@@ -148,6 +148,111 @@ export function printTeacherTimetable({ school, teacher, period, config, slots, 
     </table>
     <div class="footer">School Management System &nbsp;·&nbsp; ${new Date().toLocaleDateString('en-KE')}</div>
   </div>`;
+
+  openPrint(html);
+}
+
+/**
+ * Print all teachers (one per page)
+ */
+export function printAllTeachersTimetables({ school, teachers, period, config, allSlots, activeDays }) {
+  const sorted = [...teachers].sort((a, b) => (a.staff_code || '').localeCompare(b.staff_code || ''));
+  const days = activeDays || DAYS.slice(0, 5);
+  const dayHeaders = days.map(d => `<th>${d}</th>`).join('');
+
+  let fullHtml = '';
+
+  sorted.forEach((teacher, idx) => {
+    const teacherSlots = allSlots.filter(s => s.teacher_id === teacher.id);
+    const lookup = {};
+    teacherSlots.forEach(s => { lookup[`${s.day_of_week}__${s.slot_index}`] = s; });
+
+    const rows = config.map(cfg => {
+      if (cfg.is_break) {
+        return `<tr>
+          <td class="time-cell">${cfg.start_time}<br/><span style="font-weight:normal;font-size:7pt">${cfg.label}</span></td>
+          ${days.map(() => `<td class="break-cell">${cfg.label}</td>`).join('')}
+        </tr>`;
+      }
+      const cells = days.map(day => {
+        const s = lookup[`${day}__${cfg.slot_index}`];
+        if (!s || !s.subject) return '<td></td>';
+        return `<td>
+          <div class="cell-subject">${s.subject}</div>
+          <div class="cell-class">${s.class_grade}${s.stream ? ` ${s.stream}` : ''}</div>
+          ${s.room ? `<div class="cell-room">${s.room}</div>` : ''}
+        </td>`;
+      }).join('');
+
+      return `<tr>
+        <td class="time-cell">${cfg.start_time}–${cfg.end_time}</td>
+        ${cells}
+      </tr>`;
+    }).join('');
+
+    fullHtml += `
+      <div class="wrap" style="${idx > 0 ? 'page-break-before: always;' : ''}">
+        <div class="school-header">
+          <div class="school-name">${school?.name || 'School'}</div>
+          <div class="doc-title">Staff Timetable</div>
+          <div class="doc-sub"><strong>${teacher.name}</strong> &nbsp;·&nbsp; Code: ${teacher.staff_code || '—'} &nbsp;·&nbsp; ${period?.year || ''} Term ${period?.term || ''}</div>
+        </div>
+        <table>
+          <thead><tr><th class="time-th">Time</th>${dayHeaders}</tr></thead>
+          <tbody>${rows}</tbody>
+        </table>
+        <div class="footer">School Management System &nbsp;·&nbsp; Teacher ${idx + 1} of ${sorted.length}</div>
+      </div>
+    `;
+  });
+
+  openPrint(fullHtml);
+}
+
+/**
+ * Print Exam Schedule (List View)
+ */
+export function printExamSchedule({ school, title, period, exams }) {
+  const sortedExams = [...exams].sort((a,b) => {
+    const d = (a.date || '').localeCompare(b.date || '');
+    if (d !== 0) return d;
+    return (a.start_time || '').localeCompare(b.start_time || '');
+  });
+
+  const rows = sortedExams.map(ex => `
+    <tr>
+      <td style="white-space:nowrap">${ex.date ? new Date(ex.date).toLocaleDateString('en-KE', { weekday:'short', day:'numeric', month:'short' }) : ex.day_of_week}</td>
+      <td style="text-align:center; white-space:nowrap; font-weight:bold">${ex.start_time} – ${ex.end_time}</td>
+      <td><strong>${ex.subject}</strong></td>
+      <td>${ex.class_grade}${ex.stream ? ` ${ex.stream}` : ''}</td>
+      <td>${ex.room || '—'}</td>
+    </tr>
+  `).join('');
+
+  const html = `
+    <div class="wrap">
+      <div class="school-header">
+        <div class="school-name">${school?.name || 'School'}</div>
+        <div class="doc-title">${title || 'Exam Timetable'}</div>
+        <div class="doc-sub">${period?.year || ''} Term ${period?.term || ''}</div>
+      </div>
+      <table style="margin-top:20px">
+        <thead>
+          <tr>
+            <th style="text-align:left">Date</th>
+            <th>Time</th>
+            <th style="text-align:left">Subject / Paper</th>
+            <th style="text-align:left">Class</th>
+            <th style="text-align:left">Venue</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${rows}
+        </tbody>
+      </table>
+      <div class="footer">School Management System &nbsp;·&nbsp; Generated on ${new Date().toLocaleDateString('en-KE')}</div>
+    </div>
+  `;
 
   openPrint(html);
 }

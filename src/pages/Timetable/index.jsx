@@ -16,16 +16,19 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import './Timetable.css';
-import { printClassTimetable, printTeacherTimetable } from '../../utils/timetablePrint';
+import { 
+  printClassTimetable, 
+  printTeacherTimetable, 
+  printAllTeachersTimetables, 
+  printExamSchedule 
+} from '../../utils/timetablePrint';
 import Select from '../../components/Common/Select';
 import { Helmet } from 'react-helmet-async';
 import {
-  getTimetableConfig, saveTimetableConfig,
-  getTimetableSlots, saveTimetableSlot, clearTimetableSlot,
-  getTeacherTimetable, clearAndSaveTimetable,
   getRequirements, getAllRequirements, saveRequirement, deleteRequirement,
   getClassSubjectAssignments, getTeachers, checkTeacherConflict, checkRoomConflict, getSchoolProfile,
   isFeatureEnabled, getTimetableRooms, saveTimetableRoom, deleteTimetableRoom,
+  getAllTimetableSlots, checkExamConflict
 } from '../../data/store';
 import { 
   CalendarIcon, PrintIcon, BookIcon, SettingsIcon, CheckIcon, CrossIcon, 
@@ -342,13 +345,24 @@ export default function Timetable({ currentUser, currentPeriodId, periods = [] }
   const [showUpgrade,    setShowUpgrade]   = useState(false);
 
   // ── Cell edit modal ───────────────────────────────────────────────────
-  const [editCell,        setEditCell]        = useState(null);
-  const [editSubject,     setEditSubject]      = useState('');
-  const [editTeacher,     setEditTeacher]      = useState('');
-  const [editRoom,        setEditRoom]         = useState('');
-  const [editColor,       setEditColor]        = useState(COLORS[0]);
   const [conflictWarning, setConflictWarning]  = useState(null);
   const [cellSaving,      setCellSaving]       = useState(false);
+
+  // ── Manual Exam Scheduler ─────────────────────────────────────────────
+  const [examPanel, setExamPanel] = useState('list'); // 'list' | 'add'
+  const [allExamSlots, setAllExamSlots] = useState([]);
+  const [newExam, setNewExam] = useState({
+    date: new Date().toISOString().split('T')[0],
+    start_time: '08:00',
+    end_time: '10:30',
+    subject: '',
+    class_grade: '',
+    stream: '',
+    room: '',
+    teacher_id: '',
+    color: COLORS[0]
+  });
+  const [examSaving, setExamSaving] = useState(false);
 
   // ── UI ────────────────────────────────────────────────────────────────
   const [loading,  setLoading]  = useState(true);
@@ -395,6 +409,17 @@ export default function Timetable({ currentUser, currentPeriodId, periods = [] }
       } catch (e) { console.error(e); }
     })();
   }, [schoolId, periodId, mode]);
+
+  // ── Load ALL slots for Exam mode (Manual) ────────────────────────────
+  useEffect(() => {
+    if (!schoolId || !periodId || mode === 'weekly' || panel !== 'grid') return;
+    (async () => {
+      try {
+        const data = await getAllTimetableSlots(schoolId, periodId);
+        setAllExamSlots(data.filter(s => s.type === mode));
+      } catch (e) { console.error(e); }
+    })();
+  }, [schoolId, periodId, mode, panel]);
 
   // ── Load slots for selected class ─────────────────────────────────────
   useEffect(() => {
@@ -569,6 +594,73 @@ export default function Timetable({ currentUser, currentPeriodId, periods = [] }
       setPanel('grid');
     } catch (e) { setMessage({ type:'err', text: e.message }); }
     finally { setConfigSaving(false); }
+  };
+
+  // ── Manual Exam Scheduler Logic ──────────────────────────────────────
+  useEffect(() => {
+    if (mode === 'weekly' || !newExam.subject) return;
+    const checkConflicts = async () => {
+      try {
+        const clash = await checkExamConflict({
+          schoolId, periodId,
+          date: newExam.date,
+          startTime: newExam.start_time,
+          endTime: newExam.end_time,
+          teacherId: newExam.teacher_id,
+          room: newExam.room,
+          currentClass: selClass,
+          currentStream: selStream
+        });
+        setConflictWarning(clash);
+      } catch (e) { console.error(e); }
+    };
+    const t = setTimeout(checkConflicts, 400);
+    return () => clearTimeout(t);
+  }, [newExam.date, newExam.start_time, newExam.end_time, newExam.teacher_id, newExam.room, mode, schoolId, periodId, selClass, selStream]);
+
+  const handleSaveExam = async () => {
+    if (!newExam.date || !newExam.start_time || !newExam.end_time || !newExam.subject) {
+      setMessage({ type:'err', text:'Please fill in all required fields (*).' });
+      return;
+    }
+    setExamSaving(true);
+    try {
+      // Use timestamp as a unique slot_index for manual list items
+      const slotIdx = Math.floor(Date.now() / 1000) % 2147483647; 
+      
+      await saveTimetableSlot(schoolId, periodId, {
+        class_grade : selClass,
+        stream      : selStream || null,
+        day_of_week : new Date(newExam.date).toLocaleDateString('en-US', { weekday: 'long' }),
+        slot_index  : slotIdx,
+        subject     : newExam.subject,
+        teacher_id  : newExam.teacher_id || null,
+        room        : newExam.room || null,
+        color       : newExam.color,
+        date        : newExam.date,
+        start_time  : newExam.start_time,
+        end_time    : newExam.end_time,
+        type        : mode
+      });
+
+      // Reload
+      const data = await getAllTimetableSlots(schoolId, periodId);
+      setAllExamSlots(data.filter(s => s.type === mode));
+      setMessage({ type:'ok', text:'Exam session registered successfully.' });
+      setExamPanel('list');
+      setNewExam({ ...newExam, subject: '' }); // keep date/times for next entry
+    } catch (e) { setMessage({ type:'err', text: e.message }); }
+    finally { setExamSaving(false); }
+  };
+
+  const handleDeleteExam = async (exam) => {
+    if (!window.confirm('Remove this exam session?')) return;
+    try {
+      await clearTimetableSlot(schoolId, periodId, exam.class_grade, exam.stream, exam.day_of_week, exam.slot_index, mode);
+      const data = await getAllTimetableSlots(schoolId, periodId);
+      setAllExamSlots(data.filter(s => s.type === mode));
+      setMessage({ type:'ok', text:'Exam session removed.' });
+    } catch (e) { setMessage({ type:'err', text: e.message }); }
   };
 
   const addDraftSlot = () => setDraftConfig(p => [...p, {
@@ -760,20 +852,38 @@ export default function Timetable({ currentUser, currentPeriodId, periods = [] }
         </div>
 
         <div className="tt-header-actions">
-          {panel === 'grid' && view === 'class' && !preview && (
+          {panel === 'grid' && view === 'class' && mode === 'weekly' && !preview && (
             <button className="tt-btn" onClick={() => printClassTimetable({
               school: { name: currentUser?.schoolName }, classGrade: selClass,
-              stream: selStream, period: activePeriod, config, slots, activeDays,
-              isExam: mode === 'exam'
-            })}><PrintIcon size={14} /> Print</button>
+              stream: selStream, period: activePeriod, config, slots, activeDays
+            })}><PrintIcon size={14} /> Print Class</button>
           )}
-          {panel === 'grid' && view === 'teacher' && selTeacher && (
-            <button className="tt-btn" onClick={() => printTeacherTimetable({
+          {panel === 'grid' && mode !== 'weekly' && (
+            <button className="tt-btn tt-btn-primary" onClick={() => printExamSchedule({
               school: { name: currentUser?.schoolName },
-              teacher: teachers.find(t => t.id === selTeacher),
-              period: activePeriod, config, slots: teacherSlots, activeDays,
-              isExam: mode === 'exam'
-            })}><PrintIcon size={14} /> Print</button>
+              title: mode,
+              period: activePeriod,
+              exams: allExamSlots
+            })}><PrintIcon size={14} /> Print Exam Schedule</button>
+          )}
+          {panel === 'grid' && view === 'teacher' && (
+            <div style={{ display:'flex', gap:8 }}>
+              {selTeacher && (
+                <button className="tt-btn" onClick={() => printTeacherTimetable({
+                  school: { name: currentUser?.schoolName },
+                  teacher: teachers.find(t => t.id === selTeacher),
+                  period: activePeriod, config, slots: teacherSlots, activeDays
+                })}><PrintIcon size={14} /> Print Personal</button>
+              )}
+              <button className="tt-btn tt-btn-ghost" onClick={() => printAllTeachersTimetables({
+                school: { name: currentUser?.schoolName },
+                teachers,
+                period: activePeriod,
+                config,
+                allSlots: allExamSlots.length > 0 ? allExamSlots : slots, // Simple fallback
+                activeDays
+              })}><PrintIcon size={14} /> Print All Teachers</button>
+            </div>
           )}
           {/* Period selector always visible */}
           <Select 
@@ -923,12 +1033,152 @@ export default function Timetable({ currentUser, currentPeriodId, periods = [] }
               <div className="tt-spin" />
               <div style={{ fontSize:'.78rem', color:'#5A6B5C' }}>Loading timetable...</div>
             </div>
-          ) : config.filter(c => !c.is_break).length === 0 ? (
-            <div className="tt-empty">
-              <div className="tt-empty-ico"><SettingsIcon size={48} /></div>
-              <div className="tt-empty-title">No time slots configured</div>
-              <div className="tt-empty-sub">Set up your school day structure in the Slot Config panel first.</div>
-              {isAdmin && <button className="tt-btn tt-btn-primary" onClick={() => setPanel('config')}><SettingsIcon size={14} /> Configure Slots</button>}
+          ) : mode !== 'weekly' ? (
+            <div className="tt-exam-scheduler">
+              <div className="tt-exam-switch">
+                <button 
+                  className={`tt-exam-switch-btn ${examPanel === 'list' ? 'active' : ''}`}
+                  onClick={() => setExamPanel('list')}
+                >
+                  <CalendarIcon size={14} /> Schedule List
+                </button>
+                <button 
+                  className={`tt-exam-switch-btn ${examPanel === 'add' ? 'active' : ''}`}
+                  onClick={() => setExamPanel('add')}
+                >
+                  <PlusIcon size={14} /> Register Exam Session
+                </button>
+              </div>
+
+              {examPanel === 'add' ? (
+                <div className="tt-exam-form-wrap">
+                  <div className="tt-exam-form">
+                    <div className="tt-exam-form-grid">
+                      <div className="tt-exam-field">
+                        <label>Date *</label>
+                        <input 
+                          type="date" 
+                          value={newExam.date} 
+                          onChange={e => setNewExam({ ...newExam, date: e.target.value })} 
+                        />
+                      </div>
+                      <div className="tt-exam-field">
+                        <label>Start Time *</label>
+                        <input 
+                          type="time" 
+                          value={newExam.start_time} 
+                          onChange={e => setNewExam({ ...newExam, start_time: e.target.value })} 
+                        />
+                      </div>
+                      <div className="tt-exam-field">
+                        <label>End Time *</label>
+                        <input 
+                          type="time" 
+                          value={newExam.end_time} 
+                          onChange={e => setNewExam({ ...newExam, end_time: e.target.value })} 
+                        />
+                      </div>
+                      <div className="tt-exam-field">
+                        <label>Subject *</label>
+                        <input 
+                          type="text" 
+                          placeholder="e.g. Mathematics Paper 1"
+                          value={newExam.subject} 
+                          onChange={e => setNewExam({ ...newExam, subject: e.target.value })} 
+                        />
+                      </div>
+                      <div className="tt-exam-field">
+                        <label>Class/Grade</label>
+                        <Select 
+                          value={newExam.class_grade || selClass}
+                          onChange={e => setNewExam({ ...newExam, class_grade: e.target.value })}
+                          options={classes.map(c => ({ id: c, label: c }))}
+                          variant="minimal"
+                        />
+                      </div>
+                      <div className="tt-exam-field">
+                        <label>Teacher (Supervisor)</label>
+                        <Select 
+                          value={newExam.teacher_id}
+                          onChange={e => setNewExam({ ...newExam, teacher_id: e.target.value })}
+                          options={teachers.map(t => ({ id: t.id, label: t.name }))}
+                          placeholder="Select Teacher"
+                          variant="minimal"
+                        />
+                      </div>
+                      <div className="tt-exam-field">
+                        <label>Room / Venue</label>
+                        <Select 
+                          value={newExam.room}
+                          onChange={e => setNewExam({ ...newExam, room: e.target.value })}
+                          options={rooms.map(r => ({ id: r.name, label: r.name }))}
+                          placeholder="Select Room"
+                          variant="minimal"
+                        />
+                      </div>
+                    </div>
+
+                    {conflictWarning && (
+                      <div className="tt-exam-conflict">
+                        <AlertIcon size={16} />
+                        <div>
+                          <strong>Soft Conflict Detected:</strong> {conflictWarning.teacher_id ? 'Teacher' : 'Room'} is already booked for {conflictWarning.subject} at this time.
+                        </div>
+                      </div>
+                    )}
+
+                    <div className="tt-exam-actions">
+                      <button className="tt-btn" onClick={() => setExamPanel('list')}>Cancel</button>
+                      <button 
+                        className="tt-btn tt-btn-primary" 
+                        disabled={examSaving}
+                        onClick={handleSaveExam}
+                      >
+                        {examSaving ? 'Saving...' : 'Save Session'}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div className="tt-exam-list-wrap">
+                  {allExamSlots.length === 0 ? (
+                    <div className="tt-empty-mini">
+                      No exam sessions registered for this mode yet.
+                    </div>
+                  ) : (
+                    <table className="tt-exam-table">
+                      <thead>
+                        <tr>
+                          <th>Date</th>
+                          <th>Time</th>
+                          <th>Subject</th>
+                          <th>Class</th>
+                          <th>Room</th>
+                          <th>Teacher</th>
+                          <th>Action</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {[...allExamSlots].sort((a,b) => (a.date||'').localeCompare(b.date||'')).map((ex, i) => (
+                          <tr key={i}>
+                            <td>{ex.date ? new Date(ex.date).toLocaleDateString('en-KE', { weekday:'short', day:'numeric', month:'short' }) : '—'}</td>
+                            <td><strong>{ex.start_time} - {ex.end_time}</strong></td>
+                            <td>{ex.subject}</td>
+                            <td><span className="tt-level tt-level-cbc-primary" style={{ padding:'2px 6px', fontSize:'.7rem' }}>{ex.class_grade}</span></td>
+                            <td>{ex.room || '—'}</td>
+                            <td>{teachers.find(t => t.id === ex.teacher_id)?.name || '—'}</td>
+                            <td>
+                              <button className="tt-btn-icon tt-btn-danger" onClick={() => handleDeleteExam(ex)}>
+                                <CrossIcon size={14} />
+                              </button>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  )}
+                </div>
+              )}
             </div>
           ) : (
             <div className="tt-grid-wrap">

@@ -2840,7 +2840,10 @@ export async function saveTimetableSlot(schoolId, periodId, slot) {
       color: slot.color || null,
       is_double_first: slot.is_double_first || false,
       is_double_second: slot.is_double_second || false,
-      type: slot.type || 'class' // Default to class schedule
+      date: slot.date || null,
+      start_time: slot.start_time || null,
+      end_time: slot.end_time || null,
+      type: slot.type || 'class'
     }, { onConflict: 'school_id,period_id,class_grade,stream,day_of_week,slot_index,type' });
   if (error) throw error;
   return true;
@@ -2942,6 +2945,9 @@ export async function clearAndSaveTimetable(schoolId, periodId, slots, classGrad
     color: s.color || null,
     is_double_first: s.is_double_first || false,
     is_double_second: s.is_double_second || false,
+    date: s.date || null,
+    start_time: s.start_time || null,
+    end_time: s.end_time || null,
     type: type
   }));
 
@@ -3057,6 +3063,44 @@ export async function checkRoomConflict(schoolId, periodId, room, day, slotIndex
   // Exclude current class/stream
   const filtered = data.filter(d => d.class_grade !== currentClass || d.stream !== (currentStream || null));
   return filtered.length > 0 ? filtered[0] : null;
+}
+
+export async function checkExamConflict({ schoolId, periodId, date, startTime, endTime, teacherId, room, currentClass, currentStream }) {
+  const { data, error } = await supabase
+    .from('timetable_slots')
+    .select('class_grade, stream, subject, start_time, end_time, teacher_id, room')
+    .eq('school_id', schoolId)
+    .eq('period_id', periodId)
+    .eq('date', date)
+    .eq('type', 'exam');
+  
+  if (error) throw error;
+  if (!data || data.length === 0) return null;
+
+  // Filter overlapping times
+  const overlapping = data.filter(ex => {
+    // Check if timings overlap
+    const s1 = startTime;
+    const e1 = endTime;
+    const s2 = ex.start_time;
+    const e2 = ex.end_time;
+    
+    // overlap: (s1 < e2) && (e1 > s2)
+    const overlaps = s1 < e2 && e1 > s2;
+    if (!overlaps) return false;
+
+    // Is it a teacher conflict?
+    if (teacherId && ex.teacher_id === teacherId) return true;
+    
+    // Is it a room conflict?
+    if (room && ex.room === room) return true;
+
+    return false;
+  });
+
+  // Exclude current class/stream
+  const conflict = overlapping.find(ex => ex.class_grade !== currentClass || ex.stream !== (currentStream || null));
+  return conflict || null;
 }
 
 export async function getClassSubjectAssignments(schoolId, periodId, classGrade, stream = null) {
