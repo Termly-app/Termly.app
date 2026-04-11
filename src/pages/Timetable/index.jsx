@@ -24,8 +24,8 @@ import {
   getTimetableSlots, saveTimetableSlot, clearTimetableSlot,
   getTeacherTimetable, clearAndSaveTimetable,
   getRequirements, getAllRequirements, saveRequirement, deleteRequirement,
-  getClassSubjectAssignments, getTeachers, checkTeacherConflict, getSchoolProfile,
-  isFeatureEnabled,
+  getClassSubjectAssignments, getTeachers, checkTeacherConflict, checkRoomConflict, getSchoolProfile,
+  isFeatureEnabled, getTimetableRooms, saveTimetableRoom, deleteTimetableRoom,
 } from '../../data/store';
 import { 
   CalendarIcon, PrintIcon, BookIcon, SettingsIcon, CheckIcon, CrossIcon, 
@@ -318,6 +318,9 @@ export default function Timetable({ currentUser, currentPeriodId, periods = [] }
 
   // ── Grid slots ────────────────────────────────────────────────────────
   const [slots,        setSlots]        = useState([]);
+  const [rooms,        setRooms]        = useState([]);
+  const [roomPanel,    setRoomPanel]    = useState('list'); // 'list' | 'add'
+  const [newRoom,      setNewRoom]      = useState({ name: '', building: '' });
 
   // ── Requirements ─────────────────────────────────────────────────────
   const [reqs,         setReqs]         = useState([]);   // for selected class
@@ -327,6 +330,7 @@ export default function Timetable({ currentUser, currentPeriodId, periods = [] }
   const [reqPerWeek,   setReqPerWeek]   = useState(1);
   const [reqDouble,    setReqDouble]    = useState(false);
   const [reqColor,     setReqColor]     = useState(COLORS[0]);
+  const [reqRoom,      setReqRoom]      = useState('');
   const [addingReq,    setAddingReq]    = useState(false);
   const [reqSaving,    setReqSaving]    = useState(false);
 
@@ -429,6 +433,35 @@ export default function Timetable({ currentUser, currentPeriodId, periods = [] }
     })();
   }, [schoolId, periodId, selClass, selStream, panel, mode]);
 
+  // ── Load rooms ────────────────────────────────────────────────────────
+  useEffect(() => {
+    if (!schoolId) return;
+    (async () => {
+      try { setRooms(await getTimetableRooms(schoolId)); }
+      catch (e) { console.error(e); }
+    })();
+  }, [schoolId]);
+
+  const handleSaveRoom = async () => {
+    if (!newRoom.name.trim()) return;
+    try {
+      await saveTimetableRoom(schoolId, newRoom);
+      setRooms(await getTimetableRooms(schoolId));
+      setNewRoom({ name: '', building: '' });
+      setRoomPanel('list');
+      setMessage({ type: 'ok', text: 'Room saved successfully.' });
+    } catch (e) { setMessage({ type: 'err', text: e.message }); }
+  };
+
+  const handleDeleteRoom = async (id) => {
+    if (!window.confirm("Delete this room? It will be removed from future allocations.")) return;
+    try {
+      await deleteTimetableRoom(id);
+      setRooms(await getTimetableRooms(schoolId));
+      setMessage({ type: 'ok', text: 'Room deleted.' });
+    } catch (e) { setMessage({ type: 'err', text: e.message }); }
+  };
+
   // ── Slot lookup helper ────────────────────────────────────────────────
   const slotLookup = useCallback((day, slotIndex, src) => {
     return (src || slots).find(s => s.day_of_week === day && s.slot_index === slotIndex) || null;
@@ -447,6 +480,33 @@ export default function Timetable({ currentUser, currentPeriodId, periods = [] }
     setEditColor(existing?.color || COLORS[0]);
     setConflictWarning(null);
   };
+
+  // ── Real-time conflict checking ───────────────────────────────────────
+  useEffect(() => {
+    if (!editCell) return;
+    const checkConflicts = async () => {
+      try {
+        // 1. Teacher Conflict
+        if (editTeacher) {
+          const tClash = await checkTeacherConflict(schoolId, periodId, editTeacher, editCell.day, editCell.slotIndex, selClass, selStream, mode);
+          if (tClash) {
+            setConflictWarning({ type: 'teacher', ...tClash });
+            return;
+          }
+        }
+        // 2. Room Conflict
+        if (editRoom) {
+          const rClash = await checkRoomConflict(schoolId, periodId, editRoom, editCell.day, editCell.slotIndex, selClass, selStream, mode);
+          if (rClash) {
+            setConflictWarning({ type: 'room', ...rClash });
+            return;
+          }
+        }
+        setConflictWarning(null);
+      } catch (e) { console.error("Conflict check failed", e); }
+    };
+    checkConflicts();
+  }, [editTeacher, editRoom, editCell, schoolId, periodId, selClass, selStream, mode]);
 
   // ── Save cell ─────────────────────────────────────────────────────────
   const handleSaveCell = async () => {
@@ -529,12 +589,13 @@ export default function Timetable({ currentUser, currentPeriodId, periods = [] }
         teacher_id       : reqTeacher || null,
         periods_per_week : Number(reqPerWeek) || 1,
         allow_double     : reqDouble,
+        room             : reqRoom || null,
         color            : reqColor,
         type             : mode,
       });
       const updated = await getRequirements(schoolId, periodId, selClass, selStream || undefined, mode);
       setReqs(updated);
-      setReqSubject(''); setReqTeacher(''); setReqPerWeek(1); setReqDouble(false);
+      setReqSubject(''); setReqTeacher(''); setReqRoom(''); setReqPerWeek(1); setReqDouble(false);
       setReqColor(COLORS[updated.length % COLORS.length]);
       setAddingReq(false);
       setMessage({ type:'ok', text:'Requirement saved.' });
@@ -755,14 +816,18 @@ export default function Timetable({ currentUser, currentPeriodId, periods = [] }
                   <label style={{ fontSize: '.75rem', fontWeight: 600, color: '#5A6B5C' }}>
                     Max {mode.includes('CAT') ? 'CATs' : 'Exams'} per day:
                   </label>
-                  <input 
-                    type="number" 
-                    min={1} 
-                    max={5} 
-                    className="tt-select" 
-                    style={{ width: 60 }}
+                  <Select 
                     value={maxExamsPerDay}
                     onChange={e => setMaxExamsPerDay(Number(e.target.value))}
+                    options={[
+                      { id: 1, label: '1' },
+                      { id: 2, label: '2' },
+                      { id: 3, label: '3' },
+                      { id: 4, label: '4' },
+                      { id: 5, label: '5' },
+                    ]}
+                    style={{ width: 70 }}
+                    variant="minimal"
                   />
                 </div>
               )}
@@ -1122,6 +1187,18 @@ export default function Timetable({ currentUser, currentPeriodId, periods = [] }
                     value={reqPerWeek} onChange={e => setReqPerWeek(Number(e.target.value))} />
                 </div>
                 <div>
+                  <label className="tt-req-label">Preferred Room</label>
+                  <Select 
+                    value={reqRoom} 
+                    onChange={e => setReqRoom(e.target.value)}
+                    options={[
+                      { id: '', label: '— No Preferred Room —' },
+                      ...rooms.map(r => ({ id: r.name, label: r.name }))
+                    ]}
+                    style={{ flex: 1 }}
+                  />
+                </div>
+                <div>
                   <label className="tt-req-label">Colour</label>
                   <div className="tt-color-row" style={{ marginTop:4 }}>
                     {COLORS.slice(0, 8).map(c => (
@@ -1153,14 +1230,36 @@ export default function Timetable({ currentUser, currentPeriodId, periods = [] }
       {panel === 'config' && (
         <div className="tt-config">
           <div className="tt-config-hd">
-            <div>
-              <div className="tt-config-title">{mode === 'weekly' ? 'Weekly' : mode} Slot Configuration</div>
-              <div className="tt-config-sub">Set the periods, breaks, and times for your {mode === 'weekly' ? 'regular school day' : mode + ' schedule'}.</div>
+            <div style={{ display: 'flex', gap: 24, alignItems: 'flex-end' }}>
+              <div
+                className={`tt-config-nav-item ${roomPanel === 'list' || roomPanel === 'add' ? '' : 'active'}`}
+                onClick={() => setRoomPanel('config')}
+                style={{ cursor: 'pointer', paddingBottom: 8, borderBottom: roomPanel==='config' ? '2px solid var(--accent)' : 'none', fontWeight: roomPanel==='config' ? 700 : 500 }}
+              >
+                Schedule Periods
+              </div>
+              <div
+                className={`tt-config-nav-item ${roomPanel !== 'config' ? 'active' : ''}`}
+                onClick={() => setRoomPanel('list')}
+                style={{ cursor: 'pointer', paddingBottom: 8, borderBottom: roomPanel!=='config' ? '2px solid var(--accent)' : 'none', fontWeight: roomPanel!=='config' ? 700 : 500 }}
+              >
+                Rooms / Locations
+              </div>
             </div>
-            <button className="tt-btn tt-btn-primary" disabled={configSaving} onClick={handleSaveConfig}>
-              {configSaving ? 'Saving...' : <><SaveIcon size={14} /> Save Configuration</>}
-            </button>
+            {roomPanel === 'config' && (
+              <button className="tt-btn tt-btn-primary" disabled={configSaving} onClick={handleSaveConfig}>
+                {configSaving ? 'Saving...' : <><SaveIcon size={14} /> Save Configuration</>}
+              </button>
+            )}
+            {roomPanel === 'list' && (
+              <button className="tt-btn tt-btn-primary" onClick={() => setRoomPanel('add')}>
+                <PlusIcon size={14} /> Register New Room
+              </button>
+            )}
           </div>
+
+          {roomPanel === 'config' && (
+            <>
 
           {/* Active days */}
           <div style={{ marginBottom:14 }}>
@@ -1208,7 +1307,69 @@ export default function Timetable({ currentUser, currentPeriodId, periods = [] }
               <strong>Active days:</strong> {activeDays.length} &nbsp;·&nbsp;
               <strong>Weekly capacity per class:</strong> {draftConfig.filter(s => !s.is_break).length * activeDays.length} lessons
             </div>
-          </div>
+            </div>
+          )}
+
+          {roomPanel === 'list' && (
+            <div className="tt-rooms-list">
+              {rooms.length === 0 ? (
+                <div style={{ padding: '40px 0', textAlign: 'center', opacity: 0.6 }}>
+                  No rooms registered yet. Click "Register New Room" to get started.
+                </div>
+              ) : (
+                <div className="tt-table-container">
+                  <table className="tt-table">
+                    <thead>
+                      <tr>
+                        <th style={{ color: 'var(--text-muted)', fontSize: '0.65rem', textTransform: 'uppercase' }}>Room Name</th>
+                        <th style={{ color: 'var(--text-muted)', fontSize: '0.65rem', textTransform: 'uppercase' }}>Building / Block</th>
+                        <th style={{ width: 80, color: 'var(--text-muted)', fontSize: '0.65rem', textTransform: 'uppercase' }}>Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {rooms.map(r => (
+                        <tr key={r.id}>
+                          <td><strong>{r.name}</strong></td>
+                          <td>{r.building || '—'}</td>
+                          <td>
+                            <div style={{ display: 'flex', gap: 8 }}>
+                              <button className="tt-btn tt-btn-ghost tt-btn-sm" onClick={() => { setNewRoom(r); setRoomPanel('add'); }}>Edit</button>
+                              <button className="tt-btn tt-btn-ghost tt-btn-sm" style={{ color: '#E06C75' }} onClick={() => handleDeleteRoom(r.id)}>Delete</button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+          )}
+
+          {roomPanel === 'add' && (
+            <div className="tt-room-form">
+              <div className="tt-fields-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+                <div>
+                  <label className="tt-req-label" style={{ display: 'block', marginBottom: 6 }}>Room Name *</label>
+                  <input className="tt-req-input" type="text" placeholder="e.g. Science Lab 1" 
+                    value={newRoom.name} onChange={e => setNewRoom({ ...newRoom, name: e.target.value })} 
+                    style={{ width: '100%', padding: '10px', borderRadius: 8, border: '1px solid rgba(0,0,0,0.1)' }} />
+                </div>
+                <div>
+                  <label className="tt-req-label" style={{ display: 'block', marginBottom: 6 }}>Building / Block</label>
+                  <input className="tt-req-input" type="text" placeholder="e.g. Science Wing" 
+                    value={newRoom.building} onChange={e => setNewRoom({ ...newRoom, building: e.target.value })} 
+                    style={{ width: '100%', padding: '10px', borderRadius: 8, border: '1px solid rgba(0,0,0,0.1)' }} />
+                </div>
+              </div>
+              <div style={{ display: 'flex', gap: 12, marginTop: 20, justifyContent: 'flex-end' }}>
+                <button className="tt-btn" onClick={() => { setRoomPanel('list'); setNewRoom({ name: '', building: '' }); }}>Cancel</button>
+                <button className="tt-btn tt-btn-primary" disabled={!newRoom.name.trim()} onClick={handleSaveRoom}>
+                  {newRoom.id ? 'Update Room' : 'Save Room'}
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       )}
 
@@ -1257,15 +1418,32 @@ export default function Timetable({ currentUser, currentPeriodId, periods = [] }
               style={{ width: '100%' }}
             />
 
-            {/* Conflict warning */}
+            {/* Conflict warnings */}
             {conflictWarning && (
-              <div className="tt-conflict-box">
-                <div className="tt-conflict-title"><AlertIcon size={16} /> Teacher Unavailable</div>
+              <div className="tt-conflict-box" style={{ 
+                borderLeft: `4px solid ${conflictWarning.type === 'room' ? '#FFAD5F' : '#E06C75'}`,
+                background: conflictWarning.type === 'room' ? 'rgba(255,173,95,0.05)' : 'rgba(224,108,117,0.05)'
+              }}>
+                <div className="tt-conflict-title" style={{ color: conflictWarning.type === 'room' ? '#CC8A4A' : '#E06C75' }}>
+                  <AlertIcon size={16} /> {conflictWarning.type === 'room' ? 'Room Occupied' : 'Teacher Unavailable'}
+                </div>
                 <div className="tt-conflict-body">
-                  <strong style={{ color:'#D4DDD6' }}>{teacherName(editTeacher)}</strong> is already teaching{' '}
-                  <strong style={{ color:'#D4DDD6' }}>{conflictWarning.subject}</strong> in{' '}
-                  <strong style={{ color:'#D4DDD6' }}>{conflictWarning.class_grade}{conflictWarning.stream ? ` ${conflictWarning.stream}` : ''}</strong>{' '}
-                  at this time. Choose a different teacher or leave unassigned.
+                  {conflictWarning.type === 'room' ? (
+                    <>
+                      <strong style={{ color: '#5A6B5C' }}>{editRoom}</strong> is currently being used for{' '}
+                      <strong>{conflictWarning.subject}</strong> by{' '}
+                      <strong>{conflictWarning.class_grade}{conflictWarning.stream ? ` ${conflictWarning.stream}` : ''}</strong>.
+                    </>
+                  ) : (
+                    <>
+                      <strong style={{ color: '#5A6B5C' }}>{teacherName(editTeacher)}</strong> is already teaching{' '}
+                      <strong>{conflictWarning.subject}</strong> in{' '}
+                      <strong>{conflictWarning.class_grade}{conflictWarning.stream ? ` ${conflictWarning.stream}` : ''}</strong>.
+                    </>
+                  )}
+                  <div style={{ marginTop: 4, fontSize: '0.65rem', opacity: 0.8 }}>
+                    You can still save if this is intentional (e.g., shared hall).
+                  </div>
                 </div>
               </div>
             )}
@@ -1283,8 +1461,15 @@ export default function Timetable({ currentUser, currentPeriodId, periods = [] }
 
             {/* Room */}
             <label className="tt-field-label">Room / Location</label>
-            <input className="tt-field" type="text" placeholder="e.g. Room 4, Science Lab, Hall"
-              value={editRoom} onChange={e => setEditRoom(e.target.value)} />
+            <Select 
+              value={editRoom} 
+              onChange={e => setEditRoom(e.target.value)}
+              options={[
+                { id: '', label: '— No Room Assigned —' },
+                ...rooms.map(r => ({ id: r.name, label: `${r.name}${r.building ? ` (${r.building})` : ''}` }))
+              ]}
+              style={{ width: '100%' }}
+            />
 
             {/* Colour */}
             <label className="tt-field-label">Colour</label>
@@ -1302,7 +1487,7 @@ export default function Timetable({ currentUser, currentPeriodId, periods = [] }
                 Cancel
               </button>
               <button className="tt-btn tt-btn-primary" style={{ flex:1.4 }}
-                disabled={!editSubject.trim() || cellSaving || !!conflictWarning}
+                disabled={!editSubject.trim() || cellSaving}
                 onClick={handleSaveCell}>
                 {cellSaving ? 'Saving...' : editCell.existing ? 'Update Slot' : 'Add Slot'}
               </button>

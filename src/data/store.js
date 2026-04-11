@@ -2862,6 +2862,62 @@ export async function clearTimetableSlot(schoolId, periodId, classGrade, stream,
 
   const { error } = await query;
   if (error) throw error;
+  return true;
+}
+
+// ─── Room Management ────────────────────────────────────────────────────────
+
+export async function getTimetableRooms(schoolId) {
+  const { data, error } = await supabase
+    .from('timetable_rooms')
+    .select('*')
+    .eq('school_id', schoolId)
+    .order('name', { ascending: true });
+  if (error) {
+    // Graceful fallback if table doesn't exist yet - some environments might use local storage for rooms
+    console.warn("timetable_rooms table fetch error:", error);
+    return [];
+  }
+  return data || [];
+}
+
+export async function saveTimetableRoom(schoolId, room) {
+  const payload = {
+    school_id: schoolId,
+    name: room.name,
+    building: room.building || null,
+    updated_at: new Date().toISOString()
+  };
+
+  if (room.id) {
+    const { data, error } = await supabase
+      .from('timetable_rooms')
+      .update(payload)
+      .eq('id', room.id)
+      .select()
+      .single();
+    if (error) throw error;
+    return data;
+  } else {
+    const { data, error } = await supabase
+      .from('timetable_rooms')
+      .insert(payload)
+      .select()
+      .single();
+    if (error) throw error;
+    return data;
+  }
+}
+
+export async function deleteTimetableRoom(id) {
+  const { error } = await supabase
+    .from('timetable_rooms')
+    .delete()
+    .eq('id', id);
+  if (error) throw error;
+  return true;
+}
+
 }
 
 export async function clearAndSaveTimetable(schoolId, periodId, slots, classGrades, type = 'class') {
@@ -2978,6 +3034,32 @@ export async function checkTeacherConflict(schoolId, periodId, teacherId, day, s
   
   if (error) throw error;
   if (!data || data.length === 0) return null;
+  
+  // Exclude current class/stream from conflict check
+  const filtered = data.filter(d => d.class_grade !== currentClass || d.stream !== (currentStream || null));
+  return filtered.length > 0 ? filtered[0] : null;
+}
+
+export async function checkRoomConflict(schoolId, periodId, room, day, slotIndex, currentClass, currentStream, type = 'class') {
+  if (!room) return null;
+  
+  const { data, error } = await supabase
+    .from('timetable_slots')
+    .select('class_grade, stream, subject, type')
+    .eq('school_id', schoolId)
+    .eq('period_id', periodId)
+    .eq('room', room)
+    .eq('day_of_week', day)
+    .eq('slot_index', slotIndex)
+    .eq('type', type);
+  
+  if (error) throw error;
+  if (!data || data.length === 0) return null;
+  
+  // Exclude current class/stream
+  const filtered = data.filter(d => d.class_grade !== currentClass || d.stream !== (currentStream || null));
+  return filtered.length > 0 ? filtered[0] : null;
+}
 
   const clash = data.find(row => {
     const sameClass = row.class_grade === currentClass;
