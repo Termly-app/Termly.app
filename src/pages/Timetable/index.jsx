@@ -345,6 +345,11 @@ export default function Timetable({ currentUser, currentPeriodId, periods = [] }
   const [showUpgrade,    setShowUpgrade]   = useState(false);
 
   // ── Cell edit modal ───────────────────────────────────────────────────
+  const [editCell,        setEditCell]        = useState(null);
+  const [editSubject,     setEditSubject]      = useState('');
+  const [editTeacher,     setEditTeacher]      = useState('');
+  const [editRoom,        setEditRoom]         = useState('');
+  const [editColor,       setEditColor]        = useState(COLORS[0]);
   const [conflictWarning, setConflictWarning]  = useState(null);
   const [cellSaving,      setCellSaving]       = useState(false);
 
