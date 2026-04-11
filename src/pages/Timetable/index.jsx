@@ -1307,8 +1307,8 @@ export default function Timetable({ currentUser, currentPeriodId, periods = [] }
               <strong>Active days:</strong> {activeDays.length} &nbsp;·&nbsp;
               <strong>Weekly capacity per class:</strong> {draftConfig.filter(s => !s.is_break).length * activeDays.length} lessons
             </div>
-            </div>
-          )}
+          </div>
+        </>)}
 
           {roomPanel === 'list' && (
             <div className="tt-rooms-list">
