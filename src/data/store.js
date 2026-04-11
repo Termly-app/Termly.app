@@ -2918,8 +2918,6 @@ export async function deleteTimetableRoom(id) {
   return true;
 }
 
-}
-
 export async function clearAndSaveTimetable(schoolId, periodId, slots, classGrades, type = 'class') {
   const { error: delErr } = await supabase
     .from('timetable_slots')
@@ -3059,20 +3057,6 @@ export async function checkRoomConflict(schoolId, periodId, room, day, slotIndex
   // Exclude current class/stream
   const filtered = data.filter(d => d.class_grade !== currentClass || d.stream !== (currentStream || null));
   return filtered.length > 0 ? filtered[0] : null;
-}
-
-  const clash = data.find(row => {
-    const sameClass = row.class_grade === currentClass;
-    const sameStream = (row.stream || null) === (currentStream || null);
-    return !(sameClass && sameStream);
-  });
-
-  if (clash) {
-    const { data: t } = await supabase.from('teachers').select('name').eq('id', teacherId).single();
-    const tName = t?.name || 'Teacher';
-    return `${tName} is busy teaching ${clash.subject} to ${clash.class_grade}${clash.stream ? ' ('+clash.stream+')' : ''} at this time.`;
-  }
-  return null;
 }
 
 export async function getClassSubjectAssignments(schoolId, periodId, classGrade, stream = null) {
