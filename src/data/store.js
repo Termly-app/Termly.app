@@ -1361,19 +1361,50 @@ export async function recordPayment(studentId, amount, method, reference) {
     if (feeErr) throw feeErr;
   }
 
-  // Use the ATOMIC RPC function to record the payment and update balance
+  // Missing RPC fallback: Perform the operation client-side
   const paymentDate = new Date().toISOString().split('T')[0];
-  const { error } = await supabase.rpc('record_payment', {
-    p_student_id: studentId,
-    p_school_id: _currentSchoolId,
-    p_period_id: _currentPeriodId,
-    p_amount: Number(amount),
-    p_method: method || 'Cash',
-    p_reference: reference || '',
-    p_date: paymentDate
-  });
+  const amountNum = Number(amount);
 
-  if (error) throw error;
+  // 1. Insert the payment record
+  const { data: paymentRecord, error: paymentErr } = await supabase
+    .from('fee_payments')
+    .insert({
+      school_id: _currentSchoolId,
+      student_id: studentId,
+      period_id: _currentPeriodId,
+      amount: amountNum,
+      method: method || 'Cash',
+      reference: reference || '',
+      date: paymentDate
+    })
+    .select()
+    .single();
+
+  if (paymentErr) throw paymentErr;
+
+  // 2. Fetch current fee to calculate new balance securely
+  const { data: currentFee, error: fetchErr } = await supabase
+    .from('fees')
+    .select('paid, balance')
+    .eq('school_id', _currentSchoolId)
+    .eq('student_id', studentId)
+    .eq('period_id', _currentPeriodId)
+    .single();
+
+  if (fetchErr) throw fetchErr;
+
+  // 3. Update the fee balance
+  const { error: updateErr } = await supabase
+    .from('fees')
+    .update({ 
+      paid: Number(currentFee.paid) + amountNum, 
+      balance: Number(currentFee.balance) - amountNum 
+    })
+    .eq('school_id', _currentSchoolId)
+    .eq('student_id', studentId)
+    .eq('period_id', _currentPeriodId);
+
+  if (updateErr) throw updateErr;
 
   // 4. Queue Payment Confirmation SMS
   const student = (await getStudents()).find(s => s.id === studentId);
