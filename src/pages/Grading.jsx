@@ -169,71 +169,112 @@ export default function Grading({ currentUser, currentPeriodId }) {
     return c[lv] || '#3b82f6';
   };
 
+  // ─── Shared Excel-style CSS for all print sheets ───
+  const excelCSS = `
+    body{font-family:'Calibri','Arial',sans-serif;padding:12px;margin:0;color:#000;font-size:11px}
+    h2{font-size:14px;margin:0 0 2px;text-transform:uppercase}
+    .sub{font-size:10px;color:#555;margin-bottom:10px}
+    table{width:100%;border-collapse:collapse;margin-top:8px}
+    th,td{border:1px solid #000;padding:4px 6px;text-align:center;font-size:10px}
+    th{background:#d9e1f2;font-weight:700;text-transform:uppercase;font-size:9px}
+    td{background:#fff}
+    td.nm{text-align:left;font-weight:500;white-space:nowrap}
+    .ft{margin-top:12px;font-size:9px;color:#555;display:flex;justify-content:space-between}
+    @page{size:landscape;margin:8mm}
+    @media print{body{padding:0}}
+  `;
+
   const printClassList = async () => {
     try {
       let list = await getClassList(selectedClass);
       if (streamFilter !== 'All') list = list.filter(s => s.stream === streamFilter);
-      const streamLbl = streamFilter === 'All' ? '' : ` (${streamFilter} Stream)`;
-      const headerStr = await getPrintHeader(`${selectedClass}${streamLbl} (${level}) — Class List`);
-      const profileStr = await getSchoolProfile();
+      const p = await getSchoolProfile();
+      const sl = streamFilter === 'All' ? '' : ` - ${streamFilter}`;
       const w = window.open('', '_blank');
       w.document.write(`<html><head><title>Class List - ${selectedClass}</title>
-      <style>body{font-family:Arial,sans-serif;padding:20px}
-      table{width:100%;border-collapse:collapse;margin-top:16px}th,td{border:1px solid #e2e8f0;padding:8px 12px;text-align:left;font-size:13px}
-      th{background:#1e3a5f;color:white}.footer{margin-top:30px;font-size:12px;color:#64748b}.tag{display:inline-block;background:#e2e8f0;padding:2px 8px;border-radius:10px;font-size:11px;color:#475569}</style></head><body>
-      ${headerStr}
-      <table><thead><tr><th>#</th><th>Adm No</th><th>Student Name</th><th>Gender</th><th>Parent</th><th>Phone</th></tr></thead>
-      <tbody>${list.map((s, i) => `<tr><td>${i + 1}</td><td>${s.admNo}</td><td>${s.name}</td><td>${s.gender}</td><td>${s.parent}</td><td>${s.parentPhone}</td></tr>`).join('')}</tbody></table>
-      <div class="footer">Printed on ${new Date().toLocaleDateString()} | ${profileStr.schoolName || ''} | ${level}</div></body></html>`);
+      <style>${excelCSS}</style></head><body>
+      <h2>${p.schoolName || 'School'} - ${selectedClass}${sl} CLASS LIST</h2>
+      <div class="sub">${level} | ${examType} | Students: ${list.length}</div>
+      <table><thead><tr>
+        <th style="width:30px">#</th><th style="width:70px">ADM NO</th>
+        <th style="text-align:left;min-width:140px">STUDENT NAME</th>
+        ${subjects.map(s => `<th>${s.length > 12 ? s.substring(0, 10) + '..' : s}</th>`).join('')}
+        <th>TTL</th><th>AVG</th><th>GRD</th><th>POS</th>
+      </tr></thead><tbody>
+        ${list.map((s, i) => `<tr><td>${i + 1}</td><td>${s.admNo || ''}</td><td class="nm">${s.name}</td>${subjects.map(() => '<td></td>').join('')}<td></td><td></td><td></td><td></td></tr>`).join('')}
+      </tbody></table>
+      <div class="ft"><span>Class Teacher: _________________________ Sign: _____________</span><span>Printed: ${new Date().toLocaleDateString()}</span></div>
+      </body></html>`);
       w.document.close(); w.print();
     } catch (err) { alert({ title: 'Print Error', message: "Print failed: " + err.message, variant: 'danger' }); }
   };
 
-  // Print entire class results as one sheet
+  // Print results for current stream selection - clean Excel style
   const printClassResults = async () => {
     try {
-      const cbc = await getCBC();
-      const headerStr = await getPrintHeader(`${selectedClass}${streamFilter === 'All' ? '' : ' ' + streamFilter} ${examType} Results — ${level}`);
-      const profileStr = await getSchoolProfile();
+      const p = await getSchoolProfile();
+      const sl = streamFilter === 'All' ? ' (All Streams)' : ` - ${streamFilter}`;
       const w = window.open('', '_blank');
-      w.document.write(`<html><head><title>Class Results - ${selectedClass}</title>
-      <style>body{font-family:Arial,sans-serif;padding:16px;color:#1e293b;font-size:11px}
-      table{width:100%;border-collapse:collapse}th,td{border:1px solid #d0d5dd;padding:5px 6px;text-align:center;font-size:9.5px}
-      th{background:#1e3a5f;color:white;font-size:8.5px;text-transform:uppercase;letter-spacing:0.3px}
-      td:nth-child(2){text-align:left}tr:nth-child(even){background:#f8fafc}
-      .top3{background:#fef3c7!important}.footer{margin-top:16px;font-size:10px;color:#64748b}
-      .grade-a{color:#10b981;font-weight:700}.grade-b{color:#3b82f6;font-weight:700}.grade-c{color:#f59e0b;font-weight:700}.grade-d{color:#f97316;font-weight:700}.grade-e{color:#ef4444;font-weight:700}
-      .ee{color:#10b981}.me{color:#3b82f6}.ae{color:#f59e0b}.be{color:#ef4444}
-      @page{size:landscape;margin:10mm}
-      @media print{body{padding:0}}
-      </style></head><body>
-      ${headerStr}
-      <table><thead><tr><th>Rank</th><th>Adm No</th><th style="text-align:left">Student Name</th>
-    ${subjects.map(s => `<th>${s.length > 10 ? s.substring(0, 8) + '..' : s}</th>`).join('')}
-    ${!isEarlyYears ? '<th>Total</th><th>Avg</th><th>Grade</th>' : '<th>Overall</th>'}
-    </tr></thead><tbody>
-    ${results.map((s, i) => {
-      const studentCbc = cbc[s.id] || {};
-      if (isEarlyYears) {
-        const levels = subjects.map(sub => (studentCbc[sub] || 'Meeting Expectation'));
-        const score = levels.reduce((sc, l) => sc + (l.startsWith('Exceeding') ? 4 : l.startsWith('Meeting') ? 3 : l.startsWith('Approaching') ? 2 : 1), 0);
-        const avg = score / levels.length;
-        const overall = avg >= 3.5 ? 'EE' : avg >= 2.5 ? 'ME' : avg >= 1.5 ? 'AE' : 'BE';
-        const overallCls = avg >= 3.5 ? 'ee' : avg >= 2.5 ? 'me' : avg >= 1.5 ? 'ae' : 'be';
-        return `<tr><td>${i + 1}</td><td>${s.admNo}</td><td style="text-align:left;font-weight:600">${s.name}</td>
-        ${subjects.map(sub => { const lv = studentCbc[sub] || 'ME'; const cls = lv.startsWith('Exceeding') ? 'ee' : lv.startsWith('Meeting') ? 'me' : lv.startsWith('Approaching') ? 'ae' : 'be'; return `<td class="${cls}">${lv.split(' ')[0]}</td>`; }).join('')}
-        <td class="${overallCls}" style="font-weight:700">${overall}</td></tr>`;
-      } else {
-        const { grade: g, color } = getGrade(s.average);
-        const gradeCls = g === 'A' ? 'grade-a' : g === 'B' ? 'grade-b' : g === 'C' ? 'grade-c' : g === 'D' ? 'grade-d' : 'grade-e';
-        return `<tr class="${s.rank <= 3 ? 'top3' : ''}"><td style="font-weight:700">${s.rank}</td><td>${s.admNo}</td><td style="text-align:left;font-weight:600">${s.name}</td>
-        ${subjects.map(sub => `<td>${s.marks[sub] || '—'}</td>`).join('')}
-        <td style="font-weight:700">${s.total}</td><td style="font-weight:700">${s.average}</td><td class="${gradeCls}">${g}</td></tr>`;
-      }
-    }).join('')}
-    </tbody></table>
-    <div class="footer">Printed on ${new Date().toLocaleDateString()} | ${profileStr.schoolName || ''} | ${level} | Class Teacher: _______________</div>
-    </body></html>`);
+      w.document.write(`<html><head><title>Results - ${selectedClass}</title>
+      <style>${excelCSS}</style></head><body>
+      <h2>${p.schoolName || 'School'} - ${selectedClass}${sl} ${examType} RESULTS</h2>
+      <div class="sub">${level} | Students: ${results.length} | Exam: ${examType}</div>
+      <table><thead><tr>
+        <th style="width:30px">#</th><th style="width:70px">ADM NO</th>
+        <th style="text-align:left;min-width:140px">STUDENT NAME</th>
+        ${streamFilter === 'All' ? '<th>STR</th>' : ''}
+        ${subjects.map(s => `<th>${s.length > 12 ? s.substring(0, 10) + '..' : s}</th>`).join('')}
+        <th>TTL</th><th>AVG</th><th>GRD</th><th>POS</th>
+      </tr></thead><tbody>
+        ${results.map(s => {
+          const { grade: g } = getGrade(s.average);
+          const enrolled = s.enrolledSubjects || subjects;
+          return `<tr>
+            <td>${s.rank}</td><td>${s.admNo || ''}</td><td class="nm">${s.name}</td>
+            ${streamFilter === 'All' ? `<td>${s.stream || '-'}</td>` : ''}
+            ${subjects.map(sub => !enrolled.includes(sub) ? '<td>-</td>' : `<td>${s.marks[sub] !== undefined ? s.marks[sub] : ''}</td>`).join('')}
+            <td style="font-weight:700">${s.total}</td><td style="font-weight:700">${s.average}</td>
+            <td style="font-weight:700">${g}</td><td style="font-weight:700">${s.rank}</td>
+          </tr>`;
+        }).join('')}
+      </tbody></table>
+      <div class="ft"><span>Class Teacher: _________________________ Sign: _____________</span><span>H.O.D: _________________________ Sign: _____________</span><span>Printed: ${new Date().toLocaleDateString()}</span></div>
+      </body></html>`);
+      w.document.close(); w.print();
+    } catch(err) { alert({ title: 'Print Error', message: "Print failed: " + err.message, variant: 'danger' }); }
+  };
+
+  // Print entire grade (all streams combined, re-ranked together)
+  const printGradeResults = async () => {
+    try {
+      const p = await getSchoolProfile();
+      const all = await getClassResults(selectedClass, examType);
+      all.sort((a, b) => b.total - a.total);
+      all.forEach((s, i) => { s.rank = i + 1; });
+      const w = window.open('', '_blank');
+      w.document.write(`<html><head><title>Grade Results - ${selectedClass}</title>
+      <style>${excelCSS}</style></head><body>
+      <h2>${p.schoolName || 'School'} - ${selectedClass} OVERALL ${examType} RESULTS</h2>
+      <div class="sub">${level} | All Streams Combined | Students: ${all.length} | Exam: ${examType}</div>
+      <table><thead><tr>
+        <th style="width:30px">#</th><th style="width:70px">ADM NO</th>
+        <th style="text-align:left;min-width:140px">STUDENT NAME</th><th>STR</th>
+        ${subjects.map(s => `<th>${s.length > 12 ? s.substring(0, 10) + '..' : s}</th>`).join('')}
+        <th>TTL</th><th>AVG</th><th>GRD</th><th>POS</th>
+      </tr></thead><tbody>
+        ${all.map(s => {
+          const { grade: g } = getGrade(s.average);
+          const enrolled = s.enrolledSubjects || subjects;
+          return `<tr>
+            <td>${s.rank}</td><td>${s.admNo || ''}</td><td class="nm">${s.name}</td><td>${s.stream || '-'}</td>
+            ${subjects.map(sub => !enrolled.includes(sub) ? '<td>-</td>' : `<td>${s.marks[sub] !== undefined ? s.marks[sub] : ''}</td>`).join('')}
+            <td style="font-weight:700">${s.total}</td><td style="font-weight:700">${s.average}</td>
+            <td style="font-weight:700">${g}</td><td style="font-weight:700">${s.rank}</td>
+          </tr>`;
+        }).join('')}
+      </tbody></table>
+      <div class="ft"><span>Principal: _________________________ Sign: _____________</span><span>D.O.S: _________________________ Sign: _____________</span><span>Printed: ${new Date().toLocaleDateString()}</span></div>
+      </body></html>`);
       w.document.close(); w.print();
     } catch(err) { alert({ title: 'Print Error', message: "Print failed: " + err.message, variant: 'danger' }); }
   };
@@ -331,7 +372,8 @@ export default function Grading({ currentUser, currentPeriodId }) {
           </div>
           <div className="inline-flex" style={{ gap: 12, flexWrap: 'wrap' }}>
             <button className="btn btn-ghost" onClick={printClassList}><PrintIcon size={16} /> Class List</button>
-            <button className="btn btn-ghost" onClick={printClassResults}><DashboardIcon size={16} /> Print Results</button>
+            <button className="btn btn-ghost" onClick={printClassResults}><DashboardIcon size={16} /> Stream Results</button>
+            <button className="btn btn-ghost" onClick={printGradeResults}><ChartBarIcon size={16} /> Grade Results</button>
             <button className="btn btn-accent" onClick={printAllReportCards}><BookIcon size={16} /> Print All Report Cards</button>
             {activeTab === 'marks' && !isEarlyYears && currentUser?.role?.toLowerCase() !== 'finance' && (editMode ? (
               <><button className="btn btn-ghost" onClick={() => { setEditMode(false); loadResults(); }}>Cancel</button>
