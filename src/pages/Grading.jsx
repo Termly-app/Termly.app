@@ -377,7 +377,7 @@ export default function Grading({ currentUser, currentPeriodId }) {
 
         <div style={{ flex: 1 }} />
         <span className="badge badge-info" style={{ fontSize: '0.8rem', padding: '6px 14px' }}>{selectedClass}</span>
-        <span className="badge badge-outline" style={{ fontSize: '0.8rem', padding: '6px 14px' }}>{level}</span>
+        <span className="badge badge-outline" style={{ fontSize: '0.8rem', padding: '6px 14px' }}>{selectedClass === 'All' ? 'All Levels' : level}</span>
       </div>
 
       {/* View Tabs — pill strip */}
@@ -408,7 +408,7 @@ export default function Grading({ currentUser, currentPeriodId }) {
       {activeTab === 'marks' && (
         <div className="card">
           <div className="card-header">
-            <h3>{selectedClass} — {results.length} Students {isEarlyYears && <span style={{ fontSize: '0.78rem', color: 'var(--accent)', fontWeight: 400 }}>  (Activity-based assessment)</span>}</h3>
+            <h3>{selectedClass === 'All' ? 'All Classes' : selectedClass} — {results.length} Students {isEarlyYears && selectedClass !== 'All' && <span style={{ fontSize: '0.78rem', color: 'var(--accent)', fontWeight: 400 }}>  (Activity-based assessment)</span>}</h3>
             {!editMode && !isEarlyYears && <span className="text-muted" style={{ fontSize: '0.82rem' }}>Click a name for report card</span>}
           </div>
           <div className="card-body" style={{ padding: 0, overflowX: 'auto' }}>
@@ -417,7 +417,9 @@ export default function Grading({ currentUser, currentPeriodId }) {
               <table className="data-table">
                 <thead><tr><th>Student</th>{subjects.map(s => <th key={s} style={{ fontSize: '0.72rem' }}>{s.replace(' Activities', '')}</th>)}<th>Overall</th></tr></thead>
                 <tbody>
-                  {results.map(s => {
+                  {results.length === 0 ? (
+                    <tr><td colSpan={subjects.length + 2} className="text-center text-muted" style={{ padding: 40 }}>{selectedClass === 'All' ? 'Please select a specific class to view and manage grades.' : 'No students in this class'}</td></tr>
+                  ) : results.map(s => {
                     const studentCbc = cbcData[s.id] || {};
                     return (
                       <tr key={s.id}>
@@ -454,7 +456,7 @@ export default function Grading({ currentUser, currentPeriodId }) {
                 <thead><tr><th>Rank</th><th>Adm No</th><th>Name</th>{subjects.map(s => <th key={s} style={{ fontSize: '0.72rem' }}>{s.length > 10 ? s.substring(0, 8) + '..' : s}</th>)}<th>Total</th><th>Avg</th><th>Grade</th><th>Action</th></tr></thead>
                 <tbody>
                   {results.length === 0 ? (
-                    <tr><td colSpan={subjects.length + 5} className="text-center text-muted" style={{ padding: 40 }}>No students in this class</td></tr>
+                    <tr><td colSpan={subjects.length + 5} className="text-center text-muted" style={{ padding: 40 }}>{selectedClass === 'All' ? 'Please select a specific class to view and manage grades.' : 'No students in this class'}</td></tr>
                   ) : results.map(s => {
                     const marks = editMode ? editMarks[s.id] || {} : s.marks;
                     const total = editMode ? Object.values(marks).reduce((a, b) => a + b, 0) : s.total;

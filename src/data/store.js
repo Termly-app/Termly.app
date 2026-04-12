@@ -1420,7 +1420,15 @@ export async function getFeeSummary(preFetchedFees = null, preFetchedStudents = 
   let totalExpected = 0, totalCollected = 0, totalOutstanding = 0;
   let fullyPaid = 0, partialPaid = 0, unpaid = 0;
   students.forEach(s => {
-    const defaultFee = gradeFees[s.class] ? Number(gradeFees[s.class]) : TERM_FEE;
+    let defaultFee = TERM_FEE;
+    if (gradeFees[s.class]) {
+      if (typeof gradeFees[s.class] === 'object') {
+        const resType = (s.residenceType || 'day').toLowerCase();
+        defaultFee = Number(gradeFees[s.class][resType]) || Number(gradeFees[s.class].day) || TERM_FEE;
+      } else {
+        defaultFee = Number(gradeFees[s.class]) || TERM_FEE;
+      }
+    }
     const f = fees[s.id] || { totalFee: defaultFee, paid: 0, balance: defaultFee };
     totalExpected += f.totalFee;
     totalCollected += f.paid;
