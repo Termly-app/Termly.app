@@ -946,27 +946,56 @@ function SubjectPicker({ student, allSubjects, onClose, onSave }) {
     else setSelected([...selected, sub]);
   };
 
+  const allSelected = selected.length === allSubjects.length;
+  const toggleAll = () => setSelected(allSelected ? [] : [...allSubjects]);
+
   return (
-    <div className="modal-overlay">
-      <div className="modal-content" style={{ maxWidth: 450 }}>
+    <div className="modal-overlay" onClick={onClose}>
+      <div className="modal" onClick={e => e.stopPropagation()} style={{ maxWidth: 500 }}>
         <div className="modal-header">
-          <h3>Manage Subjects: {student.name}</h3>
-          <button className="btn-icon" onClick={onClose}><CrossIcon /></button>
+          <h3><SettingsIcon size={20} /> Manage Subjects</h3>
+          <button className="modal-close" onClick={onClose}>&times;</button>
         </div>
         <div className="modal-body">
-          <p className="text-muted" style={{ marginBottom: 15, fontSize: '0.85rem' }}>Select the subjects this student studies. Unselected subjects will be hidden from grading and report cards.</p>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
-            {allSubjects.map(sub => (
-              <label key={sub} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: 8, background: 'var(--bg)', borderRadius: 8, cursor: 'pointer' }}>
-                <input type="checkbox" checked={selected.includes(sub)} onChange={() => toggle(sub)} />
-                <span style={{ fontSize: '0.88rem' }}>{sub}</span>
-              </label>
-            ))}
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16, padding: '10px 14px', background: 'linear-gradient(135deg, rgba(99,102,241,0.08), rgba(59,130,246,0.06))', borderRadius: 10, border: '1px solid rgba(99,102,241,0.15)' }}>
+            <div>
+              <div style={{ fontWeight: 700, fontSize: '0.95rem' }}>{student.name}</div>
+              <div className="text-muted" style={{ fontSize: '0.78rem' }}>Class {student.class} &middot; {selected.length} of {allSubjects.length} subjects selected</div>
+            </div>
+            <button className="btn btn-ghost btn-sm" onClick={toggleAll} style={{ fontSize: '0.78rem' }}>
+              {allSelected ? 'Deselect All' : 'Select All'}
+            </button>
+          </div>
+
+          <p className="text-muted" style={{ marginBottom: 14, fontSize: '0.82rem' }}>Tick the subjects this student studies. Unticked subjects won't appear in marks entry or report cards.</p>
+
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+            {allSubjects.map(sub => {
+              const isChecked = selected.includes(sub);
+              return (
+                <label key={sub} style={{ 
+                  display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', 
+                  background: isChecked ? 'rgba(99,102,241,0.06)' : 'var(--bg)', 
+                  borderRadius: 10, cursor: 'pointer', transition: 'all 0.15s',
+                  border: isChecked ? '1.5px solid rgba(99,102,241,0.3)' : '1.5px solid var(--border)',
+                }}>
+                  <input 
+                    type="checkbox" 
+                    checked={isChecked} 
+                    onChange={() => toggle(sub)} 
+                    style={{ width: 16, height: 16, accentColor: 'var(--primary)', cursor: 'pointer' }}
+                  />
+                  <span style={{ fontSize: '0.85rem', fontWeight: isChecked ? 600 : 400, color: isChecked ? 'var(--text)' : 'var(--text-light)' }}>{sub}</span>
+                </label>
+              );
+            })}
           </div>
         </div>
         <div className="modal-footer">
           <button className="btn btn-ghost" onClick={onClose}>Cancel</button>
-          <button className="btn btn-primary" onClick={() => onSave(selected)}>Save Changes</button>
+          <button className="btn btn-primary" onClick={() => onSave(selected)} disabled={selected.length === 0}>
+            <SaveIcon size={15} /> Save ({selected.length})
+          </button>
         </div>
       </div>
     </div>
