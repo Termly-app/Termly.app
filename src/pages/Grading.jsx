@@ -530,7 +530,7 @@ export default function Grading({ currentUser, currentPeriodId }) {
             {isEarlyYears ? (
               /* Early Years: competency-focused view */
               <table className="data-table">
-                <thead><tr><th>Student</th>{subjects.map(s => <th key={s} style={{ fontSize: '0.72rem' }}>{s.replace(' Activities', '')}</th>)}<th>Overall</th></tr></thead>
+                <thead><tr><th>Student</th>{subjects.map(s => <th key={s} style={{ fontSize: '0.72rem' }}>{subjectAbbr(s)}</th>)}<th>Overall</th></tr></thead>
                 <tbody>
                   {results.length === 0 ? (
                     <tr><td colSpan={subjects.length + 2} className="text-center text-muted" style={{ padding: 40 }}>{selectedClass === 'All' ? 'Please select a specific class to view and manage grades.' : 'No students in this class'}</td></tr>
@@ -580,7 +580,7 @@ export default function Grading({ currentUser, currentPeriodId }) {
             ) : (
               /* Upper Primary / Junior Secondary: marks-based view */
               <table className="data-table">
-                <thead><tr><th>Rank</th><th>Adm No</th><th>Name</th>{subjects.map(s => <th key={s} style={{ fontSize: '0.72rem' }}>{s.length > 10 ? s.substring(0, 8) + '..' : s}</th>)}<th>Total</th><th>Avg</th><th>Grade</th><th>Action</th></tr></thead>
+                <thead><tr><th>Rank</th><th>Adm No</th><th>Name</th>{subjects.map(s => <th key={s} style={{ fontSize: '0.72rem' }}>{subjectAbbr(s)}</th>)}<th>Total</th><th>Avg</th><th>Grade</th><th>Action</th></tr></thead>
                 <tbody>
                   {results.length === 0 ? (
                     <tr><td colSpan={subjects.length + 5} className="text-center text-muted" style={{ padding: 40 }}>{selectedClass === 'All' ? 'Please select a specific class to view and manage grades.' : 'No students in this class'}</td></tr>
@@ -694,7 +694,7 @@ export default function Grading({ currentUser, currentPeriodId }) {
           <div className="card-header"><h3><FlagIcon size={20} /> CBC Competency Levels — {selectedClass} <span className="badge badge-info" style={{ fontSize: '0.7rem', marginLeft: 8 }}>{level}</span></h3></div>
           <div className="card-body" style={{ padding: 0, overflowX: 'auto' }}>
             <table className="data-table">
-              <thead><tr><th>Student</th>{subjects.map(s => <th key={s} style={{ fontSize: '0.7rem' }}>{s.length > 8 ? s.substring(0, 7) + '..' : s}</th>)}</tr></thead>
+              <thead><tr><th>Student</th>{subjects.map(s => <th key={s} style={{ fontSize: '0.7rem' }}>{subjectAbbr(s)}</th>)}</tr></thead>
               <tbody>
                 {results.map(s => (
                   <tr key={s.id}>
