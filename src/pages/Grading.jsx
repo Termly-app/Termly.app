@@ -931,6 +931,8 @@ function ReportCardModal({ student, cbcData, coreCompData, onClose, getGrade, cb
       </div>
     </div>
   );
+}
+
 /**
  * MODAL: Manage which subjects a student specifically studies
  */
