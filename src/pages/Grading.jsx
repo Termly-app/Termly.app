@@ -218,7 +218,15 @@ export default function Grading({ currentUser, currentPeriodId }) {
       // Other
       'Science': 'SCI', 'Hygiene & Nutrition': 'H&N',
     };
-    return map[name] || (name.length > 5 ? name.substring(0, 4).toUpperCase() : name.toUpperCase());
+    if (map[name]) return map[name];
+    // Smart fallback for admin-added subjects
+    const words = name.split(/[\s&\/]+/).filter(w => w.length > 0);
+    if (words.length >= 2) {
+      // Multi-word: use initials e.g. "Business Management" → "BM"
+      return words.map(w => w[0]).join('').toUpperCase().substring(0, 4);
+    }
+    // Single word: first 4 chars e.g. "Metalwork" → "META"
+    return name.substring(0, 4).toUpperCase();
   };
 
   const printClassList = async () => {
