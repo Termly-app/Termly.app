@@ -184,6 +184,30 @@ export default function Grading({ currentUser, currentPeriodId }) {
     @media print{body{padding:0}}
   `;
 
+  // Subject abbreviations for print-friendly A4 portrait
+  const subjectAbbr = (name) => {
+    const map = {
+      'English': 'ENG', 'Kiswahili': 'KIS', 'Mathematics': 'MATH', 'Biology': 'BIO',
+      'Physics': 'PHY', 'Chemistry': 'CHEM', 'History & Government': 'HIST', 'History': 'HIST',
+      'Geography': 'GEO', 'Christian Religious Education': 'CRE', 'Islamic Religious Education': 'IRE',
+      'Hindu Religious Education': 'HRE', 'Business Studies': 'BST', 'Agriculture': 'AGRI',
+      'Computer Studies': 'COMP', 'Computer studies': 'COMP', 'Computer Science': 'COMP',
+      'France': 'FRE', 'French': 'FRE', 'German': 'GER', 'Arabic': 'ARB',
+      'Art & Design': 'ART', 'Art and Design': 'ART', 'Music': 'MUS',
+      'Home Science': 'H/SC', 'Aviation': 'AVI', 'Electricity': 'ELEC',
+      'Power Mechanics': 'P/M', 'Metalwork': 'M/W', 'Woodwork': 'W/W',
+      'Building Construction': 'B/C', 'Drawing & Design': 'D&D',
+      'Social Studies': 'SST', 'Science': 'SCI', 'Literacy Activities': 'LIT',
+      'Mathematical Activities': 'MATH', 'Environmental Activities': 'ENV',
+      'Hygiene & Nutrition': 'H&N', 'Creative Activities': 'CRE/A',
+      'Religious Education': 'RE', 'Movement & Creative Activities': 'MCA',
+      'Integrated Science': 'I/SCI', 'Health Education': 'HLT',
+      'Pre-Technical Studies': 'PTS', 'Social Studies & Ethics': 'SSE',
+      'Life Skills': 'L/SK',
+    };
+    return map[name] || (name.length > 5 ? name.substring(0, 4).toUpperCase() : name.toUpperCase());
+  };
+
   const printClassList = async () => {
     try {
       let list = await getClassList(selectedClass);
@@ -195,11 +219,11 @@ export default function Grading({ currentUser, currentPeriodId }) {
       w.document.write(`<html><head><title>Class List - ${selectedClass}</title>
       <style>${excelCSS}</style></head><body>
       <h2>${p.schoolName || 'School'} - ${selectedClass}${sl} CLASS LIST</h2>
-      <div class="sub">${level} | ${examType} | Students: ${list.length}</div>
+      <div class="sub">${examType} | Students: ${list.length}</div>
       <table><thead><tr>
         <th style="width:30px">#</th><th style="width:70px">ADM NO</th>
         <th style="text-align:left;min-width:140px">STUDENT NAME</th>
-        ${subjects.map(s => `<th>${s.length > 12 ? s.substring(0, 10) + '..' : s}</th>`).join('')}
+        ${subjects.map(s => `<th>${subjectAbbr(s)}</th>`).join('')}
         <th>TTL</th><th>AVG</th><th>GRD</th>
       </tr></thead><tbody>
         ${list.map((s, i) => `<tr><td>${i + 1}</td><td>${s.admNo || ''}</td><td class="nm">${s.name}</td>${subjects.map(() => '<td></td>').join('')}<td></td><td></td><td></td></tr>`).join('')}
@@ -219,7 +243,7 @@ export default function Grading({ currentUser, currentPeriodId }) {
       w.document.write(`<html><head><title>Results - ${selectedClass}</title>
       <style>${excelCSS}</style></head><body>
       <h2>${p.schoolName || 'School'} - ${selectedClass}${sl} ${examType} RESULTS</h2>
-      <div class="sub">${level} | Students: ${results.length} | Exam: ${examType}</div>
+      <div class="sub">Students: ${results.length} | Exam: ${examType}</div>
       <table><thead><tr>
         <th style="width:30px">#</th><th style="width:70px">ADM NO</th>
         <th style="text-align:left;min-width:140px">STUDENT NAME</th>
@@ -256,7 +280,7 @@ export default function Grading({ currentUser, currentPeriodId }) {
       w.document.write(`<html><head><title>Grade Results - ${selectedClass}</title>
       <style>${excelCSS}</style></head><body>
       <h2>${p.schoolName || 'School'} - ${selectedClass} OVERALL ${examType} RESULTS</h2>
-      <div class="sub">${level} | All Streams Combined | Students: ${all.length} | Exam: ${examType}</div>
+      <div class="sub">All Streams Combined | Students: ${all.length} | Exam: ${examType}</div>
       <table><thead><tr>
         <th style="width:30px">#</th><th style="width:70px">ADM NO</th>
         <th style="text-align:left;min-width:140px">STUDENT NAME</th><th>STR</th>
