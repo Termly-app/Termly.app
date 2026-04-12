@@ -700,12 +700,12 @@ export default function Grading({ currentUser, currentPeriodId }) {
       )}
 
       {/* Report Card Modal */}
-      {showReport && <ReportCardModal student={showReport} cbcData={cbcData} coreCompData={coreCompData} onClose={() => setShowReport(null)} getGrade={getGrade} cbcLabel={cbcLabel} cbcColor={cbcColor} classSize={results.length} subjects={subjects} level={level} isEarlyYears={isEarlyYears} profile={profile} />}
+      {showReport && <ReportCardModal student={showReport} cbcData={cbcData} coreCompData={coreCompData} onClose={() => setShowReport(null)} getGrade={getGrade} cbcLabel={cbcLabel} cbcColor={cbcColor} classSize={results.length} subjects={subjects} level={level} isEarlyYears={isEarlyYears} profile={profile} examType={examType} />}
     </div>
   );
 }
 
-function ReportCardModal({ student, cbcData, coreCompData, onClose, getGrade, cbcLabel, cbcColor, classSize, subjects, level, isEarlyYears, profile }) {
+function ReportCardModal({ student, cbcData, coreCompData, onClose, getGrade, cbcLabel, cbcColor, classSize, subjects, level, isEarlyYears, profile, examType }) {
   const { alert } = useDialog();
   const { grade } = getGrade(student.average);
   const studentCBC = cbcData[student.id] || {};
