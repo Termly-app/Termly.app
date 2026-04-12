@@ -45,6 +45,19 @@ export default function Attendance({ currentUser, currentPeriodId }) {
     init();
   }, [selectedClass, streamFilter, selectedDate, currentPeriodId]);
 
+  const calcSummary = (attData, studentList) => {
+    let present = 0, late = 0, absent = 0;
+    studentList.forEach(s => {
+      const status = attData[s.id];
+      if (status === 'present') present++;
+      else if (status === 'late') late++;
+      else if (status === 'absent') absent++;
+    });
+    const total = studentList.length;
+    const pct = total > 0 ? (((present + late) / total) * 100).toFixed(1) : 0;
+    return { present, late, absent, total, percentage: Number(pct) };
+  };
+
   const refresh = async () => {
     try {
       const [allStudents, att] = await Promise.all([getStudents(), getAttendance()]);
@@ -53,27 +66,23 @@ export default function Attendance({ currentUser, currentPeriodId }) {
         filtered = filtered.filter(s => s.stream === streamFilter);
       }
       setStudents(filtered);
-      setAttendance(att[selectedDate] || {});
-      // Calculate summary for filtered students
       const dayData = att[selectedDate] || {};
-      let present = 0, late = 0, absent = 0;
-      filtered.forEach(s => {
-        const status = dayData[s.id];
-        if (status === 'present') present++;
-        else if (status === 'late') late++;
-        else if (status === 'absent') absent++;
-      });
-      const total = filtered.length;
-      const pct = total > 0 ? (((present + late) / total) * 100).toFixed(1) : 0;
-      setSummary({ present, late, absent, total, percentage: Number(pct) });
+      setAttendance(dayData);
+      setSummary(calcSummary(dayData, filtered));
     } catch(err) { console.error(err); }
   };
 
   const handleMark = async (studentId, status) => {
-    try {
-      await markAttendance(selectedDate, studentId, status);
+    // Optimistic UI Update
+    const newAtt = { ...attendance, [studentId]: status };
+    setAttendance(newAtt);
+    setSummary(calcSummary(newAtt, students));
+
+    // Fire and forget
+    markAttendance(selectedDate, studentId, status).catch(async (err) => {
+      alert({ title: 'Attendance Error', message: err.message, variant: 'danger' });
       await refresh();
-    } catch(err) { alert({ title: 'Attendance Error', message: err.message, variant: 'danger' }); }
+    });
   };
 
   const markAllPresent = async () => {
