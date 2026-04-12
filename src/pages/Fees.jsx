@@ -271,14 +271,19 @@ export default function Fees({ currentUser, currentPeriodId }) {
           <div className="card"><div className="card-body" style={{padding:0}}>
             <table className="data-table responsive-table"><thead><tr><th>Adm No</th><th>Student</th><th>Class</th><th>Total Fee</th><th>Paid</th><th>Balance</th><th>Status</th><th>Action</th></tr></thead>
               <tbody>{filtered.map(s=>{
-                const classFees = profile.gradeFees?.[s.class] || {};
-                const resType = (s.residenceType || 'day').toLowerCase();
-                const defaultTotal = typeof classFees === 'object' 
-                  ? (Number(classFees[resType]) || Number(classFees.day) || TERM_FEE)
-                  : (Number(classFees) || TERM_FEE);
+                const classFees = profile.gradeFees?.[s.class];
+                let defaultTotal = TERM_FEE;
+                if (classFees) {
+                  if (typeof classFees === 'object') {
+                    const resType = (s.residenceType || 'day').toLowerCase();
+                    defaultTotal = Number(classFees[resType]) || Number(classFees.day) || TERM_FEE;
+                  } else {
+                    defaultTotal = Number(classFees) || TERM_FEE;
+                  }
+                }
 
-                const f=fees[s.id]||{totalFee:defaultTotal,paid:0,balance:defaultTotal};
-                const st=f.balance<=0?'Paid':f.paid>0?'Partial':'Unpaid';
+                const f = fees[s.id] || { totalFee: defaultTotal, paid: 0, balance: defaultTotal };
+                const st = (Number(f.balance) || 0) <= 0 ? 'Paid' : (Number(f.paid) || 0) > 0 ? 'Partial' : 'Unpaid';
                 return(
                   <tr key={s.id}>
                     <td data-label="Adm No"><code style={{ fontSize: '0.85rem', color: 'var(--primary)', fontWeight: 700 }}>{s.admNo}</code></td>
@@ -305,8 +310,16 @@ export default function Fees({ currentUser, currentPeriodId }) {
         <div>M-Pesa logs here</div>
       )}
       */}
-      {showPayment&&<PaymentModal student={showPayment} fee={fees[showPayment.id] || {totalFee:(profile.gradeFees?.[showPayment.class]||TERM_FEE),paid:0,balance:(profile.gradeFees?.[showPayment.class]||TERM_FEE)}} onPay={handlePayment} onClose={()=>setShowPayment(null)}/>}
-      {showReceipt&&<ReceiptModal receipt={showReceipt} profile={profile} onClose={()=>setShowReceipt(null)}/>}
+      {showPayment && (() => {
+        const classFees = profile.gradeFees?.[showPayment.class] || {};
+        const resType = (showPayment.residenceType || 'day').toLowerCase();
+        const defaultTotal = typeof classFees === 'object' 
+          ? (Number(classFees[resType]) || Number(classFees.day) || TERM_FEE)
+          : (Number(classFees) || TERM_FEE);
+        const f = fees[showPayment.id] || { totalFee: defaultTotal, paid: 0, balance: defaultTotal };
+        return <PaymentModal student={showPayment} fee={f} onPay={handlePayment} onClose={() => setShowPayment(null)} />;
+      })()}
+      {showReceipt && <ReceiptModal receipt={showReceipt} profile={profile} onClose={() => setShowReceipt(null)} />}
     </div>
   );
 }

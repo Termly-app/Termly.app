@@ -1336,7 +1336,15 @@ export async function recordPayment(studentId, amount, method, reference) {
     const grade = student?.class;
     const profile = await getSchoolProfile();
     const customFee = profile.gradeFees?.[grade];
-    const finalFee = customFee ? Number(customFee) : TERM_FEE;
+    let finalFee = TERM_FEE;
+    if (customFee) {
+      if (typeof customFee === 'object') {
+        const resType = (student.residenceType || 'day').toLowerCase();
+        finalFee = Number(customFee[resType]) || Number(customFee.day) || TERM_FEE;
+      } else {
+        finalFee = Number(customFee) || TERM_FEE;
+      }
+    }
 
     const { data: newFee, error: feeErr } = await supabase
       .from('fees')
@@ -1451,9 +1459,9 @@ export async function getFeeSummary(preFetchedFees = null, preFetchedStudents = 
       }
     }
     const f = fees[s.id] || { totalFee: defaultFee, paid: 0, balance: defaultFee };
-    totalExpected += f.totalFee;
-    totalCollected += f.paid;
-    totalOutstanding += f.balance;
+    totalExpected += (Number(f.totalFee) || 0);
+    totalCollected += (Number(f.paid) || 0);
+    totalOutstanding += (Number(f.balance) || 0);
     if (f.balance <= 0) fullyPaid++;
     else if (f.paid > 0) partialPaid++;
     else unpaid++;
