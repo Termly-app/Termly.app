@@ -104,7 +104,8 @@ function ReceiptModal({ receipt, onClose, profile }) {
         transaction_code: receipt.reference,
         created_at: receipt.date,
         method: receipt.method,
-        balance: receipt.balance // Passed from parent
+        balance: receipt.balance, // Passed from parent
+        totalFee: receipt.totalFee
       }
     });
   };

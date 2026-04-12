@@ -83,7 +83,9 @@ function fmt(dateStr) {
  * Generate receipt number from payment id
  */
 function receiptNo(paymentId) {
-  const suffix = paymentId ? String(paymentId).slice(-6).toUpperCase() : Math.random().toString(36).slice(-6).toUpperCase();
+  const pid = String(paymentId || '');
+  if (pid.startsWith('RCT-')) return pid;
+  const suffix = pid ? pid.slice(-6).toUpperCase() : Math.random().toString(36).slice(-6).toUpperCase();
   return `RCT-${new Date().getFullYear()}-${suffix}`;
 }
 
