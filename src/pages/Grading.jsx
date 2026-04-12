@@ -269,7 +269,7 @@ export default function Grading({ currentUser, currentPeriodId }) {
         <th style="width:30px">#</th><th style="width:70px">ADM NO</th>
         <th style="text-align:left;min-width:140px">STUDENT NAME</th>
         ${streamFilter === 'All' ? '<th>STR</th>' : ''}
-        ${subjects.map(s => `<th>${s.length > 12 ? s.substring(0, 10) + '..' : s}</th>`).join('')}
+        ${subjects.map(s => `<th>${subjectAbbr(s)}</th>`).join('')}
         <th>TTL</th><th>AVG</th><th>GRD</th>
       </tr></thead><tbody>
         ${results.map(s => {
@@ -305,7 +305,7 @@ export default function Grading({ currentUser, currentPeriodId }) {
       <table><thead><tr>
         <th style="width:30px">#</th><th style="width:70px">ADM NO</th>
         <th style="text-align:left;min-width:140px">STUDENT NAME</th><th>STR</th>
-        ${subjects.map(s => `<th>${s.length > 12 ? s.substring(0, 10) + '..' : s}</th>`).join('')}
+        ${subjects.map(s => `<th>${subjectAbbr(s)}</th>`).join('')}
         <th>TTL</th><th>AVG</th><th>GRD</th>
       </tr></thead><tbody>
         ${all.map(s => {
