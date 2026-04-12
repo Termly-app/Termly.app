@@ -1369,17 +1369,33 @@ export async function recordPayment(studentId, amount, method, reference) {
     if (feeErr) throw feeErr;
   }
 
+  // 0. Ensure we have the fee ID to satisfy database constraints
+  let targetFeeId = feeRecord?._feeId;
+  
+  // 1. Fetch current fee record to get current balance and ID if missing
+  const { data: currentFee, error: fetchErr } = await supabase
+    .from('fees')
+    .select('id, paid, balance')
+    .eq('school_id', _currentSchoolId)
+    .eq('student_id', studentId)
+    .eq('period_id', _currentPeriodId)
+    .single();
+
+  if (fetchErr) throw fetchErr;
+  targetFeeId = currentFee.id;
+
   // Missing RPC fallback: Perform the operation client-side
   const paymentDate = new Date().toISOString().split('T')[0];
   const amountNum = Number(amount);
 
-  // 1. Insert the payment record
+  // 2. Insert the payment record with the required fee_id
   const { data: paymentRecord, error: paymentErr } = await supabase
     .from('fee_payments')
     .insert({
       school_id: _currentSchoolId,
       student_id: studentId,
       period_id: _currentPeriodId,
+      fee_id: targetFeeId, // Added to fix not-null constraint
       amount: amountNum,
       method: method || 'Cash',
       reference: reference || '',
@@ -1389,17 +1405,6 @@ export async function recordPayment(studentId, amount, method, reference) {
     .single();
 
   if (paymentErr) throw paymentErr;
-
-  // 2. Fetch current fee to calculate new balance securely
-  const { data: currentFee, error: fetchErr } = await supabase
-    .from('fees')
-    .select('paid, balance')
-    .eq('school_id', _currentSchoolId)
-    .eq('student_id', studentId)
-    .eq('period_id', _currentPeriodId)
-    .single();
-
-  if (fetchErr) throw fetchErr;
 
   // 3. Update the fee balance
   const { error: updateErr } = await supabase
