@@ -214,7 +214,7 @@ export default function Attendance({ currentUser, currentPeriodId }) {
             {loading && <span className="text-muted" style={{ fontSize: '0.85rem' }}>Loading...</span>}
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-            {summary.absent > 0 && (
+            {/* summary.absent > 0 && (
               <button className="btn btn-warning" onClick={async () => {
                 const enabled = await isFeatureEnabled('sms');
                 if (!enabled) {
@@ -225,7 +225,7 @@ export default function Attendance({ currentUser, currentPeriodId }) {
               }}>
                 <PlatformZapIcon size={16} /> Notify Parents ({summary.absent})
               </button>
-            )}
+            ) */}
             <button className="btn btn-ghost" onClick={() => setShowPrintOptions(true)}><PrintIcon size={16} /> Print Report</button>
             <button className="btn btn-success" onClick={markAllPresent}><CheckIcon size={16} /> Mark All Present</button>
           </div>

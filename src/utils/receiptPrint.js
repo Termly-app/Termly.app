@@ -105,9 +105,12 @@ export function printReceipt({ school, student, payment, feeItems = [] }) {
   const billed  = payment?.totalFee || 0; // Passed from Fees.jsx
   const balance = (payment?.balance !== undefined) ? payment.balance : 0;
 
+  const previousPaid = Math.max(0, billed - balance - total);
+
   const feeRows = `
     <tr><td>Term Fee (Total Required)</td><td class="amount">${ksh(billed)}</td></tr>
-    <tr><td>Amount Paid This Transaction</td><td class="amount">${ksh(total)}</td></tr>
+    ${previousPaid > 0 ? `<tr><td>Amount Paid Previously</td><td class="amount">${ksh(previousPaid)}</td></tr>` : ''}
+    <tr><td>Amount Paid This Transaction</td><td class="amount" style="font-weight:bold; color:#060">${ksh(total)}</td></tr>
   `;
 
   const html = `

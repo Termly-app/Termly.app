@@ -15,10 +15,20 @@ function PaymentModal({ student, fee, onPay, onClose }) {
   const [amount, setAmount] = useState('');
   const [method, setMethod] = useState('M-Pesa');
   const [reference, setReference] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const isNotConfigured = fee.totalFee === null; // New state detection
 
   const formatKSh = (n) => n === null ? 'Not Set' : `KSh ${Number(n||0).toLocaleString()}`;
-  const handleSubmit = (e) => { e.preventDefault(); if(!amount||Number(amount)<=0)return; onPay(student.id,amount,method,reference); };
+  const handleSubmit = async (e) => { 
+    e.preventDefault(); 
+    if(!amount || Number(amount)<=0 || isSubmitting) return; 
+    setIsSubmitting(true);
+    try {
+      await onPay(student.id, amount, method, reference); 
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   return (
     <div className="modal-overlay" onClick={onClose}>
@@ -75,7 +85,7 @@ function PaymentModal({ student, fee, onPay, onClose }) {
                 <div className="form-group"><label>Reference</label><input className="form-input" value={reference} onChange={e=>setReference(e.target.value)} placeholder="e.g. MPE1234"/></div>
               </div>
             </div>
-            <div className="modal-footer"><button type="button" className="btn btn-ghost" onClick={onClose}>Cancel</button><button type="submit" className="btn btn-success"><CheckIcon size={16} /> Record Payment</button></div>
+            <div className="modal-footer"><button type="button" className="btn btn-ghost" onClick={onClose} disabled={isSubmitting}>Cancel</button><button type="submit" className="btn btn-success" disabled={isSubmitting}><CheckIcon size={16} /> {isSubmitting ? 'Recording...' : 'Record Payment'}</button></div>
           </form>
         )}
       </div>
@@ -85,6 +95,12 @@ function PaymentModal({ student, fee, onPay, onClose }) {
 
 function ReceiptModal({ receipt, onClose, profile }) {
   const formatKSh = (n) => `KSh ${Number(n||0).toLocaleString()}`;
+  
+  const billed = receipt.totalFee || 0;
+  const currentPaid = receipt.amount || 0;
+  const balance = receipt.balance || 0;
+  const previousPaid = Math.max(0, billed - balance - currentPaid);
+
   const handlePrint = () => {
     printReceipt({
       school: {
@@ -123,7 +139,20 @@ function ReceiptModal({ receipt, onClose, profile }) {
             <div className="receipt-row"><span>Class:</span><strong>{receipt.studentClass}</strong></div>
             <div className="receipt-row"><span>Method:</span><strong>{receipt.method}</strong></div>
             {receipt.reference && <div className="receipt-row"><span>Ref:</span><strong>{receipt.reference}</strong></div>}
-            <div className="receipt-row receipt-total"><span>Amount Paid:</span><strong style={{color:'var(--success)'}}>{formatKSh(receipt.amount)}</strong></div>
+            
+            <div className="receipt-divider" style={{ borderTop: '1px dashed #ccc', margin: '10px 0' }}></div>
+            
+            <div className="receipt-row"><span>Term Fee (Billed):</span><strong>{formatKSh(billed)}</strong></div>
+            {previousPaid > 0 && <div className="receipt-row"><span>Previously Paid:</span><strong>{formatKSh(previousPaid)}</strong></div>}
+            
+            <div className="receipt-row receipt-total" style={{ borderTop: 'none', marginTop: 4, paddingTop: 4 }}>
+              <span>Amount Paid Now:</span><strong style={{color:'var(--success)'}}>{formatKSh(currentPaid)}</strong>
+            </div>
+
+            <div className="receipt-row" style={{ marginTop: '12px', padding: '10px', background: '#f8fafc', borderRadius: '6px', border: '1px solid #e2e8f0' }}>
+               <span style={{color: '#64748b', fontWeight: 600}}>Outstanding Balance:</span>
+               <strong style={{color: balance > 0 ? 'var(--danger)' : 'var(--success)', fontSize: '1.05rem'}}>{balance > 0 ? formatKSh(balance) : 'CLEARED'}</strong>
+            </div>
           </div>
         </div>
         <div className="modal-footer"><button className="btn btn-ghost" onClick={onClose}>Close</button><button className="btn btn-primary" onClick={handlePrint}><PrintIcon size={16} /> Print</button></div>
@@ -240,7 +269,7 @@ export default function Fees({ currentUser, currentPeriodId }) {
       const p = await recordPayment(sid,amount,method,ref);
       const s = students.find(x=>x.id===sid);
       const fee = (await getFees())[sid] || {};
-      setShowReceipt({...p,studentName:s.name,studentClass:s.class,admNo:s.admNo,balance:fee.balance});
+      setShowReceipt({...p,studentName:s.name,studentClass:s.class,admNo:s.admNo,totalFee:fee.totalFee,balance:fee.balance});
       setShowPayment(null); 
       await refresh();
     } catch (err) { alert({ title: 'Payment Error', message: err.message, variant: 'danger' }); }

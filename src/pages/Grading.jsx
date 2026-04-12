@@ -500,7 +500,7 @@ export default function Grading({ currentUser, currentPeriodId }) {
         {[
           { key:'marks',       icon: isEarlyYears ? <FlagIcon /> : <BookIcon />, label: isEarlyYears ? 'Competency Focus' : 'Marks & Rankings' },
           ...(!isEarlyYears ? [{ key:'subjects', icon:<DashboardIcon />, label:'Subject Rankings' }] : []),
-          { key:'cbc',         icon:<FlagIcon />, label:'CBC Levels' },
+          ...(level.includes('CBC') || level === 'All' ? [{ key:'cbc', icon:<FlagIcon />, label:'CBC Levels' }] : []),
           { key:'performance', icon:<TeacherIcon />, label:'Teacher Performance' },
         ].map(t => (
           <button key={t.key} onClick={() => setActiveTab(t.key)}
@@ -783,33 +783,7 @@ export default function Grading({ currentUser, currentPeriodId }) {
                   </div>
                 </div>
 
-                {/* Class Strength */}
-                <div style={{ padding: 16, border: '1.5px solid var(--border)', borderRadius: 12, background: 'var(--bg-card)' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
-                    <TrendUpIcon size={18} color="var(--success)" />
-                    <div style={{ fontWeight: 800, fontSize: '0.9rem' }}>Academic Health</div>
-                  </div>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-                    <div>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem', marginBottom: 4 }}>
-                        <span>Pass Rate (Above 50%)</span>
-                        <span style={{ fontWeight: 700 }}>{((results.filter(s => s.average >= 50).length / (results.length || 1)) * 100).toFixed(0)}%</span>
-                      </div>
-                      <div style={{ height: 6, background: 'var(--bg)', borderRadius: 3 }}>
-                        <div style={{ width: `${(results.filter(s => s.average >= 50).length / (results.length || 1)) * 100}%`, height: '100%', background: 'var(--success)', borderRadius: 3 }} />
-                      </div>
-                    </div>
-                    <div>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem', marginBottom: 4 }}>
-                        <span>Distinction Rate (Above 80%)</span>
-                        <span style={{ fontWeight: 700 }}>{((results.filter(s => s.average >= 80).length / (results.length || 1)) * 100).toFixed(0)}%</span>
-                      </div>
-                      <div style={{ height: 6, background: 'var(--bg)', borderRadius: 3 }}>
-                        <div style={{ width: `${(results.filter(s => s.average >= 80).length / (results.length || 1)) * 100}%`, height: '100%', background: 'var(--primary)', borderRadius: 3 }} />
-                      </div>
-                    </div>
-                  </div>
-                </div>
+                {/* removed Academic Health section by user request */}
               </div>
             </div>
           </div>
@@ -832,7 +806,7 @@ export default function Grading({ currentUser, currentPeriodId }) {
                         <td className="font-bold">{avg}%</td>
                         <td className="text-success">{high}</td>
                         <td className="text-danger">{low}</td>
-                        <td><span className="text-success">▲ +{Math.floor(Math.random() * 5)}</span></td>
+                        <td><span className="text-muted" style={{opacity: 0.5}}>—</span></td>
                       </tr>
                     );
                   })}
