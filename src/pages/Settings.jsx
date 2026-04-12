@@ -480,7 +480,7 @@ export default function Settings() {
                         />
                         <p style={{fontSize:'0.65rem',color:'var(--text-muted)',marginTop:4}}>This label appears on the main scheduling button.</p>
                       </div>
-                      */
+                      */}
                     </div>
 
                     {/* Grading Scale */}
@@ -687,7 +687,7 @@ export default function Settings() {
               </div>
             </div>
           </div>
-        )} */
+        )} */}
 
         {/* Academic Eras & Terms */}
           <div className="card">
