@@ -909,7 +909,7 @@ function ReportCardModal({ student, cbcData, coreCompData, onClose, getGrade, cb
         : (mark >= 80 ? 'Excellent' : mark >= 70 ? 'Good' : mark >= 60 ? 'Average' : mark >= 50 ? 'Below Avg' : 'Needs Improvement');
       return `<tr><td>${sub}</td>${!isEarlyYears ? `<td style="font-weight:700">${mark}</td><td style="color:${g.color};font-weight:700">${g.grade}</td>` : `<td class="${cbcCls}">${cbc}</td><td>${remark}</td>`}</tr>`;
     }).join('')}
-    ${!isEarlyYears ? `<tr style="font-weight:700;background:#f8fafc"><td>Total</td><td colspan="2">${student.total} / ${subjects.length * 100} — Average: ${student.average}% (Grade ${grade})</td></tr>` : ''}
+    ${!isEarlyYears ? `<tr style="font-weight:700;background:#f8fafc"><td>Total</td><td colspan="2">${student.total} / ${(student.enrolledSubjects?.length || subjects.length) * 100} — Average: ${student.average}% (Grade ${grade})</td></tr>` : ''}
     </tbody></table>
     ${isEarlyYears ? `
     <div class="section-title">Core Competencies & Values</div>
