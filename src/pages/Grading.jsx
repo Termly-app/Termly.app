@@ -188,6 +188,7 @@ export default function Grading({ currentUser, currentPeriodId }) {
     try {
       let list = await getClassList(selectedClass);
       if (streamFilter !== 'All') list = list.filter(s => s.stream === streamFilter);
+      list.sort((a, b) => String(a.admNo || '').localeCompare(String(b.admNo || ''), undefined, { numeric: true }));
       const p = await getSchoolProfile();
       const sl = streamFilter === 'All' ? '' : ` - ${streamFilter}`;
       const w = window.open('', '_blank');
