@@ -1034,7 +1034,7 @@ export async function getStudents() {
 export async function getStudent(id) {
   const { data, error } = await supabase
     .from('students')
-    .select('id, name, adm_no, class, stream, parent, parent_phone, gender, dob, join_date, notes, school_id, birth_cert_no, county, father_name, father_phone, mother_name, mother_phone, residence_type, house')
+    .select('id, name, adm_no, class, stream, parent, parent_phone, gender, dob, join_date, notes, school_id, birth_cert_no, county, father_name, father_phone, mother_name, mother_phone, residence_type, house, subjects')
     .eq('id', id)
     .single();
   if (error) throw error;
@@ -1078,8 +1078,8 @@ export async function addStudent(student) {
       father_name: student.fatherName || null,
       father_phone: student.fatherPhone || null,
       mother_name: student.motherName || null,
-      mother_phone: student.motherPhone || null
-      // nemls_verified column does not exist in DB schema
+      mother_phone: student.motherPhone || null,
+      subjects: getSubjectsForGrade(student.class, p)
     })
     .select()
     .single();
@@ -1109,7 +1109,8 @@ export async function addStudent(student) {
     fatherPhone: data.father_phone,
     motherName: data.mother_name,
     motherPhone: data.mother_phone,
-    nemisVerified: false // column not in DB yet
+    subjects: data.subjects || [],
+    nemisVerified: false
   };
 
   // Sync to local DB immediately for UI responsiveness
@@ -1138,7 +1139,7 @@ export async function updateStudent(id, updates) {
   if (updates.fatherPhone !== undefined) row.father_phone = updates.fatherPhone;
   if (updates.motherName !== undefined) row.mother_name = updates.motherName;
   if (updates.motherPhone !== undefined) row.mother_phone = updates.motherPhone;
-  // nemls_verified column does not exist in DB schema
+  if (updates.subjects !== undefined) row.subjects = updates.subjects;
 
   const { data, error } = await supabase
     .from('students')
@@ -1150,8 +1151,25 @@ export async function updateStudent(id, updates) {
   
   // Sync to local DB immediately
   try { await db.students.put(data); } catch(e) {}
-  
-  return data ? { ...data, admNo: data.adm_no, parentPhone: data.parent_phone, joinDate: data.join_date, residenceType: data.residence_type || 'day', house: data.house || null } : null;
+  return data ? { ...data, admNo: data.adm_no, parentPhone: data.parent_phone, joinDate: data.join_date, residenceType: data.residence_type || 'day', house: data.house || null, subjects: data.subjects || [] } : null;
+}
+
+/**
+ * MIGRATION: Auto-assign all default subjects to existing students if they have none.
+ */
+export async function migrateExistingStudentsSubjects() {
+  const students = await getStudents();
+  const profile = await getSchoolProfile();
+  let migrated = 0;
+
+  for (const s of students) {
+    if (!s.subjects || s.subjects.length === 0) {
+      const defaultSubs = getSubjectsForGrade(s.class, profile);
+      await updateStudent(s.id, { subjects: defaultSubs });
+      migrated++;
+    }
+  }
+  return migrated;
 }
 
 export async function deleteStudent(id) {
@@ -1237,12 +1255,13 @@ export async function getClassResults(className, examType = _currentExamType) {
 
   const results = students.map(s => {
     const m = marks[s.id] || {};
-    const relevantMarks = subjects.map(sub => m[sub] || 0);
+    const enrolledSubjects = (s.subjects && s.subjects.length > 0) ? s.subjects : subjects;
+    const relevantMarks = enrolledSubjects.map(sub => m[sub] || 0);
     const total = relevantMarks.reduce((sum, v) => sum + v, 0);
-    const average = subjects.length > 0 ? (total / subjects.length).toFixed(1) : 0;
+    const average = enrolledSubjects.length > 0 ? (total / enrolledSubjects.length).toFixed(1) : 0;
     const cleanMarks = {};
-    subjects.forEach(sub => { cleanMarks[sub] = m[sub] || 0; });
-    return { ...s, marks: cleanMarks, total, average: Number(average), level: getLevelForGrade(className) };
+    enrolledSubjects.forEach(sub => { cleanMarks[sub] = m[sub] || 0; });
+    return { ...s, marks: cleanMarks, total, average: Number(average), level: getLevelForGrade(className), enrolledSubjects };
   });
 
   results.sort((a, b) => b.total - a.total);
@@ -1257,9 +1276,11 @@ export async function getSubjectRankings(className, examType = _currentExamType)
   const subjects = getSubjectsForGrade(className, profile);
   const rankings = {};
   subjects.forEach(sub => {
-    const subResults = students.map(s => ({
-      ...s, mark: (marks[s.id] || {})[sub] || 0,
-    })).sort((a, b) => b.mark - a.mark);
+    const subResults = students
+      .filter(s => !s.subjects || s.subjects.length === 0 || s.subjects.includes(sub))
+      .map(s => ({
+        ...s, mark: (marks[s.id] || {})[sub] || 0,
+      })).sort((a, b) => b.mark - a.mark);
     subResults.forEach((r, i) => { r.rank = i + 1; });
     rankings[sub] = subResults;
   });

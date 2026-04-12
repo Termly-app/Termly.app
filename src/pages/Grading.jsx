@@ -5,7 +5,7 @@ import { CBC_STRUCTURE, CBC_LEVELS, CBC_CORE_COMPETENCIES, STREAMS, getSubjectsF
 import { 
   LeafIcon, BookIcon, PrintIcon, DashboardIcon, EditIcon, 
   FlagIcon, RocketIcon, TeacherIcon, SchoolIcon, SaveIcon,
-  SparklesIcon, TrendUpIcon, ChartBarIcon
+  SparklesIcon, TrendUpIcon, ChartBarIcon, SettingsIcon, CrossIcon
 } from '../components/CommonIcons';
 import Select from '../components/Common/Select';
 import { useDialog } from '../contexts/DialogContext';
@@ -22,11 +22,16 @@ export default function Grading({ currentUser, currentPeriodId }) {
   const [showReport, setShowReport] = useState(null);
   const [activeTab, setActiveTab] = useState('marks');
   const [subjectRankings, setSubjectRankings] = useState({});
+  const [showSubjectPicker, setShowSubjectPicker] = useState(null);
   const [cbcData, setCbcData] = useState({});
   const [teacherPerf, setTeacherPerf] = useState({});
-  const [selectedSubject, setSelectedSubject] = useState('');
-  const [coreCompData, setCoreCompData] = useState({});
-  const [profile, setProfile] = useState({ streams: [], activeClasses: [] });
+  
+  // Trigger migration on load if needed
+  useEffect(() => {
+    import('../data/store').then(m => m.migrateExistingStudentsSubjects());
+  }, []);
+
+  const profile = profileParam || { streams: [], activeClasses: [] };
   const [selectedPathway, setSelectedPathway] = useState('STEM');
   const [examType, setExamType] = useState('');
   const [loading, setLoading] = useState(true);
@@ -135,6 +140,21 @@ export default function Grading({ currentUser, currentPeriodId }) {
 
   const getGrade = (avg) => {
     return getGradeForScore(avg, selectedClass, profile);
+  };
+
+  const handleSubjectSelection = async (subjects) => {
+    if (!showSubjectPicker) return;
+    setLoading(true);
+    try {
+      const { updateStudent } = await import('../data/store');
+      await updateStudent(showSubjectPicker.id, { subjects });
+      setShowSubjectPicker(null);
+      await loadResults();
+    } catch (err) {
+      alert({ title: 'Update Error', message: err.message, variant: 'danger' });
+    } finally {
+      setLoading(false);
+    }
   };
 
   const cbcLabel = (lv) => {
@@ -428,7 +448,19 @@ export default function Grading({ currentUser, currentPeriodId }) {
                     const studentCbc = cbcData[s.id] || {};
                     return (
                       <tr key={s.id}>
-                        <td><strong style={{ cursor: 'pointer', color: 'var(--primary)' }} onClick={() => setShowReport(s)}>{s.name}</strong></td>
+                        <td>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                            <strong style={{ cursor: 'pointer', color: 'var(--primary)' }} onClick={() => setShowReport(s)}>{s.name}</strong>
+                            <button 
+                              onClick={() => setShowSubjectPicker(s)}
+                              className="btn-icon" 
+                              title="Manage Student Subjects"
+                              style={{ padding: 4, opacity: 0.6 }}
+                            >
+                              <SettingsIcon size={14} />
+                            </button>
+                          </div>
+                        </td>
                         {subjects.map(sub => {
                           const lv = studentCbc[sub] || 'Meeting Expectation';
                           return (
@@ -471,12 +503,31 @@ export default function Grading({ currentUser, currentPeriodId }) {
                       <tr key={s.id}>
                         <td><span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 28, height: 28, borderRadius: '50%', background: s.rank <= 3 ? '#fef3c7' : '#f1f5f9', color: s.rank <= 3 ? '#d97706' : '#64748b', fontSize: '0.82rem', fontWeight: 700 }}>{s.rank}</span></td>
                         <td style={{ fontSize: '0.85rem', fontWeight: 600 }}>{s.admNo}</td>
-                        <td><strong style={{ cursor: 'pointer', color: 'var(--primary)' }} onClick={() => !editMode && setShowReport(s)}>{s.name}</strong></td>
+                        <td>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                            <strong style={{ cursor: 'pointer', color: 'var(--primary)' }} onClick={() => !editMode && setShowReport(s)}>{s.name}</strong>
+                            {!editMode && (
+                              <button 
+                                onClick={() => setShowSubjectPicker(s)}
+                                className="btn-icon" 
+                                title="Manage Subjects"
+                                style={{ padding: 4, opacity: 0.6 }}
+                              >
+                                <SettingsIcon size={14} />
+                              </button>
+                            )}
+                          </div>
+                        </td>
                         {subjects.map(sub => {
                           // Check if this teacher is assigned to this subject in THIS stream
                           const teacherAssigned = (assignments[selectedClass]?.[s.stream || 'General']?.[sub] === currentUser?.id) || 
                                                  (assignments[selectedClass]?.['General']?.[sub] === currentUser?.id);
                           const canEdit = isAdmin || teacherAssigned;
+                          
+                          const isEnrolled = !s.subjects || s.subjects.length === 0 || s.subjects.includes(sub);
+                          if (!isEnrolled) {
+                            return <td key={sub} className="text-center text-muted" style={{ background: 'var(--bg)', opacity: 0.4 }}>—</td>;
+                          }
                           
                           return (
                             <td key={sub}>
@@ -704,6 +755,16 @@ export default function Grading({ currentUser, currentPeriodId }) {
         </div>
       )}
 
+      {/* Subject Picker Modal */}
+      {showSubjectPicker && (
+        <SubjectPicker 
+          student={showSubjectPicker} 
+          allSubjects={subjects} 
+          onClose={() => setShowSubjectPicker(null)} 
+          onSave={handleSubjectSelection} 
+        />
+      )}
+
       {/* Report Card Modal */}
       {showReport && <ReportCardModal student={showReport} cbcData={cbcData} coreCompData={coreCompData} onClose={() => setShowReport(null)} getGrade={getGrade} cbcLabel={cbcLabel} cbcColor={cbcColor} classSize={results.length} subjects={subjects} level={level} isEarlyYears={isEarlyYears} profile={profile} examType={examType} />}
     </div>
@@ -748,7 +809,7 @@ function ReportCardModal({ student, cbcData, coreCompData, onClose, getGrade, cb
     </div>
     <div class="section-title">${isEarlyYears ? 'Learning Areas & Development' : 'Academic Performance'}</div>
     <table><thead><tr><th>Learning Area</th>${!isEarlyYears ? '<th>Marks</th><th>Grade</th>' : '<th>CBC Level</th><th>Remarks</th>'}</tr></thead>
-    <tbody>${subjects.map(sub => {
+    <tbody>${(student.enrolledSubjects || subjects).map(sub => {
       const mark = student.marks[sub] || 0;
       const g = getGrade(mark);
       const cbc = studentCBC[sub] || 'Meeting Expectation';
@@ -798,7 +859,7 @@ function ReportCardModal({ student, cbcData, coreCompData, onClose, getGrade, cb
             <table>
               <thead><tr><th>Learning Area</th>{!isEarlyYears ? <><th>Marks</th><th>Grade</th></> : <><th>CBC Level</th><th>Remarks</th></>}</tr></thead>
               <tbody>
-                {subjects.map(sub => {
+                {(student.enrolledSubjects || subjects).map(sub => {
                   const mark = student.marks[sub] || 0;
                   const g = getGrade(mark);
                   const cbc = studentCBC[sub] || 'Meeting Expectation';
@@ -816,7 +877,7 @@ function ReportCardModal({ student, cbcData, coreCompData, onClose, getGrade, cb
                 })}
                 {!isEarlyYears && (
                   <tr style={{ fontWeight: 700, background: '#f8fafc' }}>
-                    <td>Total</td><td colSpan="2">{student.total} / {subjects.length * 100} — Avg: {student.average}% — Grade {grade}</td>
+                    <td>Total</td><td colSpan="2">{student.total} / {(student.enrolledSubjects?.length || subjects.length) * 100} — Avg: {student.average}% — Grade {grade}</td>
                   </tr>
                 )}
               </tbody>
@@ -867,6 +928,42 @@ function ReportCardModal({ student, cbcData, coreCompData, onClose, getGrade, cb
           </div>
         </div>
         <div className="modal-footer"><button className="btn btn-ghost" onClick={onClose}>Close</button><button className="btn btn-primary" onClick={handlePrint}><PrintIcon size={16} /> Print Report Card</button></div>
+      </div>
+    </div>
+  );
+/**
+ * MODAL: Manage which subjects a student specifically studies
+ */
+function SubjectPicker({ student, allSubjects, onClose, onSave }) {
+  const [selected, setSelected] = useState(student.enrolledSubjects && student.enrolledSubjects.length > 0 ? student.enrolledSubjects : (student.subjects && student.subjects.length > 0 ? student.subjects : allSubjects));
+
+  const toggle = (sub) => {
+    if (selected.includes(sub)) setSelected(selected.filter(s => s !== sub));
+    else setSelected([...selected, sub]);
+  };
+
+  return (
+    <div className="modal-overlay">
+      <div className="modal-content" style={{ maxWidth: 450 }}>
+        <div className="modal-header">
+          <h3>Manage Subjects: {student.name}</h3>
+          <button className="btn-icon" onClick={onClose}><CrossIcon /></button>
+        </div>
+        <div className="modal-body">
+          <p className="text-muted" style={{ marginBottom: 15, fontSize: '0.85rem' }}>Select the subjects this student studies. Unselected subjects will be hidden from grading and report cards.</p>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+            {allSubjects.map(sub => (
+              <label key={sub} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: 8, background: 'var(--bg)', borderRadius: 8, cursor: 'pointer' }}>
+                <input type="checkbox" checked={selected.includes(sub)} onChange={() => toggle(sub)} />
+                <span style={{ fontSize: '0.88rem' }}>{sub}</span>
+              </label>
+            ))}
+          </div>
+        </div>
+        <div className="modal-footer">
+          <button className="btn btn-ghost" onClick={onClose}>Cancel</button>
+          <button className="btn btn-primary" onClick={() => onSave(selected)}>Save Changes</button>
+        </div>
       </div>
     </div>
   );
