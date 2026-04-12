@@ -25,13 +25,15 @@ export default function Grading({ currentUser, currentPeriodId }) {
   const [showSubjectPicker, setShowSubjectPicker] = useState(null);
   const [cbcData, setCbcData] = useState({});
   const [teacherPerf, setTeacherPerf] = useState({});
+  const [selectedSubject, setSelectedSubject] = useState('');
+  const [coreCompData, setCoreCompData] = useState({});
   
   // Trigger migration on load if needed
   useEffect(() => {
     import('../data/store').then(m => m.migrateExistingStudentsSubjects());
   }, []);
 
-  const profile = profileParam || { streams: [], activeClasses: [] };
+  const [profile, setProfile] = useState({ streams: [], activeClasses: [] });
   const [selectedPathway, setSelectedPathway] = useState('STEM');
   const [examType, setExamType] = useState('');
   const [loading, setLoading] = useState(true);
