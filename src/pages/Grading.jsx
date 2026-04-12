@@ -172,15 +172,15 @@ export default function Grading({ currentUser, currentPeriodId }) {
   // ─── Shared Excel-style CSS for all print sheets ───
   const excelCSS = `
     body{font-family:'Calibri','Arial',sans-serif;padding:12px;margin:0;color:#000;font-size:11px}
-    h2{font-size:14px;margin:0 0 2px;text-transform:uppercase}
-    .sub{font-size:10px;color:#555;margin-bottom:10px}
+    h2{font-size:14px;margin:0 0 2px;text-transform:uppercase;font-weight:700}
+    .sub{font-size:10px;color:#000;margin-bottom:10px}
     table{width:100%;border-collapse:collapse;margin-top:8px}
     th,td{border:1px solid #000;padding:4px 6px;text-align:center;font-size:10px}
-    th{background:#d9e1f2;font-weight:700;text-transform:uppercase;font-size:9px}
+    th{background:#fff;font-weight:700;text-transform:uppercase;font-size:9px}
     td{background:#fff}
     td.nm{text-align:left;font-weight:500;white-space:nowrap}
-    .ft{margin-top:12px;font-size:9px;color:#555;display:flex;justify-content:space-between}
-    @page{size:landscape;margin:8mm}
+    .ft{margin-top:12px;font-size:9px;color:#000;display:flex;justify-content:space-between}
+    @page{size:portrait;margin:8mm}
     @media print{body{padding:0}}
   `;
 
@@ -199,9 +199,9 @@ export default function Grading({ currentUser, currentPeriodId }) {
         <th style="width:30px">#</th><th style="width:70px">ADM NO</th>
         <th style="text-align:left;min-width:140px">STUDENT NAME</th>
         ${subjects.map(s => `<th>${s.length > 12 ? s.substring(0, 10) + '..' : s}</th>`).join('')}
-        <th>TTL</th><th>AVG</th><th>GRD</th><th>POS</th>
+        <th>TTL</th><th>AVG</th><th>GRD</th>
       </tr></thead><tbody>
-        ${list.map((s, i) => `<tr><td>${i + 1}</td><td>${s.admNo || ''}</td><td class="nm">${s.name}</td>${subjects.map(() => '<td></td>').join('')}<td></td><td></td><td></td><td></td></tr>`).join('')}
+        ${list.map((s, i) => `<tr><td>${i + 1}</td><td>${s.admNo || ''}</td><td class="nm">${s.name}</td>${subjects.map(() => '<td></td>').join('')}<td></td><td></td><td></td></tr>`).join('')}
       </tbody></table>
       <div class="ft"><span>Class Teacher: _________________________ Sign: _____________</span><span>Printed: ${new Date().toLocaleDateString()}</span></div>
       </body></html>`);
@@ -224,7 +224,7 @@ export default function Grading({ currentUser, currentPeriodId }) {
         <th style="text-align:left;min-width:140px">STUDENT NAME</th>
         ${streamFilter === 'All' ? '<th>STR</th>' : ''}
         ${subjects.map(s => `<th>${s.length > 12 ? s.substring(0, 10) + '..' : s}</th>`).join('')}
-        <th>TTL</th><th>AVG</th><th>GRD</th><th>POS</th>
+        <th>TTL</th><th>AVG</th><th>GRD</th>
       </tr></thead><tbody>
         ${results.map(s => {
           const { grade: g } = getGrade(s.average);
@@ -234,7 +234,7 @@ export default function Grading({ currentUser, currentPeriodId }) {
             ${streamFilter === 'All' ? `<td>${s.stream || '-'}</td>` : ''}
             ${subjects.map(sub => !enrolled.includes(sub) ? '<td>-</td>' : `<td>${s.marks[sub] !== undefined ? s.marks[sub] : ''}</td>`).join('')}
             <td style="font-weight:700">${s.total}</td><td style="font-weight:700">${s.average}</td>
-            <td style="font-weight:700">${g}</td><td style="font-weight:700">${s.rank}</td>
+            <td style="font-weight:700">${g}</td>
           </tr>`;
         }).join('')}
       </tbody></table>
@@ -260,7 +260,7 @@ export default function Grading({ currentUser, currentPeriodId }) {
         <th style="width:30px">#</th><th style="width:70px">ADM NO</th>
         <th style="text-align:left;min-width:140px">STUDENT NAME</th><th>STR</th>
         ${subjects.map(s => `<th>${s.length > 12 ? s.substring(0, 10) + '..' : s}</th>`).join('')}
-        <th>TTL</th><th>AVG</th><th>GRD</th><th>POS</th>
+        <th>TTL</th><th>AVG</th><th>GRD</th>
       </tr></thead><tbody>
         ${all.map(s => {
           const { grade: g } = getGrade(s.average);
@@ -269,7 +269,7 @@ export default function Grading({ currentUser, currentPeriodId }) {
             <td>${s.rank}</td><td>${s.admNo || ''}</td><td class="nm">${s.name}</td><td>${s.stream || '-'}</td>
             ${subjects.map(sub => !enrolled.includes(sub) ? '<td>-</td>' : `<td>${s.marks[sub] !== undefined ? s.marks[sub] : ''}</td>`).join('')}
             <td style="font-weight:700">${s.total}</td><td style="font-weight:700">${s.average}</td>
-            <td style="font-weight:700">${g}</td><td style="font-weight:700">${s.rank}</td>
+            <td style="font-weight:700">${g}</td>
           </tr>`;
         }).join('')}
       </tbody></table>
