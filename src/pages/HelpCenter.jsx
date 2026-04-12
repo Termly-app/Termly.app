@@ -174,12 +174,7 @@ export default function HelpCenter() {
               ))}
             </div>
             
-            <div style={{ marginTop: 40, padding: 24, background: '#F8FAFC', borderRadius: 20, border: '1px solid #E2E8F0' }}>
-              <div style={{ color: 'var(--primary)', marginBottom: 12 }}><InfoIcon size={24} /></div>
-              <h5 style={{ margin: '0 0 8px 0', fontSize: '1rem', fontWeight: 800 }}>Need more help?</h5>
-              <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', lineHeight: 1.5, marginBottom: 16 }}>Our support team is available Mon-Fri 8AM-6PM EAT.</p>
-              <Link to="/support" className="btn btn-primary btn-sm btn-block">Contact Support</Link>
-            </div>
+            {/* Need more help? card removed */}
           </div>
         </div>
 

@@ -219,6 +219,33 @@ export default function LMS({ currentUser }) {
     setLoading(false);
   };
 
+  const viewSubmissions = async (ast) => {
+    setLoading(true);
+    try {
+      const subs = await getSubmissions(ast.id);
+      setSelectedSubmissions({ assignment: ast, subs });
+    } catch (e) {
+      console.error(e);
+      alert({ title: 'Error', message: 'Could not load submissions.', variant: 'danger' });
+    }
+    setLoading(false);
+  };
+
+  const handleUpdateGrade = async (subId, updates) => {
+    setLoading(true);
+    try {
+      await updateSubmission(subId, updates);
+      if (selectedSubmissions) {
+        const subs = await getSubmissions(selectedSubmissions.assignment.id);
+        setSelectedSubmissions({ ...selectedSubmissions, subs });
+      }
+    } catch (e) {
+      console.error(e);
+      alert({ title: 'Error', message: 'Could not update grade.', variant: 'danger' });
+    }
+    setLoading(false);
+  };
+
   const [showQuestionModal, setShowQuestionModal] = useState(false);
 
   const handleAddQuestion = () => {

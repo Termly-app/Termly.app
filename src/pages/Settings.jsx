@@ -467,6 +467,7 @@ export default function Settings() {
                         <button onClick={addExam} className="btn btn-ghost btn-sm" style={{display:'flex',alignItems:'center',gap:4}}><PlusIcon size={14} /> Add</button>
                       </div>
 
+                      {/* Timetable label - WIP (module disabled)
                       <div style={{marginTop: 16}}>
                         <label style={{fontSize:'0.72rem',fontWeight:700,color:'var(--text-light)',textTransform:'uppercase',marginBottom:8,display:'block'}}>Regular Timetable Name</label>
                         <input 
@@ -479,6 +480,7 @@ export default function Settings() {
                         />
                         <p style={{fontSize:'0.65rem',color:'var(--text-muted)',marginTop:4}}>This label appears on the main scheduling button.</p>
                       </div>
+                      */
                     </div>
 
                     {/* Grading Scale */}
@@ -577,7 +579,7 @@ export default function Settings() {
           </div>
         </div>
 
-        {/* Integrations (M-Pesa & SMS) - ONLY FOR ADMINS */}
+        {/* Integrations (M-Pesa & SMS) - WIP, ENTIRE CARD DISABLED
         {isAdmin && (
           <div className="card">
             <div className="card-header">
@@ -685,7 +687,7 @@ export default function Settings() {
               </div>
             </div>
           </div>
-        )}
+        )} */
 
         {/* Academic Eras & Terms */}
           <div className="card">

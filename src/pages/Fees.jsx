@@ -6,7 +6,7 @@ import {
   CardIcon, RocketIcon, UserIcon, InfoIcon, SearchIcon, CheckIcon, ReceiptIcon, PrintIcon, AlertIcon, DashboardIcon, ClockIcon
 } from '../components/CommonIcons';
 import { printReceipt } from '../utils/receiptPrint';
-import MpesaReconciliation from './MpesaReconciliation';
+// import MpesaReconciliation from './MpesaReconciliation'; // WIP: M-Pesa disabled
 import Select from '../components/Common/Select';
 import { Helmet } from 'react-helmet-async';
 import { useDialog } from '../contexts/DialogContext';
@@ -114,8 +114,8 @@ export default function Fees({ currentUser, currentPeriodId }) {
   const [profile, setProfile] = useState({});
   const [streamFilter, setStreamFilter] = useState('All');
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState('list'); // list or mpesa
-  const [mpesaLogs, setMpesaLogs] = useState([]);
+  // const [activeTab, setActiveTab] = useState('list'); // WIP: Only one tab now
+  // const [mpesaLogs, setMpesaLogs] = useState([]);
 
   useEffect(() => {
     const init = async () => {
@@ -140,8 +140,8 @@ export default function Fees({ currentUser, currentPeriodId }) {
 
   const refresh = async () => {
     try {
-      const [sData, fData, sumData, mLogs] = await Promise.all([getStudents(), getFees(), getFeeSummary(), getMpesaLogs()]);
-      setStudents(sData); setFees(fData); setSummary(sumData); setMpesaLogs(mLogs);
+      const [sData, fData, sumData] = await Promise.all([getStudents(), getFees(), getFeeSummary()]);
+      setStudents(sData); setFees(fData); setSummary(sumData);
     } catch (err) { console.error(err); }
   };
   const formatKSh = (n) => `KSh ${Number(n||0).toLocaleString()}`;
@@ -219,6 +219,7 @@ export default function Fees({ currentUser, currentPeriodId }) {
         <div className="kpi-card blue"><div className="kpi-icon blue"><DashboardIcon size={20} /></div><div className="kpi-value">{formatKSh(summary.totalExpected)}</div><div className="kpi-label">Expected</div></div>
         <div className="kpi-card purple"><div className="kpi-icon purple"><CheckIcon size={20} /></div><div className="kpi-value">{summary.fullyPaid||0}</div><div className="kpi-label">Fully Paid</div></div>
       </div>
+      {/* M-Pesa tabs disabled — WIP
       <div className="tabs-container" style={{ marginBottom: 20 }}>
         <button className={`tab-btn ${activeTab === 'list' ? 'active' : ''}`} onClick={() => setActiveTab('list')}>Student Fee List</button>
         <button className={`tab-btn ${activeTab === 'mpesa' ? 'active' : ''}`} onClick={() => setActiveTab('mpesa')}>M-Pesa Transactions</button>
@@ -226,9 +227,9 @@ export default function Fees({ currentUser, currentPeriodId }) {
           <button className={`tab-btn ${activeTab === 'reconcile' ? 'active' : ''}`} onClick={() => setActiveTab('reconcile')}>Manual Reconciliation</button>
         )}
       </div>
+      */}
 
-      {activeTab === 'list' ? (
-        <>
+      {/* Fee List (only active tab now) */}
           <div className="filter-bar">
             <div className="search-bar"><span className="search-icon"><SearchIcon size={16} /></span><input type="text" placeholder="Search student..." value={search} onChange={e=>setSearch(e.target.value)}/></div>
             <Select 
@@ -297,63 +298,13 @@ export default function Fees({ currentUser, currentPeriodId }) {
                 );
               })}</tbody></table>
           </div></div>
-        </>
+      {/* M-Pesa tab content — WIP 
       ) : activeTab === 'reconcile' ? (
         <MpesaReconciliation currentUser={currentUser} />
       ) : (
-        <div className="card slide-up">
-          <div className="card-header flex-between" style={{ padding: '16px 20px', borderBottom: '1px solid var(--border)' }}>
-            <h4 style={{ margin: 0 }}>M-Pesa Callbacks (Daraja API)</h4>
-            <div className="badge badge-info">{mpesaLogs.length} Transactions</div>
-          </div>
-          <div className="card-body" style={{ padding: 0 }}>
-            <table className="data-table">
-              <thead>
-                <tr>
-                  <th>Date</th>
-                  <th>Receipt</th>
-                  <th>Student/Account</th>
-                  <th>Phone</th>
-                  <th>Amount</th>
-                  <th>Status</th>
-                </tr>
-              </thead>
-              <tbody>
-                {mpesaLogs.length === 0 ? (
-                  <tr><td colSpan="6" className="text-center text-muted" style={{ padding: 40 }}>No automated payments received yet.</td></tr>
-                ) : (
-                  mpesaLogs.map(log => (
-                    <tr key={log.id}>
-                      <td className="text-muted" style={{ fontSize: '0.8rem' }}>{new Date(log.created_at).toLocaleString()}</td>
-                      <td><strong>{log.mpesa_receipt_number}</strong></td>
-                      <td>
-                        {log.students ? (
-                          <div>
-                            <div style={{ fontSize: '0.75rem', fontWeight: 800, color: 'var(--primary)' }}>{log.students.adm_no}</div>
-                            <strong>{log.students.name}</strong> <span className="text-muted" style={{ fontSize: '0.75rem' }}>({log.students.class})</span>
-                          </div>
-                        ) : (
-                          <div className="text-danger flex-center" style={{ gap: 4 }}>
-                            <AlertIcon size={14} /> 
-                            <span>Orphan: {log.bill_ref_number}</span>
-                          </div>
-                        )}
-                      </td>
-                      <td>{log.phone_number}</td>
-                      <td className="font-bold text-success">{formatKSh(log.amount)}</td>
-                      <td>
-                        <span className={`badge ${log.status === 'processed' ? 'badge-success' : log.status === 'orphaned' ? 'badge-danger' : 'badge-warning'}`}>
-                          {log.status === 'processed' ? 'Matched' : log.status === 'orphaned' ? 'Mismatch' : log.status}
-                        </span>
-                      </td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
-        </div>
+        <div>M-Pesa logs here</div>
       )}
+      */}
       {showPayment&&<PaymentModal student={showPayment} fee={fees[showPayment.id] || {totalFee:(profile.gradeFees?.[showPayment.class]||TERM_FEE),paid:0,balance:(profile.gradeFees?.[showPayment.class]||TERM_FEE)}} onPay={handlePayment} onClose={()=>setShowPayment(null)}/>}
       {showReceipt&&<ReceiptModal receipt={showReceipt} profile={profile} onClose={()=>setShowReceipt(null)}/>}
     </div>

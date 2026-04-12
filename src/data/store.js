@@ -1034,7 +1034,7 @@ export async function getStudents() {
 export async function getStudent(id) {
   const { data, error } = await supabase
     .from('students')
-    .select('id, name, adm_no, class, stream, parent, parent_phone, gender, dob, join_date, notes, school_id, birth_cert_no, county, father_name, father_phone, mother_name, mother_phone, nemis_verified, residence_type, house')
+    .select('id, name, adm_no, class, stream, parent, parent_phone, gender, dob, join_date, notes, school_id, birth_cert_no, county, father_name, father_phone, mother_name, mother_phone, residence_type, house')
     .eq('id', id)
     .single();
   if (error) throw error;
@@ -1078,8 +1078,8 @@ export async function addStudent(student) {
       father_name: student.fatherName || null,
       father_phone: student.fatherPhone || null,
       mother_name: student.motherName || null,
-      mother_phone: student.motherPhone || null,
-      nemls_verified: student.nemisVerified || false
+      mother_phone: student.motherPhone || null
+      // nemls_verified column does not exist in DB schema
     })
     .select()
     .single();
@@ -1109,7 +1109,7 @@ export async function addStudent(student) {
     fatherPhone: data.father_phone,
     motherName: data.mother_name,
     motherPhone: data.mother_phone,
-    nemisVerified: data.nemls_verified
+    nemisVerified: false // column not in DB yet
   };
 
   // Sync to local DB immediately for UI responsiveness
@@ -1138,7 +1138,7 @@ export async function updateStudent(id, updates) {
   if (updates.fatherPhone !== undefined) row.father_phone = updates.fatherPhone;
   if (updates.motherName !== undefined) row.mother_name = updates.motherName;
   if (updates.motherPhone !== undefined) row.mother_phone = updates.motherPhone;
-  if (updates.nemisVerified !== undefined) row.nemls_verified = updates.nemisVerified;
+  // nemls_verified column does not exist in DB schema
 
   const { data, error } = await supabase
     .from('students')
@@ -1609,7 +1609,7 @@ export async function getTeachers() {
     try {
       const { data, error } = await supabase
         .from('teachers')
-        .select('id, name, email, phone, subjects, school_id, on_leave, staff_code')
+        .select('id, name, email, phone, subjects, school_id, on_leave, staff_code, status, tsc_number')
         .eq('school_id', _currentSchoolId);
       if (error) throw error;
       if (data) {
@@ -1623,11 +1623,11 @@ export async function getTeachers() {
 
   fetchCloud();
 
-  if (cached.length > 0) return cached;
+  if (cached.length > 0) return cached.map(t => ({ ...t, status: t.status || 'Active' }));
 
   const { data, error } = await supabase
     .from('teachers')
-    .select('id, name, email, phone, subjects, school_id, on_leave, staff_code')
+    .select('id, name, email, phone, subjects, school_id, on_leave, staff_code, status, tsc_number')
     .eq('school_id', _currentSchoolId);
   if (error) throw error;
   if (data) await db.teachers.bulkPut(data.map(t => ({ ...t, school_id: _currentSchoolId })));
