@@ -1065,7 +1065,7 @@ export async function addStudent(student) {
   });
 
   await logPlatformActivity('STUDENT_ADD', `Added new student: ${student.name}`);
-  return { 
+  const newStudent = { 
     ...data, 
     admNo: data.adm_no, 
     residenceType: data.residence_type || 'day',
@@ -1079,6 +1079,11 @@ export async function addStudent(student) {
     motherPhone: data.mother_phone,
     nemisVerified: data.nemis_verified
   };
+
+  // Sync to local DB immediately for UI responsiveness
+  try { await db.students.put(data); } catch(e) {}
+
+  return newStudent;
 }
 
 export async function updateStudent(id, updates) {
@@ -1110,12 +1115,18 @@ export async function updateStudent(id, updates) {
     .select()
     .single();
   if (error) throw error;
+  
+  // Sync to local DB immediately
+  try { await db.students.put(data); } catch(e) {}
+  
   return data ? { ...data, admNo: data.adm_no, parentPhone: data.parent_phone, joinDate: data.join_date, residenceType: data.residence_type || 'day', house: data.house || null } : null;
 }
 
 export async function deleteStudent(id) {
   const { error } = await supabase.from('students').delete().eq('id', id);
   if (error) throw error;
+  // Sync to local DB immediately
+  try { await db.students.delete(id); } catch(e) {}
 }
 
 export async function transferStudents(selectedIds, direction = 'promote') {
@@ -1783,14 +1794,15 @@ export async function getTeachersBySchool(schoolId) {
 
 
 export async function addTeacher(teacher) {
-  // Check seat limit
+  // Check seat limit using the proper getPlanLimits function
   const profile = await getSchoolProfile();
   const currentTeachers = await getTeachers();
-  const plan = profile.subscriptionPlan || 'Basic';
-  const limit = SEAT_LIMITS[plan] || 10;
+  const plan = profile.subscriptionPlan || 'Sandbox';
+  const planLimits = await getPlanLimits(plan);
+  const limit = planLimits.admins || 50; // admins field = staff seat limit
 
   if (currentTeachers.length >= limit) {
-    throw new Error(`Seat limit reached for ${plan} plan (${limit} teachers max). Please upgrade your subscription.`);
+    throw new Error(`Staff seat limit reached for ${plan} plan (${limit} staff max). Please upgrade your subscription.`);
   }
 
   const { data, error } = await supabase
@@ -1815,11 +1827,15 @@ export async function addTeacher(teacher) {
   await supabase.from('school_profiles').update({ staff_count: (pData?.staff_count || 0) + 1 }).eq('school_id', _currentSchoolId);
 
   await logPlatformActivity('TEACHER_ADD', `Added new teacher: ${teacher.name}`);
+  
+  // Sync to local DB immediately for UI responsiveness
+  try { await db.teachers.put(data); } catch(e) {}
+  
   return data;
 }
 
 export async function updateTeacher(id, updates) {
-  const { error } = await supabase
+  const { data, error } = await supabase
     .from('teachers')
     .update({ 
       name: updates.name, 
@@ -1831,8 +1847,11 @@ export async function updateTeacher(id, updates) {
       tsc_number: updates.tsc_number || null,
       staff_code: updates.staff_code || null
     })
-    .eq('id', id);
+    .eq('id', id)
+    .select()
+    .single();
   if (error) throw error;
+  try { await db.teachers.put(data); } catch(e) {}
 }
 
 export async function deleteTeacher(id) {
@@ -1841,6 +1860,7 @@ export async function deleteTeacher(id) {
 
   const { error } = await supabase.from('teachers').delete().eq('id', id);
   if (error) throw error;
+  try { await db.teachers.delete(id); } catch(e) {}
 
   // Decrement staff_count in profile
   if (schoolId) {

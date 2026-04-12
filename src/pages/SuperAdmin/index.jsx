@@ -20,7 +20,7 @@ import {
   getPlatformStats, updatePlatformSetting, manualExtendSubscription,
   suspendSchool, restoreSchool, updateSchoolPlan, subscribeToPlatformChanges,
   deleteSchool, repairSchoolProfile, getDiscoveryMetrics, deactivateSchool,
-  getTeachersBySchool, deleteTeacher, SEAT_LIMITS,
+  getTeachersBySchool, deleteTeacher,
   wipeAllNonAdminSchools,
   setCurrentSchoolContext, setCurrentPeriodId
 } from '../../data/store';
