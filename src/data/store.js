@@ -1301,6 +1301,55 @@ export async function getClassList(className) {
 }
 
 // ============= FEES =============
+/**
+ * Ensures a student's fee record is in sync with the current profile configuration.
+ * Fixes "0" total_fee issues and recalculates balances if configuration has changed.
+ */
+export async function reconcileStudentFee(studentId, existingRecord = null) {
+  if (!studentId || !_currentSchoolId || !_currentPeriodId) return null;
+
+  const students = await getStudents();
+  const student = students.find(s => s.id === studentId);
+  const profile = await getSchoolProfile();
+  const configTotal = getCalculatedTotalFee(student, profile);
+
+  if (configTotal === null) return existingRecord; // No config, can't reconcile
+
+  const record = existingRecord || (await getFees())[studentId];
+  
+  // If no record exists, we don't create one here (recordPayment handles creation)
+  if (!record) return null;
+
+  const currentTotal = Number(record.totalFee);
+  
+  // Reconcile if total is 0 or different from config
+  if (currentTotal === 0 || currentTotal !== configTotal) {
+    const newPaid = Number(record.paid) || 0;
+    const newBalance = configTotal - newPaid;
+
+    const { error } = await supabase
+      .from('fees')
+      .update({
+        total_fee: configTotal,
+        balance: newBalance
+      })
+      .eq('id', record._feeId);
+
+    if (error) {
+      console.error('Fee reconciliation failed:', error);
+      return record;
+    }
+
+    // Update local record to avoid re-syncing
+    record.totalFee = configTotal;
+    record.balance = newBalance;
+    
+    invalidateCache(`fees_${_currentSchoolId}_${_currentPeriodId}`);
+  }
+
+  return record;
+}
+
 export async function getFees() {
   if (!_currentSchoolId || !_currentPeriodId) return {};
   const cacheKey = `fees_${_currentSchoolId}_${_currentPeriodId}`;
@@ -1311,7 +1360,7 @@ export async function getFees() {
       .eq('school_id', _currentSchoolId)
       .eq('period_id', _currentPeriodId);
     if (error) throw error;
-    // Convert to { studentId: { totalFee, paid, balance, payments: [] } }
+    
     const fees = {};
     (data || []).forEach(row => {
       fees[row.student_id] = {
@@ -1329,6 +1378,14 @@ export async function getFees() {
         periodId: row.period_id,
       };
     });
+
+    // Background Repair: Detect records with 0 total_fee and trigger reconciliation
+    Object.keys(fees).forEach(sid => {
+      if (fees[sid].totalFee === 0) {
+        reconcileStudentFee(sid, fees[sid]).catch(console.error);
+      }
+    });
+
     return fees;
   });
 }
@@ -1387,20 +1444,28 @@ export async function recordPayment(studentId, amount, method, reference) {
     if (feeErr) throw feeErr;
   }
 
-  // 0. Ensure we have the fee ID to satisfy database constraints
-  let targetFeeId = feeRecord?._feeId;
-  
-  // 1. Fetch current fee record to get current balance and ID if missing
+  // 1. Fetch current fee record and reconcile it with latest config
   const { data: currentFee, error: fetchErr } = await supabase
     .from('fees')
-    .select('id, paid, balance')
+    .select('id, total_fee, paid, balance')
     .eq('school_id', _currentSchoolId)
     .eq('student_id', studentId)
     .eq('period_id', _currentPeriodId)
     .single();
 
   if (fetchErr) throw fetchErr;
-  targetFeeId = currentFee.id;
+
+  // 1.5 Reconcile the total_fee and balance before processing payment
+  const reconciled = await reconcileStudentFee(studentId, {
+    totalFee: Number(currentFee.total_fee),
+    paid: Number(currentFee.paid),
+    balance: Number(currentFee.balance),
+    _feeId: currentFee.id
+  });
+
+  const targetFeeId = currentFee.id;
+  const upToDateTotalFee = Number(reconciled?.totalFee || currentFee.total_fee);
+  const upToDatePaid = Number(reconciled?.paid || currentFee.paid);
 
   // Missing RPC fallback: Perform the operation client-side
   const paymentDate = new Date().toISOString().split('T')[0];
@@ -1428,8 +1493,8 @@ export async function recordPayment(studentId, amount, method, reference) {
   const { error: updateErr } = await supabase
     .from('fees')
     .update({ 
-      paid: Number(currentFee.paid) + amountNum, 
-      balance: Number(currentFee.balance) - amountNum 
+      paid: upToDatePaid + amountNum, 
+      balance: upToDateTotalFee - (upToDatePaid + amountNum) 
     })
     .eq('school_id', _currentSchoolId)
     .eq('student_id', studentId)

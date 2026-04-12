@@ -177,9 +177,16 @@ export default function Fees({ currentUser, currentPeriodId }) {
   const formatKSh = (n) => `KSh ${Number(n||0).toLocaleString()}`;
   
   const computeStudentFee = (s) => {
+    const record = fees[s.id];
+    if (record) return { 
+      totalFee: Number(record.totalFee), 
+      paid: Number(record.paid), 
+      balance: Number(record.balance),
+      payments: record.payments
+    };
+
     const classFees = profile.gradeFees?.[s.class];
-    let totalBilled = null; // No fallback
-    
+    let totalBilled = null;
     if (classFees) {
       if (typeof classFees === 'object') {
         const resType = (s.residence_type || s.residenceType || 'day').toLowerCase();
@@ -188,9 +195,6 @@ export default function Fees({ currentUser, currentPeriodId }) {
         totalBilled = Number(classFees) || null;
       }
     }
-    
-    const record = fees[s.id];
-    if (record) return { totalFee: Number(record.total_fee), paid: Number(record.paid), balance: Number(record.balance) };
     return { totalFee: totalBilled, paid: 0, balance: totalBilled };
   };
 
