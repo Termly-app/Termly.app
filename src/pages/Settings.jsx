@@ -28,6 +28,7 @@ export default function Settings() {
   const [newHouse,setNewHouse]       = useState('');
   const [newExam, setNewExam]       = useState('');
   const [newGradeItem, setNewGradeItem] = useState({ symbol: '', min: 0, max: 100, color: '#3b82f6' });
+  const [applyGradingToAll, setApplyGradingToAll] = useState(true);
   const [periods, setPeriods]     = useState([]);
   const [newPeriod, setNewPeriod] = useState({ year: new Date().getFullYear(), term: 'Term 1' });
   const [testingMpesa, setTestingMpesa] = useState(false);
@@ -170,14 +171,23 @@ export default function Settings() {
       alert({ title: 'Invalid Range', message: 'Min value must be less than max value.', variant: 'warning' });
       return;
     }
-    const cur = profile.gradingSystems?.[activeLevel] || profile.gradingSystems?.default || [];
-    setProfile({
-      ...profile,
-      gradingSystems: {
-        ...profile.gradingSystems,
-        [activeLevel]: [...cur, { ...newGradeItem }].sort((a,b) => b.min - a.min)
-      }
-    });
+    if (applyGradingToAll) {
+      const newSystems = { ...profile.gradingSystems };
+      Object.keys(CBC_STRUCTURE).forEach(lv => {
+        const cur = newSystems[lv] || profile.gradingSystems?.default || [];
+        newSystems[lv] = [...cur, { ...newGradeItem }].sort((a,b) => b.min - a.min);
+      });
+      setProfile({ ...profile, gradingSystems: newSystems });
+    } else {
+      const cur = profile.gradingSystems?.[activeLevel] || profile.gradingSystems?.default || [];
+      setProfile({
+        ...profile,
+        gradingSystems: {
+          ...profile.gradingSystems,
+          [activeLevel]: [...cur, { ...newGradeItem }].sort((a,b) => b.min - a.min)
+        }
+      });
+    }
     setNewGradeItem({ symbol: '', min: 0, max: 100, color: '#3b82f6' });setSaved(false);
   };
   const removeGradeItem=(idx)=>{
@@ -505,29 +515,33 @@ export default function Settings() {
                         </div>
                         <div style={{display:'flex',flexDirection:'column',gap:4}}>
                           <label style={{fontSize:'0.65rem',fontWeight:700,color:'var(--text-muted)'}}>MIN %</label>
-                          <Select 
+                          <input type="number" className="form-input" style={{padding:'6px',fontSize:'0.82rem',textAlign:'center',height:32}}
                             value={newGradeItem.min} 
                             onChange={e=>setNewGradeItem({...newGradeItem,min:Number(e.target.value)})}
-                            options={[...Array(101).keys()].map(n=>({ id: n, label: String(n) }))}
-                            style={{ padding: '0px', height: 32, minWidth: 60 }}
+                            min="0" max="100"
                           />
                         </div>
                         <div style={{display:'flex',flexDirection:'column',gap:4}}>
                           <label style={{fontSize:'0.65rem',fontWeight:700,color:'var(--text-muted)'}}>MAX %</label>
-                          <Select 
+                          <input type="number" className="form-input" style={{padding:'6px',fontSize:'0.82rem',textAlign:'center',height:32}}
                             value={newGradeItem.max} 
                             onChange={e=>setNewGradeItem({...newGradeItem,max:Number(e.target.value)})}
-                            options={[...Array(101).keys()].sort((a,b)=>b-a).map(n=>({ id: n, label: String(n) }))}
-                            style={{ padding: '0px', height: 32, minWidth: 60 }}
+                            min="0" max="100"
                           />
                         </div>
                         <div style={{display:'flex',flexDirection:'column',gap:4}}>
                           <label style={{fontSize:'0.65rem',fontWeight:700,color:'var(--text-muted)'}}>COLOR</label>
                           <input type="color" style={{width:'100%',height:32,border:'1.5px solid var(--border)',borderRadius:8,background:'none',cursor:'pointer',padding:0}} value={newGradeItem.color} onChange={e=>setNewGradeItem({...newGradeItem,color:e.target.value})}/>
                         </div>
-                        <button onClick={addGradeItem} className="btn btn-primary btn-sm" style={{gridColumn:'1 / span 4',marginTop:8,height:36,fontWeight:700}}>
-                          <PlusIcon size={16} /> Add Grade Boundary
-                        </button>
+                        <div style={{gridColumn:'1 / span 4', display:'flex', justifyContent:'space-between', alignItems:'center', marginTop:10}}>
+                          <label style={{display:'flex', alignItems:'center', gap:8, fontSize:'0.75rem', cursor:'pointer', fontWeight:600, color:'var(--text-main)'}}>
+                            <input type="checkbox" checked={applyGradingToAll} onChange={e => setApplyGradingToAll(e.target.checked)} style={{accentColor:'var(--primary)', width:16, height:16, cursor:'pointer'}} />
+                            Apply boundary to all school categories
+                          </label>
+                          <button onClick={addGradeItem} className="btn btn-primary btn-sm" style={{height:36,fontWeight:700}}>
+                            <PlusIcon size={16} /> Add Selected
+                          </button>
+                        </div>
                       </div>
                     </div>
                   </div>
