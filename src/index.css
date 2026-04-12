@@ -682,3 +682,13 @@ html body .tt-select:focus {
   border-color: rgba(255,255,255,0.1) !important;
   color: #e4e4e7 !important;
 }
+
+/* Remove native up/down arrows from number inputs platform-wide */
+html body input[type="number"]::-webkit-inner-spin-button,
+html body input[type="number"]::-webkit-outer-spin-button {
+  -webkit-appearance: none !important;
+  margin: 0 !important;
+}
+html body input[type="number"] {
+  -moz-appearance: textfield !important;
+}
