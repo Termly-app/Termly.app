@@ -1332,26 +1332,44 @@ export async function getFees() {
     return fees;
   });
 }
+/**
+ * Internal helper to calculate a student's total fee based on their class and residence type.
+ * Returns null if the fee is not configured in the school profile.
+ */
+function getCalculatedTotalFee(student, profile) {
+  if (!student || !profile) return null;
+  const grade = student.class;
+  const gradeFees = profile.gradeFees || {};
+  const customFee = gradeFees[grade];
+  
+  if (!customFee) return null;
+
+  if (typeof customFee === 'object') {
+    // Standardize on residence_type (database convention)
+    const resType = (student.residence_type || student.residenceType || 'day').toLowerCase();
+    const fee = Number(customFee[resType]) || Number(customFee.day);
+    return fee || null;
+  }
+  
+  return Number(customFee) || null;
+}
+
 export async function recordPayment(studentId, amount, method, reference) {
   const numAmount = Math.max(0, Number(amount) || 0);
   if (numAmount === 0) throw new Error('Payment amount must be greater than zero.');
+  
   const fees = await getFees();
   let feeRecord = fees[studentId];
 
+  // 1. If no fee record exists, we must create one. 
+  // But we MUST have a configuration set first.
   if (!feeRecord) {
-    // Create INITIAL fee record if missing (this happens once per student/period)
     const student = (await getStudents()).find(s => s.id === studentId);
-    const grade = student?.class;
     const profile = await getSchoolProfile();
-    const customFee = profile.gradeFees?.[grade];
-    let finalFee = TERM_FEE;
-    if (customFee) {
-      if (typeof customFee === 'object') {
-        const resType = (student.residenceType || 'day').toLowerCase();
-        finalFee = Number(customFee[resType]) || Number(customFee.day) || TERM_FEE;
-      } else {
-        finalFee = Number(customFee) || TERM_FEE;
-      }
+    const finalFee = getCalculatedTotalFee(student, profile);
+
+    if (finalFee === null) {
+      throw new Error(`Fee structure not configured for ${student?.class || 'this class'}. Please set fees in Settings before recording payments.`);
     }
 
     const { data: newFee, error: feeErr } = await supabase
@@ -1453,17 +1471,11 @@ export async function applyFeeStructure() {
   const students = await getStudents();
   
   for (const student of students) {
-    const classFees = gradeFees[student.class] || {};
-    // Fallback logic: if it's a number, use it; if object, use residence key
-    const residenceKey = (student.residence_type || 'day').toLowerCase();
-    let finalFee = TERM_FEE;
-
-    if (typeof classFees === 'object') {
-      finalFee = Number(classFees[residenceKey]) || Number(classFees.day) || TERM_FEE;
-    } else {
-      finalFee = Number(classFees) || TERM_FEE;
-    }
+    const finalFee = getCalculatedTotalFee(student, profile);
     
+    // Skip students without configured fees to avoid corrupting records
+    if (finalFee === null) continue;
+
     // Get current fee record for THIS period
     const { data: currentFee } = await supabase
       .from('fees')

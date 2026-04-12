@@ -34,8 +34,8 @@ const PRINT_CSS = `
   .total-row td { font-weight: bold; border-top: 2px solid #000; border-bottom: 2px solid #000; }
   .balance-box { background: #f5f5f5; border: 1px solid #ccc; padding: 8px; margin: 10px 0; border-radius: 4px; }
   .balance-label { font-size: 9pt; color: #555; }
-  .balance-amount { font-size: 14pt; font-weight: bold; }
-  .balance-due { color: #c00; }
+  .balance-amount { font-size: 11pt; font-weight: bold; }
+  .balance-due { color: #555; }
   .balance-clear { color: #060; }
   .footer { text-align: center; font-size: 8pt; color: #888; margin-top: 12px; padding-top: 8px; border-top: 1px solid #ccc; }
   .stamp-area { border: 1px dashed #ccc; height: 40px; margin-top: 12px; display: flex; align-items: center; justify-content: center; color: #ccc; font-size: 8pt; }
@@ -99,16 +99,14 @@ function receiptNo(paymentId) {
  */
 export function printReceipt({ school, student, payment, feeItems = [] }) {
   const rNo     = receiptNo(payment?.id);
-  const total   = feeItems.length ? feeItems.reduce((s, i) => s + (i.amount || 0), 0) : (payment?.amount || 0);
+  const total   = payment?.amount || 0;
+  const billed  = payment?.totalFee || 0; // Passed from Fees.jsx
   const balance = (payment?.balance !== undefined) ? payment.balance : 0;
 
-  const feeRows = feeItems.length
-    ? feeItems.map(item => `
-        <tr>
-          <td>${item.name || 'Fee'}</td>
-          <td class="amount">${ksh(item.amount)}</td>
-        </tr>`).join('')
-    : `<tr><td>School Fees</td><td class="amount">${ksh(payment?.amount)}</td></tr>`;
+  const feeRows = `
+    <tr><td>Term Fee (Total Required)</td><td class="amount">${ksh(billed)}</td></tr>
+    <tr><td>Amount Paid This Transaction</td><td class="amount">${ksh(total)}</td></tr>
+  `;
 
   const html = `
     <div class="receipt">

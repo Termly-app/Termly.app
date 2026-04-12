@@ -15,39 +15,69 @@ function PaymentModal({ student, fee, onPay, onClose }) {
   const [amount, setAmount] = useState('');
   const [method, setMethod] = useState('M-Pesa');
   const [reference, setReference] = useState('');
-  const formatKSh = (n) => `KSh ${Number(n||0).toLocaleString()}`;
+  const isNotConfigured = fee.totalFee === null; // New state detection
+
+  const formatKSh = (n) => n === null ? 'Not Set' : `KSh ${Number(n||0).toLocaleString()}`;
   const handleSubmit = (e) => { e.preventDefault(); if(!amount||Number(amount)<=0)return; onPay(student.id,amount,method,reference); };
+
   return (
     <div className="modal-overlay" onClick={onClose}>
-      <div className="modal" onClick={e=>e.stopPropagation()}>
-        <div className="modal-header"><h3><CardIcon size={20} /> Record Payment</h3><button className="modal-close" onClick={onClose}>×</button></div>
-        <form onSubmit={handleSubmit}>
+      <div className="modal" onClick={e=>e.stopPropagation()} style={{ maxWidth: 450 }}>
+        <div className="modal-header">
+          <h3><CardIcon size={20} /> Record Payment</h3>
+          <button className="modal-close" onClick={onClose}>×</button>
+        </div>
+        
+        {isNotConfigured ? (
           <div className="modal-body">
-            <div style={{background:'#f8fafc',borderRadius:8,padding:16,marginBottom:20}}>
-              <div style={{ fontSize: '0.75rem', fontWeight: 800, color: 'var(--primary)', marginBottom: 2 }}>{student.admNo}</div>
-              <div className="flex-between"><span><strong>{student.name}</strong></span><span className="badge badge-info">{student.class}</span></div>
-              <div className="flex-between mt-1" style={{fontSize:'0.85rem'}}><span className="text-muted">Balance:</span><span className="text-danger font-bold">{formatKSh(fee?.balance)}</span></div>
-            </div>
-            <div className="form-group"><label>Amount (KSh) *</label><input className="form-input" type="number" min="1" value={amount} onChange={e=>setAmount(e.target.value)} required placeholder="Enter amount"/></div>
-            <div className="form-row">
-              <div className="form-group">
-                <label>Method</label>
-                <Select 
-                  value={method} 
-                  onChange={e => setMethod(e.target.value)}
-                  options={[
-                    { id: 'M-Pesa', label: 'M-Pesa' },
-                    { id: 'Cash', label: 'Cash' },
-                    { id: 'Bank Transfer', label: 'Bank Transfer' }
-                  ]}
-                  style={{ width: '100%' }}
-                />
-              </div>
-              <div className="form-group"><label>Reference</label><input className="form-input" value={reference} onChange={e=>setReference(e.target.value)} placeholder="e.g. MPE1234"/></div>
-            </div>
+             <div style={{ textAlign: 'center', padding: '24px 10px' }}>
+                <div style={{ fontSize: '3rem', marginBottom: 16 }}>⚙️</div>
+                <h4 style={{ marginBottom: 8 }}>Fee Structure Required</h4>
+                <p className="text-muted" style={{ fontSize: '0.9rem', marginBottom: 24 }}>
+                  You must set the term fee for <strong>{student.class}</strong> before you can record payments.
+                </p>
+                <div style={{ background: '#fef2f2', padding: 16, borderRadius: 12, border: '1px solid #fecaca', textAlign: 'left', marginBottom: 20 }}>
+                  <div style={{ fontSize: '0.8rem', fontWeight: 800, color: '#991b1b', textTransform: 'uppercase', marginBottom: 10 }}>Action Required:</div>
+                  <ol style={{ fontSize: '0.85rem', color: '#7f1d1d', paddingLeft: 18 }}>
+                    <li>Go to <strong>Settings</strong> module.</li>
+                    <li>Open the <strong>Student Fees</strong> tab.</li>
+                    <li>Update the rate for <strong>{student.class}</strong>.</li>
+                  </ol>
+                </div>
+                <button className="btn btn-primary" style={{ width: '100%' }} onClick={() => window.location.hash='#/settings'}>
+                   Go to Settings
+                </button>
+             </div>
           </div>
-          <div className="modal-footer"><button type="button" className="btn btn-ghost" onClick={onClose}>Cancel</button><button type="submit" className="btn btn-success"><CheckIcon size={16} /> Record Payment</button></div>
-        </form>
+        ) : (
+          <form onSubmit={handleSubmit}>
+            <div className="modal-body">
+              <div style={{background:'#f8fafc',borderRadius:8,padding:16,marginBottom:20}}>
+                <div style={{ fontSize: '0.75rem', fontWeight: 800, color: 'var(--primary)', marginBottom: 2 }}>{student.admNo}</div>
+                <div className="flex-between"><span><strong>{student.name}</strong></span><span className="badge badge-info">{student.class}</span></div>
+                <div className="flex-between mt-1" style={{fontSize:'0.85rem'}}><span className="text-muted">Balance:</span><span className="text-danger font-bold">{formatKSh(fee?.balance)}</span></div>
+              </div>
+              <div className="form-group"><label>Amount (KSh) *</label><input className="form-input" type="number" min="1" value={amount} onChange={e=>setAmount(e.target.value)} required placeholder="Enter amount"/></div>
+              <div className="form-row">
+                <div className="form-group">
+                  <label>Method</label>
+                  <Select 
+                    value={method} 
+                    onChange={e => setMethod(e.target.value)}
+                    options={[
+                      { id: 'M-Pesa', label: 'M-Pesa' },
+                      { id: 'Cash', label: 'Cash' },
+                      { id: 'Bank Transfer', label: 'Bank Transfer' }
+                    ]}
+                    style={{ width: '100%' }}
+                  />
+                </div>
+                <div className="form-group"><label>Reference</label><input className="form-input" value={reference} onChange={e=>setReference(e.target.value)} placeholder="e.g. MPE1234"/></div>
+              </div>
+            </div>
+            <div className="modal-footer"><button type="button" className="btn btn-ghost" onClick={onClose}>Cancel</button><button type="submit" className="btn btn-success"><CheckIcon size={16} /> Record Payment</button></div>
+          </form>
+        )}
       </div>
     </div>
   );
@@ -148,16 +178,20 @@ export default function Fees({ currentUser, currentPeriodId }) {
   
   const computeStudentFee = (s) => {
     const classFees = profile.gradeFees?.[s.class];
-    let defaultTotal = TERM_FEE;
+    let totalBilled = null; // No fallback
+    
     if (classFees) {
       if (typeof classFees === 'object') {
-        const resType = (s.residenceType || 'day').toLowerCase();
-        defaultTotal = Number(classFees[resType]) || Number(classFees.day) || TERM_FEE;
+        const resType = (s.residence_type || s.residenceType || 'day').toLowerCase();
+        totalBilled = Number(classFees[resType]) || Number(classFees.day) || null;
       } else {
-        defaultTotal = Number(classFees) || TERM_FEE;
+        totalBilled = Number(classFees) || null;
       }
     }
-    return fees[s.id] || { totalFee: defaultTotal, paid: 0, balance: defaultTotal };
+    
+    const record = fees[s.id];
+    if (record) return { totalFee: Number(record.total_fee), paid: Number(record.paid), balance: Number(record.balance) };
+    return { totalFee: totalBilled, paid: 0, balance: totalBilled };
   };
 
   const filtered = students.filter(s => {
@@ -228,12 +262,21 @@ export default function Fees({ currentUser, currentPeriodId }) {
           <button className="btn btn-ghost" onClick={printFeeList}><PrintIcon size={16} /> Print Fee List</button>
         </div>
       </div>
-      <div className="kpi-grid">
-        <div className="kpi-card green"><div className="kpi-icon green"><CardIcon size={20} /></div><div className="kpi-value">{formatKSh(summary.totalCollected)}</div><div className="kpi-label">Total Collected</div></div>
-        <div className="kpi-card red"><div className="kpi-icon red"><AlertIcon size={20} /></div><div className="kpi-value">{formatKSh(summary.totalOutstanding)}</div><div className="kpi-label">Outstanding</div></div>
-        <div className="kpi-card blue"><div className="kpi-icon blue"><DashboardIcon size={20} /></div><div className="kpi-value">{formatKSh(summary.totalExpected)}</div><div className="kpi-label">Expected</div></div>
-        <div className="kpi-card purple"><div className="kpi-icon purple"><CheckIcon size={20} /></div><div className="kpi-value">{summary.fullyPaid||0}</div><div className="kpi-label">Fully Paid</div></div>
       </div>
+      
+      {/* Configuration Warning Banner */}
+      {students.some(s => computeStudentFee(s).totalFee === null) && (
+        <div className="alert alert-warning" style={{ marginBottom: 20, display: 'flex', alignItems: 'center', gap: 12, padding: '16px 20px', borderRadius: 12 }}>
+          <div style={{ fontSize: '1.5rem' }}>ℹ️</div>
+          <div style={{ flex: 1 }}>
+            <div style={{ fontWeight: 700, marginBottom: 2 }}>Some students have no fee configuration!</div>
+            <p style={{ fontSize: '0.85rem', margin: 0, opacity: 0.9 }}>
+              Payments cannot be recorded for classes without a set fee. 
+              <a href="#/settings" style={{ marginLeft: 6, fontWeight: 700, color: 'inherit', textDecoration: 'underline' }}>Configure Fee Structure now</a>
+            </p>
+          </div>
+        </div>
+      )}
       {/* M-Pesa tabs disabled — WIP
       <div className="tabs-container" style={{ marginBottom: 20 }}>
         <button className={`tab-btn ${activeTab === 'list' ? 'active' : ''}`} onClick={() => setActiveTab('list')}>Student Fee List</button>
@@ -287,7 +330,8 @@ export default function Fees({ currentUser, currentPeriodId }) {
             <table className="data-table responsive-table"><thead><tr><th>Adm No</th><th>Student</th><th>Class</th><th>Total Fee</th><th>Paid</th><th>Balance</th><th>Status</th><th>Action</th></tr></thead>
               <tbody>{filtered.map(s=>{
                 const f = computeStudentFee(s);
-                const st = (Number(f.balance) || 0) <= 0 ? 'Paid' : (Number(f.paid) || 0) > 0 ? 'Partial' : 'Unpaid';
+                const isNotConfigured = f.totalFee === null;
+                const status = isNotConfigured ? 'Pending Setup' : (Number(f.balance) || 0) <= 0 ? 'Paid' : (Number(f.paid) || 0) > 0 ? 'Partial' : 'Unpaid';
                 return(
                   <tr key={s.id}>
                     <td data-label="Adm No"><code style={{ fontSize: '0.85rem', color: 'var(--primary)', fontWeight: 700 }}>{s.admNo}</code></td>
@@ -295,12 +339,30 @@ export default function Fees({ currentUser, currentPeriodId }) {
                     <td data-label="Class">{s.class}</td>
                     <td data-label="Total Fee">{formatKSh(f.totalFee)}</td>
                     <td data-label="Paid" className="text-success font-bold">{formatKSh(f.paid)}</td>
-                    <td data-label="Balance" className={f.balance>0?'text-danger font-bold':'text-success font-bold'}>{formatKSh(f.balance)}</td>
-                    <td data-label="Status"><span className={`badge ${st==='Paid'?'badge-success':st==='Partial'?'badge-warning':'badge-danger'}`}>{st}</span></td>
+                    <td data-label="Balance">
+                      {isNotConfigured ? (
+                        <span className="badge badge-warning" style={{ fontSize: '0.7rem' }}>⚠️ Config Needed</span>
+                      ) : (
+                        <span className={`font-bold ${f.balance > 0 ? 'text-danger' : 'text-success'}`}>{formatKSh(f.balance)}</span>
+                      )}
+                    </td>
+                    <td data-label="Status">
+                      <span className={`badge ${status==='Paid'?'badge-success':(status==='Partial'||status==='Pending Setup')?'badge-warning':'badge-danger'}`}>
+                        {status}
+                      </span>
+                    </td>
                     <td data-label="Action">
                       <div className="inline-flex" style={{justifyContent:'inherit'}}>
-                        {f.balance>0&&<button className="btn btn-primary btn-sm" onClick={()=>setShowPayment(s)}><CardIcon size={14} /> Pay</button>}
-                        {f.payments&&f.payments.length>0&&<button className="btn btn-ghost btn-sm" onClick={()=>setShowReceipt({...f.payments[f.payments.length-1],studentName:s.name,studentClass:s.class,admNo:s.admNo,balance:f.balance})}><ReceiptIcon size={14} /></button>}
+                        {(f.balance > 0 || isNotConfigured) && (
+                          <button className="btn btn-primary btn-sm" onClick={()=>setShowPayment(s)}>
+                             {isNotConfigured ? <AlertIcon size={14} /> : <CardIcon size={14} />} {isNotConfigured ? 'Configure' : 'Pay'}
+                          </button>
+                        )}
+                        {f.payments && f.payments.length > 0 && (
+                          <button className="btn btn-ghost btn-sm" onClick={()=>setShowReceipt({...f.payments[f.payments.length-1],studentName:s.name,studentClass:s.class,admNo:s.admNo,totalFee:f.totalFee,balance:f.balance})}>
+                            <ReceiptIcon size={14} />
+                          </button>
+                        )}
                       </div>
                     </td>
                   </tr>
