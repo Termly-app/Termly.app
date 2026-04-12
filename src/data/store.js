@@ -62,6 +62,14 @@ async function cachedQuery(key, fetcher, ttl = 10000) {
   return promise;
 }
 
+function invalidateCache(key) {
+  if (key) delete _dbCache[key];
+  else {
+    // Clear all if no key
+    Object.keys(_dbCache).forEach(k => delete _dbCache[k]);
+  }
+}
+
 // Consolidated into Super Admin Pricing Table
 
 /**
@@ -1405,6 +1413,10 @@ export async function recordPayment(studentId, amount, method, reference) {
     .eq('period_id', _currentPeriodId);
 
   if (updateErr) throw updateErr;
+
+  // 3.5 Invalidate caches so the UI sees the new balance immediately
+  invalidateCache(`fees_${_currentSchoolId}_${_currentPeriodId}`);
+  invalidateCache(`summary_${_currentSchoolId}_${_currentPeriodId}`);
 
   // 4. Queue Payment Confirmation SMS
   const student = (await getStudents()).find(s => s.id === studentId);
