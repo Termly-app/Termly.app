@@ -260,8 +260,11 @@ export default function Fees({ currentUser, currentPeriodId }) {
             {loading && <span className="text-muted" style={{ fontSize: '0.85rem' }}>Loading...</span>}
           </div>
           <button className="btn btn-ghost" onClick={printFeeList}><PrintIcon size={16} /> Print Fee List</button>
-        </div>
-      </div>
+      <div className="kpi-grid">
+        <div className="kpi-card green"><div className="kpi-icon green"><CardIcon size={20} /></div><div className="kpi-value">{formatKSh(summary.totalCollected)}</div><div className="kpi-label">Total Collected</div></div>
+        <div className="kpi-card red"><div className="kpi-icon red"><AlertIcon size={20} /></div><div className="kpi-value">{formatKSh(summary.totalOutstanding)}</div><div className="kpi-label">Outstanding</div></div>
+        <div className="kpi-card blue"><div className="kpi-icon blue"><DashboardIcon size={20} /></div><div className="kpi-value">{formatKSh(summary.totalExpected)}</div><div className="kpi-label">Expected</div></div>
+        <div className="kpi-card purple"><div className="kpi-icon purple"><CheckIcon size={20} /></div><div className="kpi-value">{summary.fullyPaid||0}</div><div className="kpi-label">Fully Paid</div></div>
       </div>
       
       {/* Configuration Warning Banner */}
@@ -277,58 +280,55 @@ export default function Fees({ currentUser, currentPeriodId }) {
           </div>
         </div>
       )}
-      {/* M-Pesa tabs disabled — WIP
-      <div className="tabs-container" style={{ marginBottom: 20 }}>
-        <button className={`tab-btn ${activeTab === 'list' ? 'active' : ''}`} onClick={() => setActiveTab('list')}>Student Fee List</button>
-        <button className={`tab-btn ${activeTab === 'mpesa' ? 'active' : ''}`} onClick={() => setActiveTab('mpesa')}>M-Pesa Transactions</button>
-        {(currentUser?.role === 'Admin' || currentUser?.role === 'Finance') && (
-          <button className={`tab-btn ${activeTab === 'reconcile' ? 'active' : ''}`} onClick={() => setActiveTab('reconcile')}>Manual Reconciliation</button>
-        )}
-      </div>
-      */}
 
-      {/* Fee List (only active tab now) */}
-          <div className="filter-bar">
-            <div className="search-bar"><span className="search-icon"><SearchIcon size={16} /></span><input type="text" placeholder="Search student..." value={search} onChange={e=>setSearch(e.target.value)}/></div>
-            <Select 
-              value={classFilter} 
-              onChange={e=>{setClassFilter(e.target.value); setStreamFilter('All');}}
-              options={[
-                { id: 'All', label: 'All Classes' },
-                ...Object.entries(CBC_STRUCTURE).flatMap(([levelName, levelData]) => {
-                  const activeInLevel = levelData.grades.filter(g => profile.activeClasses?.includes(g));
-                  return activeInLevel.map(g => ({ id: g, label: g }));
-                })
-              ]}
-              style={{ minWidth: 150 }}
-            />
-            <Select 
-              value={streamFilter} 
-              onChange={e=>setStreamFilter(e.target.value)}
-              options={[
-                { id: 'All', label: 'All Streams' },
-                ...(classFilter !== 'All' 
-                  ? (profile.streamsPerClass?.[classFilter] || []).map(stream => ({ id: stream, label: stream }))
-                  : Object.values(profile.streamsPerClass || {}).flat().filter((v,i,a) => a.indexOf(v)===i).map(stream => ({ id: stream, label: stream }))
-                )
-              ]}
-              style={{ minWidth: 140 }}
-            />
-            <Select 
-              value={statusFilter} 
-              onChange={e=>setStatusFilter(e.target.value)}
-              options={[
-                { id: 'All', label: 'All Status' },
-                { id: 'Paid', label: 'Fully Paid' },
-                { id: 'Partial', label: 'Partial' },
-                { id: 'Unpaid', label: 'Unpaid' }
-              ]}
-              style={{ minWidth: 140 }}
-            />
-          </div>
-          <div className="card"><div className="card-body" style={{padding:0}}>
-            <table className="data-table responsive-table"><thead><tr><th>Adm No</th><th>Student</th><th>Class</th><th>Total Fee</th><th>Paid</th><th>Balance</th><th>Status</th><th>Action</th></tr></thead>
-              <tbody>{filtered.map(s=>{
+      {/* Fee List */}
+      <div className="filter-bar">
+        <div className="search-bar"><span className="search-icon"><SearchIcon size={16} /></span><input type="text" placeholder="Search student..." value={search} onChange={e=>setSearch(e.target.value)}/></div>
+        <Select 
+          value={classFilter} 
+          onChange={e=>{setClassFilter(e.target.value); setStreamFilter('All');}}
+          options={[
+            { id: 'All', label: 'All Classes' },
+            ...Object.entries(CBC_STRUCTURE).flatMap(([levelName, levelData]) => {
+              const activeInLevel = levelData.grades.filter(g => profile.activeClasses?.includes(g));
+              return activeInLevel.map(g => ({ id: g, label: g }));
+            })
+          ]}
+          style={{ minWidth: 150 }}
+        />
+        <Select 
+          value={streamFilter} 
+          onChange={e=>setStreamFilter(e.target.value)}
+          options={[
+            { id: 'All', label: 'All Streams' },
+            ...(classFilter !== 'All' 
+              ? (profile.streamsPerClass?.[classFilter] || []).map(stream => ({ id: stream, label: stream }))
+              : Object.values(profile.streamsPerClass || {}).flat().filter((v,i,a) => a.indexOf(v)===i).map(stream => ({ id: stream, label: stream }))
+            )
+          ]}
+          style={{ minWidth: 140 }}
+        />
+        <Select 
+          value={statusFilter} 
+          onChange={e=>setStatusFilter(e.target.value)}
+          options={[
+            { id: 'All', label: 'All Status' },
+            { id: 'Paid', label: 'Fully Paid' },
+            { id: 'Partial', label: 'Partial' },
+            { id: 'Unpaid', label: 'Unpaid' }
+          ]}
+          style={{ minWidth: 140 }}
+        />
+      </div>
+
+      <div className="card">
+        <div className="card-body" style={{padding:0}}>
+          <table className="data-table responsive-table">
+            <thead>
+              <tr><th>Adm No</th><th>Student</th><th>Class</th><th>Total Fee</th><th>Paid</th><th>Balance</th><th>Status</th><th>Action</th></tr>
+            </thead>
+            <tbody>
+              {filtered.map(s=>{
                 const f = computeStudentFee(s);
                 const isNotConfigured = f.totalFee === null;
                 const status = isNotConfigured ? 'Pending Setup' : (Number(f.balance) || 0) <= 0 ? 'Paid' : (Number(f.paid) || 0) > 0 ? 'Partial' : 'Unpaid';
@@ -367,15 +367,11 @@ export default function Fees({ currentUser, currentPeriodId }) {
                     </td>
                   </tr>
                 );
-              })}</tbody></table>
-          </div></div>
-      {/* M-Pesa tab content — WIP 
-      ) : activeTab === 'reconcile' ? (
-        <MpesaReconciliation currentUser={currentUser} />
-      ) : (
-        <div>M-Pesa logs here</div>
-      )}
-      */}
+              })}
+            </tbody>
+          </table>
+        </div>
+      </div>
       {showPayment && <PaymentModal student={showPayment} fee={computeStudentFee(showPayment)} onPay={handlePayment} onClose={() => setShowPayment(null)} />}
       {showReceipt && <ReceiptModal receipt={showReceipt} profile={profile} onClose={() => setShowReceipt(null)} />}
     </div>
