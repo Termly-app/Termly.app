@@ -17,8 +17,8 @@ export default function HelpCenter() {
     { id: 'students', name: 'Student Management', icon: <StudentIcon size={24} />, color: '#0EA5E9' },
     { id: 'cbc', name: 'CBC & Grading', icon: <GraduationIcon size={24} />, color: '#8B5CF6' },
     { id: 'fees', name: 'Fees & Payments', icon: <CardIcon size={24} />, color: '#10B981' },
-    { id: 'timetable', name: 'Timetabling', icon: <ClockIcon size={24} />, color: '#F59E0B' },
-    { id: 'comms', name: 'Communication', icon: <MessageIcon size={24} />, color: '#EF4444' }
+    /* { id: 'timetable', name: 'Timetabling', icon: <ClockIcon size={24} />, color: '#F59E0B' },
+    { id: 'comms', name: 'Communication', icon: <MessageIcon size={24} />, color: '#EF4444' } */
   ];
 
   const ARTICLES = {
@@ -56,9 +56,9 @@ export default function HelpCenter() {
         tip: 'Portfolios are especially important for Grade 6 transition assessments under the CBC framework.' }
     ],
     fees: [
-      { title: 'M-Pesa Integration', content: 'Enable automated fee tracking with our M-Pesa STK Push technology. Parents receive a prompt on their phone, and the system records the payment instantly.',
+      /* { title: 'M-Pesa Integration', content: 'Enable automated fee tracking with our M-Pesa STK Push technology. Parents receive a prompt on their phone, and the system records the payment instantly.',
         steps: ['Go to Settings → Integrations → M-Pesa Configuration.', 'Enter your Safaricom Business Shortcode, Consumer Key, and Consumer Secret.', 'Test the connection using the "Send Test STK Push" button.', 'Once configured, all fee payments via M-Pesa are automatically recorded.'],
-        tip: 'You need a Safaricom Daraja API account. Register at developer.safaricom.co.ke.' },
+        tip: 'You need a Safaricom Daraja API account. Register at developer.safaricom.co.ke.' }, */
       { title: 'Fee Structure Builder', content: 'Set different fees for different classes (e.g., Boarding vs Day, Grade 1 vs Grade 6). Auto-generate invoices for the entire school with one click.',
         steps: ['Go to Settings → Fee Structure.', 'Set the base fee for each class/grade (e.g. Grade 1: KSh 15,000, Form 1: KSh 45,000).', 'The system automatically creates fee records for every student based on their class.', 'View fee balances in the Fees & Billing module.'],
         tip: 'Fee records are created per Academic Period. Configure your fees before the start of each term.' },
@@ -66,7 +66,7 @@ export default function HelpCenter() {
         steps: ['Go to Fees & Billing to see all student fee balances.', 'Sort by "Balance" to see the highest defaulters first.', 'Use the filter to isolate a specific class.', 'Click "Record Payment" on any student to log a manual payment.'],
         tip: 'The Dashboard widget shows a summary of total fees collected vs outstanding for the current term.' }
     ],
-    timetable: [
+    /* timetable: [
       { title: 'Master Timetable Generation', content: 'Input your subjects and teacher assignments. Our smart engine detects conflicts and ensures no teacher or room is double-booked.',
         steps: ['Navigate to the Timetable module (available in paid plans).', 'Select the class and configure the time slots for the school day.', 'Assign subjects and teachers to each slot.', 'The system checks for conflicts automatically.'],
         tip: 'This module is currently under development and will be available soon with enhanced features.' },
@@ -81,7 +81,7 @@ export default function HelpCenter() {
       { title: 'Email Reports', content: 'Automatically send digital report cards and fee statements to parent emails, saving on printing costs.',
         steps: ['Ensure parent email addresses are recorded in student profiles.', 'Go to Grading → select a class → click "Email Report Cards".', 'The system generates PDF report cards and emails them to each parent.', 'A delivery summary shows which emails were sent successfully.'],
         tip: 'Parents without email addresses on file will be skipped. Use SMS as a fallback for those parents.' }
-    ]
+    ] */
   };
 
   const [activeCategory, setActiveCategory] = useState('onboarding');

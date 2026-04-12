@@ -304,9 +304,9 @@ function Sidebar({ isOpen, onClose, onLogout, currentUser, subscriptionActive })
         )}
 
         {/* Librarians and Admins manage library */}
-        {(isLibrarian || isAdmin) && (features.library || isSandbox) && (
+        {/* {(isLibrarian || isAdmin) && (features.library || isSandbox) && (
           <SbLink to="/library" icon={BookIcon} label="Library" onClick={onClose} locked={(!subscriptionActive || (isSandbox && !features.library)) && !isPlatformAdmin} />
-        )}
+        )} */}
 
         {/* Academic section - always visible for Sandbox, else gated */}
         {(isTeacher || isAdmin) && (isSandbox || features.attendance || features.grading || features.timetable || features.lms) && (
@@ -720,9 +720,9 @@ function App() {
                     )} */}
 
                     {/* Library Routes: Admin & Librarian */}
-                    {(isAdmin || isLibrarian) && (
+                    {/* {(isAdmin || isLibrarian) && (
                       <Route path="/library" element={<SectionGate featureSlug="library" featureName="Library" profile={profile}><Library currentUser={currentUser} currentPeriodId={currentPeriodId} /></SectionGate>} />
-                    )}
+                    )} */}
 
                     {/* Admin-Only Routes */}
                     {isAdmin && (

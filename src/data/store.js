@@ -31,6 +31,37 @@ var _settingsCache = null;
 var _profilePromise = null;
 var _settingsPromise = null;
 
+// NETWORK DEBOUNCE CACHE (Performance Optimization)
+// Prevents cloud-fetches from spamming on navigation when offline cache is fresh
+const _lastFetch = {};
+
+function shouldFetchCloud(key, ttl = 10000) { // 10s default TTL
+  const now = Date.now();
+  if (!_lastFetch[key] || now - _lastFetch[key] > ttl) {
+    _lastFetch[key] = now;
+    return true;
+  }
+  return false;
+}
+
+// Memory caching for direct Supabase reads to prevent spamming
+const _dbCache = {};
+async function cachedQuery(key, fetcher, ttl = 10000) {
+  const now = Date.now();
+  if (_dbCache[key] && (now - _dbCache[key].time) < ttl) {
+    return _dbCache[key].promise;
+  }
+  const promise = fetcher();
+  _dbCache[key] = { time: now, promise };
+  try {
+    await promise;
+  } catch (e) {
+    delete _dbCache[key];
+    throw e;
+  }
+  return promise;
+}
+
 // Consolidated into Super Admin Pricing Table
 
 /**
@@ -944,6 +975,7 @@ export async function getStudents() {
   
   // Background fetch from cloud
   const fetchCloud = async () => {
+    if (!shouldFetchCloud(`students_${_currentSchoolId}`)) return;
     try {
       const { data, error } = await supabase
         .from('students')
@@ -1047,7 +1079,7 @@ export async function addStudent(student) {
       father_phone: student.fatherPhone || null,
       mother_name: student.motherName || null,
       mother_phone: student.motherPhone || null,
-      nemis_verified: student.nemisVerified || false
+      nemls_verified: student.nemisVerified || false
     })
     .select()
     .single();
@@ -1077,7 +1109,7 @@ export async function addStudent(student) {
     fatherPhone: data.father_phone,
     motherName: data.mother_name,
     motherPhone: data.mother_phone,
-    nemisVerified: data.nemis_verified
+    nemisVerified: data.nemls_verified
   };
 
   // Sync to local DB immediately for UI responsiveness
@@ -1106,7 +1138,7 @@ export async function updateStudent(id, updates) {
   if (updates.fatherPhone !== undefined) row.father_phone = updates.fatherPhone;
   if (updates.motherName !== undefined) row.mother_name = updates.motherName;
   if (updates.motherPhone !== undefined) row.mother_phone = updates.motherPhone;
-  if (updates.nemisVerified !== undefined) row.nemis_verified = updates.nemisVerified;
+  if (updates.nemisVerified !== undefined) row.nemls_verified = updates.nemisVerified;
 
   const { data, error } = await supabase
     .from('students')
@@ -1159,20 +1191,23 @@ export async function transferStudents(selectedIds, direction = 'promote') {
 // ============= MARKS =============
 export async function getMarks(examType = _currentExamType) {
   if (!_currentSchoolId || !_currentPeriodId) return {};
-  const { data, error } = await supabase
-    .from('marks')
-    .select('id, student_id, subject, mark, period_id, exam_type, school_id')
-    .eq('school_id', _currentSchoolId)
-    .eq('period_id', _currentPeriodId)
-    .eq('exam_type', examType);
-  if (error) throw error;
-  // Convert flat rows to nested { studentId: { subject: mark } }
-  const marks = {};
-  (data || []).forEach(row => {
-    if (!marks[row.student_id]) marks[row.student_id] = {};
-    marks[row.student_id][row.subject] = row.mark;
+  const cacheKey = `marks_${_currentSchoolId}_${_currentPeriodId}_${examType}`;
+  return cachedQuery(cacheKey, async () => {
+    const { data, error } = await supabase
+      .from('marks')
+      .select('id, student_id, subject, mark, period_id, exam_type, school_id')
+      .eq('school_id', _currentSchoolId)
+      .eq('period_id', _currentPeriodId)
+      .eq('exam_type', examType);
+    if (error) throw error;
+    // Convert flat rows to nested { studentId: { subject: mark } }
+    const marks = {};
+    (data || []).forEach(row => {
+      if (!marks[row.student_id]) marks[row.student_id] = {};
+      marks[row.student_id][row.subject] = row.mark;
+    });
+    return marks;
   });
-  return marks;
 }
 
 export async function setStudentAllMarks(studentId, subjectMarks, examType = _currentExamType) {
@@ -1239,31 +1274,34 @@ export async function getClassList(className) {
 // ============= FEES =============
 export async function getFees() {
   if (!_currentSchoolId || !_currentPeriodId) return {};
-  const { data, error } = await supabase
-    .from('fees')
-    .select('id, student_id, total_fee, paid, balance, period_id, school_id, fee_payments(id, amount, date, method, reference)')
-    .eq('school_id', _currentSchoolId)
-    .eq('period_id', _currentPeriodId);
-  if (error) throw error;
-  // Convert to { studentId: { totalFee, paid, balance, payments: [] } }
-  const fees = {};
-  (data || []).forEach(row => {
-    fees[row.student_id] = {
-      totalFee: Number(row.total_fee),
-      paid: Number(row.paid),
-      balance: Number(row.balance),
-      payments: (row.fee_payments || []).map(p => ({
-        id: p.id,
-        amount: Number(p.amount),
-        date: p.date,
-        method: p.method,
-        reference: p.reference,
-      })),
-      _feeId: row.id,
-      periodId: row.period_id,
-    };
+  const cacheKey = `fees_${_currentSchoolId}_${_currentPeriodId}`;
+  return cachedQuery(cacheKey, async () => {
+    const { data, error } = await supabase
+      .from('fees')
+      .select('id, student_id, total_fee, paid, balance, period_id, school_id, fee_payments(id, amount, date, method, reference)')
+      .eq('school_id', _currentSchoolId)
+      .eq('period_id', _currentPeriodId);
+    if (error) throw error;
+    // Convert to { studentId: { totalFee, paid, balance, payments: [] } }
+    const fees = {};
+    (data || []).forEach(row => {
+      fees[row.student_id] = {
+        totalFee: Number(row.total_fee),
+        paid: Number(row.paid),
+        balance: Number(row.balance),
+        payments: (row.fee_payments || []).map(p => ({
+          id: p.id,
+          amount: Number(p.amount),
+          date: p.date,
+          method: p.method,
+          reference: p.reference,
+        })),
+        _feeId: row.id,
+        periodId: row.period_id,
+      };
+    });
+    return fees;
   });
-  return fees;
 }
 export async function recordPayment(studentId, amount, method, reference) {
   const numAmount = Math.max(0, Number(amount) || 0);
@@ -1397,19 +1435,22 @@ export async function getFeeSummary(preFetchedFees = null, preFetchedStudents = 
 // ============= ATTENDANCE =============
 export async function getAttendance() {
   if (!_currentSchoolId || !_currentPeriodId) return {};
-  const { data, error } = await supabase
-    .from('attendance')
-    .select('id, student_id, date, status, period_id, school_id')
-    .eq('school_id', _currentSchoolId)
-    .eq('period_id', _currentPeriodId);
-  if (error) throw error;
-  // Convert to { date: { studentId: status } }
-  const att = {};
-  (data || []).forEach(row => {
-    if (!att[row.date]) att[row.date] = {};
-    att[row.date][row.student_id] = row.status;
+  const cacheKey = `att_${_currentSchoolId}_${_currentPeriodId}`;
+  return cachedQuery(cacheKey, async () => {
+    const { data, error } = await supabase
+      .from('attendance')
+      .select('id, student_id, date, status, period_id, school_id')
+      .eq('school_id', _currentSchoolId)
+      .eq('period_id', _currentPeriodId);
+    if (error) throw error;
+    // Convert to { date: { studentId: status } }
+    const att = {};
+    (data || []).forEach(row => {
+      if (!att[row.date]) att[row.date] = {};
+      att[row.date][row.student_id] = row.status;
+    });
+    return att;
   });
-  return att;
 }
 
 export async function markAttendance(date, studentId, status) {
@@ -1564,6 +1605,7 @@ export async function getTeachers() {
   const cached = await db.teachers.where('school_id').equals(_currentSchoolId).toArray();
 
   const fetchCloud = async () => {
+    if (!shouldFetchCloud(`teachers_${_currentSchoolId}`)) return;
     try {
       const { data, error } = await supabase
         .from('teachers')
@@ -1907,12 +1949,31 @@ export async function getSubjectAssignments() {
 }
 
 export async function setAssignment(classGrade, stream, subject, teacherId) {
-  await supabase
+  // First remove any existing assignment
+  const { error: delError } = await supabase
     .from('subject_assignments')
-    .upsert(
-      { school_id: _currentSchoolId, class_grade: classGrade, stream, subject, teacher_id: teacherId, period_id: _currentPeriodId },
-      { onConflict: 'school_id,class_grade,stream,subject,period_id' }
-    );
+    .delete()
+    .eq('school_id', _currentSchoolId)
+    .eq('period_id', _currentPeriodId)
+    .eq('class_grade', classGrade)
+    .eq('stream', stream)
+    .eq('subject', subject);
+  
+  if (delError) throw delError;
+
+  if (teacherId) {
+    const { error: insError } = await supabase
+      .from('subject_assignments')
+      .insert({
+        school_id: _currentSchoolId,
+        class_grade: classGrade,
+        stream,
+        subject,
+        teacher_id: teacherId,
+        period_id: _currentPeriodId
+      });
+    if (insError) throw insError;
+  }
 }
 
 export async function getTeacherForSubject(classGrade, stream, subject) {

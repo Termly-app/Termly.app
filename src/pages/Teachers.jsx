@@ -365,7 +365,7 @@ function AssignmentsTab({ assignments, teachers, onAssign, profile }) {
           {/* Desktop table */}
           <table className="data-table hide-mobile">
             <thead>
-              <tr><th>Subject</th><th>Assigned Teacher</th><th>Phone</th></tr>
+              <tr><th>Subject</th><th>Assigned Teacher</th></tr>
             </thead>
             <tbody>
               {subjects.map(sub => {
@@ -391,7 +391,6 @@ function AssignmentsTab({ assignments, teachers, onAssign, profile }) {
                         style={{ minWidth: 200 }}
                       />
                     </td>
-                    <td className="text-muted">{teacher ? teacher.phone : '—'}</td>
                   </tr>
                 );
               })}

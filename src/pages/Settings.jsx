@@ -589,7 +589,7 @@ export default function Settings() {
             <div className="card-body">
               <div className="responsive-grid-stack">
                 
-                {/* M-Pesa Daraja */}
+                {/* M-Pesa Daraja WIP 
                 <div style={sectionBox}>
                   <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',marginBottom:15}}>
                     <div>
@@ -636,8 +636,9 @@ export default function Settings() {
                     </div>
                   </div>
                 </div>
+                */}
 
-                {/* Africa's Talking SMS */}
+                {/* Africa's Talking SMS WIP
                 <div style={sectionBox}>
                   <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',marginBottom:15}}>
                     <div>
@@ -679,6 +680,7 @@ export default function Settings() {
                     </div>
                   </div>
                 </div>
+                */}
 
               </div>
             </div>

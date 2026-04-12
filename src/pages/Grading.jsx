@@ -693,23 +693,7 @@ export default function Grading({ currentUser, currentPeriodId }) {
             </div>
           </div>
           
-          <div className="card">
-            <div className="card-header"><h3><TeacherIcon size={20} /> Subject Teacher Engagement</h3></div>
-            <div className="card-body">
-              <div className="responsive-grid-stack">
-                {subjects.slice(0, 4).map(sub => (
-                  <div key={sub} style={{ padding: 16, border: '1px solid var(--border)', borderRadius: 12 }}>
-                    <div className="text-muted" style={{ fontSize: '0.75rem' }}>{sub}</div>
-                    <div style={{ fontWeight: 700, margin: '4px 0' }}>Teacher Assigned</div>
-                    <div style={{ fontSize: '0.7rem', color: 'var(--accent)' }}>Syllabus Coverage: 85%</div>
-                    <div style={{ height: 6, background: '#e2e8f0', borderRadius: 3, marginTop: 8 }}>
-                      <div style={{ width: '85%', height: '100%', background: 'var(--accent)', borderRadius: 3 }} />
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
+          {/* Subject Teacher Engagement removed */}
         </div>
       )}
 

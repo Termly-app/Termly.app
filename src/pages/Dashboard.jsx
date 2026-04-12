@@ -73,22 +73,30 @@ export default function Dashboard({ currentUser, onLogout, currentPeriodId }) {
       } finally { setLoading(false); }
     };
     loadData();
+    let debounceTimer = null;
+    const debouncedLoadData = () => {
+      if (debounceTimer) clearTimeout(debounceTimer);
+      debounceTimer = setTimeout(() => {
+        loadData();
+      }, 500);
+    };
+
     const handlePeriodChange = () => {
       setLoading(true);
-      loadData();
+      debouncedLoadData();
     };
     const handleProfileChange = () => {
       // Fetch data in background without showing full-page loader
       // This prevents the SetupWizard from unmounting and resetting its local step state.
-      loadData();
+      debouncedLoadData();
     };
     window.addEventListener('periodChanged', handlePeriodChange);
     window.addEventListener('schoolProfileChanged', handleProfileChange);
     const unsubs = [
-      subscribeToChanges('students', loadData), subscribeToChanges('teachers', loadData),
-      subscribeToChanges('payments', loadData), subscribeToChanges('attendance', loadData),
-      subscribeToChanges('marks', loadData),
-      subscribeToChanges('users', loadData)
+      subscribeToChanges('students', debouncedLoadData), subscribeToChanges('teachers', debouncedLoadData),
+      subscribeToChanges('payments', debouncedLoadData), subscribeToChanges('attendance', debouncedLoadData),
+      subscribeToChanges('marks', debouncedLoadData),
+      subscribeToChanges('users', debouncedLoadData)
     ];
     return () => {
       window.removeEventListener('periodChanged', handlePeriodChange);
@@ -288,33 +296,7 @@ export default function Dashboard({ currentUser, onLogout, currentPeriodId }) {
           </div>
         </div>
 
-        {/* Quick Actions */}
-        <div className="card">
-          <div className="card-header">
-            <h3><RocketIcon size={18} /> Quick Actions</h3>
-          </div>
-          <div className="card-body" style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-            {quickActions
-              .filter(a => hasAccess(a.feature))
-              .map((a, i) => (
-                <Link 
-                  to={a.to} 
-                  key={i} 
-                  className="quick-action"
-                  style={{ textDecoration: 'none' }}
-                >
-                  <div className="quick-action-icon" style={{ background: a.bg, color: a.color }}>{a.icon}</div>
-                  <div style={{ flex: 1 }}>
-                    <div style={{ fontWeight: 600, fontSize: '0.875rem', color: 'var(--text-main)', display:'flex', alignItems:'center', gap:8 }}>
-                      {a.label}
-                    </div>
-                    <div style={{ fontSize: '0.78rem', color: 'var(--text-light)' }}>{a.sub}</div>
-                  </div>
-                  <div className="quick-action-plus">+</div>
-                </Link>
-              ))}
-          </div>
-        </div>
+        {/* Quick Actions removed */}
 
 
       </div>
@@ -458,36 +440,7 @@ export default function Dashboard({ currentUser, onLogout, currentPeriodId }) {
           </div>
         )}
 
-        {/* Performance by Level */}
-        {!isFinance && Object.keys(data.schoolStructure).length > 0 && (
-          <div className="card">
-            <div className="card-header">
-              <div className="flex-center gap-3">
-                <div className="icon-box-accent"><DashboardIcon size={20} /></div>
-                <h3 style={{ margin: 0 }}>Academic Performance</h3>
-              </div>
-            </div>
-            <div className="card-body">
-              {Object.entries(data.schoolStructure).map(([levelName, levelData]) => {
-                const colors  = levelColors[levelName] || levelColors['Early Years'];
-                const allPerfs = Object.values(levelData.grades).map(g => g.avgPerformance).filter(p => p > 0);
-                const levelAvg = allPerfs.length > 0 ? (allPerfs.reduce((a, b) => a + b, 0) / allPerfs.length).toFixed(1) : 0;
-                const { grade, color } = getGrade(levelAvg, levelName);
-                return (
-                  <div key={levelName} className="metric-row">
-                    <div className="flex-between" style={{ marginBottom: 6 }}>
-                      <span className="metric-label">{levelName}</span>
-                      <span style={{ fontSize: '0.85rem', fontWeight: 700, color }}>{levelAvg}% <small style={{ fontWeight: 500, opacity: 0.7 }}>({grade})</small></span>
-                    </div>
-                    <div className="progress-container-refined">
-                      <div className="progress-fill-refined" style={{ width: `${levelAvg}%`, background: colors.gradient }} />
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        )}
+        {/* Academic Performance removed */}
 
       </div>
 

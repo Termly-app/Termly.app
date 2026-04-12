@@ -30,6 +30,7 @@ export default function Library({ currentUser, currentPeriodId }) {
   const [printModal, setPrintModal] = useState({ open: false });
   const [modalGrade, setModalGrade] = useState('');
   const [modalCategory, setModalCategory] = useState('');
+  const [modalSubject, setModalSubject] = useState('');
 
   const LIB_CATEGORIES = [
     'Textbook', 'Setbook', 'Storybook', 'Revision Kit', 
@@ -273,7 +274,7 @@ export default function Library({ currentUser, currentPeriodId }) {
             <button className="btn btn-ghost btn-sm" onClick={() => setBorrowModal({ open: true, data: null })}>
               <PlatformZapIcon size={14} /> Loan Book
             </button>
-            <button className="btn btn-primary btn-sm" onClick={() => { setModalGrade(''); setModalCategory(''); setBookModal({ open: true, data: null }); }}>
+            <button className="btn btn-primary btn-sm" onClick={() => { setModalGrade(''); setModalCategory(''); setModalSubject(''); setBookModal({ open: true, data: null }); }}>
               <PlusIcon size={14} /> New Entry
             </button>
           </div>
@@ -445,6 +446,7 @@ export default function Library({ currentUser, currentPeriodId }) {
                         onClick={() => { 
                           setModalGrade(book.grade || ''); 
                           setModalCategory(book.category || 'Textbook');
+                          setModalSubject(book.subject || '');
                           setBookModal({ open: true, data: book }); 
                         }}
                         className="btn btn-ghost" 
@@ -540,7 +542,7 @@ export default function Library({ currentUser, currentPeriodId }) {
               <button className="modal-close" onClick={() => setBookModal({ open: false })}>×</button>
             </div>
             <div className="modal-body">
-            <form onSubmit={handleSaveBook} className="form-group">
+             <form id="save-book-form" onSubmit={handleSaveBook} className="form-group">
                <div className="form-row">
                  <div className="form-group">
                    <label>Resource Title</label>
@@ -588,7 +590,8 @@ export default function Library({ currentUser, currentPeriodId }) {
                    <label>Subject</label>
                    <Select
                      name="subject"
-                     defaultValue={bookModal.data?.subject}
+                     value={modalSubject}
+                     onChange={e => setModalSubject(e.target.value)}
                      options={[
                        { id: '', label: '-- Select Subject (Optional) --' },
                        ...(modalGrade ? getSubjectsForGrade(modalGrade, profile) : availableSubjects).map(s => ({ id: s, label: s }))
@@ -621,7 +624,7 @@ export default function Library({ currentUser, currentPeriodId }) {
             </div>
             <div className="modal-footer">
                  <button type="button" className="btn btn-ghost" onClick={() => setBookModal({ open: false })}>Cancel</button>
-                 <button type="submit" className="btn btn-primary">Save to Catalog</button>
+                 <button type="submit" form="save-book-form" className="btn btn-primary">Save to Catalog</button>
                </div>
                       </div>
         </div>
