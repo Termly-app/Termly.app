@@ -260,6 +260,8 @@ export default function Fees({ currentUser, currentPeriodId }) {
             {loading && <span className="text-muted" style={{ fontSize: '0.85rem' }}>Loading...</span>}
           </div>
           <button className="btn btn-ghost" onClick={printFeeList}><PrintIcon size={16} /> Print Fee List</button>
+        </div>
+      </div>
       <div className="kpi-grid">
         <div className="kpi-card green"><div className="kpi-icon green"><CardIcon size={20} /></div><div className="kpi-value">{formatKSh(summary.totalCollected)}</div><div className="kpi-label">Total Collected</div></div>
         <div className="kpi-card red"><div className="kpi-icon red"><AlertIcon size={20} /></div><div className="kpi-value">{formatKSh(summary.totalOutstanding)}</div><div className="kpi-label">Outstanding</div></div>
