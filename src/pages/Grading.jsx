@@ -187,6 +187,7 @@ export default function Grading({ currentUser, currentPeriodId }) {
   // Subject abbreviations for print-friendly A4 portrait
   const subjectAbbr = (name) => {
     const map = {
+      // 8-4-4 Secondary
       'English': 'ENG', 'Kiswahili': 'KIS', 'Mathematics': 'MATH', 'Biology': 'BIO',
       'Physics': 'PHY', 'Chemistry': 'CHEM', 'History & Government': 'HIST', 'History': 'HIST',
       'Geography': 'GEO', 'Christian Religious Education': 'CRE', 'Islamic Religious Education': 'IRE',
@@ -197,13 +198,25 @@ export default function Grading({ currentUser, currentPeriodId }) {
       'Home Science': 'H/SC', 'Aviation': 'AVI', 'Electricity': 'ELEC',
       'Power Mechanics': 'P/M', 'Metalwork': 'M/W', 'Woodwork': 'W/W',
       'Building Construction': 'B/C', 'Drawing & Design': 'D&D',
-      'Social Studies': 'SST', 'Science': 'SCI', 'Literacy Activities': 'LIT',
-      'Mathematical Activities': 'MATH', 'Environmental Activities': 'ENV',
-      'Hygiene & Nutrition': 'H&N', 'Creative Activities': 'CRE/A',
+      // CBC Early Years (PP1, PP2, Grade 1-3)
+      'Literacy Activities': 'LIT', 'Mathematical Activities': 'MATH',
+      'Environmental Activities': 'ENV', 'Creative Activities': 'CRA',
       'Religious Education': 'RE', 'Movement & Creative Activities': 'MCA',
-      'Integrated Science': 'I/SCI', 'Health Education': 'HLT',
-      'Pre-Technical Studies': 'PTS', 'Social Studies & Ethics': 'SSE',
-      'Life Skills': 'L/SK',
+      // CBC Upper Primary (Grade 4-6)
+      'Science & Technology': 'S&T', 'Social Studies': 'SST',
+      'Agriculture & Nutrition': 'A&N', 'Creative Arts': 'C/ART',
+      'Physical & Health Education': 'PHE',
+      // CBC Junior Secondary (Grade 7-9)
+      'Integrated Science': 'I/SCI', 'Pre-Technical Studies': 'PTS',
+      'ICT': 'ICT', 'Health Education': 'HLT',
+      'Life Skills Education': 'LSE', 'Life Skills': 'LSE',
+      'Social Studies & Ethics': 'SSE',
+      // CBC Senior Secondary (Grade 10-12)
+      'Advanced Math': 'A/M', 'Technical Drawing': 'T/D',
+      'Visual Arts': 'V/ART', 'Physical Education': 'PE',
+      'Performing Arts': 'P/ART', 'Sports Management': 'SPM',
+      // Other
+      'Science': 'SCI', 'Hygiene & Nutrition': 'H&N',
     };
     return map[name] || (name.length > 5 ? name.substring(0, 4).toUpperCase() : name.toUpperCase());
   };
