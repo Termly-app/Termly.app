@@ -237,7 +237,7 @@ export default function Grading({ currentUser, currentPeriodId }) {
         return `<div class="report-page">
         ${headerStr}
         <div style="text-align:center;margin-top:-14px;margin-bottom:18px">
-          <div class="level">${level}</div>
+          ${isEarlyYears ? `<div class="level">${level}</div>` : ''}
           <div class="level" style="background:var(--accent);color:white;margin-left:8px">${examType}</div>
         </div>
       <div class="info">
@@ -245,7 +245,7 @@ export default function Grading({ currentUser, currentPeriodId }) {
         <div><strong>Class:</strong> ${student.class}</div>${!isEarlyYears ? `<div><strong>Position:</strong> ${student.rank} of ${classSize}</div>` : ''}
       </div>
       <div class="section-title">${isEarlyYears ? 'Learning Areas & Development' : 'Academic Performance'}</div>
-      <table><thead><tr><th>Learning Area</th>${!isEarlyYears ? '<th>Marks</th><th>Grade</th>' : ''}<th>CBC Level</th><th>Remarks</th></tr></thead>
+      <table><thead><tr><th>Learning Area</th>${!isEarlyYears ? '<th>Marks</th><th>Grade</th>' : '<th>CBC Level</th><th>Remarks</th>'}</tr></thead>
       <tbody>${subjects.map(sub => {
         const mark = student.marks[sub] || 0;
         const g = getGrade(mark);
@@ -254,10 +254,11 @@ export default function Grading({ currentUser, currentPeriodId }) {
         const remark = isEarlyYears
           ? (cbcLv.startsWith('Exceeding') ? 'Outstanding progress' : cbcLv.startsWith('Meeting') ? 'Good progress' : cbcLv.startsWith('Approaching') ? 'Developing well' : 'Needs support')
           : getProfessionalRemark(mark, student.id);
-        return `<tr><td>${sub}</td>${!isEarlyYears ? `<td style="font-weight:700">${mark}</td><td style="color:${g.color};font-weight:700">${g.grade}</td>` : ''}<td class="${cbcCls}">${cbcLv}</td><td>${remark}</td></tr>`;
+        return `<tr><td>${sub}</td>${!isEarlyYears ? `<td style="font-weight:700">${mark}</td><td style="color:${g.color};font-weight:700">${g.grade}</td>` : `<td class="${cbcCls}">${cbcLv}</td><td>${remark}</td>`}</tr>`;
       }).join('')}
-      ${!isEarlyYears ? `<tr style="font-weight:700;background:#f8fafc"><td>Total</td><td colspan="4">${student.total} / ${subjects.length * 100} — Average: ${student.average}% (Grade ${grade})</td></tr>` : ''}
+      ${!isEarlyYears ? `<tr style="font-weight:700;background:#f8fafc"><td>Total</td><td colspan="2">${student.total} / ${subjects.length * 100} — Average: ${student.average}% (Grade ${grade})</td></tr>` : ''}
       </tbody></table>
+      ${isEarlyYears ? `
       <div class="section-title">📋 Core Competencies & Values</div>
       <table><thead><tr><th>Competency</th><th>Rating</th></tr></thead><tbody>${ccHtmlFor(student.id)}</tbody></table>
       <div class="strengths"><strong>Learner Strengths:</strong> ___________________________________</div>
@@ -265,6 +266,10 @@ export default function Grading({ currentUser, currentPeriodId }) {
       <div class="strengths"><strong>Overall Academic Remark:</strong> ${getProfessionalRemark(student.average, student.id)}</div>
       <div class="strengths"><strong>Class Teacher Remarks:</strong> ___________________________________</div>
       <div class="strengths"><strong>Principal Remarks:</strong> ___________________________________</div>
+      ` : `
+      <div class="strengths"><strong>Class Teacher Remarks:</strong> __________________________________________________  <strong>Name:</strong> _______________________</div>
+      <div class="strengths"><strong>Principal Remarks:</strong> ______________________________________________________  <strong>Name:</strong> _______________________</div>
+      `}
       <div class="sigs"><div><div class="ln"></div>Class Teacher</div><div><div class="ln"></div>Principal</div><div><div class="ln"></div>Parent/Guardian</div></div>
       </div>`;
     }).join('');
@@ -734,7 +739,7 @@ function ReportCardModal({ student, cbcData, coreCompData, onClose, getGrade, cb
       </style></head><body>
       ${headerStr}
       <div style="text-align:center;margin-top:-14px;margin-bottom:18px">
-        <div class="level">${level}</div>
+        ${isEarlyYears ? `<div class="level">${level}</div>` : ''}
         <div class="level" style="background:#f59e0b;color:white;margin-left:8px">${examType}</div>
       </div>
     <div class="info">
@@ -742,7 +747,7 @@ function ReportCardModal({ student, cbcData, coreCompData, onClose, getGrade, cb
       <div><strong>Class:</strong> ${student.class}</div>${!isEarlyYears ? `<div><strong>Position:</strong> ${student.rank} of ${classSize}</div>` : ''}
     </div>
     <div class="section-title">${isEarlyYears ? 'Learning Areas & Development' : 'Academic Performance'}</div>
-    <table><thead><tr><th>Learning Area</th>${!isEarlyYears ? '<th>Marks</th><th>Grade</th>' : ''}<th>CBC Level</th><th>Remarks</th></tr></thead>
+    <table><thead><tr><th>Learning Area</th>${!isEarlyYears ? '<th>Marks</th><th>Grade</th>' : '<th>CBC Level</th><th>Remarks</th>'}</tr></thead>
     <tbody>${subjects.map(sub => {
       const mark = student.marks[sub] || 0;
       const g = getGrade(mark);
@@ -751,16 +756,21 @@ function ReportCardModal({ student, cbcData, coreCompData, onClose, getGrade, cb
       const remark = isEarlyYears
         ? (cbc.startsWith('Exceeding') ? 'Outstanding progress' : cbc.startsWith('Meeting') ? 'Good progress' : cbc.startsWith('Approaching') ? 'Developing well' : 'Needs support')
         : (mark >= 80 ? 'Excellent' : mark >= 70 ? 'Good' : mark >= 60 ? 'Average' : mark >= 50 ? 'Below Avg' : 'Needs Improvement');
-      return `<tr><td>${sub}</td>${!isEarlyYears ? `<td style="font-weight:700">${mark}</td><td style="color:${g.color};font-weight:700">${g.grade}</td>` : ''}<td class="${cbcCls}">${cbc}</td><td>${remark}</td></tr>`;
+      return `<tr><td>${sub}</td>${!isEarlyYears ? `<td style="font-weight:700">${mark}</td><td style="color:${g.color};font-weight:700">${g.grade}</td>` : `<td class="${cbcCls}">${cbc}</td><td>${remark}</td>`}</tr>`;
     }).join('')}
-    ${!isEarlyYears ? `<tr style="font-weight:700;background:#f8fafc"><td>Total</td><td colspan="4">${student.total} / ${subjects.length * 100} — Average: ${student.average}% (Grade ${grade})</td></tr>` : ''}
+    ${!isEarlyYears ? `<tr style="font-weight:700;background:#f8fafc"><td>Total</td><td colspan="2">${student.total} / ${subjects.length * 100} — Average: ${student.average}% (Grade ${grade})</td></tr>` : ''}
     </tbody></table>
+    ${isEarlyYears ? `
     <div class="section-title">Core Competencies & Values</div>
     <table><thead><tr><th>Competency</th><th>Rating</th></tr></thead><tbody>${ccHtml()}</tbody></table>
     <div class="strengths"><strong>Learner Strengths:</strong> ___________________________________</div>
     <div class="strengths"><strong>Areas for Improvement:</strong> ___________________________________</div>
     <div class="strengths"><strong>Class Teacher Remarks:</strong> ___________________________________</div>
     <div class="strengths"><strong>Principal Remarks:</strong> ___________________________________</div>
+    ` : `
+    <div class="strengths"><strong>Class Teacher Remarks:</strong> __________________________________________________  <strong>Name:</strong> _______________________</div>
+    <div class="strengths"><strong>Principal Remarks:</strong> ______________________________________________________  <strong>Name:</strong> _______________________</div>
+    `}
       <div class="sigs"><div><div class="ln"></div>Class Teacher</div><div><div class="ln"></div>Principal</div><div><div class="ln"></div>Parent/Guardian</div></div>
       </body></html>`);
       w.document.close(); w.print();
@@ -774,7 +784,7 @@ function ReportCardModal({ student, cbcData, coreCompData, onClose, getGrade, cb
         <div className="modal-body">
           <div className="report-card">
             <div className="report-card-header"><h1><SchoolIcon size={24} /> {profile?.schoolName || ''}</h1><h2>Term 1 {examType} Report Card — 2026</h2>
-              <span className="badge badge-info" style={{ marginTop: 6 }}>{level}</span>
+              {isEarlyYears && <span className="badge badge-info" style={{ marginTop: 6 }}>{level}</span>}
             </div>
             <div className="report-card-info">
               <div><strong>Adm No:</strong> {student.admNo}</div><div><strong>Student:</strong> {student.name}</div>
@@ -786,7 +796,7 @@ function ReportCardModal({ student, cbcData, coreCompData, onClose, getGrade, cb
               {isEarlyYears ? <LeafIcon size={16} /> : <BookIcon size={16} />} {isEarlyYears ? 'Learning Areas & Development' : 'Academic Performance'}
             </h4>
             <table>
-              <thead><tr><th>Learning Area</th>{!isEarlyYears && <><th>Marks</th><th>Grade</th></>}<th>CBC Level</th><th>Remarks</th></tr></thead>
+              <thead><tr><th>Learning Area</th>{!isEarlyYears ? <><th>Marks</th><th>Grade</th></> : <><th>CBC Level</th><th>Remarks</th></>}</tr></thead>
               <tbody>
                 {subjects.map(sub => {
                   const mark = student.marks[sub] || 0;
@@ -798,48 +808,61 @@ function ReportCardModal({ student, cbcData, coreCompData, onClose, getGrade, cb
                   return (
                     <tr key={sub}>
                       <td>{sub}</td>
-                      {!isEarlyYears && <><td className="font-bold">{mark}</td><td style={{ color: g.color, fontWeight: 700 }}>{g.grade}</td></>}
-                      <td style={{ color: cbcColor(cbc), fontWeight: 600, fontSize: '0.82rem' }}>{cbc}</td>
-                      <td className="text-muted" style={{ fontSize: '0.82rem' }}>{remark}</td>
+                      {!isEarlyYears ? <><td className="font-bold">{mark}</td><td style={{ color: g.color, fontWeight: 700 }}>{g.grade}</td></> : 
+                      <><td style={{ color: cbcColor(cbc), fontWeight: 600, fontSize: '0.82rem' }}>{cbc}</td>
+                      <td className="text-muted" style={{ fontSize: '0.82rem' }}>{remark}</td></>}
                     </tr>
                   );
                 })}
                 {!isEarlyYears && (
                   <tr style={{ fontWeight: 700, background: '#f8fafc' }}>
-                    <td>Total</td><td colSpan="4">{student.total} / {subjects.length * 100} — Avg: {student.average}% — Grade {grade}</td>
+                    <td>Total</td><td colSpan="2">{student.total} / {subjects.length * 100} — Avg: {student.average}% — Grade {grade}</td>
                   </tr>
                 )}
               </tbody>
             </table>
 
             {/* Core Competencies & Values */}
-            <h4 style={{ fontSize: '0.92rem', fontWeight: 700, color: 'var(--primary)', marginTop: 20, marginBottom: 8, borderBottom: '2px solid var(--border)', paddingBottom: 4 }}>
-              <BookIcon size={16} /> Core Competencies & Values
-            </h4>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6 }}>
-              {CBC_CORE_COMPETENCIES.map(comp => {
-                const lv = studentCC[comp] || 'Meeting Expectation';
-                return (
-                  <div key={comp} style={{
-                    display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                    padding: '6px 10px', borderRadius: 6, fontSize: '0.8rem',
-                    background: 'var(--bg)', border: '1px solid var(--border-light)',
-                  }}>
-                    <span style={{ fontWeight: 500 }}>{comp}</span>
-                    <span style={{
-                      padding: '2px 8px', borderRadius: 10, fontSize: '0.7rem', fontWeight: 700,
-                      color: cbcColor(lv), background: `${cbcColor(lv)}15`,
-                    }}>{cbcLabel(lv)}</span>
-                  </div>
-                );
-              })}
-            </div>
+            {isEarlyYears && (
+              <>
+                <h4 style={{ fontSize: '0.92rem', fontWeight: 700, color: 'var(--primary)', marginTop: 20, marginBottom: 8, borderBottom: '2px solid var(--border)', paddingBottom: 4 }}>
+                  <BookIcon size={16} /> Core Competencies & Values
+                </h4>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6 }}>
+                  {CBC_CORE_COMPETENCIES.map(comp => {
+                    const lv = studentCC[comp] || 'Meeting Expectation';
+                    return (
+                      <div key={comp} style={{
+                        display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                        padding: '6px 10px', borderRadius: 6, fontSize: '0.8rem',
+                        background: 'var(--bg)', border: '1px solid var(--border-light)',
+                      }}>
+                        <span style={{ fontWeight: 500 }}>{comp}</span>
+                        <span style={{
+                          padding: '2px 8px', borderRadius: 10, fontSize: '0.7rem', fontWeight: 700,
+                          color: cbcColor(lv), background: `${cbcColor(lv)}15`,
+                        }}>{cbcLabel(lv)}</span>
+                      </div>
+                    );
+                  })}
+                </div>
+              </>
+            )}
 
             <div style={{ marginTop: 20, fontSize: '0.88rem' }}>
-              <p><strong>Learner Strengths:</strong> ________________________________</p>
-              <p><strong>Areas for Improvement:</strong> ________________________________</p>
-              <p><strong>Class Teacher Remarks:</strong> ________________________________</p>
-              <p><strong>Principal Remarks:</strong> ________________________________</p>
+              {isEarlyYears ? (
+                <>
+                  <p><strong>Learner Strengths:</strong> ________________________________</p>
+                  <p><strong>Areas for Improvement:</strong> ________________________________</p>
+                  <p><strong>Class Teacher Remarks:</strong> ________________________________</p>
+                  <p><strong>Principal Remarks:</strong> ________________________________</p>
+                </>
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 15 }}>
+                  <p style={{ borderBottom: '1px dotted var(--border)', paddingBottom: 5 }}><strong>Class Teacher Remarks:</strong> ____________________________________________________  <strong>Name:</strong> ________________</p>
+                  <p style={{ borderBottom: '1px dotted var(--border)', paddingBottom: 5 }}><strong>Principal Remarks:</strong> ________________________________________________________  <strong>Name:</strong> ________________</p>
+                </div>
+              )}
             </div>
           </div>
         </div>
