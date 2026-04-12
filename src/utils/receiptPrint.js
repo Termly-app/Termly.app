@@ -141,8 +141,8 @@ export function printReceipt({ school, student, payment, feeItems = [] }) {
         <tbody>${feeRows}</tbody>
         <tfoot>
           <tr class="total-row">
-            <td>Total Paid</td>
-            <td class="amount">${ksh(total)}</td>
+            <td>Cumulative Amount Paid</td>
+            <td class="amount">${ksh(previousPaid + total)}</td>
           </tr>
         </tfoot>
       </table>

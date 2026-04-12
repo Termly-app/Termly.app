@@ -507,15 +507,15 @@ function ReportsTab() {
           classMap[cls] = new Set();
           for (const streams of Object.values(classData)) {
             if (typeof streams === 'string') continue;
-            for (const tid of Object.values(streams)) {
+            for (const [sub, tid] of Object.entries(streams)) {
               const t = teachers.find(teach => teach.id === tid);
-              if (t) classMap[cls].add(t.name);
+              if (t) classMap[cls].add(`${t.name} <span style="font-size: 0.8em; color: #555;">(${sub})</span>`);
             }
           }
         }
         tableContent = `
           <table>
-            <thead><tr><th>Class</th><th>Assigned Teachers</th></tr></thead>
+            <thead><tr><th>Class</th><th>Assigned Teachers (Subjects)</th></tr></thead>
             <tbody>
               ${Object.entries(classMap).map(([cls, names]) => `
                 <tr>

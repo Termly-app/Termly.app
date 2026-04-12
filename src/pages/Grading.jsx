@@ -500,7 +500,7 @@ export default function Grading({ currentUser, currentPeriodId }) {
         {[
           { key:'marks',       icon: isEarlyYears ? <FlagIcon /> : <BookIcon />, label: isEarlyYears ? 'Competency Focus' : 'Marks & Rankings' },
           ...(!isEarlyYears ? [{ key:'subjects', icon:<DashboardIcon />, label:'Subject Rankings' }] : []),
-          ...(level.includes('CBC') || level === 'All' ? [{ key:'cbc', icon:<FlagIcon />, label:'CBC Levels' }] : []),
+          ...(level !== 'Secondary (8-4-4)' ? [{ key:'cbc', icon:<FlagIcon />, label:'CBC Levels' }] : []),
           { key:'performance', icon:<TeacherIcon />, label:'Teacher Performance' },
         ].map(t => (
           <button key={t.key} onClick={() => setActiveTab(t.key)}
