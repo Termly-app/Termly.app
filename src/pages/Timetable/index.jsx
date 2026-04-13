@@ -2,8 +2,8 @@
  * Timetable/index.jsx — ShuleSoft Timetable Builder
  *
  * Features:
- *  - Three panels: Grid · Requirements · Slot Config
- *  - Auto-generation with no teacher or class overlaps
+ *  - Constraint-guided manual timetable builder
+ *  - Click-to-assign grid with real-time conflict validation
  *  - Double lessons (lab, practical — two consecutive slots)
  *  - CBC Primary, CBC Junior Secondary, CBC Senior Secondary, 8-4-4 support
  *  - Class view + Teacher view + Print
@@ -31,8 +31,8 @@ import {
   getTeacherTimetable
 } from '../../data/store';
 import { 
-  CalendarIcon, PrintIcon, BookIcon, SettingsIcon, CheckIcon, CrossIcon, 
-  SaveIcon, AlertIcon, UserIcon, HomeIcon, TeacherIcon, PlusIcon
+  CalendarIcon, PrintIcon, BookIcon, CheckIcon, CrossIcon, 
+  AlertIcon, UserIcon, HomeIcon, TeacherIcon, PlusIcon
 } from '../../components/CommonIcons';
 import PricingUpgrade from '../../components/PricingUpgrade';
 
@@ -126,7 +126,6 @@ export default function Timetable({ currentUser, currentPeriodId, periods = [] }
     ],
   };
   // ── Panel / view ──────────────────────────────────────────────────────
-  const [panel,  setPanel]  = useState('grid');   // 'grid' | 'config'
   const [view,   setView]   = useState('class');  // 'class' | 'teacher'
   const [ttLabel, setTtLabel]     = useState('Weekly');
 
@@ -148,13 +147,8 @@ export default function Timetable({ currentUser, currentPeriodId, periods = [] }
 
   // ── Config ────────────────────────────────────────────────────────────
   const [config,       setConfig]       = useState([]);
-  const [draftConfig,  setDraftConfig]  = useState([]);
   const [activeDays,   setActiveDays]   = useState(['Monday','Tuesday','Wednesday','Thursday','Friday']);
-  const [configSaving, setConfigSaving] = useState(false);
-  const [stdStart,     setStdStart]     = useState('08:20');
-  const [stdDuration,  setStdDuration]  = useState(40);
-  const [stdShortBreak, setStdShortBreak] = useState(20);
-  const [stdLongBreak,  setStdLongBreak]  = useState(40);
+
 
   // ── Grid slots ────────────────────────────────────────────────────────
   const [slots,        setSlots]        = useState([]);
@@ -215,7 +209,7 @@ export default function Timetable({ currentUser, currentPeriodId, periods = [] }
     })();
   }, [schoolId]);
 
-  // ── Load config when period changes ───────────────────────────────────
+  // ── Load config when period changes (auto-apply template if empty) ───
   useEffect(() => {
     if (!schoolId || !periodId) return;
     (async () => {
@@ -234,16 +228,13 @@ export default function Timetable({ currentUser, currentPeriodId, periods = [] }
 
   // ── Load slots for selected class ─────────────────────────────────────
   useEffect(() => {
-    if (!schoolId || !periodId || !selClass || panel !== 'grid' || view !== 'class') return;
+    if (!schoolId || !periodId || !selClass || view !== 'class') return;
     (async () => {
-      setLoading(true);
-      try {
-        const data = await getTimetableSlots(schoolId, periodId, selClass, selStream || null);
-        setSlots(data);
-      } catch (e) { console.error(e); }
+      try { setLoading(true); setSlots(await getTimetableSlots(schoolId, periodId, selClass, selStream || null)); }
+      catch (e) { console.error(e); }
       finally { setLoading(false); }
     })();
-  }, [schoolId, periodId, selClass, selStream, panel, view]);
+  }, [schoolId, periodId, selClass, selStream, view]);
 
   // ── Load teacher slots ────────────────────────────────────────────────
   useEffect(() => {
@@ -420,115 +411,6 @@ export default function Timetable({ currentUser, currentPeriodId, periods = [] }
     } catch (e) { setMessage({ type:'err', text: e.message }); }
   };
 
-  // ── Save config ───────────────────────────────────────────────────────
-  const handleSaveConfig = async () => {
-    setConfigSaving(true);
-    try {
-      await saveTimetableConfig(schoolId, periodId, draftConfig);
-      setConfig(draftConfig.map((s, i) => ({ ...s, slot_index: i })));
-      setMessage({ type:'ok', text:'Time slot configuration saved.' });
-      setPanel('grid');
-    } catch (e) { setMessage({ type:'err', text: e.message }); }
-    finally { setConfigSaving(false); }
-  };
-
-  const handleStandardizeTimes = () => {
-    // Helper: add minutes to a HH:MM string
-    const addMins = (timeStr, mins) => {
-      const [h, m] = timeStr.split(':').map(Number);
-      const total = h * 60 + m + parseInt(mins);
-      return `${String(Math.floor(total / 60)).padStart(2,'0')}:${String(total % 60).padStart(2,'0')}`;
-    };
-
-    let currentTime = stdStart;
-    const newDraft = draftConfig.map(slot => {
-      const startTime = currentTime;
-      let duration;
-
-      if (slot.is_break) {
-        // Determine break type: "Lunch" gets long break, everything else gets short
-        const isLong = slot.label.toLowerCase().includes('lunch');
-        duration = isLong ? parseInt(stdLongBreak) : parseInt(stdShortBreak);
-      } else {
-        duration = parseInt(stdDuration);
-      }
-
-      const endTime = addMins(startTime, duration);
-      currentTime = endTime; // Next slot starts when this one ends
-      return { ...slot, start_time: startTime, end_time: endTime };
-    });
-
-    setDraftConfig(newDraft);
-    const teachCount = newDraft.filter(s => !s.is_break).length;
-    const lastEnd = newDraft.length > 0 ? newDraft[newDraft.length - 1].end_time : '--:--';
-    setMessage({ type:'ok', text: `${teachCount} lessons at ${stdDuration}min each. School day: ${stdStart} → ${lastEnd}.` });
-  };
-
-  const loadTemplate = (level) => {
-    let template = [];
-    if (level === 'secondary') {
-      template = [
-        { label:'Assembly',  start_time:'08:00', end_time:'08:20', is_break:true  },
-        { label:'Period 1',  start_time:'08:20', end_time:'09:00', is_break:false },
-        { label:'Period 2',  start_time:'09:00', end_time:'09:40', is_break:false },
-        { label:'Tea Break', start_time:'09:40', end_time:'10:00', is_break:true  },
-        { label:'Period 3',  start_time:'10:00', end_time:'10:40', is_break:false },
-        { label:'Period 4',  start_time:'10:40', end_time:'11:20', is_break:false },
-        { label:'Period 5',  start_time:'11:20', end_time:'12:00', is_break:false },
-        { label:'Lunch',     start_time:'12:00', end_time:'12:40', is_break:true  },
-        { label:'Period 6',  start_time:'12:40', end_time:'13:20', is_break:false },
-        { label:'Period 7',  start_time:'13:20', end_time:'14:00', is_break:false },
-        { label:'Period 8',  start_time:'14:00', end_time:'14:40', is_break:false },
-      ];
-      setStdStart('08:20'); setStdDuration(40); setStdShortBreak(20); setStdLongBreak(40);
-    } else if (level === 'primary-upper') {
-      template = [
-        { label:'Assembly',  start_time:'08:00', end_time:'08:20', is_break:true  },
-        { label:'Period 1',  start_time:'08:20', end_time:'08:55', is_break:false },
-        { label:'Period 2',  start_time:'08:55', end_time:'09:30', is_break:false },
-        { label:'Health Break', start_time:'09:30', end_time:'09:50', is_break:true  },
-        { label:'Period 3',  start_time:'09:50', end_time:'10:25', is_break:false },
-        { label:'Period 4',  start_time:'10:25', end_time:'11:00', is_break:false },
-        { label:'Tea Break', start_time:'11:00', end_time:'11:30', is_break:true  },
-        { label:'Period 5',  start_time:'11:30', end_time:'12:05', is_break:false },
-        { label:'Period 6',  start_time:'12:05', end_time:'12:40', is_break:false },
-        { label:'Lunch',     start_time:'12:40', end_time:'13:40', is_break:true  },
-        { label:'Period 7',  start_time:'13:40', end_time:'14:15', is_break:false },
-      ];
-      setStdStart('08:20'); setStdDuration(35); setStdShortBreak(20); setStdLongBreak(60);
-    } else if (level === 'primary-lower') {
-      template = [
-        { label:'Assembly',  start_time:'08:00', end_time:'08:20', is_break:true  },
-        { label:'Period 1',  start_time:'08:20', end_time:'08:50', is_break:false },
-        { label:'Period 2',  start_time:'08:50', end_time:'09:20', is_break:false },
-        { label:'Health Break', start_time:'09:20', end_time:'09:30', is_break:true  },
-        { label:'Period 3',  start_time:'09:30', end_time:'10:00', is_break:false },
-        { label:'Period 4',  start_time:'10:00', end_time:'10:30', is_break:false },
-        { label:'Tea Break', start_time:'10:30', end_time:'11:00', is_break:true  },
-        { label:'Period 5',  start_time:'11:00', end_time:'11:30', is_break:false },
-        { label:'Period 6',  start_time:'11:30', end_time:'12:00', is_break:false },
-      ];
-      setStdStart('08:20'); setStdDuration(30); setStdShortBreak(10); setStdLongBreak(30);
-    }
-    setDraftConfig(template);
-    setMessage({ type:'ok', text: `Loaded standard ${level.replace('-',' ')} day template.` });
-  };
-
-  // ── Draft config helpers (Slot Config panel) ──────────────────────────
-  const updateDraft = (index, field, value) => {
-    setDraftConfig(prev => prev.map((s, i) => i === index ? { ...s, [field]: value } : s));
-  };
-  const removeDraft = (index) => {
-    setDraftConfig(prev => prev.filter((_, i) => i !== index));
-  };
-  const addDraftSlot = () => {
-    const last = draftConfig[draftConfig.length - 1];
-    setDraftConfig(prev => [...prev, {
-      label: `Period ${prev.filter(s => !s.is_break).length + 1}`,
-      start_time: last?.end_time || '08:00',
-      end_time: last ? (() => { const [h,m] = last.end_time.split(':').map(Number); const t = h*60+m+40; return `${String(Math.floor(t/60)).padStart(2,'0')}:${String(t%60).padStart(2,'0')}`; })() : '08:40',
-      is_break: false
-    }]);
   };
 
 
@@ -569,14 +451,14 @@ export default function Timetable({ currentUser, currentPeriodId, periods = [] }
 
 
         <div className="tt-header-actions">
-          {panel === 'grid' && view === 'class' && (
+          {view === 'class' && (
             <button className="tt-btn" onClick={() => printClassTimetable({
               school: { name: currentUser?.schoolName }, classGrade: selClass,
               stream: selStream, period: activePeriod, config, slots, activeDays
             })}><PrintIcon size={14} /> Print Class</button>
           )}
 
-          {panel === 'grid' && view === 'teacher' && (
+          {view === 'teacher' && (
             <div style={{ display:'flex', gap:8 }}>
               {selTeacher && (
                 <button className="tt-btn" onClick={() => printTeacherTimetable({
@@ -608,13 +490,7 @@ export default function Timetable({ currentUser, currentPeriodId, periods = [] }
         </div>
       </div>
 
-      {/* ── Panel tabs ── */}
-      <div className="tt-panel-tabs">
-        {[['grid',<><CalendarIcon size={14} /> Timetable</>],['config',<><SettingsIcon size={14} /> Slot Config</>]].map(([k, label]) => (
-          <button key={k} className={`tt-panel-tab ${panel === k ? 'active' : ''}`}
-            onClick={() => setPanel(k)}>{label}</button>
-        ))}
-      </div>
+
 
       {/* ── Toast ── */}
       {message && (
@@ -623,11 +499,8 @@ export default function Timetable({ currentUser, currentPeriodId, periods = [] }
         </div>
       )}
 
-      {/* ═══════════════════════════════════════════════════════════════
-          PANEL: GRID
-         ═══════════════════════════════════════════════════════════════ */}
-      {panel === 'grid' && (
-        <>
+      {/* ═══════════════ TIMETABLE GRID ═══════════════ */}
+      <>
 
           {/* Controls */}
           <div className="tt-controls">
@@ -787,198 +660,62 @@ export default function Timetable({ currentUser, currentPeriodId, periods = [] }
             </div>
           )}
         </>
-      )}
 
-
-
-      {/* ═══════════════════════════════════════════════════════════════
-          PANEL: SLOT CONFIG
-         ═══════════════════════════════════════════════════════════════ */}
-      {panel === 'config' && (
-        <div className="tt-config">
-          <div className="tt-config-hd">
-            <div style={{ display: 'flex', gap: 24, alignItems: 'flex-end' }}>
-              <div
-                className={`tt-config-nav-item ${roomPanel === 'list' || roomPanel === 'add' ? '' : 'active'}`}
-                onClick={() => setRoomPanel('config')}
-                style={{ cursor: 'pointer', paddingBottom: 8, borderBottom: roomPanel==='config' ? '2px solid var(--accent)' : 'none', fontWeight: roomPanel==='config' ? 700 : 500 }}
-              >
-                Schedule Periods
-              </div>
-              <div
-                className={`tt-config-nav-item ${roomPanel !== 'config' ? 'active' : ''}`}
-                onClick={() => setRoomPanel('list')}
-                style={{ cursor: 'pointer', paddingBottom: 8, borderBottom: roomPanel!=='config' ? '2px solid var(--accent)' : 'none', fontWeight: roomPanel!=='config' ? 700 : 500 }}
-              >
-                Rooms / Locations
-              </div>
+      {/* Room Management (inline, below grid) */}
+      {isAdmin && (
+        <div style={{ marginTop: 20, padding: 16, borderRadius: 10, background: 'rgba(0,0,0,.02)', border: '1px solid rgba(0,0,0,.06)' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+            <div style={{ fontSize: '.75rem', fontWeight: 700, color: '#5A6B5C' }}>
+              <HomeIcon size={14} /> Rooms / Locations
             </div>
-            {roomPanel === 'config' && (
-              <button className="tt-btn tt-btn-primary" disabled={configSaving} onClick={handleSaveConfig}>
-                {configSaving ? 'Saving...' : <><SaveIcon size={14} /> Save Configuration</>}
-              </button>
-            )}
             {roomPanel === 'list' && (
-              <button className="tt-btn tt-btn-primary" onClick={() => setRoomPanel('add')}>
-                <PlusIcon size={14} /> Register New Room
+              <button className="tt-btn tt-btn-sm" onClick={() => setRoomPanel('add')}>
+                <PlusIcon size={12} /> Add Room
               </button>
             )}
           </div>
-
-          {roomPanel === 'config' && (
-            <>
-
-          {/* Active days */}
-          <div style={{ marginBottom:14 }}>
-            <div style={{ fontSize:'.6rem', color:'#5A6B5C', textTransform:'uppercase', letterSpacing:'.07em', marginBottom:7 }}>
-              Active School Days
-            </div>
-            <div className="tt-days-row">
-              {ALL_DAYS.map(d => (
-                <button key={d}
-                  className={`tt-day-pill ${activeDays.includes(d) ? 'active' : ''}`}
-                  onClick={() => setActiveDays(p => p.includes(d) ? p.filter(x => x !== d) : [...p, d])}>
-                  {d.slice(0, 3)}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Quick Scale Tool */}
-          <div style={{ marginBottom:20, padding:12, borderRadius:8, background:'rgba(111,82,232,0.05)', border:'1px solid rgba(111,82,232,0.1)' }}>
-            <div style={{ fontSize:'.6rem', color:'#6F52E8', textTransform:'uppercase', letterSpacing:'.07em', marginBottom:12, fontWeight:700 }}>
-              Standardize Day Structure (Ministry Guidelines)
-            </div>
-            <div style={{ display:'flex', gap:10, marginBottom:15 }}>
-              <button className="tt-chip" onClick={() => loadTemplate('secondary')}>8-4-4 / Secondary Structure</button>
-              <button className="tt-chip" onClick={() => loadTemplate('primary-upper')}>Upper Primary Template</button>
-              <button className="tt-chip" onClick={() => loadTemplate('primary-lower')}>Lower Primary Template</button>
-            </div>
-            <div style={{ display:'flex', gap:15, alignItems:'flex-end', flexWrap:'wrap' }}>
-              <div className="tt-exam-field" style={{ width:100 }}>
-                <label style={{ fontSize:'.55rem' }}>First Lesson Start</label>
-                <input type="time" value={stdStart} onChange={e => setStdStart(e.target.value)} style={{ padding: '6px 8px', fontSize: '.75rem' }} />
-              </div>
-              <div className="tt-exam-field" style={{ width:100 }}>
-                <label style={{ fontSize:'.55rem' }}>Lesson (Mins)</label>
-                <input type="number" value={stdDuration} onChange={e => setStdDuration(e.target.value)} style={{ padding: '6px 8px', fontSize: '.75rem' }} />
-              </div>
-              <div className="tt-exam-field" style={{ width:110 }}>
-                <label style={{ fontSize:'.55rem' }}>Short Break (Mins)</label>
-                <input type="number" value={stdShortBreak} onChange={e => setStdShortBreak(e.target.value)} style={{ padding: '6px 8px', fontSize: '.75rem' }} />
-              </div>
-              <div className="tt-exam-field" style={{ width:110 }}>
-                <label style={{ fontSize:'.55rem' }}>Long Break (Mins)</label>
-                <input type="number" value={stdLongBreak} onChange={e => setStdLongBreak(e.target.value)} style={{ padding: '6px 8px', fontSize: '.75rem' }} />
-              </div>
-              <button 
-                className="tt-btn tt-btn-primary" 
-                onClick={handleStandardizeTimes}
-                style={{ height:34, fontSize:'.7rem', padding:'0 16px' }}
-              >
-                Apply Correct Timing
-              </button>
-              <div style={{ fontSize:'.62rem', color: 'var(--text-muted)', flex:1, minWidth:250, lineHeight:1.4 }}>
-                * Standardizes the entire day. Short breaks (Tea/Health) and Long breaks (Lunch) are calculated using separate durations based on Ministry guidelines.
-              </div>
-            </div>
-          </div>
-
-          {/* Slot rows */}
-          {draftConfig.map((slot, i) => (
-            <div key={i} className="tt-slot-row">
-              <span className="tt-slot-drag">⠿</span>
-              <input type="text" value={slot.label} placeholder="Label"
-                onChange={e => updateDraft(i, 'label', e.target.value)}
-                style={{ width:110 }} />
-              <input type="time" value={slot.start_time}
-                onChange={e => updateDraft(i, 'start_time', e.target.value)} />
-              <span style={{ fontSize:'.7rem', color:'#5A6B5C' }}>→</span>
-              <input type="time" value={slot.end_time}
-                onChange={e => updateDraft(i, 'end_time', e.target.value)} />
-              <label className="tt-slot-break-label">
-                <input type="checkbox" checked={slot.is_break}
-                  onChange={e => updateDraft(i, 'is_break', e.target.checked)} />
-                Break / Non-teaching
-              </label>
-              <button className="tt-btn tt-btn-danger tt-btn-sm" 
-                onClick={() => removeDraft(i)} style={{ marginLeft:'auto', display:'flex', alignItems:'center', justifyContent:'center' }}><CrossIcon size={14} /></button>
-            </div>
-          ))}
-          <button className="tt-add-slot" onClick={addDraftSlot}><PlusIcon size={14} /> Add Time Slot</button>
-
-          {/* Info */}
-          <div style={{ marginTop:14, padding:'10px 13px', borderRadius:8, background:'rgba(74,158,232,.07)', border:'1px solid rgba(74,158,232,.15)' }}>
-            <div style={{ fontSize:'.68rem', color:'#4A9EE8', lineHeight:1.6 }}>
-              <strong>Teaching slots:</strong> {draftConfig.filter(s => !s.is_break).length} per day &nbsp;·&nbsp;
-              <strong>Active days:</strong> {activeDays.length} &nbsp;·&nbsp;
-              <strong>Weekly capacity per class:</strong> {draftConfig.filter(s => !s.is_break).length * activeDays.length} lessons
-            </div>
-          </div>
-        </>)}
 
           {roomPanel === 'list' && (
-            <div className="tt-rooms-list">
-              {rooms.length === 0 ? (
-                <div style={{ padding: '40px 0', textAlign: 'center', opacity: 0.6 }}>
-                  No rooms registered yet. Click "Register New Room" to get started.
-                </div>
-              ) : (
-                <div className="tt-table-container">
-                  <table className="tt-table">
-                    <thead>
-                      <tr>
-                        <th style={{ color: 'var(--text-muted)', fontSize: '0.65rem', textTransform: 'uppercase' }}>Room Name</th>
-                        <th style={{ color: 'var(--text-muted)', fontSize: '0.65rem', textTransform: 'uppercase' }}>Building / Block</th>
-                        <th style={{ width: 80, color: 'var(--text-muted)', fontSize: '0.65rem', textTransform: 'uppercase' }}>Actions</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {rooms.map(r => (
-                        <tr key={r.id}>
-                          <td><strong>{r.name}</strong></td>
-                          <td>{r.building || '—'}</td>
-                          <td>
-                            <div style={{ display: 'flex', gap: 8 }}>
-                              <button className="tt-btn tt-btn-ghost tt-btn-sm" onClick={() => { setNewRoom(r); setRoomPanel('add'); }}>Edit</button>
-                              <button className="tt-btn tt-btn-ghost tt-btn-sm" style={{ color: '#E06C75' }} onClick={() => handleDeleteRoom(r.id)}>Delete</button>
-                            </div>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              )}
-            </div>
+            rooms.length === 0 ? (
+              <div style={{ padding: '16px 0', textAlign: 'center', opacity: 0.5, fontSize: '.75rem' }}>
+                No rooms registered yet.
+              </div>
+            ) : (
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+                {rooms.map(r => (
+                  <div key={r.id} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '5px 10px', borderRadius: 6, background: 'white', border: '1px solid rgba(0,0,0,.08)', fontSize: '.72rem' }}>
+                    <strong>{r.name}</strong>
+                    {r.building && <span style={{ opacity: .6 }}>({r.building})</span>}
+                    <button className="tt-btn-icon" style={{ padding: 2, marginLeft: 4 }} onClick={() => handleDeleteRoom(r.id)}>
+                      <CrossIcon size={10} />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )
           )}
 
           {roomPanel === 'add' && (
-            <div className="tt-room-form">
-              <div className="tt-fields-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
-                <div>
-                  <label className="tt-req-label" style={{ display: 'block', marginBottom: 6 }}>Room Name *</label>
-                  <input className="tt-req-input" type="text" placeholder="e.g. Science Lab 1" 
-                    value={newRoom.name} onChange={e => setNewRoom({ ...newRoom, name: e.target.value })} 
-                    style={{ width: '100%', padding: '10px', borderRadius: 8, border: '1px solid rgba(0,0,0,0.1)' }} />
-                </div>
-                <div>
-                  <label className="tt-req-label" style={{ display: 'block', marginBottom: 6 }}>Building / Block</label>
-                  <input className="tt-req-input" type="text" placeholder="e.g. Science Wing" 
-                    value={newRoom.building} onChange={e => setNewRoom({ ...newRoom, building: e.target.value })} 
-                    style={{ width: '100%', padding: '10px', borderRadius: 8, border: '1px solid rgba(0,0,0,0.1)' }} />
-                </div>
+            <div style={{ display: 'flex', gap: 10, alignItems: 'flex-end', flexWrap: 'wrap' }}>
+              <div>
+                <label style={{ fontSize: '.6rem', display: 'block', marginBottom: 4 }}>Room Name *</label>
+                <input className="tt-field" type="text" placeholder="e.g. Lab 1"
+                  value={newRoom.name} onChange={e => setNewRoom({...newRoom, name: e.target.value})}
+                  style={{ width: 140 }} />
               </div>
-              <div style={{ display: 'flex', gap: 12, marginTop: 20, justifyContent: 'flex-end' }}>
-                <button className="tt-btn" onClick={() => { setRoomPanel('list'); setNewRoom({ name: '', building: '' }); }}>Cancel</button>
-                <button className="tt-btn tt-btn-primary" disabled={!newRoom.name.trim()} onClick={handleSaveRoom}>
-                  {newRoom.id ? 'Update Room' : 'Save Room'}
-                </button>
+              <div>
+                <label style={{ fontSize: '.6rem', display: 'block', marginBottom: 4 }}>Building</label>
+                <input className="tt-field" type="text" placeholder="e.g. Science Wing"
+                  value={newRoom.building} onChange={e => setNewRoom({...newRoom, building: e.target.value})}
+                  style={{ width: 140 }} />
               </div>
+              <button className="tt-btn tt-btn-primary tt-btn-sm" disabled={!newRoom.name.trim()} onClick={handleSaveRoom}>Save</button>
+              <button className="tt-btn tt-btn-sm" onClick={() => { setRoomPanel('list'); setNewRoom({ name: '', building: '' }); }}>Cancel</button>
             </div>
           )}
         </div>
       )}
+
 
       {/* ═══════════════════════════════════════════════════════════════
           CELL EDIT MODAL
