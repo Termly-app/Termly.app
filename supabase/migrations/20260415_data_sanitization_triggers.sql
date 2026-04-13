@@ -34,8 +34,8 @@ CREATE TRIGGER sanitize_students
     EXECUTE FUNCTION public.trigger_sanitize_students();
 
 
--- 3. Trigger function for STAFF
-CREATE OR REPLACE FUNCTION public.trigger_sanitize_staff()
+-- 3. Trigger function for TEACHERS
+CREATE OR REPLACE FUNCTION public.trigger_sanitize_teachers()
 RETURNS TRIGGER AS $$
 BEGIN
     NEW.name = public.sanitize_string(NEW.name);
@@ -44,11 +44,11 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-DROP TRIGGER IF EXISTS sanitize_staff ON public.staff;
-CREATE TRIGGER sanitize_staff
-    BEFORE INSERT OR UPDATE ON public.staff
+DROP TRIGGER IF EXISTS sanitize_teachers ON public.teachers;
+CREATE TRIGGER sanitize_teachers
+    BEFORE INSERT OR UPDATE ON public.teachers
     FOR EACH ROW
-    EXECUTE FUNCTION public.trigger_sanitize_staff();
+    EXECUTE FUNCTION public.trigger_sanitize_teachers();
 
 
 -- 4. Trigger function for BOOKS

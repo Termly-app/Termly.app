@@ -13,7 +13,7 @@ CREATE INDEX IF NOT EXISTS idx_students_adm_no ON public.students(adm_no);
 CREATE INDEX IF NOT EXISTS idx_book_copies_book_id ON public.book_copies(book_id);
 CREATE INDEX IF NOT EXISTS idx_book_copies_copy_code ON public.book_copies(copy_code);
 CREATE INDEX IF NOT EXISTS idx_borrow_records_student ON public.borrow_records(student_id);
-CREATE INDEX IF NOT EXISTS idx_borrow_records_copy ON public.borrow_records(copy_id);
+CREATE INDEX IF NOT EXISTS idx_borrow_records_copy ON public.borrow_records(book_copy_id);
 CREATE INDEX IF NOT EXISTS idx_borrow_records_status ON public.borrow_records(status);
 
 -- 3. Invoices & Payments (Checking outstanding balances)
@@ -22,4 +22,4 @@ CREATE INDEX IF NOT EXISTS idx_invoices_period_id ON public.invoices(period_id);
 CREATE INDEX IF NOT EXISTS idx_payments_invoice_id ON public.payments(invoice_id);
 
 -- 4. Staff queries
-CREATE INDEX IF NOT EXISTS idx_staff_school ON public.staff(school_id);
+CREATE INDEX IF NOT EXISTS idx_teachers_school ON public.teachers(school_id);
