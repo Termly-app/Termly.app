@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { getStudents, addStudent, updateStudent, deleteStudent, getFees, transferStudents, getClassList, getCBC, getCoreCompetencies, getPrintHeader, getSchoolProfile, TERM_FEE } from '../data/store';
+import { sanitizeName, sanitizeString } from '../utils/sanitize';
 import Loader from '../components/Common/Loader';
 import { CBC_STRUCTURE, CBC_CORE_COMPETENCIES, getLevelForGrade } from '../data/seedData';
 import {
@@ -66,7 +67,14 @@ export default function Students({ currentUser, currentPeriodId }) {
   const handleSave = async (st) => {
     setLoading(true);
     try {
-      if (editingStudent) await updateStudent(editingStudent.id, st); else await addStudent(st);
+      // ** Sanitize Inputs before submitting **
+      const sanitizedData = { ...st };
+      if (sanitizedData.name) sanitizedData.name = sanitizeName(sanitizedData.name);
+      if (sanitizedData.parent) sanitizedData.parent = sanitizeName(sanitizedData.parent);
+      if (sanitizedData.admNo) sanitizedData.admNo = sanitizeString(sanitizedData.admNo);
+      if (sanitizedData.notes) sanitizedData.notes = sanitizeString(sanitizedData.notes, 500);
+
+      if (editingStudent) await updateStudent(editingStudent.id, sanitizedData); else await addStudent(sanitizedData);
       await refresh(); setShowModal(false); setEditingStudent(null);
     } catch (err) {
       console.error('Student save failed:', err);

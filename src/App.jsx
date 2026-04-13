@@ -56,6 +56,8 @@ import Loader          from './components/Common/Loader';
 import SyncIndicator from './components/Common/SyncIndicator';
 import PricingUpgrade from './components/PricingUpgrade';
 import Select from './components/Common/Select';
+import ErrorBoundary from './components/ErrorBoundary';
+import useNetworkStatus from './hooks/useNetworkStatus';
 
 import {
   DashboardIcon, UserIcon, StudentsIcon, StaffIcon, AttendanceIcon, GradingIcon,
@@ -400,50 +402,7 @@ function Sidebar({ isOpen, onClose, onLogout, currentUser, subscriptionActive })
   );
 }
 
-// --- ERROR BOUNDARY ---
-class ErrorBoundary extends Component {
-  constructor(props) {
-    super(props);
-    this.state = { hasError: false, error: null, errorInfo: null };
-  }
-  static getDerivedStateFromError(error) { return { hasError: true, error }; }
-  componentDidCatch(error, errorInfo) {
-    this.setState({ errorInfo });
-    console.error('ErrorBoundary caught:', error, errorInfo);
-  }
-  render() {
-    if (this.state.hasError) {
-      return (
-        <div style={{
-          padding: 48, background: '#fef2f2', color: '#991b1b',
-          height: '100vh', display: 'flex', flexDirection: 'column',
-          alignItems: 'center', justifyContent: 'center', fontFamily: 'Inter, sans-serif',
-        }}>
-          <div style={{ fontSize: '1.1rem', fontWeight: 700, marginBottom: 12 }}>
-            An error occurred
-          </div>
-          <div style={{ fontSize: '.85rem', color: '#B91C1C', marginBottom: 20 }}>
-            Please refresh the page. If the problem persists, contact support.
-          </div>
-          <button
-            onClick={() => window.location.reload()}
-            style={{
-              padding: '8px 20px', borderRadius: 8, background: '#DC2626',
-              color: '#fff', border: 'none', cursor: 'pointer', fontSize: '.85rem',
-            }}
-          >
-            Refresh Page
-          </button>
-          <details style={{ marginTop: 20, fontSize: '.75rem', color: '#9CA3AF', whiteSpace: 'pre-wrap', maxWidth: 600 }}>
-            {this.state.error?.toString()}
-          </details>
-        </div>
-      );
-    }
-    return this.props.children;
-  }
-}
-
+// (ErrorBoundary imported from components folder)
 // ==================== APP =================================================
 function App() {
   const [sidebarOpen,        setSidebarOpen]        = useState(false);
@@ -455,6 +414,7 @@ function App() {
   const [isPlatformAdmin,    setIsPlatformAdmin]    = useState(false);
   const [profile,            setProfile]            = useState(null);
   const location = useLocation();
+  const isOnline = useNetworkStatus();
 
   useEffect(() => {
     const handlePeriodChange = () => setPeriodId(getCurrentPeriodId());
@@ -617,6 +577,17 @@ function App() {
   // --- School portal ---
   return (
     <div className="app-layout app-shell">
+      {!isOnline && (
+        <div style={{
+          position: 'fixed', top: 0, left: 0, right: 0, zIndex: 9999, 
+          background: '#ef4444', color: '#fff', padding: '8px', 
+          textAlign: 'center', fontWeight: 'bold', fontSize: '14px',
+          boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
+        }}>
+          You are currently offline. Critical actions have been paused to prevent data loss.
+        </div>
+      )}
+
       {/* Mobile hamburger */}
       <button
         className="mobile-toggle"

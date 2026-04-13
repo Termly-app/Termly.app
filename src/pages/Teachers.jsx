@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
 import { getTeachers, addTeacher, updateTeacher, deleteTeacher, getSubjectAssignments, setAssignment, getTeacherWorkload, getTeacherPerformance, getPrintHeader, getSchoolProfile, getPlatformSettings, getUsers, setTeacherLeaveStatus, isStaffCodeAvailable } from '../data/store';
+import { sanitizeName, sanitizeString } from '../utils/sanitize';
 import Loader from '../components/Common/Loader';
 import { CBC_STRUCTURE, getSubjectsForGrade, getLevelForGrade } from '../data/seedData';
 import { 
@@ -59,8 +59,13 @@ export default function Teachers({ currentUser, currentPeriodId }) {
   const handleSave = async (t) => {
     setLoading(true);
     try {
-      if (editingTeacher) await updateTeacher(editingTeacher.id, t);
-      else await addTeacher(t);
+      const sanitized = { ...t };
+      if (sanitized.name) sanitized.name = sanitizeName(sanitized.name);
+      if (sanitized.staff_code) sanitized.staff_code = sanitizeString(sanitized.staff_code);
+      if (sanitized.tsc_number) sanitized.tsc_number = sanitizeString(sanitized.tsc_number);
+
+      if (editingTeacher) await updateTeacher(editingTeacher.id, sanitized);
+      else await addTeacher(sanitized);
       await refresh(); setShowModal(false); setEditingTeacher(null);
     } catch(err) { alert({ title: 'Save Error', message: err.message, variant: 'danger' }); } finally { setLoading(false); }
   };

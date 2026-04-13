@@ -234,33 +234,36 @@ export async function markBookReplaced(borrowRecordId) {
 // --- DASHBOARD REPORTS ---
 
 export async function getLibraryDashboard() {
-    // total_books (count distinct titles -> books table)
-    const { count: totalTitles } = await supabase.from('books').select('*', { count: 'exact', head: true }).eq('school_id', getSchoolId());
-    
-    // copies
-    const { data: copies } = await supabase.from('book_copies').select('status').eq('school_id', getSchoolId());
-    const totalCopies = copies ? copies.length : 0;
-    const availableCopies = copies ? copies.filter(c => c.status === 'available').length : 0;
-
-    // borrows & overdue
     const today = new Date().toISOString().split('T')[0];
-    const { data: borrows } = await supabase.from('borrow_records').select('due_date, status').eq('school_id', getSchoolId());
-    const activeBorrows = borrows ? borrows.filter(b => b.status === 'borrowed') : [];
+    const schoolId = getSchoolId();
+
+    const [titlesRes, copiesRes, borrowsRes, recentRes] = await Promise.all([
+        supabase.from('books').select('*', { count: 'exact', head: true }).eq('school_id', schoolId),
+        supabase.from('book_copies').select('status').eq('school_id', schoolId),
+        supabase.from('borrow_records').select('due_date, status').eq('school_id', schoolId),
+        supabase.from('borrow_records')
+            .select('*, students(name), book_copies(copy_code, books(title))')
+            .eq('school_id', schoolId)
+            .order('created_at', { ascending: false })
+            .limit(10)
+    ]);
+
+    const totalTitles = titlesRes.count || 0;
+    const copies = copiesRes.data || [];
+    const borrows = borrowsRes.data || [];
+    const recent = recentRes.data || [];
+
+    const totalCopies = copies.length;
+    const availableCopies = copies.filter(c => c.status === 'available').length;
+    const activeBorrows = borrows.filter(b => b.status === 'borrowed');
     const overdueCount = activeBorrows.filter(b => b.due_date < today).length;
 
-    // recent activity
-    const { data: recent } = await supabase.from('borrow_records')
-        .select('*, students(name), book_copies(copy_code, books(title))')
-        .eq('school_id', getSchoolId())
-        .order('created_at', { ascending: false })
-        .limit(10);
-
     return {
-        total_books: totalTitles || 0,
+        total_books: totalTitles,
         total_copies: totalCopies,
         available_copies: availableCopies,
         borrowed_count: activeBorrows.length,
         overdue_count: overdueCount,
-        recent_activity: recent || []
+        recent_activity: recent
     };
 }
