@@ -31,7 +31,7 @@ import {
   getTeacherTimetable
 } from '../../data/store';
 import { 
-  CalendarIcon, PrintIcon, SettingsIcon, CheckIcon, CrossIcon, 
+  CalendarIcon, PrintIcon, BookIcon, SettingsIcon, CheckIcon, CrossIcon, 
   SaveIcon, AlertIcon, UserIcon, HomeIcon, TeacherIcon, PlusIcon
 } from '../../components/CommonIcons';
 import PricingUpgrade from '../../components/PricingUpgrade';
