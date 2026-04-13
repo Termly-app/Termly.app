@@ -571,7 +571,7 @@ export default function SettingsTab({
               features:[
                 'Everything in Starter',
                 'KCSE / KCPE Report Cards (8-4-4)', 'Academic Grading & Reports',
-                'Timetable Builder', 'Automated Timetable Generation', 'Exam Scheduling',
+                // 'Timetable Builder', 'Automated Timetable Generation', 'Exam Scheduling',
                 'M-Pesa STK Push', 'SMS & Communications', 'Parent SMS Notifications',
                 'NEMIS Data Export', 'Bulk Student Import (CSV)', 'Multi-Stream Support',
                 'Multiple Academic Periods', 'Priority Support',

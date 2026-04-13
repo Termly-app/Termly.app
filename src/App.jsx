@@ -321,10 +321,10 @@ function Sidebar({ isOpen, onClose, onLogout, currentUser, subscriptionActive })
           <SbLink to="/grading"   icon={GradingIcon}   label="Grading"    onClick={onClose} locked={!subscriptionActive && !isPlatformAdmin} />
         )}
         
-        {/* Timetable */}
-        {(isTeacher || isAdmin) && (features.timetable || isSandbox) && (
+        {/* Timetable — hidden from production, code preserved */}
+        {/* {(isTeacher || isAdmin) && (features.timetable || isSandbox) && (
           <SbLink to="/timetable" icon={TimetableIcon} label={features.exam_scheduling ? "Scheduling" : "Timetable"} onClick={onClose} locked={!subscriptionActive && !isPlatformAdmin} />
-        )}
+        )} */}
 
         {/* WIP: E-Learning — hidden from production, code preserved */}
         {/* {(isTeacher || isAdmin) && (features.lms || isSandbox) && (
@@ -699,8 +699,8 @@ function App() {
                         <Route path="/students"     element={<Students currentUser={currentUser} currentPeriodId={currentPeriodId} />} />
                         <Route path="/grading"      element={<SectionGate featureSlug="grading" featureName="Grading" profile={profile}><Grading currentUser={currentUser} currentPeriodId={currentPeriodId} /></SectionGate>} />
                         <Route path="/attendance"   element={<SectionGate featureSlug="attendance" featureName="Attendance" profile={profile}><Attendance currentUser={currentUser} currentPeriodId={currentPeriodId} /></SectionGate>} />
-                        {/* Timetable route */}
-                        <Route path="/timetable"    element={<SectionGate featureSlug="timetable" featureName="Timetable" profile={profile}><Timetable currentUser={currentUser} currentPeriodId={currentPeriodId} periods={periods} /></SectionGate>} />
+                        {/* Timetable route — hidden from production */}
+                        {/* <Route path="/timetable"    element={<SectionGate featureSlug="timetable" featureName="Timetable" profile={profile}><Timetable currentUser={currentUser} currentPeriodId={currentPeriodId} periods={periods} /></SectionGate>} /> */}
                         {/* WIP: E-Learning route — hidden from production */}
                         {/* <Route path="/lms"          element={<SectionGate featureSlug="lms" featureName="E-Learning" profile={profile}><LMS currentUser={currentUser} /></SectionGate>} /> */}
                       </>

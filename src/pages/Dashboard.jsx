@@ -163,7 +163,7 @@ export default function Dashboard({ currentUser, onLogout, currentPeriodId }) {
     { icon:<TeacherIcon size={18} />, label:'Teachers',      sub:'Manage staff',          to:'/teachers',   bg:'#F5F3FF',  color:'#8B5CF6', feature: 'Staff Management' },
     { icon:<BookIcon size={18} />,    label:'Attendance',     sub:'Record daily attendance', to:'/attendance', bg:'#ECFDF5',  color:'#10B981', feature: 'Attendance Tracking' },
     { icon:<CardIcon size={18} />,    label:'Fees',           sub:'Fee collection & tracking', to:'/fees',    bg:'#FFFBEB',  color:'#F59E0B', feature: 'Student Fee Statements' },
-    { icon:<BookIcon size={18} />,    label:'Timetable',      sub:'Automated scheduler',    to:'/timetable',  bg:'#F5F3FF',  color:'#6D28D9', feature: 'Timetable Builder' },
+    // { icon:<BookIcon size={18} />,    label:'Timetable',      sub:'Automated scheduler',    to:'/timetable',  bg:'#F5F3FF',  color:'#6D28D9', feature: 'Timetable Builder' },
   ];
 
   // Helper to check if a feature is included in the current plan

@@ -101,7 +101,7 @@ export default function Blog() {
         <div className="feature-small-grid">
           <div className="f-item"><ChartBarIcon size={24} /> <span>Automatic Financials</span></div>
           <div className="f-item"><BookIcon size={24} /> <span>CBC Grading</span></div>
-          <div className="f-item"><RocketIcon size={24} /> <span>Smart Timetables</span></div>
+          {/* <div className="f-item"><RocketIcon size={24} /> <span>Smart Timetables</span></div> */}
           <div className="f-item"><TeacherIcon size={24} /> <span>Leave Management</span></div>
           <div className="f-item"><PrintIcon size={24} /> <span>Digital Reporting</span></div>
           <div className="f-item"><SparklesIcon size={24} /> <span>M-Pesa Sync</span></div>

@@ -254,7 +254,7 @@ export default function Landing() {
                 <div className="sl"><span className="sl-ico si-g"><UserIcon size={12} /></span>Students</div>
                 <div className="sl"><span className="sl-ico si-g"><CardIcon size={12} /></span>Fees</div>
                 <div className="sl"><span className="sl-ico si-g"><CheckIcon size={12} /></span>Exams</div>
-                <div className="sl"><span className="sl-ico si-g"><CalendarIcon size={12} /></span>Timetable</div>
+                {/* <div className="sl"><span className="sl-ico si-g"><CalendarIcon size={12} /></span>Timetable</div> */}
                 <div className="sl"><span className="sl-ico si-g"><BookIcon size={12} /></span>Attendance</div>
               </div>
               <div className="hs-main">

@@ -31,7 +31,7 @@ export var ALL_SYSTEM_MODULES = [
   { slug: '844_reports',     label: 'KCSE / KCPE Report Cards',    icon: GradingIcon,     desc: '8-4-4 curriculum grading and report generation' },
   { slug: 'cbc_competency',  label: 'CBC Competency Grading',      icon: CheckIcon,       desc: 'Strand-level rubric scoring for CBC' },
   // ── Timetable ──
-  { slug: 'timetable',       label: 'Timetable Builder',           icon: TimetableIcon,   desc: 'Manual class schedule creation' },
+  // { slug: 'timetable',       label: 'Timetable Builder',           icon: TimetableIcon,   desc: 'Manual class schedule creation' },
   // ── Finance ──
   { slug: 'fees',            label: 'Fee & Billing Engine',        icon: FeesIcon,        desc: 'Student balances, payments, tracking' },
   { slug: 'fee_structure',   label: 'Fee Structure Builder',       icon: FeesIcon,        desc: 'Define per-class, per-term fee schedules' },
@@ -76,7 +76,7 @@ export var MODULE_LABELS = {
   cbc_reports:     'CBC Report Cards (PP1–G9)',
   '844_reports':   'KCSE / KCPE Report Cards',
   cbc_competency:  'CBC Competency Grading',
-  timetable:       'Timetable Builder',
+  // timetable:       'Timetable Builder',
   fees:            'Fee & Billing Engine',
   fee_structure:   'Fee Structure Builder',
   fee_statements:  'Student Fee Statements',
@@ -108,7 +108,7 @@ export var FEATURE_SUGGESTIONS = [
   'Airtel Money Integration',
   'Student Fee Statements',
   'M-PESA Receipt Generation',
-  'Timetable Builder',
+  // 'Timetable Builder',
   'NEMIS Data Export',
   'Attendance Tracking',
   'CBC Competency Grading',
