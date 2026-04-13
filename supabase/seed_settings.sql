@@ -25,8 +25,8 @@ ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value;
 -- 3. Refined Support
 INSERT INTO platform_settings (key, value, description) VALUES
 ('support', '{
-  "email": "hello@shulesoft.co.ke", 
-  "phone": "+254 700 000000",
-  "whatsapp": "+254 700 111222"
+  "email": "shulesoft8@gmail.com", 
+  "phone": "+254 712 260057",
+  "whatsapp": "+254 712 260057"
 }', 'Platform support contact details')
 ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value;
