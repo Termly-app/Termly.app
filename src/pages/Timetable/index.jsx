@@ -515,18 +515,11 @@ export default function Timetable({ currentUser, currentPeriodId, periods = [] }
   const classStreams    = selClass ? (streams[selClass] || []) : [];
   const activePeriod    = periods.find(p => p.id === periodId);
   const suggestedSubs   = SUBJECT_SUGGESTIONS[getLevel(selClass)] || [];
-  const existingSubjects= reqs.map(r => r.subject);
   const teacherName     = (id) => teachers.find(t => t.id === id)?.name || '';
   const levelBadge      = getLevelBadge(selClass);
 
-  // Grid data source: preview slots or saved slots
-  const activeSlots = preview
-    ? preview.slots.filter(s => s.class_grade === selClass && (s.stream || null) === (selStream || null))
-    : (view === 'teacher' ? teacherSlots : slots);
-
-  // Weekly slot capacity info
-  const teachingSlotCount = config.filter(c => !c.is_break).length;
-  const weeklyCapacity    = teachingSlotCount * activeDays.length;
+  // Grid data source: saved slots
+  const activeSlots = view === 'teacher' ? teacherSlots : slots;
 
   // ─────────────────────────────────────────────────────────────────────
   // RENDER
@@ -555,7 +548,7 @@ export default function Timetable({ currentUser, currentPeriodId, periods = [] }
 
 
         <div className="tt-header-actions">
-          {panel === 'grid' && view === 'class' && mode === 'weekly' && !preview && (
+          {panel === 'grid' && view === 'class' && (
             <button className="tt-btn" onClick={() => printClassTimetable({
               school: { name: currentUser?.schoolName }, classGrade: selClass,
               stream: selStream, period: activePeriod, config, slots, activeDays
@@ -576,7 +569,7 @@ export default function Timetable({ currentUser, currentPeriodId, periods = [] }
                 teachers,
                 period: activePeriod,
                 config,
-                allSlots: allExamSlots.length > 0 ? allExamSlots : slots, // Simple fallback
+                allSlots: slots,
                 activeDays
               })}><PrintIcon size={14} /> Print All Teachers</button>
             </div>
@@ -706,7 +699,7 @@ export default function Timetable({ currentUser, currentPeriodId, periods = [] }
                             <td key={d}
                               className={`tt-cell${hasData ? '' : ' empty'}${dblCls}`}
                               onClick={() => openEdit(d, cfg.slot_index)}>
-                              {hasData && isAdmin && view === 'class' && !preview && (
+                              {hasData && isAdmin && view === 'class' && (
                                 <button className="tt-cell-clear"
                                   onClick={e => handleClearCell(d, cfg.slot_index, e)}><CrossIcon size={12} /></button>
                               )}
@@ -743,7 +736,7 @@ export default function Timetable({ currentUser, currentPeriodId, periods = [] }
                                   </>
                                 ) : (
                                   <div className="tt-add-hint">
-                                    {isAdmin && view === 'class' && !preview ? '+ Add' : ''}
+                                    {isAdmin && view === 'class' ? '+ Add' : ''}
                                   </div>
                                 )}
                               </div>
@@ -775,184 +768,7 @@ export default function Timetable({ currentUser, currentPeriodId, periods = [] }
         </>
       )}
 
-      {/* ═══════════════════════════════════════════════════════════════
-          PANEL: REQUIREMENTS
-         ═══════════════════════════════════════════════════════════════ */}
-      {panel === 'req' && (
-        <div className="tt-req-panel">
-          {/* Header with class picker + generate button */}
-          <div className="tt-req-header">
-            <div className="tt-req-class-picker">
-              <Select 
-                value={selClass} 
-                onChange={e => { setSelClass(e.target.value); setSelStream(''); }}
-                options={[
-                  { id: '', label: 'Select Class...' },
-                  ...classes.map(c => ({ id: c, label: c }))
-                ]}
-                style={{ minWidth: 160 }}
-              />
-              {classStreams.length > 0 && (
-                <Select 
-                  value={selStream} 
-                  onChange={e => setSelStream(e.target.value)}
-                  options={[
-                    { id: '', label: 'All Streams' },
-                    ...classStreams.map(s => ({ id: s, label: s }))
-                  ]}
-                  style={{ minWidth: 140 }}
-                />
-              )}
-              <span className={`tt-level-badge ${levelBadge.cls}`}>{levelBadge.label}</span>
-            </div>
-            <div style={{ display:'flex', gap:8, alignItems:'center', flexWrap:'wrap' }}>
-              <div className="tt-req-stats">
-                <span className="tt-req-stat">Lessons/week: <strong>{weeklyRequired}</strong></span>
-                <span className="tt-req-stat">Slots available: <strong>{weeklyCapacity}</strong></span>
-                {weeklyRequired > weeklyCapacity && (
-                  <span style={{ fontSize:'.68rem', color:'#D4506A', fontWeight:600, display:'flex', alignItems:'center', gap:3 }}><AlertIcon size={12} /> Over capacity</span>
-                )}
-              </div>
-              <button className="tt-btn tt-btn-sm" onClick={handleAutoImport}>Auto-import</button>
-              <button className="tt-generate-btn" disabled={generating} onClick={handleGenerate}>
-                {generating ? <><SettingsIcon size={14} /> Generating...</> : <><RocketIcon size={14} /> Generate Timetable</>}
-              </button>
-            </div>
-          </div>
 
-          <div className="tt-req-info" style={{ marginBottom:8 }}>
-            Set how many lessons per week each subject needs. The system will auto-place them with no overlaps.
-            <strong> Double lesson</strong> = two consecutive periods placed together (e.g. lab, practical).
-          </div>
-
-          {/* Requirements table */}
-          <div className="tt-req-table-wrap">
-            <table className="tt-req-table">
-              <thead>
-                <tr>
-                  <th>Subject</th>
-                  <th>Teacher</th>
-                  <th>Lessons / Week</th>
-                  <th>Double Lesson</th>
-                  <th>Colour</th>
-                  {isAdmin && <th></th>}
-                </tr>
-              </thead>
-              <tbody>
-                {reqs.length === 0 ? (
-                  <tr><td colSpan={6} style={{ padding:'30px', textAlign:'center', color:'#5A6B5C', fontSize:'.8rem' }}>
-                    No requirements yet. Add subjects below or use Auto-import.
-                  </td></tr>
-                ) : reqs.map(r => (
-                  <tr key={r.subject}>
-                    <td>
-                      <div className="tt-req-subject">{r.subject}</div>
-                    </td>
-                    <td style={{ fontSize:'.72rem', color:'#8A9B8C' }}>
-                      {r.teachers?.name || '—'}
-                    </td>
-                    <td>
-                      <span style={{ fontFamily:"'Space Mono',monospace", fontSize:'.82rem', fontWeight:700, color:'#D4DDD6' }}>
-                        {r.periods_per_week}×
-                      </span>
-                    </td>
-                    <td>
-                      {r.allow_double
-                        ? <span className="tt-req-double-badge">×2 Double</span>
-                        : <span style={{ fontSize:'.68rem', color:'#5A6B5C' }}>Single</span>}
-                    </td>
-                    <td>
-                      <div className="tt-color-swatch" style={{ background: r.color || '#5A6B5C' }} />
-                    </td>
-                    {isAdmin && (
-                      <td>
-                        <button className="tt-btn tt-btn-sm tt-btn-danger"
-                          onClick={() => handleDeleteReq(r.subject)}><CrossIcon size={12} /></button>
-                      </td>
-                    )}
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-
-          {/* Add requirement form */}
-          {isAdmin && (
-            <div className="tt-add-req">
-              <div className="tt-add-req-title"><PlusIcon size={14} /> Add Subject Requirement</div>
-              <div className="tt-add-req-grid">
-                <div>
-                  <label className="tt-req-label">Subject *</label>
-                  <input className="tt-req-input" type="text" placeholder="e.g. Mathematics"
-                    value={reqSubject}
-                    onChange={e => setReqSubject(e.target.value)}
-                    list="subject-suggestions" />
-                  <datalist id="subject-suggestions">
-                    {suggestedSubs.filter(s => !existingSubjects.includes(s)).map(s => (
-                      <option key={s} value={s} />
-                    ))}
-                  </datalist>
-                  {/* Quick chips */}
-                  <div className="tt-suggestion-chips" style={{ marginTop:6 }}>
-                    {suggestedSubs.filter(s => !existingSubjects.includes(s)).slice(0, 8).map(s => (
-                      <button key={s} className="tt-chip" onClick={() => setReqSubject(s)}>{s}</button>
-                    ))}
-                  </div>
-                </div>
-                <div>
-                  <label className="tt-req-label">Teacher</label>
-                  <Select 
-                    value={reqTeacher} 
-                    onChange={e => setReqTeacher(e.target.value)}
-                    options={[
-                      { id: '', label: '— Unassigned —' },
-                      ...teachers.map(t => ({ id: t.id, label: t.name }))
-                    ]}
-                    style={{ flex: 1 }}
-                  />
-                </div>
-                <div>
-                  <label className="tt-req-label">Lessons / Week</label>
-                  <input className="tt-req-input" type="number" min={1} max={weeklyCapacity || 20}
-                    value={reqPerWeek} onChange={e => setReqPerWeek(Number(e.target.value))} />
-                </div>
-                <div>
-                  <label className="tt-req-label">Preferred Room</label>
-                  <Select 
-                    value={reqRoom} 
-                    onChange={e => setReqRoom(e.target.value)}
-                    options={[
-                      { id: '', label: '— No Preferred Room —' },
-                      ...rooms.map(r => ({ id: r.name, label: r.name }))
-                    ]}
-                    style={{ flex: 1 }}
-                  />
-                </div>
-                <div>
-                  <label className="tt-req-label">Colour</label>
-                  <div className="tt-color-row" style={{ marginTop:4 }}>
-                    {COLORS.slice(0, 8).map(c => (
-                      <div key={c} className={`tt-color-dot ${reqColor === c ? 'active' : ''}`}
-                        style={{ background: c, width:18, height:18 }}
-                        onClick={() => setReqColor(c)} />
-                    ))}
-                  </div>
-                </div>
-              </div>
-              <div style={{ display:'flex', alignItems:'center', gap:12, marginTop:10 }}>
-                <label className="tt-double-check">
-                  <input type="checkbox" checked={reqDouble} onChange={e => setReqDouble(e.target.checked)} />
-                  Double lesson (lab / practical — two consecutive slots)
-                </label>
-                <button className="tt-btn tt-btn-primary tt-btn-sm" style={{ marginLeft:'auto' }}
-                  disabled={!reqSubject.trim() || reqSaving} onClick={handleSaveReq}>
-                  {reqSaving ? 'Saving...' : 'Add Subject'}
-                </button>
-              </div>
-            </div>
-          )}
-        </div>
-      )}
 
       {/* ═══════════════════════════════════════════════════════════════
           PANEL: SLOT CONFIG
