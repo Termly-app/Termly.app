@@ -28,22 +28,32 @@ export default function IssueReturn({ currentUser, currentPeriodId }) {
   }, [currentPeriodId]);
 
   return (
-    <div className="card animate-in pb-8">
-      <div className="card-header border-b border-gray-100 flex-col gap-4">
+    <div className="card animate-in" style={{ marginBottom: '32px' }}>
+      <div className="card-header" style={{ flexDirection: 'column', alignItems: 'flex-start', gap: '16px', borderBottom: '1px solid var(--border)' }}>
         <div>
-          <h2 className="text-xl font-bold">Issue & Return Circulation</h2>
-          <p className="text-sm text-gray-500">Fast checkout and check-in desk.</p>
+          <h2 style={{ fontSize: '1.25rem', fontWeight: 700, margin: 0 }}>Issue & Return Circulation</h2>
+          <p style={{ fontSize: '0.875rem', color: 'var(--text-light)', margin: '4px 0 0 0' }}>Fast checkout and check-in desk.</p>
         </div>
         
-        <div className="tab-nav mb-0 flex gap-1 bg-gray-50 p-1 rounded-xl w-full max-w-md">
+        <div style={{ display: 'flex', gap: '4px', background: '#f8fafc', padding: '4px', borderRadius: '12px', width: '100%', maxWidth: '400px' }}>
           <button 
-            className={`flex-1 py-2 px-4 rounded-lg font-semibold text-sm transition-all ${activeTab === 'issue' ? 'bg-white shadow text-primary' : 'text-gray-500 hover:bg-gray-100'}`}
+            style={{
+              flex: 1, padding: '8px 12px', borderRadius: '8px', fontSize: '0.875rem', fontWeight: 600, border: 'none', cursor: 'pointer', transition: 'all 0.2s',
+              background: activeTab === 'issue' ? '#fff' : 'transparent',
+              color: activeTab === 'issue' ? 'var(--primary)' : 'var(--text-light)',
+              boxShadow: activeTab === 'issue' ? '0 1px 3px rgba(0,0,0,0.1)' : 'none'
+            }}
             onClick={() => setActiveTab('issue')}
           >
             Issue Book
           </button>
           <button 
-            className={`flex-1 py-2 px-4 rounded-lg font-semibold text-sm transition-all ${activeTab === 'return' ? 'bg-white shadow text-primary' : 'text-gray-500 hover:bg-gray-100'}`}
+            style={{
+              flex: 1, padding: '8px 12px', borderRadius: '8px', fontSize: '0.875rem', fontWeight: 600, border: 'none', cursor: 'pointer', transition: 'all 0.2s',
+              background: activeTab === 'return' ? '#fff' : 'transparent',
+              color: activeTab === 'return' ? 'var(--primary)' : 'var(--text-light)',
+              boxShadow: activeTab === 'return' ? '0 1px 3px rgba(0,0,0,0.1)' : 'none'
+            }}
             onClick={() => setActiveTab('return')}
           >
             Return Book
@@ -51,7 +61,7 @@ export default function IssueReturn({ currentUser, currentPeriodId }) {
         </div>
       </div>
 
-      <div className="card-body p-6">
+      <div className="card-body p-6" style={{ padding: '24px' }}>
         {activeTab === 'issue' ? (
           <IssueTab currentUser={currentUser} students={students} alert={alert} toast={toast} />
         ) : (
@@ -152,11 +162,11 @@ function IssueTab({ currentUser, students, alert, toast }) {
   };
 
   return (
-    <div className="flex flex-col gap-8 max-w-2xl mx-auto">
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '32px', maxWidth: '600px', margin: '0 auto' }}>
       {/* 1. STUDENT */}
-      <div className="space-y-4">
-        <h3 className="flex items-center gap-2 font-bold text-gray-700">
-          <span className="bg-primary text-white w-6 h-6 rounded-full flex items-center justify-center text-xs">1</span> 
+      <div>
+        <h3 style={{ display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 700, color: 'var(--text)', marginBottom: '16px' }}>
+          <span style={{ backgroundColor: 'var(--primary)', color: '#fff', width: '24px', height: '24px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '12px' }}>1</span> 
           Student Details
         </h3>
         
@@ -178,12 +188,12 @@ function IssueTab({ currentUser, students, alert, toast }) {
                 {matchingStudents.map(s => (
                   <button 
                     key={s.id} 
-                    className="w-full text-left px-4 py-3 hover:bg-gray-50 border-b border-gray-50 last:border-0 flex justify-between items-center"
+                    style={{ width: '100%', textAlign: 'left', padding: '12px 16px', background: 'transparent', border: 'none', borderBottom: '1px solid #f1f5f9', cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
                     onClick={() => selectStudent(s)}
                   >
                     <div>
-                      <div className="font-semibold text-gray-800">{s.name}</div>
-                      <div className="text-xs text-gray-500">Adm: {s.adm_no} • {s.class}</div>
+                      <div style={{ fontWeight: 600, color: 'var(--text)' }}>{s.name}</div>
+                      <div style={{ fontSize: '0.75rem', color: 'var(--text-light)' }}>Adm: {s.adm_no} • {s.class}</div>
                     </div>
                   </button>
                 ))}
@@ -191,26 +201,26 @@ function IssueTab({ currentUser, students, alert, toast }) {
             )}
           </div>
         ) : (
-          <div className="bg-blue-50 border border-blue-100 rounded-xl p-4 flex justify-between items-start relative overflow-hidden">
-            <div className="absolute top-0 right-0 p-4 opacity-5 pointer-events-none"><UserIcon size={64} /></div>
+          <div style={{ background: '#eff6ff', border: '1px solid #bfdbfe', borderRadius: '12px', padding: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', position: 'relative', overflow: 'hidden' }}>
+            <div style={{ position: 'absolute', top: 0, right: 0, padding: '16px', opacity: 0.05, pointerEvents: 'none' }}><UserIcon size={64} /></div>
             <div>
-              <div className="text-blue-900 font-bold text-lg">{selectedStudent.name}</div>
-              <div className="text-sm text-blue-700 mt-1">Adm: <strong>{selectedStudent.adm_no}</strong> | Class: <strong>{selectedStudent.class}</strong></div>
+              <div style={{ color: '#1e3a8a', fontWeight: 700, fontSize: '1.125rem' }}>{selectedStudent.name}</div>
+              <div style={{ fontSize: '0.875rem', color: '#1d4ed8', marginTop: '4px' }}>Adm: <strong>{selectedStudent.adm_no}</strong> | Class: <strong>{selectedStudent.class}</strong></div>
               {overdueWarning && (
-                <div className="mt-3 flex items-center gap-1 text-red-600 bg-red-100 px-3 py-1.5 rounded-lg text-sm font-semibold max-w-max border border-red-200">
+                <div style={{ marginTop: '12px', display: 'flex', alignItems: 'center', gap: '4px', color: '#dc2626', background: '#fee2e2', padding: '6px 12px', borderRadius: '8px', fontSize: '0.875rem', fontWeight: 600, border: '1px solid #fecaca', width: 'fit-content' }}>
                   <AlertIcon size={14} /> This student has overdue books!
                 </div>
               )}
             </div>
-            <button className="text-blue-500 hover:text-blue-700 text-sm font-semibold underline" onClick={() => setSelectedStudent(null)}>Change Student</button>
+            <button style={{ color: '#3b82f6', background: 'transparent', border: 'none', fontSize: '0.875rem', fontWeight: 600, textDecoration: 'underline', cursor: 'pointer', zIndex: 1 }} onClick={() => setSelectedStudent(null)}>Change Student</button>
           </div>
         )}
       </div>
 
       {/* 2. BOOK */}
-      <div className={`space-y-4 ${!selectedStudent ? 'opacity-50 pointer-events-none' : ''}`}>
-        <h3 className="flex items-center gap-2 font-bold text-gray-700">
-          <span className="bg-primary text-white w-6 h-6 rounded-full flex items-center justify-center text-xs">2</span> 
+      <div style={{ opacity: !selectedStudent ? 0.5 : 1, pointerEvents: !selectedStudent ? 'none' : 'auto' }}>
+        <h3 style={{ display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 700, color: 'var(--text)', marginBottom: '16px' }}>
+          <span style={{ backgroundColor: 'var(--primary)', color: '#fff', width: '24px', height: '24px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '12px' }}>2</span> 
           Book Selection
         </h3>
         
@@ -263,9 +273,9 @@ function IssueTab({ currentUser, students, alert, toast }) {
       </div>
 
       {/* 3. DUE DATE */}
-      <div className={`space-y-4 ${(!selectedStudent || !selectedCopy) ? 'opacity-50 pointer-events-none' : ''}`}>
-        <h3 className="flex items-center gap-2 font-bold text-gray-700">
-          <span className="bg-primary text-white w-6 h-6 rounded-full flex items-center justify-center text-xs">3</span> 
+      <div style={{ opacity: (!selectedStudent || !selectedCopy) ? 0.5 : 1, pointerEvents: (!selectedStudent || !selectedCopy) ? 'none' : 'auto' }}>
+        <h3 style={{ display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 700, color: 'var(--text)', marginBottom: '16px' }}>
+          <span style={{ backgroundColor: 'var(--primary)', color: '#fff', width: '24px', height: '24px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '12px' }}>3</span> 
           Return Date
         </h3>
         <input 
@@ -277,9 +287,10 @@ function IssueTab({ currentUser, students, alert, toast }) {
         />
       </div>
 
-      <div className="pt-6 border-t border-gray-100 mt-4">
+      <div style={{ paddingTop: '24px', borderTop: '1px solid var(--border)', marginTop: '16px' }}>
         <button 
-          className="btn btn-primary w-full py-4 text-lg rounded-xl shadow-lg flex justify-center items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+          className="btn btn-primary"
+          style={{ width: '100%', padding: '16px', fontSize: '1.125rem', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px', opacity: (!selectedStudent || !selectedCopy || !dueDate || isSubmitting) ? 0.5 : 1 }}
           disabled={!selectedStudent || !selectedCopy || !dueDate || isSubmitting}
           onClick={handleIssue}
         >
@@ -370,15 +381,15 @@ function ReturnTab({ currentUser, students, alert, toast }) {
   };
 
   return (
-    <div className="max-w-4xl mx-auto flex flex-col gap-8">
+    <div style={{ maxWidth: '800px', margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '32px' }}>
       
       {/* SEARCH HEADER */}
-      <div className="bg-gray-50 border border-gray-100 rounded-2xl p-6 relative">
-        <div className="flex gap-4 mb-4">
-          <label className="flex items-center gap-2 font-semibold text-gray-700 cursor-pointer">
+      <div style={{ background: '#f8fafc', border: '1px solid var(--border)', borderRadius: '16px', padding: '24px', position: 'relative' }}>
+        <div style={{ display: 'flex', gap: '16px', marginBottom: '16px' }}>
+          <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 600, color: 'var(--text)', cursor: 'pointer' }}>
             <input type="radio" checked={searchMethod === 'student'} onChange={() => { setSearchMethod('student'); setSearchInput(''); setActiveLoans([]); }} /> Locate by Student
           </label>
-          <label className="flex items-center gap-2 font-semibold text-gray-700 cursor-pointer">
+          <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 600, color: 'var(--text)', cursor: 'pointer' }}>
             <input type="radio" checked={searchMethod === 'code'} onChange={() => { setSearchMethod('code'); setSearchInput(''); setActiveLoans([]); }} /> Locate by Book Code
           </label>
         </div>
@@ -395,10 +406,10 @@ function ReturnTab({ currentUser, students, alert, toast }) {
                />
              </div>
              {matchingStudents.length > 0 && (
-               <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-xl shadow-xl border border-gray-100 z-10 overflow-hidden">
+               <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, marginTop: '8px', background: '#fff', borderRadius: '12px', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)', border: '1px solid var(--border)', zIndex: 10, overflow: 'hidden' }}>
                  {matchingStudents.map(s => (
-                   <button key={s.id} className="w-full text-left px-4 py-3 hover:bg-gray-50 border-b border-gray-50 flex justify-between items-center" onClick={() => selectStudent(s)}>
-                     <div><div className="font-semibold text-gray-800">{s.name}</div><div className="text-xs text-gray-500">Adm: {s.adm_no} • {s.class}</div></div>
+                   <button key={s.id} style={{ width: '100%', textAlign: 'left', padding: '12px 16px', background: 'transparent', border: 'none', borderBottom: '1px solid #f1f5f9', cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }} onClick={() => selectStudent(s)}>
+                     <div><div style={{ fontWeight: 600, color: 'var(--text)' }}>{s.name}</div><div style={{ fontSize: '0.75rem', color: 'var(--text-light)' }}>Adm: {s.adm_no} • {s.class}</div></div>
                    </button>
                  ))}
                </div>
@@ -416,7 +427,7 @@ function ReturnTab({ currentUser, students, alert, toast }) {
                  onChange={e => setSearchInput(e.target.value)}
                />
              </div>
-             <button type="submit" className="btn btn-primary px-8 rounded-xl font-bold">Find Loan</button>
+             <button type="submit" className="btn btn-primary" style={{ padding: '0 32px', fontWeight: 700 }}>Find Loan</button>
           </form>
         )}
       </div>

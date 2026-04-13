@@ -128,20 +128,21 @@ export default function BooksManagement({ currentPeriodId }) {
 
   return (
     <div className="card animate-in pb-12">
-      <div className="card-header border-b border-gray-100 flex-col md:flex-row gap-4 items-start md:items-center justify-between">
+      <div className="card-header" style={{ display: 'flex', flexWrap: 'wrap', gap: '16px', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid var(--border)' }}>
         <div>
-          <h2 className="text-xl font-bold">Books Catalog</h2>
-          <p className="text-sm text-gray-500">Manage titles, subjects, and bulk copies.</p>
+          <h2 style={{ fontSize: '1.25rem', fontWeight: 700, margin: 0 }}>Books Catalog</h2>
+          <p style={{ fontSize: '0.875rem', color: 'var(--text-light)', margin: '4px 0 0 0' }}>Manage titles, subjects, and bulk copies.</p>
         </div>
         <button 
-          className="btn btn-primary flex items-center gap-2"
+          className="btn btn-primary"
+          style={{ display: 'inline-flex', alignItems: 'center', gap: '8px' }}
           onClick={() => setBookModal({ open: true, data: null })}
         >
           <PlusIcon size={16} /> Add New Title
         </button>
       </div>
 
-      <div className="p-4 border-b border-gray-100 bg-gray-50 flex flex-wrap gap-4 items-center">
+      <div style={{ padding: '16px', backgroundColor: '#f9fafb', borderBottom: '1px solid var(--border)', display: 'flex', flexWrap: 'wrap', gap: '16px', alignItems: 'center' }}>
         <div className="search-bar" style={{ flex: 1, minWidth: 200, maxWidth: '100%' }}>
           <span className="search-icon"><SearchIcon size={16} /></span>
           <input 

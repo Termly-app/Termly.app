@@ -116,32 +116,32 @@ export default function Overdue({ currentUser, currentPeriodId }) {
     <div className="animate-in space-y-6 pb-12">
 
       {/* SUMMARY CARD */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-2">
-        <div className="p-6 rounded-2xl border border-red-200 bg-red-50 flex items-center gap-5">
-          <div className="p-3 bg-white rounded-xl shadow-sm">
-            <AlertIcon size={28} className="text-red-500" />
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '24px', marginBottom: '8px' }}>
+        <div style={{ padding: '24px', borderRadius: '16px', border: '1px solid #fecaca', backgroundColor: '#fef2f2', display: 'flex', alignItems: 'center', gap: '20px' }}>
+          <div style={{ padding: '12px', backgroundColor: '#fff', borderRadius: '12px', boxShadow: '0 1px 2px rgba(0,0,0,0.05)' }}>
+            <AlertIcon size={28} className="text-red-500" style={{ color: '#ef4444' }} />
           </div>
           <div>
-            <div className="text-3xl font-black text-red-700">{filtered.length}</div>
-            <div className="text-sm font-bold text-red-500 uppercase tracking-wide">Overdue Books</div>
+            <div style={{ fontSize: '1.875rem', fontWeight: 900, color: '#b91c1c' }}>{filtered.length}</div>
+            <div style={{ fontSize: '0.875rem', fontWeight: 700, color: '#ef4444', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Overdue Books</div>
           </div>
         </div>
-        <div className="p-6 rounded-2xl border border-amber-200 bg-amber-50 flex items-center gap-5">
-          <div className="p-3 bg-white rounded-xl shadow-sm">
-            <BookIcon size={28} className="text-amber-500" />
+        <div style={{ padding: '24px', borderRadius: '16px', border: '1px solid #fde68a', backgroundColor: '#fffbeb', display: 'flex', alignItems: 'center', gap: '20px' }}>
+          <div style={{ padding: '12px', backgroundColor: '#fff', borderRadius: '12px', boxShadow: '0 1px 2px rgba(0,0,0,0.05)' }}>
+            <BookIcon size={28} className="text-amber-500" style={{ color: '#f59e0b' }} />
           </div>
           <div>
-            <div className="text-3xl font-black text-amber-700">{filtered.filter(r => getDaysOverdue(r.due_date) > 30).length}</div>
-            <div className="text-sm font-bold text-amber-500 uppercase tracking-wide">30+ Days Overdue</div>
+            <div style={{ fontSize: '1.875rem', fontWeight: 900, color: '#b45309' }}>{filtered.filter(r => getDaysOverdue(r.due_date) > 30).length}</div>
+            <div style={{ fontSize: '0.875rem', fontWeight: 700, color: '#f59e0b', textTransform: 'uppercase', letterSpacing: '0.05em' }}>30+ Days Overdue</div>
           </div>
         </div>
       </div>
 
       {/* FILTER + BULK ACTION BAR */}
-      <div className="card shadow-sm border border-gray-100">
-        <div className="p-4 bg-gray-50 border-b border-gray-100 flex flex-wrap gap-4 items-center justify-between">
-          <div className="flex items-center gap-3">
-            <FilterIcon size={16} className="text-gray-400" />
+      <div className="card" style={{ boxShadow: '0 1px 2px rgba(0,0,0,0.05)', border: '1px solid var(--border)' }}>
+        <div style={{ padding: '16px', backgroundColor: '#f9fafb', borderBottom: '1px solid var(--border)', display: 'flex', flexWrap: 'wrap', gap: '16px', alignItems: 'center', justifyContent: 'space-between' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <FilterIcon size={16} style={{ color: 'var(--text-light)' }} />
             <Select
               value={filterClass}
               onChange={e => setFilterClass(e.target.value)}
@@ -157,17 +157,21 @@ export default function Overdue({ currentUser, currentPeriodId }) {
               ]}
               style={{ minWidth: 180 }}
             />
-            <span className="text-sm text-gray-500 font-medium">Showing {filtered.length} records</span>
           </div>
-
-          {selected.size > 0 && (
-            <button
-              className="btn btn-sm bg-red-600 text-white hover:bg-red-700 flex items-center gap-2"
-              onClick={handleBulkMarkLost}
-            >
-              <AlertIcon size={14} /> Mark {selected.size} as Lost
-            </button>
-          )}
+          
+          <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+            <span style={{ fontSize: '0.875rem', color: 'var(--text-light)', fontWeight: 600 }}>Showing {filtered.length} records</span>
+            
+            {selected.size > 0 && (
+              <button 
+                className="btn btn-primary"
+                style={{ display: 'inline-flex', alignItems: 'center', gap: '8px' }}
+                onClick={handleBulkMarkLost}
+              >
+                <AlertIcon size={14} /> Mark {selected.size} as Lost
+              </button>
+            )}
+          </div>
         </div>
 
         <div className="overflow-x-auto">

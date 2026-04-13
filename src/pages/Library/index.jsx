@@ -88,14 +88,6 @@ export default function LibraryModule({ currentUser, currentPeriodId }) {
               <span style={{ fontSize: '0.875rem', color: 'var(--text-light)' }}>
                 Book circulation & inventory tracking
               </span>
-              <span style={{
-                display: 'inline-flex', alignItems: 'center', gap: 5,
-                padding: '3px 11px', borderRadius: 20,
-                background: 'var(--primary-light)', color: 'var(--primary)',
-                fontSize: '0.75rem', fontWeight: 600
-              }}>
-                <BookIcon size={12} /> Phase 1
-              </span>
             </div>
           </div>
         </div>

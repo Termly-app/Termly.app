@@ -36,41 +36,40 @@ export default function Dashboard({ currentPeriodId }) {
   return (
     <div className="animate-in space-y-6 pb-12">
       
-      {/* QUICK ACTIONS */}
-      <div className="flex flex-col md:flex-row gap-4 mb-8">
-        <Link to="/library/issue-return" className="btn btn-primary shadow-lg shadow-primary/20 py-3 px-6 flex items-center justify-center gap-2 flex-1 md:flex-none hover:-translate-y-1 transition-transform">
+      <div style={{ display: 'flex', gap: '16px', marginBottom: '32px', flexWrap: 'wrap' }}>
+        <Link to="/library/issue-return" className="btn btn-primary" style={{ padding: '12px 24px', display: 'flex', alignItems: 'center', gap: '8px' }}>
           <PlatformZapIcon size={20} /> Issue Book
         </Link>
-        <Link to="/library/issue-return" className="btn bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 hover:border-gray-300 py-3 px-6 flex items-center justify-center gap-2 flex-1 md:flex-none shadow-sm hover:-translate-y-1 transition-transform">
+        <Link to="/library/issue-return" className="btn btn-ghost" style={{ padding: '12px 24px', display: 'flex', alignItems: 'center', gap: '8px', border: '1px solid var(--border)' }}>
            <MenuIcon size={20} /> Return Book
         </Link>
       </div>
 
       {/* STAT CARDS */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '24px', marginBottom: '32px' }}>
         <StatCard 
           title="Total Titles" 
           value={data.total_books} 
           icon={<BookIcon size={28} />} 
-          color="blue" 
+          colors={{ bg: '#EFF6FF', text: '#2563EB', border: '#DBEAFE' }}
         />
         <StatCard 
           title="Total Copies" 
           value={data.total_copies} 
           icon={<MenuIcon size={28} />} 
-          color="indigo" 
+          colors={{ bg: '#EEF2FF', text: '#4F46E5', border: '#E0E7FF' }}
         />
         <StatCard 
           title="Currently Borrowed" 
           value={data.borrowed_count} 
           icon={<PlatformZapIcon size={28} />} 
-          color="green" 
+          colors={{ bg: '#ECFDF5', text: '#059669', border: '#D1FAE5' }}
         />
         <StatCard 
           title="Overdue Books" 
           value={data.overdue_count} 
           icon={<AlertIcon size={28} />} 
-          color={data.overdue_count > 0 ? "red" : "gray"} 
+          colors={data.overdue_count > 0 ? { bg: '#FEF2F2', text: '#DC2626', border: '#FEE2E2' } : { bg: '#F9FAFB', text: '#6B7280', border: '#F3F4F6' }}
         />
       </div>
 
@@ -140,25 +139,30 @@ export default function Dashboard({ currentPeriodId }) {
   );
 }
 
-function StatCard({ title, value, icon, color }) {
-  const colorMap = {
-    blue: "bg-blue-50 text-blue-600 border-blue-100",
-    indigo: "bg-indigo-50 text-indigo-600 border-indigo-100",
-    green: "bg-emerald-50 text-emerald-600 border-emerald-100",
-    red: "bg-red-50 text-red-600 border-red-100 shadow-red-100",
-    gray: "bg-gray-50 text-gray-500 border-gray-100"
-  };
-
-  const selectedColor = colorMap[color] || colorMap.gray;
-
+function StatCard({ title, value, icon, colors }) {
   return (
-    <div className={`p-6 rounded-2xl border flex flex-col justify-between items-start gap-4 transition-all duration-300 hover:shadow-lg ${selectedColor}`}>
-      <div className={`p-3 rounded-xl bg-white shadow-sm ring-1 ring-black/5`}>
+    <div style={{ 
+      padding: '24px', 
+      borderRadius: '16px', 
+      border: `1px solid ${colors.border}`, 
+      backgroundColor: colors.bg, 
+      color: colors.text,
+      display: 'flex',
+      flexDirection: 'column',
+      gap: '16px'
+    }}>
+      <div style={{ 
+        padding: '12px', 
+        borderRadius: '12px', 
+        backgroundColor: '#fff', 
+        width: 'fit-content',
+        boxShadow: '0 1px 2px rgba(0,0,0,0.05)'
+      }}>
         {icon}
       </div>
       <div>
-        <div className="text-3xl font-black mb-1">{value?.toLocaleString()}</div>
-        <div className="text-sm font-bold uppercase tracking-wide opacity-80">{title}</div>
+        <div style={{ fontSize: '1.875rem', fontWeight: 900, marginBottom: '4px' }}>{value?.toLocaleString()}</div>
+        <div style={{ fontSize: '0.875rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', opacity: 0.8 }}>{title}</div>
       </div>
     </div>
   )
