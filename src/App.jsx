@@ -23,7 +23,7 @@ const Grading      = lazy(() => import('./pages/Grading'));
 const Fees         = lazy(() => import('./pages/Fees'));
 const Timetable    = lazy(() => import('./pages/Timetable'));
 const Attendance   = lazy(() => import('./pages/Attendance'));
-const Library      = lazy(() => import('./pages/Library'));
+const Library      = lazy(() => import('./pages/Library/index'));
 const Settings     = lazy(() => import('./pages/Settings'));
 const Login        = lazy(() => import('./pages/Login'));
 const Security     = lazy(() => import('./pages/Security'));
@@ -304,9 +304,9 @@ function Sidebar({ isOpen, onClose, onLogout, currentUser, subscriptionActive })
         )}
 
         {/* Librarians and Admins manage library */}
-        {/* {(isLibrarian || isAdmin) && (features.library || isSandbox) && (
+        {(isLibrarian || isAdmin) && (features.library || isSandbox) && (
           <SbLink to="/library" icon={BookIcon} label="Library" onClick={onClose} locked={(!subscriptionActive || (isSandbox && !features.library)) && !isPlatformAdmin} />
-        )} */}
+        )}
 
         {/* Academic section - always visible for Sandbox, else gated */}
         {(isTeacher || isAdmin) && (isSandbox || features.attendance || features.grading || features.timetable || features.lms) && (
@@ -720,9 +720,9 @@ function App() {
                     )} */}
 
                     {/* Library Routes: Admin & Librarian */}
-                    {/* {(isAdmin || isLibrarian) && (
-                      <Route path="/library" element={<SectionGate featureSlug="library" featureName="Library" profile={profile}><Library currentUser={currentUser} currentPeriodId={currentPeriodId} /></SectionGate>} />
-                    )} */}
+                    {(isAdmin || isLibrarian) && (
+                      <Route path="/library/*" element={<SectionGate featureSlug="library" featureName="Library" profile={profile}><Library currentUser={currentUser} currentPeriodId={currentPeriodId} /></SectionGate>} />
+                    )}
 
                     {/* Admin-Only Routes */}
                     {isAdmin && (
