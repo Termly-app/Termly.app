@@ -28,7 +28,7 @@ export default function IssueReturn({ currentUser, currentPeriodId }) {
   }, [currentPeriodId]);
 
   return (
-    <div className="card animate-in" style={{ marginBottom: '32px' }}>
+    <div className="card animate-in" style={{ marginBottom: '32px', overflow: 'visible' }}>
       <div className="card-header" style={{ flexDirection: 'column', alignItems: 'flex-start', gap: '16px', borderBottom: '1px solid var(--border)' }}>
         <div>
           <h2 style={{ fontSize: '1.25rem', fontWeight: 700, margin: 0 }}>Issue & Return Circulation</h2>
@@ -61,7 +61,7 @@ export default function IssueReturn({ currentUser, currentPeriodId }) {
         </div>
       </div>
 
-      <div className="card-body p-6" style={{ padding: '24px' }}>
+      <div className="card-body p-6" style={{ padding: '24px', overflow: 'visible' }}>
         {activeTab === 'issue' ? (
           <IssueTab currentUser={currentUser} students={students} alert={alert} toast={toast} />
         ) : (
@@ -171,7 +171,7 @@ function IssueTab({ currentUser, students, alert, toast }) {
         </h3>
         
         {!selectedStudent ? (
-          <div className="relative">
+          <div style={{ position: 'relative' }}>
             <div className="search-bar" style={{ maxWidth: '100%' }}>
               <span className="search-icon"><SearchIcon size={18} /></span>
               <input 
@@ -184,7 +184,7 @@ function IssueTab({ currentUser, students, alert, toast }) {
             </div>
             
             {matchingStudents.length > 0 && (
-              <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-xl shadow-xl border border-gray-100 z-10 overflow-hidden">
+              <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, marginTop: '8px', background: '#fff', borderRadius: '12px', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)', border: '1px solid var(--border)', zIndex: 100, overflow: 'hidden' }}>
                 {matchingStudents.map(s => (
                   <button 
                     key={s.id} 
@@ -225,20 +225,20 @@ function IssueTab({ currentUser, students, alert, toast }) {
         </h3>
         
         {!selectedCopy ? (
-           <div className="relative">
+           <div style={{ position: 'relative' }}>
              <div className="search-bar" style={{ maxWidth: '100%' }}>
                <span className="search-icon"><BookIcon size={18} /></span>
                <input 
                  type="text" 
                  placeholder="Scan barcode or type book code / title..." 
-                 className="font-mono"
+                 style={{ fontFamily: 'monospace' }}
                  value={copySearch}
                  onChange={e => setCopySearch(e.target.value)}
                />
              </div>
              
              {availableCopies.length > 0 && (
-               <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-xl shadow-xl border border-gray-100 z-10 overflow-hidden">
+               <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, marginTop: '8px', background: '#fff', borderRadius: '12px', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)', border: '1px solid var(--border)', zIndex: 100, overflow: 'hidden' }}>
                  {availableCopies.map(c => (
                    <button 
                      key={c.id} 
@@ -384,7 +384,7 @@ function ReturnTab({ currentUser, students, alert, toast }) {
     <div style={{ maxWidth: '800px', margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '32px' }}>
       
       {/* SEARCH HEADER */}
-      <div style={{ background: '#f8fafc', border: '1px solid var(--border)', borderRadius: '16px', padding: '24px', position: 'relative' }}>
+      <div style={{ background: '#f8fafc', border: '1px solid var(--border)', borderRadius: '16px', padding: '24px', position: 'relative', overflow: 'visible', zIndex: 50 }}>
         <div style={{ display: 'flex', gap: '16px', marginBottom: '16px' }}>
           <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 600, color: 'var(--text)', cursor: 'pointer' }}>
             <input type="radio" checked={searchMethod === 'student'} onChange={() => { setSearchMethod('student'); setSearchInput(''); setActiveLoans([]); }} /> Locate by Student
@@ -406,7 +406,7 @@ function ReturnTab({ currentUser, students, alert, toast }) {
                />
              </div>
              {matchingStudents.length > 0 && (
-               <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, marginTop: '8px', background: '#fff', borderRadius: '12px', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)', border: '1px solid var(--border)', zIndex: 10, overflow: 'hidden' }}>
+               <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, marginTop: '8px', background: '#fff', borderRadius: '12px', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)', border: '1px solid var(--border)', zIndex: 100, overflow: 'hidden' }}>
                  {matchingStudents.map(s => (
                    <button key={s.id} style={{ width: '100%', textAlign: 'left', padding: '12px 16px', background: 'transparent', border: 'none', borderBottom: '1px solid #f1f5f9', cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }} onClick={() => selectStudent(s)}>
                      <div><div style={{ fontWeight: 600, color: 'var(--text)' }}>{s.name}</div><div style={{ fontSize: '0.75rem', color: 'var(--text-light)' }}>Adm: {s.adm_no} • {s.class}</div></div>

@@ -25,7 +25,7 @@ export default function Reports({ currentPeriodId }) {
   }, [currentPeriodId]);
 
   return (
-    <div className="card animate-in pb-12">
+    <div className="card animate-in pb-12" style={{ overflow: 'visible' }}>
       <div className="card-header" style={{ flexDirection: 'column', alignItems: 'flex-start', gap: '16px', borderBottom: '1px solid var(--border)' }}>
         <div>
           <h2 style={{ fontSize: '1.25rem', fontWeight: 700, margin: 0 }}>Library Reports</h2>
@@ -54,7 +54,7 @@ export default function Reports({ currentPeriodId }) {
         </div>
       </div>
 
-      <div className="card-body p-6" style={{ padding: '24px' }}>
+      <div className="card-body p-6" style={{ padding: '24px', overflow: 'visible' }}>
         {activeTab === 'by-class' && <ByClassReport profile={profile} students={students} />}
         {activeTab === 'by-subject' && <BySubjectReport profile={profile} students={students} />}
         {activeTab === 'student-history' && <StudentHistoryReport students={students} />}
@@ -346,7 +346,7 @@ function StudentHistoryReport({ students }) {
           <input type="text" placeholder="Search student by name or admission number..." value={searchInput} onChange={e => { setSearchInput(e.target.value); setSelectedStudent(null); setHistory([]); }} />
         </div>
         {matchingStudents.length > 0 && !selectedStudent && (
-          <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, marginTop: '8px', background: '#fff', borderRadius: '12px', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)', border: '1px solid var(--border)', zIndex: 10, overflow: 'hidden' }}>
+          <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, marginTop: '8px', background: '#fff', borderRadius: '12px', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)', border: '1px solid var(--border)', zIndex: 100, overflow: 'hidden' }}>
             {matchingStudents.map(s => (
               <button key={s.id} style={{ width: '100%', textAlign: 'left', padding: '12px 16px', background: 'transparent', border: 'none', borderBottom: '1px solid #f1f5f9', cursor: 'pointer' }} onClick={() => selectStudent(s)}>
                 <div style={{ fontWeight: 600, color: 'var(--text)' }}>{s.name}</div>
