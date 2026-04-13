@@ -1080,12 +1080,12 @@ export async function addStudent(student) {
       gender: student.gender || '',
       dob: student.dob || '',
       join_date: student.joinDate || new Date().toISOString().split('T')[0],
-      notes: student.notes || '',
+      notes: sanitizeString(student.notes || ''),
       birth_cert_no: student.birthCertNo || null,
       county: student.county || null,
-      father_name: student.fatherName || null,
+      father_name: sanitizeName(student.fatherName || null),
       father_phone: student.fatherPhone || null,
-      mother_name: student.motherName || null,
+      mother_name: sanitizeName(student.motherName || null),
       mother_phone: student.motherPhone || null,
       subjects: getSubjectsForGrade(student.class, p)
     })
@@ -1415,6 +1415,7 @@ export async function recordPayment(studentId, amount, method, reference) {
   const numAmount = Math.max(0, Number(amount) || 0);
   if (numAmount === 0) throw new Error('Payment amount must be greater than zero.');
   
+  const sanitizedRef = (reference || '').trim().toUpperCase().replace(/[^A-Z0-9-]/g, '');
   const fees = await getFees();
   let feeRecord = fees[studentId];
 
@@ -1481,7 +1482,7 @@ export async function recordPayment(studentId, amount, method, reference) {
       fee_id: targetFeeId, // Added to fix not-null constraint
       amount: amountNum,
       method: method || 'Cash',
-      reference: reference || '',
+      reference: sanitizedRef,
       date: paymentDate
     })
     .select()
@@ -2042,14 +2043,14 @@ export async function updateTeacher(id, updates) {
   const { data, error } = await supabase
     .from('teachers')
     .update({ 
-      name: updates.name, 
-      email: updates.email,
+      name: sanitizeName(updates.name), 
+      email: sanitizeString(updates.email),
       phone: updates.phone, 
       subjects: updates.subjects,
       status: updates.status, 
       on_leave: updates.on_leave,
-      tsc_number: updates.tsc_number || null,
-      staff_code: updates.staff_code || null
+      tsc_number: sanitizeString(updates.tsc_number || null),
+      staff_code: sanitizeString(updates.staff_code || null)
     })
     .eq('id', id)
     .select()
@@ -4077,8 +4078,8 @@ export async function logCommunication(comm) {
   const { data, error } = await supabase.from('communications_log').insert([{
     school_id: getCurrentSchoolId(),
     type: comm.type,
-    target: comm.target,
-    message: comm.message,
+    target: sanitizeString(comm.target),
+    message: sanitizeString(comm.message),
     sender_id: getCurrentAuthUser()?.id,
     recipient_count: comm.recipientCount,
     status: 'dispatched',

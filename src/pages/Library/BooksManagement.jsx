@@ -342,7 +342,7 @@ export default function BooksManagement({ currentPeriodId }) {
                         : 'BK'
                     }
                   />
-                  <p className="text-xs text-gray-400 mt-1">E.g. MAT-F1 -> MAT-F1-001</p>
+                  <p className="text-xs text-gray-400 mt-1">E.g. MAT-F1 &rarr; MAT-F1-001</p>
                 </div>
               </div>
               <div className="modal-footer">

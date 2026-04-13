@@ -51,6 +51,23 @@ CREATE TRIGGER sanitize_teachers
     EXECUTE FUNCTION public.trigger_sanitize_teachers();
 
 
+-- 4. Trigger function for COMMUNICATIONS
+CREATE OR REPLACE FUNCTION public.trigger_sanitize_communications()
+RETURNS TRIGGER AS $$
+BEGIN
+    NEW.target = public.sanitize_string(NEW.target);
+    NEW.message = public.sanitize_string(NEW.message);
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+DROP TRIGGER IF EXISTS sanitize_communications ON public.communications_log;
+CREATE TRIGGER sanitize_communications
+    BEFORE INSERT OR UPDATE ON public.communications_log
+    FOR EACH ROW
+    EXECUTE FUNCTION public.trigger_sanitize_communications();
+
+
 -- 4. Trigger function for BOOKS
 CREATE OR REPLACE FUNCTION public.trigger_sanitize_books()
 RETURNS TRIGGER AS $$
