@@ -411,9 +411,6 @@ export default function Timetable({ currentUser, currentPeriodId, periods = [] }
     } catch (e) { setMessage({ type:'err', text: e.message }); }
   };
 
-  };
-
-
   // ── Computed ──────────────────────────────────────────────────────────
   const classStreams    = selClass ? (streams[selClass] || []) : [];
   const activePeriod    = periods.find(p => p.id === periodId);
