@@ -142,12 +142,11 @@ export default function BooksManagement({ currentPeriodId }) {
       </div>
 
       <div className="p-4 border-b border-gray-100 bg-gray-50 flex flex-wrap gap-4 items-center">
-        <div className="flex-1 min-w-[200px] relative">
-          <SearchIcon size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+        <div className="search-bar" style={{ flex: 1, minWidth: 200, maxWidth: '100%' }}>
+          <span className="search-icon"><SearchIcon size={16} /></span>
           <input 
             type="text" 
             placeholder="Search titles, authors, or ISBN..." 
-            className="form-input pl-9 w-full bg-white"
             value={search}
             onChange={e => setSearch(e.target.value)}
           />
@@ -172,7 +171,13 @@ export default function BooksManagement({ currentPeriodId }) {
             onChange={e => setLevel(e.target.value)}
             options={[ 
               {id:'', label:'All Classes'}, 
-              ...(profile.activeClasses || []).map(g => ({id:g, label:g})) 
+              ...Object.entries(CBC_STRUCTURE).flatMap(([ln, ld]) => {
+                const isMatch = (g1, g2) => g1?.toLowerCase().trim() === g2?.toLowerCase().trim();
+                const active = ld.grades.filter(g => 
+                  (profile.activeClasses || []).some(ac => isMatch(ac, g))
+                );
+                return active.map(g => ({ id: g, label: g }));
+              })
             ]}
             style={{ minWidth: 160 }}
         />

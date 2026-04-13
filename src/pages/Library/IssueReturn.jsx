@@ -162,13 +162,12 @@ function IssueTab({ currentUser, students, alert, toast }) {
         
         {!selectedStudent ? (
           <div className="relative">
-            <div className="flex items-center border-2 border-gray-200 rounded-xl px-4 py-3 focus-within:border-primary transition-colors bg-gray-50">
-              <SearchIcon size={20} className="text-gray-400 mr-2" />
+            <div className="search-bar" style={{ maxWidth: '100%' }}>
+              <span className="search-icon"><SearchIcon size={18} /></span>
               <input 
                 ref={studentInputRef}
                 type="text" 
                 placeholder="Search by student name or admission number..." 
-                className="w-full bg-transparent border-none outline-none"
                 value={studentSearch}
                 onChange={e => setStudentSearch(e.target.value)}
               />
@@ -217,12 +216,12 @@ function IssueTab({ currentUser, students, alert, toast }) {
         
         {!selectedCopy ? (
            <div className="relative">
-             <div className="flex items-center border-2 border-gray-200 rounded-xl px-4 py-3 focus-within:border-primary transition-colors bg-gray-50">
-               <BookIcon size={20} className="text-gray-400 mr-2" />
+             <div className="search-bar" style={{ maxWidth: '100%' }}>
+               <span className="search-icon"><BookIcon size={18} /></span>
                <input 
                  type="text" 
                  placeholder="Scan barcode or type book code / title..." 
-                 className="w-full bg-transparent border-none outline-none font-mono"
+                 className="font-mono"
                  value={copySearch}
                  onChange={e => setCopySearch(e.target.value)}
                />
@@ -271,7 +270,8 @@ function IssueTab({ currentUser, students, alert, toast }) {
         </h3>
         <input 
           type="date" 
-          className="form-input border-2 border-gray-200 rounded-xl px-4 py-3 w-full max-w-[200px]" 
+          className="form-input" 
+          style={{ maxWidth: 200 }}
           value={dueDate}
           onChange={e => setDueDate(e.target.value)}
         />
@@ -384,13 +384,12 @@ function ReturnTab({ currentUser, students, alert, toast }) {
         </div>
 
         {searchMethod === 'student' ? (
-          <div className="relative">
-             <div className="flex items-center border-2 border-gray-200 rounded-xl px-4 py-3 focus-within:border-primary transition-colors bg-white">
-               <UserIcon size={20} className="text-gray-400 mr-2" />
+          <div className="relative mt-4">
+             <div className="search-bar" style={{ maxWidth: '100%' }}>
+               <span className="search-icon"><UserIcon size={18} /></span>
                <input 
                  type="text" 
                  placeholder="Search student by name or admission..." 
-                 className="w-full bg-transparent border-none outline-none"
                  value={searchInput}
                  onChange={e => setSearchInput(e.target.value)}
                />
@@ -406,13 +405,13 @@ function ReturnTab({ currentUser, students, alert, toast }) {
              )}
           </div>
         ) : (
-          <form className="relative flex gap-2" onSubmit={handleBarcodeSubmit}>
-             <div className="flex-1 flex items-center border-2 border-gray-200 rounded-xl px-4 py-3 focus-within:border-primary transition-colors bg-white">
-               <BookIcon size={20} className="text-gray-400 mr-2" />
+          <form className="relative flex gap-2 mt-4" onSubmit={handleBarcodeSubmit}>
+             <div className="search-bar" style={{ flex: 1, maxWidth: '100%' }}>
+               <span className="search-icon"><BookIcon size={18} /></span>
                <input 
                  type="text" 
                  placeholder="Scan or type book copy code (e.g. MAT-F1-001)..." 
-                 className="w-full bg-transparent border-none outline-none font-mono"
+                 className="font-mono"
                  value={searchInput}
                  onChange={e => setSearchInput(e.target.value)}
                />

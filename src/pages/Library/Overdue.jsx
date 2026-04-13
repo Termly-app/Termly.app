@@ -5,6 +5,7 @@ import { getCurrentSchoolId } from '../../data/store';
 import { getSchoolProfile } from '../../data/store';
 import { useDialog } from '../../contexts/DialogContext';
 import Select from '../../components/Common/Select';
+import { CBC_STRUCTURE } from '../../data/seedData';
 import Loader from '../../components/Common/Loader';
 import {
   AlertIcon, ClockIcon, SearchIcon, FilterIcon, BookIcon
@@ -146,7 +147,13 @@ export default function Overdue({ currentUser, currentPeriodId }) {
               onChange={e => setFilterClass(e.target.value)}
               options={[
                 { id: '', label: 'All Classes' },
-                ...(profile.activeClasses || []).map(g => ({ id: g, label: g }))
+                ...Object.entries(CBC_STRUCTURE).flatMap(([ln, ld]) => {
+                  const isMatch = (g1, g2) => g1?.toLowerCase().trim() === g2?.toLowerCase().trim();
+                  const active = ld.grades.filter(g => 
+                    (profile.activeClasses || []).some(ac => isMatch(ac, g))
+                  );
+                  return active.map(g => ({ id: g, label: g }));
+                })
               ]}
               style={{ minWidth: 180 }}
             />
