@@ -197,12 +197,20 @@ export default function Timetable({ currentUser, currentPeriodId, periods = [] }
       try {
         const [profile, tList] = await Promise.all([getSchoolProfile(), getTeachers(schoolId)]);
         const cls = profile?.activeClasses || [];
-        setClasses(cls);
+        // Sort classes naturally: PP1, PP2, Grade 1..12, Form 1..4
+        const sortedCls = [...cls].sort((a, b) => {
+          const order = ['PP1','PP2','Grade 1','Grade 2','Grade 3','Grade 4','Grade 5','Grade 6','Grade 7','Grade 8','Grade 9','Grade 10','Grade 11','Grade 12','Form 1','Form 2','Form 3','Form 4'];
+          const ai = order.indexOf(a), bi = order.indexOf(b);
+          if (ai !== -1 && bi !== -1) return ai - bi;
+          if (ai !== -1) return -1;
+          if (bi !== -1) return 1;
+          return a.localeCompare(b);
+        });
+        setClasses(sortedCls);
         setStreams(profile?.streamsPerClass || {});
         setTeachers(tList);
-        setExamTypes(profile?.custom_exams || ['CAT 1', 'CAT 2', 'Mid Term', 'End Term']);
         setTtLabel(profile?.timetable_label || 'Weekly');
-        if (cls.length > 0 && !selClass) setSelClass(cls[0]);
+        if (sortedCls.length > 0 && !selClass) setSelClass(sortedCls[0]);
       } catch (e) { console.error(e); }
     })();
   }, [schoolId]);
@@ -289,8 +297,6 @@ export default function Timetable({ currentUser, currentPeriodId, periods = [] }
   // ── Cell click (grid view) ────────────────────────────────────────────
   const openEdit = (day, slotIndex) => {
     if (!isAdmin || view !== 'class') return;
-    // In preview mode, don't allow manual edits
-    if (preview) { setMessage({ type:'err', text:'Discard or save the preview first.' }); return; }
     const existing = slotLookup(day, slotIndex);
     setEditCell({ day, slotIndex, existing });
     setEditSubject(existing?.subject || '');
@@ -337,8 +343,7 @@ export default function Timetable({ currentUser, currentPeriodId, periods = [] }
         const clash = await checkTeacherConflict(
           schoolId, periodId, editTeacher,
           editCell.day, editCell.slotIndex,
-          selClass, selStream || null,
-          mode
+          selClass, selStream || null
         );
         if (clash) { setConflictWarning(clash); return; }
       } catch (e) {
@@ -408,7 +413,7 @@ export default function Timetable({ currentUser, currentPeriodId, periods = [] }
   // ── Clear cell ────────────────────────────────────────────────────────
   const handleClearCell = async (day, slotIndex, e) => {
     e.stopPropagation();
-    if (!isAdmin || preview) return;
+    if (!isAdmin) return;
     try {
       await clearTimetableSlot(schoolId, periodId, selClass, selStream || null, day, slotIndex);
       setSlots(await getTimetableSlots(schoolId, periodId, selClass, selStream || null));
@@ -509,6 +514,22 @@ export default function Timetable({ currentUser, currentPeriodId, periods = [] }
     setMessage({ type:'ok', text: `Loaded standard ${level.replace('-',' ')} day template.` });
   };
 
+  // ── Draft config helpers (Slot Config panel) ──────────────────────────
+  const updateDraft = (index, field, value) => {
+    setDraftConfig(prev => prev.map((s, i) => i === index ? { ...s, [field]: value } : s));
+  };
+  const removeDraft = (index) => {
+    setDraftConfig(prev => prev.filter((_, i) => i !== index));
+  };
+  const addDraftSlot = () => {
+    const last = draftConfig[draftConfig.length - 1];
+    setDraftConfig(prev => [...prev, {
+      label: `Period ${prev.filter(s => !s.is_break).length + 1}`,
+      start_time: last?.end_time || '08:00',
+      end_time: last ? (() => { const [h,m] = last.end_time.split(':').map(Number); const t = h*60+m+40; return `${String(Math.floor(t/60)).padStart(2,'0')}:${String(t%60).padStart(2,'0')}`; })() : '08:40',
+      is_break: false
+    }]);
+  };
 
 
   // ── Computed ──────────────────────────────────────────────────────────
@@ -619,14 +640,14 @@ export default function Timetable({ currentUser, currentPeriodId, periods = [] }
               <>
                 <Select 
                   value={selClass} 
-                  onChange={e => { setSelClass(e.target.value); setSelStream(''); setPreview(null); }}
+                  onChange={e => { setSelClass(e.target.value); setSelStream(''); }}
                   options={classes.map(c => ({ id: c, label: c }))}
                   style={{ minWidth: 120 }}
                 />
                 {classStreams.length > 0 && (
                   <Select 
                     value={selStream} 
-                    onChange={e => { setSelStream(e.target.value); setPreview(null); }}
+                    onChange={e => setSelStream(e.target.value)}
                     options={[
                       { id: '', label: 'All Streams' },
                       ...classStreams.map(s => ({ id: s, label: s }))
