@@ -16,10 +16,11 @@ CREATE INDEX IF NOT EXISTS idx_borrow_records_student ON public.borrow_records(s
 CREATE INDEX IF NOT EXISTS idx_borrow_records_copy ON public.borrow_records(book_copy_id);
 CREATE INDEX IF NOT EXISTS idx_borrow_records_status ON public.borrow_records(status);
 
--- 3. Invoices & Payments (Checking outstanding balances)
-CREATE INDEX IF NOT EXISTS idx_invoices_student_id ON public.invoices(student_id);
-CREATE INDEX IF NOT EXISTS idx_invoices_period_id ON public.invoices(period_id);
-CREATE INDEX IF NOT EXISTS idx_payments_invoice_id ON public.payments(invoice_id);
+-- 3. Fees & Student Payments
+CREATE INDEX IF NOT EXISTS idx_fees_student_id ON public.fees(student_id);
+CREATE INDEX IF NOT EXISTS idx_fees_period_id ON public.fees(period_id);
+CREATE INDEX IF NOT EXISTS idx_fee_payments_fee_id ON public.fee_payments(fee_id);
 
--- 4. Staff queries
+-- 4. Staff & Platform queries
 CREATE INDEX IF NOT EXISTS idx_teachers_school ON public.teachers(school_id);
+CREATE INDEX IF NOT EXISTS idx_payments_school ON public.payments(school_id);
