@@ -24,7 +24,7 @@ export default function Landing() {
   useEffect(() => {
     // Add class to body for specific styles
     document.body.classList.add('landing-body');
-    
+
     // ── PARALLAX ON FLOATERS ──
     const onMouseMoveParallax = (e) => {
       const cx = window.innerWidth / 2;
@@ -54,7 +54,7 @@ export default function Landing() {
       card.style.transform = '';
       card.style.transition = 'transform .35s cubic-bezier(.16,1,.3,1)';
     };
-    
+
     // ── SMOOTH ACTIVE NAV LINK ──
     const onScroll = () => {
       const sections = document.querySelectorAll('section[id], div[id]');
@@ -79,9 +79,9 @@ export default function Landing() {
   useEffect(() => {
     // ── SCROLL REVEAL ──
     const revealObs = new IntersectionObserver((entries) => {
-      entries.forEach(e => { if(e.isIntersecting) { e.target.classList.add('visible'); }});
+      entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('visible'); } });
     }, { threshold: 0.12 });
-    
+
     const revealElements = document.querySelectorAll('.reveal');
     revealElements.forEach(el => revealObs.observe(el));
 
@@ -182,10 +182,10 @@ export default function Landing() {
           <Link to="/" className="nav-logo">
             <div className="nav-sq">
               <svg viewBox="0 0 13 13" fill="none">
-                <rect x="1" y="1" width="4.5" height="4.5" rx="1" fill="white"/>
-                <rect x="7.5" y="1" width="4.5" height="4.5" rx="1" fill="rgba(255,255,255,.55)"/>
-                <rect x="1" y="7.5" width="4.5" height="4.5" rx="1" fill="rgba(255,255,255,.55)"/>
-                <rect x="7.5" y="7.5" width="4.5" height="4.5" rx="1" fill="rgba(255,255,255,.25)"/>
+                <rect x="1" y="1" width="4.5" height="4.5" rx="1" fill="white" />
+                <rect x="7.5" y="1" width="4.5" height="4.5" rx="1" fill="rgba(255,255,255,.55)" />
+                <rect x="1" y="7.5" width="4.5" height="4.5" rx="1" fill="rgba(255,255,255,.55)" />
+                <rect x="7.5" y="7.5" width="4.5" height="4.5" rx="1" fill="rgba(255,255,255,.25)" />
               </svg>
             </div>
             ShuleSoft
@@ -198,7 +198,7 @@ export default function Landing() {
           <Link to="/login" className="nlink n-login">Sign in</Link>
           <Link to="/register" className="ncta">
             Get access
-            <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2.5 7h9M8 3.5l3.5 3.5L8 10.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2.5 7h9M8 3.5l3.5 3.5L8 10.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" /></svg>
           </Link>
         </nav>
       </div>
@@ -217,10 +217,10 @@ export default function Landing() {
 
         <div className="hero-icon">
           <svg width="38" height="38" viewBox="0 0 38 38" fill="none">
-            <rect x="4" y="4" width="13" height="13" rx="3" fill="white"/>
-            <rect x="21" y="4" width="13" height="13" rx="3" fill="rgba(255,255,255,.55)"/>
-            <rect x="4" y="21" width="13" height="13" rx="3" fill="rgba(255,255,255,.55)"/>
-            <rect x="21" y="21" width="13" height="13" rx="3" fill="rgba(255,255,255,.25)"/>
+            <rect x="4" y="4" width="13" height="13" rx="3" fill="white" />
+            <rect x="21" y="4" width="13" height="13" rx="3" fill="rgba(255,255,255,.55)" />
+            <rect x="4" y="21" width="13" height="13" rx="3" fill="rgba(255,255,255,.55)" />
+            <rect x="21" y="21" width="13" height="13" rx="3" fill="rgba(255,255,255,.25)" />
           </svg>
         </div>
 
@@ -229,12 +229,12 @@ export default function Landing() {
             <span className="bdot"></span>
             Built for Kenyan Schools · CBC Ready
           </div>
-          <h1 className="hero-h1">Manage your entire school easily<br/><span className="h1-dim">— students, fees, results —</span><br/>all in one system.</h1>
+          <h1 className="hero-h1">Manage your entire school easily<br /><span className="h1-dim">— students, fees, results —</span><br />all in one system.</h1>
           <p className="hero-sub">Built for Kenyan schools. Stop juggling bank slips and paper registers. Automate your fee collection, secondary school grading, and CBC portfolios with ShuleSoft.</p>
           <div className="hero-btns">
             <Link to="/register" className="btn-p">
               Get access
-              <svg width="15" height="15" viewBox="0 0 15 15" fill="none"><path d="M2.5 7.5h10M9 3.5l4 4-4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+              <svg width="15" height="15" viewBox="0 0 15 15" fill="none"><path d="M2.5 7.5h10M9 3.5l4 4-4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" /></svg>
             </Link>
             <a href="#pricing" className="btn-s">View pricing</a>
           </div>
@@ -249,7 +249,7 @@ export default function Landing() {
             </div>
             <div className="hs-body">
               <div className="hs-side">
-                <div className="hs-side-logo"><div className="hs-side-sq"><svg viewBox="0 0 13 13" fill="none" width="10" height="10"><rect x="1" y="1" width="4.5" height="4.5" rx="1" fill="white"/><rect x="7.5" y="1" width="4.5" height="4.5" rx="1" fill="white"/><rect x="1" y="7.5" width="4.5" height="4.5" rx="1" fill="white"/><rect x="7.5" y="7.5" width="4.5" height="4.5" rx="1" fill="white"/></svg></div>ShuleSoft</div>
+                <div className="hs-side-logo"><div className="hs-side-sq"><svg viewBox="0 0 13 13" fill="none" width="10" height="10"><rect x="1" y="1" width="4.5" height="4.5" rx="1" fill="white" /><rect x="7.5" y="1" width="4.5" height="4.5" rx="1" fill="white" /><rect x="1" y="7.5" width="4.5" height="4.5" rx="1" fill="white" /><rect x="7.5" y="7.5" width="4.5" height="4.5" rx="1" fill="white" /></svg></div>ShuleSoft</div>
                 <div className="sl on"><span className="sl-ico si-v"><DashboardIcon size={12} /></span>Dashboard</div>
                 <div className="sl"><span className="sl-ico si-g"><UserIcon size={12} /></span>Students</div>
                 <div className="sl"><span className="sl-ico si-g"><CardIcon size={12} /></span>Fees</div>
@@ -327,7 +327,7 @@ export default function Landing() {
       <section className="section" id="features">
         <div className="sec-head reveal">
           <div className="eyebrow">Platform capabilities</div>
-          <h2 className="landing-h2">Built for everyone<br/>in your school.</h2>
+          <h2 className="landing-h2">Built for everyone<br />in your school.</h2>
           <p className="sec-p">Purpose-built for the Kenyan CBC curriculum, M-PESA ecosystem, and the real people who run schools every day.</p>
         </div>
 
@@ -392,14 +392,14 @@ export default function Landing() {
               <div className="ring-w" style={{ width: '100%', padding: 8 }}>
                 <div className="ring-svg">
                   <svg width="54" height="54" viewBox="0 0 54 54">
-                    <circle className="rbg" cx="27" cy="27" r="21"/>
-                    <circle className="rfill" cx="27" cy="27" r="21"/>
+                    <circle className="rbg" cx="27" cy="27" r="21" />
+                    <circle className="rfill" cx="27" cy="27" r="21" />
                   </svg>
                   <div className="ring-lbl">94%</div>
                 </div>
                 <div className="ring-info">
                   <strong>Daily Attendance</strong>
-                  792 of 842 present<br/>
+                  792 of 842 present<br />
                   <span style={{ color: '#16A34A', fontWeight: 500, fontSize: '.65rem' }}>94% attendance rate</span>
                 </div>
               </div>
@@ -447,23 +447,23 @@ export default function Landing() {
                 <div className="pplan">{name}</div>
                 <div className="pprice"><sup>KSh</sup> {p.price?.toLocaleString() || '0'}</div>
                 <div className="pp">per term · up to {p.limit?.toLocaleString() || '0'} students</div>
-                <hr className="pdiv"/>
+                <hr className="pdiv" />
                 <ul className="pfeats">
                   {(() => {
                     const displayFeatures = getPlanDisplayFeatures(p);
                     return displayFeatures.length > 0 ? (
                       displayFeatures.map((f, i) => (
-                        <li key={i} style={{ display:'flex', alignItems:'flex-start', gap:8, marginBottom:8 }}>
-                          <CheckIcon size={14} color="var(--te)" style={{ marginTop:2, flexShrink:0 }} />
+                        <li key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: 8, marginBottom: 8 }}>
+                          <CheckIcon size={14} color="var(--te)" style={{ marginTop: 2, flexShrink: 0 }} />
                           <span>{f.replace(/_/g, ' ')}</span>
                         </li>
                       ))
                     ) : (
                       <>
-                        <li style={{ display:'flex', alignItems:'flex-start', gap:8, marginBottom:8 }}><CheckIcon size={14} color="var(--te)" style={{ marginTop:2, flexShrink:0 }} /><span>Core management features</span></li>
-                        <li style={{ display:'flex', alignItems:'flex-start', gap:8, marginBottom:8 }}><CheckIcon size={14} color="var(--te)" style={{ marginTop:2, flexShrink:0 }} /><span>Student & staff profiles</span></li>
-                        <li style={{ display:'flex', alignItems:'flex-start', gap:8, marginBottom:8 }}><CheckIcon size={14} color="var(--te)" style={{ marginTop:2, flexShrink:0 }} /><span>M-PESA integration</span></li>
-                        <li style={{ display:'flex', alignItems:'flex-start', gap:8, marginBottom:8 }}><CheckIcon size={14} color="var(--te)" style={{ marginTop:2, flexShrink:0 }} /><span>Support included</span></li>
+                        <li style={{ display: 'flex', alignItems: 'flex-start', gap: 8, marginBottom: 8 }}><CheckIcon size={14} color="var(--te)" style={{ marginTop: 2, flexShrink: 0 }} /><span>Core management features</span></li>
+                        <li style={{ display: 'flex', alignItems: 'flex-start', gap: 8, marginBottom: 8 }}><CheckIcon size={14} color="var(--te)" style={{ marginTop: 2, flexShrink: 0 }} /><span>Student & staff profiles</span></li>
+                        <li style={{ display: 'flex', alignItems: 'flex-start', gap: 8, marginBottom: 8 }}><CheckIcon size={14} color="var(--te)" style={{ marginTop: 2, flexShrink: 0 }} /><span>M-PESA integration</span></li>
+                        <li style={{ display: 'flex', alignItems: 'flex-start', gap: 8, marginBottom: 8 }}><CheckIcon size={14} color="var(--te)" style={{ marginTop: 2, flexShrink: 0 }} /><span>Support included</span></li>
                       </>
                     );
                   })()}
@@ -478,12 +478,12 @@ export default function Landing() {
         <div className="cta-ghost">Kenya</div>
         <div className="cta-in reveal">
           <div className="eyebrow" style={{ margin: '0 auto 24px' }}>Get started today</div>
-          <h2 className="landing-h2">Your school,<br/>finally organised.</h2>
-          <p>Join a growing community of Kenyan schools that replaced spreadsheets,<br/>paper registers, and group chats with ShuleSoft.</p>
+          <h2 className="landing-h2">Your school,<br />finally organised.</h2>
+          <p>Join a growing community of Kenyan schools that replaced spreadsheets,<br />paper registers, and group chats with ShuleSoft.</p>
           <div className="cta-btns">
             <Link to="/register" className="btn-p" style={{ padding: '16px 38px', borderRadius: 100, fontSize: '1rem' }}>
               Get access now
-              <svg width="15" height="15" viewBox="0 0 15 15" fill="none"><path d="M2.5 7.5h10M9 3.5l4 4-4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+              <svg width="15" height="15" viewBox="0 0 15 15" fill="none"><path d="M2.5 7.5h10M9 3.5l4 4-4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" /></svg>
             </Link>
             <Link to="/support" className="btn-s" style={{ padding: '16px 38px', borderRadius: 100, fontSize: '1rem' }}>Contact support</Link>
           </div>
@@ -498,10 +498,10 @@ export default function Landing() {
             <Link to="/" className="ft-logo">
               <div className="ft-sq">
                 <svg viewBox="0 0 13 13" fill="none">
-                  <rect x="1" y="1" width="4.5" height="4.5" rx="1" fill="#0D0D0D"/>
-                  <rect x="7.5" y="1" width="4.5" height="4.5" rx="1" fill="rgba(13,13,13,.4)"/>
-                  <rect x="1" y="7.5" width="4.5" height="4.5" rx="1" fill="rgba(13,13,13,.4)"/>
-                  <rect x="7.5" y="7.5" width="4.5" height="4.5" rx="1" fill="rgba(13,13,13,.2)"/>
+                  <rect x="1" y="1" width="4.5" height="4.5" rx="1" fill="#0D0D0D" />
+                  <rect x="7.5" y="1" width="4.5" height="4.5" rx="1" fill="rgba(13,13,13,.4)" />
+                  <rect x="1" y="7.5" width="4.5" height="4.5" rx="1" fill="rgba(13,13,13,.4)" />
+                  <rect x="7.5" y="7.5" width="4.5" height="4.5" rx="1" fill="rgba(13,13,13,.2)" />
                 </svg>
               </div>
               ShuleSoft
@@ -523,7 +523,7 @@ export default function Landing() {
             <ul className="ft-links">
               <li><Link to="/support">Contact Support</Link></li>
               <li><a href={`tel:${settings?.support?.phone || '+254712260057'}`}>Call: {settings?.support?.phone || '+254712260057'}</a></li>
-              <li><a href="mailto:hallo@shulesoft.co.ke">Email: hallo@shulesoft.co.ke</a></li>
+              <li><a href="mailto:shulesoft8@gmail.com">Email: shulesoft8@gmail.com</a></li>
               <li><Link to="/faq">FAQ</Link></li>
               <li><Link to="/legal/service-level">Service Level (SLA)</Link></li>
             </ul>
@@ -549,7 +549,7 @@ export default function Landing() {
         <div className="ft-bottom">
           <span className="ft-copy">© 2025 Kaulani Corp · ShuleSoft is a product of Kaulani Corp</span>
           <div className="ft-b-links">
-             <span>All rights reserved.</span>
+            <span>All rights reserved.</span>
           </div>
         </div>
       </footer>

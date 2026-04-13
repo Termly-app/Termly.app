@@ -4,8 +4,8 @@ import { getSchoolProfile } from '../../data/store';
 import { CBC_STRUCTURE, getSubjectsForGrade } from '../../data/seedData';
 import Select from '../../components/Common/Select';
 import { useDialog } from '../../contexts/DialogContext';
-import { 
-  SearchIcon, PlusIcon, FilterIcon, BookIcon, EditIcon, 
+import {
+  SearchIcon, PlusIcon, FilterIcon, BookIcon, EditIcon,
   MenuIcon, CloseIcon
 } from '../../components/CommonIcons';
 import Loader from '../../components/Common/Loader';
@@ -48,9 +48,9 @@ export default function BooksManagement({ currentPeriodId }) {
       ]);
       setBooks(bk);
       setProfile(pf);
-    } catch(e) {
+    } catch (e) {
       console.error(e);
-      alert({message: "Failed to load books. Please try again.", variant: 'danger'});
+      alert({ message: "Failed to load books. Please try again.", variant: 'danger' });
     } finally {
       setLoading(false);
     }
@@ -60,8 +60,8 @@ export default function BooksManagement({ currentPeriodId }) {
 
   const filteredBooks = useMemo(() => {
     return books.filter(b => {
-      const matchSearch = !search || 
-        b.title.toLowerCase().includes(search.toLowerCase()) || 
+      const matchSearch = !search ||
+        b.title.toLowerCase().includes(search.toLowerCase()) ||
         (b.author && b.author.toLowerCase().includes(search.toLowerCase())) ||
         (b.isbn && b.isbn.includes(search));
       const matchCat = !filterCategory || b.category === filterCategory;
@@ -94,10 +94,10 @@ export default function BooksManagement({ currentPeriodId }) {
         await createBook(payload);
         toast('Book created successfully', 'success');
       }
-      setBookModal({open: false, data: null});
+      setBookModal({ open: false, data: null });
       loadData();
-    } catch(err) {
-      alert({title: 'Error', message: err.message, variant: 'danger'});
+    } catch (err) {
+      alert({ title: 'Error', message: err.message, variant: 'danger' });
     }
   };
 
@@ -107,10 +107,10 @@ export default function BooksManagement({ currentPeriodId }) {
     try {
       await bulkGenerateCopies(bulkModal.book.id, fd.get('prefix'), parseInt(fd.get('count')));
       toast('Copies generated successfully!', 'success');
-      setBulkModal({open: false, book: null});
+      setBulkModal({ open: false, book: null });
       loadData();
-    } catch(err) {
-      alert({title: 'Error generating copies', message: err.message, variant: 'danger'});
+    } catch (err) {
+      alert({ title: 'Error generating copies', message: err.message, variant: 'danger' });
     }
   };
 
@@ -119,7 +119,7 @@ export default function BooksManagement({ currentPeriodId }) {
     try {
       const c = await getBookCopies(book.id);
       setCopiesModal({ open: true, book, copies: c, loading: false });
-    } catch(e) {
+    } catch (e) {
       setCopiesModal({ open: false, book: null, copies: [] });
     }
   };
@@ -133,7 +133,7 @@ export default function BooksManagement({ currentPeriodId }) {
           <h2 style={{ fontSize: '1.25rem', fontWeight: 700, margin: 0 }}>Books Catalog</h2>
           <p style={{ fontSize: '0.875rem', color: 'var(--text-light)', margin: '4px 0 0 0' }}>Manage titles, subjects, and bulk copies.</p>
         </div>
-        <button 
+        <button
           className="btn btn-primary"
           style={{ display: 'inline-flex', alignItems: 'center', gap: '8px' }}
           onClick={() => setBookModal({ open: true, data: null })}
@@ -145,42 +145,42 @@ export default function BooksManagement({ currentPeriodId }) {
       <div style={{ padding: '16px', backgroundColor: '#f9fafb', borderBottom: '1px solid var(--border)', display: 'flex', flexWrap: 'wrap', gap: '16px', alignItems: 'center' }}>
         <div className="search-bar" style={{ flex: 1, minWidth: 200, maxWidth: '100%' }}>
           <span className="search-icon"><SearchIcon size={16} /></span>
-          <input 
-            type="text" 
-            placeholder="Search titles, authors, or ISBN..." 
+          <input
+            type="text"
+            placeholder="Search titles, authors, or ISBN..."
             value={search}
             onChange={e => setSearch(e.target.value)}
           />
         </div>
-        
-        <Select 
-            value={filterCategory} 
-            onChange={e => setCategory(e.target.value)}
-            options={[ {id:'', label:'All Categories'}, ...LIB_CATEGORIES.map(c => ({id:c, label:c.charAt(0).toUpperCase() + c.slice(1)})) ]}
-            style={{ minWidth: 160 }}
+
+        <Select
+          value={filterCategory}
+          onChange={e => setCategory(e.target.value)}
+          options={[{ id: '', label: 'All Categories' }, ...LIB_CATEGORIES.map(c => ({ id: c, label: c.charAt(0).toUpperCase() + c.slice(1) }))]}
+          style={{ minWidth: 160 }}
         />
 
-        <Select 
-            value={filterSubject} 
-            onChange={e => setSubject(e.target.value)}
-            options={[ {id:'', label:'All Subjects'}, ...availableSubjects.map(s => ({id:s, label:s})) ]}
-            style={{ minWidth: 160 }}
+        <Select
+          value={filterSubject}
+          onChange={e => setSubject(e.target.value)}
+          options={[{ id: '', label: 'All Subjects' }, ...availableSubjects.map(s => ({ id: s, label: s }))]}
+          style={{ minWidth: 160 }}
         />
-        
-        <Select 
-            value={filterLevel} 
-            onChange={e => setLevel(e.target.value)}
-            options={[ 
-              {id:'', label:'All Classes'}, 
-              ...Object.entries(CBC_STRUCTURE).flatMap(([ln, ld]) => {
-                const isMatch = (g1, g2) => g1?.toLowerCase().trim() === g2?.toLowerCase().trim();
-                const active = ld.grades.filter(g => 
-                  (profile.activeClasses || []).some(ac => isMatch(ac, g))
-                );
-                return active.map(g => ({ id: g, label: g }));
-              })
-            ]}
-            style={{ minWidth: 160 }}
+
+        <Select
+          value={filterLevel}
+          onChange={e => setLevel(e.target.value)}
+          options={[
+            { id: '', label: 'All Classes' },
+            ...Object.entries(CBC_STRUCTURE).flatMap(([ln, ld]) => {
+              const isMatch = (g1, g2) => g1?.toLowerCase().trim() === g2?.toLowerCase().trim();
+              const active = ld.grades.filter(g =>
+                (profile.activeClasses || []).some(ac => isMatch(ac, g))
+              );
+              return active.map(g => ({ id: g, label: g }));
+            })
+          ]}
+          style={{ minWidth: 160 }}
         />
       </div>
 
@@ -203,11 +203,10 @@ export default function BooksManagement({ currentPeriodId }) {
                   <div className="text-gray-500 text-xs mt-1">by {b.author || 'Unknown'} {b.isbn ? `• ISBN: ${b.isbn}` : ''}</div>
                 </td>
                 <td className="p-4 capitalize">
-                  <span className={`px-2.5 py-1 rounded-md text-xs font-bold ${
-                    b.category === 'setbook' ? 'bg-purple-100 text-purple-700' :
-                    b.category === 'revision' ? 'bg-amber-100 text-amber-700' :
-                    'bg-blue-100 text-blue-700'
-                  }`}>
+                  <span className={`px-2.5 py-1 rounded-md text-xs font-bold ${b.category === 'setbook' ? 'bg-purple-100 text-purple-700' :
+                      b.category === 'revision' ? 'bg-amber-100 text-amber-700' :
+                        'bg-blue-100 text-blue-700'
+                    }`}>
                     {b.category}
                   </span>
                 </td>
@@ -217,7 +216,7 @@ export default function BooksManagement({ currentPeriodId }) {
                 </td>
                 <td className="p-4">
                   <div className="flex items-center gap-2">
-                    <span className="font-bold text-lg" style={{color: b.available_copies > 0 ? 'var(--success)' : 'var(--danger)'}}>
+                    <span className="font-bold text-lg" style={{ color: b.available_copies > 0 ? 'var(--success)' : 'var(--danger)' }}>
                       {b.available_copies}
                     </span>
                     <span className="text-gray-400 font-medium">/</span>
@@ -227,13 +226,13 @@ export default function BooksManagement({ currentPeriodId }) {
                 <td className="p-4 text-right">
                   <div className="flex items-center justify-end gap-2">
                     <button className="btn btn-sm bg-gray-100 hover:bg-gray-200 text-gray-700 px-3" onClick={() => viewCopies(b)}>
-                       Copies Details
+                      Copies Details
                     </button>
-                    <button className="btn btn-sm btn-ghost px-2 text-primary hover:bg-primary-50" onClick={() => setBulkModal({open: true, book: b})} title="Add Bulk Copies">
-                       <PlusIcon size={16} />
+                    <button className="btn btn-sm btn-ghost px-2 text-primary hover:bg-primary-50" onClick={() => setBulkModal({ open: true, book: b })} title="Add Bulk Copies">
+                      <PlusIcon size={16} />
                     </button>
-                    <button className="btn btn-sm btn-ghost px-2" onClick={() => setBookModal({open: true, data: b})} title="Edit Title">
-                       <EditIcon size={16} />
+                    <button className="btn btn-sm btn-ghost px-2" onClick={() => setBookModal({ open: true, data: b })} title="Edit Title">
+                      <EditIcon size={16} />
                     </button>
                   </div>
                 </td>
@@ -244,9 +243,9 @@ export default function BooksManagement({ currentPeriodId }) {
 
         {filteredBooks.length === 0 && !loading && (
           <div className="text-center py-20 bg-gray-50 border-t border-gray-100">
-             <BookIcon size={48} className="mx-auto text-gray-300 mb-4" />
-             <h3 className="text-lg font-bold text-gray-500">No books found</h3>
-             <p className="text-sm text-gray-400">Try adjusting your filters or search term.</p>
+            <BookIcon size={48} className="mx-auto text-gray-300 mb-4" />
+            <h3 className="text-lg font-bold text-gray-500">No books found</h3>
+            <p className="text-sm text-gray-400">Try adjusting your filters or search term.</p>
           </div>
         )}
       </div>
@@ -257,7 +256,7 @@ export default function BooksManagement({ currentPeriodId }) {
           <div className="modal relative max-w-2xl w-full mx-4">
             <div className="modal-header">
               <h3>{bookModal.data ? 'Edit Book Record' : 'Register New Title'}</h3>
-              <button className="modal-close" onClick={() => setBookModal({open:false})}>×</button>
+              <button className="modal-close" onClick={() => setBookModal({ open: false })}>×</button>
             </div>
             <form onSubmit={handleSaveBook}>
               <div className="modal-body p-6 grid grid-cols-2 gap-4">
@@ -273,29 +272,29 @@ export default function BooksManagement({ currentPeriodId }) {
                   <label>ISBN</label>
                   <input className="form-input" name="isbn" defaultValue={bookModal.data?.isbn} />
                 </div>
-                
+
                 <div className="form-group">
                   <label>Category</label>
-                  <Select 
+                  <Select
                     name="category"
-                    options={LIB_CATEGORIES.map(c => ({id:c, label:c.charAt(0).toUpperCase() + c.slice(1)}))}
+                    options={LIB_CATEGORIES.map(c => ({ id: c, label: c.charAt(0).toUpperCase() + c.slice(1) }))}
                     defaultValue={bookModal.data?.category}
                     required
                   />
                 </div>
                 <div className="form-group">
                   <label>Target Class/Level</label>
-                  <Select 
+                  <Select
                     name="level"
-                    options={[{id:'', label:'-- General --'}, ...(profile.activeClasses || []).map(g => ({id:g, label:g}))]}
+                    options={[{ id: '', label: '-- General --' }, ...(profile.activeClasses || []).map(g => ({ id: g, label: g }))]}
                     defaultValue={bookModal.data?.level}
                   />
                 </div>
                 <div className="form-group">
                   <label>Subject Focus</label>
-                  <Select 
+                  <Select
                     name="subject"
-                    options={[{id:'', label:'-- General --'}, ...availableSubjects.map(s => ({id:s, label:s}))]}
+                    options={[{ id: '', label: '-- General --' }, ...availableSubjects.map(s => ({ id: s, label: s }))]}
                     defaultValue={bookModal.data?.subject}
                   />
                 </div>
@@ -305,7 +304,7 @@ export default function BooksManagement({ currentPeriodId }) {
                 </div>
               </div>
               <div className="modal-footer">
-                <button type="button" className="btn btn-ghost" onClick={() => setBookModal({open:false})}>Cancel</button>
+                <button type="button" className="btn btn-ghost" onClick={() => setBookModal({ open: false })}>Cancel</button>
                 <button type="submit" className="btn btn-primary">{bookModal.data ? 'Save Changes' : 'Register Book'}</button>
               </div>
             </form>
@@ -319,7 +318,7 @@ export default function BooksManagement({ currentPeriodId }) {
           <div className="modal relative max-w-sm w-full">
             <div className="modal-header">
               <h3>Add Inventory Copies</h3>
-              <button className="modal-close" onClick={() => setBulkModal({open:false})}>×</button>
+              <button className="modal-close" onClick={() => setBulkModal({ open: false })}>×</button>
             </div>
             <form onSubmit={handleBulkGenerate}>
               <div className="modal-body p-6 space-y-4">
@@ -336,18 +335,18 @@ export default function BooksManagement({ currentPeriodId }) {
 
                 <div className="form-group">
                   <label>Code Prefix</label>
-                  <input className="form-input font-mono uppercase" name="prefix" required 
+                  <input className="form-input font-mono uppercase" name="prefix" required
                     defaultValue={
-                      bulkModal.book?.subject ? 
-                        bulkModal.book.subject.substring(0,3).toUpperCase() + '-' + (bulkModal.book.level?.charAt(0) || 'B') 
+                      bulkModal.book?.subject ?
+                        bulkModal.book.subject.substring(0, 3).toUpperCase() + '-' + (bulkModal.book.level?.charAt(0) || 'B')
                         : 'BK'
-                    } 
+                    }
                   />
                   <p className="text-xs text-gray-400 mt-1">E.g. MAT-F1 -> MAT-F1-001</p>
                 </div>
               </div>
               <div className="modal-footer">
-                <button type="button" className="btn btn-ghost" onClick={() => setBulkModal({open:false})}>Cancel</button>
+                <button type="button" className="btn btn-ghost" onClick={() => setBulkModal({ open: false })}>Cancel</button>
                 <button type="submit" className="btn btn-primary">Generate Copies</button>
               </div>
             </form>
@@ -364,7 +363,7 @@ export default function BooksManagement({ currentPeriodId }) {
                 <h3>Inventory Detail</h3>
                 <div className="text-sm font-normal text-gray-500">{copiesModal.book?.title}</div>
               </div>
-              <button className="modal-close" onClick={() => setCopiesModal({open:false, book:null, copies:[]})}>×</button>
+              <button className="modal-close" onClick={() => setCopiesModal({ open: false, book: null, copies: [] })}>×</button>
             </div>
             <div className="flex-1 overflow-auto p-0 bg-gray-50">
               {copiesModal.loading ? <Loader /> : (
