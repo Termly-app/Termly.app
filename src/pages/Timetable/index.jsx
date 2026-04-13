@@ -16,27 +16,23 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import './Timetable.css';
-import { 
+import {
   printClassTimetable, 
   printTeacherTimetable, 
-  printAllTeachersTimetables, 
-  printExamSchedule 
+  printAllTeachersTimetables
 } from '../../utils/timetablePrint';
 import Select from '../../components/Common/Select';
 import { Helmet } from 'react-helmet-async';
 import {
-  getRequirements, getAllRequirements, saveRequirement, deleteRequirement,
-  getClassSubjectAssignments, getTeachers, checkTeacherConflict, checkRoomConflict, getSchoolProfile,
-  isFeatureEnabled, getTimetableRooms, saveTimetableRoom, deleteTimetableRoom,
-  getAllTimetableSlots, checkExamConflict,
+  getTeachers, checkTeacherConflict, checkRoomConflict, getSchoolProfile,
+  getTimetableRooms, saveTimetableRoom, deleteTimetableRoom,
   getTimetableConfig, saveTimetableConfig,
   getTimetableSlots, saveTimetableSlot, clearTimetableSlot,
-  getTeacherTimetable, clearAndSaveTimetable
+  getTeacherTimetable
 } from '../../data/store';
 import { 
-  CalendarIcon, PrintIcon, BookIcon, SettingsIcon, CheckIcon, CrossIcon, 
-  RocketIcon, SaveIcon, AlertIcon, UserIcon, HomeIcon, TeacherIcon, PlusIcon,
-  SparklesIcon
+  CalendarIcon, PrintIcon, SettingsIcon, CheckIcon, CrossIcon, 
+  SaveIcon, AlertIcon, UserIcon, HomeIcon, TeacherIcon, PlusIcon
 } from '../../components/CommonIcons';
 import PricingUpgrade from '../../components/PricingUpgrade';
 
@@ -63,170 +59,6 @@ function getLevelBadge(grade) {
   if (l === 'Senior Secondary (CBC)')   return { cls:'tt-level-cbc-secondary', label:'CBC Sr. Sec' };
   if (l === '8-4-4 Form 1–4')          return { cls:'tt-level-844',           label:'8-4-4' };
   return { cls:'tt-level-cbc-primary', label:'CBC' };
-}
-
-// ═══════════════════════════════════════════════════════════════════════════
-// AUTO-GENERATE ALGORITHM
-// ═══════════════════════════════════════════════════════════════════════════
-/**
- * Generates a complete school timetable from requirements.
- * Guarantees:
- *   - No teacher teaches two classes at the same time
- *   - No class has two subjects at the same time
- *   - Same subject not repeated on the same day (when avoidable)
- *   - Double lessons placed as two consecutive non-break slots
- *
- * @param {Array}  config       — time slot config [{slot_index, is_break, ...}]
- * @param {Array}  requirements — all lesson requirements for all classes
- * @param {Array}  activeDays   — ['Monday','Tuesday',...]
- * @param {Number} maxPerDay    — maximum lessons of any subject per day (for exams)
- * @returns {{ slots: Array, unplaced: Array }}
- */
-function generateTimetable(config, requirements, activeDays, maxPerDay = 999) {
-  const sorted = [...config].sort((a, b) => a.slot_index - b.slot_index);
-  const teachingSlots = sorted.filter(c => !c.is_break);
-
-  // Map slot_index → next CONSECUTIVE teaching slot_index (no break between them)
-  const consecutiveNext = {};
-  for (let i = 0; i < teachingSlots.length - 1; i++) {
-    const curr = teachingSlots[i];
-    const next = teachingSlots[i + 1];
-    // Find positions in full sorted config
-    const currPos = sorted.findIndex(c => c.slot_index === curr.slot_index);
-    const nextPos = sorted.findIndex(c => c.slot_index === next.slot_index);
-    // Check nothing between them is a break
-    const between = sorted.slice(currPos + 1, nextPos);
-    if (!between.some(c => c.is_break)) {
-      consecutiveNext[curr.slot_index] = next.slot_index;
-    }
-  }
-
-  // State maps
-  const placed      = {};  // `${cls}::${day}::${slot}` → slot data
-  const teacherBusy = {};  // `${teacherId}::${day}::${slot}` → true
-  const dayLoad     = {};  // `${cls}::${day}` → count (spread days evenly)
-  const daySubject  = {};  // `${cls}::${day}::${subject}` → count (avoid same subject twice/day)
-
-  const clsKey  = r  => `${r.class_grade}::${r.stream || ''}`;
-  const gridKey = (cls, day, slot) => `${cls}::${day}::${slot}`;
-  const tKey    = (tid, day, slot) => `${tid}::${day}::${slot}`;
-  const dKey    = (cls, day)       => `${cls}::${day}`;
-  const dsKey   = (cls, day, sub)  => `${cls}::${day}::${sub}`;
-
-  // Group requirements by class
-  const byClass = {};
-  for (const req of requirements) {
-    const k = clsKey(req);
-    if (!byClass[k]) byClass[k] = [];
-    byClass[k].push(req);
-  }
-
-  const unplaced = [];
-
-  // Fisher-Yates shuffle for day/slot variety
-  function shuffle(arr) {
-    const a = [...arr];
-    for (let i = a.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [a[i], a[j]] = [a[j], a[i]];
-    }
-    return a;
-  }
-
-  for (const [clsK, reqs] of Object.entries(byClass)) {
-    // Build lesson list
-    const lessons = [];
-    for (const req of reqs) {
-      let rem = req.periods_per_week || 1;
-      // Place one double lesson first if requested
-      if (req.allow_double && rem >= 2) {
-        lessons.push({ ...req, _double: true });
-        rem -= 2;
-      }
-      for (let i = 0; i < rem; i++) {
-        lessons.push({ ...req, _double: false });
-      }
-    }
-
-    // Sort: doubles first (hardest to place), then most-periods-per-week
-    lessons.sort((a, b) => {
-      if (a._double !== b._double) return a._double ? -1 : 1;
-      return (b.periods_per_week || 1) - (a.periods_per_week || 1);
-    });
-
-    for (const lesson of lessons) {
-      let placed_ = false;
-
-      // Sort days: prefer less-loaded days, prefer days without this subject already
-      const sortedDays = [...activeDays].sort((a, b) => {
-        const loadDiff = (dayLoad[dKey(clsK, a)] || 0) - (dayLoad[dKey(clsK, b)] || 0);
-        if (loadDiff !== 0) return loadDiff;
-        const subA = daySubject[dsKey(clsK, a, lesson.subject)] || 0;
-        const subB = daySubject[dsKey(clsK, b, lesson.subject)] || 0;
-        return subA - subB;
-      });
-
-      outer: for (const day of sortedDays) {
-        for (const slotCfg of teachingSlots) {
-          const si  = slotCfg.slot_index;
-          const gk  = gridKey(clsK, day, si);
-          const tk  = lesson.teacher_id ? tKey(lesson.teacher_id, day, si) : null;
-
-          if (placed[gk])           continue; // class busy
-          if (tk && teacherBusy[tk]) continue; // teacher busy
-
-          // Enforce max exams/lessons per day for this class
-          if ((dayLoad[dKey(clsK, day)] || 0) >= maxPerDay) continue;
-
-          if (lesson._double) {
-            // Need next consecutive slot too
-            const nextSi = consecutiveNext[si];
-            if (nextSi === undefined) continue;
-
-            const gk2 = gridKey(clsK, day, nextSi);
-            const tk2 = lesson.teacher_id ? tKey(lesson.teacher_id, day, nextSi) : null;
-
-            if (placed[gk2])            continue;
-            if (tk2 && teacherBusy[tk2]) continue;
-
-            // Place double
-            placed[gk]  = { ...lesson, day_of_week:day, slot_index:si,     is_double_first:true,  is_double_second:false };
-            placed[gk2] = { ...lesson, day_of_week:day, slot_index:nextSi, is_double_first:false, is_double_second:true  };
-            if (tk)  teacherBusy[tk]  = true;
-            if (tk2) teacherBusy[tk2] = true;
-            dayLoad[dKey(clsK, day)]              = (dayLoad[dKey(clsK, day)] || 0) + 2;
-            daySubject[dsKey(clsK, day, lesson.subject)] = (daySubject[dsKey(clsK, day, lesson.subject)] || 0) + 1;
-          } else {
-            placed[gk] = { ...lesson, day_of_week:day, slot_index:si, is_double_first:false, is_double_second:false };
-            if (tk) teacherBusy[tk] = true;
-            dayLoad[dKey(clsK, day)]              = (dayLoad[dKey(clsK, day)] || 0) + 1;
-            daySubject[dsKey(clsK, day, lesson.subject)] = (daySubject[dsKey(clsK, day, lesson.subject)] || 0) + 1;
-          }
-
-          placed_ = true;
-          break outer;
-        }
-      }
-
-      if (!placed_) unplaced.push(lesson);
-    }
-  }
-
-  // Convert to slot rows
-  const slots = Object.values(placed).map(s => ({
-    class_grade      : s.class_grade,
-    stream           : s.stream           || null,
-    day_of_week      : s.day_of_week,
-    slot_index       : s.slot_index,
-    subject          : s.subject,
-    teacher_id       : s.teacher_id       || null,
-    room             : s.room             || null,
-    color            : s.color            || null,
-    is_double_first  : s.is_double_first  || false,
-    is_double_second : s.is_double_second || false,
-  }));
-
-  return { slots, unplaced };
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -294,10 +126,8 @@ export default function Timetable({ currentUser, currentPeriodId, periods = [] }
     ],
   };
   // ── Panel / view ──────────────────────────────────────────────────────
-  const [panel,  setPanel]  = useState('grid');   // 'grid' | 'req' | 'config'
+  const [panel,  setPanel]  = useState('grid');   // 'grid' | 'config'
   const [view,   setView]   = useState('class');  // 'class' | 'teacher'
-  const [mode,   setMode]   = useState('weekly'); // 'weekly' | 'CAT 1' | 'End Term' etc.
-  const [examTypes, setExamTypes] = useState([]); // from profile
   const [ttLabel, setTtLabel]     = useState('Weekly');
 
   // ── Period ────────────────────────────────────────────────────────────
@@ -332,23 +162,6 @@ export default function Timetable({ currentUser, currentPeriodId, periods = [] }
   const [roomPanel,    setRoomPanel]    = useState('list'); // 'list' | 'add'
   const [newRoom,      setNewRoom]      = useState({ name: '', building: '' });
 
-  // ── Requirements ─────────────────────────────────────────────────────
-  const [reqs,         setReqs]         = useState([]);   // for selected class
-  const [allReqs,      setAllReqs]      = useState([]);   // for generator
-  const [reqSubject,   setReqSubject]   = useState('');
-  const [reqTeacher,   setReqTeacher]   = useState('');
-  const [reqPerWeek,   setReqPerWeek]   = useState(1);
-  const [reqDouble,    setReqDouble]    = useState(false);
-  const [reqColor,     setReqColor]     = useState(COLORS[0]);
-  const [reqRoom,      setReqRoom]      = useState('');
-  const [addingReq,    setAddingReq]    = useState(false);
-  const [reqSaving,    setReqSaving]    = useState(false);
-
-  // ── Auto-generate ─────────────────────────────────────────────────────
-  const [preview,      setPreview]      = useState(null); // { slots, unplaced } or null
-  const [generating,   setGenerating]   = useState(false);
-  const [savingGen,    setSavingGen]    = useState(false);
-  const [maxExamsPerDay, setMaxExamsPerDay] = useState(2); 
   const [showUpgrade,    setShowUpgrade]   = useState(false);
 
   // ── Cell edit modal ───────────────────────────────────────────────────
@@ -359,22 +172,9 @@ export default function Timetable({ currentUser, currentPeriodId, periods = [] }
   const [editColor,       setEditColor]        = useState(COLORS[0]);
   const [conflictWarning, setConflictWarning]  = useState(null);
   const [cellSaving,      setCellSaving]       = useState(false);
+  const [isDouble,        setIsDouble]         = useState(false);
 
-  // ── Manual Exam Scheduler ─────────────────────────────────────────────
-  const [examPanel, setExamPanel] = useState('list'); // 'list' | 'add'
-  const [allExamSlots, setAllExamSlots] = useState([]);
-  const [newExam, setNewExam] = useState({
-    date: new Date().toISOString().split('T')[0],
-    start_time: '08:00',
-    end_time: '10:30',
-    subject: '',
-    class_grade: '',
-    stream: '',
-    room: '',
-    teacher_id: '',
-    color: COLORS[0]
-  });
-  const [examSaving, setExamSaving] = useState(false);
+
 
   // ── UI ────────────────────────────────────────────────────────────────
   const [loading,  setLoading]  = useState(true);
@@ -412,7 +212,7 @@ export default function Timetable({ currentUser, currentPeriodId, periods = [] }
     if (!schoolId || !periodId) return;
     (async () => {
       try {
-        const cfg = await getTimetableConfig(schoolId, periodId, mode);
+        const cfg = await getTimetableConfig(schoolId, periodId);
         const resolved = cfg.length > 0
           ? cfg
           : DEFAULT_SLOTS.map((s, i) => ({ ...s, slot_index: i }));
@@ -420,18 +220,9 @@ export default function Timetable({ currentUser, currentPeriodId, periods = [] }
         setDraftConfig(resolved.map(c => ({ ...c })));
       } catch (e) { console.error(e); }
     })();
-  }, [schoolId, periodId, mode]);
+  }, [schoolId, periodId]);
 
-  // ── Load ALL slots for Exam mode (Manual) ────────────────────────────
-  useEffect(() => {
-    if (!schoolId || !periodId || mode === 'weekly' || panel !== 'grid') return;
-    (async () => {
-      try {
-        const data = await getAllTimetableSlots(schoolId, periodId);
-        setAllExamSlots(data.filter(s => s.type === mode));
-      } catch (e) { console.error(e); }
-    })();
-  }, [schoolId, periodId, mode, panel]);
+
 
   // ── Load slots for selected class ─────────────────────────────────────
   useEffect(() => {
@@ -439,12 +230,12 @@ export default function Timetable({ currentUser, currentPeriodId, periods = [] }
     (async () => {
       setLoading(true);
       try {
-        const data = await getTimetableSlots(schoolId, periodId, selClass, selStream || null, mode);
+        const data = await getTimetableSlots(schoolId, periodId, selClass, selStream || null);
         setSlots(data);
       } catch (e) { console.error(e); }
       finally { setLoading(false); }
     })();
-  }, [schoolId, periodId, selClass, selStream, panel, view, mode]);
+  }, [schoolId, periodId, selClass, selStream, panel, view]);
 
   // ── Load teacher slots ────────────────────────────────────────────────
   useEffect(() => {
@@ -452,23 +243,14 @@ export default function Timetable({ currentUser, currentPeriodId, periods = [] }
     (async () => {
       setLoading(true);
       try { 
-        setTeacherSlots(await getTeacherTimetable(schoolId, periodId, selTeacher, mode)); 
+        setTeacherSlots(await getTeacherTimetable(schoolId, periodId, selTeacher)); 
       }
       catch (e) { console.error(e); }
       finally { setLoading(false); }
     })();
-  }, [schoolId, periodId, selTeacher, view, mode]);
+  }, [schoolId, periodId, selTeacher, view]);
 
-  // ── Load requirements for selected class ──────────────────────────────
-  useEffect(() => {
-    if (!schoolId || !periodId || !selClass || panel !== 'req') return;
-    (async () => {
-      try {
-        const data = await getRequirements(schoolId, periodId, selClass, selStream || undefined, mode);
-        setReqs(data);
-      } catch (e) { console.error(e); }
-    })();
-  }, [schoolId, periodId, selClass, selStream, panel, mode]);
+
 
   // ── Load rooms ────────────────────────────────────────────────────────
   useEffect(() => {
@@ -515,6 +297,7 @@ export default function Timetable({ currentUser, currentPeriodId, periods = [] }
     setEditTeacher(existing?.teacher_id || '');
     setEditRoom(existing?.room || '');
     setEditColor(existing?.color || COLORS[0]);
+    setIsDouble(existing?.is_double_first || false);
     setConflictWarning(null);
   };
 
@@ -525,7 +308,7 @@ export default function Timetable({ currentUser, currentPeriodId, periods = [] }
       try {
         // 1. Teacher Conflict
         if (editTeacher) {
-          const tClash = await checkTeacherConflict(schoolId, periodId, editTeacher, editCell.day, editCell.slotIndex, selClass, selStream, mode);
+          const tClash = await checkTeacherConflict(schoolId, periodId, editTeacher, editCell.day, editCell.slotIndex, selClass, selStream);
           if (tClash) {
             setConflictWarning({ type: 'teacher', ...tClash });
             return;
@@ -533,7 +316,7 @@ export default function Timetable({ currentUser, currentPeriodId, periods = [] }
         }
         // 2. Room Conflict
         if (editRoom) {
-          const rClash = await checkRoomConflict(schoolId, periodId, editRoom, editCell.day, editCell.slotIndex, selClass, selStream, mode);
+          const rClash = await checkRoomConflict(schoolId, periodId, editRoom, editCell.day, editCell.slotIndex, selClass, selStream);
           if (rClash) {
             setConflictWarning({ type: 'room', ...rClash });
             return;
@@ -543,7 +326,7 @@ export default function Timetable({ currentUser, currentPeriodId, periods = [] }
       } catch (e) { console.error("Conflict check failed", e); }
     };
     checkConflicts();
-  }, [editTeacher, editRoom, editCell, schoolId, periodId, selClass, selStream, mode]);
+  }, [editTeacher, editRoom, editCell, schoolId, periodId, selClass, selStream]);
 
   // ── Save cell ─────────────────────────────────────────────────────────
   const handleSaveCell = async () => {
@@ -566,6 +349,26 @@ export default function Timetable({ currentUser, currentPeriodId, periods = [] }
     setConflictWarning(null);
     setCellSaving(true);
     try {
+      let isDoubleSupported = false;
+      let nextSlotIndex = null;
+
+      if (isDouble) {
+        const sortedTeaching = [...config]
+          .sort((a,b) => a.slot_index - b.slot_index)
+          .filter(c => !c.is_break);
+        
+        const curIdx = sortedTeaching.findIndex(c => c.slot_index === editCell.slotIndex);
+        if (curIdx !== -1 && curIdx < sortedTeaching.length - 1) {
+          nextSlotIndex = sortedTeaching[curIdx + 1].slot_index;
+          isDoubleSupported = true;
+        } else {
+          setMessage({ type:'err', text: 'Cannot place double lesson at the end of the teaching day.' });
+          setCellSaving(false);
+          return;
+        }
+      }
+
+      // Save first slot
       await saveTimetableSlot(schoolId, periodId, {
         class_grade : selClass,
         stream      : selStream || null,
@@ -575,13 +378,29 @@ export default function Timetable({ currentUser, currentPeriodId, periods = [] }
         teacher_id  : editTeacher || null,
         room        : editRoom.trim() || null,
         color       : editColor,
-        is_double_first  : false,
-        is_double_second : false,
-        type: mode,
+        is_double_first  : isDoubleSupported,
+        is_double_second : false
       });
-      setSlots(await getTimetableSlots(schoolId, periodId, selClass, selStream || null, mode));
+
+      // Save second slot if requested
+      if (isDoubleSupported && nextSlotIndex !== null) {
+        await saveTimetableSlot(schoolId, periodId, {
+          class_grade : selClass,
+          stream      : selStream || null,
+          day_of_week : editCell.day,
+          slot_index  : nextSlotIndex,
+          subject     : editSubject.trim(),
+          teacher_id  : editTeacher || null,
+          room        : editRoom.trim() || null,
+          color       : editColor,
+          is_double_first  : false,
+          is_double_second : true
+        });
+      }
+
+      setSlots(await getTimetableSlots(schoolId, periodId, selClass, selStream || null));
       setEditCell(null);
-      setMessage({ type:'ok', text:'Slot saved.' });
+      setMessage({ type:'ok', text: isDoubleSupported ? 'Double slot saved.' : 'Slot saved.' });
     } catch (e) { setMessage({ type:'err', text: e.message }); }
     finally { setCellSaving(false); }
   };
@@ -591,8 +410,8 @@ export default function Timetable({ currentUser, currentPeriodId, periods = [] }
     e.stopPropagation();
     if (!isAdmin || preview) return;
     try {
-      await clearTimetableSlot(schoolId, periodId, selClass, selStream || null, day, slotIndex, mode);
-      setSlots(await getTimetableSlots(schoolId, periodId, selClass, selStream || null, mode));
+      await clearTimetableSlot(schoolId, periodId, selClass, selStream || null, day, slotIndex);
+      setSlots(await getTimetableSlots(schoolId, periodId, selClass, selStream || null));
     } catch (e) { setMessage({ type:'err', text: e.message }); }
   };
 
@@ -600,7 +419,7 @@ export default function Timetable({ currentUser, currentPeriodId, periods = [] }
   const handleSaveConfig = async () => {
     setConfigSaving(true);
     try {
-      await saveTimetableConfig(schoolId, periodId, draftConfig, mode);
+      await saveTimetableConfig(schoolId, periodId, draftConfig);
       setConfig(draftConfig.map((s, i) => ({ ...s, slot_index: i })));
       setMessage({ type:'ok', text:'Time slot configuration saved.' });
       setPanel('grid');
@@ -690,206 +509,7 @@ export default function Timetable({ currentUser, currentPeriodId, periods = [] }
     setMessage({ type:'ok', text: `Loaded standard ${level.replace('-',' ')} day template.` });
   };
 
-  // ── Manual Exam Scheduler Logic ──────────────────────────────────────
-  useEffect(() => {
-    if (mode === 'weekly' || !newExam.subject) return;
-    const checkConflicts = async () => {
-      try {
-        const clash = await checkExamConflict({
-          schoolId, periodId,
-          date: newExam.date,
-          startTime: newExam.start_time,
-          endTime: newExam.end_time,
-          teacherId: newExam.teacher_id,
-          room: newExam.room,
-          currentClass: selClass,
-          currentStream: selStream
-        });
-        setConflictWarning(clash);
-      } catch (e) { console.error(e); }
-    };
-    const t = setTimeout(checkConflicts, 400);
-    return () => clearTimeout(t);
-  }, [newExam.date, newExam.start_time, newExam.end_time, newExam.teacher_id, newExam.room, mode, schoolId, periodId, selClass, selStream]);
 
-  const handleSaveExam = async () => {
-    if (!newExam.date || !newExam.start_time || !newExam.end_time || !newExam.subject) {
-      setMessage({ type:'err', text:'Please fill in all required fields (*).' });
-      return;
-    }
-    setExamSaving(true);
-    try {
-      // Use timestamp as a unique slot_index for manual list items
-      const slotIdx = Math.floor(Date.now() / 1000) % 2147483647; 
-      
-      await saveTimetableSlot(schoolId, periodId, {
-        class_grade : selClass,
-        stream      : selStream || null,
-        day_of_week : new Date(newExam.date).toLocaleDateString('en-US', { weekday: 'long' }),
-        slot_index  : slotIdx,
-        subject     : newExam.subject,
-        teacher_id  : newExam.teacher_id || null,
-        room        : newExam.room || null,
-        color       : newExam.color,
-        date        : newExam.date,
-        start_time  : newExam.start_time,
-        end_time    : newExam.end_time,
-        type        : mode
-      });
-
-      // Reload
-      const data = await getAllTimetableSlots(schoolId, periodId);
-      setAllExamSlots(data.filter(s => s.type === mode));
-      setMessage({ type:'ok', text:'Exam session registered successfully.' });
-      setExamPanel('list');
-      setNewExam({ ...newExam, subject: '' }); // keep date/times for next entry
-    } catch (e) { setMessage({ type:'err', text: e.message }); }
-    finally { setExamSaving(false); }
-  };
-
-  const handleDeleteExam = async (exam) => {
-    if (!window.confirm('Remove this exam session?')) return;
-    try {
-      await clearTimetableSlot(schoolId, periodId, exam.class_grade, exam.stream, exam.day_of_week, exam.slot_index, mode);
-      const data = await getAllTimetableSlots(schoolId, periodId);
-      setAllExamSlots(data.filter(s => s.type === mode));
-      setMessage({ type:'ok', text:'Exam session removed.' });
-    } catch (e) { setMessage({ type:'err', text: e.message }); }
-  };
-
-  const addDraftSlot = () => {
-    setDraftConfig(p => {
-      const last = p[p.length - 1];
-      const start = last ? last.end_time : '14:00';
-      const [h, m] = start.split(':').map(Number);
-      const total = h * 60 + m + 40;
-      const end = `${String(Math.floor(total/60)).padStart(2,'0')}:${String(total%60).padStart(2,'0')}`;
-      return [...p, {
-        label: p.filter(s => !s.is_break).length > 0 ? `Period ${p.filter(s => !s.is_break).length + 1}` : 'Period 1',
-        start_time: start,
-        end_time: end,
-        is_break: false,
-      }];
-    });
-  };
-  const updateDraft = (i, f, v) => setDraftConfig(p => p.map((s, idx) => idx === i ? { ...s, [f]: v } : s));
-  const removeDraft = (i) => setDraftConfig(p => p.filter((_, idx) => idx !== i));
-
-  // ── Save requirement ──────────────────────────────────────────────────
-  const handleSaveReq = async () => {
-    if (!reqSubject.trim()) return;
-    setReqSaving(true);
-    try {
-      await saveRequirement(schoolId, periodId, {
-        class_grade      : selClass,
-        stream           : selStream || null,
-        subject          : reqSubject.trim(),
-        teacher_id       : reqTeacher || null,
-        periods_per_week : Number(reqPerWeek) || 1,
-        allow_double     : reqDouble,
-        room             : reqRoom || null,
-        color            : reqColor,
-        type             : mode,
-      });
-      const updated = await getRequirements(schoolId, periodId, selClass, selStream || undefined, mode);
-      setReqs(updated);
-      setReqSubject(''); setReqTeacher(''); setReqRoom(''); setReqPerWeek(1); setReqDouble(false);
-      setReqColor(COLORS[updated.length % COLORS.length]);
-      setAddingReq(false);
-      setMessage({ type:'ok', text:'Requirement saved.' });
-    } catch (e) { setMessage({ type:'err', text: e.message }); }
-    finally { setReqSaving(false); }
-  };
-
-  const handleDeleteReq = async (subject) => {
-    try {
-      await deleteRequirement(schoolId, periodId, selClass, selStream || null, subject, mode);
-      setReqs(p => p.filter(r => r.subject !== subject));
-    } catch (e) { setMessage({ type:'err', text: e.message }); }
-  };
-
-  // ── Auto-import from subject_assignments ──────────────────────────────
-  const handleAutoImport = async () => {
-    try {
-      const assignments = await getClassSubjectAssignments(schoolId, periodId, selClass, selStream || null);
-      if (assignments.length === 0) {
-        setMessage({ type:'err', text:'No subject assignments found for this class.' });
-        return;
-      }
-      let count = 0;
-      for (const a of assignments) {
-        if (reqs.some(r => r.subject === a.subject)) continue;
-        await saveRequirement(schoolId, periodId, {
-          class_grade      : selClass,
-          stream           : selStream || null,
-          subject          : a.subject,
-          teacher_id       : a.teacher_id || null,
-          periods_per_week : 5,
-          allow_double     : false,
-          color            : COLORS[count % COLORS.length],
-          type             : mode,
-        });
-        count++;
-      }
-      setReqs(await getRequirements(schoolId, periodId, selClass, selStream || undefined, mode));
-      setMessage({ type:'ok', text:`Imported ${count} subject${count !== 1 ? 's' : ''}.` });
-    } catch (e) { setMessage({ type:'err', text: e.message }); }
-  };
-
-  // ── Generate timetable ────────────────────────────────────────────────
-  const handleGenerate = async () => {
-    if (config.length === 0) {
-      setMessage({ type:'err', text:'Configure time slots first.' });
-      return;
-    }
-
-    const enabled = await isFeatureEnabled('auto_timetable');
-    if (!enabled) {
-      setShowUpgrade(true);
-      return;
-    }
-
-    setGenerating(true);
-    try {
-      // Load all requirements across all classes for THIS mode
-      const all = await getAllRequirements(schoolId, periodId, mode);
-      setAllReqs(all);
-
-      if (all.length === 0) {
-        setMessage({ type:'err', text:'No requirements found. Add lesson requirements first.' });
-        return;
-      }
-
-      const configSorted = [...config].sort((a, b) => a.slot_index - b.slot_index);
-      const limitPerDay = (mode === 'weekly') ? 999 : (maxExamsPerDay || 2);
-      const result = generateTimetable(configSorted, all, activeDays, limitPerDay);
-
-      setPreview(result);
-      setPanel('grid');
-      if (result.unplaced.length > 0) {
-        setMessage({ type:'err', text: `Generated with ${result.unplaced.length} unplaced lesson(s). See warnings below.` });
-      } else {
-        setMessage({ type:'ok', text: `Generated ${result.slots.length} slots with no conflicts. Review and save.` });
-      }
-    } catch (e) { setMessage({ type:'err', text: e.message }); }
-    finally { setGenerating(false); }
-  };
-
-  // ── Save generated timetable ──────────────────────────────────────────
-  const handleSaveGenerated = async () => {
-    if (!preview) return;
-    setSavingGen(true);
-    try {
-      const classGrades = [...new Set(preview.slots.map(s => s.class_grade))];
-      await clearAndSaveTimetable(schoolId, periodId, preview.slots, classGrades, mode);
-      // Reload current class view
-      const updated = await getTimetableSlots(schoolId, periodId, selClass, selStream || null, mode);
-      setSlots(updated);
-      setPreview(null);
-      setMessage({ type:'ok', text: `Timetable saved for all classes in ${mode} mode!` });
-    } catch (e) { setMessage({ type:'err', text: e.message }); }
-    finally { setSavingGen(false); }
-  };
 
   // ── Computed ──────────────────────────────────────────────────────────
   const classStreams    = selClass ? (streams[selClass] || []) : [];
@@ -907,7 +527,6 @@ export default function Timetable({ currentUser, currentPeriodId, periods = [] }
   // Weekly slot capacity info
   const teachingSlotCount = config.filter(c => !c.is_break).length;
   const weeklyCapacity    = teachingSlotCount * activeDays.length;
-  const weeklyRequired    = reqs.reduce((s, r) => s + (r.periods_per_week || 1), 0);
 
   // ─────────────────────────────────────────────────────────────────────
   // RENDER
@@ -922,40 +541,18 @@ export default function Timetable({ currentUser, currentPeriodId, periods = [] }
       {/* ── Header ── */}
       <div className="tt-header">
         <div className="tt-title-group">
-          <div className="tt-icon">{mode === 'exam' ? <AlertIcon size={24} color="#F59E0B" /> : <CalendarIcon size={24} />}</div>
+          <div className="tt-icon"><CalendarIcon size={24} /></div>
           <div>
-            <div className="tt-title">{mode === 'exam' ? 'Exam Scheduling' : 'Timetable'}</div>
+            <div className="tt-title">Timetable</div>
             <div className="tt-sub">
               {selClass || '—'}
               {selClass && <span className={`tt-level-badge ${levelBadge.cls}`}>{levelBadge.label}</span>}
-              {mode !== 'weekly' && <span className="tt-mode-badge">{mode.toUpperCase()}</span>}
-              {mode === 'weekly' && ttLabel !== 'Weekly' && <span className="tt-mode-badge">{ttLabel.toUpperCase()}</span>}
+              {ttLabel !== 'Weekly' && <span className="tt-mode-badge">{ttLabel.toUpperCase()}</span>}
             </div>
           </div>
         </div>
 
-        {/* Mode Switcher */}
-        <div className="tt-mode-toggle">
-          <button 
-            className={`tt-mode-btn ${mode === 'weekly' ? 'active' : ''}`}
-            onClick={() => setMode('weekly')}
-          >
-            {ttLabel}
-          </button>
-          
-          {examTypes.map(et => (
-            <button 
-              key={et}
-              className={`tt-mode-btn ${mode === et ? 'active' : ''}`}
-              onClick={() => {
-                setMode(et);
-                setPanel('grid');
-              }}
-            >
-              {et}
-            </button>
-          ))}
-        </div>
+
 
         <div className="tt-header-actions">
           {panel === 'grid' && view === 'class' && mode === 'weekly' && !preview && (
@@ -964,14 +561,7 @@ export default function Timetable({ currentUser, currentPeriodId, periods = [] }
               stream: selStream, period: activePeriod, config, slots, activeDays
             })}><PrintIcon size={14} /> Print Class</button>
           )}
-          {panel === 'grid' && mode !== 'weekly' && (
-            <button className="tt-btn tt-btn-primary" onClick={() => printExamSchedule({
-              school: { name: currentUser?.schoolName },
-              title: mode,
-              period: activePeriod,
-              exams: allExamSlots
-            })}><PrintIcon size={14} /> Print Exam Schedule</button>
-          )}
+
           {panel === 'grid' && view === 'teacher' && (
             <div style={{ display:'flex', gap:8 }}>
               {selTeacher && (
@@ -1006,7 +596,7 @@ export default function Timetable({ currentUser, currentPeriodId, periods = [] }
 
       {/* ── Panel tabs ── */}
       <div className="tt-panel-tabs">
-        {[['grid',<><CalendarIcon size={14} /> Timetable</>],['req',<><BookIcon size={14} /> Requirements</>],['config',<><SettingsIcon size={14} /> Slot Config</>]].map(([k, label]) => (
+        {[['grid',<><CalendarIcon size={14} /> Timetable</>],['config',<><SettingsIcon size={14} /> Slot Config</>]].map(([k, label]) => (
           <button key={k} className={`tt-panel-tab ${panel === k ? 'active' : ''}`}
             onClick={() => setPanel(k)}>{label}</button>
         ))}
@@ -1024,75 +614,6 @@ export default function Timetable({ currentUser, currentPeriodId, periods = [] }
          ═══════════════════════════════════════════════════════════════ */}
       {panel === 'grid' && (
         <>
-          {/* Generate Button (Admin only) */}
-          {isAdmin && !preview && (
-            <div style={{ marginBottom: 16, display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: 12 }}>
-              {mode !== 'weekly' && (
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <label style={{ fontSize: '.75rem', fontWeight: 600, color: '#5A6B5C' }}>
-                    Max {mode.includes('CAT') ? 'CATs' : 'Exams'} per day:
-                  </label>
-                  <Select 
-                    value={maxExamsPerDay}
-                    onChange={e => setMaxExamsPerDay(Number(e.target.value))}
-                    options={[
-                      { id: 1, label: '1' },
-                      { id: 2, label: '2' },
-                      { id: 3, label: '3' },
-                      { id: 4, label: '4' },
-                      { id: 5, label: '5' },
-                    ]}
-                    style={{ width: 70 }}
-                    variant="minimal"
-                  />
-                </div>
-              )}
-              <button className="tt-generate-btn" disabled={generating} onClick={handleGenerate}>
-                {generating ? (
-                  <><div className="tt-spin" style={{ width: 14, height: 14, borderWidth: 2, margin: 0, marginRight: 8 }} /> Generating...</>
-                ) : (
-                  <><SparklesIcon size={16} /> Auto-Generate {mode === 'weekly' ? 'Timetable' : 'Schedule'}</>
-                )}
-              </button>
-            </div>
-          )}
-
-          {/* Preview banner */}
-          {preview && (
-            <div className="tt-preview-banner">
-              <div className="tt-preview-banner-text">
-                <RocketIcon size={18} /> 
-                <div style={{ display:'flex', flexDirection:'column' }}>
-                  <span>Preview Mode</span>
-                  <span style={{ fontSize:'.68rem', fontWeight:400, opacity:.8 }}>{preview.slots.length} slots generated. Discard or save to apply changes.</span>
-                </div>
-              </div>
-              <div className="tt-preview-actions">
-                <button className="tt-btn tt-btn-sm" onClick={() => { setPreview(null); setMessage(null); }}>
-                  Discard
-                </button>
-                <button className="tt-btn tt-btn-success tt-btn-sm" disabled={savingGen} onClick={handleSaveGenerated}>
-                  {savingGen ? 'Saving...' : <><SaveIcon size={14} /> Save Timetable</>}
-                </button>
-              </div>
-            </div>
-          )}
-
-          {/* Unplaced warnings */}
-          {preview?.unplaced?.length > 0 && (
-            <div className="tt-unplaced">
-              <div className="tt-unplaced-title">
-                <AlertIcon size={16} /> {preview.unplaced.length} lesson{preview.unplaced.length !== 1 ? 's' : ''} could not be placed
-                — not enough free slots. Reduce periods/week or add more time slots.
-              </div>
-              {preview.unplaced.map((u, i) => (
-                <div key={i} className="tt-unplaced-item">
-                  {u.class_grade}{u.stream ? ` ${u.stream}` : ''} — {u.subject}
-                  {u._double ? ' (double)' : ''}
-                </div>
-              ))}
-            </div>
-          )}
 
           {/* Controls */}
           <div className="tt-controls">
@@ -1138,170 +659,6 @@ export default function Timetable({ currentUser, currentPeriodId, periods = [] }
             <div style={{ padding:48, textAlign:'center' }}>
               <div className="tt-spin" />
               <div style={{ fontSize:'.78rem', color:'#5A6B5C' }}>Loading timetable...</div>
-            </div>
-          ) : mode !== 'weekly' ? (
-            <div className="tt-exam-scheduler">
-              <div className="tt-exam-switch">
-                <button 
-                  className={`tt-exam-switch-btn ${examPanel === 'list' ? 'active' : ''}`}
-                  onClick={() => setExamPanel('list')}
-                >
-                  <CalendarIcon size={14} /> Schedule List
-                </button>
-                <button 
-                  className={`tt-exam-switch-btn ${examPanel === 'add' ? 'active' : ''}`}
-                  onClick={() => setExamPanel('add')}
-                >
-                  <PlusIcon size={14} /> Register Exam Session
-                </button>
-              </div>
-
-              {examPanel === 'add' ? (
-                <div className="tt-exam-form-wrap">
-                  <div className="tt-exam-form">
-                    <div className="tt-exam-form-grid">
-                      <div className="tt-exam-field">
-                        <label>Date *</label>
-                        <input 
-                          type="date" 
-                          value={newExam.date} 
-                          onChange={e => setNewExam({ ...newExam, date: e.target.value })} 
-                        />
-                      </div>
-                      <div className="tt-exam-field">
-                        <label>Start / End Time *</label>
-                        <div style={{ display:'flex', gap:6, marginBottom:8 }}>
-                          <button 
-                            className="tt-chip" 
-                            style={{ fontSize:'.62rem', padding:'2px 8px' }}
-                            onClick={() => setNewExam({ ...newExam, start_time:'08:00', end_time:'10:30' })}
-                          >
-                            Morning (8:00 - 10:30)
-                          </button>
-                          <button 
-                            className="tt-chip" 
-                            style={{ fontSize:'.62rem', padding:'2px 8px' }}
-                            onClick={() => setNewExam({ ...newExam, start_time:'14:00', end_time:'16:30' })}
-                          >
-                            Afternoon (14:00 - 16:30)
-                          </button>
-                        </div>
-                        <div style={{ display:'flex', gap:8 }}>
-                          <input 
-                            type="time" 
-                            value={newExam.start_time} 
-                            onChange={e => setNewExam({ ...newExam, start_time: e.target.value })} 
-                            style={{ flex:1 }}
-                          />
-                          <input 
-                            type="time" 
-                            value={newExam.end_time} 
-                            onChange={e => setNewExam({ ...newExam, end_time: e.target.value })} 
-                            style={{ flex:1 }}
-                          />
-                        </div>
-                      </div>
-                      <div className="tt-exam-field">
-                        <label>Subject *</label>
-                        <input 
-                          type="text" 
-                          placeholder="e.g. Mathematics Paper 1"
-                          value={newExam.subject} 
-                          onChange={e => setNewExam({ ...newExam, subject: e.target.value })} 
-                        />
-                      </div>
-                      <div className="tt-exam-field">
-                        <label>Class/Grade</label>
-                        <Select 
-                          value={newExam.class_grade || selClass}
-                          onChange={e => setNewExam({ ...newExam, class_grade: e.target.value })}
-                          options={classes.map(c => ({ id: c, label: c }))}
-                          variant="minimal"
-                        />
-                      </div>
-                      <div className="tt-exam-field">
-                        <label>Teacher (Supervisor)</label>
-                        <Select 
-                          value={newExam.teacher_id}
-                          onChange={e => setNewExam({ ...newExam, teacher_id: e.target.value })}
-                          options={teachers.map(t => ({ id: t.id, label: t.name }))}
-                          placeholder="Select Teacher"
-                          variant="minimal"
-                        />
-                      </div>
-                      <div className="tt-exam-field">
-                        <label>Room / Venue</label>
-                        <Select 
-                          value={newExam.room}
-                          onChange={e => setNewExam({ ...newExam, room: e.target.value })}
-                          options={rooms.map(r => ({ id: r.name, label: r.name }))}
-                          placeholder="Select Room"
-                          variant="minimal"
-                        />
-                      </div>
-                    </div>
-
-                    {conflictWarning && (
-                      <div className="tt-exam-conflict">
-                        <AlertIcon size={16} />
-                        <div>
-                          <strong>Soft Conflict Detected:</strong> {conflictWarning.teacher_id ? 'Teacher' : 'Room'} is already booked for {conflictWarning.subject} at this time.
-                        </div>
-                      </div>
-                    )}
-
-                    <div className="tt-exam-actions">
-                      <button className="tt-btn" onClick={() => setExamPanel('list')}>Cancel</button>
-                      <button 
-                        className="tt-btn tt-btn-primary" 
-                        disabled={examSaving}
-                        onClick={handleSaveExam}
-                      >
-                        {examSaving ? 'Saving...' : 'Save Session'}
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              ) : (
-                <div className="tt-exam-list-wrap">
-                  {allExamSlots.length === 0 ? (
-                    <div className="tt-empty-mini">
-                      No exam sessions registered for this mode yet.
-                    </div>
-                  ) : (
-                    <table className="tt-exam-table">
-                      <thead>
-                        <tr>
-                          <th>Date</th>
-                          <th>Time</th>
-                          <th>Subject</th>
-                          <th>Class</th>
-                          <th>Room</th>
-                          <th>Teacher</th>
-                          <th>Action</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {[...allExamSlots].sort((a,b) => (a.date||'').localeCompare(b.date||'')).map((ex, i) => (
-                          <tr key={i}>
-                            <td>{ex.date ? new Date(ex.date).toLocaleDateString('en-KE', { weekday:'short', day:'numeric', month:'short' }) : '—'}</td>
-                            <td><strong>{ex.start_time} - {ex.end_time}</strong></td>
-                            <td>{ex.subject}</td>
-                            <td><span className="tt-level tt-level-cbc-primary" style={{ padding:'2px 6px', fontSize:'.7rem' }}>{ex.class_grade}</span></td>
-                            <td>{ex.room || '—'}</td>
-                            <td>{teachers.find(t => t.id === ex.teacher_id)?.name || '—'}</td>
-                            <td>
-                              <button className="tt-btn-icon tt-btn-danger" onClick={() => handleDeleteExam(ex)}>
-                                <CrossIcon size={14} />
-                              </button>
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  )}
-                </div>
-              )}
             </div>
           ) : (
             <div className="tt-grid-wrap">
@@ -1804,16 +1161,12 @@ export default function Timetable({ currentUser, currentPeriodId, periods = [] }
             <label className="tt-field-label">Subject *</label>
             <input className="tt-field" type="text" placeholder="e.g. Mathematics"
               value={editSubject} onChange={e => setEditSubject(e.target.value)} />
-            {reqs.length > 0 && (
+            {suggestedSubs && suggestedSubs.length > 0 && (
               <div className="tt-suggestion-chips" style={{ marginTop:6 }}>
-                {reqs.map(r => (
-                  <button key={r.subject} className={`tt-chip ${editSubject === r.subject ? 'active' : ''}`}
-                    onClick={() => {
-                      setEditSubject(r.subject);
-                      if (r.teacher_id) setEditTeacher(r.teacher_id);
-                      if (r.color) setEditColor(r.color);
-                    }}>
-                    {r.subject}
+                {suggestedSubs.slice(0, 8).map(s => (
+                  <button key={s} className={`tt-chip ${editSubject === s ? 'active' : ''}`}
+                    onClick={() => setEditSubject(s)}>
+                    {s}
                   </button>
                 ))}
               </div>
@@ -1892,6 +1245,12 @@ export default function Timetable({ currentUser, currentPeriodId, periods = [] }
                   style={{ background: c }} onClick={() => setEditColor(c)} />
               ))}
             </div>
+
+            {/* Double Lesson Checkbox */}
+            <label className="tt-double-check" style={{ marginTop:16, display:'flex', alignItems:'center', gap:8, cursor:'pointer', fontSize:'.8rem' }}>
+              <input type="checkbox" checked={isDouble} onChange={e => setIsDouble(e.target.checked)} />
+              Double lesson (consecutive slot handling)
+            </label>
 
             {/* Actions */}
             <div className="tt-modal-actions">

@@ -30,10 +30,8 @@ export var ALL_SYSTEM_MODULES = [
   { slug: 'cbc_reports',     label: 'CBC Report Cards (PP1–G9)',   icon: GradingIcon,     desc: 'CBC competency-based learner portfolios' },
   { slug: '844_reports',     label: 'KCSE / KCPE Report Cards',    icon: GradingIcon,     desc: '8-4-4 curriculum grading and report generation' },
   { slug: 'cbc_competency',  label: 'CBC Competency Grading',      icon: CheckIcon,       desc: 'Strand-level rubric scoring for CBC' },
-  { slug: 'exam_scheduling', label: 'Exam Scheduling',             icon: CalendarIcon,    desc: 'Plan and publish exam timetables per class' },
   // ── Timetable ──
   { slug: 'timetable',       label: 'Timetable Builder',           icon: TimetableIcon,   desc: 'Manual class schedule creation' },
-  { slug: 'auto_timetable',  label: 'Automated Timetable',         icon: TimetableIcon,   desc: 'AI-powered schedule generation' },
   // ── Finance ──
   { slug: 'fees',            label: 'Fee & Billing Engine',        icon: FeesIcon,        desc: 'Student balances, payments, tracking' },
   { slug: 'fee_structure',   label: 'Fee Structure Builder',       icon: FeesIcon,        desc: 'Define per-class, per-term fee schedules' },
@@ -78,9 +76,7 @@ export var MODULE_LABELS = {
   cbc_reports:     'CBC Report Cards (PP1–G9)',
   '844_reports':   'KCSE / KCPE Report Cards',
   cbc_competency:  'CBC Competency Grading',
-  exam_scheduling: 'Exam Scheduling',
   timetable:       'Timetable Builder',
-  auto_timetable:  'Automated Timetable Generation',
   fees:            'Fee & Billing Engine',
   fee_structure:   'Fee Structure Builder',
   fee_statements:  'Student Fee Statements',
@@ -113,7 +109,6 @@ export var FEATURE_SUGGESTIONS = [
   'Student Fee Statements',
   'M-PESA Receipt Generation',
   'Timetable Builder',
-  'Automated Timetable Generation',
   'NEMIS Data Export',
   'Attendance Tracking',
   'CBC Competency Grading',
@@ -129,7 +124,6 @@ export var FEATURE_SUGGESTIONS = [
   'Custom Branding',
   'API Access',
   'Bulk Student Import (CSV)',
-  'Exam Scheduling',
   'Library Management',
 ];
 

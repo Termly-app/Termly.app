@@ -3027,14 +3027,13 @@ export async function saveTimetableConfig(schoolId, periodId, slots, type = 'cla
   if (error) throw error;
 }
 
-export async function getTimetableSlots(schoolId, periodId, classGrade, stream = null, type = 'class') {
+export async function getTimetableSlots(schoolId, periodId, classGrade, stream = null) {
   let query = supabase
     .from('timetable_slots')
     .select('*, teachers(id, name, staff_code)')
     .eq('school_id', schoolId)
     .eq('period_id', periodId)
-    .eq('class_grade', classGrade)
-    .eq('type', type); // Filter by mode (class vs exam)
+    .eq('class_grade', classGrade);
   
   if (stream) query = query.eq('stream', stream);
   else query = query.is('stream', null);
@@ -3054,14 +3053,13 @@ export async function getAllTimetableSlots(schoolId, periodId) {
   return data || [];
 }
 
-export async function getTeacherTimetable(schoolId, periodId, teacherId, type = 'class') {
+export async function getTeacherTimetable(schoolId, periodId, teacherId) {
   const { data, error } = await supabase
     .from('timetable_slots')
     .select('*, teachers(id, name, staff_code)')
     .eq('school_id', schoolId)
     .eq('period_id', periodId)
     .eq('teacher_id', teacherId)
-    .eq('type', type)
     .order('slot_index', { ascending: true });
   if (error) throw error;
   return data || [];
@@ -3082,17 +3080,13 @@ export async function saveTimetableSlot(schoolId, periodId, slot) {
       room: slot.room || null,
       color: slot.color || null,
       is_double_first: slot.is_double_first || false,
-      is_double_second: slot.is_double_second || false,
-      date: slot.date || null,
-      start_time: slot.start_time || null,
-      end_time: slot.end_time || null,
-      type: slot.type || 'class'
-    }, { onConflict: 'school_id,period_id,class_grade,stream,day_of_week,slot_index,type' });
+      is_double_second: slot.is_double_second || false
+    }, { onConflict: 'school_id,period_id,class_grade,stream,day_of_week,slot_index' });
   if (error) throw error;
   return true;
 }
 
-export async function clearTimetableSlot(schoolId, periodId, classGrade, stream, day, slotIndex, type = 'class') {
+export async function clearTimetableSlot(schoolId, periodId, classGrade, stream, day, slotIndex) {
   let query = supabase
     .from('timetable_slots')
     .delete()
@@ -3100,8 +3094,7 @@ export async function clearTimetableSlot(schoolId, periodId, classGrade, stream,
     .eq('period_id', periodId)
     .eq('class_grade', classGrade)
     .eq('day_of_week', day)
-    .eq('slot_index', slotIndex)
-    .eq('type', type);
+    .eq('slot_index', slotIndex);
   
   if (stream) query = query.eq('stream', stream);
   else query = query.is('stream', null);
@@ -3164,13 +3157,12 @@ export async function deleteTimetableRoom(id) {
   return true;
 }
 
-export async function clearAndSaveTimetable(schoolId, periodId, slots, classGrades, type = 'class') {
+export async function clearAndSaveTimetable(schoolId, periodId, slots, classGrades) {
   const { error: delErr } = await supabase
     .from('timetable_slots')
     .delete()
     .eq('school_id', schoolId)
     .eq('period_id', periodId)
-    .eq('type', type)
     .in('class_grade', classGrades);
   if (delErr) throw delErr;
 
@@ -3190,8 +3182,7 @@ export async function clearAndSaveTimetable(schoolId, periodId, slots, classGrad
     is_double_second: s.is_double_second || false,
     date: s.date || null,
     start_time: s.start_time || null,
-    end_time: s.end_time || null,
-    type: type
+    end_time: s.end_time || null
   }));
 
   const CHUNK_SIZE = 100;
@@ -3202,82 +3193,19 @@ export async function clearAndSaveTimetable(schoolId, periodId, slots, classGrad
   }
 }
 
-export async function getRequirements(schoolId, periodId, classGrade, stream = null, type = 'class') {
-  let query = supabase
-    .from('timetable_requirements')
-    .select('*, teachers(id, name)')
-    .eq('school_id', schoolId)
-    .eq('period_id', periodId)
-    .eq('type', type);
-  
-  if (classGrade) query = query.eq('class_grade', classGrade);
-  if (stream !== undefined) {
-    query = stream ? query.eq('stream', stream) : query.is('stream', null);
-  }
-  
-  const { data, error } = await query.order('subject', { ascending: true });
-  if (error) throw error;
-  return data || [];
-}
 
-export async function getAllRequirements(schoolId, periodId, type = 'class') {
-  const { data, error } = await supabase
-    .from('timetable_requirements')
-    .select('*, teachers(id, name)')
-    .eq('school_id', schoolId)
-    .eq('period_id', periodId)
-    .eq('type', type);
-  if (error) throw error;
-  return data || [];
-}
 
-export async function saveRequirement(schoolId, periodId, req) {
-  const { error } = await supabase
-    .from('timetable_requirements')
-    .upsert({
-      school_id: schoolId,
-      period_id: periodId,
-      class_grade: req.class_grade,
-      stream: req.stream || null,
-      subject: req.subject,
-      teacher_id: req.teacher_id || null,
-      periods_per_week: req.periods_per_week || 1,
-      allow_double: req.allow_double || false,
-      color: req.color || null,
-      type: req.type || 'class'
-    }, { onConflict: 'school_id,period_id,class_grade,stream,subject,type' });
-  if (error) throw error;
-}
-
-export async function deleteRequirement(schoolId, periodId, classGrade, stream, subject, type = 'class') {
-  let query = supabase
-    .from('timetable_requirements')
-    .delete()
-    .eq('school_id', schoolId)
-    .eq('period_id', periodId)
-    .eq('class_grade', classGrade)
-    .eq('subject', subject)
-    .eq('type', type || 'class');
-  
-  if (stream) query = query.eq('stream', stream);
-  else query = query.is('stream', null);
-
-  const { error } = await query;
-  if (error) throw error;
-}
-
-export async function checkTeacherConflict(schoolId, periodId, teacherId, day, slotIndex, currentClass, currentStream, type = 'class') {
+export async function checkTeacherConflict(schoolId, periodId, teacherId, day, slotIndex, currentClass, currentStream) {
   if (!teacherId) return null;
   
   const { data, error } = await supabase
     .from('timetable_slots')
-    .select('class_grade, stream, subject, type')
+    .select('class_grade, stream, subject')
     .eq('school_id', schoolId)
     .eq('period_id', periodId)
     .eq('teacher_id', teacherId)
     .eq('day_of_week', day)
-    .eq('slot_index', slotIndex)
-    .eq('type', type);
+    .eq('slot_index', slotIndex);
   
   if (error) throw error;
   if (!data || data.length === 0) return null;
@@ -3287,18 +3215,17 @@ export async function checkTeacherConflict(schoolId, periodId, teacherId, day, s
   return filtered.length > 0 ? filtered[0] : null;
 }
 
-export async function checkRoomConflict(schoolId, periodId, room, day, slotIndex, currentClass, currentStream, type = 'class') {
+export async function checkRoomConflict(schoolId, periodId, room, day, slotIndex, currentClass, currentStream) {
   if (!room) return null;
   
   const { data, error } = await supabase
     .from('timetable_slots')
-    .select('class_grade, stream, subject, type')
+    .select('class_grade, stream, subject')
     .eq('school_id', schoolId)
     .eq('period_id', periodId)
     .eq('room', room)
     .eq('day_of_week', day)
-    .eq('slot_index', slotIndex)
-    .eq('type', type);
+    .eq('slot_index', slotIndex);
   
   if (error) throw error;
   if (!data || data.length === 0) return null;
@@ -3308,43 +3235,6 @@ export async function checkRoomConflict(schoolId, periodId, room, day, slotIndex
   return filtered.length > 0 ? filtered[0] : null;
 }
 
-export async function checkExamConflict({ schoolId, periodId, date, startTime, endTime, teacherId, room, currentClass, currentStream }) {
-  const { data, error } = await supabase
-    .from('timetable_slots')
-    .select('class_grade, stream, subject, start_time, end_time, teacher_id, room')
-    .eq('school_id', schoolId)
-    .eq('period_id', periodId)
-    .eq('date', date)
-    .eq('type', 'exam');
-  
-  if (error) throw error;
-  if (!data || data.length === 0) return null;
-
-  // Filter overlapping times
-  const overlapping = data.filter(ex => {
-    // Check if timings overlap
-    const s1 = startTime;
-    const e1 = endTime;
-    const s2 = ex.start_time;
-    const e2 = ex.end_time;
-    
-    // overlap: (s1 < e2) && (e1 > s2)
-    const overlaps = s1 < e2 && e1 > s2;
-    if (!overlaps) return false;
-
-    // Is it a teacher conflict?
-    if (teacherId && ex.teacher_id === teacherId) return true;
-    
-    // Is it a room conflict?
-    if (room && ex.room === room) return true;
-
-    return false;
-  });
-
-  // Exclude current class/stream
-  const conflict = overlapping.find(ex => ex.class_grade !== currentClass || ex.stream !== (currentStream || null));
-  return conflict || null;
-}
 
 export async function getClassSubjectAssignments(schoolId, periodId, classGrade, stream = null) {
   let query = supabase
