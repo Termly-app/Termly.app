@@ -257,9 +257,9 @@
 .sa .ig-st { font-size: 0.85rem; font-weight: 700; color: #fff !important; }
 .sa .ig-st.is-ok { color: var(--te) !important; }
 
-/* KILL TR:HOVER LEAK FROM APP.CSS */
-.theme-onyx .sa table tr:hover td { background: rgba(255,255,255,0.03) !important; }
-.theme-onyx .sa .li:hover { background: rgba(255,255,255,0.02); }
+/* KILL TR:HOVER LEAK FROM APP.CSS & FIX CONTRAST */
+.theme-onyx .sa table tr:hover td { background: rgba(255,255,255,0.1) !important; cursor: pointer; }
+.theme-onyx .sa .li:hover { background: rgba(255,255,255,0.05); }
 
 
 /* ─── Toast ──────────────────────────────────────────────────────────────── */

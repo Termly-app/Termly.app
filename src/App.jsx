@@ -13,6 +13,7 @@ import {
   isFeatureEnabled,
   checkIsSubscriptionActive,
   subscribeToSchoolChanges,
+  isShadowMode,
 } from './data/store';
 
 // Pages (Lazy Loaded)
@@ -585,6 +586,36 @@ function App() {
           boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
         }}>
           You are currently offline. Critical actions have been paused to prevent data loss.
+        </div>
+      )}
+
+      {isShadowMode() && (
+        <div style={{
+          position: 'fixed', top: 0, left: 0, right: 0, zIndex: 10000, 
+          background: 'linear-gradient(90deg, #F97316 0%, #EF4444 100%)', // Deep Orange to Red
+          color: '#fff', padding: '12px 20px', 
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+          fontWeight: '700', fontSize: '13px', textTransform: 'uppercase', letterSpacing: '0.05em',
+          boxShadow: '0 4px 15px rgba(239, 68, 68, 0.4)'
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <ShieldIcon size={18} />
+            <span>Read-Only Shadow Mode: You are viewing {profile?.schoolName || 'School'} as an Administrator</span>
+          </div>
+          <button 
+            onClick={() => {
+              sessionStorage.removeItem('shulesoft_acting_as_admin');
+              sessionStorage.removeItem('shulesoft_school_id');
+              window.location.href = '/super-admin';
+            }}
+            style={{
+              background: 'rgba(255,255,255,0.2)', color: '#fff', border: '1px solid rgba(255,255,255,0.4)',
+              padding: '4px 12px', borderRadius: '6px', fontSize: '11px', fontWeight: '800',
+              cursor: 'pointer', transition: 'all 0.2s'
+            }}
+          >
+            EXIT SHADOW MODE
+          </button>
         </div>
       )}
 

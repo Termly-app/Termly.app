@@ -18,6 +18,7 @@ export default function SchoolsTab({
   handleOpenStaffModal,
   onNEMISExport,          // ← new: opens NEMIS export modal for a school
   approvedPayments,
+  handleLoginAs,          // Added handleLoginAs
 }) {
   return (
     <div className="tv">

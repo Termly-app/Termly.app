@@ -194,11 +194,13 @@ export default function SuperAdmin({ currentUser, isPlatformAdmin, sidebarOpen, 
             if (allStudents) allStudents.forEach(s => { if (s.school_id) studentCounts[s.school_id] = (studentCounts[s.school_id] || 0) + 1; });
           } catch (e) { console.warn('Could not fetch usage counts', e); }
 
-          const enriched = rawSchools.map(s => ({
-            ...s,
-            _staffCount: userCounts[s.id] || 0,
-            _studentCount: studentCounts[s.id] || 0
-          }));
+          const enriched = rawSchools
+            .filter(s => !s.name?.toLowerCase().includes('shulesoft hq')) // 1. EXCLUDE PLATFORM HQ
+            .map(s => ({
+              ...s,
+              _staffCount: userCounts[s.id] || 0,
+              _studentCount: studentCounts[s.id] || 0
+            }));
           setSchools(enriched);
 
           // Optional profile merge (catches anything the join missed)
@@ -259,27 +261,19 @@ export default function SuperAdmin({ currentUser, isPlatformAdmin, sidebarOpen, 
 
     // If ANY profile is functional, the school is active
     return profiles.some(p => {
-      // 2. Explicit deactivation/suspension wins for this profile
+      // 2. Explicit deactivation/suspension wins
       if (p.subscription_status === 'Deactivated' || p.subscription_status === 'Suspended') return false;
 
-      // 3. Status 'Active' always wins unless deactivated/suspended
-      if (p.subscription_status === 'Active') return true;
+      // 3. Status 'Active' or 'Sandbox' plan always wins
+      const plan = (p.subscription_plan || p.subscriptionPlan || '').toLowerCase();
+      if (p.subscription_status === 'Active' || plan === 'sandbox') return true;
 
-      // 4. INDIVIDUAL FUTURE OVERRIDE - Future expiry always wins
+      // 4. FUTURE EXPIRY: Strictly enforce expiry date (No Trials)
       if (p.subscription_expiry) {
         const pExp = new Date(p.subscription_expiry);
         if (isNaN(pExp.getTime()) === false) {
           pExp.setHours(23, 59, 59, 999);
           if (pExp > now) return true;
-        }
-      }
-
-      // 5. GLOBAL CUTOFF (Grace Period)
-      if (subEndDate) {
-        const gExp = new Date(subEndDate);
-        if (isNaN(gExp.getTime()) === false) {
-          gExp.setHours(23, 59, 59, 999);
-          if (gExp > now) return true;
         }
       }
 

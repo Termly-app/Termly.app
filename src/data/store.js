@@ -27,9 +27,19 @@ var _currentPeriodId = null;
 
 // MEMORY CACHE (Performance Optimization)
 var _profileCache  = null;
-var _settingsCache = null;
-var _profilePromise = null;
 var _settingsPromise = null;
+
+// SHADOW MODE (VIEW-ONLY) GUARD
+export const isShadowMode = () => {
+  return sessionStorage.getItem('shulesoft_acting_as_admin') === 'true';
+};
+
+const mutationGuard = (fnName) => {
+  if (isShadowMode()) {
+    console.warn(`[SHADOW MODE] Blocked mutation attempt in ${fnName}`);
+    throw new Error('Action blocked: You are currently in View-Only Shadow Mode (Watching TV).');
+  }
+};
 
 // NETWORK DEBOUNCE CACHE (Performance Optimization)
 // Prevents cloud-fetches from spamming on navigation when offline cache is fresh
@@ -532,6 +542,7 @@ export async function checkFeatureAccess(featureName, profile) {
 }
 
 export async function submitPayment(amount, transactionCode, notes = '') {
+  mutationGuard('submitPayment');
   if (!_currentSchoolId) throw new Error('No school context');
   const { error } = await supabase
     .from('payments')
@@ -584,6 +595,7 @@ export async function getAllPayments() {
 }
 
 export async function approvePayment(paymentId, schoolId, monthsToAdd = 4) {
+  mutationGuard('approvePayment');
   // 1. Update payment status
   const { error: pError } = await supabase
     .from('payments')
@@ -788,6 +800,7 @@ export async function getPeriods() {
 }
 
 export async function createPeriod(year, term, setAsActive = false) {
+  mutationGuard('createPeriod');
   if (!_currentSchoolId) return;
   const { data, error } = await supabase
     .from('academic_periods')
@@ -808,6 +821,7 @@ export async function createPeriod(year, term, setAsActive = false) {
 }
 
 export async function setActivePeriod(periodId) {
+  mutationGuard('setActivePeriod');
   if (!_currentSchoolId) return;
   // Update DB
   await supabase.from('academic_periods')
@@ -902,6 +916,7 @@ export async function getUsers() {
 }
 
 export async function saveUsers(users) {
+  mutationGuard('saveUsers');
   // Bulk update
   const admins = users.filter(u => u.role === 'Admin');
   if (admins.length > 1) {
@@ -915,6 +930,7 @@ export async function saveUsers(users) {
 }
 
 export async function addUser(user) {
+  mutationGuard('addUser');
   if (user.role === 'Admin') {
     const existing = await getUsers();
     if (existing.some(u => u.role === 'Admin')) {
@@ -937,6 +953,7 @@ export async function addUser(user) {
 }
 
 export async function deleteUser(id) {
+  mutationGuard('deleteUser');
   // Prevent deleting oneself
   const { data: { session } } = await supabase.auth.getSession();
   const all = await getUsers();
@@ -1050,6 +1067,7 @@ export async function getStudent(id) {
 }
 
 export async function addStudent(student) {
+  mutationGuard('addStudent');
   const all = await getStudents();
   const p = await getSchoolProfile();
   const planName = p.subscriptionPlan || 'Sandbox';
@@ -1128,6 +1146,7 @@ export async function addStudent(student) {
 }
 
 export async function updateStudent(id, updates) {
+  mutationGuard('updateStudent');
   const row = {};
   if (updates.name !== undefined) row.name = updates.name;
   if (updates.class !== undefined) row.class = updates.class;
@@ -1181,6 +1200,7 @@ export async function migrateExistingStudentsSubjects() {
 }
 
 export async function deleteStudent(id) {
+  mutationGuard('deleteStudent');
   const { error } = await supabase.from('students').delete().eq('id', id);
   if (error) throw error;
   // Sync to local DB immediately
@@ -1188,6 +1208,7 @@ export async function deleteStudent(id) {
 }
 
 export async function transferStudents(selectedIds, direction = 'promote') {
+  mutationGuard('transferStudents');
   const allGrades = Object.values(CBC_STRUCTURE).flatMap(l => l.grades);
   const students = await getStudents();
   
@@ -1237,6 +1258,7 @@ export async function getMarks(examType = _currentExamType) {
 }
 
 export async function setStudentAllMarks(studentId, subjectMarks, examType = _currentExamType) {
+  mutationGuard('setStudentAllMarks');
   const rows = Object.entries(subjectMarks).map(([subject, mark]) => ({
     school_id: _currentSchoolId,
     student_id: studentId,
@@ -1306,6 +1328,7 @@ export async function getClassList(className) {
  * Fixes "0" total_fee issues and recalculates balances if configuration has changed.
  */
 export async function reconcileStudentFee(studentId, existingRecord = null) {
+  mutationGuard('reconcileStudentFee');
   if (!studentId || !_currentSchoolId || !_currentPeriodId) return null;
 
   const students = await getStudents();
