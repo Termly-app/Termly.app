@@ -8,9 +8,12 @@
 -- ============================================================================
 
 -- 1. RESTORE PLATFORM SETTINGS (BILLING & PRICING)
-INSERT INTO public.platform_settings (id, billing, pricing, updated_at)
+-- The table structure uses 'key' as the identifier and 'value' for the JSON payload.
+
+-- Restore Billing Details
+INSERT INTO public.platform_settings (key, value, updated_at)
 VALUES (
-  'global_settings',
+  'billing',
   '{
     "mpesa_shortcode": "4122600",
     "account_name": "Peter Kaulani",
@@ -18,6 +21,14 @@ VALUES (
     "currency": "KSh",
     "trial_days": 0
   }'::jsonb,
+  NOW()
+)
+ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value, updated_at = NOW();
+
+-- Restore Pricing Plans
+INSERT INTO public.platform_settings (key, value, updated_at)
+VALUES (
+  'pricing',
   '{
     "Sandbox": {
       "price": 0,
@@ -57,7 +68,7 @@ VALUES (
   }'::jsonb,
   NOW()
 )
-ON CONFLICT (id) DO NOTHING;
+ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value, updated_at = NOW();
 
 
 -- 2. DYNAMIC USER LIMIT ENFORCEMENT (RPC)
