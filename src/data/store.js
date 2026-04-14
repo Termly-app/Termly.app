@@ -26,7 +26,9 @@ var _currentAuthUser = null;
 var _currentPeriodId = null;
 
 // MEMORY CACHE (Performance Optimization)
-var _profileCache  = null;
+var _profileCache    = null;
+var _profilePromise  = null;
+var _settingsCache   = null;
 var _settingsPromise = null;
 
 // SHADOW MODE (VIEW-ONLY) GUARD
