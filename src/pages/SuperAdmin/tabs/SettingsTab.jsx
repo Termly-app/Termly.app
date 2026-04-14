@@ -350,24 +350,24 @@ export default function SettingsTab({
                           <div>
                             <label style={S.label}>Price (KSh / term)</label>
                             <input style={S.numInput} type="number" min={0}
-                              value={plan.price} onChange={e => updatePlan(plan.id, 'price', e.target.value)} />
+                              value={plan.price !== undefined ? plan.price : 0} onChange={e => updatePlan(plan.id, 'price', e.target.value === '' ? '' : Number(e.target.value))} />
                           </div>
                           <div>
                             <label style={S.label}>Student Limit</label>
                             <input style={S.numInput} type="number" min={1}
-                              value={plan.limit} onChange={e => updatePlan(plan.id, 'limit', e.target.value)} />
+                              value={plan.limit !== undefined ? plan.limit : 5} onChange={e => updatePlan(plan.id, 'limit', e.target.value === '' ? '' : Number(e.target.value))} />
                           </div>
                           <div>
                             <label style={S.label}>Staff Accounts</label>
                             <input style={S.numInput} type="number" min={1}
-                              value={plan.admins || 5} onChange={e => updatePlan(plan.id, 'admins', e.target.value)} />
+                              value={plan.admins !== undefined ? plan.admins : 5} onChange={e => updatePlan(plan.id, 'admins', e.target.value === '' ? '' : Number(e.target.value))} />
                           </div>
                         </div>
                         <div className="grid-2">
                           <div>
                             <label style={S.label}>Free Trial (days, 0 = no trial)</label>
                             <input style={S.numInput} type="number" min={0}
-                              value={plan.trial_days || 0} onChange={e => updatePlan(plan.id, 'trial_days', e.target.value)} />
+                              value={plan.trial_days !== undefined ? plan.trial_days : 0} onChange={e => updatePlan(plan.id, 'trial_days', e.target.value === '' ? '' : Number(e.target.value))} />
                           </div>
                           <div style={{ display:'flex', flexDirection:'column', justifyContent:'flex-end' }}>
                             <label style={{ ...S.label, cursor:'pointer', userSelect:'none', display:'flex', alignItems:'center', gap:7, marginBottom:8 }}>

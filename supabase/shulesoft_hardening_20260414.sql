@@ -33,7 +33,7 @@ VALUES (
     "Sandbox": {
       "price": 0,
       "limit": 5,
-      "admins": 1,
+      "admins": 10,
       "modules": ["student_mgmt", "staff_mgmt", "attendance", "grading", "fees", "dashboard"],
       "features": ["Evaluation Mode", "Core Modules Only"]
     },
