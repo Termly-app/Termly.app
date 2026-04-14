@@ -10,7 +10,11 @@ import {
 } from '../../components/CommonIcons';
 import Loader from '../../components/Common/Loader';
 
-export default function BooksManagement({ currentPeriodId }) {
+export default function BooksManagement({ currentUser, currentPeriodId }) {
+  const role = currentUser?.role?.toLowerCase() || '';
+  const isAdmin = role === 'admin';
+  const isLibrarian = role === 'librarian';
+  const canManage = isAdmin || isLibrarian;
   const { alert, toast } = useDialog();
   const [loading, setLoading] = useState(true);
   const [books, setBooks] = useState([]);
@@ -133,13 +137,14 @@ export default function BooksManagement({ currentPeriodId }) {
           <h2 style={{ fontSize: '1.25rem', fontWeight: 700, margin: 0 }}>Books Catalog</h2>
           <p style={{ fontSize: '0.875rem', color: 'var(--text-light)', margin: '4px 0 0 0' }}>Manage titles, subjects, and bulk copies.</p>
         </div>
-        <button
-          className="btn btn-primary"
-          style={{ display: 'inline-flex', alignItems: 'center', gap: '8px' }}
-          onClick={() => setBookModal({ open: true, data: null })}
-        >
-          <PlusIcon size={16} /> Add New Title
-        </button>
+        <div style={{ display: 'flex', gap: 12 }}>
+          {canManage && (
+            <button className="btn btn-primary" onClick={() => setBookModal({ open: true, data: null })}>
+              <PlusIcon size={18} />
+              <span>Add Book</span>
+            </button>
+          )}
+        </div>
       </div>
 
       <div style={{ padding: '16px', backgroundColor: '#f9fafb', borderBottom: '1px solid var(--border)', display: 'flex', flexWrap: 'wrap', gap: '16px', alignItems: 'center' }}>
@@ -224,16 +229,15 @@ export default function BooksManagement({ currentPeriodId }) {
                   </div>
                 </td>
                 <td className="p-4 text-right">
-                  <div className="flex items-center justify-end gap-2">
-                    <button className="btn btn-sm bg-gray-100 hover:bg-gray-200 text-gray-700 px-3" onClick={() => viewCopies(b)}>
-                      Copies Details
+                  <div style={{ display: 'flex', gap: 6, justifyContent: 'flex-end' }}>
+                    <button className="btn btn-ghost btn-sm" title="View/Edit Book" onClick={() => setBookModal({ open: true, data: b })}>
+                      {canManage ? <EditIcon size={14} /> : <BookIcon size={14} />}
                     </button>
-                    <button className="btn btn-sm btn-ghost px-2 text-primary hover:bg-primary-50" onClick={() => setBulkModal({ open: true, book: b })} title="Add Bulk Copies">
-                      <PlusIcon size={16} />
-                    </button>
-                    <button className="btn btn-sm btn-ghost px-2" onClick={() => setBookModal({ open: true, data: b })} title="Edit Title">
-                      <EditIcon size={16} />
-                    </button>
+                    {canManage && (
+                      <button className="btn btn-ghost btn-sm" title="Manage Copies" onClick={() => viewCopies(b)}>
+                        <MenuIcon size={14} />
+                      </button>
+                    )}
                   </div>
                 </td>
               </tr>

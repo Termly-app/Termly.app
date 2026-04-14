@@ -10,10 +10,23 @@ import { useDialog } from '../../contexts/DialogContext';
 import Select from '../../components/Common/Select';
 
 export default function IssueReturn({ currentUser, currentPeriodId }) {
+  const role = currentUser?.role?.toLowerCase() || '';
+  const canManage = role === 'admin' || role === 'librarian';
+  
   const { alert, toast } = useDialog();
   const [activeTab, setActiveTab] = useState('issue'); // 'issue', 'return'
   const [loading, setLoading] = useState(false);
   const [students, setStudents] = useState([]);
+
+  if (!canManage) {
+    return (
+      <div className="card" style={{ padding: 40, textAlign: 'center' }}>
+        <AlertIcon size={48} color="var(--warning)" style={{ marginBottom: 16 }} />
+        <h3>Access Denied</h3>
+        <p className="text-muted">Only Librarians and Admins can access the Circulation Desk.</p>
+      </div>
+    );
+  }
   
   // Load initial data
   useEffect(() => {

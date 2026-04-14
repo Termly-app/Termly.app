@@ -54,6 +54,8 @@ export default function Students({ currentUser, currentPeriodId }) {
 
   const isAdmin   = currentUser?.role?.toLowerCase() === 'admin';
   const isTeacher = currentUser?.role?.toLowerCase() === 'teacher';
+  const isFinance = currentUser?.role?.toLowerCase() === 'finance';
+  const isLibrarian = currentUser?.role?.toLowerCase() === 'librarian';
 
   const filtered = students.filter(s => {
     const q = search.toLowerCase();
@@ -199,7 +201,7 @@ export default function Students({ currentUser, currentPeriodId }) {
               <tr>
                 <th>Adm No</th><th>Full Name</th><th>Class</th><th>Level</th><th>Stream</th>
                 <th>Category</th><th>Parent</th><th>Phone</th>
-                {!isTeacher&&<th>Fee Balance</th>}
+                { (isAdmin || isFinance) && <th>Fee Balance</th> }
                 {isAdmin&&<th style={{textAlign:'center'}}>Actions</th>}
               </tr>
             </thead>
@@ -229,7 +231,7 @@ export default function Students({ currentUser, currentPeriodId }) {
                     <td data-label="Category"><span className={`badge ${s.residenceType === 'boarding' ? 'badge-accent' : 'badge-ghost'}`} style={{textTransform:'capitalize'}}>{s.residenceType === 'boarding' && s.house ? `Boarding (${s.house})` : (s.residenceType || 'day')}</span></td>
                     <td data-label="Parent">{s.parent}</td>
                     <td data-label="Phone" style={{color:'var(--text-light)',fontSize:'0.85rem'}}>{s.parentPhone}</td>
-                    {!isTeacher&&(
+                    {(isAdmin || isFinance) && (
                       <td data-label="Fee Balance">{(()=>{const cv=profile.gradeFees?.[s.class];const cf=typeof cv==='object'?(Number(cv[(s.residenceType||'day').toLowerCase()])||Number(cv.day)||TERM_FEE):(Number(cv)||TERM_FEE);const b=fd.balance!==undefined?fd.balance:cf;return<span style={{fontWeight:700,color:b>0?'var(--danger)':'var(--success)'}}>{fmtKSh(b)}</span>;})()}</td>
                     )}
                     {isAdmin&&(
@@ -381,6 +383,8 @@ function StudentDetail({ student, feeData, onClose, onEdit, currentUser, profile
   useEffect(()=>{(async()=>{try{const c=await getCBC();setData({cbc:c[student.id]||{}});}catch(e){console.error(e);}finally{setLoading(false);}})();},[student.id]);
   const isAdmin=currentUser?.role?.toLowerCase()==='admin';
   const isTeacher=currentUser?.role?.toLowerCase()==='teacher';
+  const isFinance=currentUser?.role?.toLowerCase()==='finance';
+  const isLibrarian=currentUser?.role?.toLowerCase()==='librarian';
   const fmtKSh=(n)=>`KSh ${Number(n||0).toLocaleString()}`;
   const lv=getLevelForGrade(student.class);
   const lb=(()=>{if(lv==='Early Years')return{cls:'early-years',ico:<LeafIcon size={14} />};if(lv==='Upper Primary')return{cls:'upper-primary',ico:<BookIcon size={14} />};if(lv==='Junior Secondary')return{cls:'junior-secondary',ico:<GraduationIcon size={14} />};return{cls:'senior-secondary',ico:<RocketIcon size={14} />};})();
@@ -406,7 +410,7 @@ function StudentDetail({ student, feeData, onClose, onEdit, currentUser, profile
           <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:10,background:'var(--bg)',borderRadius:10,padding:14,marginBottom:12,fontSize:'0.875rem'}}>
             {[{l:'Gender',v:student.gender},{l:'Residence',v:<span style={{textTransform:'capitalize'}}>{student.residenceType === 'boarding' && student.house ? `Boarding (${student.house})` : (student.residenceType || 'day')}</span>},{l:'D.O.B',v:student.dob||'—'},{l:'Parent',v:student.parent},{l:'Phone',v:student.parentPhone},{l:'Joined',v:student.joinDate||'—'},
               {l:'Birth Cert',v:student.birthCertNo||'—'},{l:'County',v:student.county||'—'},
-              ...(!isTeacher?[{l:'Fee Balance',v:(()=>{const cv=profile?.gradeFees?.[student.class];const cf=typeof cv==='object'?(Number(cv[(student.residenceType||'day').toLowerCase()])||Number(cv.day)||TERM_FEE):(Number(cv)||TERM_FEE);const b=feeData.balance!==undefined?feeData.balance:cf;return<span style={{fontWeight:700,color:b>0?'var(--danger)':'var(--success)'}}>{fmtKSh(b)}</span>;})()}]:[]),
+              ...((isAdmin || isFinance)?[{l:'Fee Balance',v:(()=>{const cv=profile?.gradeFees?.[student.class];const cf=typeof cv==='object'?(Number(cv[(student.residenceType||'day').toLowerCase()])||Number(cv.day)||TERM_FEE):(Number(cv)||TERM_FEE);const b=feeData.balance!==undefined?feeData.balance:cf;return<span style={{fontWeight:700,color:b>0?'var(--danger)':'var(--success)'}}>{fmtKSh(b)}</span>;})()}]:[]),
             ].map((r,i)=>(
               <div key={i}><div style={{fontSize:'0.68rem',color:'var(--text-muted)',textTransform:'uppercase',letterSpacing:'0.06em',marginBottom:2}}>{r.l}</div><div style={{fontWeight:500}}>{r.v}</div></div>
             ))}

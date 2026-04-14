@@ -295,8 +295,8 @@ function Sidebar({ isOpen, onClose, onLogout, currentUser, subscriptionActive })
         <SbSection label="General" />
         <SbLink to="/dashboard" icon={DashboardIcon} label="Dashboard" onClick={onClose} locked={(!subscriptionActive && !isSandbox) && !isPlatformAdmin} />
         
-        {/* Teachers and Admins manage students */}
-        {(isTeacher || isAdmin) && (
+        {/* Teachers, Admins, Finance and Librarians manage students */}
+        {(isTeacher || isAdmin || isFinance || isLibrarian) && (
           <SbLink to="/students"  icon={StudentsIcon}  label="Students"  onClick={onClose} locked={(!subscriptionActive && !isSandbox) && !isPlatformAdmin} />
         )}
         
@@ -305,8 +305,8 @@ function Sidebar({ isOpen, onClose, onLogout, currentUser, subscriptionActive })
           <SbLink to="/teachers" icon={StaffIcon} label="Staff" onClick={onClose} locked={(!subscriptionActive && !isSandbox) && !isPlatformAdmin} />
         )}
 
-        {/* Librarians and Admins manage library */}
-        {(isLibrarian || isAdmin) && (features.library || isSandbox) && (
+        {/* Librarians, Teachers, and Admins can see the Library catalog */}
+        {(isLibrarian || isTeacher || isAdmin) && (features.library || isSandbox) && (
           <SbLink to="/library" icon={BookIcon} label="Library" onClick={onClose} locked={(!subscriptionActive || (isSandbox && !features.library)) && !isPlatformAdmin} />
         )}
 
@@ -690,8 +690,8 @@ function App() {
                       <Route path="/communications" element={<SectionGate featureSlug="sms" featureName="Communications" profile={profile}><Communications currentUser={currentUser} /></SectionGate>} />
                     )} */}
 
-                    {/* Library Routes: Admin & Librarian */}
-                    {(isAdmin || isLibrarian) && (
+                    {/* Library Routes: Admin, Librarian & Teacher (View Only) */}
+                    {(isAdmin || isLibrarian || isTeacher) && (
                       <Route path="/library/*" element={<SectionGate featureSlug="library" featureName="Library" profile={profile}><Library currentUser={currentUser} currentPeriodId={currentPeriodId} /></SectionGate>} />
                     )}
 

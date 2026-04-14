@@ -293,6 +293,7 @@ function UserModal({ onClose, onSave, error, adminExists }) {
                 options={[
                   { id: 'Teacher', label: 'Teacher (Grading, Attendance, Students)' },
                   { id: 'Finance', label: 'Finance (Fees, Students List)' },
+                  { id: 'Librarian', label: 'Librarian (Library, Students List)' },
                   { id: 'Admin', label: `Admin (Full Access) ${adminExists ? '— (Limit: 1)' : ''}`, disabled: adminExists }
                 ]}
                 style={{ width: '100%' }}

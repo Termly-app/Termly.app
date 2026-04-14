@@ -16,6 +16,36 @@ RETURNS BOOLEAN AS $$
   );
 $$ LANGUAGE sql SECURITY DEFINER;
 
+CREATE OR REPLACE FUNCTION public.is_school_finance(check_school_id UUID)
+RETURNS BOOLEAN AS $$
+  SELECT EXISTS (
+    SELECT 1 FROM public.users 
+    WHERE auth_user_id = auth.uid() 
+    AND (role = 'Admin' OR role = 'Finance') 
+    AND school_id = check_school_id
+  );
+$$ LANGUAGE sql SECURITY DEFINER;
+
+CREATE OR REPLACE FUNCTION public.is_school_librarian(check_school_id UUID)
+RETURNS BOOLEAN AS $$
+  SELECT EXISTS (
+    SELECT 1 FROM public.users 
+    WHERE auth_user_id = auth.uid() 
+    AND (role = 'Admin' OR role = 'Librarian') 
+    AND school_id = check_school_id
+  );
+$$ LANGUAGE sql SECURITY DEFINER;
+
+CREATE OR REPLACE FUNCTION public.is_school_teacher(check_school_id UUID)
+RETURNS BOOLEAN AS $$
+  SELECT EXISTS (
+    SELECT 1 FROM public.users 
+    WHERE auth_user_id = auth.uid() 
+    AND (role = 'Admin' OR role = 'Teacher') 
+    AND school_id = check_school_id
+  );
+$$ LANGUAGE sql SECURITY DEFINER;
+
 CREATE OR REPLACE FUNCTION public.is_school_owner(check_school_id UUID)
 RETURNS BOOLEAN AS $$
   SELECT EXISTS (
@@ -100,23 +130,23 @@ CREATE POLICY "teachers_modify" ON teachers FOR ALL USING (public.is_school_owne
 
 -- Marks (Teachers and Admins can modify)
 CREATE POLICY "marks_select" ON marks FOR SELECT USING (school_id = public.get_auth_school_id() OR public.is_school_owner(school_id));
-CREATE POLICY "marks_modify" ON marks FOR ALL USING (public.is_school_owner(school_id) OR school_id = public.get_auth_school_id());
+CREATE POLICY "marks_modify" ON marks FOR ALL USING (public.is_school_owner(school_id) OR public.is_school_teacher(school_id));
 
 -- Fees (Finance and Admins can modify)
 CREATE POLICY "fees_select" ON fees FOR SELECT USING (school_id = public.get_auth_school_id() OR public.is_school_owner(school_id));
-CREATE POLICY "fees_modify" ON fees FOR ALL USING (public.is_school_owner(school_id) OR school_id = public.get_auth_school_id());
+CREATE POLICY "fees_modify" ON fees FOR ALL USING (public.is_school_owner(school_id) OR public.is_school_finance(school_id));
 
 -- Fee Payments
 CREATE POLICY "fee_payments_select" ON fee_payments FOR SELECT USING (
   fee_id IN (SELECT id FROM fees WHERE school_id = public.get_auth_school_id() OR public.is_school_owner(school_id))
 );
 CREATE POLICY "fee_payments_modify" ON fee_payments FOR ALL USING (
-  fee_id IN (SELECT id FROM fees WHERE school_id = public.get_auth_school_id() OR public.is_school_owner(school_id))
+  fee_id IN (SELECT id FROM fees WHERE public.is_school_owner(school_id) OR public.is_school_finance(school_id))
 );
 
 -- Attendance (Teachers and Admins can modify)
 CREATE POLICY "attendance_select" ON attendance FOR SELECT USING (school_id = public.get_auth_school_id() OR public.is_school_owner(school_id));
-CREATE POLICY "attendance_modify" ON attendance FOR ALL USING (public.is_school_owner(school_id) OR school_id = public.get_auth_school_id());
+CREATE POLICY "attendance_modify" ON attendance FOR ALL USING (public.is_school_owner(school_id) OR public.is_school_teacher(school_id));
 
 -- CBC
 CREATE POLICY "cbc_assessments_select" ON cbc_assessments FOR SELECT USING (school_id = public.get_auth_school_id() OR public.is_school_owner(school_id));

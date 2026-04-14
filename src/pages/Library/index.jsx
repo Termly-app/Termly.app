@@ -13,13 +13,19 @@ const Overdue = lazy(() => import('./Overdue'));
 const Reports = lazy(() => import('./Reports'));
 
 // Sub-navigation tabs for the Library module
-function LibrarySubNav() {
+function LibrarySubNav({ currentUser }) {
   const location = useLocation();
+  const role = currentUser?.role?.toLowerCase() || '';
+  const isAdmin = role === 'admin';
+  const isLibrarian = role === 'librarian';
+
   const tabs = [
     { to: '/library', label: 'Dashboard', icon: MenuIcon, exact: true },
     { to: '/library/books', label: 'Books', icon: BookIcon },
-    { to: '/library/issue-return', label: 'Issue / Return', icon: PlatformZapIcon },
-    { to: '/library/overdue', label: 'Overdue', icon: AlertIcon },
+    ...((isAdmin || isLibrarian) ? [
+      { to: '/library/issue-return', label: 'Issue / Return', icon: PlatformZapIcon },
+      { to: '/library/overdue', label: 'Overdue', icon: AlertIcon },
+    ] : []),
     { to: '/library/reports', label: 'Reports', icon: MenuIcon },
   ];
 
@@ -93,7 +99,7 @@ export default function LibraryModule({ currentUser, currentPeriodId }) {
         </div>
       </div>
 
-      <LibrarySubNav />
+      <LibrarySubNav currentUser={currentUser} />
 
       <Suspense fallback={<Loader />}>
         <Routes>

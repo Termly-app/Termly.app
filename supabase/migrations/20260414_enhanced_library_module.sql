@@ -109,19 +109,19 @@ ALTER TABLE public.library_fines ENABLE ROW LEVEL SECURITY;
 
 -- Dynamic Policies using existing helper functions (schema is public)
 CREATE POLICY "books_select" ON public.books FOR SELECT USING (school_id = public.get_auth_school_id() OR public.is_school_owner(school_id));
-CREATE POLICY "books_modify" ON public.books FOR ALL USING (public.is_school_owner(school_id) OR public.is_school_admin(school_id));
+CREATE POLICY "books_modify" ON public.books FOR ALL USING (public.is_school_owner(school_id) OR public.is_school_librarian(school_id));
 
 CREATE POLICY "book_copies_select" ON public.book_copies FOR SELECT USING (school_id = public.get_auth_school_id() OR public.is_school_owner(school_id));
-CREATE POLICY "book_copies_modify" ON public.book_copies FOR ALL USING (public.is_school_owner(school_id) OR public.is_school_admin(school_id));
+CREATE POLICY "book_copies_modify" ON public.book_copies FOR ALL USING (public.is_school_owner(school_id) OR public.is_school_librarian(school_id));
 
 CREATE POLICY "borrow_records_select" ON public.borrow_records FOR SELECT USING (school_id = public.get_auth_school_id() OR public.is_school_owner(school_id));
-CREATE POLICY "borrow_records_modify" ON public.borrow_records FOR ALL USING (public.is_school_owner(school_id) OR public.is_school_admin(school_id));
+CREATE POLICY "borrow_records_modify" ON public.borrow_records FOR ALL USING (public.is_school_owner(school_id) OR public.is_school_librarian(school_id));
 
 CREATE POLICY "book_class_alloc_select" ON public.book_class_allocations FOR SELECT USING (school_id = public.get_auth_school_id() OR public.is_school_owner(school_id));
-CREATE POLICY "book_class_alloc_modify" ON public.book_class_allocations FOR ALL USING (public.is_school_owner(school_id) OR public.is_school_admin(school_id));
+CREATE POLICY "book_class_alloc_modify" ON public.book_class_allocations FOR ALL USING (public.is_school_owner(school_id) OR public.is_school_librarian(school_id));
 
 CREATE POLICY "library_fines_select" ON public.library_fines FOR SELECT USING (school_id = public.get_auth_school_id() OR public.is_school_owner(school_id));
-CREATE POLICY "library_fines_modify" ON public.library_fines FOR ALL USING (public.is_school_owner(school_id) OR public.is_school_admin(school_id));
+CREATE POLICY "library_fines_modify" ON public.library_fines FOR ALL USING (public.is_school_owner(school_id) OR public.is_school_librarian(school_id));
 
 
 -- ── RPC TRANSACTIONS ─────────────────────────────────────────────────────────
