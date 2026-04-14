@@ -68,14 +68,6 @@ export default function Security({ currentUser }) {
     seatLimit = fallbackPlans[planName].seats || 5;
   }
   
-  // Explicit overrides based on name
-  const lowerPlan = planName.toLowerCase();
-  if (lowerPlan.includes('starter') || lowerPlan.includes('fala')) {
-    seatLimit = 5;
-  } else if (lowerPlan === 'sandbox') {
-    seatLimit = 10;
-  }
-
   const actualStaffCount = users.length;
   const isAtLimit = actualStaffCount >= seatLimit;
 

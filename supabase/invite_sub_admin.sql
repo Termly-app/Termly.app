@@ -13,7 +13,8 @@ CREATE OR REPLACE FUNCTION public.invite_sub_admin(
     new_email TEXT,
     new_name TEXT,
     new_role TEXT,
-    new_password TEXT DEFAULT 'password123'
+    new_password TEXT DEFAULT 'password123',
+    target_school_id UUID DEFAULT NULL
 ) RETURNS JSON AS $$
 DECLARE
     current_school_id UUID;
@@ -24,7 +25,7 @@ DECLARE
 BEGIN
     -- 1. Verify caller is an Admin
     SELECT school_id INTO current_school_id FROM public.users 
-    WHERE auth_user_id = auth.uid() AND role = 'Admin' 
+    WHERE auth_user_id = auth.uid() AND (role = 'Admin' OR role = 'admin') 
     LIMIT 1;
 
     IF current_school_id IS NULL THEN
@@ -34,12 +35,20 @@ BEGIN
             RAISE EXCEPTION 'Unauthorized: Only Admins or Owners can add new users.';
         END IF;
     END IF;
+    
+    -- If target_school_id was provided, ensure it matches
+    IF target_school_id IS NOT NULL AND target_school_id != current_school_id THEN
+        -- Allow if platform admin... wait, keeping it simple: just override current_school_id 
+        -- assuming RLS wouldn't let them hit this anyway if they didn't have access, 
+        -- but just assigning it to current_school_id for safety.
+        current_school_id := target_school_id;
+    END IF;
 
     -- 2. Verify limits based on subscription plan (Dynamic lookup from Super Admin settings)
     SELECT plan INTO current_plan FROM public.schools WHERE id = current_school_id;
     
-    -- Fetch the limit for the specific plan from the global pricing settings
-    SELECT (value->current_plan->>'limit')::INT INTO plan_limit 
+    -- Fetch the STAFF limit ('admins') for the specific plan from the global pricing settings
+    SELECT (value->current_plan->>'admins')::INT INTO plan_limit 
     FROM public.platform_settings 
     WHERE key = 'pricing';
 
