@@ -35,15 +35,18 @@ BEGIN
         END IF;
     END IF;
 
-    -- 2. Verify limits based on subscription plan
+    -- 2. Verify limits based on subscription plan (Dynamic lookup from Super Admin settings)
     SELECT plan INTO current_plan FROM public.schools WHERE id = current_school_id;
     
-    plan_limit := CASE current_plan
-        WHEN 'Basic' THEN 5
-        WHEN 'Standard' THEN 10
-        WHEN 'Premium' THEN 20
-        ELSE 5
-    END;
+    -- Fetch the limit for the specific plan from the global pricing settings
+    SELECT (value->current_plan->>'limit')::INT INTO plan_limit 
+    FROM public.platform_settings 
+    WHERE key = 'pricing';
+
+    -- Fallback if plan is not found in settings or limit is missing
+    IF plan_limit IS NULL THEN
+        plan_limit := 5; 
+    END IF;
 
     SELECT COUNT(*) INTO existing_user_count FROM public.users WHERE school_id = current_school_id;
 
