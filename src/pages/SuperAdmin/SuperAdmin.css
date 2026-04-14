@@ -258,8 +258,23 @@
 .sa .ig-st.is-ok { color: var(--te) !important; }
 
 /* KILL TR:HOVER LEAK FROM APP.CSS & FIX CONTRAST */
-.theme-onyx .sa table tr:hover td { background: rgba(255,255,255,0.1) !important; cursor: pointer; }
-.theme-onyx .sa .li:hover { background: rgba(255,255,255,0.05); }
+.theme-onyx .sa table tr { transition: background 0.2s ease; }
+.theme-onyx .sa table tr:hover td { 
+  background: rgba(255, 255, 255, 0.15) !important; 
+  color: #ffffff !important;
+  cursor: pointer; 
+}
+.theme-onyx .sa table tr:hover .td-sub,
+.theme-onyx .sa table tr:hover .pay-dt,
+.theme-onyx .sa table tr:hover .ai-s {
+  color: rgba(255, 255, 255, 0.8) !important;
+}
+.theme-onyx .sa table tr:hover .pill { 
+  border-color: rgba(255, 255, 255, 0.4) !important;
+  box-shadow: 0 0 10px rgba(255, 255, 255, 0.1);
+}
+
+.theme-onyx .sa .li:hover { background: rgba(255,255,255,0.08); }
 
 
 /* ─── Toast ──────────────────────────────────────────────────────────────── */

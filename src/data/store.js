@@ -944,7 +944,8 @@ export async function addUser(user) {
     new_email: user.email,
     new_name: user.name,
     new_role: user.role,
-    new_password: user.password || 'password123'
+    new_password: user.password || 'password123',
+    target_school_id: getCurrentSchoolId()
   });
 
   if (error) {

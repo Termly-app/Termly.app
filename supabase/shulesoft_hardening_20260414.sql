@@ -74,13 +74,15 @@ ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value, updated_at = NOW();
 -- 2. DYNAMIC USER LIMIT ENFORCEMENT (RPC)
 -- This function intercepts user invitations to enforce seat limits based on the subscription plan.
 
+DROP FUNCTION IF EXISTS public.invite_sub_admin(text,text,text,text,uuid);
 DROP FUNCTION IF EXISTS public.invite_sub_admin(text,text,text,text);
 
 CREATE OR REPLACE FUNCTION public.invite_sub_admin(
     new_email TEXT,
     new_name TEXT,
     new_role TEXT,
-    new_password TEXT DEFAULT 'password123'
+    new_password TEXT DEFAULT 'password123',
+    target_school_id UUID DEFAULT NULL
 )
 RETURNS JSONB
 LANGUAGE plpgsql
@@ -88,24 +90,48 @@ SECURITY DEFINER
 SET search_path = public, auth
 AS $$
 DECLARE
-    curr_school_id UUID;
     curr_plan TEXT;
     user_limit INTEGER;
     current_user_count INTEGER;
     settings_pricing JSONB;
     matched_plan JSONB;
+    caller_id UUID;
+    is_plat_admin BOOLEAN;
+    is_school_member BOOLEAN;
 BEGIN
-    -- 1. Get current school from metadata
-    curr_school_id := (auth.jwt() -> 'user_metadata' ->> 'school_id')::UUID;
-    IF curr_school_id IS NULL THEN
-        RAISE EXCEPTION 'Session expired or school context missing.';
+    -- 1. Identity Verification
+    caller_id := auth.uid();
+    IF caller_id IS NULL THEN
+        RAISE EXCEPTION 'Not authenticated.';
     END IF;
 
-    -- 2. Fetch current plan and student/admin limits from platform settings
-    SELECT subscription_plan INTO curr_plan FROM public.school_profiles WHERE school_id = curr_school_id;
+    -- 2. Permission Check
+    -- Check if caller is a Platform Admin (Super Admin)
+    SELECT EXISTS (
+        SELECT 1 FROM public.platform_admins 
+        WHERE email = (auth.jwt() ->> 'email')
+    ) INTO is_plat_admin;
+
+    -- Check if caller is a member of the target school
+    SELECT EXISTS (
+        SELECT 1 FROM public.users 
+        WHERE id = caller_id AND school_id = target_school_id
+    ) INTO is_school_member;
+
+    IF NOT is_plat_admin AND NOT is_school_member THEN
+        RAISE EXCEPTION 'Permission denied: You do not have access to this school context.';
+    END IF;
+
+    -- Use the provided target_school_id
+    IF target_school_id IS NULL THEN
+         RAISE EXCEPTION 'Target school ID is required.';
+    END IF;
+
+    -- 3. Fetch current plan and student/admin limits from platform settings
+    SELECT subscription_plan INTO curr_plan FROM public.school_profiles WHERE school_id = target_school_id;
     SELECT value INTO settings_pricing FROM public.platform_settings WHERE key = 'pricing';
 
-    -- 3. Dynamic Lookup in Pricing Table
+    -- 4. Dynamic Lookup in Pricing Table
     matched_plan := settings_pricing -> curr_plan;
     
     -- Fallback to Sandbox if plan not found
@@ -113,17 +139,18 @@ BEGIN
         matched_plan := settings_pricing -> 'Sandbox';
     END IF;
 
-    -- 4. Set Limits (Defaulting to 5 if settings are missing)
+    -- 5. Set Limits (Defaulting to 5 if settings are missing)
     user_limit := (matched_plan ->> 'admins')::INTEGER;
     IF user_limit IS NULL THEN user_limit := 5; END IF;
 
-    -- 5. Enforcement
-    SELECT COUNT(*) INTO current_user_count FROM public.users WHERE school_id = curr_school_id;
+    -- 6. Enforcement
+    SELECT COUNT(*) INTO current_user_count FROM public.users WHERE school_id = target_school_id;
     IF current_user_count >= user_limit THEN
         RAISE EXCEPTION 'Administrative user limit reached for your % plan (% users). Please upgrade.', curr_plan, user_limit;
     END IF;
 
-    -- 6. Insert Logic [Placeholder for secure invite logic]
-    RETURN jsonb_build_object('status', 'success', 'limit', user_limit);
+    -- 7. Insert Logic [Placeholder for secure invite logic]
+    -- In a real implementation, this would use service_role to create the Auth user
+    RETURN jsonb_build_object('status', 'success', 'limit', user_limit, 'school_id', target_school_id);
 END;
 $$;
