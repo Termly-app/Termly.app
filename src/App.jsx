@@ -66,7 +66,7 @@ import {
   BillingIcon, SignOutIcon, MenuIcon, CloseIcon, ChevronDownIcon,
   OverviewIcon, SchoolsIcon, PaymentsIcon, HistoryIcon, RevenueIcon,
   ActivityIcon, RecoveryIcon, StatusDotIcon, ZapIcon, SubscriptionsIcon, MessageIcon,
-  DownloadIcon, UploadIcon, RefreshIcon, ShieldIcon, LogoMarkBW, BookIcon
+  DownloadIcon, UploadIcon, RefreshIcon, LogoMarkBW, BookIcon
 } from './components/Common/Icons';
 
 // --- Sidebar nav link helper ------------------------------------------------
@@ -599,7 +599,7 @@ function App() {
           boxShadow: '0 4px 15px rgba(239, 68, 68, 0.4)'
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <ShieldIcon size={18} />
+            <SecurityIcon size={18} />
             <span>Read-Only Shadow Mode: You are viewing {profile?.schoolName || 'School'} as an Administrator</span>
           </div>
           <button 
