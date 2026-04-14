@@ -260,7 +260,8 @@
 /* KILL TR:HOVER LEAK FROM APP.CSS & FIX CONTRAST */
 .theme-onyx .sa table tr { transition: background 0.2s ease; }
 .theme-onyx .sa table tr:hover td { 
-  background: rgba(255, 255, 255, 0.15) !important; 
+  background: rgba(255, 255, 255, 0.05) !important; 
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.04);
   color: #ffffff !important;
   cursor: pointer; 
 }

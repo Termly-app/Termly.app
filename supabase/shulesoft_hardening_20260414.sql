@@ -115,7 +115,7 @@ BEGIN
     -- Check if caller is a member of the target school
     SELECT EXISTS (
         SELECT 1 FROM public.users 
-        WHERE id = caller_id AND school_id = target_school_id
+        WHERE auth_user_id = caller_id AND school_id = target_school_id
     ) INTO is_school_member;
 
     IF NOT is_plat_admin AND NOT is_school_member THEN
