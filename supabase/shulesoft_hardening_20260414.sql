@@ -72,6 +72,10 @@ ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value, updated_at = NOW();
 
 
 -- 2. DYNAMIC USER LIMIT ENFORCEMENT (RPC)
+-- This function intercepts user invitations to enforce seat limits based on the subscription plan.
+
+DROP FUNCTION IF EXISTS public.invite_sub_admin(text,text,text,text);
+
 CREATE OR REPLACE FUNCTION public.invite_sub_admin(
     new_email TEXT,
     new_name TEXT,
@@ -99,7 +103,7 @@ BEGIN
 
     -- 2. Fetch current plan and student/admin limits from platform settings
     SELECT subscription_plan INTO curr_plan FROM public.school_profiles WHERE school_id = curr_school_id;
-    SELECT pricing INTO settings_pricing FROM public.platform_settings WHERE id = 'global_settings';
+    SELECT value INTO settings_pricing FROM public.platform_settings WHERE key = 'pricing';
 
     -- 3. Dynamic Lookup in Pricing Table
     matched_plan := settings_pricing -> curr_plan;
