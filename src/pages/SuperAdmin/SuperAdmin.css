@@ -260,19 +260,23 @@
 /* KILL TR:HOVER LEAK FROM APP.CSS & FIX CONTRAST */
 .theme-onyx .sa table tr { transition: background 0.2s ease; }
 .theme-onyx .sa table tr:hover td { 
-  background: rgba(255, 255, 255, 0.05) !important; 
-  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.04);
-  color: #ffffff !important;
+  background: #ffffff !important; 
+  color: #000000 !important;
   cursor: pointer; 
 }
+.theme-onyx .sa table tr:hover .td-b,
 .theme-onyx .sa table tr:hover .td-sub,
+.theme-onyx .sa table tr:hover .pay-nm,
 .theme-onyx .sa table tr:hover .pay-dt,
-.theme-onyx .sa table tr:hover .ai-s {
-  color: rgba(255, 255, 255, 0.8) !important;
+.theme-onyx .sa table tr:hover .ai-s,
+.theme-onyx .sa table tr:hover .ig-nm,
+.theme-onyx .sa table tr:hover .p-pill,
+.theme-onyx .sa table tr:hover .td-m {
+  color: #000000 !important;
 }
 .theme-onyx .sa table tr:hover .pill { 
-  border-color: rgba(255, 255, 255, 0.4) !important;
-  box-shadow: 0 0 10px rgba(255, 255, 255, 0.1);
+  border-color: rgba(0, 0, 0, 0.2) !important;
+  background: rgba(0, 0, 0, 0.05) !important;
 }
 
 .theme-onyx .sa .li:hover { background: rgba(255,255,255,0.08); }
