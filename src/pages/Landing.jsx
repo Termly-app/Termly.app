@@ -5,7 +5,8 @@ import { getPlanDisplayFeatures } from './SuperAdmin/superAdminUtils';
 import './Landing.css';
 import {
   BookIcon, UserIcon, CheckIcon, CardIcon, SchoolIcon,
-  PhoneIcon, DashboardIcon, CalendarIcon, FlagIcon, RocketIcon
+  PhoneIcon, DashboardIcon, CalendarIcon, FlagIcon, RocketIcon,
+  GraduationIcon
 } from '../components/CommonIcons';
 
 export default function Landing() {
