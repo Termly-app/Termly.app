@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { getUsers, addUser, deleteUser, getSchoolProfile, getPlatformSettings } from '../data/store';
-import { DiamondIcon, UsersIcon } from '../components/CommonIcons';
+import { DiamondIcon, UsersIcon, EyeIcon, EyeOffIcon } from '../components/CommonIcons';
 import Select from '../components/Common/Select';
 import { Helmet } from 'react-helmet-async';
 
@@ -240,7 +240,8 @@ export default function Security({ currentUser }) {
 }
 
 function UserModal({ onClose, onSave, error, adminExists }) {
-  const [form, setForm] = useState({ name: '', email: '', role: 'Teacher' });
+  const [form, setForm] = useState({ name: '', email: '', role: 'Teacher', password: '' });
+  const [showPassword, setShowPassword] = useState(false);
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -293,14 +294,25 @@ function UserModal({ onClose, onSave, error, adminExists }) {
             </div>
             <div className="form-group">
               <label>Temporary Password</label>
-              <input 
-                type="password"
-                className="form-input" 
-                value={form.password || ''} 
-                onChange={(e) => setForm({ ...form, password: e.target.value })} 
-                placeholder="password123"
-                minLength={6}
-              />
+              <div style={{ position: 'relative' }}>
+                <input 
+                  type={showPassword ? "text" : "password"}
+                  className="form-input" 
+                  value={form.password || ''} 
+                  onChange={(e) => setForm({ ...form, password: e.target.value })} 
+                  placeholder="password123"
+                  minLength={6}
+                  style={{ width: '100%', paddingRight: '40px' }}
+                />
+                <button 
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  style={{ position: 'absolute', right: 12, top: 12, background: 'none', border: 'none', cursor: 'pointer', padding: 0, color: 'var(--text-light)' }}
+                  tabIndex="-1"
+                >
+                  {showPassword ? <EyeOffIcon size={18} /> : <EyeIcon size={18} />}
+                </button>
+              </div>
               <span style={{ fontSize: '0.75rem', color: 'var(--text-light)', marginTop: 4, display: 'block' }}>Must be at least 6 characters. If left blank, defaults to "password123".</span>
             </div>
           </div>

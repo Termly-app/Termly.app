@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { TeacherIcon, ShieldIcon, PhoneIcon } from '../../components/CommonIcons';
+import { TeacherIcon, ShieldIcon, PhoneIcon, EyeIcon, EyeOffIcon } from '../../components/CommonIcons';
 import { validateStaffLogin } from '../../data/store';
 
 export default function StaffLogin({ onLogin }) {
@@ -7,6 +7,7 @@ export default function StaffLogin({ onLogin }) {
   const [pin, setPin] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [showPin, setShowPin] = useState(false);
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -60,16 +61,26 @@ export default function StaffLogin({ onLogin }) {
 
             <div style={{ marginBottom: 24, textAlign: 'left' }}>
               <label style={{ fontSize: '0.75rem', fontWeight: 700, color: '#64748b', textTransform: 'uppercase', marginBottom: 6, display: 'block' }}>Access PIN</label>
-              <input 
-                type="password" 
-                inputMode="numeric" 
-                pattern="[0-9]*" 
-                value={pin}
-                onChange={(e) => setPin(e.target.value)}
-                placeholder="••••"
-                style={{ width: '100%', padding: 12, border: '2px solid #cbd5e1', borderRadius: 12, fontSize: '1.5rem', textAlign: 'center', letterSpacing: '0.4em', fontWeight: 800, boxSizing: 'border-box' }}
-                required
-              />
+              <div style={{ position: 'relative' }}>
+                <input 
+                  type={showPin ? "text" : "password"} 
+                  inputMode="numeric" 
+                  pattern="[0-9]*" 
+                  value={pin}
+                  onChange={(e) => setPin(e.target.value)}
+                  placeholder="••••"
+                  style={{ width: '100%', padding: '12px 40px 12px 12px', border: '2px solid #cbd5e1', borderRadius: 12, fontSize: '1.5rem', textAlign: 'center', letterSpacing: '0.4em', fontWeight: 800, boxSizing: 'border-box' }}
+                  required
+                />
+                <button 
+                  type="button"
+                  onClick={() => setShowPin(!showPin)}
+                  style={{ position: 'absolute', right: 12, top: 18, background: 'none', border: 'none', cursor: 'pointer', padding: 0, color: '#94a3b8' }}
+                  tabIndex="-1"
+                >
+                  {showPin ? <EyeOffIcon size={20} /> : <EyeIcon size={20} />}
+                </button>
+              </div>
             </div>
 
             <button 

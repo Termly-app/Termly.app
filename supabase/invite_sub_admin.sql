@@ -7,6 +7,10 @@
 -- and automatically insert them into the public.users table for their school.
 -- It requires the pgcrypto extension to generate temporary passwords if none is provided.
 
+-- Drop existing functions to avoid return type conflicts
+DROP FUNCTION IF EXISTS public.invite_sub_admin(text,text,text,text,uuid);
+DROP FUNCTION IF EXISTS public.invite_sub_admin(text,text,text,text);
+
 CREATE EXTENSION IF NOT EXISTS pgcrypto;
 
 CREATE OR REPLACE FUNCTION public.invite_sub_admin(
@@ -90,4 +94,4 @@ EXCEPTION
     WHEN OTHERS THEN
         RAISE EXCEPTION 'Failed to invite user: %', SQLERRM;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public, auth, extensions;
