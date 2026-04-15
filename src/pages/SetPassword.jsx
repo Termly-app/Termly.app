@@ -4,6 +4,7 @@ import { EyeIcon, EyeOffIcon, ShieldIcon, CheckIcon } from '../components/Common
 import { useNavigate } from 'react-router-dom';
 
 export default function SetPassword({ currentUser, onPasswordChanged }) {
+  const [currentPassword, setCurrentPassword] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -38,7 +39,12 @@ export default function SetPassword({ currentUser, onPasswordChanged }) {
 
     setLoading(true);
     try {
-      await setSelfPassword(password);
+      if (!currentPassword) {
+        setError('Current password is required to verify your identity.');
+        setLoading(false);
+        return;
+      }
+      await setSelfPassword(password, currentPassword);
       if (onPasswordChanged) onPasswordChanged();
       // On success, redirect to dashboard or they will automatically be re-routed
       navigate('/');
@@ -66,6 +72,18 @@ export default function SetPassword({ currentUser, onPasswordChanged }) {
         {error && <div className="sp-error">{error}</div>}
 
         <form onSubmit={handleUpdate} className="sp-form">
+          <div className="sp-field" style={{ marginBottom: 24 }}>
+            <label>Current Password</label>
+            <div className="sp-input-wrap">
+              <input 
+                type={showPassword ? "text" : "password"} 
+                placeholder="Verify identity with current password"
+                value={currentPassword}
+                onChange={(e) => setCurrentPassword(e.target.value)}
+                required
+              />
+            </div>
+          </div>
           <div className="sp-field">
             <label>New Password</label>
             <div className="sp-input-wrap">

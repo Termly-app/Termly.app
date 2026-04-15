@@ -995,23 +995,32 @@ export async function getUserByAuthId(authUserId) {
   return data || null;
 }
 
-export async function setSelfPassword(newPassword) {
+export async function setSelfPassword(newPassword, oldPassword = null) {
   mutationGuard('setSelfPassword');
   
-  // 1. Update Auth Identity
+  const user = (await supabase.auth.getUser()).data.user;
+  if (!user) throw new Error('Not authenticated');
+
+  // 1. If project requires old password, re-authenticate first
+  if (oldPassword) {
+    const { error: reauthErr } = await supabase.auth.reauthenticateWithPassword({
+      password: oldPassword
+    });
+    if (reauthErr) throw new Error(`Current password verification failed: ${reauthErr.message}`);
+  }
+  
+  // 2. Update Auth Identity
   const { data: authData, error: authError } = await supabase.auth.updateUser({
     password: newPassword
   });
   if (authError) throw authError;
 
-  // 2. Update users table password_changed flag
-  if (authData?.user) {
-    const { error: dbError } = await supabase
-      .from('users')
-      .update({ password_changed: true })
-      .eq('auth_user_id', authData.user.id);
-    if (dbError) throw dbError;
-  }
+  // 3. Update users table password_changed flag
+  const { error: dbError } = await supabase
+    .from('users')
+    .update({ password_changed: true })
+    .eq('auth_user_id', user.id);
+  if (dbError) throw dbError;
 }
 
 
