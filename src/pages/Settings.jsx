@@ -6,7 +6,8 @@ import { useDialog } from '../contexts/DialogContext';
 import {
   ClockIcon, CheckIcon, SaveIcon, SchoolIcon, ImageIcon, FolderIcon,
   BookIcon, CardIcon, DiamondIcon, PhoneIcon, RefreshIcon, CrossIcon, PlusIcon,
-  CalendarIcon, DownloadIcon, UploadIcon, PlatformZapIcon, ShieldIcon
+  CalendarIcon, DownloadIcon, UploadIcon, PlatformZapIcon, ShieldIcon,
+  EyeIcon, EyeOffIcon
 } from '../components/CommonIcons';
 
 export default function Settings() {
@@ -34,6 +35,9 @@ export default function Settings() {
   const [testingMpesa, setTestingMpesa] = useState(false);
   const [testingSms, setTestingSms] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [showMpesaKey, setShowMpesaKey] = useState(false);
+  const [showMpesaSec, setShowMpesaSec] = useState(false);
+  const [showSmsKey, setShowSmsKey] = useState(false);
   const fileRef   = useRef(null);
   const backupRef = useRef(null);
 
@@ -632,13 +636,33 @@ export default function Settings() {
                     </div>
                     <div className="form-group">
                       <label style={{fontSize:'0.7rem'}}>Consumer Key</label>
-                      <input className="form-input" type="password" placeholder="Daraja Consumer Key" value={profile.mpesa_config?.consumer_key||''} 
-                        onChange={e=>setProfile({...profile, mpesa_config: {...profile.mpesa_config, consumer_key: e.target.value}})}/>
+                      <div style={{ position: 'relative' }}>
+                        <input className="form-input" 
+                          type={showMpesaKey ? "text" : "password"} 
+                          placeholder="Daraja Consumer Key" 
+                          value={profile.mpesa_config?.consumer_key||''} 
+                          onChange={e=>setProfile({...profile, mpesa_config: {...profile.mpesa_config, consumer_key: e.target.value}})}
+                          style={{ paddingRight: '40px' }}
+                        />
+                        <button type="button" onClick={() => setShowMpesaKey(!showMpesaKey)} style={{ position: 'absolute', right: 10, top: 12, background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-light)' }}>
+                          {showMpesaKey ? <EyeOffIcon size={16} /> : <EyeIcon size={16} />}
+                        </button>
+                      </div>
                     </div>
                     <div className="form-group">
                       <label style={{fontSize:'0.7rem'}}>Consumer Secret</label>
-                      <input className="form-input" type="password" placeholder="Daraja Consumer Secret" value={profile.mpesa_config?.consumer_secret||''} 
-                        onChange={e=>setProfile({...profile, mpesa_config: {...profile.mpesa_config, consumer_secret: e.target.value}})}/>
+                      <div style={{ position: 'relative' }}>
+                        <input className="form-input" 
+                          type={showMpesaSec ? "text" : "password"} 
+                          placeholder="Daraja Consumer Secret" 
+                          value={profile.mpesa_config?.consumer_secret||''} 
+                          onChange={e=>setProfile({...profile, mpesa_config: {...profile.mpesa_config, consumer_secret: e.target.value}})}
+                          style={{ paddingRight: '40px' }}
+                        />
+                        <button type="button" onClick={() => setShowMpesaSec(!showMpesaSec)} style={{ position: 'absolute', right: 10, top: 12, background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-light)' }}>
+                          {showMpesaSec ? <EyeOffIcon size={16} /> : <EyeIcon size={16} />}
+                        </button>
+                      </div>
                     </div>
                     
                     <div style={{marginTop:12,padding:12,background:'var(--bg)',borderRadius:8,border:'1px dashed var(--border)',display:'flex',flexDirection:'column',gap:8}}>
@@ -680,8 +704,18 @@ export default function Settings() {
                     </div>
                     <div className="form-group">
                       <label style={{fontSize:'0.7rem'}}>API Key</label>
-                      <input className="form-input" type="password" placeholder="Africa's Talking API Key" value={profile.sms_config?.api_key||''} 
-                        onChange={e=>setProfile({...profile, sms_config: {...profile.sms_config, api_key: e.target.value}})}/>
+                      <div style={{ position: 'relative' }}>
+                        <input className="form-input" 
+                          type={showSmsKey ? "text" : "password"} 
+                          placeholder="Africa's Talking API Key" 
+                          value={profile.sms_config?.api_key||''} 
+                          onChange={e=>setProfile({...profile, sms_config: {...profile.sms_config, api_key: e.target.value}})}
+                          style={{ paddingRight: '40px' }}
+                        />
+                        <button type="button" onClick={() => setShowSmsKey(!showSmsKey)} style={{ position: 'absolute', right: 10, top: 12, background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-light)' }}>
+                          {showSmsKey ? <EyeOffIcon size={16} /> : <EyeIcon size={16} />}
+                        </button>
+                      </div>
                     </div>
                     
                     <div style={{marginTop:8,padding:12,background:'var(--bg)',borderRadius:8,border:'1px dashed var(--border)',display:'flex',flexDirection:'column',gap:8}}>

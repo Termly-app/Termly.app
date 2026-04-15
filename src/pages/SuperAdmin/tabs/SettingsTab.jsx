@@ -31,7 +31,8 @@
 import { useState } from 'react';
 import { calcExpiry } from '../superAdminUtils';
 import { 
-  CrossIcon, CheckIcon, RefreshIcon, SubscriptionsIcon
+  CrossIcon, CheckIcon, RefreshIcon, SubscriptionsIcon,
+  EyeIcon, EyeOffIcon
 } from '../../../components/CommonIcons';
 import { 
   ALL_SYSTEM_MODULES, FEATURE_SUGGESTIONS 
@@ -54,6 +55,9 @@ export default function SettingsTab({
   setMessage,
   onWipeSchools, // New prop for bulk cleanup
 }) {
+  const [showSmsKey, setShowSmsKey] = useState(false);
+  const [showMpesaKey, setShowMpesaKey] = useState(false);
+  const [showMpesaSec, setShowMpesaSec] = useState(false);
   const PLAN_COLORS = [
     '#ffffff','#f4f4f5','#e1eed1','#e8A020','#D4506A','#71717a','#F97316',
   ];
@@ -205,7 +209,18 @@ export default function SettingsTab({
               <div style={{ fontSize:'.55rem', color:'var(--sub)', marginBottom:6, fontStyle:'italic' }}>Used for system-wide alerts and ShuleSoft HQ communications.</div>
               <div style={{ display:'flex', gap:8, marginBottom:8 }}>
                 <input type="text" style={{ ...S.input, flex:2 }} placeholder="Sender ID" value={smsConfig.senderId} onChange={e => setSmsConfig({...smsConfig, senderId: e.target.value.toUpperCase()})} />
-                <input type="password" style={{ ...S.input, flex:3 }} placeholder="API Key" value={smsConfig.apiKey} onChange={e => setSmsConfig({...smsConfig, apiKey: e.target.value})} />
+                <div style={{ flex:3, position: 'relative' }}>
+                  <input 
+                    type={showSmsKey ? "text" : "password"} 
+                    style={{ ...S.input, width: '100%', paddingRight: '32px' }} 
+                    placeholder="API Key" 
+                    value={smsConfig.apiKey} 
+                    onChange={e => setSmsConfig({...smsConfig, apiKey: e.target.value})} 
+                  />
+                  <button type="button" onClick={() => setShowSmsKey(!showSmsKey)} style={{ position: 'absolute', right: 8, top: 12, background: 'none', border: 'none', cursor: 'pointer', color: 'var(--sub)' }}>
+                    {showSmsKey ? <EyeOffIcon size={14} /> : <EyeIcon size={14} />}
+                  </button>
+                </div>
               </div>
             </div>
 
@@ -214,8 +229,30 @@ export default function SettingsTab({
               <div style={{ fontSize:'.55rem', color:'var(--sub)', marginBottom:6, fontStyle:'italic' }}>Used for school's subscription payments to ShuleSoft.</div>
               <input type="text" style={{ ...S.input, marginBottom:8 }} placeholder="Shortcode" value={mpesaConfig.shortcode} onChange={e => setMpesaConfig({...mpesaConfig, shortcode: e.target.value})} />
               <div style={{ display:'flex', gap:8 }}>
-                <input type="password" style={{ ...S.input }} placeholder="Consumer Key" value={mpesaConfig.consumerKey} onChange={e => setMpesaConfig({...mpesaConfig, consumerKey: e.target.value})} />
-                <input type="password" style={{ ...S.input }} placeholder="Consumer Secret" value={mpesaConfig.consumerSecret} onChange={e => setMpesaConfig({...mpesaConfig, consumerSecret: e.target.value})} />
+                <div style={{ flex: 1, position: 'relative' }}>
+                  <input 
+                    type={showMpesaKey ? "text" : "password"} 
+                    style={{ ...S.input, width: '100%', paddingRight: '32px' }} 
+                    placeholder="Consumer Key" 
+                    value={mpesaConfig.consumerKey} 
+                    onChange={e => setMpesaConfig({...mpesaConfig, consumerKey: e.target.value})} 
+                  />
+                  <button type="button" onClick={() => setShowMpesaKey(!showMpesaKey)} style={{ position: 'absolute', right: 8, top: 12, background: 'none', border: 'none', cursor: 'pointer', color: 'var(--sub)' }}>
+                    {showMpesaKey ? <EyeOffIcon size={14} /> : <EyeIcon size={14} />}
+                  </button>
+                </div>
+                <div style={{ flex: 1, position: 'relative' }}>
+                  <input 
+                    type={showMpesaSec ? "text" : "password"} 
+                    style={{ ...S.input, width: '100%', paddingRight: '32px' }} 
+                    placeholder="Consumer Secret" 
+                    value={mpesaConfig.consumerSecret} 
+                    onChange={e => setMpesaConfig({...mpesaConfig, consumerSecret: e.target.value})} 
+                  />
+                  <button type="button" onClick={() => setShowMpesaSec(!showMpesaSec)} style={{ position: 'absolute', right: 8, top: 12, background: 'none', border: 'none', cursor: 'pointer', color: 'var(--sub)' }}>
+                    {showMpesaSec ? <EyeOffIcon size={14} /> : <EyeIcon size={14} />}
+                  </button>
+                </div>
               </div>
             </div>
           </div>
