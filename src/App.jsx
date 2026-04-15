@@ -734,6 +734,7 @@ function App() {
                         {/* Timetable and E-Learning routes */}
                         <Route path="/timetable"    element={<SectionGate featureSlug="timetable" featureName="Timetable" profile={profile}><Timetable currentUser={currentUser} currentPeriodId={currentPeriodId} periods={periods} /></SectionGate>} />
                         <Route path="/lms"          element={<SectionGate featureSlug="lms" featureName="E-Learning" profile={profile}><LMS currentUser={currentUser} /></SectionGate>} />
+                        <Route path="/exams"        element={<SectionGate featureSlug="exams" featureName="Formal Exams" profile={profile}><Exams currentUser={currentUser} currentPeriodId={currentPeriodId} /></SectionGate>} />
                       </>
                     )}
 
