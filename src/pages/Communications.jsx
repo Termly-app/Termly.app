@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { 
-  getStudents, getSchoolProfile, logCommunication, getCommunicationLogs, 
+  getStudents, getSchoolProfile, logCommunication, getAnnouncements, 
   sendSMSMessage, sendWhatsAppMessage 
 } from '../data/store';
 import { 
@@ -38,7 +38,7 @@ export default function Communications({ currentUser }) {
 
   const loadData = async () => {
     try {
-      const comms = await getCommunicationLogs();
+      const comms = await getAnnouncements();
       setHistory(comms);
       const studs = await getStudents();
       setStudents(studs);
@@ -264,12 +264,17 @@ export default function Communications({ currentUser }) {
           <div className="comm-card glass recent-card">
             <h4>Recent Activity</h4>
             <div className="history-list">
-              {history.slice(0, 5).map((log, i) => (
-                <div key={i} className="history-item">
-                  <div className="h-dot"></div>
+              {history.length === 0 ? (
+                <div style={{ textAlign: 'center', padding: '20px', color: 'var(--text-muted)', fontSize: '0.85rem' }}>No recent broadcasts found.</div>
+              ) : history.slice(0, 10).map((log, i) => (
+                <div key={log.id || i} className="history-item">
+                  <div className="h-dot" style={{ background: log.metadata?.channel === 'whatsapp' ? '#25d366' : '#5b3ef5' }}></div>
                   <div className="h-info">
-                    <div className="h-target">{log.target}</div>
-                    <div className="h-msg">{log.message.substring(0, 40)}...</div>
+                    <div className="h-target" style={{ fontSize: '0.85rem', fontWeight: 700 }}>{log.target_audience}</div>
+                    <div className="h-msg" style={{ fontSize: '0.75rem', opacity: 0.8 }}>{log.content?.substring(0, 60)}...</div>
+                    <div style={{ fontSize: '0.65rem', opacity: 0.5, marginTop: 4 }}>
+                      {new Date(log.created_at).toLocaleString()} • {log.metadata?.recipient_count || 0} recp.
+                    </div>
                   </div>
                 </div>
               ))}

@@ -16,9 +16,12 @@ export default function HelpCenter() {
     { id: 'onboarding', name: 'Getting Started', icon: <RocketIcon size={24} />, color: '#5B3EF5' },
     { id: 'students', name: 'Student Management', icon: <StudentIcon size={24} />, color: '#0EA5E9' },
     { id: 'cbc', name: 'CBC & Grading', icon: <GraduationIcon size={24} />, color: '#8B5CF6' },
+    { id: 'exams', name: 'Formal Exams', icon: <GraduationIcon size={24} />, color: '#F43F5E' },
     { id: 'fees', name: 'Fees & Payments', icon: <CardIcon size={24} />, color: '#10B981' },
-    /* { id: 'timetable', name: 'Timetabling', icon: <ClockIcon size={24} />, color: '#F59E0B' },
-    { id: 'comms', name: 'Communication', icon: <MessageIcon size={24} />, color: '#EF4444' } */
+    { id: 'timetable', name: 'Timetabling', icon: <ClockIcon size={24} />, color: '#F59E0B' },
+    { id: 'library', name: 'Library Management', icon: <BookIcon size={24} />, color: '#8B5CF6' },
+    { id: 'comms', name: 'Communication', icon: <MessageIcon size={24} />, color: '#EF4444' },
+    { id: 'nemis', name: 'NEMIS Compliance', icon: <FlagIcon size={24} />, color: '#0EA5E9' }
   ];
 
   const ARTICLES = {
@@ -56,32 +59,34 @@ export default function HelpCenter() {
         tip: 'Portfolios are especially important for Grade 6 transition assessments under the CBC framework.' }
     ],
     fees: [
-      /* { title: 'M-Pesa Integration', content: 'Enable automated fee tracking with our M-Pesa STK Push technology. Parents receive a prompt on their phone, and the system records the payment instantly.',
-        steps: ['Go to Settings → Integrations → M-Pesa Configuration.', 'Enter your Safaricom Business Shortcode, Consumer Key, and Consumer Secret.', 'Test the connection using the "Send Test STK Push" button.', 'Once configured, all fee payments via M-Pesa are automatically recorded.'],
-        tip: 'You need a Safaricom Daraja API account. Register at developer.safaricom.co.ke.' }, */
-      { title: 'Fee Structure Builder', content: 'Set different fees for different classes (e.g., Boarding vs Day, Grade 1 vs Grade 6). Auto-generate invoices for the entire school with one click.',
-        steps: ['Go to Settings → Fee Structure.', 'Set the base fee for each class/grade (e.g. Grade 1: KSh 15,000, Form 1: KSh 45,000).', 'The system automatically creates fee records for every student based on their class.', 'View fee balances in the Fees & Billing module.'],
-        tip: 'Fee records are created per Academic Period. Configure your fees before the start of each term.' },
-      { title: 'Defaulter Management', content: 'Identify students with outstanding balances instantly. Send bulk SMS reminders to parents and track payment plans over time.',
-        steps: ['Go to Fees & Billing to see all student fee balances.', 'Sort by "Balance" to see the highest defaulters first.', 'Use the filter to isolate a specific class.', 'Click "Record Payment" on any student to log a manual payment.'],
-        tip: 'The Dashboard widget shows a summary of total fees collected vs outstanding for the current term.' }
-    ],
-    /* timetable: [
-      { title: 'Master Timetable Generation', content: 'Input your subjects and teacher assignments. Our smart engine detects conflicts and ensures no teacher or room is double-booked.',
-        steps: ['Navigate to the Timetable module (available in paid plans).', 'Select the class and configure the time slots for the school day.', 'Assign subjects and teachers to each slot.', 'The system checks for conflicts automatically.'],
-        tip: 'This module is currently under development and will be available soon with enhanced features.' },
-      { title: 'Staff Workload Analysis', content: 'Balance teaching loads across your staff. View reports on teaching hours per week for every teacher.',
-        steps: ['Open the Timetable module and switch to the "Teacher View" tab.', 'Select a teacher to see their weekly schedule at a glance.', 'Review total teaching hours to ensure balanced workloads.', 'Adjust assignments directly from the teacher view.'],
-        tip: 'This feature helps principals identify overloaded or underutilized staff members.' }
-    ],
-    comms: [
-      { title: 'Bulk SMS Notifications', content: 'Send urgent alerts, fee reminders, or exam results to all parents or filtered groups instantly.',
-        steps: ['Navigate to the Communications module (available in paid plans).', 'Select your target audience: All Parents, a specific Class, or individual students.', 'Type your message — the character count is shown in real time.', 'Click "Send" — delivery reports appear within seconds.'],
-        tip: 'This module is under development. SMS integration requires a configured SMS provider in Settings.' },
       { title: 'Email Reports', content: 'Automatically send digital report cards and fee statements to parent emails, saving on printing costs.',
         steps: ['Ensure parent email addresses are recorded in student profiles.', 'Go to Grading → select a class → click "Email Report Cards".', 'The system generates PDF report cards and emails them to each parent.', 'A delivery summary shows which emails were sent successfully.'],
         tip: 'Parents without email addresses on file will be skipped. Use SMS as a fallback for those parents.' }
-    ] */
+    ],
+    exams: [
+      { title: 'Formal Exam Lifecycle', content: 'Manage the entire lifecycle of formal exams, from creating sessions to automated ranking.',
+        steps: ['Go to Exams and create a new session (e.g., "Term 1 Mock").', 'Configure subject papers and maximum marks for each paper.', 'Assign subjects to grades/streams.', 'Teachers enter marks via the dashboard or mobile portal.'],
+        tip: 'Once marks entry is complete, close the exam to trigger automated student ranking across classes.' },
+      { title: 'Automated Student Ranking', content: 'The system automatically calculates total marks, means, and ranks student performance.',
+        steps: ['Ensure all marks are entered and synced.', 'Click "Close Exam" in the exam session dashboard.', 'The system will process all marks and update student report data.', 'View the ranking table to see top performers by stream and overall.'],
+        tip: 'Ranking can be recalculated if you re-open and modify marks later.' }
+    ],
+    library: [
+      { title: 'Cataloging Books', content: 'Build a digital catalog of your school\'s library books with ISBN and category tracking.',
+        steps: ['Go to Library → Books tab.', 'Click "Add Book" and enter title, author, and ISBN.', 'Assign a category (e.g., Science, Humanities) for easier browsing.', 'Set the stock quantity for physical copies.'],
+        tip: 'Use the search bar to quickly check if a book is already in your database before adding.' },
+      { title: 'Borrowing & Returns', content: 'Track book movement across your student population with automated return tracking.',
+        steps: ['Navigate to Library → Issue/Return.', 'Search for a student and select the book they wish to borrow.', 'Set a return date and confirm.', 'To return, click "Check In" on the student\'s active borrowing record.'],
+        tip: 'Overdue books are highlighted in red to help librarians track late returns.' }
+    ],
+    nemis: [
+      { title: 'NEMIS Data Audit', content: 'Perform a comprehensive audit of your student data health against government requirements.',
+        steps: ['Go to Compliance → NEMIS Audit.', 'Review the "Data Gaps" breakdown showing missing UPIs, DOBs, etc.', 'Click "Fix" on any student to jump directly to their profile and update missing info.', 'The "NEMIS Ready" gauge shows your overall compliance percentage.'],
+        tip: 'Aim for 100% readiness before the end-of-term reporting deadline.' },
+      { title: 'Exporting MOE Reports', content: 'Generate high-fidelity CSV files compatible with the Kenya Ministry of Education portal.',
+        steps: ['Once your data is compliant, click "Export NEMIS CSV".', 'The file will include 22 mandatory reporting fields correctly formatted.', 'Open the file in Excel for a final check, then upload to nemis.education.go.ke.'],
+        tip: 'The export includes a term-specific filename for better archive management.' }
+    ]
   };
 
   const [activeCategory, setActiveCategory] = useState('onboarding');

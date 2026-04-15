@@ -1,6 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { LogoutIcon, UserIcon, CardIcon, MessageIcon, StatusDotIcon, ActivityIcon, CheckIcon } from '../../components/CommonIcons';
-import { getFees, simulateMpesaSTKPush, getMarks, getGradeForScore, getSchoolProfile } from '../../data/store';
+import { 
+  getFees, simulateMpesaSTKPush, getStudentExamResults, getAnnouncements, 
+  getGradeForScore, getSchoolProfile 
+} from '../../data/store';
 import { getAssignments, submitAssignment } from '../../data/offlineStore';
 
 export default function PortalDashboard({ user, onLogout }) {
@@ -19,39 +22,46 @@ export default function PortalDashboard({ user, onLogout }) {
   const [mySubmissions, setMySubmissions] = useState({});
   const [quizData, setQuizData] = useState(null);
   const [quizAnswers, setQuizAnswers] = useState({});
+  const [examResults, setExamResults] = useState([]);
+  const [notices, setNotices] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     async function init() {
-      const [asts, profile, allMarks] = await Promise.all([
-        getAssignments(user.class),
-        getSchoolProfile(),
-        getMarks()
-      ]);
-      setAssignments(asts);
-      
+      setLoading(true);
       try {
-        const { getStudentSubmissions } = await import('../../data/store');
-        const subs = await getStudentSubmissions(user.id);
+        const [asts, profile, examRes, schoolNotices] = await Promise.all([
+          getAssignments(user.class),
+          getSchoolProfile(),
+          getStudentExamResults(user.id),
+          getAnnouncements({ status: 'published' })
+        ]);
+        
+        setAssignments(asts);
+        setExamResults(examRes);
+        setNotices(schoolNotices);
+        
+        const subs = await getStudentSubmissions(user.id).catch(() => []);
         const subMap = {};
         subs.forEach(s => { subMap[s.assignment_id] = s; });
         setMySubmissions(subMap);
-      } catch (e) { console.warn('LMS Submissions fetch failed', e); }
-      const myMarks = allMarks[user.id] || {};
-      const values = Object.values(myMarks);
-      if (values.length > 0) {
-        const avg = values.reduce((a, b) => a + b, 0) / values.length;
-        const { grade, color } = getGradeForScore(avg, user.class, profile);
-        setAcademic({ average: avg.toFixed(1), grade, color });
-      }
+        
+        if (examRes.length > 0) {
+          const avg = examRes.reduce((acc, curr) => acc + (curr.total_marks / (curr.total_subjects || 1)), 0) / examRes.length;
+          const { grade, color } = getGradeForScore(avg, user.class, profile);
+          setAcademic({ average: avg.toFixed(1), grade, color, rank: examRes[0].class_position });
+        }
 
-      const fees = await getFees();
-      const myFee = fees[user.id];
-      if (myFee) {
-        setFeeBalance(myFee.balance);
-        setMpesaAmount(myFee.balance > 0 ? myFee.balance : 0);
-      } else {
-        setFeeBalance(0);
-        setMpesaAmount(0);
+        const fees = await getFees();
+        const myFee = fees[user.id];
+        if (myFee) {
+          setFeeBalance(myFee.balance);
+          setMpesaAmount(myFee.balance > 0 ? myFee.balance : 0);
+        }
+      } catch (err) {
+        console.error('Portal init failed:', err);
+      } finally {
+        setLoading(false);
       }
     }
     init();
@@ -112,7 +122,7 @@ export default function PortalDashboard({ user, onLogout }) {
     setQuizAnswers({});
     // Refresh submissions...
     try {
-      const { getStudentSubmissions } = await import('../../data/store');
+      const { getStudentSubmissions } = await import('../../data/offlineStore');
       const subs = await getStudentSubmissions(user.id);
       const subMap = {};
       subs.forEach(s => { subMap[s.assignment_id] = s; });
@@ -207,6 +217,34 @@ export default function PortalDashboard({ user, onLogout }) {
             </button>
           </div>
         </div>
+      </div>
+
+      {/* Formal Exams results */}
+      <div style={{ background: 'white', borderRadius: 20, padding: 32, boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05)', border: '1px solid #f1f5f9', marginBottom: 24 }}>
+        <h3 style={{ margin: '0 0 24px', fontSize: '1.1rem', fontWeight: 800, color: '#0f172a', display: 'flex', alignItems: 'center', gap: 8 }}>
+          <ActivityIcon size={20} color="var(--primary)" /> Formal Exam Results
+        </h3>
+        
+        {examResults.length === 0 ? (
+          <div style={{ textAlign: 'center', padding: '30px', color: '#94a3b8', background: '#f8fafc', borderRadius: 12 }}>
+            No formal exams have been published yet for this term.
+          </div>
+        ) : (
+          <div style={{ display: 'grid', gap: 16 }}>
+            {examResults.map(res => (
+              <div key={res.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px 20px', background: '#f8fafc', borderRadius: 12, border: '1px solid #e2e8f0' }}>
+                <div>
+                  <div style={{ fontWeight: 800, color: '#0f172a' }}>{res.exams?.name}</div>
+                  <div style={{ fontSize: '0.8rem', color: '#64748b' }}>{res.exams?.term} • {res.exams?.exam_type}</div>
+                </div>
+                <div style={{ textAlign: 'right' }}>
+                  <div style={{ fontSize: '1.2rem', fontWeight: 900, color: 'var(--primary)' }}>{res.total_marks} Marks</div>
+                  <div style={{ fontSize: '0.8rem', fontWeight: 600, color: '#10b981' }}>Ranked #{res.class_position} / {res.class_size}</div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Homework / LMS Portal */}
@@ -321,32 +359,36 @@ export default function PortalDashboard({ user, onLogout }) {
         )}
       </div>
 
-      {/* Communications Feed */}
       <div style={{ background: 'white', borderRadius: 20, padding: 32, boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05)', border: '1px solid #f1f5f9' }}>
         <h3 style={{ margin: '0 0 24px', fontSize: '1.1rem', fontWeight: 800, color: '#0f172a', display: 'flex', alignItems: 'center', gap: 8 }}>
           <MessageIcon size={20} color="#6366f1" /> Official School Notices
         </h3>
 
-        {comms.length === 0 ? (
+        {notices.length === 0 ? (
           <div style={{ textAlign: 'center', padding: '40px 20px', color: '#94a3b8' }}>
             <MessageIcon size={48} color="#e2e8f0" style={{ marginBottom: 16 }} />
             <div>No recent announcements from the school.</div>
           </div>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-            {comms.map((c, i) => (
+            {notices.map((c, i) => (
               <div key={c.id || i} style={{ padding: 20, background: '#f8fafc', borderRadius: 16, borderLeft: '4px solid #10b981' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 8 }}>
                   <div style={{ fontWeight: 700, color: '#0f172a', fontSize: '0.95rem', display: 'flex', alignItems: 'center', gap: 8 }}>
-                    <StatusDotIcon color="#10b981" /> General Notice
+                    <StatusDotIcon color="#10b981" /> {c.title || 'Official Notice'}
                   </div>
                   <div style={{ fontSize: '0.8rem', color: '#94a3b8', fontWeight: 600 }}>
-                    {new Date(c.timestamp).toLocaleDateString()}
+                    {new Date(c.created_at).toLocaleDateString()}
                   </div>
                 </div>
                 <div style={{ color: '#475569', fontSize: '0.95rem', lineHeight: 1.6 }}>
-                  "{c.message}"
+                   {c.content}
                 </div>
+                {c.metadata?.channel && (
+                  <div style={{ marginTop: 8, fontSize: '0.7rem', color: '#94a3b8' }}>
+                    Broadcast via {c.metadata.channel.toUpperCase()}
+                  </div>
+                )}
               </div>
             ))}
           </div>

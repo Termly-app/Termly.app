@@ -20,6 +20,7 @@ This is your primary management interface.
   - **Activate**: Use this to manual confirm a school's payment and grant them access.
   - **Deactivate**: Use this for non-payment or policy violations.
   - **Terminate**: Permanent deletion (use with extreme caution).
+- **NEMIS Support**: As a SuperAdmin, you can generate a **NEMIS-Ready CSV** for any school on their behalf. Use the "NEMIS Export" button in the school's context menu within the Schools tab.
 
 ## 3. Financial Management
 

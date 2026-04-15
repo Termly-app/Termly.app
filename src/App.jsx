@@ -37,6 +37,8 @@ const MpesaReconciliation = lazy(() => import('./pages/MpesaReconciliation'));
 const PortalManager = lazy(() => import('./pages/Portal'));
 const StaffPortalManager = lazy(() => import('./pages/StaffPortal'));
 const LMS          = lazy(() => import('./pages/LMS'));
+const Exams        = lazy(() => import('./pages/Exams'));
+const NEMISDashboard = lazy(() => import('./pages/NEMIS/index'));
 const TermsOfService  = lazy(() => import('./pages/legal/TermsOfService'));
 const PrivacyPolicy   = lazy(() => import('./pages/legal/PrivacyPolicy'));
 const AcceptableUse   = lazy(() => import('./pages/legal/AcceptableUse'));
@@ -51,6 +53,7 @@ const Blog            = lazy(() => import('./pages/Blog'));
 const Partners        = lazy(() => import('./pages/Partners'));
 const ForgotPassword  = lazy(() => import('./pages/ForgotPassword'));
 const ResetPassword   = lazy(() => import('./pages/ResetPassword'));
+const SetPassword  = lazy(() => import('./pages/SetPassword'));
 const HelpCenter      = lazy(() => import('./pages/HelpCenter'));
 
 import Loader          from './components/Common/Loader';
@@ -324,15 +327,19 @@ function Sidebar({ isOpen, onClose, onLogout, currentUser, subscriptionActive })
           <SbLink to="/grading"   icon={GradingIcon}   label="Grading"    onClick={onClose} locked={!subscriptionActive && !isPlatformAdmin} />
         )}
         
-        {/* Timetable — hidden from production, code preserved */}
-        {/* {(isTeacher || isAdmin) && (features.timetable || isSandbox) && (
-          <SbLink to="/timetable" icon={TimetableIcon} label={features.exam_scheduling ? "Scheduling" : "Timetable"} onClick={onClose} locked={!subscriptionActive && !isPlatformAdmin} />
-        )} */}
+        {(isTeacher || isAdmin) && (features.exams || isSandbox) && (
+          <SbLink to="/exams"     icon={GradingIcon}   label="Exams"      onClick={onClose} locked={!subscriptionActive && !isPlatformAdmin} />
+        )}
+        
+        {/* Timetable — Reactivated for Sandbox/Production */}
+        {(isTeacher || isAdmin) && (features.timetable || isSandbox) && (
+          <SbLink to="/timetable" icon={TimetableIcon} label="Timetable" onClick={onClose} locked={!subscriptionActive && !isPlatformAdmin} />
+        )}
 
-        {/* WIP: E-Learning — hidden from production, code preserved */}
-        {/* {(isTeacher || isAdmin) && (features.lms || isSandbox) && (
+        {/* E-Learning — Reactivated for Sandbox/Production */}
+        {(isTeacher || isAdmin) && (features.lms || isSandbox) && (
           <SbLink to="/lms" icon={ActivityIcon} label="E-Learning" onClick={onClose} locked={!subscriptionActive && !isPlatformAdmin} />
-        )} */}
+        )}
 
         {/* Administration/Finance section - always visible for Sandbox, else gated */}
         {(isAdmin || isFinance) && (isSandbox || features.fees || isAdmin) && (
@@ -345,20 +352,25 @@ function Sidebar({ isOpen, onClose, onLogout, currentUser, subscriptionActive })
 
         
 
-        {/* WIP: Communications — hidden from production, code preserved */}
-        {/* {isAdmin && (features.sms || isSandbox) && (
+        {isAdmin && (features.sms || isSandbox) && (
           <SbLink to="/communications" icon={MessageIcon} label="Comm. Center" onClick={onClose} locked={!subscriptionActive && !isPlatformAdmin} />
-        )} */}
+        )}
 
-        {/* WIP: Teacher Portal — hidden from production, code preserved */}
-        {/* {(isAdmin || isTeacher) && (features.teacher_portal || isSandbox) && (
+        {(isAdmin || isTeacher) && (features.teacher_portal || isSandbox) && (
           <SbLink to="/portal/teacher" icon={StaffIcon} label="Teacher Portal" onClick={onClose} locked={!subscriptionActive && !isPlatformAdmin} />
-        )} */}
+        )}
 
-        {/* WIP: Parent Portal — hidden from production, code preserved */}
-        {/* {isAdmin && (features.parent_portal || isSandbox) && (
+        {isAdmin && (features.parent_portal || isSandbox) && (
           <SbLink to="/portal/parent" icon={UserIcon} label="Parent Portal" onClick={onClose} locked={(!subscriptionActive || (isSandbox && !features.parent_portal)) && !isPlatformAdmin} />
-        )} */}
+        )}
+        {/* Compliance section - Admins ONLY (as requested: no finance) */}
+        {isAdmin && (
+          <>
+            <SbSection label="Compliance" />
+            <SbLink to="/compliance/nemis" icon={FlagIcon} label="NEMIS Audit" onClick={onClose} locked={!subscriptionActive && !isPlatformAdmin} />
+          </>
+        )}
+
         <SbSection label="Resources" />
         <SbLink to="/help" icon={BookIcon} label="Help Center" onClick={onClose} />
         
@@ -457,6 +469,7 @@ function App() {
               role       : userRecord.role,
               schoolName : userRecord.schools?.name,
               school_id  : (realIsPlatAdmin && isActingAs && overrideSchoolId) ? overrideSchoolId : userRecord.school_id,
+              password_changed: userRecord.password_changed
             });
             const profileData = await getSchoolProfile();
             setProfile(profileData);
@@ -523,6 +536,7 @@ function App() {
         <Routes>
           <Route path="/"                   element={<Landing />} />
           <Route path="/login"              element={<Login onLogin={setCurrentUser} />} />
+          <Route path="/:schoolCode/login"  element={<Login onLogin={setCurrentUser} />} />
           <Route path="/register"           element={<Register />} />
           <Route path="/legal/terms"        element={<TermsOfService />} />
           <Route path="/legal/privacy"      element={<PrivacyPolicy />} />
@@ -565,6 +579,8 @@ function App() {
                   />
                 </ErrorBoundary>
               } />
+                <Route path="/lms" element={<Suspense fallback={<Loader />}><LMS /></Suspense>} />
+                <Route path="/exams" element={<Suspense fallback={<Loader />}><Exams /></Suspense>} />
               <Route path="/login" element={<Navigate to="/super-admin" replace />} />
               <Route path="/"     element={<Navigate to="/super-admin" replace />} />
               <Route path="*"     element={<Navigate to="/super-admin" replace />} />
@@ -572,6 +588,20 @@ function App() {
           </Suspense>
         </div>
       </>
+    );
+  }
+
+  // --- Required Password Update ---
+  if (currentUser && currentUser.password_changed === false) {
+    return (
+      <div className="app-layout">
+        <Suspense fallback={<Loader />}>
+          <Routes>
+            <Route path="/set-password" element={<SetPassword currentUser={currentUser} onPasswordChanged={() => setCurrentUser({...currentUser, password_changed: true})} />} />
+            <Route path="*" element={<Navigate to="/set-password" replace />} />
+          </Routes>
+        </Suspense>
+      </div>
     );
   }
 
@@ -701,10 +731,9 @@ function App() {
                         <Route path="/students"     element={<Students currentUser={currentUser} currentPeriodId={currentPeriodId} />} />
                         <Route path="/grading"      element={<SectionGate featureSlug="grading" featureName="Grading" profile={profile}><Grading currentUser={currentUser} currentPeriodId={currentPeriodId} /></SectionGate>} />
                         <Route path="/attendance"   element={<SectionGate featureSlug="attendance" featureName="Attendance" profile={profile}><Attendance currentUser={currentUser} currentPeriodId={currentPeriodId} /></SectionGate>} />
-                        {/* Timetable route — hidden from production */}
-                        {/* <Route path="/timetable"    element={<SectionGate featureSlug="timetable" featureName="Timetable" profile={profile}><Timetable currentUser={currentUser} currentPeriodId={currentPeriodId} periods={periods} /></SectionGate>} /> */}
-                        {/* WIP: E-Learning route — hidden from production */}
-                        {/* <Route path="/lms"          element={<SectionGate featureSlug="lms" featureName="E-Learning" profile={profile}><LMS currentUser={currentUser} /></SectionGate>} /> */}
+                        {/* Timetable and E-Learning routes */}
+                        <Route path="/timetable"    element={<SectionGate featureSlug="timetable" featureName="Timetable" profile={profile}><Timetable currentUser={currentUser} currentPeriodId={currentPeriodId} periods={periods} /></SectionGate>} />
+                        <Route path="/lms"          element={<SectionGate featureSlug="lms" featureName="E-Learning" profile={profile}><LMS currentUser={currentUser} /></SectionGate>} />
                       </>
                     )}
 
@@ -716,10 +745,9 @@ function App() {
                     )}
 
                     {/* Communications Routes: Admin */}
-                    {/* WIP: Communications route — hidden from production */}
-                    {/* {isAdmin && (
+                    {isAdmin && (
                       <Route path="/communications" element={<SectionGate featureSlug="sms" featureName="Communications" profile={profile}><Communications currentUser={currentUser} /></SectionGate>} />
-                    )} */}
+                    )}
 
                     {/* Library Routes: Admin, Librarian & Teacher (View Only) */}
                     {(isAdmin || isLibrarian || isTeacher) && (
@@ -733,9 +761,13 @@ function App() {
                         <Route path="/security" element={<Security currentUser={currentUser} />} />
                         <Route path="/settings" element={<Settings currentUser={currentUser} />} />
                         <Route path="/billing"  element={<Billing currentUser={currentUser} />} />
-                        {/* WIP: Portal routes — hidden from production */}
-                        {/* <Route path="/portal/teacher" element={<SectionGate featureSlug="teacher_portal" featureName="Teacher Portal" profile={profile}><div style={{padding:40}}>Teacher Portal Management (Coming Soon)</div></SectionGate>} /> */}
-                        {/* <Route path="/portal/parent"  element={<SectionGate featureSlug="parent_portal"  featureName="Parent Portal"  profile={profile}><div style={{padding:40}}>Parent Portal Management (Coming Soon)</div></SectionGate>} /> */}
+                        <Route path="/compliance/nemis" element={
+                          <SectionGate featureSlug="nemis" featureName="NEMIS Export" profile={profile}>
+                            <NEMISDashboard currentUser={currentUser} />
+                          </SectionGate>
+                        } />
+                        <Route path="/portal/teacher" element={<SectionGate featureSlug="teacher_portal" featureName="Teacher Portal" profile={profile}><div style={{padding:40}}>Teacher Portal Management (Coming Soon)</div></SectionGate>} />
+                        <Route path="/portal/parent"  element={<SectionGate featureSlug="parent_portal"  featureName="Parent Portal"  profile={profile}><div style={{padding:40}}>Parent Portal Management (Coming Soon)</div></SectionGate>} />
                       </>
                     )}
 

@@ -227,10 +227,10 @@ export default function Landing() {
         <div className="hero-content">
           <div className="hero-badge">
             <span className="bdot"></span>
-            Built for Kenyan Schools · CBC Ready
+            Built for Kenyan Schools · CBC & 8-4-4 Ready
           </div>
-          <h1 className="hero-h1">Manage your entire school easily<br /><span className="h1-dim">— students, fees, results —</span><br />all in one system.</h1>
-          <p className="hero-sub">Built for Kenyan schools. Stop juggling bank slips and paper registers. Automate your fee collection, secondary school grading, and CBC portfolios with ShuleSoft.</p>
+          <h1 className="hero-h1">Complete School Management<br /><span className="h1-dim">— Exams, Finance, Compliance —</span><br />all in one system.</h1>
+          <p className="hero-sub">ShuleSoft is the all-in-one ecosystem for modern Kenyan schools. Automate your M-PESA fee collection, manage formal exam sessions with auto-ranking, and ensure 100% NEMIS compliance.</p>
           <div className="hero-btns">
             <Link to="/register" className="btn-p">
               Get access
@@ -253,9 +253,9 @@ export default function Landing() {
                 <div className="sl on"><span className="sl-ico si-v"><DashboardIcon size={12} /></span>Dashboard</div>
                 <div className="sl"><span className="sl-ico si-g"><UserIcon size={12} /></span>Students</div>
                 <div className="sl"><span className="sl-ico si-g"><CardIcon size={12} /></span>Fees</div>
-                <div className="sl"><span className="sl-ico si-g"><CheckIcon size={12} /></span>Exams</div>
-                {/* <div className="sl"><span className="sl-ico si-g"><CalendarIcon size={12} /></span>Timetable</div> */}
-                <div className="sl"><span className="sl-ico si-g"><BookIcon size={12} /></span>Attendance</div>
+                <div className="sl"><span className="sl-ico si-g"><GraduationIcon size={12} /></span>Exams</div>
+                <div className="sl"><span className="sl-ico si-g"><FlagIcon size={12} /></span>NEMIS Audit</div>
+                <div className="sl"><span className="sl-ico si-g"><BookIcon size={12} /></span>Library</div>
               </div>
               <div className="hs-main">
                 <div className="hs-t">Greenfield Academy</div>
@@ -283,10 +283,10 @@ export default function Landing() {
                   <div className="dp">
                     <div className="dpt">Activity</div>
                     <div className="acts">
-                      <div className="act"><span className="an">Form 3A</span><span className="tag tg">Live</span></div>
-                      <div className="act"><span className="an">M-PESA</span><span className="tag ty">Pending</span></div>
-                      <div className="act"><span className="an">Std 6B</span><span className="tag tr">Alert</span></div>
-                      <div className="act"><span className="an">CBC</span><span className="tag tv">Sync</span></div>
+                      <div className="act"><span className="an">Form 4 Mock</span><span className="tag tg">Exam Open</span></div>
+                      <div className="act"><span className="an">NEMIS Sync</span><span className="tag tv">94% Ready</span></div>
+                      <div className="act"><span className="an">Library</span><span className="tag ty">12 Overdue</span></div>
+                      <div className="act"><span className="an">M-PESA STK</span><span className="tag tr">Alert</span></div>
                     </div>
                   </div>
                 </div>
@@ -300,10 +300,10 @@ export default function Landing() {
         <div className="ticker-track">
           <span className="ti on"><span className="tic tv-"><BookIcon size={14} /></span>CBC Portfolios</span><span className="tick-dot">·</span>
           <span className="ti"><span className="tic tg-"><CardIcon size={14} /></span>M-PESA Fees</span><span className="tick-dot">·</span>
-          <span className="ti on"><span className="tic ty-"><DashboardIcon size={14} /></span>KNEC Report Cards</span><span className="tick-dot">·</span>
-          <span className="ti"><span className="tic tv-"><CalendarIcon size={14} /></span>Student Analytics</span><span className="tick-dot">·</span>
-          <span className="ti on"><span className="tic tg-"><UserIcon size={14} /></span>Staff Records</span><span className="tick-dot">·</span>
-          <span className="ti"><span className="tic ty-"><RocketIcon size={14} /></span>Exam Analytics</span><span className="tick-dot">·</span>
+          <span className="ti on"><span className="tic ty-"><GraduationIcon size={14} /></span>Formal Exams</span><span className="tick-dot">·</span>
+          <span className="ti"><span className="tic tv-"><FlagIcon size={14} /></span>NEMIS Compliance</span><span className="tick-dot">·</span>
+          <span className="ti on"><span className="tic tg-"><BookIcon size={14} /></span>Smart Library</span><span className="tick-dot">·</span>
+          <span className="ti"><span className="tic ty-"><RocketIcon size={14} /></span>E-Learning LMS</span><span className="tick-dot">·</span>
           <span className="ti on"><span className="tic tv-"><SchoolIcon size={14} /></span>Multi-Campus</span><span className="tick-dot">·</span>
           <span className="ti"><span className="tic tg-"><FlagIcon size={14} /></span>Built in Nairobi</span><span className="tick-dot">·</span>
           <span className="ti on"><span className="tic tv-"><BookIcon size={14} /></span>CBC Portfolios</span><span className="tick-dot">·</span>

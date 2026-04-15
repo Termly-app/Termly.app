@@ -32,6 +32,9 @@ A high-privilege component that performs global aggregation.
 | `students` | Student details and academic status. | `id` (UUID) | `school_id` |
 | `marks` | Academic scores and assessments. | `id` (UUID) | `student_id`, `school_id` |
 | `payments` | Fee transactions and M-PESA records. | `id` (UUID) | `school_id` |
+| `announcements`| System and school-wide broadcast logs. | `id` (UUID) | `school_id` |
+| `exam_sessions`| Formal exam configurations and timelines. | `id` (UUID) | `school_id`, `period_id` |
+| `library_books`| School catalog, ISBNs, and borrowing state.| `id` (UUID) | `school_id` |
 | `platform_settings`| Global pricing, billing instructions, and APK links. | `id` | - |
 
 ## 4. Key Design Patterns

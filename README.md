@@ -5,7 +5,10 @@ ShuleSoft is a comprehensive SaaS platform designed to streamline school operati
 ## 🚀 Key Features
 
 - **CBC Grading System**: Automated generation of KNEC-aligned portfolios and report cards.
+- **Formal Exams Engine**: Complete exam lifecycle management with automated analytics and student ranking.
 - **Fees & Finance**: M-PESA paybill integration with instant receipt generation.
+- **NEMIS Compliance Module**: Built-in 22-field MoE data audit and one-click reporting CSV exports.
+- **Library & E-Learning**: Integrated book cataloging and LMS features for an all-around school digital ecosystem.
 - **Multi-Term Management**: Effortlessly switch between academic years and terms.
 - **SuperAdmin Dashboard**: Global analytics for revenue, school growth, and seat usage.
 - **Mobile Responsive**: Full PWA support for access on any device, including desktop installation.

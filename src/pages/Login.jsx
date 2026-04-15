@@ -1,22 +1,71 @@
 import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import {
   findSchool,
   setCurrentSchoolContext,
   initActivePeriod,
+  getSchoolByCode,
+  searchPublicSchools,
 } from '../data/store';
 import { CardIcon, DashboardIcon, RocketIcon, FlagIcon, EyeIcon, EyeOffIcon } from '../components/CommonIcons';
 
 export default function Login({ onLogin }) {
+  const { schoolCode } = useParams();
+  const navigate = useNavigate();
+
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [brandedSchool, setBrandedSchool] = useState(null);
+
+  // Search State
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchResults, setSearchResults] = useState([]);
+  const [isSearching, setIsSearching] = useState(false);
+  const [selectedSchool, setSelectedSchool] = useState(null);
 
   // Login State
   const [schoolEmail, setSchoolEmail] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+
+  useEffect(() => {
+    if (searchQuery.trim().length < 2) {
+      setSearchResults([]);
+      return;
+    }
+    const timer = setTimeout(async () => {
+      setIsSearching(true);
+      try {
+         const results = await searchPublicSchools(searchQuery);
+         setSearchResults(results);
+      } catch (err) {
+         console.error(err);
+      } finally {
+         setIsSearching(false);
+      }
+    }, 400);
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
+
+  useEffect(() => {
+    async function initBranding() {
+      if (schoolCode) {
+        try {
+          const school = await getSchoolByCode(schoolCode);
+          if (school) {
+            setBrandedSchool(school);
+          } else {
+            setError('Invalid or inactive school link.');
+          }
+        } catch (e) {
+           setError('Could not load school branding.');
+        }
+      }
+    }
+    initBranding();
+  }, [schoolCode]);
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -25,144 +74,144 @@ export default function Login({ onLogin }) {
       return;
     }
     
-    // Suggest school email if missing but potentially an admin
-    if (!schoolEmail.trim() && !email.toLowerCase().endsWith('@shulesoft.com')) {
-      setError('Staff & Admins: Please enter your School Workspace Email to continue.');
-      return;
-    }
+    // Provide early error ONLY if we definitely have not identified any context
+    // Actually, let's defer it.
     
     setError('');
     setLoading(true);
 
     try {
+      // 0. Smart Credential Routing
+      let loginString = email.trim();
+      let loginEmail = loginString;
+      let targetSchoolRef = brandedSchool || selectedSchool;
+
+      if (/^[0-9+]+$/.test(loginString)) {
+         // Mostly numeric - decide if Phone or Adm No
+         if (loginString.length >= 9) {
+            setError("Phone/SMS authentication is currently coming soon. Please use Email or Adm No.");
+            setLoading(false);
+            return;
+         } else {
+            if (!targetSchoolRef) {
+               setError('To login with an Admission Number, please search and select your school first.');
+               setLoading(false);
+               return;
+            }
+            loginEmail = `${loginString}@${targetSchoolRef.school_code}.shulesoft.com`.toLowerCase();
+         }
+      } else if (!loginString.includes('@')) {
+          if (!targetSchoolRef) {
+             setError('To login with a Username, please search and select your school first.');
+             setLoading(false);
+             return;
+          }
+          loginEmail = `${loginString}@${targetSchoolRef.school_code}.shulesoft.com`.toLowerCase();
+      }
+
       // 1. Authenticate first
       const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
-        email,
+        email: loginEmail,
         password,
       });
       if (authError) throw authError;
 
       const authUser = authData.user;
 
-      // 2. If schoolEmail is provided, resolve school by that email
-      let targetSchoolId = null;
-      if (schoolEmail && schoolEmail.trim()) {
-        // Find the school whose owner registered with this email
-        const { data: ownerAuth } = await supabase
-          .from('users')
-          .select('school_id')
-          .eq('email', schoolEmail.trim().toLowerCase())
-          .eq('role', 'Admin')
-          .maybeSingle();
-
-        if (ownerAuth) {
-          targetSchoolId = ownerAuth.school_id;
-        } else {
-          // Try finding by school owner_id via schools table
-          // First look up the auth user for this school email
-          const { data: schoolsByName } = await supabase
-            .from('schools')
-            .select('id, owner_id')
-            .limit(50);
-          
-          if (schoolsByName) {
-            // Check if any school's owner has this email by checking users table
-            const { data: ownerUser } = await supabase
-              .from('users')
-              .select('school_id')
-              .eq('email', schoolEmail.trim().toLowerCase())
-              .limit(1);
-            if (ownerUser && ownerUser.length > 0) {
-              targetSchoolId = ownerUser[0].school_id;
-            }
-          }
-        }
-
-        if (!targetSchoolId) {
-          throw new Error('No school workspace found for that school email. Please check and try again.');
-        }
-      }
-
-      // 3. Look up user record by auth_user_id
-      let userQuery = supabase
+      // 2. Fetch all known user records (memberships) for this auth identity
+      const { data: userRecords } = await supabase
         .from('users')
         .select('*, schools(id, name, plan)')
         .eq('auth_user_id', authUser.id);
-      
-      // If we have a target school, filter by it
-      if (targetSchoolId) {
-        userQuery = userQuery.eq('school_id', targetSchoolId);
+
+      const knownSchoolIds = userRecords?.map(u => u.school_id) || [];
+
+      // 3. Fallback: Check if they are the owner of any schools
+      const { data: ownedSchools } = await supabase
+        .from('schools')
+        .select('*')
+        .eq('owner_id', authUser.id);
+        
+      ownedSchools?.forEach(s => {
+        if (!knownSchoolIds.includes(s.id)) knownSchoolIds.push(s.id);
+      });
+
+      let targetSchoolId = brandedSchool ? brandedSchool.id : (selectedSchool ? selectedSchool.id : null);
+
+      // 4. Resolve target school intelligently 
+      if (!targetSchoolId && schoolEmail && schoolEmail.trim()) {
+        // If they typed a schoolEmail, try to find that specific school
+        const { data: ownerAuth } = await supabase.from('users').select('school_id').eq('email', schoolEmail.trim().toLowerCase()).eq('role', 'Admin').maybeSingle();
+        if (ownerAuth) {
+          targetSchoolId = ownerAuth.school_id;
+        } else {
+           const { data: schoolsByName } = await supabase.from('schools').select('id, owner_id').limit(50);
+           if (schoolsByName) {
+             const { data: ownerUser } = await supabase.from('users').select('school_id').eq('email', schoolEmail.trim().toLowerCase()).limit(1);
+             if (ownerUser?.length > 0) targetSchoolId = ownerUser[0].school_id;
+           }
+        }
+        if (!targetSchoolId) throw new Error('No school workspace found for that school email.');
       }
 
-      const { data: userRecord } = await userQuery.maybeSingle();
+      // 5. Intelligent Auto-select if targetSchoolId is STILL null
+      if (!targetSchoolId) {
+        if (knownSchoolIds.length === 1) {
+          targetSchoolId = knownSchoolIds[0];
+        } else if (knownSchoolIds.length > 1) {
+          throw new Error('Your account belongs to multiple schools. Please enter the School Workspace Email to specify which one you want to log into.');
+        } else {
+           // Fallback matching by email (legacy)
+           const { data: emailMatch } = await supabase.from('users').select('id, school_id').eq('email', email.toLowerCase()).limit(1);
+           if (emailMatch && emailMatch.length > 0) {
+             targetSchoolId = emailMatch[0].school_id;
+           } else {
+             throw new Error('Access denied. No school workspace found. If you are a staff member, enter the School Workspace Email below.');
+           }
+        }
+      }
 
-      if (userRecord) {
-        setCurrentSchoolContext(userRecord.school_id, authUser);
+      // 6. Complete Login with definitively identified targetSchoolId
+      let activeUser = userRecords?.find(u => u.school_id === targetSchoolId);
+      
+      if (!activeUser && ownedSchools?.find(s => s.id === targetSchoolId)) {
+         // Auto-provision owner missing an explicit users row
+         const oSchool = ownedSchools.find(s => s.id === targetSchoolId);
+         const { data: newUser, error: newUserErr } = await supabase.from('users')
+          .upsert({
+            school_id: oSchool.id, auth_user_id: authUser.id,
+            name: (authUser.user_metadata?.full_name || oSchool.name + ' Admin'),
+            email: authUser.email, role: 'Admin',
+          }).select().single();
+         if (newUserErr) throw newUserErr;
+         activeUser = { ...newUser, schools: { name: oSchool.name }};
+      }
+      
+      if (!activeUser) {
+        // Fallback email matcher check
+        const { data: emailMatchUser } = await supabase.from('users').select('*, schools(id, name, plan)').eq('school_id', targetSchoolId).eq('email', email.toLowerCase()).maybeSingle();
+        if (emailMatchUser) {
+           await supabase.from('users').update({ auth_user_id: authUser.id }).eq('id', emailMatchUser.id);
+           activeUser = emailMatchUser;
+        }
+      }
+
+      if (activeUser) {
+        setCurrentSchoolContext(targetSchoolId, authUser);
         await initActivePeriod();
         onLogin({
-          id: userRecord.id,
-          name: userRecord.name,
-          email: userRecord.email,
-          role: userRecord.role,
-          schoolName: userRecord.schools?.name,
+          id: activeUser.id,
+          name: activeUser.name,
+          email: activeUser.email,
+          role: activeUser.role,
+          schoolName: activeUser.schools?.name,
         });
         return;
       }
 
-      // 4. Fallback: match by email in users table (for accounts created before RPC)
-      if (targetSchoolId) {
-        const { data: emailMatch } = await supabase
-          .from('users')
-          .select('*, schools(id, name, plan)')
-          .eq('school_id', targetSchoolId)
-          .eq('email', email.toLowerCase())
-          .maybeSingle();
+      throw new Error('You do not have access to this school workspace.');
 
-        if (emailMatch) {
-          // Link the auth_user_id for future logins
-          await supabase.from('users').update({ auth_user_id: authUser.id }).eq('id', emailMatch.id);
-          setCurrentSchoolContext(emailMatch.school_id, authUser);
-          await initActivePeriod();
-          onLogin({
-            id: emailMatch.id,
-            name: emailMatch.name,
-            email: emailMatch.email,
-            role: emailMatch.role,
-            schoolName: emailMatch.schools?.name,
-          });
-          return;
-        }
-      }
 
-      // 5. Fallback: Check if they are the owner of a school
-      const { data: ownedSchool } = await supabase
-        .from('schools')
-        .select('*')
-        .eq('owner_id', authUser.id)
-        .maybeSingle();
-
-      if (ownedSchool) {
-        const { data: newUser, error: newUserErr } = await supabase
-          .from('users')
-          .upsert({
-            school_id: ownedSchool.id,
-            auth_user_id: authUser.id,
-            name: (authUser.user_metadata?.full_name || ownedSchool.name + ' Admin'),
-            email: authUser.email,
-            role: 'Admin',
-          })
-          .select()
-          .single();
-        
-        if (newUserErr) throw newUserErr;
-
-        setCurrentSchoolContext(ownedSchool.id, authUser);
-        await initActivePeriod();
-        onLogin({ ...newUser, schoolName: ownedSchool.name });
-        return;
-      }
-
-      throw new Error('Access denied. No school workspace found for this account. If you are a staff member, please enter the School Email to identify your workspace.');
     } catch (err) {
       let msg = err.message;
       if (msg.includes('Invalid login credentials')) msg = 'Invalid Email or Password.';
@@ -230,42 +279,45 @@ export default function Login({ onLogin }) {
           </Link>
 
           <div className="login-content">
-            <div className="res-ftitle">Secure Login</div>
+            <div className="res-ftitle">{brandedSchool ? `Welcome to ${brandedSchool.name}` : `Secure Login`}</div>
             <p className="res-fsub">Sign in to your school's workspace.</p>
 
             {error && <div className="res-error">{error}</div>}
 
             <form onSubmit={handleLogin}>
-              <div className="res-field" style={{ marginBottom: 32 }}>
+              {!brandedSchool && (
+              <div className="res-field" style={{ marginBottom: 32, position: 'relative', zIndex: 100 }}>
                 <div className="res-fico">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/>
+                    <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
                   </svg>
                 </div>
-                <input 
-                  type="email" 
-                  placeholder="School Workspace Email" 
-                  value={schoolEmail} 
-                  onChange={(e) => setSchoolEmail(e.target.value)} 
-                />
+                {selectedSchool ? (
+                  <div style={{ display: 'flex', alignItems: 'center', height: '100%', paddingLeft: '45px', fontWeight: '600', color: '#5B3EF5', justifyContent: 'space-between', paddingRight: '12px', background: 'transparent' }}>
+                    {selectedSchool.name}
+                    <button type="button" onClick={() => setSelectedSchool(null)} style={{ background: 'none', border: 'none', color: '#94A3B8', cursor: 'pointer', padding: '4px' }}>✕</button>
+                  </div>
+                ) : (
+                  <input 
+                    type="text" 
+                    placeholder="Search for your school..." 
+                    value={searchQuery} 
+                    onChange={(e) => setSearchQuery(e.target.value)} 
+                    autoComplete="off"
+                  />
+                )}
                 <div className="res-uline"></div>
-                <div className="res-fhint" style={{ 
-                  color: schoolEmail ? '#5B3EF5' : '#D4506A',
-                  background: schoolEmail ? 'rgba(91, 62, 245, 0.05)' : 'rgba(212, 80, 106, 0.05)',
-                  padding: '8px 12px',
-                  borderRadius: '6px',
-                  marginTop: '10px',
-                  fontWeight: 500,
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '6px'
-                }}>
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ width: 14, height: 14, flexShrink: 0 }}>
-                    <circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/>
-                  </svg>
-                  Staff/Admins: Enter the email used to register your school account here.
-                </div>
+                {!selectedSchool && searchResults.length > 0 && (
+                   <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, background: '#fff', border: '1px solid #e2e8f0', borderRadius: '12px', marginTop: '8px', zIndex: 110, boxShadow: '0 10px 25px rgba(0,0,0,0.1)', maxHeight: '200px', overflowY: 'auto' }}>
+                     {searchResults.map(s => (
+                        <div key={s.id} onClick={() => { setSelectedSchool(s); setSearchQuery(''); setSearchResults([]); }} style={{ padding: '12px 16px', cursor: 'pointer', borderBottom: '1px solid #f1f5f9', fontWeight: 500, color: '#1E293B', transition: 'background 0.2s', fontSize: '0.9rem' }} onMouseEnter={(e) => e.currentTarget.style.background = '#f8fafc'} onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}>
+                          {s.name}
+                        </div>
+                     ))}
+                   </div>
+                )}
               </div>
+              )}
 
               <div className="res-field">
                 <div className="res-fico">
@@ -274,8 +326,8 @@ export default function Login({ onLogin }) {
                   </svg>
                 </div>
                 <input 
-                  type="email" 
-                  placeholder="Your Email Address" 
+                  type="text" 
+                  placeholder="Email, Phone, or Adm No" 
                   value={email} 
                   onChange={(e) => setEmail(e.target.value)} 
                   required 

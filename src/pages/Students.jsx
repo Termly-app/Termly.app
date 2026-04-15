@@ -199,7 +199,9 @@ export default function Students({ currentUser, currentPeriodId }) {
           <table className="data-table responsive-table">
             <thead>
               <tr>
-                <th>Adm No</th><th>Full Name</th><th>Class</th><th>Level</th><th>Stream</th>
+                <th>Adm No</th><th>Full Name</th><th>Class</th><th>Level</th>
+                <th title="NEMIS Readiness Status">Status</th>
+                <th>Stream</th>
                 <th>Category</th><th>Parent</th><th>Phone</th>
                 { (isAdmin || isFinance) && <th>Fee Balance</th> }
                 {isAdmin&&<th style={{textAlign:'center'}}>Actions</th>}
@@ -227,6 +229,17 @@ export default function Students({ currentUser, currentPeriodId }) {
                     </td>
                     <td data-label="Class"><span className="badge badge-info">{s.class}</span></td>
                     <td data-label="Level"><span className={`level-badge ${lb.cls}`}>{lb.ico} {getLevelForGrade(s.class)}</span></td>
+                    <td data-label="Status">
+                      { (s.upi || s.nemis_number) && s.dob && s.gender && (s.parent_phone || s.parentPhone) ? (
+                        <span className="badge badge-success" style={{ display: 'inline-flex', alignItems: 'center', gap: 4, padding: '2px 8px', fontSize: '0.65rem' }}>
+                          <FlagIcon size={10} /> Ready
+                        </span>
+                      ) : (
+                        <span className="badge badge-warning" style={{ display: 'inline-flex', alignItems: 'center', gap: 4, padding: '2px 8px', fontSize: '0.65rem', background: '#fff7ed', color: '#c2410c', border: '1px solid #ffedd5' }}>
+                          Pending
+                        </span>
+                      )}
+                    </td>
                     <td data-label="Stream">{s.stream||<span className="text-muted">—</span>}</td>
                     <td data-label="Category"><span className={`badge ${s.residenceType === 'boarding' ? 'badge-accent' : 'badge-ghost'}`} style={{textTransform:'capitalize'}}>{s.residenceType === 'boarding' && s.house ? `Boarding (${s.house})` : (s.residenceType || 'day')}</span></td>
                     <td data-label="Parent">{s.parent}</td>
@@ -355,11 +368,19 @@ function StudentModal({ student, profile, onSave, onClose }) {
           </div>
           <div className="form-group"><label>Notes</label><textarea className="form-input" name="notes" value={form.notes} onChange={hc} rows={2} style={{resize:'vertical'}}/></div>
           
-          <div style={{marginTop:20,paddingTop:15,borderTop:'1px dashed var(--border)'}}>
-            <h4 style={{fontSize:'0.75rem',fontWeight:700,color:'var(--primary)',marginBottom:12,textTransform:'uppercase',letterSpacing:'0.05em'}}>Optional: NEMIS Details</h4>
+          <div style={{marginTop:20,paddingTop:15,borderTop:'1px dashed var(--border)', background: '#f8fafc', padding: 15, borderRadius: 12}}>
+            <h4 style={{fontSize:'0.75rem',fontWeight:700,color:'#0369a1',marginBottom:12,textTransform:'uppercase',letterSpacing:'0.05em', display: 'flex', alignItems: 'center', gap: 8}}>
+              <FlagIcon size={14} /> Ministry (NEMIS) Compliance Data
+            </h4>
+            <div style={{ fontSize: '0.7rem', color: '#64748b', marginBottom: 12 }}>Required for official government reporting and funding.</div>
             <div className="form-row">
+              <div className="form-group">
+                <label style={{ color: !form.upi && !form.nemis_number ? '#c2410c' : 'inherit' }}>
+                  UPI / NEMIS No {!form.upi && !form.nemis_number && <span style={{ color: '#ef4444' }}>*</span>}
+                </label>
+                <input className="form-input" name="upi" value={form.upi || form.nemis_number || ''} onChange={hc} placeholder="Unique Personal Identifier"/>
+              </div>
               <div className="form-group"><label>Birth Certificate No</label><input className="form-input" name="birthCertNo" value={form.birthCertNo} onChange={hc} placeholder="e.g. 12345678"/></div>
-              <div className="form-group"><label>County</label><input className="form-input" name="county" value={form.county} onChange={hc} placeholder="e.g. Nairobi"/></div>
             </div>
             <div className="form-row">
               <div className="form-group"><label>Father's Name</label><input className="form-input" name="fatherName" value={form.fatherName} onChange={hc}/></div>

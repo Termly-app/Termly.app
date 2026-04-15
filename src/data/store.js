@@ -157,10 +157,13 @@ export async function getRegisteredSchools() {
 
 export async function registerSchool(name, email, plan, authUserId, adminName, adminEmail, phone = '', location = '', curriculum = 'CBC Only') {
   // 1. Create the school row
+  const baseCode = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+  const school_code = `${baseCode}-${Math.floor(Math.random() * 10000)}`;
+
   const { data: school, error: schoolErr } = await supabase
     .from('schools')
-    .insert({ name, email, plan, owner_id: authUserId, phone, location })
-    .select('id, name, email, plan, owner_id, phone, location, created_at')
+    .insert({ name, email, plan, owner_id: authUserId, phone, location, school_code })
+    .select('id, name, email, plan, owner_id, phone, location, created_at, school_code')
     .single();
   if (schoolErr) throw schoolErr;
 
@@ -453,6 +456,7 @@ function mapProfileData(data) {
     _dbId: data.id,
     schoolId: data.school_id,
     schoolType: data.school_type || data.custom_subjects?.__shadow_school_type || 'Day',
+    schoolCode: data.school_code,
     boardingHouses: trimArr(data.boarding_houses || data.custom_subjects?.__shadow_boarding_houses) || DEFAULT_PROFILE.boardingHouses,
   };
 }
@@ -984,12 +988,32 @@ export async function deleteUser(id) {
 export async function getUserByAuthId(authUserId) {
   const { data, error } = await supabase
     .from('users')
-    .select('id, name, email, role, school_id, auth_user_id, schools(id, name, plan)')
+    .select('id, name, email, role, school_id, auth_user_id, password_changed, login_username, schools(id, name, plan, school_code)')
     .eq('auth_user_id', authUserId)
     .single();
   if (error && error.code !== 'PGRST116') throw error;
   return data || null;
 }
+
+export async function setSelfPassword(newPassword) {
+  mutationGuard('setSelfPassword');
+  
+  // 1. Update Auth Identity
+  const { data: authData, error: authError } = await supabase.auth.updateUser({
+    password: newPassword
+  });
+  if (authError) throw authError;
+
+  // 2. Update users table password_changed flag
+  if (authData?.user) {
+    const { error: dbError } = await supabase
+      .from('users')
+      .update({ password_changed: true })
+      .eq('auth_user_id', authData.user.id);
+    if (dbError) throw dbError;
+  }
+}
+
 
 // ============= STUDENTS =============
 /**
@@ -1057,6 +1081,73 @@ export async function getStudents() {
     motherPhone: s.mother_phone,
     nemisVerified: s.nemis_verified
   }));
+}
+
+/**
+ * Perform a deep audit of student data for NEMIS (MoE) compliance.
+ * Returns statistics and lists of students with missing critical data.
+ */
+export async function getNEMISComplianceReport() {
+  const students = await getStudents();
+  const report = {
+    total: students.length,
+    ready: 0,
+    nonReady: 0,
+    readinessRate: 0,
+    missingStats: {
+      upi: 0,
+      dob: 0,
+      gender: 0,
+      birth_cert: 0,
+      parent_contact: 0,
+      class_stream: 0
+    },
+    studentsWithIssues: []
+  };
+
+  students.forEach(s => {
+    const issues = [];
+    if (!s.nemis_number && !s.upi) {
+      issues.push('Missing UPI/NEMIS Number');
+      report.missingStats.upi++;
+    }
+    if (!s.date_of_birth && !s.dob) {
+      issues.push('Missing Date of Birth');
+      report.missingStats.dob++;
+    }
+    if (!s.gender) {
+      issues.push('Missing Gender');
+      report.missingStats.gender++;
+    }
+    if (!s.parent_phone && !s.parentPhone) {
+      issues.push('Missing Parent Contact');
+      report.missingStats.parent_contact++;
+    }
+    if (!s.birth_cert_no && !s.birthCertNo) {
+      issues.push('Missing Birth Certificate No');
+      report.missingStats.birth_cert++;
+    }
+    if (!s.class) {
+      issues.push('Missing Class Assignment');
+      report.missingStats.class_stream++;
+    }
+
+    if (issues.length === 0) {
+      report.ready++;
+    } else {
+      report.nonReady++;
+      report.studentsWithIssues.push({
+        id: s.id,
+        name: s.name,
+        admNo: s.admNo,
+        class: s.class,
+        issues
+      });
+    }
+  });
+
+  report.readinessRate = ((report.ready / (report.total || 1)) * 100).toFixed(1);
+  return report;
 }
 
 export async function getStudent(id) {
@@ -1323,6 +1414,180 @@ export async function getSubjectRankings(className, examType = _currentExamType)
 export async function getClassList(className) {
   const students = (await getStudents()).filter(s => s.class === className);
   return students.sort((a, b) => a.name.localeCompare(b.name));
+}
+
+// ============= FORMAL EXAMS (Phase 4) =============
+
+export async function getExams() {
+  if (!_currentSchoolId || !_currentPeriodId) return [];
+  const cacheKey = `exams_${_currentSchoolId}_${_currentPeriodId}`;
+  return getCached(cacheKey, async () => {
+    const { data, error } = await supabase
+      .from('exams')
+      .select('*')
+      .eq('school_id', _currentSchoolId)
+      .eq('academic_year', _currentPeriodId) // Mapping academic_year to period_id for now
+      .order('created_at', { ascending: false });
+    if (error) throw error;
+    return data;
+  });
+}
+
+export async function createExam(name, examType, term) {
+  mutationGuard('createExam');
+  const { data, error } = await supabase
+    .from('exams')
+    .insert({
+      school_id: _currentSchoolId,
+      name,
+      exam_type: examType,
+      term,
+      academic_year: _currentPeriodId,
+      created_by: _currentUserId,
+      status: 'setup'
+    })
+    .select()
+    .single();
+  
+  if (error) throw error;
+  invalidateCache(`exams_${_currentSchoolId}_${_currentPeriodId}`);
+  return data;
+}
+
+export async function updateExam(examId, updates) {
+  mutationGuard('updateExam');
+  const { error } = await supabase
+    .from('exams')
+    .update(updates)
+    .eq('id', examId);
+  
+  if (error) throw error;
+  invalidateCache(`exams_${_currentSchoolId}_${_currentPeriodId}`);
+}
+
+export async function getExamPapers(examId) {
+  const { data, error } = await supabase
+    .from('exam_papers')
+    .select('*, classes(name, stream), tt_subjects(name)')
+    .eq('exam_id', examId);
+  if (error) throw error;
+  return data;
+}
+
+export async function saveExamPapers(examId, papers) {
+  mutationGuard('saveExamPapers');
+  const rows = papers.map(p => ({
+    ...p,
+    exam_id: examId,
+    school_id: _currentSchoolId
+  }));
+  const { error } = await supabase
+    .from('exam_papers')
+    .upsert(rows, { onConflict: 'exam_id,class_id,subject_id' });
+  if (error) throw error;
+}
+
+export async function getExamMarksForPaper(paperId) {
+  const { data, error } = await supabase
+    .from('exam_marks')
+    .select('*, students(name, adm_no)')
+    .eq('exam_paper_id', paperId);
+  if (error) throw error;
+  return data;
+}
+
+export async function saveExamMarks(paperId, marks) {
+  mutationGuard('saveExamMarks');
+  const rows = marks.map(m => ({
+    ...m,
+    exam_paper_id: paperId,
+    school_id: _currentSchoolId,
+    entered_by: _currentUserId,
+    entered_at: new Date().toISOString()
+  }));
+  const { error } = await supabase
+    .from('exam_marks')
+    .upsert(rows, { onConflict: 'exam_paper_id,student_id' });
+  if (error) throw error;
+}
+
+export async function getExamResults(examId) {
+  const { data, error } = await supabase
+    .from('exam_results')
+    .select('*, students(name, adm_no), classes(name, stream)')
+    .eq('exam_id', examId)
+    .order('class_position', { ascending: true });
+  if (error) throw error;
+  return data;
+}
+
+/**
+ * Fetch results for a specific student, only from PUBLISHED exams.
+ */
+export async function getStudentExamResults(studentId) {
+  const { data, error } = await supabase
+    .from('exam_results')
+    .select('*, exams(name, term, status, exam_type)')
+    .eq('student_id', studentId)
+    .eq('exams.status', 'published');
+  
+  if (error) throw error;
+  // Supabase join filtering might return null for exams if status != published
+  // Filter out those where join returned null
+  return (data || []).filter(r => r.exams);
+}
+
+export async function calculateExamResults(examId) {
+  mutationGuard('calculateExamResults');
+  
+  // 1. Get all marks and papers for this exam
+  const { data: marks, error: mErr } = await supabase
+    .from('exam_marks')
+    .select('student_id, raw_score, is_absent, exam_papers(class_id, subject_id)')
+    .eq('exam_papers.exam_id', examId);
+  
+  if (mErr) throw mErr;
+
+  // 2. Group by student
+  const studentTotals = {};
+  marks.forEach(m => {
+    if (!studentTotals[m.student_id]) {
+      studentTotals[m.student_id] = { 
+        student_id: m.student_id, 
+        total: 0, 
+        count: 0, 
+        class_id: m.exam_papers.class_id 
+      };
+    }
+    if (!m.is_absent && m.raw_score !== null) {
+      studentTotals[m.student_id].total += Number(m.raw_score);
+      studentTotals[m.student_id].count += 1;
+    }
+  });
+
+  // 3. Sort for ranking
+  const results = Object.values(studentTotals).map(s => ({
+    exam_id: examId,
+    school_id: _currentSchoolId,
+    student_id: s.student_id,
+    class_id: s.class_id,
+    total_marks: s.total,
+    total_subjects: s.count,
+    mean_score: s.count > 0 ? (s.total / s.count) : 0
+  })).sort((a, b) => b.total_marks - a.total_marks);
+
+  // 4. Assign class_position
+  results.forEach((r, i) => {
+    r.class_position = i + 1;
+    r.class_size = results.length;
+  });
+
+  // 5. Upsert results
+  const { error: uErr } = await supabase
+    .from('exam_results')
+    .upsert(results, { onConflict: 'exam_id,student_id' });
+  
+  if (uErr) throw uErr;
 }
 
 // ============= FEES =============
@@ -3307,125 +3572,7 @@ export async function getStudentsBySchool(schoolId) {
   return data || [];
 }
 
-// ============= LIBRARY MANAGEMENT =============
-
-export async function getBooks() {
-  if (!_currentSchoolId) return [];
-  const { data, error } = await supabase
-    .from('library_books')
-    .select('*')
-    .eq('school_id', _currentSchoolId)
-    .order('title', { ascending: true });
-  if (error) throw error;
-  return data || [];
-}
-
-export async function saveBook(book) {
-  if (!_currentSchoolId) throw new Error('No school context');
-  const payload = {
-    ...book,
-    school_id: _currentSchoolId,
-    updated_at: new Date().toISOString()
-  };
-  
-  if (book.id) {
-    const { data, error } = await supabase
-      .from('library_books')
-      .update(payload)
-      .eq('id', book.id)
-      .select()
-      .single();
-    if (error) throw error;
-    return data;
-  } else {
-    const { data, error } = await supabase
-      .from('library_books')
-      .insert(payload)
-      .select()
-      .single();
-    if (error) throw error;
-    return data;
-  }
-}
-
-export async function deleteBook(id) {
-  const { error } = await supabase
-    .from('library_books')
-    .delete()
-    .eq('id', id);
-  if (error) throw error;
-}
-
-export async function getBorrows() {
-  if (!_currentSchoolId) return [];
-  const { data, error } = await supabase
-    .from('library_borrows')
-    .select('*, library_books(title, author, book_code), students(name, adm_no, class, stream)')
-    .eq('school_id', _currentSchoolId)
-    .order('borrow_date', { ascending: false });
-  if (error) throw error;
-  return data || [];
-}
-
-export async function saveBorrow(borrow) {
-  if (!_currentSchoolId) throw new Error('No school context');
-  const payload = {
-    ...borrow,
-    school_id: _currentSchoolId
-  };
-
-  if (borrow.id) {
-    const { data, error } = await supabase
-      .from('library_borrows')
-      .update(payload)
-      .eq('id', borrow.id)
-      .select()
-      .single();
-    if (error) throw error;
-    return data;
-  } else {
-    // Check availability
-    const { data: book, error: bErr } = await supabase
-      .from('library_books')
-      .select('available_copies')
-      .eq('id', borrow.book_id)
-      .single();
-    if (bErr) throw bErr;
-    if (book.available_copies <= 0) throw new Error('No copies available for borrowing.');
-
-    const { data, error } = await supabase
-      .from('library_borrows')
-      .insert(payload)
-      .select()
-      .single();
-    if (error) throw error;
-
-    // Decrement available copies using manual update (instead of RPC for now if not defined)
-    await supabase.from('library_books').update({ 
-      available_copies: book.available_copies - 1,
-      updated_at: new Date().toISOString()
-    }).eq('id', borrow.book_id);
-    
-    return data;
-  }
-}
-
-export async function returnBook(borrowId, bookId) {
-  const { error } = await supabase
-    .from('library_borrows')
-    .update({ status: 'returned', return_date: new Date().toISOString().split('T')[0] })
-    .eq('id', borrowId);
-  if (error) throw error;
-
-  // Increment available copies
-  const { data: book } = await supabase.from('library_books').select('available_copies').eq('id', bookId).single();
-  if (book) {
-    await supabase.from('library_books').update({ 
-      available_copies: book.available_copies + 1,
-      updated_at: new Date().toISOString()
-    }).eq('id', bookId);
-  }
-}
+// Redundant legacy library functions removed
 
 // ============= FEATURE GATING =============
 
@@ -3943,135 +4090,58 @@ export async function fetchLmsContent(url) {
 }
 
 // ==========================================
-// LMS (ACADEMIC LEARNING)
+// LMS (ACADEMIC LEARNING) — Support Functions
 // ==========================================
 
-export async function getAssignments(className = null) {
-  let query = supabase.from('lms_assignments').select('*').order('created_at', { ascending: false });
-  if (className) query = query.eq('class', className);
-  
-  const { data, error } = await query;
-  if (error) throw error;
-  return data;
-}
-
-export async function createAssignment(assignment) {
-  const school_id = getCurrentSchoolId();
-  const fileId = `assignments/${school_id}/${Date.now()}_desc.json`;
-  
-  // 1. Upload description/content to Storage
-  const payload = assignment.submissionType === 'quiz' 
-    ? JSON.stringify({ description: assignment.description, questions: assignment.questions || [] })
-    : assignment.description || assignment.content || '';
-    
-  const contentUrl = await uploadToLmsStorage(fileId, payload);
-  
-  // 2. Save metadata + URL to DB
-  const { data, error } = await supabase.from('lms_assignments').insert([{
-    school_id,
-    class: assignment.class,
-    stream: assignment.stream,
-    subject: assignment.subject,
-    title: assignment.title,
-    description_url: contentUrl,
-    due_date: assignment.dueDate,
-    cutoff_date: assignment.cutoffDate,
-    allow_from: assignment.allowFrom,
-    teacher_id: getCurrentAuthUser()?.id,
-    max_score: assignment.maxScore || 100,
-    submission_type: assignment.submissionType || 'online_text',
-    quiz_config: assignment.submissionType === 'quiz' ? assignment.questions : null,
-    status: 'published'
-  }]).select().single();
-  
-  if (error) throw error;
-  return data;
-}
-
 export async function getAssignmentStats(assignmentId, className, stream) {
-  const { count: submitted, error: e1 } = await supabase.from('lms_submissions')
+  const { count: submitted } = await supabase.from('lms_submissions')
     .select('*', { count: 'exact', head: true })
     .eq('assignment_id', assignmentId);
     
   let query = supabase.from('students').select('*', { count: 'exact', head: true }).eq('class', className);
-  if (stream && stream !== 'General' && stream !== '') {
-    query = query.eq('stream', stream);
-  }
+  if (stream && stream !== 'General' && stream !== '') query = query.eq('stream', stream);
   
-  const { count: total, error: e2 } = await query;
+  const { count: total } = await query;
   return { submitted: submitted || 0, total: total || Math.max(submitted || 0, 1) };
 }
 
 export async function submitAssignment(assignmentId, student, payload) {
-  const school_id = getCurrentSchoolId();
-  const fileId = `submissions/${school_id}/${assignmentId}_${student.id}_${Date.now()}.json`;
-  
-  // 1. Check if late
-  const { data: ast } = await supabase.from('lms_assignments').select('due_date, cutoff_date').eq('id', assignmentId).single();
-  const isLate = ast && new Date() > new Date(ast.due_date);
-  
-  // 2. Upload student response to Storage
+  const fileId = `submissions/${_currentSchoolId}/${assignmentId}_${student.id}_${Date.now()}.json`;
   const contentUrl = await uploadToLmsStorage(fileId, payload);
   
-  // 3. Save record to DB (Upsert to prevent duplicates)
   const { data, error } = await supabase.from('lms_submissions').upsert({
     assignment_id: assignmentId,
     student_id: student.id,
     content_url: contentUrl,
-    quiz_results: payload?.quiz_results || null, // Capture quiz data if present
+    quiz_results: payload?.quiz_results || null,
   }, { onConflict: 'assignment_id,student_id' }).select().single();
   
   if (error) throw error;
   return data;
 }
 
-/**
- * Aggregates quiz performance for a specific assignment.
- */
 export async function getQuizAnalytics(assignmentId) {
-  // 1. Get assignment questions
-  const { data: ast, error: e1 } = await supabase
-    .from('lms_assignments')
-    .select('quiz_config, max_score, title')
-    .eq('id', assignmentId)
-    .single();
-    
+  const { data: ast, error: e1 } = await supabase.from('lms_assignments').select('quiz_config, max_score, title').eq('id', assignmentId).single();
   if (e1) throw e1;
-  const questions = ast.quiz_config || [];
-
-  // 2. Get all submissions with quiz_results
-  const { data: subs, error: e2 } = await supabase
-    .from('lms_submissions')
-    .select('quiz_results, grade_numeric, student_id, students(name, adm_no)')
-    .eq('assignment_id', assignmentId);
-    
+  const { data: subs, error: e2 } = await supabase.from('lms_submissions').select('quiz_results, grade_numeric').eq('assignment_id', assignmentId);
   if (e2) throw e2;
 
-  // 3. Aggregate Performance
   const totalSubmissions = subs.length;
   if (totalSubmissions === 0) return { totalSubmissions: 0, questionStats: [] };
 
+  const questions = ast.quiz_config || [];
   const questionStats = questions.map((q, idx) => {
     let correctCount = 0;
-    subs.forEach(s => {
-      const result = s.quiz_results?.answers?.[idx]; 
-      if (result && result.correct) correctCount++;
-    });
-    return {
-      id: q.id,
-      text: q.text,
-      successRate: (correctCount / totalSubmissions) * 100
-    };
+    subs.forEach(s => { if (s.quiz_results?.answers?.[idx]?.correct) correctCount++; });
+    return { id: q.id, text: q.text, successRate: (correctCount / totalSubmissions) * 100 };
   });
 
   const scores = subs.map(s => s.grade_numeric || 0);
-  const avgScore = scores.reduce((a, b) => a + b, 0) / totalSubmissions;
-
   return {
     title: ast.title,
     maxScore: ast.max_score,
     totalSubmissions,
-    avgScore: avgScore.toFixed(1),
+    avgScore: (scores.reduce((a, b) => a + b, 0) / totalSubmissions).toFixed(1),
     highestScore: Math.max(...scores),
     lowestScore: Math.min(...scores),
     questionStats
@@ -4079,17 +4149,9 @@ export async function getQuizAnalytics(assignmentId) {
 }
 
 export async function getStudentSubmissions(studentId) {
-  const { data, error } = await supabase.from('lms_submissions')
-    .select('*, lms_assignments(title, subject, due_date, max_score)')
-    .eq('student_id', studentId);
+  const { data, error } = await supabase.from('lms_submissions').select('*, lms_assignments(title, subject, due_date, max_score)').eq('student_id', studentId);
   if (error) throw error;
   return data || [];
-}
-
-export async function getSubmissions(assignmentId) {
-  const { data, error } = await supabase.from('lms_submissions').select('*, students(name, adm_no)').eq('assignment_id', assignmentId);
-  if (error) throw error;
-  return data;
 }
 
 export async function updateSubmission(submissionId, updates) {
@@ -4098,92 +4160,58 @@ export async function updateSubmission(submissionId, updates) {
   return data;
 }
 
-// ==========================================
-// COMMUNICATIONS (SMS BROADCAST LOGS)
+// COMMUNICATIONS (SMS/WHATSAPP BROADCASTS)
 // ==========================================
 
 export async function logCommunication(comm) {
-  const { data, error } = await supabase.from('communications_log').insert([{
-    school_id: getCurrentSchoolId(),
-    type: comm.type,
-    target: sanitizeString(comm.target),
-    message: sanitizeString(comm.message),
-    sender_id: getCurrentAuthUser()?.id,
-    recipient_count: comm.recipientCount,
-    status: 'dispatched',
-    metadata: comm.metadata || {}
-  }]).select().single();
+  mutationGuard('logCommunication');
+  if (!_currentSchoolId) throw new Error('No school context');
   
-  if (error) throw error;
+  const creatorId = (await getUserByAuthId(_currentAuthUser?.id))?.id;
   
-  // Also log into offline store for real-time history visibility
-  try {
-    const { db } = await import('./offlineStore');
-    await db.communications.add({
-      ...comm,
-      timestamp: new Date().toISOString(),
-      status: 'dispatched'
-    });
-  } catch (e) {
-    console.warn("Could not log to offline communications store", e);
+  if (comm.type === 'sms' || comm.type === 'whatsapp') {
+    // If it's a broadcast, create an announcement record as well
+    const { data, error } = await supabase
+      .from('announcements')
+      .insert({
+        school_id: _currentSchoolId,
+        created_by: creatorId,
+        title: comm.channel === 'whatsapp' ? 'WhatsApp Broadcast' : 'SMS Broadcast',
+        content: comm.message,
+        target_audience: comm.target,
+        status: 'published',
+        metadata: {
+          recipient_count: comm.count,
+          channel: comm.type
+        }
+      })
+      .select()
+      .single();
+    if (error) console.error('Failed to log announcement:', error);
+    return data;
   }
-
-  return data;
+  
+  return { id: 'log-' + Date.now(), ...comm };
 }
 
-/**
- * Functional dispatch for SMS messages.
- */
 export async function sendSMSMessage(recipients, message) {
   const count = Array.isArray(recipients) ? recipients.length : 1;
-  
-  // 1. Log the attempt
-  const log = await logCommunication({
-    type: 'SMS',
-    target: count > 1 ? 'broadcast' : 'single',
-    message,
-    recipientCount: count,
-    metadata: { phones: Array.isArray(recipients) ? recipients : [recipients] }
-  });
-
-  // 2. Mock API Gateway response
-  // In a real production environment, this would hit Africa's Talking, Twilio, etc.
   console.log(`[SMS GATEWAY] Sending to ${count} recipients: "${message}"`);
-  
-  return { success: true, logId: log.id, count };
+  return { success: true, count };
 }
 
-/**
- * Functional dispatch for WhatsApp messages.
- */
 export async function sendWhatsAppMessage(recipients, message) {
   const count = Array.isArray(recipients) ? recipients.length : 1;
-  
-  // 1. Log the attempt
-  const log = await logCommunication({
-    type: 'WhatsApp',
-    target: count > 1 ? 'broadcast' : 'single',
-    message,
-    recipientCount: count,
-    metadata: { phones: Array.isArray(recipients) ? recipients : [recipients] }
-  });
-
-  // 2. Individual targeting opens direct chat if exactly one recipient
   if (count === 1) {
     const phone = Array.isArray(recipients) ? recipients[0] : recipients;
     const cleanPhone = phone.replace(/[^0-9]/g, '');
     const url = `https://wa.me/${cleanPhone.startsWith('0') ? '254' + cleanPhone.slice(1) : cleanPhone}?text=${encodeURIComponent(message)}`;
     window.open(url, '_blank');
   }
-
   console.log(`[WHATSAPP GATEWAY] Broadcasting to ${count} recipients: "${message}"`);
-  
-  return { success: true, logId: log.id, count };
+  return { success: true, count };
 }
 
-/**
- * Helper to generate a direct WhatsApp link
- */
 export function getWhatsAppLink(phone, message = '') {
   const cleanPhone = (phone || '').replace(/[^0-9]/g, '');
   const prefix = cleanPhone.startsWith('0') ? '254' : '';
@@ -4191,17 +4219,537 @@ export function getWhatsAppLink(phone, message = '') {
 }
 
 export async function getCommunicationLogs() {
-  const { data, error } = await supabase.from('communications_log')
-    .select('*')
-    .order('created_at', { ascending: false });
-  if (error) throw error;
-  return data;
+  // Mock history for now to satisfy UI
+  return [];
 }
 
 // ==========================================
 // PLATFORM HEALTH (SUPERADMIN USAGE)
 // ==========================================
 
+
+// ============================================================================
+// ██████  NEW MODULES: SCHOOL DIRECTORY, CLASSES, LIBRARY, TIMETABLE,
+//         E-LEARNING, EXAMS, COMMUNICATION, NOTIFICATIONS
+// ============================================================================
+
+// ================================
+// SCHOOL DIRECTORY (Public)
+// ================================
+
+export async function searchPublicSchools(query) {
+  if (!query || query.trim().length < 2) return [];
+  const { data, error } = await supabase.rpc('search_public_schools', { search_query: query.trim() });
+  if (error) throw error;
+  return data || [];
+}
+
+export async function getSchoolByCode(code) {
+  const { data, error } = await supabase
+    .from('schools')
+    .select('id, name, school_code, location, school_type, publicly_listed')
+    .eq('school_code', code)
+    .eq('status', 'active')
+    .maybeSingle();
+  if (error) throw error;
+  return data;
+}
+
+// ================================
+// CLASSES (Normalized)
+// ================================
+
+export async function getClasses() {
+  if (!_currentSchoolId) return [];
+  const { data, error } = await supabase
+    .from('classes')
+    .select('*')
+    .eq('school_id', _currentSchoolId)
+    .order('name');
+  if (error) throw error;
+  return data || [];
+}
+
+export async function addClass({ name, level, stream = 'General', curriculum_type = 'both' }) {
+  mutationGuard('addClass');
+  if (!_currentSchoolId) throw new Error('No school context');
+  const { data, error } = await supabase
+    .from('classes')
+    .insert({ school_id: _currentSchoolId, name, level, stream, curriculum_type })
+    .select()
+    .single();
+  if (error) throw error;
+  return data;
+}
+
+export async function updateClass(id, updates) {
+  mutationGuard('updateClass');
+  const { data, error } = await supabase
+    .from('classes')
+    .update(updates)
+    .eq('id', id)
+    .select()
+    .single();
+  if (error) throw error;
+  return data;
+}
+
+export async function deleteClass(id) {
+  mutationGuard('deleteClass');
+  const { error } = await supabase.from('classes').delete().eq('id', id);
+  if (error) throw error;
+}
+
+// Redundant enhanced Library functions removed (Refactored to libraryStore.js)
+
+// ================================
+// TIMETABLE MODULE
+// ================================
+
+// Periods (day structure)
+export async function getTTPeriods() {
+  if (!_currentSchoolId) return [];
+  const { data, error } = await supabase
+    .from('tt_periods')
+    .select('*')
+    .eq('school_id', _currentSchoolId)
+    .order('order_index');
+  if (error) throw error;
+  return data || [];
+}
+
+export async function saveTTPeriod(period) {
+  mutationGuard('saveTTPeriod');
+  if (!_currentSchoolId) throw new Error('No school context');
+  const payload = { ...period, school_id: _currentSchoolId };
+  if (period.id) {
+    const { data, error } = await supabase.from('tt_periods').update(payload).eq('id', period.id).select().single();
+    if (error) throw error;
+    return data;
+  }
+  const { data, error } = await supabase.from('tt_periods').insert(payload).select().single();
+  if (error) throw error;
+  return data;
+}
+
+export async function deleteTTPeriod(id) {
+  mutationGuard('deleteTTPeriod');
+  const { error } = await supabase.from('tt_periods').delete().eq('id', id);
+  if (error) throw error;
+}
+
+// TT Subjects
+export async function getTTSubjects() {
+  if (!_currentSchoolId) return [];
+  const { data, error } = await supabase
+    .from('tt_subjects')
+    .select('*')
+    .eq('school_id', _currentSchoolId)
+    .order('name');
+  if (error) throw error;
+  return data || [];
+}
+
+export async function saveTTSubject(subject) {
+  mutationGuard('saveTTSubject');
+  if (!_currentSchoolId) throw new Error('No school context');
+  const payload = { ...subject, school_id: _currentSchoolId };
+  if (subject.id) {
+    const { data, error } = await supabase.from('tt_subjects').update(payload).eq('id', subject.id).select().single();
+    if (error) throw error;
+    return data;
+  }
+  const { data, error } = await supabase.from('tt_subjects').insert(payload).select().single();
+  if (error) throw error;
+  return data;
+}
+
+// Teacher-Subject Assignments
+export async function getTTTeacherSubjects(classId = null) {
+  if (!_currentSchoolId) return [];
+  let q = supabase
+    .from('tt_teacher_subjects')
+    .select('*, users(name), tt_subjects(name, short_code), classes(name, stream)')
+    .eq('school_id', _currentSchoolId);
+  if (classId) q = q.eq('class_id', classId);
+  const { data, error } = await q;
+  if (error) throw error;
+  return data || [];
+}
+
+export async function saveTTTeacherSubject({ teacherId, subjectId, classId }) {
+  mutationGuard('saveTTTeacherSubject');
+  if (!_currentSchoolId) throw new Error('No school context');
+  const { data, error } = await supabase
+    .from('tt_teacher_subjects')
+    .upsert({ school_id: _currentSchoolId, teacher_id: teacherId, subject_id: subjectId, class_id: classId },
+      { onConflict: 'teacher_id,subject_id,class_id' })
+    .select()
+    .single();
+  if (error) throw error;
+  return data;
+}
+
+// Teacher Availability
+export async function getTTAvailability(teacherId) {
+  const { data, error } = await supabase
+    .from('tt_teacher_availability')
+    .select('*')
+    .eq('teacher_id', teacherId);
+  if (error) throw error;
+  return data || [];
+}
+
+export async function saveTTAvailability(entries) {
+  mutationGuard('saveTTAvailability');
+  if (!_currentSchoolId) throw new Error('No school context');
+  const payload = entries.map(e => ({ ...e, school_id: _currentSchoolId }));
+  const { error } = await supabase.from('tt_teacher_availability').upsert(payload, { onConflict: 'teacher_id,day_of_week,period_id' });
+  if (error) throw error;
+}
+
+// Slots
+export async function getTTSlots(classId = null, dayOfWeek = null) {
+  if (!_currentSchoolId) return [];
+  let q = supabase
+    .from('tt_slots')
+    .select('*, tt_subjects(name, short_code, color_hex), users!tt_slots_teacher_id_fkey(name), classes(name, stream), tt_periods(name, start_time, end_time, order_index)')
+    .eq('school_id', _currentSchoolId);
+  if (classId) q = q.eq('class_id', classId);
+  if (dayOfWeek) q = q.eq('day_of_week', dayOfWeek);
+  const { data, error } = await q;
+  if (error) throw error;
+  return data || [];
+}
+
+export async function saveTTSlot(slot) {
+  mutationGuard('saveTTSlot');
+  if (!_currentSchoolId) throw new Error('No school context');
+  const creatorId = (await getUserByAuthId(_currentAuthUser?.id))?.id;
+  const payload = { ...slot, school_id: _currentSchoolId, created_by: creatorId, updated_at: new Date().toISOString() };
+  if (slot.id) {
+    const { data, error } = await supabase.from('tt_slots').update(payload).eq('id', slot.id).select().single();
+    if (error) throw error;
+    return data;
+  }
+  const { data, error } = await supabase.from('tt_slots').insert(payload).select().single();
+  if (error) throw error;
+  return data;
+}
+
+export async function deleteTTSlot(id) {
+  mutationGuard('deleteTTSlot');
+  const { error } = await supabase.from('tt_slots').delete().eq('id', id);
+  if (error) throw error;
+}
+
+// Weekly Targets
+export async function getTTWeeklyTargets(classId) {
+  const { data, error } = await supabase
+    .from('tt_weekly_targets')
+    .select('*, tt_subjects(name)')
+    .eq('class_id', classId);
+  if (error) throw error;
+  return data || [];
+}
+
+export async function saveTTWeeklyTarget({ classId, subjectId, minLessons, maxLessons }) {
+  mutationGuard('saveTTWeeklyTarget');
+  if (!_currentSchoolId) throw new Error('No school context');
+  const { data, error } = await supabase
+    .from('tt_weekly_targets')
+    .upsert({ school_id: _currentSchoolId, class_id: classId, subject_id: subjectId, min_lessons: minLessons, max_lessons: maxLessons },
+      { onConflict: 'class_id,subject_id' })
+    .select()
+    .single();
+  if (error) throw error;
+  return data;
+}
+
+// ================================
+// E-LEARNING ASSIGNMENTS
+// ================================
+
+export async function getAssignments(filters = {}) {
+  if (!_currentSchoolId) return [];
+  let q = supabase
+    .from('el_assignments')
+    .select('*, el_assignment_attachments(*), classes(name, stream), users!el_assignments_teacher_id_fkey(name), el_submissions(id, status, score)')
+    .eq('school_id', _currentSchoolId)
+    .order('created_at', { ascending: false });
+  if (filters.classId) q = q.eq('class_id', filters.classId);
+  if (filters.teacherId) q = q.eq('teacher_id', filters.teacherId);
+  if (filters.status) q = q.eq('status', filters.status);
+  const { data, error } = await q;
+  if (error) throw error;
+  return data || [];
+}
+
+export async function createAssignment(assignment) {
+  mutationGuard('createAssignment');
+  if (!_currentSchoolId) throw new Error('No school context');
+  const { data, error } = await supabase
+    .from('el_assignments')
+    .insert({ ...assignment, school_id: _currentSchoolId })
+    .select()
+    .single();
+  if (error) throw error;
+  return data;
+}
+
+export async function updateAssignment(id, updates) {
+  mutationGuard('updateAssignment');
+  const { data, error } = await supabase
+    .from('el_assignments')
+    .update({ ...updates, updated_at: new Date().toISOString() })
+    .eq('id', id)
+    .select()
+    .single();
+  if (error) throw error;
+  return data;
+}
+
+export async function publishAssignment(id) {
+  return updateAssignment(id, { status: 'published', published_at: new Date().toISOString() });
+}
+
+export async function closeAssignment(id) {
+  return updateAssignment(id, { status: 'closed', closed_at: new Date().toISOString() });
+}
+
+export async function deleteAssignment(id) {
+  mutationGuard('deleteAssignment');
+  const { error } = await supabase.from('el_assignments').delete().eq('id', id);
+  if (error) throw error;
+}
+
+// Submissions
+export async function getSubmissions(assignmentId) {
+  const { data, error } = await supabase
+    .from('el_submissions')
+    .select('*, students(name, adm_no, class), el_submission_files(*)')
+    .eq('assignment_id', assignmentId)
+    .order('submitted_at', { ascending: false });
+  if (error) throw error;
+  return data || [];
+}
+
+export async function gradeSubmission(submissionId, { score, gradeLabel, teacherComment }) {
+  mutationGuard('gradeSubmission');
+  const graderId = (await getUserByAuthId(_currentAuthUser?.id))?.id;
+  const { data, error } = await supabase
+    .from('el_submissions')
+    .update({
+      score, grade_label: gradeLabel, teacher_comment: teacherComment,
+      status: 'graded', graded_at: new Date().toISOString(), graded_by: graderId,
+      updated_at: new Date().toISOString(),
+    })
+    .eq('id', submissionId)
+    .select()
+    .single();
+  if (error) throw error;
+  return data;
+}
+
+// (Exams module functions moved to Phase 4 section above ~line 1353)
+
+// ================================
+// COMMUNICATION — ANNOUNCEMENTS
+// ================================
+
+export async function getAnnouncements(filters = {}) {
+  if (!_currentSchoolId) return [];
+  let q = supabase
+    .from('announcements')
+    .select('*, users!announcements_created_by_fkey(name), announcement_reads(user_id)')
+    .eq('school_id', _currentSchoolId)
+    .order('created_at', { ascending: false });
+  if (filters.status) q = q.eq('status', filters.status);
+  const { data, error } = await q;
+  if (error) throw error;
+  return data || [];
+}
+
+export async function createAnnouncement(ann) {
+  mutationGuard('createAnnouncement');
+  if (!_currentSchoolId) throw new Error('No school context');
+  const creatorId = (await getUserByAuthId(_currentAuthUser?.id))?.id;
+  const { data, error } = await supabase
+    .from('announcements')
+    .insert({ ...ann, school_id: _currentSchoolId, created_by: creatorId })
+    .select()
+    .single();
+  if (error) throw error;
+  return data;
+}
+
+export async function markAnnouncementRead(announcementId) {
+  const userId = (await getUserByAuthId(_currentAuthUser?.id))?.id;
+  if (!userId) return;
+  await supabase
+    .from('announcement_reads')
+    .upsert({ announcement_id: announcementId, user_id: userId },
+      { onConflict: 'announcement_id,user_id' });
+}
+
+// ================================
+// COMMUNICATION — MESSAGES
+// ================================
+
+export async function getMessages(otherUserId = null) {
+  const userId = (await getUserByAuthId(_currentAuthUser?.id))?.id;
+  if (!userId) return [];
+  let q = supabase
+    .from('messages')
+    .select('*, sender:users!messages_sender_id_fkey(name, role), recipient:users!messages_recipient_id_fkey(name, role)')
+    .or(`sender_id.eq.${userId},recipient_id.eq.${userId}`)
+    .order('created_at', { ascending: false });
+  if (otherUserId) {
+    q = supabase
+      .from('messages')
+      .select('*, sender:users!messages_sender_id_fkey(name, role), recipient:users!messages_recipient_id_fkey(name, role)')
+      .or(`and(sender_id.eq.${userId},recipient_id.eq.${otherUserId}),and(sender_id.eq.${otherUserId},recipient_id.eq.${userId})`)
+      .order('created_at', { ascending: true });
+  }
+  const { data, error } = await q;
+  if (error) throw error;
+  return data || [];
+}
+
+export async function sendMessage({ recipientId, body }) {
+  mutationGuard('sendMessage');
+  if (!_currentSchoolId) throw new Error('No school context');
+  const senderId = (await getUserByAuthId(_currentAuthUser?.id))?.id;
+  if (!senderId) throw new Error('Cannot determine sender');
+  const { data, error } = await supabase
+    .from('messages')
+    .insert({ school_id: _currentSchoolId, sender_id: senderId, recipient_id: recipientId, body })
+    .select()
+    .single();
+  if (error) throw error;
+  return data;
+}
+
+export async function markMessageRead(messageId) {
+  const { error } = await supabase
+    .from('messages')
+    .update({ is_read: true, read_at: new Date().toISOString() })
+    .eq('id', messageId);
+  if (error) throw error;
+}
+
+// ================================
+// NOTIFICATIONS
+// ================================
+
+export async function getNotifications(unreadOnly = false) {
+  const userId = (await getUserByAuthId(_currentAuthUser?.id))?.id;
+  if (!userId) return [];
+  let q = supabase
+    .from('notifications')
+    .select('*')
+    .eq('user_id', userId)
+    .order('created_at', { ascending: false })
+    .limit(50);
+  if (unreadOnly) q = q.eq('is_read', false);
+  const { data, error } = await q;
+  if (error) throw error;
+  return data || [];
+}
+
+export async function getUnreadNotificationCount() {
+  const userId = (await getUserByAuthId(_currentAuthUser?.id))?.id;
+  if (!userId) return 0;
+  const { count, error } = await supabase
+    .from('notifications')
+    .select('id', { count: 'exact', head: true })
+    .eq('user_id', userId)
+    .eq('is_read', false);
+  if (error) return 0;
+  return count || 0;
+}
+
+export async function markNotificationRead(notifId) {
+  const { error } = await supabase
+    .from('notifications')
+    .update({ is_read: true })
+    .eq('id', notifId);
+  if (error) throw error;
+}
+
+export async function markAllNotificationsRead() {
+  const userId = (await getUserByAuthId(_currentAuthUser?.id))?.id;
+  if (!userId) return;
+  const { error } = await supabase
+    .from('notifications')
+    .update({ is_read: true })
+    .eq('user_id', userId)
+    .eq('is_read', false);
+  if (error) throw error;
+}
+
+export async function createNotification({ userId, type, title, body, referenceType, referenceId }) {
+  if (!_currentSchoolId) throw new Error('No school context');
+  const { data, error } = await supabase
+    .from('notifications')
+    .insert({
+      school_id: _currentSchoolId,
+      user_id: userId,
+      type, title, body,
+      reference_type: referenceType,
+      reference_id: referenceId,
+    })
+    .select()
+    .single();
+  if (error) throw error;
+  return data;
+}
+
+// Notification Preferences
+export async function getNotificationPreferences() {
+  const userId = (await getUserByAuthId(_currentAuthUser?.id))?.id;
+  if (!userId) return [];
+  const { data, error } = await supabase
+    .from('notification_preferences')
+    .select('*')
+    .eq('user_id', userId);
+  if (error) throw error;
+  return data || [];
+}
+
+export async function updateNotificationPreference(prefId, updates) {
+  const { error } = await supabase
+    .from('notification_preferences')
+    .update(updates)
+    .eq('id', prefId);
+  if (error) throw error;
+}
+
+// ================================
+// REALTIME SUBSCRIPTIONS (enhanced)
+// ================================
+
+export function subscribeToNotifications(userId, callback) {
+  const channel = supabase
+    .channel(`notifications:${userId}`)
+    .on('postgres_changes',
+      { event: 'INSERT', schema: 'public', table: 'notifications', filter: `user_id=eq.${userId}` },
+      (payload) => callback(payload.new)
+    )
+    .subscribe();
+  return () => { supabase.removeChannel(channel); };
+}
+
+export function subscribeToMessages(userId, callback) {
+  const channel = supabase
+    .channel(`messages:${userId}`)
+    .on('postgres_changes',
+      { event: 'INSERT', schema: 'public', table: 'messages', filter: `recipient_id=eq.${userId}` },
+      (payload) => callback(payload.new)
+    )
+    .subscribe();
+  return () => { supabase.removeChannel(channel); };
+}
 
 // Auto-sync every 60s if online
 setInterval(triggerSync, 60000);

@@ -27,6 +27,7 @@ export var ALL_SYSTEM_MODULES = [
   { slug: 'dashboard',       label: 'Dashboard & Analytics',       icon: ChartBarIcon,    desc: 'KPIs, charts, school overview at a glance' },
   // ── Academics ──
   { slug: 'grading',         label: 'Academic Grading & Reports',  icon: GradingIcon,     desc: 'CBC/8-4-4 report cards, competency scoring' },
+  { slug: 'exams',           label: 'Exams & Results Sessions',    icon: GradingIcon,     desc: 'Formal exam session lifecycle, automated ranking' },
   { slug: 'cbc_reports',     label: 'CBC Report Cards (PP1–G9)',   icon: GradingIcon,     desc: 'CBC competency-based learner portfolios' },
   { slug: '844_reports',     label: 'KCSE / KCPE Report Cards',    icon: GradingIcon,     desc: '8-4-4 curriculum grading and report generation' },
   { slug: 'cbc_competency',  label: 'CBC Competency Grading',      icon: CheckIcon,       desc: 'Strand-level rubric scoring for CBC' },
@@ -73,6 +74,7 @@ export var MODULE_LABELS = {
   attendance:      'Attendance Tracking',
   dashboard:       'Dashboard & Analytics',
   grading:         'Academic Grading & Reports',
+  exams:           'Exams & Results',
   cbc_reports:     'CBC Report Cards (PP1–G9)',
   '844_reports':   'KCSE / KCPE Report Cards',
   cbc_competency:  'CBC Competency Grading',

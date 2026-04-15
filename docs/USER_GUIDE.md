@@ -27,9 +27,20 @@ Welcome to ShuleSoft! This guide will help you manage your school efficiently, f
 
 ## 3. Academic Records (CBC & Grading)
 
-- **Grading**: Navigate to the **Grading** section to input student marks.
+- **Grading**: Navigate to the **Grading** section to input student marks for standard term-based assessments.
+- **Formal Exams**: Use the **Exams** module to manage the full exam lifecycle (End Term, Mock, CATs). Configure exam papers, enter marks by subject, and trigger **Automated Ranking** once an exam is closed.
 - **CBC Assessments**: Use the specialized CBC interface to track Core Competencies and create detailed student portfolios.
 - **Report Cards**: Generate print-ready report cards that align with KNEC standards instantly.
+
+## 4. Library & E-Learning
+
+### Library Management
+- **Cataloging**: Add and manage your school's book collection including ISBN and category tracking.
+- **Borrowing**: Issue books to students and track return dates. The system flags overdue items automatically.
+
+### LMS (E-Learning)
+- **Assignments**: Upload homework and learning materials for students to access via the Student Portal.
+- **Submissions**: Track student progress and mark digital assignments.
 
 ## 4. Fees & Finance
 
@@ -49,6 +60,11 @@ Welcome to ShuleSoft! This guide will help you manage your school efficiently, f
 - **Renewal**: To renew, follow the M-PESA instructions in the billing dashboard and submit your transaction code.
 - **Upgrading**: You can switch plans anytime as your student population grows.
 
-## 6. Multi-Term Support
+## 7. Compliance & NEMIS
+- **NEMIS Audit**: Use the **NEMIS Compliance** dashboard to audit your student data health against Ministry of Education requirements.
+- **Data Gaps**: The system identifies students missing critical fields (UPI, DOB, parent contacts).
+- **Export**: Generate MOE-compatible CSV files for direct upload to the government portal.
+
+## 8. Multi-Term Support
 - Use the **Term Switcher** in the top navigation or sidebar to view historical data or prepare for upcoming terms.
 - **Note**: Grading and Fee summaries update automatically based on your selected term.
