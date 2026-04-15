@@ -2046,7 +2046,8 @@ export async function addTeacher(teacher) {
       subjects: teacher.subjects || [],
       status: teacher.status || 'Active', 
       tsc_number: teacher.tsc_number || null,
-      staff_code: teacher.staff_code || null
+      staff_code: teacher.staff_code || null,
+      pin: teacher.pin || '1234'
     })
     .select()
     .single();
@@ -2076,7 +2077,8 @@ export async function updateTeacher(id, updates) {
       status: updates.status, 
       on_leave: updates.on_leave,
       tsc_number: sanitizeString(updates.tsc_number || null),
-      staff_code: sanitizeString(updates.staff_code || null)
+      staff_code: sanitizeString(updates.staff_code || null),
+      pin: updates.pin || '1234'
     })
     .eq('id', id)
     .select()

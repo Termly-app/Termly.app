@@ -5,7 +5,8 @@ import Loader from '../components/Common/Loader';
 import { CBC_STRUCTURE, getSubjectsForGrade, getLevelForGrade } from '../data/seedData';
 import { 
   TeacherIcon, RocketIcon, AlertIcon, LogoutIcon, ClockIcon, SearchIcon, DashboardIcon,
-  LeafIcon, GraduationIcon, PlusIcon, EditIcon, DeleteIcon, SchoolIcon, PrintIcon, PhoneIcon, BookIcon
+  LeafIcon, GraduationIcon, PlusIcon, EditIcon, DeleteIcon, SchoolIcon, PrintIcon, PhoneIcon, BookIcon,
+  ChevronDownIcon, CheckIcon, EyeIcon, EyeOffIcon
 } from '../components/CommonIcons';
 import { useDialog } from '../contexts/DialogContext';
 import Select from '../components/Common/Select';
@@ -879,7 +880,8 @@ function ReportsTab() {
 
 // ========== TEACHER MODAL ==========
 function TeacherModal({ teacher, onSave, onClose, isAdmin }) {
-  const [form, setForm] = useState(teacher || { name: '', phone: '', status: 'Active', staff_code: '' });
+  const [form, setForm] = useState(teacher || { name: '', phone: '', status: 'Active', staff_code: '', pin: '1234' });
+  const [showPin, setShowPin] = useState(false);
   const [error, setError] = useState(null);
   const [validating, setValidating] = useState(false);
 
