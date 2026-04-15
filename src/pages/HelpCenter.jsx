@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { 
   RocketIcon, BookIcon, CardIcon, GraduationIcon, ClockIcon, 
   MessageIcon, StudentIcon, SearchIcon, ChevronRightIcon,
-  CheckIcon, InfoIcon
+  CheckIcon, InfoIcon, FlagIcon
 } from '../components/CommonIcons';
 import { Link } from 'react-router-dom';
 
