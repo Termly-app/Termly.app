@@ -82,6 +82,13 @@ export default function SetPassword({ currentUser, onPasswordChanged }) {
                 onChange={(e) => setCurrentPassword(e.target.value)}
                 required
               />
+              <button 
+                type="button" 
+                className="sp-eye" 
+                onClick={() => setShowPassword(!showPassword)}
+              >
+                {showPassword ? <EyeOffIcon size={18} /> : <EyeIcon size={18} />}
+              </button>
             </div>
           </div>
           <div className="sp-field">
@@ -130,6 +137,13 @@ export default function SetPassword({ currentUser, onPasswordChanged }) {
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 required
               />
+              <button 
+                type="button" 
+                className="sp-eye" 
+                onClick={() => setShowPassword(!showPassword)}
+              >
+                {showPassword ? <EyeOffIcon size={18} /> : <EyeIcon size={18} />}
+              </button>
             </div>
           </div>
 
@@ -143,11 +157,13 @@ export default function SetPassword({ currentUser, onPasswordChanged }) {
       <style>{`
         .set-password-page {
           min-height: 100vh;
+          width: 100%;
           display: flex;
           align-items: center;
           justify-content: center;
           background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
-          padding: 20px;
+          padding: 40px 20px;
+          box-sizing: border-box;
         }
         .sp-card {
           width: 100%;

@@ -1001,12 +1001,13 @@ export async function setSelfPassword(newPassword, oldPassword = null) {
   const user = (await supabase.auth.getUser()).data.user;
   if (!user) throw new Error('Not authenticated');
 
-  // 1. If project requires old password, re-authenticate first
-  if (oldPassword) {
-    const { error: reauthErr } = await supabase.auth.reauthenticateWithPassword({
+  // 1. If project requires old password, verify credentials first
+  if (oldPassword && user.email) {
+    const { error: verifyErr } = await supabase.auth.signInWithPassword({
+      email: user.email,
       password: oldPassword
     });
-    if (reauthErr) throw new Error(`Current password verification failed: ${reauthErr.message}`);
+    if (verifyErr) throw new Error(`Current password verification failed: ${verifyErr.message}`);
   }
   
   // 2. Update Auth Identity
