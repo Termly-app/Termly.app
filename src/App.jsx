@@ -20,7 +20,7 @@ import {
 const Dashboard    = lazy(() => import('./pages/Dashboard'));
 const Students     = lazy(() => import('./pages/Students'));
 const Teachers     = lazy(() => import('./pages/Teachers'));
-const Grading      = lazy(() => import('./pages/Grading'));
+const Academics    = lazy(() => import('./pages/Academics'));
 const Fees         = lazy(() => import('./pages/Fees'));
 const Timetable    = lazy(() => import('./pages/Timetable'));
 const Attendance   = lazy(() => import('./pages/Attendance'));
@@ -37,7 +37,6 @@ const MpesaReconciliation = lazy(() => import('./pages/MpesaReconciliation'));
 const PortalManager = lazy(() => import('./pages/Portal'));
 const StaffPortalManager = lazy(() => import('./pages/StaffPortal'));
 const LMS          = lazy(() => import('./pages/LMS'));
-const Exams        = lazy(() => import('./pages/Exams'));
 const NEMISDashboard = lazy(() => import('./pages/NEMIS/index'));
 const TermsOfService  = lazy(() => import('./pages/legal/TermsOfService'));
 const PrivacyPolicy   = lazy(() => import('./pages/legal/PrivacyPolicy'));
@@ -323,12 +322,8 @@ function Sidebar({ isOpen, onClose, onLogout, currentUser, subscriptionActive })
           <SbLink to="/attendance" icon={AttendanceIcon} label="Attendance" onClick={onClose} locked={!subscriptionActive && !isPlatformAdmin} />
         )}
         
-        {(isTeacher || isAdmin) && (features.grading || isSandbox) && (
-          <SbLink to="/grading"   icon={GradingIcon}   label="Grading"    onClick={onClose} locked={!subscriptionActive && !isPlatformAdmin} />
-        )}
-        
-        {(isTeacher || isAdmin) && (features.exams || isSandbox) && (
-          <SbLink to="/exams"     icon={GradingIcon}   label="Exams"      onClick={onClose} locked={!subscriptionActive && !isPlatformAdmin} />
+        {(isAdmin || isTeacher) && (
+          <SbLink to="/academics" icon={GradingIcon} label="Grading & Exams" onClick={onClose} locked={!subscriptionActive && !isPlatformAdmin} />
         )}
         
         {/* Timetable — Reactivated for Sandbox/Production */}
@@ -579,8 +574,8 @@ function App() {
                   />
                 </ErrorBoundary>
               } />
+                <Route path="/academics" element={<Suspense fallback={<Loader />}><Academics /></Suspense>} />
                 <Route path="/lms" element={<Suspense fallback={<Loader />}><LMS /></Suspense>} />
-                <Route path="/exams" element={<Suspense fallback={<Loader />}><Exams /></Suspense>} />
               <Route path="/login" element={<Navigate to="/super-admin" replace />} />
               <Route path="/"     element={<Navigate to="/super-admin" replace />} />
               <Route path="*"     element={<Navigate to="/super-admin" replace />} />
@@ -729,12 +724,11 @@ function App() {
                     {(isAdmin || isTeacher) && (
                       <>
                         <Route path="/students"     element={<Students currentUser={currentUser} currentPeriodId={currentPeriodId} />} />
-                        <Route path="/grading"      element={<SectionGate featureSlug="grading" featureName="Grading" profile={profile}><Grading currentUser={currentUser} currentPeriodId={currentPeriodId} /></SectionGate>} />
-                        <Route path="/attendance"   element={<SectionGate featureSlug="attendance" featureName="Attendance" profile={profile}><Attendance currentUser={currentUser} currentPeriodId={currentPeriodId} /></SectionGate>} />
+                        <Route path="/attendance"   element={<SectionGate featureSlug="attendance" featureName="Attendance" profile={profile}><Attendance currentUser={currentUser} currentPeriodId={currentPeriodId} /></SectionGate>}  />
+                        <Route path="/academics"    element={<SectionGate featureSlug="grading" featureName="Grading & Exams" profile={profile}><Academics currentUser={currentUser} currentPeriodId={currentPeriodId} /></SectionGate>}  />
                         {/* Timetable and E-Learning routes */}
                         <Route path="/timetable"    element={<SectionGate featureSlug="timetable" featureName="Timetable" profile={profile}><Timetable currentUser={currentUser} currentPeriodId={currentPeriodId} periods={periods} /></SectionGate>} />
                         <Route path="/lms"          element={<SectionGate featureSlug="lms" featureName="E-Learning" profile={profile}><LMS currentUser={currentUser} /></SectionGate>} />
-                        <Route path="/exams"        element={<SectionGate featureSlug="exams" featureName="Formal Exams" profile={profile}><Exams currentUser={currentUser} currentPeriodId={currentPeriodId} /></SectionGate>} />
                       </>
                     )}
 

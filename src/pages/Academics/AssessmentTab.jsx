@@ -1,17 +1,17 @@
 import { useState, useEffect } from 'react';
 import { Helmet } from 'react-helmet-async';
-import { getClassResults, setStudentAllMarks, getSubjectRankings, getClassList, getCBC, setCBC, getTeacherPerformance, getCoreCompetencies, getPrintHeader, getSchoolProfile, subscribeToChanges, getGradeForScore, getSubjectAssignments } from '../data/store';
-import { CBC_STRUCTURE, CBC_LEVELS, CBC_CORE_COMPETENCIES, STREAMS, getSubjectsForGrade, getLevelForGrade } from '../data/seedData';
+import { getClassResults, setStudentAllMarks, getSubjectRankings, getClassList, getCBC, setCBC, getTeacherPerformance, getCoreCompetencies, getPrintHeader, getSchoolProfile, subscribeToChanges, getGradeForScore, getSubjectAssignments } from '../../data/store';
+import { CBC_STRUCTURE, CBC_LEVELS, CBC_CORE_COMPETENCIES, STREAMS, getSubjectsForGrade, getLevelForGrade } from '../../data/seedData';
 import { 
   LeafIcon, BookIcon, PrintIcon, DashboardIcon, EditIcon, 
   FlagIcon, RocketIcon, TeacherIcon, SchoolIcon, SaveIcon,
   SparklesIcon, TrendUpIcon, ChartBarIcon, SettingsIcon, CrossIcon
-} from '../components/CommonIcons';
-import Select from '../components/Common/Select';
-import { useDialog } from '../contexts/DialogContext';
-import { getProfessionalRemark } from '../utils/remarkUtils';
+} from '../../components/CommonIcons';
+import Select from '../../components/Common/Select';
+import { useDialog } from '../../contexts/DialogContext';
+import { getProfessionalRemark } from '../../utils/remarkUtils';
 
-export default function Grading({ currentUser, currentPeriodId }) {
+export default function AssessmentTab({ currentUser, currentPeriodId }) {
   const { alert, confirm } = useDialog();
   const allGrades = Object.values(CBC_STRUCTURE).flatMap(l => l.grades);
   const [selectedClass, setSelectedClass] = useState(sessionStorage.getItem('grading_class') || 'All');
@@ -30,7 +30,7 @@ export default function Grading({ currentUser, currentPeriodId }) {
   
   // Trigger migration on load if needed
   useEffect(() => {
-    import('../data/store').then(m => m.migrateExistingStudentsSubjects());
+    import('../../data/store').then(m => m.migrateExistingStudentsSubjects());
   }, []);
 
   const [profile, setProfile] = useState({ streams: [], activeClasses: [] });
@@ -148,7 +148,7 @@ export default function Grading({ currentUser, currentPeriodId }) {
     if (!showSubjectPicker) return;
     setLoading(true);
     try {
-      const { updateStudent } = await import('../data/store');
+      const { updateStudent } = await import('../../data/store');
       await updateStudent(showSubjectPicker.id, { subjects });
       setShowSubjectPicker(null);
       await loadResults();
@@ -407,15 +407,8 @@ export default function Grading({ currentUser, currentPeriodId }) {
         <title>Grading & Academic Performance | ShuleSoft</title>
         <meta name="description" content="Manage student marks, CBC assessments, and generate professional report cards instantly." />
       </Helmet>
-      <div className="page-header">
-        <div className="page-header-actions" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 16 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-            <div>
-              <h2>Grading & Results</h2>
-              <p className="text-muted">Enter marks, track CBC competencies, and generate report cards</p>
-            </div>
-            {loading && <span className="text-muted" style={{ fontSize: '0.85rem' }}>Loading...</span>}
-          </div>
+      <div className="tab-header" style={{ marginBottom: 20 }}>
+        <div className="page-header-actions" style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', flexWrap: 'wrap', gap: 12 }}>
           <div className="inline-flex" style={{ gap: 12, flexWrap: 'wrap' }}>
             <button className="btn btn-ghost" onClick={printClassList}><PrintIcon size={16} /> Class List</button>
             <button className="btn btn-ghost" onClick={printClassResults}><DashboardIcon size={16} /> Stream Results</button>

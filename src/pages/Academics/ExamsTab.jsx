@@ -11,7 +11,7 @@ import {
 import Loader from '../../components/Common/Loader';
 import MarksEntry from './MarksEntry';
 
-const Exams = () => {
+const ExamsTab = ({ currentUser, currentPeriodId }) => {
   const [exams, setExams] = useState([]);
   const [loading, setLoading] = useState(true);
   const [view, setView] = useState('list'); // 'list', 'detail', or 'entry'
@@ -297,15 +297,8 @@ const Exams = () => {
   }
 
   return (
-    <div className="exams-page" style={{ padding: '2rem', maxWidth: '1200px', margin: '0 auto' }}>
-      <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
-        <div>
-          <h1 style={{ fontSize: '2rem', fontWeight: 800, color: 'var(--text)', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-            <GradingIcon size={32} color="var(--primary)" />
-            Exams & Results
-          </h1>
-          <p style={{ color: 'var(--text-muted)', marginTop: '0.5rem' }}>Management of formal exam sessions and ranking calculation.</p>
-        </div>
+    <div className="exams-tab animate-in">
+      <header style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', marginBottom: '1.5rem' }}>
         <button 
           onClick={() => setShowCreateModal(true)}
           style={{ 
