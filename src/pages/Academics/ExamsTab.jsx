@@ -481,4 +481,4 @@ const ExamsTab = ({ currentUser, currentPeriodId }) => {
   );
 };
 
-export default Exams;
+export default ExamsTab;
