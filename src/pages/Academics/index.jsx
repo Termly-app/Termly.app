@@ -1,10 +1,9 @@
 import { Suspense, lazy } from 'react';
 import { Helmet } from 'react-helmet-async';
 import Loader from '../../components/Common/Loader';
-import { BookIcon, GraduationIcon } from '../../components/CommonIcons';
+import { BookIcon } from '../../components/CommonIcons';
 
 const AssessmentTab = lazy(() => import('./AssessmentTab'));
-const ExamsTab = lazy(() => import('./ExamsTab'));
 
 export default function AcademicCenter({ currentUser, currentPeriodId }) {
   return (
@@ -21,23 +20,13 @@ export default function AcademicCenter({ currentUser, currentPeriodId }) {
         </div>
       </div>
 
-      <div className="academic-content" style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '48px' }}>
+      <div className="academic-content" style={{ padding: '24px' }}>
         <Suspense fallback={<Loader />}>
-          <section>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px' }}>
-              <BookIcon size={24} color="var(--primary)" />
-              <h2 style={{ fontSize: '1.4rem', fontWeight: 800, color: 'var(--text)' }}>Assessment & Grading</h2>
-            </div>
-            <AssessmentTab currentUser={currentUser} currentPeriodId={currentPeriodId} />
-          </section>
-
-          <section style={{ paddingTop: '24px', borderTop: '1px solid var(--border)' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px' }}>
-              <GraduationIcon size={24} color="var(--primary)" />
-              <h2 style={{ fontSize: '1.4rem', fontWeight: 800, color: 'var(--text)' }}>Formal Exam Sessions</h2>
-            </div>
-            <ExamsTab currentUser={currentUser} currentPeriodId={currentPeriodId} />
-          </section>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px' }}>
+            <BookIcon size={24} color="var(--primary)" />
+            <h2 style={{ fontSize: '1.4rem', fontWeight: 800, color: 'var(--text)' }}>Assessment & Grading</h2>
+          </div>
+          <AssessmentTab currentUser={currentUser} currentPeriodId={currentPeriodId} />
         </Suspense>
       </div>
 
