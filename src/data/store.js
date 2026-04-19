@@ -349,7 +349,8 @@ const DEFAULT_PROFILE = {
       {min: 50, max: 59, grade: 'D', color: '#f97316'},
       {min: 0, max: 49, grade: 'E', color: '#ef4444'}
     ]
-  }
+  },
+  enabledModules: { attendance: true }
 };
 
 const SAFE_PROFILE_COLUMNS = 'id, school_name, motto, phone, email, address, logo, subscription_plan, streams_per_class, custom_subjects, active_classes, grade_fees, subscription_status, subscription_expiry, last_payment_status, mpesa_config, sms_config, grading_systems, custom_exams, curriculum, timetable_label';
@@ -458,6 +459,7 @@ function mapProfileData(data) {
     schoolType: data.school_type || data.custom_subjects?.__shadow_school_type || 'Day',
     schoolCode: data.school_code,
     boardingHouses: trimArr(data.boarding_houses || data.custom_subjects?.__shadow_boarding_houses) || DEFAULT_PROFILE.boardingHouses,
+    enabledModules: data.custom_subjects?.__shadow_enabled_modules || DEFAULT_PROFILE.enabledModules,
   };
 }
 
@@ -765,6 +767,7 @@ export async function saveSchoolProfile(profile) {
       shadowBlob.__shadow_boarding_houses = profile.boardingHouses || [];
       shadowBlob.__shadow_active_classes = profile.activeClasses || [];
       shadowBlob.__shadow_streams_per_class = profile.streamsPerClass || {};
+      shadowBlob.__shadow_enabled_modules = profile.enabledModules || DEFAULT_PROFILE.enabledModules;
       
       await supabase
         .from('school_profiles')
@@ -3626,6 +3629,12 @@ const FEATURE_MAPPING = {
 export async function isFeatureEnabled(featureSlug) {
   try {
     const profile = await getSchoolProfile();
+    
+    // School-level module toggle override
+    if (featureSlug === 'attendance' && profile.enabledModules?.attendance === false) {
+      return false;
+    }
+    
     return await checkFeatureAccess(featureSlug, profile);
   } catch (e) {
     console.error("Feature gating error:", e);

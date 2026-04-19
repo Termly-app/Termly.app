@@ -343,6 +343,66 @@ export default function Settings() {
             </div>
           </div>
         </div>
+<div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(320px,1fr))',gap:24}}>
+          {/* Module Management */}
+          <div className="card">
+            <div className="card-header">
+              <div style={{display:'flex',alignItems:'center',gap:10}}>
+                <div style={{background:'var(--primary-light)',color:'var(--primary)',padding:8,borderRadius:10,display:'flex'}}>
+                  <PlatformZapIcon size={20} />
+                </div>
+                <div>
+                  <h3 style={{margin:0}}>Module Management</h3>
+                  <p style={{fontSize:'0.75rem',color:'var(--text-light)',margin:0}}>Enable or disable major school features</p>
+                </div>
+              </div>
+            </div>
+            <div className="card-body">
+              <div style={{display:'flex',flexDirection:'column',gap:12}}>
+                <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',padding:14,background:'var(--bg-card)',borderRadius:12,border:'1px solid var(--border)'}}>
+                  <div>
+                    <div style={{fontWeight:700,fontSize:'0.9rem'}}>Attendance Tracking</div>
+                    <div style={{fontSize:'0.75rem',color:'var(--text-light)'}}>Manage daily student presence and reporting</div>
+                  </div>
+                  <label className="switch" style={{position:'relative',display:'inline-block',width:44,height:24}}>
+                    <input 
+                      type="checkbox" 
+                      checked={profile.enabledModules?.attendance !== false} 
+                      onChange={(e) => {
+                        const isChecked = e.target.checked;
+                        setProfile(p => ({
+                          ...p,
+                          enabledModules: { ...p.enabledModules, attendance: isChecked }
+                        }));
+                        setSaved(false);
+                      }}
+                      style={{opacity:0,width:0,height:0}}
+                    />
+                    <span 
+                      style={{
+                        position:'absolute',cursor:'pointer',top:0,left:0,right:0,bottom:0,
+                        backgroundColor: (profile.enabledModules?.attendance !== false) ? 'var(--primary)' : 'var(--border)',
+                        transition:'.3s',borderRadius:24
+                      }}
+                    >
+                      <span 
+                        style={{
+                          position:'absolute',content:'""',height:18,width:18,left: 3,bottom: 3,
+                          backgroundColor:'white',transition:'.3s',borderRadius:'50%',
+                          transform: (profile.enabledModules?.attendance !== false) ? 'translateX(20px)' : 'translateX(0)'
+                        }}
+                      />
+                    </span>
+                  </label>
+                </div>
+                
+                <p style={{fontSize:'0.7rem',color:'var(--text-muted)',margin:'4px 0 0',padding:'0 4px'}}>
+                  Note: Disabling a module hides its navigation and dashboard widgets but preserves existing data.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
 
         {/* Academic Configuration */}
         <div className="card">

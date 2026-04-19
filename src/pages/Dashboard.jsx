@@ -155,17 +155,17 @@ export default function Dashboard({ currentUser, onLogout, currentPeriodId }) {
     { icon:<StudentIcon size={20} />, label:'Total Students',    value: data.totalStudents,       color:'#0EA5E9', bg:'#E0F2FE',  show: true          },
     { icon:<TeacherIcon size={20} />, label:'Teaching Staff',    value: data.totalTeachers,       color:'#8B5CF6', bg:'#F5F3FF',  show: !isFinance && !isLibrarian },
     { icon:<CardIcon size={20} />,    label:'Fee Collection',      value: `${data.collectionRate}%`, color:'#10B981', bg:'#ECFDF5',  show: !isTeacher && !isLibrarian },
-    { icon:<BookIcon size={20} />,    label:"Today's Attendance", value: `${data.attendance.percentage}%`, color:'#F59E0B', bg:'#FFFBEB', show: !isFinance && !isLibrarian },
+    { icon:<BookIcon size={20} />,    label:"Today's Attendance", value: `${data.attendance.percentage}%`, color:'#F59E0B', bg:'#FFFBEB', show: !isFinance && !isLibrarian && data.profile?.enabledModules?.attendance !== false },
     { icon:<UserIcon size={20} />,    label:'Seat Usage',        value: `${totalStaff}/${seatLimit}`, color:'#64748b', bg:'#f1f5f9', show: !isTeacher && !isFinance && !isLibrarian },
   ].filter(k => k.show);
 
   const quickActions = [
     { icon:<StudentIcon size={18} />, label:'Students',      sub:'Manage all students',   to:'/students',   bg:'#E0F2FE',  color:'#0EA5E9', feature: 'Student Management' },
     { icon:<TeacherIcon size={18} />, label:'Teachers',      sub:'Manage staff',          to:'/teachers',   bg:'#F5F3FF',  color:'#8B5CF6', feature: 'Staff Management' },
-    { icon:<BookIcon size={18} />,    label:'Attendance',     sub:'Record daily attendance', to:'/attendance', bg:'#ECFDF5',  color:'#10B981', feature: 'Attendance Tracking' },
+    { icon:<BookIcon size={18} />,    label:'Attendance',     sub:'Record daily attendance', to:'/attendance', bg:'#ECFDF5',  color:'#10B981', feature: 'Attendance Tracking', show: data.profile?.enabledModules?.attendance !== false },
     { icon:<CardIcon size={18} />,    label:'Fees',           sub:'Fee collection & tracking', to:'/fees',    bg:'#FFFBEB',  color:'#F59E0B', feature: 'Student Fee Statements' },
     // { icon:<BookIcon size={18} />,    label:'Timetable',      sub:'Automated scheduler',    to:'/timetable',  bg:'#F5F3FF',  color:'#6D28D9', feature: 'Timetable Builder' },
-  ];
+  ].filter(a => a.show !== false);
 
   // Helper to check if a feature is included in the current plan
   const hasAccess = (featureName) => {
@@ -371,7 +371,7 @@ export default function Dashboard({ currentUser, onLogout, currentPeriodId }) {
       <div className="dashboard-grid-2">
 
         {/* Attendance */}
-        {!isFinance && (
+        {!isFinance && data.profile?.enabledModules?.attendance !== false && (
           <div className="card">
             <div className="card-header">
               <div className="flex-center gap-3">
