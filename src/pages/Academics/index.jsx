@@ -1,4 +1,4 @@
-import { useState, Suspense, lazy } from 'react';
+import { Suspense, lazy } from 'react';
 import { Helmet } from 'react-helmet-async';
 import Loader from '../../components/Common/Loader';
 import { BookIcon, GraduationIcon } from '../../components/CommonIcons';
@@ -7,8 +7,6 @@ const AssessmentTab = lazy(() => import('./AssessmentTab'));
 const ExamsTab = lazy(() => import('./ExamsTab'));
 
 export default function AcademicCenter({ currentUser, currentPeriodId }) {
-  const [activeTab, setActiveTab] = useState('assessment'); // 'assessment' or 'exams'
-
   return (
     <div className="academic-center-page animate-in">
       <Helmet>
@@ -21,65 +19,25 @@ export default function AcademicCenter({ currentUser, currentPeriodId }) {
           <h1 style={{ fontSize: '1.8rem', fontWeight: 800, color: 'var(--text)' }}>Academic Center</h1>
           <p style={{ color: 'var(--text-muted)', marginTop: '4px' }}>Unified results management for daily assessment and formal exams</p>
         </div>
-
-        {/* Unified Tab Switcher */}
-        <div className="tab-switcher" style={{ 
-          display: 'flex', 
-          gap: '32px', 
-          marginTop: '24px', 
-          padding: '0 24px',
-          borderBottom: '1px solid var(--border)' 
-        }}>
-          <button 
-            onClick={() => setActiveTab('assessment')}
-            style={{
-              padding: '12px 4px',
-              background: 'none',
-              border: 'none',
-              borderBottom: activeTab === 'assessment' ? '3px solid var(--primary)' : '3px solid transparent',
-              color: activeTab === 'assessment' ? 'var(--primary)' : 'var(--text-muted)',
-              fontWeight: activeTab === 'assessment' ? 700 : 500,
-              fontSize: '0.95rem',
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '8px',
-              transition: 'all 0.2s'
-            }}
-          >
-            <BookIcon size={18} />
-            Assessment & Grading
-          </button>
-          <button 
-            onClick={() => setActiveTab('exams')}
-            style={{
-              padding: '12px 4px',
-              background: 'none',
-              border: 'none',
-              borderBottom: activeTab === 'exams' ? '3px solid var(--primary)' : '3px solid transparent',
-              color: activeTab === 'exams' ? 'var(--primary)' : 'var(--text-muted)',
-              fontWeight: activeTab === 'exams' ? 700 : 500,
-              fontSize: '0.95rem',
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '8px',
-              transition: 'all 0.2s'
-            }}
-          >
-            <GraduationIcon size={18} />
-            Formal Exam Sessions
-          </button>
-        </div>
       </div>
 
-      <div className="academic-content" style={{ padding: '24px' }}>
+      <div className="academic-content" style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '48px' }}>
         <Suspense fallback={<Loader />}>
-          {activeTab === 'assessment' ? (
+          <section>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px' }}>
+              <BookIcon size={24} color="var(--primary)" />
+              <h2 style={{ fontSize: '1.4rem', fontWeight: 800, color: 'var(--text)' }}>Assessment & Grading</h2>
+            </div>
             <AssessmentTab currentUser={currentUser} currentPeriodId={currentPeriodId} />
-          ) : (
+          </section>
+
+          <section style={{ paddingTop: '24px', borderTop: '1px solid var(--border)' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px' }}>
+              <GraduationIcon size={24} color="var(--primary)" />
+              <h2 style={{ fontSize: '1.4rem', fontWeight: 800, color: 'var(--text)' }}>Formal Exam Sessions</h2>
+            </div>
             <ExamsTab currentUser={currentUser} currentPeriodId={currentPeriodId} />
-          )}
+          </section>
         </Suspense>
       </div>
 
@@ -87,9 +45,6 @@ export default function AcademicCenter({ currentUser, currentPeriodId }) {
         .academic-center-page {
           min-height: 100vh;
           background: var(--bg);
-        }
-        .tab-switcher button:hover {
-          color: var(--primary);
         }
       `}</style>
     </div>
