@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { 
   getSchoolProfile, getAssignments, createAssignment, 
-  getSubmissions, updateSubmission, fetchLmsContent, getQuizAnalytics 
+  getSubmissions, updateSubmission, fetchLmsContent, getQuizAnalytics,
+  CBC_STRUCTURE, getSubjectsForGrade, updateAssignment
 } from '../data/store';
 import { 
   BookIcon, CheckIcon, UsersIcon, DownloadIcon, ClockIcon, MessageIcon, GraduationIcon, 
@@ -159,7 +160,7 @@ function QuizAnalyticsModal({ assignmentId, onClose }) {
 }
 
 export default function LMS({ currentUser }) {
-  const { alert } = useDialog();
+  const { alert, prompt, toast } = useDialog();
   const [profile, setProfile] = useState(null);
   const [assignments, setAssignments] = useState([]);
   const [selectedSubmissions, setSelectedSubmissions] = useState(null);
@@ -196,6 +197,15 @@ export default function LMS({ currentUser }) {
 
   const handleCreate = async (e) => {
     e.preventDefault();
+    if (formData.links) {
+      const trusted = ['https://docs.google.com', 'https://drive.google.com', 'https://1drv.ms', 'https://onedrive.live.com'];
+      const isTrusted = trusted.some(t => formData.links.trim().startsWith(t));
+      if (!isTrusted) {
+        alert({ title: 'Untrusted Link', message: 'For platform hygiene, please provide a link strictly from a trusted source (Google Docs, Google Drive, or OneDrive).', variant: 'warning' });
+        return;
+      }
+    }
+
     setLoading(true);
     try {
       await createAssignment({
@@ -246,6 +256,35 @@ export default function LMS({ currentUser }) {
     setLoading(false);
   };
 
+  const [extendDeadlineAst, setExtendDeadlineAst] = useState(null);
+  const [newDeadline, setNewDeadline] = useState('');
+
+  const openExtendModal = (ast) => {
+    setExtendDeadlineAst(ast);
+    const currentDue = new Date(ast.due_date || ast.dueDate);
+    currentDue.setMinutes(currentDue.getMinutes() - currentDue.getTimezoneOffset());
+    setNewDeadline(currentDue.toISOString().slice(0, 16));
+  };
+
+  const handleSaveExtension = async () => {
+    setLoading(true);
+    try {
+      const updatedDue = new Date(newDeadline);
+      const updatedCutoff = new Date(updatedDue.getTime() + 86400000); // Pad cutoff 1 additional day
+      
+      await updateAssignment(extendDeadlineAst.id, { 
+        due_date: updatedDue.toISOString(),
+        cutoff_date: updatedCutoff.toISOString()
+      });
+      toast('Deadline updated successfully.', 'success');
+      setExtendDeadlineAst(null);
+      await loadData();
+    } catch (err) {
+      alert({ title: 'Update Failed', message: 'Failed to update the deadline.', variant: 'danger' });
+    }
+    setLoading(false);
+  };
+
   const [showQuestionModal, setShowQuestionModal] = useState(false);
 
   const handleAddQuestion = () => {
@@ -276,24 +315,36 @@ export default function LMS({ currentUser }) {
     });
   };
 
-  const activeClasses = profile?.activeClasses || [];
-  
+  const allGradesOrder = useMemo(() => {
+    if (!CBC_STRUCTURE) return [];
+    return Object.values(CBC_STRUCTURE).flatMap(l => l.grades);
+  }, []);
 
-  // Robust Subject Filtering (Exclude curriculum names & hidden keys)
-  const curriculumNames = ['Secondary (8-4-4)', 'CBC Only', 'CBC & 8-4-4', 'Day', 'Boarding', 'Day & Boarding'];
-  
-  const subjects = (() => {
-    if (!profile?.customSubjects) return ['Mathematics', 'English', 'Kiswahili', 'Science', 'Social Studies', 'CRE/IRE', 'ICT', 'Arts'];
-    
-    const filtered = Object.keys(profile.customSubjects).filter(k => 
-      !k.startsWith('__') && !curriculumNames.includes(k)
-    );
-    
-    // If filtering leaves us with nothing, use the standard list as fallback
-    return filtered.length > 0 
-      ? filtered 
-      : ['Mathematics', 'English', 'Kiswahili', 'Science', 'Social Studies', 'CRE/IRE', 'ICT', 'Arts'];
-  })();
+  const sortedActiveClasses = useMemo(() => {
+    const classes = profile?.activeClasses || [];
+    if (allGradesOrder.length === 0) return classes;
+    return [...classes].sort((a, b) => {
+      const idxA = allGradesOrder.indexOf(a);
+      const idxB = allGradesOrder.indexOf(b);
+      const scoreA = idxA === -1 ? 999 : idxA;
+      const scoreB = idxB === -1 ? 999 : idxB;
+      return scoreA - scoreB;
+    });
+  }, [profile?.activeClasses, allGradesOrder]);
+
+  const subjects = useMemo(() => {
+    if (!formData.class) {
+      if (!profile?.customSubjects) return ['Mathematics', 'English', 'Kiswahili', 'Science', 'Social Studies', 'CRE/IRE', 'ICT', 'Arts'];
+      const curriculumNames = ['Secondary (8-4-4)', 'CBC Only', 'CBC & 8-4-4', 'Day', 'Boarding', 'Day & Boarding'];
+      const filtered = Object.keys(profile.customSubjects).filter(k => 
+        !k.startsWith('__') && !curriculumNames.includes(k)
+      );
+      return filtered.length > 0 
+        ? filtered 
+        : ['Mathematics', 'English', 'Kiswahili', 'Science', 'Social Studies', 'CRE/IRE', 'ICT', 'Arts'];
+    }
+    return getSubjectsForGrade(formData.class, profile);
+  }, [formData.class, profile]);
 
   // Dynamic Stream logic with robust fallback for Sandbox/Incomplete setup
   const classStreams = (() => {
@@ -319,6 +370,15 @@ export default function LMS({ currentUser }) {
       }
     }
   }, [formData.class, profile]);
+
+  // Effect to reset subject if class changes and it's no longer valid
+  useEffect(() => {
+    if (formData.subject && subjects.length > 0) {
+      if (!subjects.includes(formData.subject)) {
+        setFormData(prev => ({ ...prev, subject: '' }));
+      }
+    }
+  }, [subjects]);
 
   return (
     <div className="section-card animate-in" style={{ display: 'grid', gridTemplateColumns: '380px 1fr', gap: 24, minHeight: 'calc(100vh - 120px)' }}>
@@ -348,7 +408,7 @@ export default function LMS({ currentUser }) {
               <Select 
                 value={formData.class} 
                 onChange={e => setFormData({ ...formData, class: e.target.value })}
-                options={activeClasses.map(c => ({ id: c, label: c.toLowerCase().includes('grade') || c.toLowerCase().includes('form') ? c : `Class ${c}` }))}
+                options={sortedActiveClasses.map(c => ({ id: c, label: c.toLowerCase().includes('grade') || c.toLowerCase().includes('form') ? c : `Class ${c}` }))}
                 placeholder="Select Class"
                 style={{ width: '100%' }}
               />
@@ -405,12 +465,25 @@ export default function LMS({ currentUser }) {
                 onChange={e => setFormData({ ...formData, submissionType: e.target.value })}
                 options={[
                   { id: 'online_text', label: 'Online Text Response' },
+                  { id: 'external_link', label: 'External Link (Google Doc / Drive Link)' },
                   { id: 'file_upload', label: 'File Upload (PDF/Scan)' },
                   { id: 'quiz', label: 'Interactive Quiz (Auto-graded)' }
                 ]}
                 style={{ width: '100%' }}
               />
             </div>
+            
+            {formData.submissionType === 'external_link' && (
+              <div style={{ gridColumn: '1 / -1', padding: 12, background: 'rgba(56, 189, 248, 0.1)', color: 'var(--info)', borderRadius: 8, fontSize: '0.85rem', fontWeight: 600, border: '1px solid rgba(56, 189, 248, 0.3)' }}>
+                💡 Students will be required to submit a URL as their assignment. Please remind them in your instructions to change their document sharing permissions to <strong>"Anyone with the link can view"</strong>.
+              </div>
+            )}
+            
+            {formData.submissionType === 'file_upload' && (
+              <div style={{ gridColumn: '1 / -1', padding: 12, background: 'rgba(245, 158, 11, 0.1)', color: 'var(--warning)', borderRadius: 8, fontSize: '0.85rem', fontWeight: 600, border: '1px solid rgba(245, 158, 11, 0.3)' }}>
+                ⚠️ File uploads consume database quota. For large classes, consider using the <strong>External Link</strong> submission type instead.
+              </div>
+            )}
           </div>
 
           {formData.submissionType === 'quiz' && (
@@ -484,6 +557,21 @@ export default function LMS({ currentUser }) {
              />
           </div>
 
+          <div className="form-group">
+            <label>External Resource Link (Optional Worksheet / Material)</label>
+            <input 
+              className="form-input" 
+              type="url"
+              placeholder="e.g., https://docs.google.com/..."
+              value={formData.links}
+              onChange={e => setFormData({ ...formData, links: e.target.value })}
+            />
+            <div style={{ marginTop: 6, fontSize: '0.75rem', color: 'var(--text-muted)', lineHeight: 1.4 }}>
+              To ensure access, we strictly require formatting links from <strong>Trusted Sources</strong> only: <br />
+              <code style={{ background: 'var(--bg-card)', padding: 2, borderRadius: 4, display: 'inline-block', marginTop: 4 }}>https://docs.google.com/</code>, <code>https://drive.google.com/</code>, or <code>https://onedrive.live.com/</code>.
+            </div>
+          </div>
+
           <button className="btn btn-primary" type="submit" disabled={loading} style={{ padding: '14px', fontSize: '1rem', fontWeight: 800, marginTop: 5, boxShadow: '0 4px 12px rgba(14,165,233,0.3)' }}>
             {loading ? 'Publishing...' : 'Send to Portals'}
           </button>
@@ -537,6 +625,14 @@ export default function LMS({ currentUser }) {
                       onClick={() => viewSubmissions(ast)}
                     >
                       Process →
+                    </button>
+                    <button 
+                      className="btn btn-ghost" 
+                      style={{ border: '1.5px solid var(--border)', color: 'var(--text-main)', fontWeight: 800, fontSize: '0.8rem' }}
+                      title="Extend Deadline"
+                      onClick={() => openExtendModal(ast)}
+                    >
+                      <ClockIcon size={14} style={{ marginRight: 4 }} /> Extend
                     </button>
                     {ast.submission_type === 'quiz' && (
                       <button 
@@ -730,6 +826,43 @@ export default function LMS({ currentUser }) {
         </div>
       )}
       {showAnalytics && <QuizAnalyticsModal assignmentId={showAnalytics} onClose={() => setShowAnalytics(null)} />}
+
+      {extendDeadlineAst && (
+        <div className="modal-overlay" onClick={() => setExtendDeadlineAst(null)}>
+          <div className="modal glass-morph" onClick={e => e.stopPropagation()} style={{ maxWidth: 400, padding: 32 }}>
+            <h3 style={{ margin: '0 0 16px', fontSize: '1.3rem', fontWeight: 800, color: 'var(--text-main)' }}>Update Deadline</h3>
+            <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: 20 }}>
+              Set a new exact date and time for <strong>{extendDeadlineAst.title}</strong> to close.
+            </p>
+            <div className="form-group">
+              <label>New Due Date</label>
+              <input 
+                className="form-input" 
+                type="datetime-local" 
+                value={newDeadline} 
+                onChange={e => setNewDeadline(e.target.value)} 
+                autoFocus
+              />
+            </div>
+            <div style={{ display: 'flex', gap: 12, marginTop: 24 }}>
+              <button 
+                className="btn btn-primary" 
+                style={{ flex: 1, padding: 12, fontWeight: 700 }}
+                onClick={handleSaveExtension}
+                disabled={loading}
+              >
+                {loading ? 'Saving...' : 'Update Deadline'}
+              </button>
+              <button 
+                className="btn btn-secondary" 
+                onClick={() => setExtendDeadlineAst(null)}
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
