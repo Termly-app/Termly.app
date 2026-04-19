@@ -466,7 +466,6 @@ export default function LMS({ currentUser }) {
                 options={[
                   { id: 'online_text', label: 'Online Text Response' },
                   { id: 'external_link', label: 'External Link (Google Doc / Drive Link)' },
-                  { id: 'file_upload', label: 'File Upload (PDF/Scan)' },
                   { id: 'quiz', label: 'Interactive Quiz (Auto-graded)' }
                 ]}
                 style={{ width: '100%' }}
@@ -476,12 +475,6 @@ export default function LMS({ currentUser }) {
             {formData.submissionType === 'external_link' && (
               <div style={{ gridColumn: '1 / -1', padding: 12, background: 'rgba(56, 189, 248, 0.1)', color: 'var(--info)', borderRadius: 8, fontSize: '0.85rem', fontWeight: 600, border: '1px solid rgba(56, 189, 248, 0.3)' }}>
                 💡 Students will be required to submit a URL as their assignment. Please remind them in your instructions to change their document sharing permissions to <strong>"Anyone with the link can view"</strong>.
-              </div>
-            )}
-            
-            {formData.submissionType === 'file_upload' && (
-              <div style={{ gridColumn: '1 / -1', padding: 12, background: 'rgba(245, 158, 11, 0.1)', color: 'var(--warning)', borderRadius: 8, fontSize: '0.85rem', fontWeight: 600, border: '1px solid rgba(245, 158, 11, 0.3)' }}>
-                ⚠️ File uploads consume database quota. For large classes, consider using the <strong>External Link</strong> submission type instead.
               </div>
             )}
           </div>
