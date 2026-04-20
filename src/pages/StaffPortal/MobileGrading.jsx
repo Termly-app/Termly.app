@@ -157,7 +157,6 @@ export default function MobileGrading({ user, onLogout }) {
   if (loading && exams.length === 0) return <Loader />;
 
   return (
-  return (
     <div style={{ width: '100%', maxWidth: 600, margin: '0 auto', background: '#f8fafc', minHeight: '100vh', display: 'flex', flexDirection: 'column', fontFamily: 'var(--font)' }}>
       
       {/* Mobile Header Menu */}
