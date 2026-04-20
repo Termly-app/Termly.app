@@ -10,6 +10,7 @@ import {
   DownloadIcon, RefreshIcon, UserIcon, EditIcon, 
   ChevronRightIcon, ActivityIcon, PrintIcon
 } from '../../components/CommonIcons';
+import { LogoMarkBW } from '../../components/Common/Icons';
 import { Helmet } from 'react-helmet-async';
 import Loader from '../../components/Common/Loader';
 import Select from '../../components/Common/Select';
@@ -191,9 +192,14 @@ export default function NEMISDashboard({ currentUser }) {
           {/* Print header (only visible when printing) */}
           <div className="print-only" style={{ padding: '0 0 20px', borderBottom: '1px solid #000', marginBottom: 20 }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
-              <div>
-                <h1 style={{ margin: 0, fontSize: '1.5rem', fontWeight: 900, letterSpacing: '-0.02em' }}>{profile?.schoolName || 'School'}</h1>
-                <h2 style={{ margin: '4px 0 0', fontSize: '0.9rem', color: '#333', textTransform: 'uppercase', fontWeight: 700 }}>NEMIS Data Compliance Report</h2>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 15 }}>
+                {profile?.logo && (
+                  <img src={profile.logo} alt="School Logo" style={{ width: 60, height: 60, objectFit: 'contain' }} className="print-only" />
+                )}
+                <div>
+                  <h1 style={{ margin: 0, fontSize: '1.5rem', fontWeight: 900, letterSpacing: '-0.02em' }}>{profile?.schoolName || 'School'}</h1>
+                  <h2 style={{ margin: '4px 0 0', fontSize: '0.9rem', color: '#333', textTransform: 'uppercase', fontWeight: 700 }}>NEMIS Data Compliance Report</h2>
+                </div>
               </div>
               <div style={{ textAlign: 'right', fontSize: '0.75rem', color: '#444' }}>
                 <div><strong>Class:</strong> {classFilter !== 'All' ? classFilter : 'All Classes'}</div>
@@ -247,9 +253,14 @@ export default function NEMISDashboard({ currentUser }) {
               ))}
             </tbody>
           </table>
-          <div className="print-only" style={{ marginTop: 30, paddingTop: 10, borderTop: '1px solid #eee', fontSize: '0.7rem', color: '#999', display: 'flex', justifyContent: 'space-between' }}>
-            <span>NEMIS Compliance Audit Report</span>
-            <span>Page 1 of 1</span>
+          <div className="print-only" style={{ marginTop: 40, paddingTop: 10, borderTop: '1px solid #ccc', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6, opacity: 0.6 }}>
+              <LogoMarkBW size={16} />
+              <span style={{ fontSize: '0.65rem', fontWeight: 700, letterSpacing: '0.5px' }}>POWERED BY SHULESOFT</span>
+            </div>
+            <div style={{ fontSize: '0.65rem', color: '#999' }}>
+               NEMIS Compliance Audit Report — Page 1 of 1
+            </div>
           </div>
         </div>
 
