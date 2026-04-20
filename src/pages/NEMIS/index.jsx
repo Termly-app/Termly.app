@@ -347,28 +347,60 @@ export default function NEMISDashboard({ currentUser }) {
             display: none !important;
           }
           
-          .main-content { margin: 0 !important; padding: 0 !important; }
-          .page-content { padding: 0 !important; }
+          .main-content { margin: 0 !important; padding: 0 !important; width: 100% !important; max-width: none !important; }
+          .page-content { padding: 0 !important; width: 100% !important; max-width: none !important; }
           .app-layout { display: block !important; }
-          .card { box-shadow: none !important; border: none !important; padding: 0 !important; }
+          
+          .card { 
+            box-shadow: none !important; 
+            border: none !important; 
+            padding: 0 !important; 
+            width: 100% !important; 
+            max-width: none !important;
+            margin: 0 !important;
+          }
           .print-only { display: block !important; }
 
-          /* Table styling for print */
+          /* Header Adjustments */
+          .print-only h1 { font-size: 2rem !important; }
+          .print-only h2 { font-size: 1.1rem !important; }
+          .print-only div { font-size: 0.9rem !important; }
+
+          /* Table styling for print - Force Full Width and Larger Text */
           .data-table { 
-            font-size: 0.8rem !important; 
+            font-size: 0.95rem !important; 
             width: 100% !important;
             border-collapse: collapse !important;
-            border: 1px solid #eee !important;
+            border: 2px solid #000 !important;
+            margin-top: 10px !important;
           }
-          .data-table th { background: #f9f9f9 !important; color: #000 !important; text-align: left !important; }
-          .data-table th, .data-table td { 
-            padding: 8px 12px !important; 
-            border: 1px solid #eee !important;
+          .data-table th { 
+            background: #f0f0f0 !important; 
+            color: #000 !important; 
+            text-align: left !important;
+            font-size: 1rem !important;
+            border: 1px solid #000 !important;
+          }
+          .data-table td { 
+            padding: 10px 14px !important; 
+            border: 1px solid #000 !important;
+            color: #000 !important;
           }
           
+          /* Make badges look like plain text with borders for print legibility */
+          .data-table span[style*="background"] {
+            background: transparent !important;
+            border: 1px solid #999 !important;
+            color: #000 !important;
+            padding: 2px 6px !important;
+            font-size: 0.8rem !important;
+            display: inline-block !important;
+            margin: 2px !important;
+          }
+
           @page {
-            size: A4;
-            margin: 15mm;
+            size: A4 portrait;
+            margin: 10mm;
           }
         }
       `}</style>
