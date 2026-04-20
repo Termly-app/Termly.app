@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { getStudents, getFees, recordPayment, voidPayment, restorePayment, getStudentPayments, getFeeSummary, getPrintHeader, getSchoolProfile, TERM_FEE, subscribeToChanges, getMpesaLogs } from '../data/store';
+import { getStudents, getFees, recordPayment, voidPayment, restorePayment, getStudentPayments, getFeeSummary, getPrintHeader, getPrintFooter, getSchoolProfile, TERM_FEE, subscribeToChanges, getMpesaLogs } from '../data/store';
 import Loader from '../components/Common/Loader';
 import { CLASSES, CBC_STRUCTURE } from '../data/seedData';
 import { 
@@ -362,6 +362,7 @@ export default function Fees({ currentUser, currentPeriodId }) {
     try {
       const list = filtered;
       const headerStr = await getPrintHeader(`Fee Report — ${classFilter} | ${streamFilter} | ${statusFilter}`);
+      const footerStr = getPrintFooter();
       const w = window.open('', '_blank');
       w.document.write(`<html><head><title>Fee List - ${classFilter}</title>
       <style>body{font-family:Arial,sans-serif;padding:20px}
@@ -378,7 +379,9 @@ export default function Fees({ currentUser, currentPeriodId }) {
         <td class="${f.balance>0?'text-danger':'text-success'} font-bold">${formatKSh(f.balance)}</td>
         <td>${st}</td></tr>`;
     }).join('')}</tbody></table>
-    <div class="footer">Printed on ${new Date().toLocaleDateString()}</div></body></html>`);
+    <div class="footer">Printed on ${new Date().toLocaleDateString()}</div>
+    ${footerStr}
+    </body></html>`);
       w.document.close(); w.print();
     } catch(err){ alert({ title: 'Print Error', message: "Print failed: " + err.message, variant: 'danger' }); }
   };
