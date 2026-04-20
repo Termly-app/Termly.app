@@ -699,24 +699,39 @@ html body input[type="number"] {
 }
 
 /* GLOBAL PRINT STYLES */
-.global-print-element {
+.global-print-fixed-footer {
+  display: none;
+}
+.global-print-flow-header {
   display: none;
 }
 @media print {
-  .global-print-element {
-    display: block !important;
+  .global-print-fixed-footer {
+    display: flex !important;
     position: fixed;
+    bottom: 5mm;
+    left: 15mm;
     z-index: 9999;
+    color: #000 !important;
+    opacity: 1 !important;
   }
-  .global-print-header {
-    top: 0;
-    left: 0;
+  .global-print-fixed-footer svg {
+    fill: #000 !important;
+    stroke: #000 !important;
   }
-  .global-print-footer {
-    bottom: 0;
-    left: 0;
+
+  .global-print-flow-header {
+    display: flex !important;
   }
   
+  /* Reset layout constraints to prevent empty second pages */
+  html, body, #root, .app-layout, .main-content, .page-content {
+    min-height: 0 !important;
+    height: auto !important;
+    overflow: visible !important;
+    background: transparent !important;
+  }
+
   @page {
     margin: 0; /* Ensures browser headers are hidden globally if needed */
   }

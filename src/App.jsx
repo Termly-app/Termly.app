@@ -697,6 +697,13 @@ function App() {
           </div>
         </div>
 
+        {/* Global Print Overlay Header (In Flow to push content down) */}
+        {profile?.logo && (
+          <div className="global-print-flow-header" style={{ margin: '15mm 15mm 0', paddingBottom: '10px', alignItems: 'center', gap: '15px' }}>
+            <img src={profile.logo} alt="School Logo" style={{ height: 60, objectFit: 'contain' }} />
+          </div>
+        )}
+
         {/* Page content */}
         <div className="page-content">
           <Suspense fallback={<Loader />}>
@@ -770,15 +777,8 @@ function App() {
           </Suspense>
         </div>
       </main>
-
-      {/* Global Print Overlay Header & Footer */}
-      {profile?.logo && (
-        <div className="global-print-element global-print-header" style={{ margin: '15mm' }}>
-          <img src={profile.logo} alt="School Logo" style={{ height: 50, objectFit: 'contain' }} />
-        </div>
-      )}
-      <div className="global-print-element global-print-footer" style={{ margin: '15mm', opacity: 0.8 }}>
-        <LogoMarkBW size={20} />
+      <div className="global-print-fixed-footer">
+        <LogoMarkBW size={22} color="#000" />
       </div>
 
     </div>
