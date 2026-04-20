@@ -532,6 +532,8 @@ function App() {
       <Suspense fallback={<Loader />}>
         <Routes>
           <Route path="/"                   element={<Landing />} />
+          <Route path="/portal/*"           element={<PortalManager />} />
+          <Route path="/staff/*"            element={<StaffPortalManager />} />
           <Route path="/login"              element={<Login onLogin={setCurrentUser} />} />
           <Route path="/:schoolCode/login"  element={<Login onLogin={setCurrentUser} />} />
           <Route path="/register"           element={<Register />} />
@@ -549,8 +551,6 @@ function App() {
           <Route path="/forgot-password"    element={<ForgotPassword />} />
           <Route path="/reset-password"     element={<ResetPassword />} />
           <Route path="/security-trust"     element={<SecurityTrust />} />
-          <Route path="/portal/*"           element={<PortalManager />} />
-          <Route path="/staff/*"            element={<StaffPortalManager />} />
           <Route path="*"                   element={<Landing />} />
         </Routes>
       </Suspense>

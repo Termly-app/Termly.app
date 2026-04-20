@@ -57,10 +57,10 @@ export default function Login({ onLogin }) {
           if (school) {
             setBrandedSchool(school);
           } else {
-            setError('Invalid or inactive school link.');
+            console.warn(`[Login] No school found for code: ${schoolCode}. Falling back to default.`);
           }
         } catch (e) {
-           setError('Could not load school branding.');
+           console.error('[Login] Branding load error:', e);
         }
       }
     }
