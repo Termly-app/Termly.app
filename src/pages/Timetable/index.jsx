@@ -31,7 +31,8 @@ import {
 } from '../../data/store';
 import { 
   CalendarIcon, PrintIcon, BookIcon, CheckIcon, CrossIcon, 
-  AlertIcon, UserIcon, HomeIcon, TeacherIcon, PlusIcon
+  AlertIcon, UserIcon, HomeIcon, TeacherIcon, PlusIcon,
+  SettingsIcon, ChevronDownIcon
 } from '../../components/CommonIcons';
 import PricingUpgrade from '../../components/PricingUpgrade';
 import { useDialog } from '../../contexts/DialogContext';
