@@ -2570,19 +2570,21 @@ export async function addTeacher(teacher) {
 }
 
 export async function updateTeacher(id, updates) {
+  // Build a partial update payload — only include fields that are provided
+  const payload = {};
+  if (updates.name !== undefined) payload.name = sanitizeName(updates.name);
+  if (updates.email !== undefined) payload.email = sanitizeString(updates.email);
+  if (updates.phone !== undefined) payload.phone = updates.phone;
+  if (updates.subjects !== undefined) payload.subjects = updates.subjects;
+  if (updates.status !== undefined) payload.status = updates.status;
+  if (updates.on_leave !== undefined) payload.on_leave = updates.on_leave;
+  if (updates.tsc_number !== undefined) payload.tsc_number = sanitizeString(updates.tsc_number || null);
+  if (updates.staff_code !== undefined) payload.staff_code = sanitizeString(updates.staff_code || null);
+  if (updates.pin !== undefined) payload.pin = updates.pin;
+
   const { data, error } = await supabase
     .from('teachers')
-    .update({ 
-      name: sanitizeName(updates.name), 
-      email: sanitizeString(updates.email),
-      phone: updates.phone, 
-      subjects: updates.subjects,
-      status: updates.status, 
-      on_leave: updates.on_leave,
-      tsc_number: sanitizeString(updates.tsc_number || null),
-      staff_code: sanitizeString(updates.staff_code || null),
-      pin: updates.pin || '1234'
-    })
+    .update(payload)
     .eq('id', id)
     .select()
     .single();

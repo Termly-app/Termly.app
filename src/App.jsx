@@ -36,6 +36,8 @@ const Register     = lazy(() => import('./pages/Register'));
 const MpesaReconciliation = lazy(() => import('./pages/MpesaReconciliation'));
 const PortalManager = lazy(() => import('./pages/Portal'));
 const StaffPortalManager = lazy(() => import('./pages/StaffPortal'));
+const TeacherPortalAdmin = lazy(() => import('./pages/Portal/TeacherPortalAdmin'));
+const ParentPortalAdmin  = lazy(() => import('./pages/Portal/ParentPortalAdmin'));
 const LMS          = lazy(() => import('./pages/LMS'));
 const NEMISDashboard = lazy(() => import('./pages/NEMIS/index'));
 const TermsOfService  = lazy(() => import('./pages/legal/TermsOfService'));
@@ -765,8 +767,8 @@ function App() {
                         <Route path="/settings" element={<Settings currentUser={currentUser} />} />
                         <Route path="/billing"  element={<Billing currentUser={currentUser} />} />
                         <Route path="/compliance/nemis" element={<NEMISDashboard currentUser={currentUser} />} />
-                        <Route path="/portal/teacher" element={<SectionGate featureSlug="teacher_portal" featureName="Teacher Portal" profile={profile}><div style={{padding:40}}>Teacher Portal Management (Coming Soon)</div></SectionGate>} />
-                        <Route path="/portal/parent"  element={<SectionGate featureSlug="parent_portal"  featureName="Parent Portal"  profile={profile}><div style={{padding:40}}>Parent Portal Management (Coming Soon)</div></SectionGate>} />
+                        <Route path="/portal/teacher" element={<SectionGate featureSlug="teacher_portal" featureName="Teacher Portal" profile={profile}><TeacherPortalAdmin /></SectionGate>} />
+                        <Route path="/portal/parent"  element={<SectionGate featureSlug="parent_portal"  featureName="Parent Portal"  profile={profile}><ParentPortalAdmin /></SectionGate>} />
                       </>
                     )}
 
