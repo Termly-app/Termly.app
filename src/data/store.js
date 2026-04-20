@@ -1924,6 +1924,41 @@ export async function voidPayment(paymentId, reason) {
 }
 
 /**
+ * Restore a voided payment (undo an accidental void).
+ * Re-applies the payment amount to the student's balance.
+ */
+export async function restorePayment(paymentId) {
+  mutationGuard('restorePayment');
+  
+  // 1. Get the payment
+  const { data: payment, error: pErr } = await supabase
+    .from('fee_payments')
+    .select('*')
+    .eq('id', paymentId)
+    .single();
+    
+  if (pErr) throw pErr;
+  if (payment.status !== 'Voided') throw new Error('Only voided payments can be restored.');
+
+  // 2. Mark as restored (back to Success)
+  const previousNotes = payment.notes || '';
+  const { error: rErr } = await supabase
+    .from('fee_payments')
+    .update({ 
+      status: 'Success',
+      notes: previousNotes ? `${previousNotes} | RESTORED on ${new Date().toISOString().split('T')[0]}` : `RESTORED on ${new Date().toISOString().split('T')[0]}`
+    })
+    .eq('id', paymentId);
+    
+  if (rErr) throw rErr;
+
+  // 3. Re-reconcile the student's balance
+  await reconcileStudentFeesWithPayments(payment.student_id);
+  
+  await logPlatformActivity('PAYMENT_RESTORE', `Restored voided payment of ${payment.amount} for Student ID: ${payment.student_id}`);
+}
+
+/**
  * Hard-reconciliation: Recalculates the student's total paid amount
  * based on all non-voided fee_payments records.
  */

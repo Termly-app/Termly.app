@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { getStudents, getFees, recordPayment, voidPayment, getStudentPayments, getFeeSummary, getPrintHeader, getSchoolProfile, TERM_FEE, subscribeToChanges, getMpesaLogs } from '../data/store';
+import { getStudents, getFees, recordPayment, voidPayment, restorePayment, getStudentPayments, getFeeSummary, getPrintHeader, getSchoolProfile, TERM_FEE, subscribeToChanges, getMpesaLogs } from '../data/store';
 import Loader from '../components/Common/Loader';
 import { CLASSES, CBC_STRUCTURE } from '../data/seedData';
 import { 
@@ -131,6 +131,24 @@ function HistoryModal({ student, onClose, onVoid, isAdmin }) {
     }
   };
 
+  const handleRestoreClick = async (p) => {
+    const ok = await confirm({
+      title: 'Restore Payment',
+      message: `Restore the voided payment of KSh ${p.amount.toLocaleString()}? This will re-apply the amount to the student's balance.`,
+      confirmText: 'Restore Payment',
+      variant: 'warning'
+    });
+    if (ok) {
+      setLoading(true);
+      try {
+        await restorePayment(p.id);
+        setPayments(await getStudentPayments(student.id));
+      } catch (e) {
+        console.error(e);
+      } finally { setLoading(false); }
+    }
+  };
+
   return (
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal" onClick={e=>e.stopPropagation()} style={{ maxWidth: 600 }}>
@@ -169,6 +187,9 @@ function HistoryModal({ student, onClose, onVoid, isAdmin }) {
                       <td>
                         {p.status !== 'Voided' && (
                           <button className="btn btn-ghost btn-xs text-danger" onClick={() => handleVoidClick(p)}>Void</button>
+                        )}
+                        {p.status === 'Voided' && (
+                          <button className="btn btn-ghost btn-xs text-success" onClick={() => handleRestoreClick(p)} style={{fontWeight:700}}>Restore</button>
                         )}
                       </td>
                     )}
