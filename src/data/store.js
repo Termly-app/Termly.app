@@ -4579,18 +4579,6 @@ export async function getSubmissions(assignmentId) {
   return data || [];
 }
 
-export async function updateSubmission(submissionId, updates) {
-  mutationGuard('updateSubmission');
-  const { data, error } = await supabase
-    .from('el_submissions')
-    .update(updates)
-    .eq('id', submissionId)
-    .select()
-    .single();
-  if (error) throw error;
-  return data;
-}
-
 // (Exams module functions moved to Phase 4 section above ~line 1353)
 
 // ================================
