@@ -33,7 +33,7 @@ import {
 import { 
   CalendarIcon, PrintIcon, BookIcon, CheckIcon, CrossIcon, 
   AlertIcon, UserIcon, HomeIcon, TeacherIcon, PlusIcon,
-  SettingsIcon, ChevronDownIcon, AlertCircleIcon
+  SettingsIcon, ChevronDownIcon
 } from '../../components/CommonIcons';
 import PricingUpgrade from '../../components/PricingUpgrade';
 import { useDialog } from '../../contexts/DialogContext';
@@ -694,8 +694,9 @@ export default function Timetable({ currentUser, currentPeriodId, periods = [] }
                                       return (
                                         <div style={{display:'flex', flexDirection:'column', gap:2}}>
                                           <div className="tt-cell-teacher" style={{ color: bg, opacity: 0.8, display:'flex', alignItems:'center', gap:3 }}>
-                                            {tName} {!isMatch && <AlertCircleIcon size={10} style={{ color: '#F59E0B' }} />}
+                                            {tName} {!isMatch && <AlertIcon size={10} style={{ color: '#F59E0B' }} />}
                                           </div>
+
                                         </div>
                                       );
                                     })()}
@@ -808,7 +809,7 @@ export default function Timetable({ currentUser, currentPeriodId, periods = [] }
 
 
                 return <div className="tt-competency-warning">
-                  <AlertCircleIcon size={12} /> This teacher is not registered to teach {editSubject}
+                  <AlertIcon size={12} /> This teacher is not registered to teach {editSubject}
                 </div>;
               }
               return null;
