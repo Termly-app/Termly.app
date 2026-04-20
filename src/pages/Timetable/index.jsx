@@ -740,7 +740,6 @@ export default function Timetable({ currentUser, currentPeriodId, periods = [] }
                                   <>
                                     <div className="tt-cell-subject" style={{ color: bg }}>
                                       {MOE_ABBREVIATIONS[cell.subject] || cell.subject}
-                                      {isDoubleFirst && <span className="tt-dbl-tag">×2</span>}
                                     </div>
                                     {view === 'class' && (cell.teachers?.name || teacherName(cell.teacher_id)) && (() => {
                                       const tName = cell.teachers?.name || teacherName(cell.teacher_id);
@@ -792,7 +791,7 @@ export default function Timetable({ currentUser, currentPeriodId, periods = [] }
                 return (
                   <div key={sub} className="tt-legend-item">
                     <div className="tt-legend-dot" style={{ background: s?.color || COLORS[0] }} />
-                    {sub}{s?.is_double_first || activeSlots.find(sl => sl.subject === sub && sl.is_double_first) ? ' ×2' : ''}
+                    {sub}
                   </div>
                 );
               })}

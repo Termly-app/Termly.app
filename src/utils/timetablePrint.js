@@ -58,15 +58,16 @@ export async function printClassTimetable({ school, classGrade, stream, period, 
     }
     const cells = days.map(day => {
       const s = lookup[`${day}__${cfg.slot_index}`];
+      if (s?.is_double_second) return '';
+
       if (!s || !s.subject) return '<td></td>';
 
-      const dblClass = s.is_double_first ? ' double-first' : s.is_double_second ? ' double-second' : '';
-      const dblBadge = s.is_double_first ? '<span class="double-badge">×2</span>' : '';
-      const contLabel = s.is_double_second ? '<div class="double-cont">↑ continued</div>' : '';
+      const dblClass = s.is_double_first ? ' double-first' : '';
+      const rowSpanAttr = s.is_double_first ? ' rowspan="2"' : '';
 
-      return `<td class="${dblClass}">
-        <div class="cell-subject">${s.subject}${s.is_double_first ? ' <small>(x2)</small>' : ''}</div>
-        ${s.teachers?.staff_code && !s.is_double_second ? `<div class="cell-teacher">${s.teachers.staff_code}</div>` : ''}
+      return `<td class="${dblClass}"${rowSpanAttr}>
+        <div class="cell-subject">${s.subject}</div>
+        ${s.teachers?.staff_code ? `<div class="cell-teacher">${s.teachers.staff_code}</div>` : ''}
       </td>`;
     }).join('');
 
@@ -120,16 +121,16 @@ export async function printTeacherTimetable({ school, teacher, period, config, s
     }
     const cells = days.map(day => {
       const s = lookup[`${day}__${cfg.slot_index}`];
+      if (s?.is_double_second) return '';
+
       if (!s || !s.subject) return '<td></td>';
 
-      const dblClass = s.is_double_first ? ' double-first' : s.is_double_second ? ' double-second' : '';
-      const dblBadge = s.is_double_first ? '<span class="double-badge">×2</span>' : '';
-      const contLabel = s.is_double_second ? '<div class="double-cont">↑ continued</div>' : '';
+      const dblClass = s.is_double_first ? ' double-first' : '';
+      const rowSpanAttr = s.is_double_first ? ' rowspan="2"' : '';
 
-      return `<td class="${dblClass}">
-        <div class="cell-subject">${s.subject}${dblBadge}</div>
+      return `<td class="${dblClass}"${rowSpanAttr}>
+        <div class="cell-subject">${s.subject}</div>
         <div class="cell-class">${s.class_grade}${s.stream ? ` ${s.stream}` : ''}</div>
-        ${contLabel}
       </td>`;
     }).join('');
 
@@ -180,8 +181,11 @@ export async function printAllTeachersTimetables({ school, teachers, period, con
       }
       const cells = days.map(day => {
         const s = lookup[`${day}__${cfg.slot_index}`];
+        if (s?.is_double_second) return '';
         if (!s || !s.subject) return '<td></td>';
-        return `<td>
+        
+        const rowSpanAttr = s.is_double_first ? ' rowspan="2"' : '';
+        return `<td${rowSpanAttr}>
           <div class="cell-subject">${s.subject}</div>
           <div class="cell-class">${s.class_grade}${s.stream ? ` ${s.stream}` : ''}</div>
         </td>`;

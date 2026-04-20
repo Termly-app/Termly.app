@@ -149,6 +149,7 @@
   border-bottom: 1px solid rgba(255,255,255,.03);
   vertical-align: top; cursor: pointer; transition: all .2s cubic-bezier(0.4, 0, 0.2, 1);
   min-height: 72px; position: relative;
+  height: 1px;
 }
 .tt-cell:hover { background: rgba(111,82,232,0.06); transform: scale(1.01); z-index: 5; }
 .tt-cell-inner {
@@ -177,9 +178,7 @@
 .tt-cell.empty:hover .tt-add-hint { opacity: 1; }
 
 /* Double lesson */
-.tt-cell.double-first  .tt-cell-inner { border-bottom-left-radius: 0; border-bottom-right-radius: 0; border-bottom: 2px dashed rgba(255,255,255,.2); }
-.tt-cell.double-second { margin-top: -6px; }
-.tt-cell.double-second .tt-cell-inner { border-top-left-radius: 0; border-top-right-radius: 0; opacity: .9; }
+/* Old Legacy leave & cover hooks... */
 .tt-double-badge { display: inline-flex; align-items: center; padding: 2px 6px; border-radius: 4px; font-size: .55rem; font-weight: 800; background: var(--border, rgba(255,255,255,.2)); color: var(--text, #fff); margin-left: 6px; vertical-align: middle; text-transform: uppercase; }
 .tt-double-cont  { font-size: .6rem; color: var(--text-muted, rgba(255,255,255,.6)); font-style: italic; margin-top: 3px; }
 
@@ -637,24 +636,7 @@
 }
 
 /* Double Lesson Visuals */
-.tt-cell.double-first {
-  border-bottom: none !important;
-}
-.tt-cell.double-first .tt-cell-inner {
-  border-bottom-left-radius: 0;
-  border-bottom-right-radius: 0;
-  margin-bottom: -1px;
-  position: relative;
-  z-index: 2;
-}
-.tt-cell.double-second {
-  border-top: none !important;
-}
-.tt-cell.double-second .tt-cell-inner {
-  border-top-left-radius: 0;
-  border-top-right-radius: 0;
-  padding-top: 5px;
-}
+/* Legacy Double Lesson hacks removed */
 .tt-dbl-tag {
   display: inline-block;
   padding: 2px 6px;
