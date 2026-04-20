@@ -24,10 +24,11 @@ import {
 import Select from '../../components/Common/Select';
 import { Helmet } from 'react-helmet-async';
 import {
+  getTeachers, checkTeacherConflict, getSchoolProfile,
   getTimetableConfig, saveTimetableConfig,
   getTimetableSlots, saveTimetableSlot, clearTimetableSlot,
   getTeacherTimetable, clearAllTimetableSlots, duplicateTimetable,
-  checkTimetableConflicts
+  checkTimetableConflicts, setCurrentSchoolContext
 } from '../../data/store';
 import { 
   CalendarIcon, PrintIcon, BookIcon, CheckIcon, CrossIcon, 
@@ -176,7 +177,8 @@ export default function Timetable({ currentUser, currentPeriodId, periods = [] }
 
 
   // ── UI ────────────────────────────────────────────────────────────────
-  const [loading,  setLoading]  = useState(true);
+  const [loading,  setLoading]  = useState(false);
+
   const [message,  setMessage]  = useState(null);
 
   const schoolId = currentUser?.school_id;
@@ -194,6 +196,10 @@ export default function Timetable({ currentUser, currentPeriodId, periods = [] }
     if (!schoolId) return;
     (async () => {
       try {
+        setLoading(true);
+        // Ensure store.js knows WHICH school we are working on
+        setCurrentSchoolContext(schoolId, currentUser);
+        
         const [profile, tList] = await Promise.all([getSchoolProfile(), getTeachers(schoolId)]);
         const cls = profile?.activeClasses || [];
         // Sort classes naturally: PP1, PP2, Grade 1..12, Form 1..4
@@ -210,9 +216,15 @@ export default function Timetable({ currentUser, currentPeriodId, periods = [] }
         setTeachers(tList);
         setTtLabel(profile?.timetable_label || 'Weekly');
         if (sortedCls.length > 0 && !selClass) setSelClass(sortedCls[0]);
-      } catch (e) { console.error(e); }
+      } catch (e) { 
+        console.error("Profile load failed", e); 
+        setMessage({ type:'err', text:'Failed to load school profile. Please refresh.' });
+      } finally {
+        setLoading(false);
+      }
     })();
   }, [schoolId]);
+
 
   // ── Load config when period changes (auto-apply template if empty) ───
   useEffect(() => {
