@@ -28,7 +28,7 @@ import {
   getTimetableConfig, saveTimetableConfig,
   getTimetableSlots, saveTimetableSlot, clearTimetableSlot,
   getTeacherTimetable, clearAllTimetableSlots, duplicateTimetable,
-  checkTimetableConflicts, setCurrentSchoolContext
+  checkTimetableConflicts, setCurrentSchoolContext, getSubjectsForGrade
 } from '../../data/store';
 import { 
   CalendarIcon, PrintIcon, BookIcon, CheckIcon, CrossIcon, 
@@ -138,6 +138,8 @@ export default function Timetable({ currentUser, currentPeriodId, periods = [] }
   const [classes,    setClasses]    = useState([]);
   const [streams,    setStreams]    = useState({});
   const [teachers,   setTeachers]  = useState([]);
+  const [fullProfile, setFullProfile] = useState(null);
+
 
   // ── Class selector (grid + req panels) ───────────────────────────────
   const [selClass,  setSelClass]  = useState('');
@@ -214,7 +216,9 @@ export default function Timetable({ currentUser, currentPeriodId, periods = [] }
         setClasses(sortedCls);
         setStreams(profile?.streamsPerClass || {});
         setTeachers(tList);
+        setFullProfile(profile);
         setTtLabel(profile?.timetable_label || 'Weekly');
+
         if (sortedCls.length > 0 && !selClass) setSelClass(sortedCls[0]);
       } catch (e) { 
         console.error("Profile load failed", e); 
@@ -426,9 +430,10 @@ export default function Timetable({ currentUser, currentPeriodId, periods = [] }
   // ── Computed ──────────────────────────────────────────────────────────
   const classStreams    = selClass ? (streams[selClass] || []) : [];
   const activePeriod    = periods.find(p => p.id === periodId);
-  const suggestedSubs   = SUBJECT_SUGGESTIONS[getLevel(selClass)] || [];
+  const suggestedSubs   = getSubjectsForGrade(selClass, fullProfile);
   const teacherName     = (id) => teachers.find(t => t.id === id)?.name || '';
   const levelBadge      = getLevelBadge(selClass);
+
 
   // Grid data source: saved slots
   const activeSlots = view === 'teacher' ? teacherSlots : slots;
@@ -769,6 +774,17 @@ export default function Timetable({ currentUser, currentPeriodId, periods = [] }
               ]}
               style={{ width: '100%' }}
             />
+            {editTeacher && editSubject && (() => {
+              const t = teachers.find(x => x.id === editTeacher);
+              const tSubs = Array.isArray(t?.subjects) ? t.subjects : (t?.subjects || '').split(',').map(s => s.trim());
+              const isMatch = tSubs.some(s => s.toLowerCase() === editSubject.toLowerCase());
+              if (!isMatch && tSubs.length > 0 && tSubs[0] !== '') {
+                return <div className="tt-competency-warning">
+                  <AlertCircleIcon size={12} /> This teacher is not registered to teach {editSubject}
+                </div>;
+              }
+              return null;
+            })()}
 
             {/* Conflict warnings */}
             {conflictWarning && (
