@@ -28,7 +28,8 @@ import {
   getTimetableConfig, saveTimetableConfig,
   getTimetableSlots, saveTimetableSlot, clearTimetableSlot,
   getTeacherTimetable, clearAllTimetableSlots, duplicateTimetable,
-  checkTimetableConflicts, setCurrentSchoolContext, getSubjectsForGrade
+  checkTimetableConflicts, setCurrentSchoolContext, getSubjectsForGrade,
+  getClassSubjectAssignments
 } from '../../data/store';
 import { 
   CalendarIcon, PrintIcon, BookIcon, CheckIcon, CrossIcon, 
@@ -183,6 +184,7 @@ export default function Timetable({ currentUser, currentPeriodId, periods = [] }
   const [configSaving, setConfigSaving] = useState(false);
   const [bulkLoading,  setBulkLoading]  = useState(false);
   const [showBulk,     setShowBulk]     = useState(false);
+  const [classAssignments, setClassAssignments] = useState([]);
 
 
 
@@ -273,7 +275,15 @@ export default function Timetable({ currentUser, currentPeriodId, periods = [] }
   useEffect(() => {
     if (!schoolId || !periodId || !selClass || view !== 'class') return;
     (async () => {
-      try { setLoading(true); setSlots(await getTimetableSlots(schoolId, periodId, selClass, selStream || null)); }
+      try { 
+        setLoading(true); 
+        const [slotData, assignData] = await Promise.all([
+          getTimetableSlots(schoolId, periodId, selClass, selStream || null),
+          getClassSubjectAssignments(schoolId, periodId, selClass, selStream || null)
+        ]);
+        setSlots(slotData); 
+        setClassAssignments(assignData);
+      }
       catch (e) { console.error(e); }
       finally { setLoading(false); }
     })();
@@ -721,12 +731,13 @@ export default function Timetable({ currentUser, currentPeriodId, periods = [] }
                                         .map(s => s.trim().toLowerCase())
                                         .filter(Boolean);
                                       const searchSub = (cell.subject || '').trim().toLowerCase();
-                                      const isMatch = !searchSub || tSubs.some(s => s === searchSub || s.includes(searchSub) || searchSub.includes(s));
+                                      const isAssigned = classAssignments.some(a => a.subject?.toLowerCase() === searchSub && a.teacher_id === cell.teacher_id);
+                                      const isMatch = !searchSub || isAssigned || tSubs.some(s => s === searchSub || s.includes(searchSub) || searchSub.includes(s));
 
                                       return (
                                         <div style={{display:'flex', flexDirection:'column', gap:2}}>
                                           <div className="tt-cell-teacher" style={{ color: bg, opacity: 0.8, display:'flex', alignItems:'center', gap:3 }}>
-                                            {tName} {!isMatch && <AlertIcon size={10} style={{ color: '#F59E0B' }} />}
+                                            {tName} {!isMatch && searchSub && <AlertIcon size={10} style={{ color: '#F59E0B' }} />}
                                           </div>
 
                                         </div>
@@ -827,7 +838,8 @@ export default function Timetable({ currentUser, currentPeriodId, periods = [] }
                     .map(s => s.trim().toLowerCase())
                     .filter(Boolean);
                   const searchSub = editSubject.trim().toLowerCase();
-                  const isMatch = tSubs.some(s => s === searchSub || s.includes(searchSub) || searchSub.includes(s));
+                  const isAssigned = classAssignments.some(a => a.subject?.toLowerCase() === searchSub && a.teacher_id === editTeacher);
+                  const isMatch = isAssigned || tSubs.some(s => s === searchSub || s.includes(searchSub) || searchSub.includes(s));
                   return (!isMatch) ? '1.5px solid #d17800' : '1px solid var(--border, rgba(255,255,255,0.1))';
                 })()
               }}
@@ -840,7 +852,8 @@ export default function Timetable({ currentUser, currentPeriodId, periods = [] }
                 .filter(Boolean);
               
               const searchSub = editSubject.trim().toLowerCase();
-              const isMatch = tSubs.some(s => s === searchSub || s.includes(searchSub) || searchSub.includes(s));
+              const isAssigned = classAssignments.some(a => a.subject?.toLowerCase() === searchSub && a.teacher_id === editTeacher);
+              const isMatch = isAssigned || tSubs.some(s => s === searchSub || s.includes(searchSub) || searchSub.includes(s));
               
               if (!isMatch) {
                 return <div className="tt-competency-warning">
