@@ -1,10 +1,12 @@
 import { useState, useRef } from 'react';
+import { useDialog } from '../contexts/DialogContext';
 import { 
   UploadIcon, CheckIcon, AlertIcon, DeleteIcon, EditIcon, 
   SearchIcon, StudentIcon, XIcon, FileIcon, RefreshIcon 
 } from './CommonIcons';
 
 export default function StudentImporter({ profile, onImport, onClose }) {
+  const { alert, confirm } = useDialog();
   const [step, setStep] = useState(1); // 1: Upload, 2: Review
   const [dragActive, setDragActive] = useState(false);
   const [rawFile, setRawFile] = useState(null);
@@ -50,9 +52,16 @@ export default function StudentImporter({ profile, onImport, onClose }) {
     reader.readAsText(file);
   };
 
-  const parseCSV = (text) => {
+  const parseCSV = async (text) => {
     const lines = text.split(/\r?\n/).filter(line => line.trim());
-    if (lines.length < 2) return alert("File is too short or empty.");
+    if (lines.length < 2) {
+      await alert({ 
+        title: 'Empty File', 
+        message: 'The uploaded file is too short or empty. Please check your CSV data.', 
+        variant: 'warning' 
+      });
+      return;
+    }
 
     const headers = lines[0].split(',').map(h => h.trim().toLowerCase());
     const newMappings = {};
@@ -118,9 +127,14 @@ export default function StudentImporter({ profile, onImport, onClose }) {
     validateData(newData);
   };
 
-  const handleImport = () => {
+  const handleImport = async () => {
     if (errors.length > 0) {
-      if (!confirm(`There are ${errors.length} rows with warnings. Import valid rows only?`)) return;
+      const ok = await confirm({
+        title: 'Import with Issues',
+        message: `There are ${errors.length} rows with validation issues. These rows will be skipped. Proceed anyway?`,
+        variant: 'warning'
+      });
+      if (!ok) return;
       const validRows = data.filter((_, i) => !errors.find(e => e.idx === i));
       onImport(validRows);
     } else {

@@ -24,7 +24,7 @@ export default function Teachers({ currentUser, currentPeriodId }) {
   const [settings, setSettings] = useState({});
   const [registeredUsers, setRegisteredUsers] = useState([]);
   const [loading, setLoading] = useState(true);
-  const { alert, confirm } = useDialog();
+  const { alert, confirm, toast } = useDialog();
 
   const loadData = async () => {
     setLoading(true);
@@ -66,8 +66,13 @@ export default function Teachers({ currentUser, currentPeriodId }) {
       if (sanitized.staff_code) sanitized.staff_code = sanitizeString(sanitized.staff_code);
       if (sanitized.tsc_number) sanitized.tsc_number = sanitizeString(sanitized.tsc_number);
 
-      if (editingTeacher) await updateTeacher(editingTeacher.id, sanitized);
-      else await addTeacher(sanitized);
+      if (editingTeacher) {
+        await updateTeacher(editingTeacher.id, sanitized);
+        toast('Teacher profile updated', 'success');
+      } else {
+        await addTeacher(sanitized);
+        toast('New teacher registered successfully', 'success');
+      }
       await refresh(); setShowModal(false); setEditingTeacher(null);
     } catch(err) { alert({ title: 'Save Error', message: err.message, variant: 'danger' }); } finally { setLoading(false); }
   };
@@ -80,13 +85,21 @@ export default function Teachers({ currentUser, currentPeriodId }) {
     });
     if (ok) { 
       setLoading(true);
-      try { await deleteTeacher(id); await refresh(); } 
+      try { 
+        await deleteTeacher(id); 
+        await refresh(); 
+        toast('Teacher record removed', 'info');
+      } 
       catch(err){ alert({ title: 'Delete Error', message: err.message, variant: 'danger' }); } finally { setLoading(false); }
     }
   };
 
   const handleAssign = async (cls, stream, sub, teacherId) => {
-    try { await setAssignment(cls, stream, sub, teacherId); await refresh(); } catch(err){ alert({ title: 'Assignment Error', message: err.message, variant: 'danger' }); }
+    try { 
+      await setAssignment(cls, stream, sub, teacherId); 
+      await refresh(); 
+      toast('Class assignment updated', 'success');
+    } catch(err){ alert({ title: 'Assignment Error', message: err.message, variant: 'danger' }); }
   };
   const handleLeaveToggle = async (id, status) => {
     try { await setTeacherLeaveStatus(id, status); await refresh(); } catch(err){ alert({ title: 'Leave Update Error', message: err.message, variant: 'danger' }); }
@@ -620,7 +633,13 @@ function ReportsTab() {
     <div class="footer">${profileStr.schoolName || ''} | Teacher Performance Report | Printed ${new Date().toLocaleDateString()}</div>
     </body></html>`);
     w.document.close(); w.print();
-    } catch(err) { alert("Print failed: " + err.message); }
+    } catch(err) { 
+      await alert({ 
+        title: 'Print Failed', 
+        message: err.message || 'Could not generate teacher report.', 
+        variant: 'danger' 
+      }); 
+    }
   };
 
   // Print all teachers summary
@@ -653,7 +672,13 @@ function ReportsTab() {
     ).join('')}</tbody></table>
     <div class="footer">Printed on ${new Date().toLocaleDateString()} | ${profileStr.schoolName || ''}</div></body></html>`);
     w.document.close(); w.print();
-    } catch(err) { alert("Print failed: " + err.message); }
+    } catch(err) { 
+      await alert({ 
+        title: 'Print Failed', 
+        message: err.message || 'Could not generate staff summary.', 
+        variant: 'danger' 
+      }); 
+    }
   };
 
   return (

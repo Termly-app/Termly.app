@@ -7,6 +7,7 @@ import {
   EyeIcon, EyeOffIcon
 } from '../components/CommonIcons';
 import { SANDBOX_PLAN } from '../data/constants';
+import { useDialog } from '../contexts/DialogContext';
 
 export default function Register() {
   const [searchParams] = useSearchParams();
@@ -21,6 +22,7 @@ export default function Register() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [settings, setSettings] = useState(null);
+  const { alert } = useDialog();
 
   const [formData, setFormData] = useState({
     schoolName: '',
@@ -469,8 +471,8 @@ export default function Register() {
                         const { error } = await supabase.auth.resend({ type: 'signup', email: formData.schoolEmail });
                         if (error) throw error;
                         setLastResent(Date.now());
-                        alert("Activation email resent!");
-                      } catch (e) { alert(e.message); }
+                        await alert({ title: 'Email Resent', message: 'Activation email has been resent to your inbox.', variant: 'success' });
+                      } catch (e) { await alert({ title: 'Resend Failed', message: e.message, variant: 'danger' }); }
                       finally { setResendLoading(false); }
                     }}
                     disabled={resendLoading || (Date.now() - lastResent < 60000)}

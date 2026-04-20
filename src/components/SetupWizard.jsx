@@ -68,8 +68,7 @@ export default function SetupWizard({ profile, onComplete, totalStudents }) {
       if (result?.skipped?.length > 0) {
         const fieldNames = result.skipped.map(c => c.replace(/_/g, ' ').toUpperCase()).join(', ');
         const msg = `Partial Save: The following fields could NOT be saved yet: [${fieldNames}]. \n\nReason: Your database is missing these columns. Please run the SQL script I provided in the chat!`;
-        if (alert) alert({ title: 'Warning', message: msg, variant: 'warning' });
-        else window.alert(msg);
+        await alert({ title: 'Warning', message: msg, variant: 'warning' });
       }
 
       if (step === 6) {
@@ -81,12 +80,11 @@ export default function SetupWizard({ profile, onComplete, totalStudents }) {
       console.error('Wizard Save Error:', err);
       const msg = `SAVE FAILED: ${err.message || 'Unknown database error'}. \n\nPlease make sure you have run the SQL migration in Supabase.`;
       
-      try {
-        if (alert) alert({ title: 'Database Error', message: msg, variant: 'danger' });
-        else window.alert(msg);
-      } catch (alertErr) {
-        window.alert('CRITICAL SAVE ERROR: ' + msg);
-      }
+      await alert({ 
+        title: 'Database Error', 
+        message: msg, 
+        variant: 'danger' 
+      });
     } finally {
       setSaving(false);
     }

@@ -35,6 +35,7 @@ import {
   AlertIcon, UserIcon, HomeIcon, TeacherIcon, PlusIcon
 } from '../../components/CommonIcons';
 import PricingUpgrade from '../../components/PricingUpgrade';
+import { useDialog } from '../../contexts/DialogContext';
 
 // ── Colour palette for subjects (Modern, Premium Palette) ────────────────
 
@@ -157,6 +158,7 @@ export default function Timetable({ currentUser, currentPeriodId, periods = [] }
   const [newRoom,      setNewRoom]      = useState({ name: '', building: '' });
 
   const [showUpgrade,    setShowUpgrade]   = useState(false);
+  const { alert, confirm } = useDialog();
 
   // ── Cell edit modal ───────────────────────────────────────────────────
   const [editCell,        setEditCell]        = useState(null);
@@ -272,7 +274,7 @@ export default function Timetable({ currentUser, currentPeriodId, periods = [] }
   };
 
   const handleDeleteRoom = async (id) => {
-    if (!window.confirm("Delete this room? It will be removed from future allocations.")) return;
+    if (!await confirm({ title: 'Delete Room', message: 'Are you sure you want to delete this room? It will be removed from future allocations.', variant: 'danger' })) return;
     try {
       await deleteTimetableRoom(id);
       setRooms(await getTimetableRooms(schoolId));

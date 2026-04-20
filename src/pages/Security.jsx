@@ -3,6 +3,7 @@ import { getUsers, addUser, deleteUser, getSchoolProfile, getPlatformSettings } 
 import { DiamondIcon, UsersIcon, EyeIcon, EyeOffIcon } from '../components/CommonIcons';
 import Select from '../components/Common/Select';
 import { Helmet } from 'react-helmet-async';
+import { useDialog } from '../contexts/DialogContext';
 
 export default function Security({ currentUser }) {
   const [users, setUsers] = useState([]);
@@ -10,6 +11,7 @@ export default function Security({ currentUser }) {
   const [settings, setSettings] = useState({});
   const [showModal, setShowModal] = useState(false);
   const [error, setError] = useState('');
+  const { alert, confirm } = useDialog();
 
   const [loading, setLoading] = useState(true);
 
@@ -73,14 +75,14 @@ export default function Security({ currentUser }) {
 
   const handleDelete = async (id) => {
     try {
-      if (confirm('Are you sure you want to delete this user?')) {
+      if (await confirm({ title: 'Delete User', message: 'Are you sure you want to delete this user?', variant: 'danger' })) {
         setLoading(true);
         await deleteUser(id);
         await refresh();
         setLoading(false);
       }
     } catch (err) {
-      alert(err.message);
+      alert({ title: 'Error', message: err.message, variant: 'danger' });
       setLoading(false);
     }
   };

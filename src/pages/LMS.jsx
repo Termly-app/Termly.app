@@ -160,7 +160,7 @@ function QuizAnalyticsModal({ assignmentId, onClose }) {
 }
 
 export default function LMS({ currentUser }) {
-  const { alert, prompt, toast } = useDialog();
+  const { alert, prompt, toast, confirm } = useDialog();
   const [profile, setProfile] = useState(null);
   const [assignments, setAssignments] = useState([]);
   const [selectedSubmissions, setSelectedSubmissions] = useState(null);

@@ -1,10 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { LogoutIcon, UserIcon, CardIcon, MessageIcon, StatusDotIcon, ActivityIcon, CheckIcon } from '../../components/CommonIcons';
-import { 
-  getFees, simulateMpesaSTKPush, getStudentExamResults, getAnnouncements, 
-  getGradeForScore, getSchoolProfile 
-} from '../../data/store';
-import { getAssignments, submitAssignment } from '../../data/offlineStore';
+import { getFees, simulateMpesaSTKPush, getStudentExamResults, getAnnouncements, getGradeForScore, getSchoolProfile } from '../../data/store';
+import { getAssignments, submitAssignment, getStudentSubmissions } from '../../data/offlineStore';
+import { useDialog } from '../../contexts/DialogContext';
 
 export default function PortalDashboard({ user, onLogout }) {
   const [feeBalance, setFeeBalance] = useState(0);
@@ -12,6 +10,7 @@ export default function PortalDashboard({ user, onLogout }) {
   const [mpesaPhone, setMpesaPhone] = useState('254700000000');
   const [mpesaAmount, setMpesaAmount] = useState(0);
   const [isSTKPushing, setIsSTKPushing] = useState(false);
+  const { alert } = useDialog();
 
   // If they have recent comms from offline store
   const comms = user.recent_comms || [];
@@ -75,7 +74,7 @@ export default function PortalDashboard({ user, onLogout }) {
         setQuizData(data);
       } catch (e) {
         console.error('Quiz data load failed', e);
-        alert('Could not load quiz questions. Please contact your teacher.');
+        await alert({ title: 'Fetch Error', message: 'Could not load quiz questions. Please contact your teacher.', variant: 'danger' });
         return;
       }
     }
@@ -112,17 +111,19 @@ export default function PortalDashboard({ user, onLogout }) {
       workflow_status: grade_numeric !== null ? 'released' : 'submitted'
     });
     
-    alert(ast.submission_type === 'quiz' 
-      ? `Quiz completed! Your score: ${grade_numeric}%` 
-      : "Assignment Submitted successfully!" + (isLate ? " (Note: This is a late submission)" : "")
-    );
+    await alert({ 
+      title: ast.submission_type === 'quiz' ? 'Quiz Complete' : 'Submission Success',
+      message: ast.submission_type === 'quiz' 
+        ? `Quiz completed! Your score: ${grade_numeric}%` 
+        : "Assignment submitted successfully!" + (isLate ? " (Note: This is a late submission)" : ""),
+      variant: 'success'
+    });
     
     setShowSubmitModal(null);
     setSubmissionPayload('');
     setQuizAnswers({});
     // Refresh submissions...
     try {
-      const { getStudentSubmissions } = await import('../../data/offlineStore');
       const subs = await getStudentSubmissions(user.id);
       const subMap = {};
       subs.forEach(s => { subMap[s.assignment_id] = s; });
@@ -345,7 +346,7 @@ export default function PortalDashboard({ user, onLogout }) {
                     )}
                     {mySub?.feedback && (
                       <button 
-                        onClick={() => alert(`Teacher Feedback for ${ast.title}:\n\n"${mySub.feedback}"`)}
+                        onClick={() => alert({ title: 'Teacher Feedback', message: `Feedback for ${ast.title}:\n\n"${mySub.feedback}"`, variant: 'info' })}
                         style={{ background: 'white', border: '1.5px solid var(--border)', padding: '10px 20px', borderRadius: 8, fontWeight: 700, color: 'var(--text-main)', cursor: 'pointer' }}
                       >
                         View Feedback
@@ -475,11 +476,11 @@ export default function PortalDashboard({ user, onLogout }) {
                 setShowMpesaModal(false);
                 const fees = await getFees();
                 setFeeBalance(fees[user.id]?.balance || 0);
-                alert('M-Pesa payment confirmed! The administration has automatically received a receipt.');
+                await alert({ title: 'Payment Confirmed', message: 'M-Pesa payment confirmed! The administration has automatically received a receipt.', variant: 'success' });
               } catch(err) {
                 console.error(err);
                 setIsSTKPushing(false);
-                alert('M-Pesa push failed. Please try again.');
+                await alert({ title: 'Payment Failed', message: 'M-Pesa push failed. Please try again.', variant: 'danger' });
               }
             }}>
               <div className="form-group" style={{ marginBottom: 16 }}>

@@ -37,7 +37,7 @@ export default function Students({ currentUser, currentPeriodId }) {
   const [profile, setProfile] = useState({ activeClasses: [], streamsPerClass: {}, gradeFees: {} });
   const [loading, setLoading] = useState(true);
   const [showTransitionModal, setShowTransitionModal] = useState(false);
-  const { confirm, prompt, alert } = useDialog();
+  const { confirm, prompt, alert, toast } = useDialog();
 
   const loadData = async () => {
     setLoading(true);
@@ -76,7 +76,13 @@ export default function Students({ currentUser, currentPeriodId }) {
       if (sanitizedData.admNo) sanitizedData.admNo = sanitizeString(sanitizedData.admNo);
       if (sanitizedData.notes) sanitizedData.notes = sanitizeString(sanitizedData.notes, 500);
 
-      if (editingStudent) await updateStudent(editingStudent.id, sanitizedData); else await addStudent(sanitizedData);
+      if (editingStudent) {
+        await updateStudent(editingStudent.id, sanitizedData);
+        toast('Student record updated successfully', 'success');
+      } else {
+        await addStudent(sanitizedData);
+        toast('New student registered successfully', 'success');
+      }
       await refresh(); setShowModal(false); setEditingStudent(null);
     } catch (err) {
       console.error('Student save failed:', err);
@@ -87,7 +93,12 @@ export default function Students({ currentUser, currentPeriodId }) {
     const ok = await confirm({ title: 'Remove Student', message: 'Are you sure you want to remove this student record?', variant: 'danger' });
     if (!ok) return;
     setLoading(true);
-    try { await deleteStudent(id); await refresh(); setSelectedStudent(null); }
+    try { 
+      await deleteStudent(id); 
+      await refresh(); 
+      setSelectedStudent(null); 
+      toast('Student record removed', 'info');
+    }
     catch (err) { console.error(err); } finally { setLoading(false); }
   };
   const handleTransfer = async (ids, dir) => {
@@ -102,7 +113,13 @@ export default function Students({ currentUser, currentPeriodId }) {
       const w = window.open('', '_blank');
       w.document.write(`<html><head><title>Class List</title><style>body{font-family:Arial;padding:20px}table{width:100%;border-collapse:collapse;margin-top:16px}th,td{border:1px solid #e2e8f0;padding:8px 12px;font-size:13px;text-align:left}th{background:#0EA5E9;color:#fff}</style></head><body>${h}<table><thead><tr><th>#</th><th>Adm No</th><th>Name</th><th>Class</th><th>Gender</th><th>Parent</th><th>Phone</th></tr></thead><tbody>${filtered.map((s,i)=>`<tr><td>${i+1}</td><td>${s.admNo}</td><td>${s.name}</td><td>${s.class}</td><td>${s.gender}</td><td>${s.parent}</td><td>${s.parentPhone}</td></tr>`).join('')}</tbody></table></body></html>`);
       w.document.close(); w.print();
-    } catch (err) { alert('Print failed: ' + err.message); }
+    } catch (err) { 
+      await alert({ 
+        title: 'Print Failed', 
+        message: err.message || 'Could not generate print view.', 
+        variant: 'danger' 
+      }); 
+    }
   };
 
   const fmtKSh = (n) => `KSh ${Number(n||0).toLocaleString()}`;
