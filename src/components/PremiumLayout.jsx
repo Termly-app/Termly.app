@@ -103,14 +103,7 @@ export default function PremiumLayout({ children }) {
               <li><a href="#">Blog</a></li>
             </ul>
           </div>
-          <div className="ft-col ft-col-news">
-            <h4 className="ft-h">Stay Updated</h4>
-            <p className="ft-news-p">Get the latest on Kenyan educational tech.</p>
-            <div className="newsletter-box">
-              <input type="email" placeholder="Email Address" className="news-input" />
-              <button className="news-btn">Join</button>
-            </div>
-          </div>
+
         </div>
         <div className="ft-bottom">
           <span className="ft-copy">© 2025 Kaulani Corp · Made in Nairobi, Kenya</span>

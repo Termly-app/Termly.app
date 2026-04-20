@@ -538,14 +538,7 @@ export default function Landing() {
               <li><Link to="/partners">Partners</Link></li>
             </ul>
           </div>
-          <div className="ft-col ft-col-news">
-            <h4 className="ft-h">Stay Updated</h4>
-            <p className="ft-news-p">Get the latest on Kenyan educational tech.</p>
-            <div className="newsletter-box">
-              <input type="email" placeholder="Email Address" className="news-input" />
-              <button className="news-btn">Join</button>
-            </div>
-          </div>
+
         </div>
         <div className="ft-bottom">
           <span className="ft-copy">© 2025 Kaulani Corp · ShuleSoft is a product of Kaulani Corp</span>
