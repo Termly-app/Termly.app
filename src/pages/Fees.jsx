@@ -271,6 +271,9 @@ export default function Fees({ currentUser, currentPeriodId }) {
   // const [activeTab, setActiveTab] = useState('list'); // WIP: Only one tab now
   // const [mpesaLogs, setMpesaLogs] = useState([]);
 
+  const isAdmin   = currentUser?.role?.toLowerCase() === 'admin';
+  const isFinance = currentUser?.role?.toLowerCase() === 'finance';
+
   useEffect(() => {
     const init = async () => {
       setLoading(true);
