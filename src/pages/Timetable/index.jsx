@@ -717,7 +717,9 @@ export default function Timetable({ currentUser, currentPeriodId, periods = [] }
                                     {view === 'class' && (cell.teachers?.name || teacherName(cell.teacher_id)) && (() => {
                                       const tName = cell.teachers?.name || teacherName(cell.teacher_id);
                                       const t = teachers.find(x => x.id === cell.teacher_id);
-                                      const tSubs = Array.isArray(t?.subjects) ? t.subjects : (t?.subjects || '').split(',').map(s => s.trim().toLowerCase());
+                                      const tSubs = (Array.isArray(t?.subjects) ? t.subjects : (t?.subjects || '').split(','))
+                                        .map(s => s.trim().toLowerCase())
+                                        .filter(Boolean);
                                       const searchSub = (cell.subject || '').trim().toLowerCase();
                                       const isMatch = !searchSub || tSubs.some(s => s === searchSub || s.includes(searchSub) || searchSub.includes(s));
 
@@ -821,23 +823,26 @@ export default function Timetable({ currentUser, currentPeriodId, periods = [] }
                 width: '100%',
                 border: editTeacher && editSubject && (() => {
                   const t = teachers.find(x => x.id === editTeacher);
-                  const tSubs = Array.isArray(t?.subjects) ? t.subjects : (t?.subjects || '').split(',').map(s => s.trim().toLowerCase());
+                  const tSubs = (Array.isArray(t?.subjects) ? t.subjects : (t?.subjects || '').split(','))
+                    .map(s => s.trim().toLowerCase())
+                    .filter(Boolean);
                   const searchSub = editSubject.trim().toLowerCase();
                   const isMatch = tSubs.some(s => s === searchSub || s.includes(searchSub) || searchSub.includes(s));
-                  return (!isMatch && tSubs.length > 0 && tSubs[0] !== '') ? '1.5px solid #d17800' : '1px solid var(--border, rgba(255,255,255,0.1))';
+                  return (!isMatch) ? '1.5px solid #d17800' : '1px solid var(--border, rgba(255,255,255,0.1))';
                 })()
-
               }}
             />
 
             {editTeacher && editSubject && (() => {
               const t = teachers.find(x => x.id === editTeacher);
-              const tSubs = Array.isArray(t?.subjects) ? t.subjects : (t?.subjects || '').split(',').map(s => s.trim().toLowerCase());
+              const tSubs = (Array.isArray(t?.subjects) ? t.subjects : (t?.subjects || '').split(','))
+                .map(s => s.trim().toLowerCase())
+                .filter(Boolean);
+              
               const searchSub = editSubject.trim().toLowerCase();
               const isMatch = tSubs.some(s => s === searchSub || s.includes(searchSub) || searchSub.includes(s));
-              if (!isMatch && tSubs.length > 0 && tSubs[0] !== '') {
-
-
+              
+              if (!isMatch) {
                 return <div className="tt-competency-warning">
                   <AlertIcon size={12} /> This teacher is not registered to teach {editSubject}
                 </div>;

@@ -3785,8 +3785,8 @@ export async function checkTimetableConflicts(schoolId, periodId, { day, startTi
   if (error) throw error;
   if (!slots || slots.length === 0) return null;
 
-  // Function to check if two time strings overlap
-  const isOverlap = (s1, e1, s2, e2) => (s1 < e2) && (s2 < e1);
+  // Function to check if two time strings overlap (ignore seconds)
+  const isOverlap = (s1, e1, s2, e2) => (s1.substring(0, 5) < e2.substring(0, 5)) && (s2.substring(0, 5) < e1.substring(0, 5));
 
   for (const s of slots) {
     // Skip the slot we are currently editing
