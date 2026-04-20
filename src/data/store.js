@@ -4515,9 +4515,27 @@ export async function getAssignments(filters = {}) {
 export async function createAssignment(assignment) {
   mutationGuard('createAssignment');
   if (!_currentSchoolId) throw new Error('No school context');
+  
+  const payload = {
+    school_id: _currentSchoolId,
+    title: assignment.title,
+    class: assignment.class,
+    stream: assignment.stream,
+    subject: assignment.subject,
+    description: assignment.description,
+    links: assignment.links,
+    allow_from: assignment.allowFrom,
+    due_date: assignment.dueDate,
+    cutoff_date: assignment.cutoffDate,
+    max_score: assignment.maxScore,
+    submission_type: assignment.submissionType,
+    questions: assignment.questions,
+    teacher: assignment.teacher
+  };
+
   const { data, error } = await supabase
     .from('el_assignments')
-    .insert({ ...assignment, school_id: _currentSchoolId })
+    .insert(payload)
     .select()
     .single();
   if (error) throw error;
