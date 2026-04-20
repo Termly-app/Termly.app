@@ -338,9 +338,15 @@ export default function Timetable({ currentUser, currentPeriodId, periods = [] }
           const fullSorted = [...config].sort((a,b) => a.slot_index - b.slot_index);
           const i = fullSorted.findIndex(c => c.slot_index === editCell.slotIndex);
           if (i !== -1 && i < fullSorted.length - 1) {
-            if (!fullSorted[i+1].is_break) {
+            if (fullSorted[i+1].is_break) {
+              setConflictWarning("Cannot place a double lesson across a break.");
+              return;
+            } else {
               endTime = fullSorted[i+1].end_time;
             }
+          } else {
+            setConflictWarning("Cannot place a double lesson at the end of the day.");
+            return;
           }
         }
 
@@ -383,14 +389,14 @@ export default function Timetable({ currentUser, currentPeriodId, periods = [] }
       if (i !== -1 && i < fullSorted.length - 1) {
         const immediateNext = fullSorted[i+1];
         if (immediateNext.is_break) {
-          setMessage({ type:'err', text: 'Cannot place a double lesson across a break.' });
+          setConflictWarning('Cannot place a double lesson across a break.');
           return;
         } else {
           nextSlot = immediateNext;
           endTime = nextSlot.end_time;
         }
       } else {
-        setMessage({ type:'err', text: 'Cannot place double lesson at the end of the day.' });
+        setConflictWarning('Cannot place double lesson at the end of the day.');
         return;
       }
     }
@@ -914,7 +920,7 @@ export default function Timetable({ currentUser, currentPeriodId, periods = [] }
                 Cancel
               </button>
               <button className="tt-btn tt-btn-primary" style={{ flex:1.4 }}
-                disabled={!editSubject.trim() || cellSaving}
+                disabled={!editSubject.trim() || cellSaving || !!conflictWarning}
                 onClick={handleSaveCell}>
                 {cellSaving ? 'Saving...' : editCell.existing ? 'Update Slot' : 'Add Slot'}
               </button>
