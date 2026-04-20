@@ -347,25 +347,28 @@ export default function LMS({ currentUser }) {
   }, [formData.class, profile]);
 
   // Dynamic Stream logic with robust fallback for Sandbox/Incomplete setup
-  const classStreams = (() => {
+  const classStreams = useMemo(() => {
     if (!formData.class) return [];
-    const fromProfile = profile?.streamsPerClass?.[formData.class] || [];
-    if (fromProfile.length > 0) return fromProfile;
     
-    // Fallback to standard streams if none configured (prevents "broken" UI)
-    return ['North', 'South', 'East', 'West', 'Central'];
-  })();
+    const configuredStreams = profile?.streamsPerClass?.[formData.class] || [];
+    
+    // Always provide an "Entire Class" option as the primary choice
+    const streams = [{ id: '', label: 'Entire Class' }];
+    
+    // Add configured streams if they exist
+    configuredStreams.forEach(s => {
+      streams.push({ id: s, label: s });
+    });
+
+    return streams;
+  }, [formData.class, profile]);
 
   // Effect to reset stream if class changes and it's no longer valid
   useEffect(() => {
     if (formData.class) {
       const validStreams = profile?.streamsPerClass?.[formData.class] || [];
-      if (validStreams.length > 0) {
-        if (!validStreams.includes(formData.stream)) {
-          // If only one stream, auto-select it
-          setFormData(prev => ({ ...prev, stream: validStreams.length === 1 ? validStreams[0] : '' }));
-        }
-      } else {
+      // Empty string '' is always valid (Entire Class)
+      if (formData.stream !== '' && validStreams.length > 0 && !validStreams.includes(formData.stream)) {
         setFormData(prev => ({ ...prev, stream: '' }));
       }
     }
@@ -418,8 +421,8 @@ export default function LMS({ currentUser }) {
               <Select 
                 value={formData.stream} 
                 onChange={e => setFormData({ ...formData, stream: e.target.value })}
-                options={classStreams.map(s => ({ id: s, label: s }))}
-                placeholder="Select Stream"
+                options={classStreams}
+                placeholder="Select Target"
                 style={{ width: '100%' }}
               />
             </div>
