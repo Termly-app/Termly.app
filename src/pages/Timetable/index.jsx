@@ -453,8 +453,15 @@ export default function Timetable({ currentUser, currentPeriodId, periods = [] }
           start_time  : nextSlot.start_time,
           end_time    : nextSlot.end_time
         });
+      } else if (editCell.existing?.is_double_first && !isDouble) {
+        // If it was previously a double lesson and they unchecked it, we must delete the orphaned second slot!
+        const fullSorted = [...config].sort((a,b) => a.slot_index - b.slot_index);
+        const fullIdx = fullSorted.findIndex(c => c.slot_index === editCell.slotIndex);
+        if (fullIdx !== -1 && fullIdx < fullSorted.length - 1) {
+          const orphanedNext = fullSorted[fullIdx + 1];
+          await clearTimetableSlot(schoolId, periodId, selClass, selStream || '', editCell.day, orphanedNext.slot_index);
+        }
       }
-
 
       setSlots(await getTimetableSlots(schoolId, periodId, selClass, selStream || null));
       setEditCell(null);
