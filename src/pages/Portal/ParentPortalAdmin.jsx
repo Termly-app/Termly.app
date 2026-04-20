@@ -121,24 +121,24 @@ export default function ParentPortalAdmin() {
               <SchoolIcon size={16} style={{ marginRight: 8, verticalAlign: '-2px' }} />
               Student Directory
             </h3>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
               <select
                 value={selectedClass}
                 onChange={e => setSelectedClass(e.target.value)}
-                className="form-input"
-                style={{ width: 'auto', minWidth: 120, fontSize: '0.85rem' }}
+                className="custom-select"
+                style={{ width: 'auto', minWidth: 140, fontSize: '0.85rem' }}
               >
-                {classes.map(c => <option key={c} value={c}>{c}</option>)}
+                {classes.map(c => <option key={c} value={c}>{c === 'All' ? 'All Grades' : c}</option>)}
               </select>
-              <div style={{ position: 'relative' }}>
-                <SearchIcon size={14} color="#94a3b8" style={{ position: 'absolute', left: 10, top: 9 }} />
+              <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+                <SearchIcon size={14} color="#94a3b8" style={{ position: 'absolute', left: 12, pointerEvents: 'none' }} />
                 <input
                   type="text"
                   placeholder="Search student..."
                   value={search}
                   onChange={e => setSearch(e.target.value)}
                   className="form-input"
-                  style={{ paddingLeft: 32, width: 200, padding: '6px 12px 6px 32px' }}
+                  style={{ padding: '10px 12px 10px 36px', width: 220, fontSize: '0.85rem' }}
                 />
               </div>
               <span className="text-muted" style={{ fontSize: '0.82rem' }}>{filtered.length} students</span>
