@@ -871,7 +871,14 @@ export async function getCurrentPeriodDetails() {
 export async function getPrintHeader(subtitle) {
   const p = await getSchoolProfile();
   const name = p.schoolName || '';
-  const logoHtml = p.logo ? `<img src="${p.logo}" style="height:60px;max-width:120px;object-fit:contain;margin-right:14px" />` : '';
+  
+  let logoUrl = p.logo;
+  if (logoUrl && (logoUrl.startsWith('/') || logoUrl.startsWith('.'))) {
+    // Resolve relative logo URL because about:blank breaks relative paths
+    logoUrl = window.location.origin + (logoUrl.startsWith('.') ? logoUrl.substring(1) : logoUrl);
+  }
+  
+  const logoHtml = logoUrl ? `<img src="${logoUrl}" style="height:60px;max-width:120px;object-fit:contain;margin-right:14px" />` : '';
   const mottoHtml = p.motto ? `<div style="font-size:11px;color:#64748b;font-style:italic;margin-top:2px">"${p.motto}"</div>` : '';
   const contactParts = [p.phone, p.email, p.address].filter(Boolean);
   const period = await getCurrentPeriodDetails();
@@ -895,7 +902,13 @@ export async function getPrintHeader(subtitle) {
 
 export function getPrintFooter() {
   return `
-    <div style="position:fixed;bottom:5mm;left:15mm;display:flex;align-items:center;opacity:1;z-index:9999;color:#000;">
+    <style>
+      @media print {
+        @page { margin: 0; }
+        .shulesoft-system-footer svg rect { fill: #000 !important; print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+      }
+    </style>
+    <div class="shulesoft-system-footer" style="position:fixed;bottom:5mm;left:15mm;display:flex;align-items:center;opacity:1;z-index:9999;color:#000;">
       <svg width="22" height="22" viewBox="0 0 13 13" fill="none" aria-label="ShuleSoft">
         <rect x="1" y="1" width="4.5" height="4.5" rx="1" fill="#000"/>
         <rect x="7.5" y="1" width="4.5" height="4.5" rx="1" fill="#000" fill-opacity="0.4"/>

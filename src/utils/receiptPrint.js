@@ -46,7 +46,7 @@ const PRINT_CSS = `
     body { margin: 8mm; }
     .no-print { display: none !important; }
     .watermark { opacity: .04; }
-    .system-footer svg { fill: #000 !important; stroke: #000 !important; }
+    .system-footer svg rect { fill: #000 !important; print-color-adjust: exact; -webkit-print-color-adjust: exact; }
   }
 `;
 
@@ -60,6 +60,17 @@ const SHULESOFT_FOOTER = `
     </svg>
   </div>
 `;
+
+/**
+ * Ensures relative URLs work in about:blank windows
+ */
+function getAbsoluteUrl(url) {
+  if (!url) return '';
+  if (url.startsWith('/') || url.startsWith('.')) {
+    return window.location.origin + (url.startsWith('.') ? url.substring(1) : url);
+  }
+  return url;
+}
 
 /**
  * Open a print window and trigger browser print dialog
@@ -132,7 +143,7 @@ export function printReceipt({ school, student, payment, feeItems = [] }) {
 
       <!-- School header -->
       <div class="school-header" style="display:flex; align-items:center; justify-content:center; gap: 15px; border-bottom: 2px solid #000; padding-bottom: 8px; margin-bottom: 10px;">
-        ${school?.logo ? `<img src="${school.logo}" alt="School Logo" style="height: 50px; object-fit: contain;" />` : ''}
+        ${school?.logo ? `<img src="${getAbsoluteUrl(school.logo)}" alt="School Logo" style="height: 50px; object-fit: contain;" />` : ''}
         <div style="text-align: ${school?.logo ? 'left' : 'center'}">
           <div class="school-name">${school?.name || 'School Name'}</div>
           <div class="school-sub">${school?.location || ''}</div>
@@ -234,7 +245,7 @@ export function printFeeStatement({ school, student, payments = [], feeStructure
     <div class="statement">
       <!-- School header -->
       <div class="school-header" style="display:flex; align-items:center; justify-content:center; gap: 15px; border-bottom: 2px solid #000; padding-bottom: 8px; margin-bottom: 10px;">
-        ${school?.logo ? `<img src="${school.logo}" alt="School Logo" style="height: 50px; object-fit: contain;" />` : ''}
+        ${school?.logo ? `<img src="${getAbsoluteUrl(school.logo)}" alt="School Logo" style="height: 50px; object-fit: contain;" />` : ''}
         <div style="text-align: ${school?.logo ? 'left' : 'center'}">
           <div class="school-name">${school?.name || 'School Name'}</div>
           <div class="school-sub">${school?.location || ''}</div>
