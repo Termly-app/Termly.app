@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { getStudents, addStudent, updateStudent, deleteStudent, getFees, transferStudents, getClassList, getCBC, getCoreCompetencies, getPrintHeader, getSchoolProfile, TERM_FEE } from '../data/store';
+import { getStudents, addStudent, updateStudent, archiveStudent, getFees, transferStudents, getClassList, getCBC, getCoreCompetencies, getPrintHeader, getSchoolProfile, TERM_FEE } from '../data/store';
 import { sanitizeName, sanitizeString } from '../utils/sanitize';
 import Loader from '../components/Common/Loader';
 import { CBC_STRUCTURE, CBC_CORE_COMPETENCIES, getLevelForGrade } from '../data/seedData';
@@ -29,6 +29,7 @@ export default function Students({ currentUser, currentPeriodId }) {
   const [search, setSearch]           = useState('');
   const [classFilter, setClassFilter] = useState('All');
   const [streamFilter, setStreamFilter] = useState('All');
+  const [statusFilter, setStatusFilter] = useState('Active');
   const [showModal, setShowModal]     = useState(false);
   const [showImportModal, setShowImportModal] = useState(false);
   const [editingStudent, setEditingStudent]   = useState(null);
@@ -59,11 +60,11 @@ export default function Students({ currentUser, currentPeriodId }) {
 
   const filtered = students.filter(s => {
     const q = search.toLowerCase();
-    return (
-      (!q || (s.name||'').toLowerCase().includes(q) || (s.admNo||'').toLowerCase().includes(q) || (s.parentPhone||'').includes(q)) &&
-      (classFilter === 'All' || s.class === classFilter) &&
-      (streamFilter === 'All' || s.stream === streamFilter)
-    );
+    const matchStatus = statusFilter === 'All' || s.status === statusFilter;
+    const matchSearch = (!q || (s.name||'').toLowerCase().includes(q) || (s.admNo||'').toLowerCase().includes(q) || (s.parentPhone||'').includes(q));
+    const matchClass = (classFilter === 'All' || s.class === classFilter);
+    const matchStream = (streamFilter === 'All' || s.stream === streamFilter);
+    return matchStatus && matchSearch && matchClass && matchStream;
   });
 
   const handleSave = async (st) => {
@@ -89,15 +90,20 @@ export default function Students({ currentUser, currentPeriodId }) {
       await alert({ title: 'Save Failed', message: err.message || 'Could not save student record. Please try again.', variant: 'danger' });
     } finally { setLoading(false); }
   };
-  const handleDelete = async (id) => {
-    const ok = await confirm({ title: 'Remove Student', message: 'Are you sure you want to remove this student record?', variant: 'danger' });
+  const handleArchive = async (id) => {
+    const ok = await confirm({ 
+      title: 'Archive Student', 
+      message: 'Are you sure you want to archive this student record? They will no longer appear in active class lists or billing reports.', 
+      variant: 'warning',
+      confirmText: 'Archive Student'
+    });
     if (!ok) return;
     setLoading(true);
     try { 
-      await deleteStudent(id); 
+      await archiveStudent(id, 'Transferred'); 
       await refresh(); 
       setSelectedStudent(null); 
-      toast('Student record removed', 'info');
+      toast('Student record archived', 'success');
     }
     catch (err) { console.error(err); } finally { setLoading(false); }
   };
@@ -178,6 +184,20 @@ export default function Students({ currentUser, currentPeriodId }) {
               <input type="text" placeholder="Search students..." value={search} onChange={e=>setSearch(e.target.value)}/>
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <label style={{ fontSize: '0.82rem', fontWeight: 600 }}>Enrollment:</label>
+              <Select 
+                value={statusFilter}
+                onChange={e => setStatusFilter(e.target.value)}
+                options={[
+                  { id: 'Active', label: 'Active' },
+                  { id: 'Transferred', label: 'Transferred' },
+                  { id: 'Graduated', label: 'Graduated' },
+                  { id: 'All', label: 'All Records' }
+                ]}
+                style={{ minWidth: 130 }}
+              />
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
               <label style={{ fontSize: '0.82rem', fontWeight: 600 }}>Class:</label>
               <Select 
                 value={classFilter}
@@ -198,7 +218,7 @@ export default function Students({ currentUser, currentPeriodId }) {
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
               <label style={{ fontSize: '0.82rem', fontWeight: 600 }}>Stream:</label>
               <Select 
-                value={streamFilter}
+                value={streamFilter} 
                 onChange={e => setStreamFilter(e.target.value)}
                 options={[
                   { id: 'All', label: 'All Streams' },
@@ -217,7 +237,8 @@ export default function Students({ currentUser, currentPeriodId }) {
             <thead>
               <tr>
                 <th>Adm No</th><th>Full Name</th><th>Class</th><th>Level</th>
-                <th title="NEMIS Readiness Status">Status</th>
+                <th>Enrolment</th>
+                <th title="NEMIS Readiness Status">NEMIS</th>
                 <th>Stream</th>
                 <th>Category</th><th>Parent</th><th>Phone</th>
                 { (isAdmin || isFinance) && <th>Fee Balance</th> }
@@ -246,7 +267,19 @@ export default function Students({ currentUser, currentPeriodId }) {
                     </td>
                     <td data-label="Class"><span className="badge badge-info">{s.class}</span></td>
                     <td data-label="Level"><span className={`level-badge ${lb.cls}`}>{lb.ico} {getLevelForGrade(s.class)}</span></td>
-                    <td data-label="Status">
+                    <td data-label="Enrolment">
+                      <span style={{ 
+                        fontSize: '0.65rem', padding: '2px 8px', borderRadius: 6, fontWeight: 700, textTransform: 'uppercase',
+                        backgroundColor: s.status === 'Active' ? '#ecfdf5' : s.status === 'Graduated' ? '#eff6ff' : '#f3f4f6',
+                        color: s.status === 'Active' ? '#059669' : s.status === 'Graduated' ? '#1d4ed8' : '#4b5563',
+                        border: `1px solid ${s.status === 'Active' ? '#10b98144' : s.status === 'Graduated' ? '#3b82f644' : '#d1d5db'}`,
+                        display: 'inline-flex', alignItems: 'center', gap: 4
+                      }}>
+                        {s.status === 'Active' && <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#10b981' }}></span>}
+                        {s.status || 'Active'}
+                      </span>
+                    </td>
+                    <td data-label="NEMIS">
                       { (s.upi || s.nemis_number) && s.dob && s.gender && (s.parent_phone || s.parentPhone) ? (
                         <span className="badge badge-success" style={{ display: 'inline-flex', alignItems: 'center', gap: 4, padding: '2px 8px', fontSize: '0.65rem' }}>
                           <FlagIcon size={10} /> Ready
@@ -268,7 +301,9 @@ export default function Students({ currentUser, currentPeriodId }) {
                       <td data-label="Actions" style={{textAlign:'center'}}>
                         <div style={{display:'inline-flex',gap:4}}>
                           <button className="btn btn-ghost btn-sm" onClick={()=>{setEditingStudent(s);setShowModal(true);}}><EditIcon size={14} /></button>
-                          <button className="btn btn-ghost btn-sm" onClick={()=>handleDelete(s.id)}><DeleteIcon size={14} /></button>
+                          {s.status === 'Active' && (
+                            <button className="btn btn-ghost btn-sm text-danger" onClick={()=>handleArchive(s.id)} title="Archive Student"><TrashIcon size={14} /></button>
+                          )}
                         </div>
                       </td>
                     )}

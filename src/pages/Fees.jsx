@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { getStudents, getFees, recordPayment, getFeeSummary, getPrintHeader, getSchoolProfile, TERM_FEE, subscribeToChanges, getMpesaLogs } from '../data/store';
+import { getStudents, getFees, recordPayment, voidPayment, getStudentPayments, getFeeSummary, getPrintHeader, getSchoolProfile, TERM_FEE, subscribeToChanges, getMpesaLogs } from '../data/store';
 import Loader from '../components/Common/Loader';
 import { CLASSES, CBC_STRUCTURE } from '../data/seedData';
 import { 
@@ -93,6 +93,99 @@ function PaymentModal({ student, fee, onPay, onClose }) {
   );
 }
 
+function HistoryModal({ student, onClose, onVoid, isAdmin }) {
+  const [payments, setPayments] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const { confirm, prompt } = useDialog();
+
+  useEffect(() => {
+    const load = async () => {
+      try {
+        const data = await getStudentPayments(student.id);
+        setPayments(data);
+      } catch (e) { console.error(e); }
+      finally { setLoading(false); }
+    };
+    load();
+  }, [student.id]);
+
+  const handleVoidClick = async (p) => {
+    const reason = await prompt({
+      title: 'Void Payment',
+      message: `Are you sure you want to void the payment of KSh ${p.amount.toLocaleString()}? This will reverse the amount on the student's balance.`,
+      inputLabel: 'Reason for voiding (required)',
+      inputPlaceholder: 'e.g. Wrong student selected, duplicate entry...',
+      confirmText: 'Void Payment',
+      variant: 'danger'
+    });
+
+    if (reason) {
+      setLoading(true);
+      try {
+        await onVoid(p.id, reason);
+        // Refresh list
+        setPayments(await getStudentPayments(student.id));
+      } catch (e) {
+        alert({ title: 'Void Failed', message: e.message, variant: 'danger' });
+      } finally { setLoading(false); }
+    }
+  };
+
+  return (
+    <div className="modal-overlay" onClick={onClose}>
+      <div className="modal" onClick={e=>e.stopPropagation()} style={{ maxWidth: 600 }}>
+        <div className="modal-header">
+          <h3><ClockIcon size={20} /> Payment History — {student.name}</h3>
+          <button className="modal-close" onClick={onClose}>×</button>
+        </div>
+        <div className="modal-body" style={{ maxHeight: 400, overflowY: 'auto' }}>
+          {loading ? <div style={{ textAlign: 'center', padding: 20 }}>Loading history...</div> : (
+            <table className="data-table" style={{ fontSize: '0.85rem' }}>
+              <thead>
+                <tr>
+                  <th>Date</th>
+                  <th>Amount</th>
+                  <th>Ref</th>
+                  <th>Method</th>
+                  <th>Status</th>
+                  {isAdmin && <th>Action</th>}
+                </tr>
+              </thead>
+              <tbody>
+                {payments.length === 0 ? (
+                  <tr><td colSpan="6" style={{ textAlign: 'center', padding: 20 }}>No payments found.</td></tr>
+                ) : payments.map(p => (
+                  <tr key={p.id} style={{ opacity: p.status === 'Voided' ? 0.5 : 1 }}>
+                    <td>{new Date(p.date || p.created_at).toLocaleDateString()}</td>
+                    <td className="font-bold">KSh {Number(p.amount).toLocaleString()}</td>
+                    <td><code style={{ fontSize: '0.75rem' }}>{p.reference || 'N/A'}</code></td>
+                    <td>{p.method}</td>
+                    <td>
+                      <span className={`badge ${p.status === 'Voided' ? 'badge-danger' : 'badge-success'}`} style={{ fontSize: '0.65rem' }}>
+                        {p.status || 'Success'}
+                      </span>
+                    </td>
+                    {isAdmin && (
+                      <td>
+                        {p.status !== 'Voided' && (
+                          <button className="btn btn-ghost btn-xs text-danger" onClick={() => handleVoidClick(p)}>Void</button>
+                        )}
+                      </td>
+                    )}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </div>
+        <div className="modal-footer">
+          <button className="btn btn-ghost" onClick={onClose}>Close</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function ReceiptModal({ receipt, onClose, profile }) {
   const formatKSh = (n) => `KSh ${Number(n||0).toLocaleString()}`;
   
@@ -171,6 +264,7 @@ export default function Fees({ currentUser, currentPeriodId }) {
   const [statusFilter, setStatusFilter] = useState('All');
   const [showPayment, setShowPayment] = useState(null);
   const [showReceipt, setShowReceipt] = useState(null);
+  const [showHistory, setShowHistory] = useState(null);
   const [profile, setProfile] = useState({});
   const [streamFilter, setStreamFilter] = useState('All');
   const [loading, setLoading] = useState(true);
@@ -274,6 +368,13 @@ export default function Fees({ currentUser, currentPeriodId }) {
       await refresh();
     } catch (err) { alert({ title: 'Payment Error', message: err.message, variant: 'danger' }); }
     finally { setLoading(false); }
+  };
+
+  const handleVoid = async (pid, reason) => {
+    try {
+      await voidPayment(pid, reason);
+      await refresh();
+    } catch (err) { alert({ title: 'Void Error', message: err.message, variant: 'danger' }); }
   };
 
   if (loading && students.length === 0) return <Loader />;
@@ -394,8 +495,11 @@ export default function Fees({ currentUser, currentPeriodId }) {
                              {isNotConfigured ? <AlertIcon size={14} /> : <CardIcon size={14} />} {isNotConfigured ? 'Configure' : 'Pay'}
                           </button>
                         )}
+                        <button className="btn btn-ghost btn-sm" onClick={()=>setShowHistory(s)} title="View Payment History">
+                          <ClockIcon size={14} />
+                        </button>
                         {f.payments && f.payments.length > 0 && (
-                          <button className="btn btn-ghost btn-sm" onClick={()=>setShowReceipt({...f.payments[f.payments.length-1],studentName:s.name,studentClass:s.class,admNo:s.admNo,totalFee:f.totalFee,balance:f.balance})}>
+                          <button className="btn btn-ghost btn-sm" onClick={()=>setShowReceipt({...f.payments[f.payments.length-1],studentName:s.name,studentClass:s.class,admNo:s.admNo,totalFee:f.totalFee,balance:f.balance})} title="Last Receipt">
                             <ReceiptIcon size={14} />
                           </button>
                         )}
@@ -410,6 +514,7 @@ export default function Fees({ currentUser, currentPeriodId }) {
       </div>
       {showPayment && <PaymentModal student={showPayment} fee={computeStudentFee(showPayment)} onPay={handlePayment} onClose={() => setShowPayment(null)} />}
       {showReceipt && <ReceiptModal receipt={showReceipt} profile={profile} onClose={() => setShowReceipt(null)} />}
+      {showHistory && <HistoryModal student={showHistory} isAdmin={isAdmin} onVoid={handleVoid} onClose={() => setShowHistory(null)} />}
     </div>
   );
 }

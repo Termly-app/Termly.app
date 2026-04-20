@@ -1080,7 +1080,8 @@ export async function getStudents() {
       fatherPhone: s.father_phone,
       motherName: s.mother_name,
       motherPhone: s.mother_phone,
-      nemisVerified: s.nemis_verified
+      nemisVerified: s.nemis_verified,
+      status: s.status || 'Active'
     }));
   }
   
@@ -1100,7 +1101,8 @@ export async function getStudents() {
     fatherPhone: s.father_phone,
     motherName: s.mother_name,
     motherPhone: s.mother_phone,
-    nemisVerified: s.nemis_verified
+    nemisVerified: s.nemis_verified,
+    status: s.status || 'Active'
   }));
 }
 
@@ -1220,6 +1222,7 @@ export async function addStudent(student) {
       father_phone: student.fatherPhone || null,
       mother_name: sanitizeName(student.motherName || null),
       mother_phone: student.motherPhone || null,
+      status: student.status || 'Active',
       subjects: getSubjectsForGrade(student.class, p)
     })
     .select()
@@ -1251,6 +1254,7 @@ export async function addStudent(student) {
     motherName: data.mother_name,
     motherPhone: data.mother_phone,
     subjects: data.subjects || [],
+    status: data.status || 'Active',
     nemisVerified: false
   };
 
@@ -1282,6 +1286,7 @@ export async function updateStudent(id, updates) {
   if (updates.motherName !== undefined) row.mother_name = updates.motherName;
   if (updates.motherPhone !== undefined) row.mother_phone = updates.motherPhone;
   if (updates.subjects !== undefined) row.subjects = updates.subjects;
+  if (updates.status !== undefined) row.status = updates.status;
 
   const { data, error } = await supabase
     .from('students')
@@ -1293,7 +1298,7 @@ export async function updateStudent(id, updates) {
   
   // Sync to local DB immediately
   try { await db.students.put(data); } catch(e) {}
-  return data ? { ...data, admNo: data.adm_no, parentPhone: data.parent_phone, joinDate: data.join_date, residenceType: data.residence_type || 'day', house: data.house || null, subjects: data.subjects || [] } : null;
+  return data ? { ...data, admNo: data.adm_no, parentPhone: data.parent_phone, joinDate: data.join_date, residenceType: data.residence_type || 'day', house: data.house || null, subjects: data.subjects || [], status: data.status || 'Active' } : null;
 }
 
 /**
@@ -1322,11 +1327,34 @@ export async function deleteStudent(id) {
   try { await db.students.delete(id); } catch(e) {}
 }
 
+/**
+ * Archive a student record (Soft Delete).
+ * Transfers the student to a specific inactive category like 'Transferred' or 'Graduated'.
+ */
+export async function archiveStudent(id, targetStatus = 'Transferred', reason = '') {
+  mutationGuard('archiveStudent');
+  const { data, error } = await supabase
+    .from('students')
+    .update({ 
+      status: targetStatus,
+      notes: reason ? `[ARCHIVED: ${new Date().toLocaleDateString()}] ${reason}` : undefined
+    })
+    .eq('id', id)
+    .select()
+    .single();
+    
+  if (error) throw error;
+  
+  // Update local cache
+  try { await db.students.update(id, { status: targetStatus }); } catch(e) {}
+  await logPlatformActivity('STUDENT_ARCHIVE', `Archived student (Status: ${targetStatus}): ${data.name}`);
+  return data;
+}
+
 export async function transferStudents(selectedIds, direction = 'promote') {
   mutationGuard('transferStudents');
   const allGrades = Object.values(CBC_STRUCTURE).flatMap(l => l.grades);
-  const students = await getStudents();
-  
+  const students = (await getStudents()).filter(s => s.status === 'Active');
   const targetStudents = students.filter(s => selectedIds.includes(s.id));
   const updates = [];
 
@@ -1836,6 +1864,125 @@ export async function recordPayment(studentId, amount, method, reference) {
     reference, 
     date: paymentDate 
   };
+}
+
+/**
+ * Archive a student record (Soft Delete).
+ * Transfers the student to a specific inactive category like 'Transferred' or 'Graduated'.
+ */
+export async function archiveStudent(id, targetStatus = 'Transferred', reason = '') {
+  mutationGuard('archiveStudent');
+  const { data, error } = await supabase
+    .from('students')
+    .update({ 
+      status: targetStatus,
+      notes: reason ? `[ARCHIVED: ${new Date().toLocaleDateString()}] ${reason}` : undefined
+    })
+    .eq('id', id)
+    .select()
+    .single();
+    
+  if (error) throw error;
+  
+  // Update local cache
+  try { await db.students.update(id, { status: targetStatus }); } catch(e) {}
+  await logPlatformActivity('STUDENT_ARCHIVE', `Archived student (Status: ${targetStatus}): ${data.name}`);
+  return data;
+}
+
+/**
+ * Fetch all payments for a specific student in the current period.
+ */
+export async function getStudentPayments(studentId) {
+  if (!_currentSchoolId || !_currentPeriodId) return [];
+  const { data, error } = await supabase
+    .from('fee_payments')
+    .select('*')
+    .eq('school_id', _currentSchoolId)
+    .eq('student_id', studentId)
+    .eq('period_id', _currentPeriodId)
+    .order('created_at', { ascending: false });
+  
+  if (error) throw error;
+  return data || [];
+}
+
+/**
+ * Void a payment record (Soft Delete for finance).
+ * Reverses the payment amount from the student's balance.
+ */
+export async function voidPayment(paymentId, reason) {
+  mutationGuard('voidPayment');
+  
+  // 1. Get the payment to know the amount and student
+  const { data: payment, error: pErr } = await supabase
+    .from('fee_payments')
+    .select('*')
+    .eq('id', paymentId)
+    .single();
+    
+  if (pErr) throw pErr;
+  if (payment.status === 'Voided') throw new Error('Payment is already voided.');
+
+  // 2. Mark as voided
+  const { error: vErr } = await supabase
+    .from('fee_payments')
+    .update({ 
+      status: 'Voided',
+      notes: reason ? `VOIDED: ${reason}` : 'Voided by Admin'
+    })
+    .eq('id', paymentId);
+    
+  if (vErr) throw vErr;
+
+  // 3. Trigger reconciliation for this student to fix the running balance
+  await reconcileStudentFeesWithPayments(payment.student_id);
+  
+  await logPlatformActivity('PAYMENT_VOID', `Voided payment of ${payment.amount} for Student ID: ${payment.student_id}. Reason: ${reason}`);
+}
+
+/**
+ * Hard-reconciliation: Recalculates the student's total paid amount
+ * based on all non-voided fee_payments records.
+ */
+export async function reconcileStudentFeesWithPayments(studentId) {
+  mutationGuard('reconcileStudentFeesWithPayments');
+  
+  // 1. Get all valid payments
+  const { data: payments, error: pErr } = await supabase
+    .from('fee_payments')
+    .select('amount')
+    .eq('student_id', studentId)
+    .eq('period_id', _currentPeriodId)
+    .neq('status', 'Voided');
+    
+  if (pErr) throw pErr;
+  
+  const totalPaid = (payments || []).reduce((sum, p) => sum + Number(p.amount), 0);
+
+  // 2. Get current fee record to find total_fee
+  const { data: feeRecord, error: fErr } = await supabase
+    .from('fees')
+    .select('total_fee')
+    .eq('student_id', studentId)
+    .eq('period_id', _currentPeriodId)
+    .single();
+    
+  if (fErr) throw fErr;
+
+  // 3. Update the fees table with the verified totals
+  const { error: uErr } = await supabase
+    .from('fees')
+    .update({
+      paid: totalPaid,
+      balance: Number(feeRecord.total_fee) - totalPaid
+    })
+    .eq('student_id', studentId)
+    .eq('period_id', _currentPeriodId);
+    
+  if (uErr) throw uErr;
+  
+  invalidateCache(`fees_${_currentSchoolId}_${_currentPeriodId}`);
 }
 
 /**
