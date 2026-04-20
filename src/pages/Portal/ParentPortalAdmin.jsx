@@ -43,18 +43,44 @@ export default function ParentPortalAdmin() {
     }
   };
 
-  const filtered = students.filter(s => {
-    const q = search.toLowerCase();
-    const matchSearch = !search || (
-      s.name?.toLowerCase().includes(q) || 
-      s.admNo?.toLowerCase().includes(q) ||
-      s.adm_no?.toLowerCase().includes(q)
-    );
-    const matchClass = selectedClass === 'All' || s.class === selectedClass;
-    return matchSearch && matchClass;
-  });
+  const getClassRank = (name) => {
+    if (!name) return 1000;
+    const n = name.toLowerCase();
+    if (n.includes('baby') || n.includes('play')) return 1;
+    if (n.includes('nursery') || n.includes('pp1')) return 2;
+    if (n.includes('pre-unit') || n.includes('pp2')) return 3;
+    if (n.includes('grade') || n.includes('standard') || n.includes('std')) {
+      const num = parseInt(n.replace(/\D/g, '')) || 0;
+      return 10 + num;
+    }
+    if (n.includes('form')) {
+      const num = parseInt(n.replace(/\D/g, '')) || 0;
+      return 100 + num;
+    }
+    return 500;
+  };
 
-  const classes = ['All', ...new Set(students.map(s => s.class).filter(Boolean))].sort();
+  const filtered = students
+    .filter(s => {
+      const q = search.toLowerCase();
+      const matchSearch = !search || (
+        s.name?.toLowerCase().includes(q) || 
+        s.admNo?.toLowerCase().includes(q) ||
+        s.adm_no?.toLowerCase().includes(q)
+      );
+      const matchClass = selectedClass === 'All' || s.class === selectedClass;
+      return matchSearch && matchClass;
+    })
+    .sort((a, b) => {
+      const rankA = getClassRank(a.class);
+      const rankB = getClassRank(b.class);
+      if (rankA !== rankB) return rankA - rankB;
+      return (a.name || '').localeCompare(b.name || '');
+    });
+
+  const rawClasses = [...new Set(students.map(s => s.class).filter(Boolean))];
+  const sortedClasses = rawClasses.sort((a, b) => getClassRank(a) - getClassRank(b));
+  const classes = ['All', ...sortedClasses];
   const classOptions = classes.map(c => ({ value: c, label: c === 'All' ? 'All Grades' : c }));
 
   return (
