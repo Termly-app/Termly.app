@@ -119,8 +119,8 @@ export default function TeacherPortalAdmin() {
               Staff Access Management
             </h3>
             <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-              <div className="search-bar" style={{ maxWidth: 300 }}>
-                <div className="search-icon">
+              <div className="search-bar" style={{ maxWidth: 300, minWidth: 240, position: 'relative', display: 'flex', alignItems: 'center' }}>
+                <div className="search-icon" style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', zIndex: 1, color: '#94a3b8', lineHeight: 1, display: 'flex', alignItems: 'center' }}>
                   <SearchIcon size={14} />
                 </div>
                 <input
@@ -128,7 +128,8 @@ export default function TeacherPortalAdmin() {
                   placeholder="Search staff..."
                   value={search}
                   onChange={e => setSearch(e.target.value)}
-                  style={{ borderRadius: 20 }}
+                  className="form-input"
+                  style={{ padding: '10px 12px 10px 40px', borderRadius: 24, fontSize: '0.85rem', width: '100%', background: '#fff' }}
                 />
               </div>
               <span className="text-muted" style={{ fontSize: '0.82rem' }}>{filtered.length} active teachers</span>

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { getSchoolProfile, getStudents } from '../../data/store';
 import { UserIcon, CheckIcon, CopyIcon, SchoolIcon, SearchIcon } from '../../components/CommonIcons';
+import Select from '../../components/Common/Select';
 
 export default function ParentPortalAdmin() {
   const [profile, setProfile] = useState(null);
@@ -54,6 +55,7 @@ export default function ParentPortalAdmin() {
   });
 
   const classes = ['All', ...new Set(students.map(s => s.class).filter(Boolean))].sort();
+  const classOptions = classes.map(c => ({ value: c, label: c === 'All' ? 'All Grades' : c }));
 
   return (
     <div className="animate-in">
@@ -122,16 +124,15 @@ export default function ParentPortalAdmin() {
               Student Directory
             </h3>
             <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-              <select
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+              <Select
                 value={selectedClass}
                 onChange={e => setSelectedClass(e.target.value)}
-                className="custom-select"
-                style={{ width: 'auto', minWidth: 140, fontSize: '0.85rem' }}
-              >
-                {classes.map(c => <option key={c} value={c}>{c === 'All' ? 'All Grades' : c}</option>)}
-              </select>
-              <div className="search-bar" style={{ maxWidth: 300 }}>
-                <div className="search-icon">
+                options={classOptions}
+                style={{ width: 'auto', minWidth: 160 }}
+              />
+              <div className="search-bar" style={{ maxWidth: 300, minWidth: 240, position: 'relative', display: 'flex', alignItems: 'center' }}>
+                <div className="search-icon" style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', zIndex: 1, color: '#94a3b8', lineHeight: 1, display: 'flex', alignItems: 'center' }}>
                   <SearchIcon size={14} />
                 </div>
                 <input
@@ -139,7 +140,8 @@ export default function ParentPortalAdmin() {
                   placeholder="Search student..."
                   value={search}
                   onChange={e => setSearch(e.target.value)}
-                  style={{ borderRadius: 20 }}
+                  className="form-input"
+                  style={{ padding: '10px 12px 10px 40px', borderRadius: 24, fontSize: '0.85rem', width: '100%', background: '#fff' }}
                 />
               </div>
               <span className="text-muted" style={{ fontSize: '0.82rem' }}>{filtered.length} students</span>
