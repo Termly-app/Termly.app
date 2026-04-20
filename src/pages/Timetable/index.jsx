@@ -335,10 +335,12 @@ export default function Timetable({ currentUser, currentPeriodId, periods = [] }
         let endTime   = timeCfg.end_time;
 
         if (isDouble) {
-          const sorted = [...config].sort((a,b) => a.slot_index - b.slot_index).filter(c => !c.is_break);
-          const i = sorted.findIndex(c => c.slot_index === editCell.slotIndex);
-          if (i !== -1 && i < sorted.length - 1) {
-            endTime = sorted[i+1].end_time;
+          const fullSorted = [...config].sort((a,b) => a.slot_index - b.slot_index);
+          const i = fullSorted.findIndex(c => c.slot_index === editCell.slotIndex);
+          if (i !== -1 && i < fullSorted.length - 1) {
+            if (!fullSorted[i+1].is_break) {
+              endTime = fullSorted[i+1].end_time;
+            }
           }
         }
 
@@ -375,11 +377,18 @@ export default function Timetable({ currentUser, currentPeriodId, periods = [] }
     let nextSlot  = null;
 
     if (isDouble) {
-      const sorted = [...config].sort((a,b) => a.slot_index - b.slot_index).filter(c => !c.is_break);
-      const i = sorted.findIndex(c => c.slot_index === editCell.slotIndex);
-      if (i !== -1 && i < sorted.length - 1) {
-        endTime = sorted[i+1].end_time;
-        nextSlot = sorted[i+1];
+      const fullSorted = [...config].sort((a,b) => a.slot_index - b.slot_index);
+      const i = fullSorted.findIndex(c => c.slot_index === editCell.slotIndex);
+      
+      if (i !== -1 && i < fullSorted.length - 1) {
+        const immediateNext = fullSorted[i+1];
+        if (immediateNext.is_break) {
+          setMessage({ type:'err', text: 'Cannot place a double lesson across a break.' });
+          return;
+        } else {
+          nextSlot = immediateNext;
+          endTime = nextSlot.end_time;
+        }
       } else {
         setMessage({ type:'err', text: 'Cannot place double lesson at the end of the day.' });
         return;
@@ -454,22 +463,21 @@ export default function Timetable({ currentUser, currentPeriodId, periods = [] }
     e?.stopPropagation();
     if (!isAdmin) return;
     
-    // Check if it's a double lesson
     const existing = slotLookup(day, slotIndex, slots);
-    let clearSecond = false;
-    if (existing?.is_double_first) {
-      if (confirm) {
-        clearSecond = await confirm('Clear both slots?', 'This is a double lesson. Would you like to clear both consecutive slots?');
-      } else {
-        clearSecond = window.confirm('This is a double lesson. Clear both slots?');
-      }
-    }
 
     try {
       await clearTimetableSlot(schoolId, periodId, selClass, selStream || '', day, slotIndex);
-      if (clearSecond) {
-        await clearTimetableSlot(schoolId, periodId, selClass, selStream || '', day, slotIndex + 1);
+      
+      if (existing?.is_double_first) {
+        // Automatically delete the second half of the double lesson
+        const fullSorted = [...config].sort((a,b) => a.slot_index - b.slot_index);
+        const fullIdx = fullSorted.findIndex(c => c.slot_index === slotIndex);
+        if (fullIdx !== -1 && fullIdx < fullSorted.length - 1) {
+          const nextSlot = fullSorted[fullIdx + 1];
+          await clearTimetableSlot(schoolId, periodId, selClass, selStream || '', day, nextSlot.slot_index);
+        }
       }
+      
       setSlots(await getTimetableSlots(schoolId, periodId, selClass, selStream || ''));
       setEditCell(null);
     } catch (e) { setMessage({ type:'err', text: e.message }); }
@@ -705,20 +713,24 @@ export default function Timetable({ currentUser, currentPeriodId, periods = [] }
                           const bg      = hasData ? (cell.color || COLORS[0]) : null;
                           const isDoubleFirst  = cell?.is_double_first;
                           const isDoubleSecond = cell?.is_double_second;
-                          const dblCls  = isDoubleFirst ? ' double-first' : isDoubleSecond ? ' double-second' : '';
+                          
+                          if (isDoubleSecond) return null; // Skip rendering td to let rowSpan take over
+
+                          const dblCls  = isDoubleFirst ? ' double-first' : '';
 
                           return (
                             <td key={d}
+                              rowSpan={isDoubleFirst ? 2 : 1}
                               className={`tt-cell${hasData ? '' : ' empty'}${dblCls}`}
                               onClick={() => openEdit(d, cfg.slot_index)}>
-                              {hasData && !isDoubleSecond && isAdmin && view === 'class' && (
+                              {hasData && isAdmin && view === 'class' && (
                                 <button className="tt-cell-clear"
                                   onClick={e => handleClearCell(d, cfg.slot_index, e)}><CrossIcon size={12} /></button>
                               )}
                               <div className="tt-cell-inner" style={hasData ? {
-                                background: `${bg}22`, border: `1px solid ${bg}55`,
+                                background: `${bg}22`, border: `1px solid ${bg}55`, minHeight: isDoubleFirst ? '120px' : 'auto'
                               } : {}}>
-                                {hasData && !isDoubleSecond && (
+                                {hasData && (
                                   <>
                                     <div className="tt-cell-subject" style={{ color: bg }}>
                                       {MOE_ABBREVIATIONS[cell.subject] || cell.subject}
@@ -749,11 +761,6 @@ export default function Timetable({ currentUser, currentPeriodId, periods = [] }
                                       </div>
                                     )}
                                   </>
-                                )}
-                                {hasData && isDoubleSecond && (
-                                  <div style={{ opacity:0.4, fontSize:'0.6rem', textAlign:'center', color: bg, fontWeight: 700 }}>
-                                    (Continued...)
-                                  </div>
                                 )}
                                 {!hasData && isAdmin && view === 'class' && (
                                   <div className="tt-add-hint">+ Add</div>
