@@ -130,15 +130,16 @@ export default function ParentPortalAdmin() {
               >
                 {classes.map(c => <option key={c} value={c}>{c === 'All' ? 'All Grades' : c}</option>)}
               </select>
-              <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
-                <SearchIcon size={14} color="#94a3b8" style={{ position: 'absolute', left: 12, pointerEvents: 'none' }} />
+              <div className="search-bar" style={{ maxWidth: 300 }}>
+                <div className="search-icon">
+                  <SearchIcon size={14} />
+                </div>
                 <input
                   type="text"
                   placeholder="Search student..."
                   value={search}
                   onChange={e => setSearch(e.target.value)}
-                  className="form-input"
-                  style={{ padding: '10px 12px 10px 36px', width: 220, fontSize: '0.85rem' }}
+                  style={{ borderRadius: 20 }}
                 />
               </div>
               <span className="text-muted" style={{ fontSize: '0.82rem' }}>{filtered.length} students</span>
