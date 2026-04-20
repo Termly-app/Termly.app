@@ -34,6 +34,53 @@ function openPrint(html) {
 
 const DAYS = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
 
+const MOE_ABBREVIATIONS = {
+  'Mathematics': 'MATH',
+  'English': 'ENG',
+  'Kiswahili': 'KISW',
+  'Biology': 'BIO',
+  'Physics': 'PHY',
+  'Chemistry': 'CHEM',
+  'History & Government': 'HIST',
+  'Geography': 'GEO',
+  'Christian Religious Education': 'CRE',
+  'Islamic Religious Education': 'IRE',
+  'Hindu Religious Education': 'HRE',
+  'Business Studies': 'BST',
+  'Agriculture': 'AGR',
+  'Integrated Science': 'SCI',
+  'Social Studies': 'SST',
+  'Literacy Activities': 'LIT',
+  'Mathematical Activities': 'MATH',
+  'Environmental Activities': 'ENV',
+  'Religious Education': 'R.E',
+  'Science & Technology': 'S&T',
+  'Agriculture & Nutrition': 'A&N',
+  'Creative Arts': 'C.A',
+  'Physical Education': 'P.E',
+  'Physical and Health Education': 'P.E',
+  'Life Skills': 'LSE',
+  'ICT': 'ICT',
+  'Pre-Technical Studies': 'PRE-TECH',
+  'Visual Arts': 'ART',
+  'Performing Arts': 'PERF',
+  'Home Science': 'H.SCI',
+  'Woodwork': 'WOOD',
+  'Metalwork': 'METAL',
+  'Computer Studies': 'COMP'
+};
+
+const isLowerClass = (className) => {
+  if (!className) return false;
+  const c = className.toLowerCase();
+  return c.includes('pp') || c.includes('play') || c.includes('nursery') || c.includes('kg') || c.includes('pre') || c.match(/grade\s*[1-5]/) || c.match(/class\s*[1-5]/) || c.match(/std\s*[1-5]/);
+};
+
+const getDisplayName = (subject, className) => {
+  if (isLowerClass(className)) return subject;
+  return MOE_ABBREVIATIONS[subject] || subject;
+};
+
 /**
  * Print a class timetable
  */
@@ -75,7 +122,7 @@ export async function printClassTimetable({ school, classGrade, stream, period, 
       const rowSpanAttr = s.is_double_first ? ' rowspan="2"' : '';
 
       return `<td class="${dblClass}"${rowSpanAttr}>
-        <div class="cell-subject">${s.subject}</div>
+        <div class="cell-subject">${getDisplayName(s.subject, classGrade)}</div>
         ${s.teachers?.staff_code && !s.is_double_second ? `<div class="cell-teacher">${s.teachers.staff_code}</div>` : ''}
       </td>`;
     }).join('');
@@ -146,7 +193,7 @@ export async function printTeacherTimetable({ school, teacher, period, config, s
       const rowSpanAttr = s.is_double_first ? ' rowspan="2"' : '';
 
       return `<td class="${dblClass}"${rowSpanAttr}>
-        <div class="cell-subject">${s.subject}</div>
+        <div class="cell-subject">${getDisplayName(s.subject, s.class_grade)}</div>
         <div class="cell-class">${s.class_grade}${s.stream ? ` ${s.stream}` : ''}</div>
       </td>`;
     }).join('');
@@ -212,7 +259,7 @@ export async function printAllTeachersTimetables({ school, teachers, period, con
         
         const rowSpanAttr = s.is_double_first ? ' rowspan="2"' : '';
         return `<td${rowSpanAttr}>
-          <div class="cell-subject">${s.subject}</div>
+          <div class="cell-subject">${getDisplayName(s.subject, s.class_grade)}</div>
           <div class="cell-class">${s.class_grade}${s.stream ? ` ${s.stream}` : ''}</div>
         </td>`;
       }).join('');
