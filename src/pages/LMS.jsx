@@ -671,22 +671,21 @@ export default function LMS({ currentUser }) {
                    <span><strong>Subject:</strong> {selectedSubmissions.assignment.subject}</span>
                 </div>
               </div>
-              <div style={{ display: 'flex', gap: 10 }}>
+              <div style={{ display: 'flex', gap: 12 }}>
                 <button 
-                  className="btn btn-ghost" 
+                  className="btn btn-danger" 
                   onClick={handleDeleteAssignment} 
-                  style={{ border: '1.5px solid rgba(255,255,255,0.2)', color: '#fff', fontWeight: 600 }}
+                  style={{ padding: '8px 16px', fontSize: '0.85rem', fontWeight: 700 }}
                   title="Delete Assignment"
                 >
-                  <MessageIcon size={16} style={{ display: 'none' }} /> {/* Placeholder, using style to hide if icon missing, but just use pure text */}
-                  🗑️ Delete
+                  🗑️ Delete Assignment
                 </button>
                 <button 
-                  className="btn btn-ghost" 
+                  className="btn" 
                   onClick={() => setSelectedSubmissions(null)} 
-                  style={{ border: '1.5px solid rgba(255,255,255,0.2)', color: '#fff', fontWeight: 600 }}
+                  style={{ background: 'rgba(255,255,255,0.15)', color: '#fff', border: '1px solid rgba(255,255,255,0.2)', padding: '8px 16px', fontSize: '0.85rem', fontWeight: 700 }}
                 >
-                  Back to List
+                  ← Back to List
                 </button>
               </div>
             </div>
