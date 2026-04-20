@@ -90,36 +90,40 @@ export default function Students({ currentUser, currentPeriodId }) {
       await alert({ title: 'Save Failed', message: err.message || 'Could not save student record. Please try again.', variant: 'danger' });
     } finally { setLoading(false); }
   };
-  const handleArchive = async (id) => {
-    const status = await prompt({
-      title: 'Archive Student',
-      message: 'Choose the relevant status for this student. They will be moved to historical records.',
-      inputLabel: 'Status',
+  const handleStatusChange = async (id, currentStatus) => {
+    const options = [
+      { id: 'Active', label: 'Active (Re-enroll)' },
+      { id: 'Transferred', label: 'Transferred' },
+      { id: 'Graduated', label: 'Graduated' }
+    ].filter(o => o.id !== currentStatus);
+
+    const newStatus = await prompt({
+      title: 'Change Enrollment Status',
+      message: `Current status: ${currentStatus || 'Active'}. Select the new status for this student.`,
+      inputLabel: 'New Status',
       inputType: 'select',
-      inputOptions: [
-        { id: 'Transferred', label: 'Transferred (Soft Delete)' },
-        { id: 'Graduated', label: 'Graduated (Soft Delete)' }
-      ],
-      confirmText: 'Move to Archive',
+      inputOptions: options,
+      confirmText: 'Update Status',
       confirmVariant: 'warning'
     });
-
-    if (!status) return;
+    if (!newStatus) return;
 
     const reason = await prompt({
-      title: 'Archiving Reason',
-      message: `Optional: Provide a reason for marking this student as ${status}.`,
-      inputPlaceholder: 'e.g. Transferred to another district, Graduated 2026...',
+      title: 'Reason (Optional)',
+      message: `Provide a reason for changing status to ${newStatus}.`,
+      inputPlaceholder: 'e.g. Transferred to another school, Graduated 2026...',
     });
 
     setLoading(true);
-    try { 
-      await archiveStudent(id, status, reason); 
-      await refresh(); 
-      setSelectedStudent(null); 
-      toast(`Student record archived as ${status}`, 'success');
-    }
-    catch (err) { console.error(err); } finally { setLoading(false); }
+    try {
+      await archiveStudent(id, newStatus, reason || '');
+      await refresh();
+      setSelectedStudent(null);
+      toast(`Student status changed to ${newStatus}`, 'success');
+    } catch (err) {
+      console.error(err);
+      await alert({ title: 'Status Change Failed', message: err.message || 'Could not update student status.', variant: 'danger' });
+    } finally { setLoading(false); }
   };
   const handleTransfer = async (ids, dir) => {
     setLoading(true);
@@ -282,14 +286,19 @@ export default function Students({ currentUser, currentPeriodId }) {
                     <td data-label="Class"><span className="badge badge-info">{s.class}</span></td>
                     <td data-label="Level"><span className={`level-badge ${lb.cls}`}>{lb.ico} {getLevelForGrade(s.class)}</span></td>
                     <td data-label="Enrolment">
-                      <span style={{ 
-                        fontSize: '0.65rem', padding: '2px 8px', borderRadius: 6, fontWeight: 700, textTransform: 'uppercase',
-                        backgroundColor: s.status === 'Active' ? '#ecfdf5' : s.status === 'Graduated' ? '#eff6ff' : '#f3f4f6',
-                        color: s.status === 'Active' ? '#059669' : s.status === 'Graduated' ? '#1d4ed8' : '#4b5563',
-                        border: `1px solid ${s.status === 'Active' ? '#10b98144' : s.status === 'Graduated' ? '#3b82f644' : '#d1d5db'}`,
-                        display: 'inline-flex', alignItems: 'center', gap: 4
-                      }}>
-                        {s.status === 'Active' && <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#10b981' }}></span>}
+                      <span 
+                        onClick={isAdmin ? () => handleStatusChange(s.id, s.status || 'Active') : undefined}
+                        style={{ 
+                          fontSize: '0.65rem', padding: '2px 8px', borderRadius: 6, fontWeight: 700, textTransform: 'uppercase',
+                          backgroundColor: (s.status||'Active') === 'Active' ? '#ecfdf5' : s.status === 'Graduated' ? '#eff6ff' : '#f3f4f6',
+                          color: (s.status||'Active') === 'Active' ? '#059669' : s.status === 'Graduated' ? '#1d4ed8' : '#4b5563',
+                          border: `1px solid ${(s.status||'Active') === 'Active' ? '#10b98144' : s.status === 'Graduated' ? '#3b82f644' : '#d1d5db'}`,
+                          display: 'inline-flex', alignItems: 'center', gap: 4,
+                          cursor: isAdmin ? 'pointer' : 'default'
+                        }}
+                        title={isAdmin ? 'Click to change status' : ''}
+                      >
+                        {(s.status||'Active') === 'Active' && <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#10b981' }}></span>}
                         {s.status || 'Active'}
                       </span>
                     </td>
@@ -315,9 +324,7 @@ export default function Students({ currentUser, currentPeriodId }) {
                       <td data-label="Actions" style={{textAlign:'center'}}>
                         <div style={{display:'inline-flex',gap:4}}>
                           <button className="btn btn-ghost btn-sm" onClick={()=>{setEditingStudent(s);setShowModal(true);}} title="Edit Student"><EditIcon size={14} /></button>
-                          {(s.status || 'Active') === 'Active' && (
-                            <button className="btn btn-ghost btn-sm text-danger" onClick={()=>handleArchive(s.id)} title="Archive/Transfer Student"><DeleteIcon size={14} /></button>
-                          )}
+                          <button className="btn btn-ghost btn-sm text-danger" onClick={()=>handleStatusChange(s.id, s.status || 'Active')} title="Change Status"><DeleteIcon size={14} /></button>
                         </div>
                       </td>
                     )}
