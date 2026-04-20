@@ -10,6 +10,8 @@ export default function TeacherPortalAdmin() {
   const [loading, setLoading] = useState(true);
   const [showPins, setShowPins] = useState({});
   const [editPin, setEditPin] = useState({});
+  const [search, setSearch] = useState('');
+  const [selectedClass, setSelectedClass] = useState('All');
   const [copied, setCopied] = useState(false);
 
   useEffect(() => {
@@ -59,6 +61,21 @@ export default function TeacherPortalAdmin() {
     }
   };
 
+  const filtered = teachers.filter(t => {
+    const q = search.toLowerCase();
+    const matchSearch = !search || (
+      t.name?.toLowerCase().includes(q) || 
+      t.phone?.toLowerCase().includes(q)
+    );
+    // Subjects are usually "Subject - Grade" or "Grade Class"
+    const matchClass = selectedClass === 'All' || (t.subjects || []).some(s => s.includes(selectedClass));
+    return matchSearch && matchClass;
+  });
+
+  const availableClasses = ['All', ...new Set(teachers.flatMap(t => 
+    (t.subjects || []).map(s => s.split(' - ')[1] || s.split(' ')[1]).filter(Boolean)
+  ))].sort();
+
   return (
     <div className="animate-in">
       <div className="page-header">
@@ -101,12 +118,33 @@ export default function TeacherPortalAdmin() {
       {/* Teacher Access Table */}
       <div className="card">
         <div className="card-body" style={{ padding: 0 }}>
-          <div style={{ padding: '16px 24px', borderBottom: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div style={{ padding: '16px 24px', borderBottom: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 12 }}>
             <h3 style={{ margin: 0, fontSize: '1rem', fontWeight: 700 }}>
               <ShieldIcon size={16} style={{ marginRight: 8, verticalAlign: '-2px' }} />
               Staff Access Management
             </h3>
-            <span className="text-muted" style={{ fontSize: '0.82rem' }}>{teachers.length} active teachers</span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <select
+                value={selectedClass}
+                onChange={e => setSelectedClass(e.target.value)}
+                className="form-input"
+                style={{ width: 'auto', minWidth: 120, fontSize: '0.85rem' }}
+              >
+                {availableClasses.map(c => <option key={c} value={c}>{c === 'All' ? 'All Grades' : c}</option>)}
+              </select>
+              <div style={{ position: 'relative' }}>
+                <SearchIcon size={14} color="#94a3b8" style={{ position: 'absolute', left: 10, top: 9 }} />
+                <input
+                  type="text"
+                  placeholder="Search staff..."
+                  value={search}
+                  onChange={e => setSearch(e.target.value)}
+                  className="form-input"
+                  style={{ paddingLeft: 32, width: 200, padding: '6px 12px 6px 32px' }}
+                />
+              </div>
+              <span className="text-muted" style={{ fontSize: '0.82rem' }}>{filtered.length} active teachers</span>
+            </div>
           </div>
           <table className="data-table">
             <thead>
@@ -122,10 +160,10 @@ export default function TeacherPortalAdmin() {
             <tbody>
               {loading ? (
                 <tr><td colSpan="6" style={{ textAlign: 'center', padding: 40 }} className="text-muted">Loading staff...</td></tr>
-              ) : teachers.length === 0 ? (
-                <tr><td colSpan="6" style={{ textAlign: 'center', padding: 40 }} className="text-muted">No active teachers found. Add teachers from the Staff page first.</td></tr>
+              ) : filtered.length === 0 ? (
+                <tr><td colSpan="6" style={{ textAlign: 'center', padding: 40 }} className="text-muted">No teachers found matching your filters.</td></tr>
               ) : (
-                teachers.map((t, i) => (
+                filtered.map((t, i) => (
                   <tr key={t.id}>
                     <td className="text-muted">{i + 1}</td>
                     <td><strong>{t.name}</strong></td>

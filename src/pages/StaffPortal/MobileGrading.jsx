@@ -157,7 +157,8 @@ export default function MobileGrading({ user, onLogout }) {
   if (loading && exams.length === 0) return <Loader />;
 
   return (
-    <div style={{ maxWidth: 600, margin: '0 auto', background: '#f8fafc', minHeight: '100vh', display: 'flex', flexDirection: 'column', fontFamily: 'Inter, sans-serif' }}>
+  return (
+    <div style={{ width: '100%', maxWidth: 600, margin: '0 auto', background: '#f8fafc', minHeight: '100vh', display: 'flex', flexDirection: 'column', fontFamily: 'var(--font)' }}>
       
       {/* Mobile Header Menu */}
       <div style={{ background: 'linear-gradient(135deg, #1e293b 0%, #0f172a 100%)', color: 'white', padding: '24px 20px 32px', borderBottomLeftRadius: 32, borderBottomRightRadius: 32, boxShadow: '0 10px 25px -5px rgba(15, 23, 42, 0.2)' }}>
@@ -247,9 +248,9 @@ export default function MobileGrading({ user, onLogout }) {
               <button 
                 onClick={handleSave} 
                 disabled={saving || loading}
-                style={{ background: '#10b981', color: 'white', border: 'none', padding: '10px 20px', borderRadius: '12px', fontWeight: 800, fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: 8, boxShadow: '0 10px 15px -3px rgba(16, 185, 129, 0.3)', opacity: (saving || loading) ? 0.7 : 1, cursor: 'pointer' }}
+                style={{ background: '#10b981', color: 'white', border: 'none', padding: '10px 16px', borderRadius: '12px', fontWeight: 800, fontSize: '0.82rem', display: 'flex', alignItems: 'center', gap: 6, boxShadow: '0 4px 12px rgba(16, 185, 129, 0.2)', opacity: (saving || loading) ? 0.7 : 1, cursor: 'pointer' }}
               >
-                <SaveIcon size={18} /> {saving ? 'Saving...' : 'Sync Cloud'}
+                <SaveIcon size={16} /> {saving ? 'Saving...' : 'Sync Cloud'}
               </button>
             </div>
 
@@ -274,14 +275,14 @@ export default function MobileGrading({ user, onLogout }) {
                     </div>
 
                     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
-                       <label style={{ fontSize: '0.65rem', fontWeight: 800, color: data.isAbsent ? '#cbd5e1' : '#64748b' }}>SCORE</label>
+                       <label style={{ fontSize: '0.6rem', fontWeight: 800, color: data.isAbsent ? '#cbd5e1' : '#64748b' }}>SCORE</label>
                        <input
                         type="number"
                         inputMode="numeric"
                         disabled={data.isAbsent}
                         value={data.score ?? ''}
                         onChange={(e) => handleMarkChange(s.id, 'score', e.target.value)}
-                        style={{ width: 68, padding: '10px 0', textAlign: 'center', border: '2.5px solid #e2e8f0', borderRadius: '12px', fontSize: '1.25rem', fontWeight: 900, color: data.isAbsent ? '#cbd5e1' : '#0f172a', background: data.isAbsent ? '#f8fafc' : 'white' }}
+                        style={{ width: 60, padding: '12px 0', textAlign: 'center', border: '2px solid #e2e8f0', borderRadius: '12px', fontSize: '1.1rem', fontWeight: 900, color: data.isAbsent ? '#cbd5e1' : '#0f172a', background: data.isAbsent ? '#f8fafc' : 'white' }}
                         placeholder="—"
                       />
                     </div>
@@ -291,13 +292,13 @@ export default function MobileGrading({ user, onLogout }) {
             </div>
 
             {/* Sticky Bottom Save Button */}
-            <div style={{ position: 'fixed', bottom: 20, left: 16, right: 16 }}>
+            <div style={{ position: 'fixed', bottom: 16, left: 16, right: 16, zIndex: 100 }}>
               <button 
                 onClick={handleSave} 
                 disabled={saving || loading}
-                style={{ width: '100%', background: '#3b82f6', color: 'white', border: 'none', padding: '18px', borderRadius: '20px', fontSize: '1.1rem', fontWeight: 900, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, boxShadow: '0 15px 30px -5px rgba(59, 130, 246, 0.4)', cursor: 'pointer' }}
+                style={{ width: '100%', background: 'var(--primary)', color: 'white', border: 'none', padding: '16px', borderRadius: '16px', fontSize: '1rem', fontWeight: 800, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, boxShadow: '0 12px 24px -6px rgba(59, 130, 246, 0.4)', cursor: 'pointer' }}
               >
-                {saving ? 'SYNCHRONIZING...' : <><CheckIcon size={24} /> PUSH MARKS TO CLOUD</>}
+                {saving ? 'SYNCHRONIZING...' : <><CheckIcon size={20} /> PUSH MARKS TO CLOUD</>}
               </button>
             </div>
 

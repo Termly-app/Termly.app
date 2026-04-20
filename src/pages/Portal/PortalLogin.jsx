@@ -39,8 +39,8 @@ export default function PortalLogin({ onLogin }) {
 
   return (
     <div style={{ display: 'flex', minHeight: '100vh', background: 'linear-gradient(135deg, #10B981 0%, #059669 100%)', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
-      <div style={{ background: 'white', borderRadius: 24, width: '100%', maxWidth: 480, boxShadow: '0 20px 40px rgba(0,0,0,0.2)', overflow: 'hidden' }}>
-        <div style={{ background: '#f8fafc', padding: '32px 40px', borderBottom: '1px solid #e2e8f0', textAlign: 'center' }}>
+      <div style={{ background: 'white', borderRadius: 24, width: '100%', maxWidth: 480, boxShadow: '0 20px 40px rgba(0,0,0,0.2)', overflow: 'hidden', margin: 'auto' }}>
+        <div style={{ background: '#f8fafc', padding: '24px 20px', borderBottom: '1px solid #e2e8f0', textAlign: 'center' }}>
           <div style={{ background: '#10B981', color: 'white', width: 48, height: 48, borderRadius: 12, margin: '0 auto 16px', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 12px rgba(16, 185, 129, 0.4)' }}>
             <SchoolIcon size={24} />
           </div>
@@ -48,7 +48,7 @@ export default function PortalLogin({ onLogin }) {
           <p style={{ margin: '8px 0 0', color: '#64748b', fontSize: '0.9rem' }}>Access your academic and financial records.</p>
         </div>
         
-        <form onSubmit={handleSubmit} style={{ padding: '40px' }}>
+        <form onSubmit={handleSubmit} style={{ padding: '24px 20px' }}>
           {error && (
             <div style={{ background: '#fef2f2', color: '#b91c1c', padding: 12, borderRadius: 8, fontSize: '0.85rem', marginBottom: 20, textAlign: 'center', fontWeight: 600 }}>
               {error}

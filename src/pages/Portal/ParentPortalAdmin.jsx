@@ -6,6 +6,7 @@ export default function ParentPortalAdmin() {
   const [profile, setProfile] = useState(null);
   const [students, setStudents] = useState([]);
   const [search, setSearch] = useState('');
+  const [selectedClass, setSelectedClass] = useState('All');
   const [loading, setLoading] = useState(true);
   const [copied, setCopied] = useState(false);
   const [copiedRow, setCopiedRow] = useState(null);
@@ -42,13 +43,17 @@ export default function ParentPortalAdmin() {
   };
 
   const filtered = students.filter(s => {
-    if (!search) return true;
     const q = search.toLowerCase();
-    return s.name?.toLowerCase().includes(q) || 
-           s.admNo?.toLowerCase().includes(q) ||
-           s.adm_no?.toLowerCase().includes(q) ||
-           s.class?.toLowerCase().includes(q);
+    const matchSearch = !search || (
+      s.name?.toLowerCase().includes(q) || 
+      s.admNo?.toLowerCase().includes(q) ||
+      s.adm_no?.toLowerCase().includes(q)
+    );
+    const matchClass = selectedClass === 'All' || s.class === selectedClass;
+    return matchSearch && matchClass;
   });
+
+  const classes = ['All', ...new Set(students.map(s => s.class).filter(Boolean))].sort();
 
   return (
     <div className="animate-in">
@@ -117,6 +122,14 @@ export default function ParentPortalAdmin() {
               Student Directory
             </h3>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <select
+                value={selectedClass}
+                onChange={e => setSelectedClass(e.target.value)}
+                className="form-input"
+                style={{ width: 'auto', minWidth: 120, fontSize: '0.85rem' }}
+              >
+                {classes.map(c => <option key={c} value={c}>{c}</option>)}
+              </select>
               <div style={{ position: 'relative' }}>
                 <SearchIcon size={14} color="#94a3b8" style={{ position: 'absolute', left: 10, top: 9 }} />
                 <input

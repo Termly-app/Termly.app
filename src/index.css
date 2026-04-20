@@ -592,6 +592,54 @@ body {
   }
 }
 
+/* ====== PORTAL MOBILE-FIRST UTILITIES ====== */
+.portal-container {
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 40px 20px;
+}
+
+.portal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 40px;
+  background: var(--bg-card);
+  padding: 20px 32px;
+  border-radius: 16px;
+  box-shadow: var(--shadow);
+}
+
+.portal-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 24px;
+  margin-bottom: 24px;
+}
+
+@media (max-width: 768px) {
+  .portal-container {
+    padding: 20px 16px;
+  }
+  .portal-header {
+    flex-direction: column;
+    gap: 20px;
+    padding: 20px;
+    text-align: center;
+  }
+  .portal-header .avatar-box {
+    margin: 0 auto;
+  }
+  .portal-header button {
+    width: 100%;
+    justify-content: center;
+  }
+  .portal-grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+}
+
 /* Onyx Theme Sidebar Fix for Super Admin mobile */
 @media (max-width: 1024px) {
   .theme-onyx .sidebar {

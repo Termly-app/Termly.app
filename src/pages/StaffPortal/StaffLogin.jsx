@@ -29,7 +29,7 @@ export default function StaffLogin({ onLogin }) {
     <div style={{ display: 'flex', minHeight: '100vh', background: '#0f172a', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
       <div style={{ width: '100%', maxWidth: 360 }}>
         
-        <div style={{ textAlign: 'center', marginBottom: 40 }}>
+        <div style={{ textAlign: 'center', marginBottom: 24 }}>
           <div style={{ width: 64, height: 64, background: '#3b82f6', borderRadius: 16, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px', color: 'white', boxShadow: '0 8px 24px rgba(59, 130, 246, 0.4)' }}>
             <TeacherIcon size={32} />
           </div>
@@ -37,7 +37,7 @@ export default function StaffLogin({ onLogin }) {
           <p style={{ color: '#94a3b8', margin: 0, fontSize: '0.9rem' }}>Quickly enter marks from anywhere.</p>
         </div>
 
-        <div style={{ background: 'white', padding: 32, borderRadius: 24, boxShadow: '0 20px 40px rgba(0,0,0,0.4)', textAlign: 'center' }}>
+        <div style={{ background: 'white', padding: '24px 20px', borderRadius: 24, boxShadow: '0 20px 40px rgba(0,0,0,0.4)', textAlign: 'center' }}>
           <ShieldIcon size={24} color="#94a3b8" style={{ marginBottom: 16 }} />
           <h2 style={{ margin: '0 0 24px', fontSize: '1rem', color: '#0f172a' }}>Enter Access Details</h2>
           

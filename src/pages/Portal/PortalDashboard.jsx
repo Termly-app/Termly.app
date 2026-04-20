@@ -143,18 +143,18 @@ export default function PortalDashboard({ user, onLogout }) {
   };
 
   return (
-    <div style={{ maxWidth: 1000, margin: '0 auto', padding: '40px 20px' }}>
+    <div className="portal-container">
       
       {/* Header */}
-      <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 40, background: 'white', padding: '20px 32px', borderRadius: 16, boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05)' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-          <div style={{ background: '#ecfdf5', color: '#10b981', width: 56, height: 56, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.5rem', fontWeight: 800 }}>
+      <header className="portal-header">
+        <div style={{ display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap', justifyContent: 'center' }}>
+          <div className="avatar-box" style={{ background: '#ecfdf5', color: '#10b981', width: 56, height: 56, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.5rem', fontWeight: 800 }}>
             {user.name.charAt(0)}
           </div>
-          <div>
+          <div style={{ textAlign: 'inherit' }}>
             <div style={{ fontWeight: 800, color: '#10b981', fontSize: '1rem', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: 2 }}>{user.adm_no}</div>
             <h2 style={{ margin: 0, fontSize: '1.4rem', color: '#0f172a', fontWeight: 800 }}>{user.name}</h2>
-            <div style={{ color: '#64748b', fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: 8, marginTop: 4 }}>
+            <div style={{ color: '#64748b', fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: 8, marginTop: 4, justifyContent: 'inherit' }}>
               <span>Class {user.class}</span>
               <span>•</span>
               <span style={{ textTransform: 'capitalize' }}>{user.residence_type.replace('_', ' ')} Student</span>
@@ -163,15 +163,14 @@ export default function PortalDashboard({ user, onLogout }) {
         </div>
         <button 
           onClick={onLogout}
-          style={{ background: 'none', border: '1.5px solid #e2e8f0', padding: '10px 20px', borderRadius: 100, color: '#64748b', fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8, transition: 'all 0.2s' }}
-          onMouseOver={(e) => {e.currentTarget.style.borderColor = '#cbd5e1'; e.currentTarget.style.color = '#0f172a';}}
-          onMouseOut={(e) => {e.currentTarget.style.borderColor = '#e2e8f0'; e.currentTarget.style.color = '#64748b';}}
+          className="btn btn-ghost"
+          style={{ padding: '10px 20px', borderRadius: 100, transition: 'all 0.2s' }}
         >
           Sign Out <LogoutIcon size={16} />
         </button>
       </header>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 24, marginBottom: 24 }}>
+      <div className="portal-grid">
         
         {/* Financial Snapshot */}
         <div style={{ background: 'linear-gradient(135deg, #1e293b 0%, #0f172a 100%)', color: 'white', borderRadius: 20, padding: 32, boxShadow: '0 10px 25px -5px rgba(15, 23, 42, 0.5)', position: 'relative', overflow: 'hidden' }}>
@@ -233,7 +232,7 @@ export default function PortalDashboard({ user, onLogout }) {
         ) : (
           <div style={{ display: 'grid', gap: 16 }}>
             {examResults.map(res => (
-              <div key={res.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px 20px', background: '#f8fafc', borderRadius: 12, border: '1px solid #e2e8f0' }}>
+              <div key={res.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px 20px', background: '#f8fafc', borderRadius: 12, border: '1px solid #e2e8f0', flexWrap: 'wrap', gap: 12 }}>
                 <div>
                   <div style={{ fontWeight: 800, color: '#0f172a' }}>{res.exams?.name}</div>
                   <div style={{ fontSize: '0.8rem', color: '#64748b' }}>{res.exams?.term} • {res.exams?.exam_type}</div>
@@ -274,49 +273,52 @@ export default function PortalDashboard({ user, onLogout }) {
               const isGraded = mySub?.workflow_status === 'released' || (mySub?.grade_numeric !== null && mySub?.grade_numeric !== undefined);
               
               return (
-                <div key={ast.id} style={{ 
-                  padding: 24, 
-                  background: isLocked ? '#f8fafc' : isOverdue ? '#fff1f2' : isGraded ? '#f0fdf4' : '#fffbeb', 
-                  borderRadius: 16, 
-                  border: `1px solid ${isLocked ? '#e2e8f0' : isOverdue ? '#fecdd3' : isGraded ? '#bbf7d0' : '#fde68a'}`,
-                  transition: 'transform 0.2s',
-                  opacity: isLocked ? 0.7 : 1
-                }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 12 }}>
-                    <div>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
-                        <span className="badge" style={{ background: 'rgba(0,0,0,0.05)', color: 'var(--text-main)', fontSize: '0.65rem' }}>{ast.subject}</span>
-                        {isGraded ? (
-                          <span className="badge badge-success">Graded: {mySub.grade_numeric} / {ast.max_score || 100}</span>
-                        ) : mySub ? (
-                          <span className="badge badge-info">Submitted {mySub.is_late ? '(Late)' : ''}</span>
-                        ) : isLocked ? (
-                          <span className="badge" style={{ background: '#e2e8f0', color: '#64748b' }}>Scheduled</span>
-                        ) : isExpired ? (
-                          <span className="badge badge-danger">Closed</span>
-                        ) : isOverdue ? (
-                          <span className="badge badge-danger">Overdue</span>
-                        ) : (
-                          <span className="badge badge-warning">Pending</span>
-                        )}
+                  <div style={{ 
+                    padding: 24, 
+                    background: isLocked ? '#f8fafc' : isOverdue ? '#fff1f2' : isGraded ? '#f0fdf4' : '#fffbeb', 
+                    borderRadius: 16, 
+                    border: `1px solid ${isLocked ? '#e2e8f0' : isOverdue ? '#fecdd3' : isGraded ? '#bbf7d0' : '#fde68a'}`,
+                    transition: 'transform 0.2s',
+                    opacity: isLocked ? 0.7 : 1,
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: 16
+                  }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 12 }}>
+                      <div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4, flexWrap: 'wrap' }}>
+                          <span className="badge" style={{ background: 'rgba(0,0,0,0.05)', color: 'var(--text-main)', fontSize: '0.65rem' }}>{ast.subject}</span>
+                          {isGraded ? (
+                            <span className="badge badge-success">Graded: {mySub.grade_numeric} / {ast.max_score || 100}</span>
+                          ) : mySub ? (
+                            <span className="badge badge-info">Submitted {mySub.is_late ? '(Late)' : ''}</span>
+                          ) : isLocked ? (
+                            <span className="badge" style={{ background: '#e2e8f0', color: '#64748b' }}>Scheduled</span>
+                          ) : isExpired ? (
+                            <span className="badge badge-danger">Closed</span>
+                          ) : isOverdue ? (
+                            <span className="badge badge-danger">Overdue</span>
+                          ) : (
+                            <span className="badge badge-warning">Pending</span>
+                          )}
+                        </div>
+                        <div style={{ fontWeight: 800, color: '#0f172a', fontSize: '1.1rem', display: 'flex', alignItems: 'center', gap: 6 }}>
+                          {isLocked && <ClockIcon size={16} color="#94a3b8" />}
+                          {ast.title}
+                        </div>
                       </div>
-                      <div style={{ fontWeight: 800, color: '#0f172a', fontSize: '1.1rem', display: 'flex', alignItems: 'center', gap: 6 }}>
-                        {isLocked && <ClockIcon size={16} color="#94a3b8" />}
-                        {ast.title}
+                      <div style={{ textAlign: 'inherit', fontSize: '0.8rem', color: '#64748b' }}>
+                         <div style={{ fontWeight: 700, color: isOverdue || isExpired ? 'var(--danger)' : isLocked ? '#94a3b8' : '#64748b' }}>
+                           {isLocked ? `Opens in ${getRemainingTime(openDate)}` : 
+                            isExpired ? 'Closed' : 
+                            isOverdue ? 'Overdue' : 
+                            getRemainingTime(dueDate)}
+                         </div>
+                         <div style={{ fontSize: '0.7rem', opacity: 0.8 }}>
+                           {isLocked ? `Starts ${openDate.toLocaleString()}` : `Due ${dueDate.toLocaleString()}`}
+                         </div>
                       </div>
                     </div>
-                    <div style={{ textAlign: 'right', fontSize: '0.8rem', color: '#64748b' }}>
-                       <div style={{ fontWeight: 700, color: isOverdue || isExpired ? 'var(--danger)' : isLocked ? '#94a3b8' : '#64748b' }}>
-                         {isLocked ? `Opens in ${getRemainingTime(openDate)}` : 
-                          isExpired ? 'Closed' : 
-                          isOverdue ? 'Overdue' : 
-                          getRemainingTime(dueDate)}
-                       </div>
-                       <div style={{ fontSize: '0.7rem', opacity: 0.8 }}>
-                         {isLocked ? `Starts ${openDate.toLocaleString()}` : `Due ${dueDate.toLocaleString()}`}
-                       </div>
-                    </div>
-                  </div>
 
                   <div style={{ fontSize: '0.9rem', color: '#475569', background: 'rgba(255,255,255,0.5)', padding: 16, borderRadius: 12, marginBottom:16, border: '1px solid rgba(0,0,0,0.03)' }}>
                     {isLocked ? 
@@ -325,29 +327,29 @@ export default function PortalDashboard({ user, onLogout }) {
                     }
                   </div>
 
-                  <div style={{ display: 'flex', gap: 10 }}>
+                  <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
                     {!isGraded && !isLocked && !isExpired && (
                       <button 
                         onClick={() => handleStartWork(ast)}
-                        style={{ background: 'var(--primary)', color: 'white', border: 'none', padding: '10px 20px', borderRadius: 8, fontWeight: 700, cursor: 'pointer' }}
+                        style={{ background: 'var(--primary)', color: 'white', border: 'none', padding: '10px 20px', borderRadius: 8, fontWeight: 700, cursor: 'pointer', flex: 1, minWidth: '120px' }}
                       >
                         {mySub ? (ast.submission_type === 'quiz' ? 'Retake Quiz' : 'Resubmit Work') : (ast.submission_type === 'quiz' ? 'Start Quiz' : 'Turn In Work')}
                       </button>
                     )}
                     {isLocked && (
-                      <button disabled style={{ background: '#f1f5f9', color: '#94a3b8', border: 'none', padding: '10px 20px', borderRadius: 8, fontWeight: 700, cursor: 'not-allowed' }}>
+                      <button disabled style={{ background: '#f1f5f9', color: '#94a3b8', border: 'none', padding: '10px 20px', borderRadius: 8, fontWeight: 700, cursor: 'not-allowed', width: '100%' }}>
                         Assignment Locked
                       </button>
                     )}
                     {isExpired && !mySub && (
-                      <button disabled style={{ background: '#fee2e2', color: '#ef4444', border: 'none', padding: '10px 20px', borderRadius: 8, fontWeight: 700, cursor: 'not-allowed' }}>
+                      <button disabled style={{ background: '#fee2e2', color: '#ef4444', border: 'none', padding: '10px 20px', borderRadius: 8, fontWeight: 700, cursor: 'not-allowed', width: '100%' }}>
                         Submissions Closed
                       </button>
                     )}
                     {mySub?.feedback && (
                       <button 
                         onClick={() => alert({ title: 'Teacher Feedback', message: `Feedback for ${ast.title}:\n\n"${mySub.feedback}"`, variant: 'info' })}
-                        style={{ background: 'white', border: '1.5px solid var(--border)', padding: '10px 20px', borderRadius: 8, fontWeight: 700, color: 'var(--text-main)', cursor: 'pointer' }}
+                        style={{ background: 'white', border: '1.5px solid var(--border)', padding: '10px 20px', borderRadius: 8, fontWeight: 700, color: 'var(--text-main)', cursor: 'pointer', flex: 1, minWidth: '120px' }}
                       >
                         View Feedback
                       </button>
