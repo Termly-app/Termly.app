@@ -165,6 +165,7 @@ export async function printAllTeachersTimetables({ school, teachers, period, con
   const days = activeDays || DAYS.slice(0, 5);
   const dayHeaders = days.map(d => `<th>${d}</th>`).join('');
 
+  const pages = await Promise.all(sorted.map(async (teacher, idx) => {
     const teacherSlots = allSlots.filter(s => s.teacher_id === teacher.id);
 
     const lookup = {};
