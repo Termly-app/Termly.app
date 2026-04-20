@@ -362,7 +362,7 @@ function Sidebar({ isOpen, onClose, onLogout, currentUser, subscriptionActive })
         {isAdmin && (
           <>
             <SbSection label="Compliance" />
-            <SbLink to="/compliance/nemis" icon={FlagIcon} label="NEMIS Audit" onClick={onClose} locked={!subscriptionActive && !isPlatformAdmin} />
+            <SbLink to="/compliance/nemis" icon={FlagIcon} label="NEMIS Audit" onClick={onClose} locked={false} />
           </>
         )}
 
@@ -756,11 +756,7 @@ function App() {
                         <Route path="/security" element={<Security currentUser={currentUser} />} />
                         <Route path="/settings" element={<Settings currentUser={currentUser} />} />
                         <Route path="/billing"  element={<Billing currentUser={currentUser} />} />
-                        <Route path="/compliance/nemis" element={
-                          <SectionGate featureSlug="nemis" featureName="NEMIS Export" profile={profile}>
-                            <NEMISDashboard currentUser={currentUser} />
-                          </SectionGate>
-                        } />
+                        <Route path="/compliance/nemis" element={<NEMISDashboard currentUser={currentUser} />} />
                         <Route path="/portal/teacher" element={<SectionGate featureSlug="teacher_portal" featureName="Teacher Portal" profile={profile}><div style={{padding:40}}>Teacher Portal Management (Coming Soon)</div></SectionGate>} />
                         <Route path="/portal/parent"  element={<SectionGate featureSlug="parent_portal"  featureName="Parent Portal"  profile={profile}><div style={{padding:40}}>Parent Portal Management (Coming Soon)</div></SectionGate>} />
                       </>
