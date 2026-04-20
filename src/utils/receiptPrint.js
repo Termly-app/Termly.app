@@ -40,12 +40,25 @@ const PRINT_CSS = `
   .footer { text-align: center; font-size: 8pt; color: #888; margin-top: 12px; padding-top: 8px; border-top: 1px solid #ccc; }
   .stamp-area { border: 1px dashed #ccc; height: 40px; margin-top: 12px; display: flex; align-items: center; justify-content: center; color: #ccc; font-size: 8pt; }
   .watermark { position: fixed; bottom: 20mm; right: 20mm; opacity: .06; font-size: 60pt; font-weight: bold; transform: rotate(-35deg); pointer-events: none; }
+  .system-footer { position: fixed; bottom: 5mm; left: 15mm; display: flex; align-items: center; color: #000; z-index: 9999; }
   @media print {
     @page { margin: 0; }
     body { margin: 8mm; }
     .no-print { display: none !important; }
     .watermark { opacity: .04; }
+    .system-footer svg { fill: #000 !important; stroke: #000 !important; }
   }
+`;
+
+const SHULESOFT_FOOTER = `
+  <div class="system-footer">
+    <svg width="22" height="22" viewBox="0 0 13 13" fill="none" aria-label="ShuleSoft">
+      <rect x="1" y="1" width="4.5" height="4.5" rx="1" fill="#000"/>
+      <rect x="7.5" y="1" width="4.5" height="4.5" rx="1" fill="#000" fill-opacity="0.4"/>
+      <rect x="1" y="7.5" width="4.5" height="4.5" rx="1" fill="#000" fill-opacity="0.4"/>
+      <rect x="7.5" y="7.5" width="4.5" height="4.5" rx="1" fill="#000" fill-opacity="0.2"/>
+    </svg>
+  </div>
 `;
 
 /**
@@ -53,7 +66,7 @@ const PRINT_CSS = `
  */
 function openPrintWindow(html) {
   const win = window.open('', '_blank', 'width=600,height=800');
-  win.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><style>${PRINT_CSS}</style></head><body>${html}</body></html>`);
+  win.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><style>${PRINT_CSS}</style></head><body>${html}${SHULESOFT_FOOTER}</body></html>`);
   win.document.close();
   // Small delay so styles load before print dialog
   setTimeout(() => {
@@ -118,10 +131,13 @@ export function printReceipt({ school, student, payment, feeItems = [] }) {
       <div class="watermark">PAID</div>
 
       <!-- School header -->
-      <div class="school-header">
-        <div class="school-name">${school?.name || 'School Name'}</div>
-        <div class="school-sub">${school?.location || ''}</div>
-        ${school?.phone ? `<div class="school-sub">📞 ${school.phone}</div>` : ''}
+      <div class="school-header" style="display:flex; align-items:center; justify-content:center; gap: 15px; border-bottom: 2px solid #000; padding-bottom: 8px; margin-bottom: 10px;">
+        ${school?.logo ? `<img src="${school.logo}" alt="School Logo" style="height: 50px; object-fit: contain;" />` : ''}
+        <div style="text-align: ${school?.logo ? 'left' : 'center'}">
+          <div class="school-name">${school?.name || 'School Name'}</div>
+          <div class="school-sub">${school?.location || ''}</div>
+          ${school?.phone ? `<div class="school-sub">📞 ${school.phone}</div>` : ''}
+        </div>
       </div>
 
       <div class="doc-title">Official Payment Receipt</div>
@@ -217,10 +233,13 @@ export function printFeeStatement({ school, student, payments = [], feeStructure
   const html = `
     <div class="statement">
       <!-- School header -->
-      <div class="school-header">
-        <div class="school-name">${school?.name || 'School Name'}</div>
-        <div class="school-sub">${school?.location || ''}</div>
-        ${school?.phone ? `<div class="school-sub">📞 ${school.phone}</div>` : ''}
+      <div class="school-header" style="display:flex; align-items:center; justify-content:center; gap: 15px; border-bottom: 2px solid #000; padding-bottom: 8px; margin-bottom: 10px;">
+        ${school?.logo ? `<img src="${school.logo}" alt="School Logo" style="height: 50px; object-fit: contain;" />` : ''}
+        <div style="text-align: ${school?.logo ? 'left' : 'center'}">
+          <div class="school-name">${school?.name || 'School Name'}</div>
+          <div class="school-sub">${school?.location || ''}</div>
+          ${school?.phone ? `<div class="school-sub">📞 ${school.phone}</div>` : ''}
+        </div>
       </div>
 
       <div class="doc-title">Student Fee Statement${term ? ` — ${term}` : ''}</div>

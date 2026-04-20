@@ -221,7 +221,8 @@ function ReceiptModal({ receipt, onClose, profile }) {
         name: profile?.schoolName || '',
         location: profile?.address || 'Nairobi, Kenya',
         phone: profile?.phone || '',
-        email: profile?.email || ''
+        email: profile?.email || '',
+        logo: profile?.logo
       },
       student: {
         name: receipt.studentName,
