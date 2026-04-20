@@ -2776,7 +2776,7 @@ export async function checkIsPlatformAdmin(email) {
 export async function logPlatformActivity(type, description, schoolId = null) {
   try {
     const { error } = await supabase
-      .from('platform_activity')
+      .from('platform_activity_logs')
       .insert({
         type,
         description,
@@ -2794,7 +2794,7 @@ export async function logPlatformActivity(type, description, schoolId = null) {
  */
 export async function getPlatformActivities(limit = 50) {
   const { data, error } = await supabase
-    .from('platform_activity')
+    .from('platform_activity_logs')
     .select('id, type, description, actor_email, created_at, schools(name)')
     .order('created_at', { ascending: false })
     .limit(limit);

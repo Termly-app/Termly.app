@@ -302,7 +302,7 @@ export default function Students({ currentUser, currentPeriodId }) {
                         <div style={{display:'inline-flex',gap:4}}>
                           <button className="btn btn-ghost btn-sm" onClick={()=>{setEditingStudent(s);setShowModal(true);}}><EditIcon size={14} /></button>
                           {s.status === 'Active' && (
-                            <button className="btn btn-ghost btn-sm text-danger" onClick={()=>handleArchive(s.id)} title="Archive Student"><TrashIcon size={14} /></button>
+                            <button className="btn btn-ghost btn-sm text-danger" onClick={()=>handleArchive(s.id)} title="Archive Student"><DeleteIcon size={14} /></button>
                           )}
                         </div>
                       </td>
