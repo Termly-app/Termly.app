@@ -140,7 +140,7 @@ export default function NEMISDashboard({ currentUser }) {
         </div>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 320px', gap: 20, alignItems: 'start' }}>
+      <div className="report-grid-container" style={{ display: 'grid', gridTemplateColumns: '1fr 320px', gap: 20, alignItems: 'start' }}>
         
         {/* Compliance Issues List */}
         <div className="card">
@@ -347,9 +347,13 @@ export default function NEMISDashboard({ currentUser }) {
             display: none !important;
           }
           
-          .main-content { margin: 0 !important; padding: 0 !important; width: 100% !important; max-width: none !important; }
-          .page-content { padding: 0 !important; width: 100% !important; max-width: none !important; }
-          .app-layout { display: block !important; }
+          .main-content, .page-content, .report-grid-container, .app-layout { 
+            margin: 0 !important; 
+            padding: 0 !important; 
+            width: 100% !important; 
+            max-width: none !important; 
+            display: block !important;
+          }
           
           .card { 
             box-shadow: none !important; 
@@ -361,41 +365,50 @@ export default function NEMISDashboard({ currentUser }) {
           }
           .print-only { display: block !important; }
 
-          /* Header Adjustments */
-          .print-only h1 { font-size: 2rem !important; }
-          .print-only h2 { font-size: 1.1rem !important; }
-          .print-only div { font-size: 0.9rem !important; }
+          /* Header Adjustments - Large and clear */
+          .print-only h1 { font-size: 2.4rem !important; margin-bottom: 8px !important; }
+          .print-only h2 { font-size: 1.3rem !important; color: #000 !important; }
+          .print-only div { font-size: 1rem !important; }
 
-          /* Table styling for print - Force Full Width and Larger Text */
+          /* Table styling for print - BIG and BOLD */
           .data-table { 
-            font-size: 0.95rem !important; 
+            font-size: 1.1rem !important; 
             width: 100% !important;
             border-collapse: collapse !important;
             border: 2px solid #000 !important;
-            margin-top: 10px !important;
+            margin-top: 20px !important;
           }
           .data-table th { 
-            background: #f0f0f0 !important; 
+            background: #eee !important; 
             color: #000 !important; 
             text-align: left !important;
-            font-size: 1rem !important;
-            border: 1px solid #000 !important;
+            font-size: 1.2rem !important;
+            border: 2px solid #000 !important;
+            padding: 12px 15px !important;
           }
           .data-table td { 
-            padding: 10px 14px !important; 
+            padding: 12px 15px !important; 
             border: 1px solid #000 !important;
             color: #000 !important;
+            vertical-align: top !important;
           }
           
-          /* Make badges look like plain text with borders for print legibility */
+          /* Student name should be prominent */
+          .data-table div[style*="font-weight: 600"] {
+            font-size: 1.2rem !important;
+            font-weight: 800 !important;
+          }
+
+          /* Issue labels - Clear and distinct */
           .data-table span[style*="background"] {
-            background: transparent !important;
-            border: 1px solid #999 !important;
+            background: #fff !important;
+            border: 1px solid #000 !important;
             color: #000 !important;
-            padding: 2px 6px !important;
-            font-size: 0.8rem !important;
+            padding: 4px 8px !important;
+            font-size: 0.9rem !important;
             display: inline-block !important;
-            margin: 2px !important;
+            margin: 3px !important;
+            border-radius: 4px !important;
           }
 
           @page {
