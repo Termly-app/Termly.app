@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import { getStudents, addStudent, updateStudent, archiveStudent, getFees, transferStudents, getClassList, getCBC, getCoreCompetencies, getPrintHeader, getSchoolProfile, TERM_FEE } from '../data/store';
 import { sanitizeName, sanitizeString } from '../utils/sanitize';
 import Loader from '../components/Common/Loader';
@@ -49,7 +50,22 @@ export default function Students({ currentUser, currentPeriodId }) {
       setStudents(sData); setFees(fData); setProfile(pData);
     } catch (err) { console.error(err); } finally { setLoading(false); }
   };
+  const location = useLocation();
+
   useEffect(() => { loadData(); }, []);
+
+  // Auto-open edit modal when navigating from NEMIS Audit "Fix" button
+  useEffect(() => {
+    if (location.state?.editStudentId && students.length > 0) {
+      const targetStudent = students.find(s => s.id === location.state.editStudentId);
+      if (targetStudent) {
+        setEditingStudent(targetStudent);
+        setShowModal(true);
+        // Clear state so it doesn't re-trigger on re-render
+        window.history.replaceState({}, document.title);
+      }
+    }
+  }, [location.state, students]);
   const refresh = async () => {
     try { const [s, f] = await Promise.all([getStudents(), getFees()]); setStudents(s); setFees(f); }
     catch (err) { console.error(err); }
