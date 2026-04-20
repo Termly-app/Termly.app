@@ -106,7 +106,7 @@ export default function NEMISDashboard({ currentUser }) {
       </div>
 
       {/* Summary Stats Row */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 16, marginBottom: 24 }}>
+      <div className="no-print" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 16, marginBottom: 24 }}>
         <div className="card" style={{ padding: 20, borderLeft: '4px solid var(--primary)' }}>
           <div style={{ color: 'var(--text-light)', fontSize: '0.7rem', fontWeight: 800, textTransform: 'uppercase', marginBottom: 6 }}>Total Enrollment</div>
           <div style={{ fontSize: '1.8rem', fontWeight: 900, color: 'var(--text-main)' }}>{audit.total}</div>
@@ -144,7 +144,7 @@ export default function NEMISDashboard({ currentUser }) {
         
         {/* Compliance Issues List */}
         <div className="card">
-          <div className="card-header" style={{ flexDirection: 'column', gap: 10, alignItems: 'stretch' }}>
+          <div className="card-header no-print" style={{ flexDirection: 'column', gap: 10, alignItems: 'stretch' }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                 <h3 style={{ margin: 0 }}>Learner Readiness Audit</h3>
@@ -177,16 +177,16 @@ export default function NEMISDashboard({ currentUser }) {
           </div>
 
           {/* Print header (only visible when printing) */}
-          <div className="print-only" style={{ padding: '16px 20px', borderBottom: '2px solid #000' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div className="print-only" style={{ padding: '0 0 20px', borderBottom: '1px solid #000', marginBottom: 20 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
               <div>
-                <h2 style={{ margin: 0, fontSize: '1.1rem' }}>{profile?.schoolName || 'School'}</h2>
-                <p style={{ margin: '2px 0 0', fontSize: '0.8rem', color: '#666' }}>NEMIS Compliance Audit Report</p>
+                <h1 style={{ margin: 0, fontSize: '1.5rem', fontWeight: 900, letterSpacing: '-0.02em' }}>{profile?.schoolName || 'School'}</h1>
+                <h2 style={{ margin: '4px 0 0', fontSize: '0.9rem', color: '#333', textTransform: 'uppercase', fontWeight: 700 }}>NEMIS Data Compliance Report</h2>
               </div>
-              <div style={{ textAlign: 'right', fontSize: '0.75rem', color: '#666' }}>
-                <div>Date: {new Date().toLocaleDateString()}</div>
-                <div>Class: {classFilter !== 'All' ? classFilter : 'All Classes'}</div>
-                <div>Issues Found: {filteredIssues.length}</div>
+              <div style={{ textAlign: 'right', fontSize: '0.75rem', color: '#444' }}>
+                <div><strong>Class:</strong> {classFilter !== 'All' ? classFilter : 'All Classes'}</div>
+                <div><strong>Issues:</strong> {filteredIssues.length} Students</div>
+                <div><strong>Date:</strong> {new Date().toLocaleDateString()}</div>
               </div>
             </div>
           </div>
@@ -194,11 +194,10 @@ export default function NEMISDashboard({ currentUser }) {
           <table className="data-table">
             <thead>
               <tr>
-                <th style={{ width: 30 }}>#</th>
-                <th>Student Name</th>
-                <th>Adm No</th>
+                <th className="no-print" style={{ width: 30 }}>#</th>
+                <th>Student</th>
                 <th>Class</th>
-                <th>Identified Issues</th>
+                <th>Missing Details</th>
                 <th style={{ textAlign: 'right' }} className="no-print">Action</th>
               </tr>
             </thead>
@@ -206,32 +205,29 @@ export default function NEMISDashboard({ currentUser }) {
               {filteredIssues.length === 0 ? (
                 <tr><td colSpan="6" style={{ padding: 40, textAlign: 'center', color: 'var(--text-light)' }}>
                   {classFilter !== 'All' 
-                    ? `No compliance issues found for ${classFilter}. All students in this class are NEMIS-ready!`
-                    : 'No compliance issues found. All students are ready for NEMIS export!'}
+                    ? `No compliance issues found for ${classFilter}.`
+                    : 'No compliance issues found.'}
                 </td></tr>
               ) : filteredIssues.map((s, idx) => (
                 <tr key={s.id}>
-                  <td style={{ color: 'var(--text-light)', fontSize: '0.7rem' }}>{idx + 1}</td>
+                  <td className="no-print" style={{ color: 'var(--text-light)', fontSize: '0.7rem' }}>{idx + 1}</td>
                   <td>
-                    <div style={{ fontWeight: 600, color: 'var(--text-main)' }}>{s.name}</div>
+                    <div style={{ fontWeight: 600, color: '#000' }}>{s.name}</div>
+                    <div className="print-only" style={{ fontSize: '0.65rem', color: '#666' }}>Adm: {s.admNo}</div>
                   </td>
-                  <td><code style={{ fontSize: '0.72rem', color: 'var(--text-light)' }}>{s.admNo}</code></td>
+                  <td className="no-print"><code style={{ fontSize: '0.72rem', color: '#444' }}>{s.admNo}</code></td>
                   <td><span className="badge badge-ghost">{s.class}</span></td>
                   <td>
                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
                       {s.issues.map((iss, i) => (
-                        <span key={i} style={{ fontSize: '0.6rem', padding: '2px 6px', borderRadius: 4, background: '#fff7ed', color: '#c2410c', border: '1px solid #ffedd5', fontWeight: 600 }}>
+                        <span key={i} style={{ fontSize: '0.65rem', padding: '1px 5px', borderRadius: 3, background: '#fef2f2', color: '#991b1b', border: '1px solid #fecaca', fontWeight: 600 }}>
                           {iss}
                         </span>
                       ))}
                     </div>
                   </td>
                   <td style={{ textAlign: 'right' }} className="no-print">
-                    <button 
-                      className="btn btn-ghost btn-sm" 
-                      onClick={() => handleFix(s.id)}
-                      title="Open student edit form to fix missing data"
-                    >
+                    <button className="btn btn-ghost btn-sm" onClick={() => handleFix(s.id)}>
                       <EditIcon size={14} /> Fix
                     </button>
                   </td>
@@ -239,16 +235,14 @@ export default function NEMISDashboard({ currentUser }) {
               ))}
             </tbody>
           </table>
-          {filteredIssues.length > 0 && (
-            <div className="print-only" style={{ padding: '12px 20px', borderTop: '1px solid #ccc', fontSize: '0.7rem', color: '#666', display: 'flex', justifyContent: 'space-between' }}>
-              <span>Total: {filteredIssues.length} student(s) with data gaps</span>
-              <span>Printed: {new Date().toLocaleString()}</span>
-            </div>
-          )}
+          <div className="print-only" style={{ marginTop: 30, paddingTop: 10, borderTop: '1px solid #eee', fontSize: '0.7rem', color: '#999', display: 'flex', justifyContent: 'space-between' }}>
+            <span>Generated by ShuleSoft Platform Audit</span>
+            <span>Page 1 of 1</span>
+          </div>
         </div>
 
         {/* Breakdown Sidebar */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }} className="no-print">
           
           {/* Class Breakdown */}
           <div className="card" style={{ padding: 20 }}>
@@ -342,39 +336,46 @@ export default function NEMISDashboard({ currentUser }) {
 
       {/* Print Styles */}
       <style>{`
+        .no-print { display: block; }
         .print-only { display: none !important; }
 
         @media print {
-          /* Hide everything except the report */
+          /* Force hiding no-print elements */
+          .no-print, 
           .sidebar, .topbar, .mobile-toggle, .sidebar-overlay,
-          .page-header, .no-print, .sb-footer, .sb-brand {
+          .page-header, .sb-footer, .sb-brand, .no-print * {
             display: none !important;
           }
+          
           .main-content { margin: 0 !important; padding: 0 !important; }
           .page-content { padding: 0 !important; }
           .app-layout { display: block !important; }
-          .card { box-shadow: none !important; border: 1px solid #ddd !important; break-inside: avoid; }
-          .print-only { display: flex !important; }
-
-          /* Layout adjustments */
-          .nemis-report > div[style*="grid-template-columns"] {
-            display: block !important;
-          }
-          .nemis-report > div[style*="grid-template-columns"]:first-of-type {
-            display: grid !important;
-          }
+          .card { box-shadow: none !important; border: none !important; padding: 0 !important; }
+          .print-only { display: block !important; }
 
           /* Table styling for print */
-          .data-table { font-size: 0.75rem !important; }
-          .data-table th, .data-table td { padding: 6px 8px !important; }
-          .badge { border: 1px solid #ccc !important; }
-
+          .data-table { 
+            font-size: 0.8rem !important; 
+            width: 100% !important;
+            border-collapse: collapse !important;
+            border: 1px solid #eee !important;
+          }
+          .data-table th { background: #f9f9f9 !important; color: #000 !important; text-align: left !important; }
+          .data-table th, .data-table td { 
+            padding: 8px 12px !important; 
+            border: 1px solid #eee !important;
+          }
+          
           @page {
-            size: A4 landscape;
+            size: A4;
             margin: 15mm;
           }
         }
       `}</style>
+    </div>
+  );
+}
+
     </div>
   );
 }
