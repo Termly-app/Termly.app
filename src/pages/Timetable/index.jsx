@@ -476,10 +476,12 @@ export default function Timetable({ currentUser, currentPeriodId, periods = [] }
 
           {view === 'teacher' && (
             <button className="tt-btn" onClick={async () => await printTeacherTimetable({
-              school: { name: currentUser?.schoolName }, teacher: teacherList.find(t => t.id === selTeacherId),
-              period: activePeriod, config, slots, activeDays
+              school: { name: currentUser?.schoolName }, 
+              teacher: teachers.find(t => t.id === selTeacher),
+              period: activePeriod, config, slots: activeSlots, activeDays
             })}><PrintIcon size={14} /> Print Timetable</button>
           )}
+
 
           {view === 'master' && isAdmin && (
             <div style={{ position: 'relative' }}>

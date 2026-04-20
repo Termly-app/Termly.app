@@ -1,30 +1,28 @@
 import { getPrintHeader, getPrintFooter } from '../data/store';
 
 const PRINT_CSS = `
+  @page { size: landscape; margin: 10mm; }
   * { box-sizing:border-box; margin:0; padding:0; }
-  body { font-family:Arial,sans-serif; font-size:10pt; background:#fff; color:#000; -webkit-print-color-adjust:exact; print-color-adjust:exact; }
-  .wrap { padding:15mm; }
-  .school-header-wrap { margin-bottom: 20px; }
-  .doc-info { margin-bottom: 12px; }
-  .doc-title     { font-size:16pt; font-weight:800; color:#1e3a5f; text-transform:uppercase; letter-spacing:0.05em; margin:0; }
-  .doc-sub       { font-size:11pt; color:#475569; font-weight:600; margin-top:2px; }
+  body { font-family:Arial,sans-serif; font-size:10pt; background:#fff; color:#000; -webkit-print-color-adjust:exact; print-color-adjust:exact; margin: 0; }
+  .wrap { padding:10mm; width: 100%; }
+  .school-header-wrap { margin-bottom: 15px; }
+  .doc-info { margin-bottom: 12px; display: flex; justify-content: space-between; align-items: flex-end; border-bottom: 2px solid #1e3a5f; padding-bottom: 8px; }
+  .doc-title     { font-size:14pt; font-weight:800; color:#1e3a5f; text-transform:uppercase; letter-spacing:0.05em; margin:0; }
+  .doc-sub       { font-size:10pt; color:#475569; font-weight:600; }
 
-  table  { width:100%; border-collapse:collapse; margin-top:10px; }
-  th     { background:#1a1a2e; color:#fff; padding:7px 6px; font-size:9pt; text-align:center; border:1px solid #000; }
-  th.time-th { text-align:left; padding-left:8px; width:72px; }
-  td     { padding:5px 5px; border:1px solid #ccc; vertical-align:top; min-height:36px; font-size:9pt; }
-  td.time-cell  { background:#f5f5f5; font-weight:bold; font-size:8pt; text-align:center; color:#333; width:72px; vertical-align:middle; }
-  td.break-cell { background:#f0f0f0; text-align:center; color:#888; font-style:italic; font-size:8pt; }
-  td.double-first  { border-bottom:2px dashed #aaa; }
-  td.double-second { border-top:none; background:#fafafa; }
-  .cell-subject { font-weight:bold; font-size:9pt; }
-  .cell-teacher { font-size:8pt; color:#555; margin-top:2px; }
-  .cell-class   { font-size:8pt; color:#444; font-style:italic; margin-top:2px; }
+  table  { width:100%; border-collapse:collapse; margin-top:8px; table-layout: fixed; }
+  th     { background:#1e3a5f; color:#fff; padding:6px 4px; font-size:8pt; text-align:center; border:1px solid #000; }
+  th.time-th { width: 85px; }
+  td     { padding:4px 4px; border:1px solid #000; vertical-align:top; min-height:45px; font-size:8pt; word-wrap: break-word; }
+  td.time-cell  { background:#f8fafc; font-weight:bold; font-size:8pt; text-align:center; color:#333; width: 85px; vertical-align:middle; border-right: 2px solid #000; }
+  td.break-cell { background:#f1f5f9; text-align:center; color:#64748b; font-style:italic; font-size:8pt; vertical-align:middle; font-weight: 600; }
+  
+  .cell-subject { font-weight:bold; font-size:9pt; margin-bottom: 2px; }
+  .cell-teacher { font-size:7.5pt; color:#334155; font-weight: 600; }
+  .cell-class   { font-size:7.5pt; color:#334155; font-weight: 600; }
 
-  .double-badge { display:inline-block; padding:0 4px; background:#e0e0e0; border-radius:3px; font-size:7pt; font-weight:bold; margin-left:4px; vertical-align:middle; }
-  .double-cont  { font-size:8pt; color:#999; font-style:italic; }
-  .footer { text-align:center; font-size:8pt; color:#aaa; margin-top:14px; padding-top:8px; border-top:1px solid #ddd; }
-  @media print { @page { margin:0; size:landscape; } body { margin:8mm; } }
+  .footer { display: flex; justify-content: space-between; font-size:7pt; color:#64748b; margin-top:12px; padding-top:6px; border-top:1px solid #e2e8f0; }
+  .print-date { font-style: italic; }
 `;
 
 function openPrint(html) {
@@ -67,9 +65,8 @@ export async function printClassTimetable({ school, classGrade, stream, period, 
       const contLabel = s.is_double_second ? '<div class="double-cont">↑ continued</div>' : '';
 
       return `<td class="${dblClass}">
-        <div class="cell-subject">${s.subject}${dblBadge}</div>
-        ${s.teachers?.name ? `<div class="cell-teacher">Teacher: ${s.teachers.name}</div>` : ''}
-        ${contLabel}
+        <div class="cell-subject">${s.subject}${s.is_double_first ? ' <small>(x2)</small>' : ''}</div>
+        ${s.teachers?.staff_code && !s.is_double_second ? `<div class="cell-teacher">${s.teachers.staff_code}</div>` : ''}
       </td>`;
     }).join('');
 
@@ -91,7 +88,10 @@ export async function printClassTimetable({ school, classGrade, stream, period, 
       <thead><tr><th class="time-th">Time</th>${dayHeaders}</tr></thead>
       <tbody>${rows}</tbody>
     </table>
-    ${footer}
+    <div class="footer">
+      <div>${footer}</div>
+      <div class="print-date">Generated: ${new Date().toLocaleString('en-GB', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</div>
+    </div>
   </div>`;
 
   openPrint(html);
