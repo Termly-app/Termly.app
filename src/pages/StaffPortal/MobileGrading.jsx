@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { 
   getSchoolProfile, getExams, getExamPapers, 
-  getExamMarksForPaper, saveExamMarks, getClassList 
+  getExamMarksForPaper, saveExamMarks, getClassList,
+  getTeacherWorkloadSummary, getTeacherTimetable, getTimetableConfig, getPeriods
 } from '../../data/store';
 import { 
   BookIcon, CheckIcon, SignOutIcon, SaveIcon, UserIcon, 
@@ -23,17 +24,41 @@ export default function MobileGrading({ user, onLogout }) {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
+  // Timetable/Workload stats
+  const [workload, setWorkload] = useState(0);
+  const [schedule, setSchedule] = useState([]);
+  const [config, setConfig] = useState([]);
+  const [showSchedule, setShowSchedule] = useState(false);
+  const [activePeriod, setActivePeriod] = useState(null);
+
+
   useEffect(() => {
-    loadExams();
+    loadInitialData();
   }, []);
 
-  const loadExams = async () => {
+  const loadInitialData = async () => {
     try {
       setLoading(true);
-      const activeExams = await getExams({ status: 'open' });
+      const [activeExams, allPeriods, profile] = await Promise.all([
+        getExams({ status: 'open' }),
+        getPeriods(),
+        getSchoolProfile()
+      ]);
+      
+      const current = allPeriods.find(p => p.is_active) || allPeriods[0];
+      setActivePeriod(current);
       setExams(activeExams);
-      if (activeExams.length > 0) {
-        setSelectedExamId(activeExams[0].id);
+      if (activeExams.length > 0) setSelectedExamId(activeExams[0].id);
+
+      if (current && profile?.id) {
+        const [w, s, c] = await Promise.all([
+          getTeacherWorkloadSummary(profile.id, current.id, user.id),
+          getTeacherTimetable(profile.id, current.id, user.id),
+          getTimetableConfig(profile.id, current.id)
+        ]);
+        setWorkload(w);
+        setSchedule(s);
+        setConfig(c);
       }
     } catch (err) {
       console.error(err);
@@ -41,6 +66,7 @@ export default function MobileGrading({ user, onLogout }) {
       setLoading(false);
     }
   };
+
 
   useEffect(() => {
     if (selectedExamId) {
@@ -144,6 +170,22 @@ export default function MobileGrading({ user, onLogout }) {
             <SignOutIcon size={20} />
           </button>
         </div>
+
+        {/* Workload Stats */}
+        <div style={{ display: 'flex', gap: 12, marginBottom: 20 }}>
+          <div style={{ flex: 1, background: 'rgba(255,255,255,0.1)', padding: '16px', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.05)' }}>
+            <div style={{ fontSize: '0.65rem', color: '#94a3b8', textTransform: 'uppercase', fontWeight: 800 }}>Weekly Workload</div>
+            <div style={{ fontSize: '1.4rem', fontWeight: 900, color: '#fbbf24' }}>{workload} <span style={{ fontSize: '0.8rem', fontWeight: 600, color: '#94a3b8' }}>Periods</span></div>
+          </div>
+          <button 
+            onClick={() => setShowSchedule(true)}
+            style={{ flex: 1, background: 'var(--primary)', color: 'white', border: 'none', padding: '16px', borderRadius: '16px', display: 'flex', flexDirection: 'column', justifyContent: 'center', cursor: 'pointer', boxShadow: '0 8px 20px -5px rgba(59, 130, 246, 0.4)' }}
+          >
+            <div style={{ fontSize: '0.65rem', textTransform: 'uppercase', fontWeight: 800, opacity: 0.8 }}>My Timetable</div>
+            <div style={{ fontSize: '1rem', fontWeight: 800, display: 'flex', alignItems: 'center', gap: 6 }}>View Schedule <ChevronDownIcon size={14} /></div>
+          </button>
+        </div>
+
 
         {/* Wizard Selectors */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
@@ -262,6 +304,59 @@ export default function MobileGrading({ user, onLogout }) {
           </div>
         )}
       </div>
+
+      {/* Timetable Modal (Mobile View) */}
+      {showSchedule && (
+        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'white', zIndex: 9999, display: 'flex', flexDirection: 'column', animation: 'sIn 0.3s ease-out' }}>
+          <div style={{ padding: '24px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #f1f5f9' }}>
+            <div>
+              <div style={{ fontSize: '1.2rem', fontWeight: 900, color: '#0f172a' }}>My Weekly Schedule</div>
+              <div style={{ fontSize: '0.75rem', color: '#64748b', fontWeight: 600 }}>{activePeriod?.term} {activePeriod?.year}</div>
+            </div>
+            <button onClick={() => setShowSchedule(false)} style={{ background: '#f1f5f9', border: 'none', color: '#0f172a', padding: '12px', borderRadius: '12px', cursor: 'pointer' }}>
+              <SignOutIcon size={20} />
+            </button>
+          </div>
+
+          <div style={{ flex: 1, overflowY: 'auto', padding: '16px' }}>
+            {['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'].map(day => {
+              const dayLessons = schedule.filter(s => s.day_of_week === day).sort((a,b) => a.slot_index - b.slot_index);
+              if (dayLessons.length === 0) return null;
+
+              return (
+                <div key={day} style={{ marginBottom: 24 }}>
+                  <div style={{ fontSize: '0.75rem', fontWeight: 900, textTransform: 'uppercase', color: 'var(--primary)', letterSpacing: '0.05em', marginBottom: 12, display: 'flex', alignItems: 'center', gap: 8 }}>
+                    {day} <div style={{ flex: 1, height: 1, background: 'var(--border)' }} />
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                    {dayLessons.map(s => {
+                      const time = config.find(c => c.slot_index === s.slot_index);
+                      return (
+                        <div key={s.id} style={{ display: 'flex', gap: 16, background: '#f8fafc', padding: 12, borderRadius: 16, border: '1px solid #f1f5f9' }}>
+                          <div style={{ width: 70, textAlign: 'center' }}>
+                            <div style={{ fontSize: '0.85rem', fontWeight: 900, color: '#0f172a' }}>{time?.start_time}</div>
+                            <div style={{ fontSize: '0.65rem', fontWeight: 700, color: '#94a3b8' }}>TO {time?.end_time}</div>
+                          </div>
+                          <div style={{ flex: 1 }}>
+                            <div style={{ fontSize: '0.95rem', fontWeight: 750, color: '#0f172a' }}>{s.subject}</div>
+                            <div style={{ fontSize: '0.75rem', fontWeight: 600, color: '#64748b' }}>{s.class_grade} {s.stream || ''}</div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              );
+            })}
+            {schedule.length === 0 && (
+              <div style={{ textAlign: 'center', padding: '60px 20px', color: '#94a3b8' }}>
+                <CalendarIcon size={48} color="#e2e8f0" style={{ marginBottom: 16 }} />
+                <div>No lessons assigned to you yet for this term.</div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
       <style>{`
         @keyframes sIn {

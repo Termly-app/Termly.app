@@ -1,17 +1,14 @@
-/**
- * timetablePrint.js — Print class timetable or teacher timetable
- * Supports double lessons (two consecutive slots for the same subject)
- * Place at: src/utils/timetablePrint.js
- */
+import { getPrintHeader, getPrintFooter } from '../data/store';
 
 const PRINT_CSS = `
   * { box-sizing:border-box; margin:0; padding:0; }
-  body { font-family:Arial,sans-serif; font-size:10pt; background:#fff; color:#000; }
-  .wrap { padding:12mm; }
-  .school-header { text-align:center; border-bottom:2px solid #000; padding-bottom:8px; margin-bottom:12px; }
-  .school-name   { font-size:14pt; font-weight:bold; text-transform:uppercase; }
-  .doc-title     { font-size:11pt; font-weight:bold; text-transform:uppercase; letter-spacing:.06em; margin:4px 0 2px; }
-  .doc-sub       { font-size:9pt; color:#555; }
+  body { font-family:Arial,sans-serif; font-size:10pt; background:#fff; color:#000; -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+  .wrap { padding:15mm; }
+  .school-header-wrap { margin-bottom: 20px; }
+  .doc-info { margin-bottom: 12px; }
+  .doc-title     { font-size:16pt; font-weight:800; color:#1e3a5f; text-transform:uppercase; letter-spacing:0.05em; margin:0; }
+  .doc-sub       { font-size:11pt; color:#475569; font-weight:600; margin-top:2px; }
+
   table  { width:100%; border-collapse:collapse; margin-top:10px; }
   th     { background:#1a1a2e; color:#fff; padding:7px 6px; font-size:9pt; text-align:center; border:1px solid #000; }
   th.time-th { text-align:left; padding-left:8px; width:72px; }
@@ -42,7 +39,10 @@ const DAYS = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
 /**
  * Print a class timetable
  */
-export function printClassTimetable({ school, classGrade, stream, period, config, slots, activeDays }) {
+export async function printClassTimetable({ school, classGrade, stream, period, config, slots, activeDays }) {
+  const header = await getPrintHeader('Class Timetable');
+  const footer = getPrintFooter();
+
   const days = activeDays || DAYS.slice(0, 5);
 
   // Build lookup: `${day}__${slotIndex}` → slot
@@ -79,17 +79,19 @@ export function printClassTimetable({ school, classGrade, stream, period, config
     </tr>`;
   }).join('');
 
-  const html = `<div class="wrap">
-    <div class="school-header">
-      <div class="school-name">${school?.name || 'School'}</div>
-      <div class="doc-title">Class Timetable</div>
-      <div class="doc-sub">${classGrade}${stream ? ` — ${stream}` : ''} &nbsp;·&nbsp; ${period?.year || ''} Term ${period?.term || ''}</div>
-    </div>
+  const html = `
+    <div class="wrap">
+      <div class="school-header-wrap">${header}</div>
+      <div class="doc-info">
+        <div class="doc-title">${classGrade}${stream ? ` — ${stream}` : ''}</div>
+        <div class="doc-sub">${period?.year || ''} Term ${period?.term || ''}</div>
+      </div>
+
     <table>
       <thead><tr><th class="time-th">Time</th>${dayHeaders}</tr></thead>
       <tbody>${rows}</tbody>
     </table>
-    <div class="footer">School Management System &nbsp;·&nbsp; ${new Date().toLocaleDateString('en-KE')}</div>
+    ${footer}
   </div>`;
 
   openPrint(html);
@@ -98,7 +100,10 @@ export function printClassTimetable({ school, classGrade, stream, period, config
 /**
  * Print a teacher's personal timetable
  */
-export function printTeacherTimetable({ school, teacher, period, config, slots, activeDays }) {
+export async function printTeacherTimetable({ school, teacher, period, config, slots, activeDays }) {
+  const header = await getPrintHeader('Teacher Timetable');
+  const footer = getPrintFooter();
+
   const days = activeDays || DAYS.slice(0, 5);
 
   const lookup = {};
@@ -134,18 +139,19 @@ export function printTeacherTimetable({ school, teacher, period, config, slots, 
     </tr>`;
   }).join('');
 
-  const html = `<div class="wrap">
-    <div class="school-header">
-      <div class="school-name">${school?.name || 'School'}</div>
-      <div class="doc-title">Teacher Timetable</div>
-      <div class="doc-sub">${teacher?.name || 'Teacher'} ${teacher?.staff_code ? `(${teacher.staff_code})` : ''} &nbsp;·&nbsp; ${period?.year || ''} Term ${period?.term || ''}</div>
-    </div>
-    <table>
-      <thead><tr><th class="time-th">Time</th>${dayHeaders}</tr></thead>
-      <tbody>${rows}</tbody>
-    </table>
-    <div class="footer">School Management System &nbsp;·&nbsp; ${new Date().toLocaleDateString('en-KE')}</div>
-  </div>`;
+  const html = `
+    <div class="wrap">
+      <div class="school-header-wrap">${header}</div>
+      <div class="doc-info">
+        <div class="doc-title">${teacher?.name || 'Teacher'}</div>
+        <div class="doc-sub">${teacher?.staff_code ? `Staff ID: ${teacher.staff_code} · ` : ''} ${period?.year || ''} Term ${period?.term || ''}</div>
+      </div>
+      <table>
+        <thead><tr><th class="time-th">Time</th>${dayHeaders}</tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+      ${footer}
+    </div>`;
 
   openPrint(html);
 }
@@ -153,14 +159,15 @@ export function printTeacherTimetable({ school, teacher, period, config, slots, 
 /**
  * Print all teachers (one per page)
  */
-export function printAllTeachersTimetables({ school, teachers, period, config, allSlots, activeDays }) {
+export async function printAllTeachersTimetables({ school, teachers, period, config, allSlots, activeDays }) {
+  const footer = getPrintFooter();
   const sorted = [...teachers].sort((a, b) => (a.staff_code || '').localeCompare(b.staff_code || ''));
   const days = activeDays || DAYS.slice(0, 5);
   const dayHeaders = days.map(d => `<th>${d}</th>`).join('');
 
-  let fullHtml = '';
+  const pages = await Promise.all(sorted.map(async (teacher, idx) => {
+    const header = await getPrintHeader('Teacher Timetable');
 
-  sorted.forEach((teacher, idx) => {
     const teacherSlots = allSlots.filter(s => s.teacher_id === teacher.id);
     const lookup = {};
     teacherSlots.forEach(s => { lookup[`${s.day_of_week}__${s.slot_index}`] = s; });
@@ -187,23 +194,23 @@ export function printAllTeachersTimetables({ school, teachers, period, config, a
       </tr>`;
     }).join('');
 
-    fullHtml += `
+    return `
       <div class="wrap" style="${idx > 0 ? 'page-break-before: always;' : ''}">
-        <div class="school-header">
-          <div class="school-name">${school?.name || 'School'}</div>
-          <div class="doc-title">Staff Timetable</div>
-          <div class="doc-sub"><strong>${teacher.name}</strong> &nbsp;·&nbsp; Code: ${teacher.staff_code || '—'} &nbsp;·&nbsp; ${period?.year || ''} Term ${period?.term || ''}</div>
+        <div class="school-header-wrap">${header}</div>
+        <div class="doc-info">
+          <div class="doc-title">${teacher.name}</div>
+          <div class="doc-sub">Staff ID: ${teacher.staff_code || '—'} &nbsp;·&nbsp; ${period?.year || ''} Term ${period?.term || ''}</div>
         </div>
         <table>
           <thead><tr><th class="time-th">Time</th>${dayHeaders}</tr></thead>
           <tbody>${rows}</tbody>
         </table>
-        <div class="footer">School Management System &nbsp;·&nbsp; Teacher ${idx + 1} of ${sorted.length}</div>
+        ${footer}
       </div>
     `;
-  });
+  }));
 
-  openPrint(fullHtml);
+  openPrint(pages.join(''));
 }
 
 /**

@@ -3698,6 +3698,69 @@ export async function clearAndSaveTimetable(schoolId, periodId, slots, classGrad
   }
 }
 
+/**
+ * [NEW] Clear ALL slots for a period
+ */
+export async function clearAllTimetableSlots(schoolId, periodId) {
+  mutationGuard('clearAllTimetableSlots');
+  const { error } = await supabase
+    .from('timetable_slots')
+    .delete()
+    .eq('school_id', schoolId)
+    .eq('period_id', periodId);
+  if (error) throw error;
+  return true;
+}
+
+/**
+ * [NEW] Duplicate Timetable structure from one term to another
+ */
+export async function duplicateTimetable(schoolId, fromPeriodId, toPeriodId) {
+  mutationGuard('duplicateTimetable');
+  if (fromPeriodId === toPeriodId) throw new Error("Source and target periods cannot be the same.");
+
+  const { data: sourceSlots, error: fetchErr } = await supabase
+    .from('timetable_slots')
+    .select('*')
+    .eq('school_id', schoolId)
+    .eq('period_id', fromPeriodId);
+  
+  if (fetchErr) throw fetchErr;
+  if (!sourceSlots || sourceSlots.length === 0) throw new Error("No timetable slots found in the source period.");
+
+  // Clear target before duplication to avoid conflicts
+  await clearAllTimetableSlots(schoolId, toPeriodId);
+
+  const newSlots = sourceSlots.map(s => {
+    const { id, created_at, ...rest } = s; // Strip unique fields
+    return { ...rest, period_id: toPeriodId };
+  });
+
+  const CHUNK_SIZE = 100;
+  for (let i = 0; i < newSlots.length; i += CHUNK_SIZE) {
+    const chunk = newSlots.slice(i, i + CHUNK_SIZE);
+    const { error } = await supabase.from('timetable_slots').insert(chunk);
+    if (error) throw error;
+  }
+  return true;
+}
+
+/**
+ * [NEW] Get summary workload for a teacher
+ */
+export async function getTeacherWorkloadSummary(schoolId, periodId, teacherId) {
+  const { data, error, count } = await supabase
+    .from('timetable_slots')
+    .select('id', { count: 'exact' })
+    .eq('school_id', schoolId)
+    .eq('period_id', periodId)
+    .eq('teacher_id', teacherId);
+  
+  if (error) throw error;
+  return count || 0;
+}
+
+
 
 
 export async function checkTeacherConflict(schoolId, periodId, teacherId, day, slotIndex, currentClass, currentStream) {

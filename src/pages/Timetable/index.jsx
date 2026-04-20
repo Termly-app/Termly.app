@@ -27,7 +27,7 @@ import {
   getTeachers, checkTeacherConflict, getSchoolProfile,
   getTimetableConfig, saveTimetableConfig,
   getTimetableSlots, saveTimetableSlot, clearTimetableSlot,
-  getTeacherTimetable
+  getTeacherTimetable, clearAllTimetableSlots, duplicateTimetable
 } from '../../data/store';
 import { 
   CalendarIcon, PrintIcon, BookIcon, CheckIcon, CrossIcon, 
@@ -155,6 +155,9 @@ export default function Timetable({ currentUser, currentPeriodId, periods = [] }
   const [showConfig,   setShowConfig]   = useState(false);
   const [draftConfig,  setDraftConfig]  = useState([]);
   const [configSaving, setConfigSaving] = useState(false);
+  const [bulkLoading,  setBulkLoading]  = useState(false);
+  const [showBulk,     setShowBulk]     = useState(false);
+
 
 
   const [showUpgrade,    setShowUpgrade]   = useState(false);
@@ -419,31 +422,77 @@ export default function Timetable({ currentUser, currentPeriodId, periods = [] }
           )}
 
           {view === 'class' && (
-            <button className="tt-btn" onClick={() => printClassTimetable({
+            <button className="tt-btn" onClick={async () => await printClassTimetable({
               school: { name: currentUser?.schoolName }, classGrade: selClass,
               stream: selStream, period: activePeriod, config, slots, activeDays
             })}><PrintIcon size={14} /> Print Class</button>
           )}
 
           {view === 'teacher' && (
-            <div style={{ display:'flex', gap:8 }}>
-              {selTeacher && (
-                <button className="tt-btn" onClick={() => printTeacherTimetable({
-                  school: { name: currentUser?.schoolName },
-                  teacher: teachers.find(t => t.id === selTeacher),
-                  period: activePeriod, config, slots: teacherSlots, activeDays
-                })}><PrintIcon size={14} /> Print Personal</button>
+            <button className="tt-btn" onClick={async () => await printTeacherTimetable({
+              school: { name: currentUser?.schoolName }, teacher: teacherList.find(t => t.id === selTeacherId),
+              period: activePeriod, config, slots, activeDays
+            })}><PrintIcon size={14} /> Print Timetable</button>
+          )}
+
+          {view === 'master' && isAdmin && (
+            <div style={{ position: 'relative' }}>
+              <button className="tt-btn tt-btn-danger" onClick={() => setShowBulk(!showBulk)}>
+                Bulk Actions <ChevronDownIcon size={14} />
+              </button>
+              
+              {showBulk && (
+                <div style={{ position: 'absolute', top: '100%', right: 0, marginTop: 8, background: 'white', border: '1px solid var(--border)', borderRadius: 12, boxShadow: '0 10px 25px -5px rgba(0,0,0,0.1)', zIndex: 100, width: 220, padding: 8, display: 'flex', flexDirection: 'column', gap: 4 }}>
+                  <button className="tt-btn tt-btn-ghost" style={{ justifyContent: 'flex-start', color: 'var(--danger)' }} 
+                    onClick={async () => {
+                      const ok = await confirm({ title: 'Clear Timetable?', message: 'This will DELETE ALL assignments for THIS TERM. This cannot be undone.', variant: 'danger' });
+                      if (!ok) return;
+                      setBulkLoading(true);
+                      try {
+                        await clearAllTimetableSlots(schoolId, periodId);
+                        setSlots([]);
+                        setMessage({ type: 'ok', text: 'Timetable cleared successfully.' });
+                      } catch (e) { setMessage({ type: 'err', text: e.message }); }
+                      finally { setBulkLoading(false); setShowBulk(false); }
+                    }}>
+                    <CrossIcon size={14} /> Clear Entire Term
+                  </button>
+                  
+                  <button className="tt-btn tt-btn-ghost" style={{ justifyContent: 'flex-start' }}
+                    onClick={async () => {
+                      // For simplicity, we just duplicate from the "previous" period in the list if it exists
+                      const currentIndex = periods.findIndex(p => p.id === periodId);
+                      const prevPeriod = periods[currentIndex + 1]; // Sorted desc usually
+                      if (!prevPeriod) {
+                        alert({ title: 'No Source', message: 'No previous term found to duplicate from.', variant: 'warning' });
+                        return;
+                      }
+                      const ok = await confirm({ title: 'Duplicate Timetable?', message: `Copy structure from ${prevPeriod.year} ${prevPeriod.term}? This CURRENT term will be overwritten.`, variant: 'primary' });
+                      if (!ok) return;
+                      setBulkLoading(true);
+                      try {
+                        await duplicateTimetable(schoolId, prevPeriod.id, periodId);
+                        // Reload slots
+                        if (selClass) setSlots(await getTimetableSlots(schoolId, periodId, selClass, selStream || null));
+                        setMessage({ type: 'ok', text: 'Structure duplicated from ' + prevPeriod.term });
+                      } catch (e) { setMessage({ type: 'err', text: e.message }); }
+                      finally { setBulkLoading(false); setShowBulk(false); }
+                    }}>
+                    <PlusIcon size={14} /> Duplicate from Prev
+                  </button>
+                </div>
               )}
-              <button className="tt-btn tt-btn-ghost" onClick={() => printAllTeachersTimetables({
-                school: { name: currentUser?.schoolName },
-                teachers,
-                period: activePeriod,
-                config,
-                allSlots: slots,
-                activeDays
-              })}><PrintIcon size={14} /> Print All Teachers</button>
             </div>
           )}
+
+          {view === 'master' && isAdmin && (
+            <button className="tt-btn tt-btn-ghost" onClick={async () => await printAllTeachersTimetables({
+              school: { name: currentUser?.schoolName }, teachers: teacherList,
+              period: activePeriod, config, allSlots: slots, activeDays
+            })}><PrintIcon size={14} /> Print All Staff Timetables</button>
+          )}
+
+
           {/* Period selector always visible */}
           <Select 
             value={periodId} 
