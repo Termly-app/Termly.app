@@ -340,7 +340,7 @@ const DEFAULT_PROFILE = {
   sms_config: { sender_id: '', api_key: '' },
   curriculum: 'CBC Only',
   timetable_label: 'Weekly',
-  custom_exams: ['CAT 1', 'CAT 2', 'Mid Term', 'End Term'],
+  custom_exams: [],
   gradingSystems: { 
     default: [
       {min: 80, max: 100, grade: 'A', color: '#10b981'},
@@ -352,6 +352,24 @@ const DEFAULT_PROFILE = {
   },
   enabledModules: { attendance: true }
 };
+
+// Offline profile persistence helpers
+const PROFILE_CACHE_KEY = 'shulesoft_profile_cache';
+function saveProfileToLocal(schoolId, profile) {
+  try {
+    const blob = JSON.stringify({ schoolId, profile, ts: Date.now() });
+    localStorage.setItem(PROFILE_CACHE_KEY, blob);
+  } catch (e) { /* localStorage full or blocked */ }
+}
+function loadProfileFromLocal(schoolId) {
+  try {
+    const raw = localStorage.getItem(PROFILE_CACHE_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    if (parsed.schoolId !== schoolId) return null;
+    return parsed.profile;
+  } catch (e) { return null; }
+}
 
 const SAFE_PROFILE_COLUMNS = 'id, school_name, motto, phone, email, address, logo, subscription_plan, streams_per_class, custom_subjects, active_classes, grade_fees, subscription_status, subscription_expiry, last_payment_status, mpesa_config, sms_config, grading_systems, custom_exams, curriculum, timetable_label';
 
@@ -383,6 +401,7 @@ export async function getSchoolProfile() {
         if (!safeData) return { ...DEFAULT_PROFILE };
         const mapped = mapProfileData(safeData);
         _profileCache = mapped;
+        saveProfileToLocal(_currentSchoolId, mapped);
         return mapped;
       }
       throw error;
@@ -391,9 +410,17 @@ export async function getSchoolProfile() {
     if (!data) return { ...DEFAULT_PROFILE };
     const mapped = mapProfileData(data);
     _profileCache = mapped;
+    saveProfileToLocal(_currentSchoolId, mapped);
     return mapped;
   } catch (err) {
     console.error('getSchoolProfile critical failure:', err);
+    // Try to recover from localStorage instead of showing placeholder defaults
+    const localProfile = loadProfileFromLocal(_currentSchoolId);
+    if (localProfile) {
+      console.info('Recovered school profile from local cache (offline mode).');
+      _profileCache = localProfile;
+      return localProfile;
+    }
     return { ...DEFAULT_PROFILE };
   } finally {
     _profilePromise = null;
