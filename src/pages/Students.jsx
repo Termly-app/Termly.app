@@ -39,6 +39,7 @@ export default function Students({ currentUser, currentPeriodId }) {
   const [loading, setLoading] = useState(true);
   const [showTransitionModal, setShowTransitionModal] = useState(false);
   const [statusMenuId, setStatusMenuId] = useState(null);
+  const [statusMenuPos, setStatusMenuPos] = useState({x:0,y:0});
   const { confirm, prompt, alert, toast } = useDialog();
 
   const loadData = async () => {
@@ -271,7 +272,7 @@ export default function Students({ currentUser, currentPeriodId }) {
                     <td data-label="Level"><span className={`level-badge ${lb.cls}`}>{lb.ico} {getLevelForGrade(s.class)}</span></td>
                     <td data-label="Enrolment" style={{position:'relative'}}>
                       <span 
-                        onClick={isAdmin ? (e) => { e.stopPropagation(); setStatusMenuId(statusMenuId === s.id ? null : s.id); } : undefined}
+                        onClick={isAdmin ? (e) => { e.stopPropagation(); const r=e.currentTarget.getBoundingClientRect(); setStatusMenuPos({x:r.left,y:r.bottom+4}); setStatusMenuId(statusMenuId === s.id ? null : s.id); } : undefined}
                         style={{ 
                           fontSize: '0.65rem', padding: '2px 8px', borderRadius: 6, fontWeight: 700, textTransform: 'uppercase',
                           backgroundColor: (s.status||'Active') === 'Active' ? '#ecfdf5' : s.status === 'Graduated' ? '#eff6ff' : '#f3f4f6',
@@ -289,7 +290,7 @@ export default function Students({ currentUser, currentPeriodId }) {
                       {statusMenuId === s.id && (
                         <>
                           <div style={{position:'fixed',inset:0,zIndex:99}} onClick={()=>setStatusMenuId(null)}/>
-                          <div style={{position:'absolute',top:'100%',left:0,zIndex:100,marginTop:4,background:'var(--bg-card)',border:'1px solid var(--border)',borderRadius:8,boxShadow:'0 4px 16px rgba(0,0,0,0.15)',minWidth:160,overflow:'hidden'}}>
+                          <div style={{position:'fixed',top:statusMenuPos.y,left:statusMenuPos.x,zIndex:10000,background:'var(--bg-card)',border:'1px solid var(--border)',borderRadius:8,boxShadow:'0 8px 24px rgba(0,0,0,0.2)',minWidth:160,overflow:'hidden'}}>
                             <div style={{padding:'6px 10px',fontSize:'0.65rem',color:'var(--text-muted)',fontWeight:700,textTransform:'uppercase',borderBottom:'1px solid var(--border)'}}>Change Status</div>
                             {[{v:'Active',c:'#059669',bg:'#ecfdf5'},{v:'Transferred',c:'#4b5563',bg:'#f3f4f6'},{v:'Graduated',c:'#1d4ed8',bg:'#eff6ff'}]
                               .filter(o=>o.v!==(s.status||'Active'))
