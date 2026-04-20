@@ -3494,25 +3494,24 @@ export function subscribeToSchoolChanges(onSettingsChange, onProfileChange) {
 
 // ============= TIMETABLE =============
 
-export async function getTimetableConfig(schoolId, periodId, type = 'class') {
+export async function getTimetableConfig(schoolId, periodId) {
   const { data, error } = await supabase
     .from('timetable_configs')
     .select('*')
     .eq('school_id', schoolId)
     .eq('period_id', periodId)
-    .eq('type', type) // Isolated by mode
     .order('slot_index', { ascending: true });
   if (error) throw error;
   return data || [];
 }
 
-export async function saveTimetableConfig(schoolId, periodId, slots, type = 'class') {
+
+export async function saveTimetableConfig(schoolId, periodId, slots) {
   const { error: delErr } = await supabase
     .from('timetable_configs')
     .delete()
     .eq('school_id', schoolId)
-    .eq('period_id', periodId)
-    .eq('type', type);
+    .eq('period_id', periodId);
   if (delErr) throw delErr;
 
   if (!slots || slots.length === 0) return;
@@ -3520,7 +3519,6 @@ export async function saveTimetableConfig(schoolId, periodId, slots, type = 'cla
   const rows = slots.map((s, i) => ({
     school_id: schoolId,
     period_id: periodId,
-    type: type,
     slot_index: i,
     label: s.label,
     start_time: s.start_time,
@@ -3531,6 +3529,7 @@ export async function saveTimetableConfig(schoolId, periodId, slots, type = 'cla
   const { error } = await supabase.from('timetable_configs').insert(rows);
   if (error) throw error;
 }
+
 
 export async function getTimetableSlots(schoolId, periodId, classGrade, stream = null) {
   let query = supabase
