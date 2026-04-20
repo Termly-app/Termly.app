@@ -1870,25 +1870,7 @@ export async function recordPayment(studentId, amount, method, reference) {
  * Archive a student record (Soft Delete).
  * Transfers the student to a specific inactive category like 'Transferred' or 'Graduated'.
  */
-export async function archiveStudent(id, targetStatus = 'Transferred', reason = '') {
-  mutationGuard('archiveStudent');
-  const { data, error } = await supabase
-    .from('students')
-    .update({ 
-      status: targetStatus,
-      notes: reason ? `[ARCHIVED: ${new Date().toLocaleDateString()}] ${reason}` : undefined
-    })
-    .eq('id', id)
-    .select()
-    .single();
-    
-  if (error) throw error;
-  
-  // Update local cache
-  try { await db.students.update(id, { status: targetStatus }); } catch(e) {}
-  await logPlatformActivity('STUDENT_ARCHIVE', `Archived student (Status: ${targetStatus}): ${data.name}`);
-  return data;
-}
+
 
 /**
  * Fetch all payments for a specific student in the current period.
