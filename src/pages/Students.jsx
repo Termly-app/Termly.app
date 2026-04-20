@@ -61,7 +61,8 @@ export default function Students({ currentUser, currentPeriodId }) {
 
   const filtered = students.filter(s => {
     const q = search.toLowerCase();
-    const matchStatus = statusFilter === 'All' || s.status === statusFilter;
+    const currentStatus = s.status || 'Active';
+    const matchStatus = statusFilter === 'All' || currentStatus === statusFilter;
     const matchSearch = (!q || (s.name||'').toLowerCase().includes(q) || (s.admNo||'').toLowerCase().includes(q) || (s.parentPhone||'').includes(q));
     const matchClass = (classFilter === 'All' || s.class === classFilter);
     const matchStream = (streamFilter === 'All' || s.stream === streamFilter);
@@ -242,8 +243,14 @@ export default function Students({ currentUser, currentPeriodId }) {
             </thead>
             <tbody>
               {filtered.length===0?(
-                <tr><td colSpan="9" style={{padding:'48px',textAlign:'center',color:'var(--text-muted)'}}>
-                  <div style={{fontSize:'2rem',marginBottom:8}}><StudentIcon size={48} /></div>No students found
+                <tr><td colSpan={10 + (isAdmin || isFinance ? 1 : 0) + (isAdmin ? 1 : 0)} style={{padding:'48px',textAlign:'center',color:'var(--text-muted)'}}>
+                  <div style={{fontSize:'2rem',marginBottom:8}}><StudentIcon size={48} /></div>
+                  <p>No students found with the current filters.</p>
+                  {statusFilter !== 'All' && (
+                    <button className="btn btn-ghost btn-sm" style={{marginTop:10}} onClick={() => setStatusFilter('All')}>
+                      View All Statuses (including Transferred/Graduated)
+                    </button>
+                  )}
                 </td></tr>
               ):filtered.map(s=>{
                 const fd=fees[s.id]||{};
