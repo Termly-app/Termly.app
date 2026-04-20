@@ -379,7 +379,7 @@ export default function Register() {
                 <input type="text" name="adminName" placeholder="Full name" value={formData.adminName} onChange={handleChange} required />
                 <div className="res-uline"></div>
               </div>
-              <div className="res-fhint">This will be your primary Super Admin account.</div>
+              <div className="res-fhint">This will be your primary School Admin account.</div>
               
               <div className="res-field">
                 <div className="res-fico">
@@ -482,7 +482,7 @@ export default function Register() {
                   </button>
                 </div>
 
-                    <p style={{ marginTop: 16, opacity: 0.8, fontSize: '0.85rem' }}>This school email will be your <strong>Super Admin</strong> login ID.</p>
+                    <p style={{ marginTop: 16, opacity: 0.8, fontSize: '0.85rem' }}>This school email will be your <strong>School Admin</strong> login ID.</p>
                     <Link to="/login" className="res-cta success-cta">Proceed to Login</Link>
                   </>
                 )}

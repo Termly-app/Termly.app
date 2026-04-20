@@ -13,8 +13,7 @@ export default function Docs() {
     { id: 'students', title: 'Student Management', icon: <GraduationIcon size={18} /> },
     { id: 'academics', title: 'Academic Records', icon: <EditIcon size={18} /> },
     { id: 'fees', title: 'Fees & Finance', icon: <CardIcon size={18} /> },
-    { id: 'security', title: 'Security & RLS', icon: <ShieldIcon size={18} /> },
-    { id: 'super-admin', title: 'Super Admin Guide', icon: <SettingsIcon size={18} /> }
+    { id: 'security', title: 'Security & RLS', icon: <ShieldIcon size={18} /> }
   ];
 
   return (
@@ -91,7 +90,7 @@ export default function Docs() {
                 </p>
                 <h3 style={{ marginTop: '32px' }}>1. Registration</h3>
                 <p style={{ color: 'var(--text-muted)', lineHeight: 1.7 }}>
-                  Use your official school email to sign up. This email will serve as your primary **Super Admin** account. 
+                  Use your official school email to sign up. This email will serve as your primary **School Admin** account. 
                   After registration, you will receive an activation link to verify your institution.
                 </p>
                 <h3 style={{ marginTop: '32px' }}>2. Selection of Plans</h3>
@@ -173,23 +172,6 @@ export default function Docs() {
                 <h3 style={{ marginTop: '32px' }}>Role-Based Access</h3>
                 <p style={{ color: 'var(--text-muted)', lineHeight: 1.7 }}>
                   Admins have full oversight, while Teachers can only manage grading and attendance for their assigned classes.
-                </p>
-              </article>
-            )}
-
-            {activeSec === 'super-admin' && (
-              <article>
-                <h1 style={{ fontSize: '2rem', marginBottom: '24px' }}>Super Admin Guide</h1>
-                <p style={{ color: 'var(--text-muted)', lineHeight: 1.7, marginBottom: '20px' }}>
-                  Platform owners have the tools to manage the entire ShuleSoft ecosystem.
-                </p>
-                <h3 style={{ marginTop: '32px' }}>School Onboarding</h3>
-                <p style={{ color: 'var(--text-muted)', lineHeight: 1.7 }}>
-                  Platform admins can verify payments and activate school accounts manually through the Super Admin panel.
-                </p>
-                <h3 style={{ marginTop: '32px' }}>Revenue Analytics</h3>
-                <p style={{ color: 'var(--text-muted)', lineHeight: 1.7 }}>
-                  Monitor global revenue, school growth trends, and seat usage across all institutions in Kenya.
                 </p>
               </article>
             )}
