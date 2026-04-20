@@ -3576,7 +3576,7 @@ export async function saveTimetableSlot(schoolId, periodId, slot) {
       school_id: schoolId,
       period_id: periodId,
       class_grade: slot.class_grade,
-      stream: slot.stream || null,
+      stream: slot.stream || '',
       day_of_week: slot.day_of_week,
       slot_index: slot.slot_index,
       subject: slot.subject,
