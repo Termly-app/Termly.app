@@ -91,19 +91,33 @@ export default function Students({ currentUser, currentPeriodId }) {
     } finally { setLoading(false); }
   };
   const handleArchive = async (id) => {
-    const ok = await confirm({ 
-      title: 'Archive Student', 
-      message: 'Are you sure you want to archive this student record? They will no longer appear in active class lists or billing reports.', 
-      variant: 'warning',
-      confirmText: 'Archive Student'
+    const status = await prompt({
+      title: 'Archive Student',
+      message: 'Choose the relevant status for this student. They will be moved to historical records.',
+      inputLabel: 'Status',
+      inputType: 'select',
+      inputOptions: [
+        { id: 'Transferred', label: 'Transferred (Soft Delete)' },
+        { id: 'Graduated', label: 'Graduated (Soft Delete)' }
+      ],
+      confirmText: 'Move to Archive',
+      confirmVariant: 'warning'
     });
-    if (!ok) return;
+
+    if (!status) return;
+
+    const reason = await prompt({
+      title: 'Archiving Reason',
+      message: `Optional: Provide a reason for marking this student as ${status}.`,
+      inputPlaceholder: 'e.g. Transferred to another district, Graduated 2026...',
+    });
+
     setLoading(true);
     try { 
-      await archiveStudent(id, 'Transferred'); 
+      await archiveStudent(id, status, reason); 
       await refresh(); 
       setSelectedStudent(null); 
-      toast('Student record archived', 'success');
+      toast(`Student record archived as ${status}`, 'success');
     }
     catch (err) { console.error(err); } finally { setLoading(false); }
   };
@@ -300,9 +314,9 @@ export default function Students({ currentUser, currentPeriodId }) {
                     {isAdmin&&(
                       <td data-label="Actions" style={{textAlign:'center'}}>
                         <div style={{display:'inline-flex',gap:4}}>
-                          <button className="btn btn-ghost btn-sm" onClick={()=>{setEditingStudent(s);setShowModal(true);}}><EditIcon size={14} /></button>
-                          {s.status === 'Active' && (
-                            <button className="btn btn-ghost btn-sm text-danger" onClick={()=>handleArchive(s.id)} title="Archive Student"><DeleteIcon size={14} /></button>
+                          <button className="btn btn-ghost btn-sm" onClick={()=>{setEditingStudent(s);setShowModal(true);}} title="Edit Student"><EditIcon size={14} /></button>
+                          {(s.status || 'Active') === 'Active' && (
+                            <button className="btn btn-ghost btn-sm text-danger" onClick={()=>handleArchive(s.id)} title="Archive/Transfer Student"><DeleteIcon size={14} /></button>
                           )}
                         </div>
                       </td>
@@ -382,6 +396,7 @@ function StudentModal({ student, profile, onSave, onClose }) {
               </div>
             )}
           </div>
+          <div className="form-row">
             <div className="form-group">
               <label>Class *</label>
               <Select 
@@ -410,6 +425,21 @@ function StudentModal({ student, profile, onSave, onClose }) {
                 ]}
               />
             </div>
+            <div className="form-group">
+              <label>Enrollment Status</label>
+              <Select 
+                name="status" 
+                value={form.status || 'Active'} 
+                onChange={hc}
+                options={[
+                  { id: 'Active', label: 'Active' },
+                  { id: 'Transferred', label: 'Transferred' },
+                  { id: 'Graduated', label: 'Graduated' }
+                ]}
+              />
+            </div>
+          </div>
+
           <div className="form-row">
             <div className="form-group"><label>Parent / Guardian *</label><input className="form-input" name="parent" value={form.parent} onChange={hc} required/></div>
             <div className="form-group"><label>Parent Phone *</label><input className="form-input" name="parentPhone" value={form.parentPhone} onChange={hc} required/></div>
