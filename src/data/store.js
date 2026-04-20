@@ -3826,7 +3826,7 @@ export async function getClassSubjectAssignments(schoolId, periodId, classGrade,
     .eq('period_id', periodId)
     .eq('class_grade', classGrade);
   if (stream) query = query.eq('stream', stream);
-  else query = query.is('stream', null);
+  // If no stream is provided, fetch assignments for all streams of the class to ensure competency checks still work
   const { data, error } = await query;
   if (error) throw error;
   return data || [];
