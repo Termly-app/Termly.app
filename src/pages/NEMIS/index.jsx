@@ -375,7 +375,3 @@ export default function NEMISDashboard({ currentUser }) {
     </div>
   );
 }
-
-    </div>
-  );
-}
