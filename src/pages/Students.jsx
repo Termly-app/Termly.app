@@ -276,7 +276,18 @@ export default function Students({ currentUser, currentPeriodId }) {
                     <td data-label="Level"><span className={`level-badge ${lb.cls}`}>{lb.ico} {getLevelForGrade(s.class)}</span></td>
                     <td data-label="Enrolment" style={{position:'relative'}}>
                       <span 
-                        onClick={isAdmin ? (e) => { e.stopPropagation(); const r=e.currentTarget.getBoundingClientRect(); setStatusMenuPos({x:r.left,y:r.bottom+4}); setStatusMenuId(statusMenuId === s.id ? null : s.id); } : undefined}
+                        onClick={isAdmin ? (e) => { 
+                          e.stopPropagation(); 
+                          const r = e.currentTarget.getBoundingClientRect();
+                          const menuHeight = 180; // Estimated height of the menu
+                          const spaceBelow = window.innerHeight - r.bottom;
+                          const showUp = spaceBelow < menuHeight;
+                          setStatusMenuPos({
+                            x: r.left,
+                            y: showUp ? r.top - menuHeight - 4 : r.bottom + 4
+                          }); 
+                          setStatusMenuId(statusMenuId === s.id ? null : s.id); 
+                        } : undefined}
                         style={{ 
                           fontSize: '0.65rem', padding: '2px 8px', borderRadius: 6, fontWeight: 700, textTransform: 'uppercase',
                           backgroundColor: (s.status||'Active') === 'Active' ? '#ecfdf5' : s.status === 'Graduated' ? '#eff6ff' : '#f3f4f6',
