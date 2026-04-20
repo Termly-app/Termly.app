@@ -628,3 +628,54 @@
   background: rgba(0,0,0,0.035) !important;
   border-color: rgba(0,0,0,0.08) !important;
 }
+
+/* Double Lesson Visuals */
+.tt-cell.double-first {
+  border-bottom: none !important;
+}
+.tt-cell.double-first .tt-cell-inner {
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
+  margin-bottom: -1px;
+  position: relative;
+  z-index: 2;
+}
+.tt-cell.double-second {
+  border-top: none !important;
+}
+.tt-cell.double-second .tt-cell-inner {
+  border-top-left-radius: 0;
+  border-top-right-radius: 0;
+  padding-top: 5px;
+}
+.tt-dbl-tag {
+  display: inline-block;
+  padding: 2px 6px;
+  background: rgba(255,255,255,0.15);
+  border-radius: 4px;
+  font-size: 0.6rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  margin-top: 4px;
+}
+
+/* Conflict Warning */
+.tt-conflict-alert {
+  background: #fef2f2;
+  border: 1px solid #fee2e2;
+  color: #991b1b;
+  padding: 12px 16px;
+  border-radius: 12px;
+  margin-bottom: 20px;
+  font-size: .85rem;
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  animation: ttShake 0.4s ease-in-out;
+}
+@keyframes ttShake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-4px); }
+  75% { transform: translateX(4px); }
+}
+

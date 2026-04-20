@@ -3585,11 +3585,14 @@ export async function saveTimetableSlot(schoolId, periodId, slot) {
       room: slot.room || null,
       color: slot.color || null,
       is_double_first: slot.is_double_first || false,
-      is_double_second: slot.is_double_second || false
+      is_double_second: slot.is_double_second || false,
+      start_time: slot.start_time || null,
+      end_time: slot.end_time || null
     }, { onConflict: 'school_id,period_id,class_grade,stream,day_of_week,slot_index' });
   if (error) throw error;
   return true;
 }
+
 
 export async function clearTimetableSlot(schoolId, periodId, classGrade, stream, day, slotIndex) {
   let query = supabase
@@ -3763,45 +3766,56 @@ export async function getTeacherWorkloadSummary(schoolId, periodId, teacherId) {
 
 
 
-export async function checkTeacherConflict(schoolId, periodId, teacherId, day, slotIndex, currentClass, currentStream) {
-  if (!teacherId) return null;
-  
-  const { data, error } = await supabase
+/**
+ * [NEW] Smart Time-Aware Conflict Detection
+ * Checks if a teacher or class is busy during a specific time range.
+ * Overlap Logic: (newStart < existingEnd) && (existingStart < newEnd)
+ */
+export async function checkTimetableConflicts(schoolId, periodId, { day, startTime, endTime, teacherId, classGrade, stream, currentSlotIndex }) {
+  if (!startTime || !endTime) return null;
+
+  // 1. Fetch ALL slots for that day and school
+  const { data: slots, error } = await supabase
     .from('timetable_slots')
-    .select('class_grade, stream, subject')
+    .select('*, teachers(name)')
     .eq('school_id', schoolId)
     .eq('period_id', periodId)
-    .eq('teacher_id', teacherId)
-    .eq('day_of_week', day)
-    .eq('slot_index', slotIndex);
+    .eq('day_of_week', day);
   
   if (error) throw error;
-  if (!data || data.length === 0) return null;
-  
-  // Exclude current class/stream from conflict check
-  const filtered = data.filter(d => d.class_grade !== currentClass || d.stream !== (currentStream || null));
-  return filtered.length > 0 ? filtered[0] : null;
+  if (!slots || slots.length === 0) return null;
+
+  // Function to check if two time strings overlap
+  const isOverlap = (s1, e1, s2, e2) => (s1 < e2) && (s2 < e1);
+
+  for (const s of slots) {
+    // Skip the slot we are currently editing
+    if (s.class_grade === classGrade && (s.stream || null) === (stream || null) && s.slot_index === currentSlotIndex) continue;
+    
+    // Check if times were recorded for the existing slot
+    if (!s.start_time || !s.end_time) continue;
+
+    if (isOverlap(startTime, endTime, s.start_time, s.end_time)) {
+      // a) Teacher Conflict
+      if (teacherId && s.teacher_id === teacherId) {
+        return { 
+          type: 'teacher', 
+          msg: `Teacher double-booked: Already assigned to ${s.subject} in ${s.class_grade} ${s.stream || ''} (${s.start_time}-${s.end_time})`
+        };
+      }
+      // b) Class Conflict (Only if we are scheduling for THIS class)
+      if (s.class_grade === classGrade && (s.stream || null) === (stream || null)) {
+        return { 
+          type: 'class', 
+          msg: `Class double-booked: Already has ${s.subject} during this time (${s.start_time}-${s.end_time})`
+        };
+      }
+    }
+  }
+
+  return null;
 }
 
-export async function checkRoomConflict(schoolId, periodId, room, day, slotIndex, currentClass, currentStream) {
-  if (!room) return null;
-  
-  const { data, error } = await supabase
-    .from('timetable_slots')
-    .select('class_grade, stream, subject')
-    .eq('school_id', schoolId)
-    .eq('period_id', periodId)
-    .eq('room', room)
-    .eq('day_of_week', day)
-    .eq('slot_index', slotIndex);
-  
-  if (error) throw error;
-  if (!data || data.length === 0) return null;
-  
-  // Exclude current class/stream
-  const filtered = data.filter(d => d.class_grade !== currentClass || d.stream !== (currentStream || null));
-  return filtered.length > 0 ? filtered[0] : null;
-}
 
 
 export async function getClassSubjectAssignments(schoolId, periodId, classGrade, stream = null) {

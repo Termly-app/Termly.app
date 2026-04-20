@@ -24,10 +24,10 @@ import {
 import Select from '../../components/Common/Select';
 import { Helmet } from 'react-helmet-async';
 import {
-  getTeachers, checkTeacherConflict, getSchoolProfile,
   getTimetableConfig, saveTimetableConfig,
   getTimetableSlots, saveTimetableSlot, clearTimetableSlot,
-  getTeacherTimetable, clearAllTimetableSlots, duplicateTimetable
+  getTeacherTimetable, clearAllTimetableSlots, duplicateTimetable,
+  checkTimetableConflicts
 } from '../../data/store';
 import { 
   CalendarIcon, PrintIcon, BookIcon, CheckIcon, CrossIcon, 
@@ -280,59 +280,86 @@ export default function Timetable({ currentUser, currentPeriodId, periods = [] }
     if (!editCell) return;
     const checkConflicts = async () => {
       try {
-        // 1. Teacher Conflict
-        if (editTeacher) {
-          const tClash = await checkTeacherConflict(schoolId, periodId, editTeacher, editCell.day, editCell.slotIndex, selClass, selStream);
-          if (tClash) {
-            setConflictWarning({ type: 'teacher', ...tClash });
-            return;
+        const timeCfg = config.find(c => c.slot_index === editCell.slotIndex);
+        if (!timeCfg) return;
+
+        let startTime = timeCfg.start_time;
+        let endTime   = timeCfg.end_time;
+
+        if (isDouble) {
+          const sorted = [...config].sort((a,b) => a.slot_index - b.slot_index).filter(c => !c.is_break);
+          const i = sorted.findIndex(c => c.slot_index === editCell.slotIndex);
+          if (i !== -1 && i < sorted.length - 1) {
+            endTime = sorted[i+1].end_time;
           }
         }
-        setConflictWarning(null);
+
+        const clash = await checkTimetableConflicts(schoolId, periodId, {
+          day: editCell.day,
+          startTime,
+          endTime,
+          teacherId: editTeacher || null,
+          classGrade: selClass,
+          stream: selStream || null,
+          currentSlotIndex: editCell.slotIndex
+        });
+
+        if (clash) {
+          setConflictWarning(clash.msg);
+        } else {
+          setConflictWarning(null);
+        }
       } catch (e) { console.error("Conflict check failed", e); }
     };
     checkConflicts();
-  }, [editTeacher, editCell, schoolId, periodId, selClass, selStream]);
+  }, [editTeacher, isDouble, editCell, schoolId, periodId, selClass, selStream, config]);
+
 
   // ── Save cell ─────────────────────────────────────────────────────────
   const handleSaveCell = async () => {
     if (!editCell || !editSubject.trim()) return;
-    // Conflict check
-    if (editTeacher) {
-      try {
-        const clash = await checkTeacherConflict(
-          schoolId, periodId, editTeacher,
-          editCell.day, editCell.slotIndex,
-          selClass, selStream || null
-        );
-        if (clash) { setConflictWarning(clash); return; }
-      } catch (e) {
-        setMessage({ type:'err', text:'Could not verify teacher schedule.' });
+    
+    const timeCfg = config.find(c => c.slot_index === editCell.slotIndex);
+    if (!timeCfg) return;
+    
+    let startTime = timeCfg.start_time;
+    let endTime   = timeCfg.end_time;
+    let nextSlot  = null;
+
+    if (isDouble) {
+      const sorted = [...config].sort((a,b) => a.slot_index - b.slot_index).filter(c => !c.is_break);
+      const i = sorted.findIndex(c => c.slot_index === editCell.slotIndex);
+      if (i !== -1 && i < sorted.length - 1) {
+        endTime = sorted[i+1].end_time;
+        nextSlot = sorted[i+1];
+      } else {
+        setMessage({ type:'err', text: 'Cannot place double lesson at the end of the day.' });
         return;
       }
     }
-    setConflictWarning(null);
+
+    // Final Conflict check
+    try {
+      const clash = await checkTimetableConflicts(schoolId, periodId, {
+        day: editCell.day,
+        startTime,
+        endTime,
+        teacherId: editTeacher || null,
+        classGrade: selClass,
+        stream: selStream || null,
+        currentSlotIndex: editCell.slotIndex
+      });
+      if (clash) { 
+        setConflictWarning(clash.msg); 
+        return; 
+      }
+    } catch (e) {
+      setMessage({ type:'err', text:'Conflict check failed.' });
+      return;
+    }
+
     setCellSaving(true);
     try {
-      let isDoubleSupported = false;
-      let nextSlotIndex = null;
-
-      if (isDouble) {
-        const sortedTeaching = [...config]
-          .sort((a,b) => a.slot_index - b.slot_index)
-          .filter(c => !c.is_break);
-        
-        const curIdx = sortedTeaching.findIndex(c => c.slot_index === editCell.slotIndex);
-        if (curIdx !== -1 && curIdx < sortedTeaching.length - 1) {
-          nextSlotIndex = sortedTeaching[curIdx + 1].slot_index;
-          isDoubleSupported = true;
-        } else {
-          setMessage({ type:'err', text: 'Cannot place double lesson at the end of the teaching day.' });
-          setCellSaving(false);
-          return;
-        }
-      }
-
       // Save first slot
       await saveTimetableSlot(schoolId, periodId, {
         class_grade : selClass,
@@ -342,28 +369,34 @@ export default function Timetable({ currentUser, currentPeriodId, periods = [] }
         subject     : editSubject.trim(),
         teacher_id  : editTeacher || null,
         color       : editColor,
-        is_double_first  : isDoubleSupported,
-        is_double_second : false
+        is_double_first  : !!nextSlot,
+        is_double_second : false,
+        start_time  : timeCfg.start_time,
+        end_time    : !!nextSlot ? nextSlot.end_time : timeCfg.end_time // Double lesson spans both times
       });
 
       // Save second slot if requested
-      if (isDoubleSupported && nextSlotIndex !== null) {
+      if (nextSlot) {
         await saveTimetableSlot(schoolId, periodId, {
           class_grade : selClass,
           stream      : selStream || null,
           day_of_week : editCell.day,
-          slot_index  : nextSlotIndex,
+          slot_index  : nextSlot.slot_index,
           subject     : editSubject.trim(),
           teacher_id  : editTeacher || null,
           color       : editColor,
           is_double_first  : false,
-          is_double_second : true
+          is_double_second : true,
+          start_time  : nextSlot.start_time,
+          end_time    : nextSlot.end_time
         });
       }
 
+
       setSlots(await getTimetableSlots(schoolId, periodId, selClass, selStream || null));
       setEditCell(null);
-      setMessage({ type:'ok', text: isDoubleSupported ? 'Double slot saved.' : 'Slot saved.' });
+      setMessage({ type:'ok', text: nextSlot ? 'Double slot saved.' : 'Slot saved.' });
+
     } catch (e) { setMessage({ type:'err', text: e.message }); }
     finally { setCellSaving(false); }
   };
@@ -610,23 +643,22 @@ export default function Timetable({ currentUser, currentPeriodId, periods = [] }
                             <td key={d}
                               className={`tt-cell${hasData ? '' : ' empty'}${dblCls}`}
                               onClick={() => openEdit(d, cfg.slot_index)}>
-                              {hasData && isAdmin && view === 'class' && (
+                              {hasData && !isDoubleSecond && isAdmin && view === 'class' && (
                                 <button className="tt-cell-clear"
                                   onClick={e => handleClearCell(d, cfg.slot_index, e)}><CrossIcon size={12} /></button>
                               )}
                               <div className="tt-cell-inner" style={hasData ? {
                                 background: `${bg}22`, border: `1px solid ${bg}55`,
                               } : {}}>
-                                {hasData ? (
+                                {hasData && !isDoubleSecond && (
                                   <>
                                     <div className="tt-cell-subject" style={{ color: bg }}>
                                       {cell.subject}
-                                      {isDoubleFirst && <span className="tt-double-badge">×2</span>}
+                                      {isDoubleFirst && <span className="tt-dbl-tag">×2</span>}
                                     </div>
-                                    {isDoubleSecond && <div className="tt-double-cont">↑ continued</div>}
-                                    {view === 'class' && (cell.teachers?.name || teacherName(cell.teacher_id)) && !isDoubleSecond && (
+                                    {view === 'class' && (cell.teachers?.name || teacherName(cell.teacher_id)) && (
                                       <div style={{display:'flex', flexDirection:'column', gap:2}}>
-                                        <div className="tt-cell-teacher">
+                                        <div className="tt-cell-teacher" style={{ color: bg, opacity: 0.8 }}>
                                           <UserIcon size={12} /> {cell.teachers?.staff_code || teachers.find(t => t.id === cell.teacher_id)?.staff_code || cell.teachers?.name || teacherName(cell.teacher_id)}
                                         </div>
                                         {teachers.find(t => t.id === cell.teacher_id)?.on_leave && (
@@ -637,19 +669,23 @@ export default function Timetable({ currentUser, currentPeriodId, periods = [] }
                                       </div>
                                     )}
                                     {view === 'teacher' && cell.class_grade && (
-                                      <div className="tt-cell-class">
+                                      <div className="tt-cell-class" style={{ color: bg, opacity: 0.8 }}>
                                         {cell.class_grade}{cell.stream ? ` · ${cell.stream}` : ''}
                                       </div>
                                     )}
-
                                   </>
-                                ) : (
-                                  <div className="tt-add-hint">
-                                    {isAdmin && view === 'class' ? '+ Add' : ''}
+                                )}
+                                {hasData && isDoubleSecond && (
+                                  <div style={{ opacity:0.4, fontSize:'0.6rem', textAlign:'center', color: bg, fontWeight: 700 }}>
+                                    (Continued...)
                                   </div>
+                                )}
+                                {!hasData && isAdmin && view === 'class' && (
+                                  <div className="tt-add-hint">+ Add</div>
                                 )}
                               </div>
                             </td>
+
                           );
                         })}
                       </tr>
@@ -722,23 +758,12 @@ export default function Timetable({ currentUser, currentPeriodId, periods = [] }
 
             {/* Conflict warnings */}
             {conflictWarning && (
-              <div className="tt-conflict-box" style={{ 
-                borderLeft: `4px solid #E06C75`,
-                background: 'rgba(224,108,117,0.05)'
-              }}>
-                <div className="tt-conflict-title" style={{ color: '#E06C75' }}>
-                  <AlertIcon size={16} /> Teacher Unavailable
-                </div>
-                <div className="tt-conflict-body">
-                  <strong style={{ color: '#5A6B5C' }}>{teacherName(editTeacher)}</strong> is already teaching{' '}
-                  <strong>{conflictWarning.subject}</strong> in{' '}
-                  <strong>{conflictWarning.class_grade}{conflictWarning.stream ? ` ${conflictWarning.stream}` : ''}</strong>.
-                  <div style={{ marginTop: 4, fontSize: '0.65rem', opacity: 0.8 }}>
-                    You can still save if this is intentional (shared class).
-                  </div>
-                </div>
+              <div className="tt-conflict-alert">
+                <AlertIcon size={20} />
+                <div>{conflictWarning}</div>
               </div>
             )}
+
 
             {/* Leave Warning in Modal */}
             {!conflictWarning && editTeacher && teachers.find(t => t.id === editTeacher)?.on_leave && (
