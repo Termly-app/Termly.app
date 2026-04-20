@@ -13,6 +13,7 @@ export default function Landing() {
   const ringFillRef = useRef(null);
   const barsRef = useRef(null);
   const [settings, setSettings] = useState(null);
+  const [showLoginDropdown, setShowLoginDropdown] = useState(false);
 
   useEffect(() => {
     async function loadSettings() {
@@ -70,12 +71,21 @@ export default function Landing() {
     };
     window.addEventListener('scroll', onScroll, { passive: true });
 
+    // ── DROP-AWAY DROPDOWN ──
+    const handleClickOutside = (e) => {
+      if (showLoginDropdown && !e.target.closest('.nav-dropdown-w')) {
+        setShowLoginDropdown(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+
     return () => {
       document.body.classList.remove('landing-body');
       document.removeEventListener('mousemove', onMouseMoveParallax);
       window.removeEventListener('scroll', onScroll);
+      document.removeEventListener('mousedown', handleClickOutside);
     };
-  }, []);
+  }, [showLoginDropdown]);
 
   useEffect(() => {
     // ── SCROLL REVEAL ──
@@ -196,7 +206,44 @@ export default function Landing() {
           <Link to="/partners" className="nlink">Partners</Link>
           <Link to="/docs" className="nlink">Docs</Link>
           <div className="nsep"></div>
-          <Link to="/login" className="nlink n-login">Sign in</Link>
+          
+          <div className="nav-dropdown-w" style={{ position: 'relative' }}>
+            <button 
+              className={`nlink n-login ${showLoginDropdown ? 'active' : ''}`}
+              onClick={() => setShowLoginDropdown(!showLoginDropdown)}
+              style={{ border: 'none', background: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}
+            >
+              Sign in
+              <ChevronDownIcon size={12} style={{ transform: showLoginDropdown ? 'rotate(180deg)' : 'none', transition: 'transform 0.3s' }} />
+            </button>
+            
+            {showLoginDropdown && (
+              <div className="portal-dropdown animate-pop">
+                <Link to="/login" className="pd-item" onClick={() => setShowLoginDropdown(false)}>
+                  <div className="pd-i si-v"><SchoolIcon size={14} /></div>
+                  <div className="pd-t">
+                    <strong>School Management</strong>
+                    <span>For Admins & Bursars</span>
+                  </div>
+                </Link>
+                <Link to="/staff/login" className="pd-item" onClick={() => setShowLoginDropdown(false)}>
+                  <div className="pd-i si-g"><UserIcon size={14} /></div>
+                  <div className="pd-t">
+                    <strong>Staff Portal</strong>
+                    <span>For Teachers & Staff</span>
+                  </div>
+                </Link>
+                <Link to="/portal/login" className="pd-item" onClick={() => setShowLoginDropdown(false)}>
+                  <div className="pd-i si-y"><GraduationIcon size={14} /></div>
+                  <div className="pd-t">
+                    <strong>Parent Portal</strong>
+                    <span>For Results & Fees</span>
+                  </div>
+                </Link>
+              </div>
+            )}
+          </div>
+
           <Link to="/register" className="ncta">
             Get access
             <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2.5 7h9M8 3.5l3.5 3.5L8 10.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" /></svg>
@@ -472,6 +519,37 @@ export default function Landing() {
                 <Link to={`/register?plan=${name}`} className="pbtn">Get started</Link>
               </div>
             ))}
+        </div>
+      </section>
+
+      <section className="section portals-gateway" id="portals">
+        <div className="sec-head reveal">
+          <div className="eyebrow">Portal Gateway</div>
+          <h2 className="landing-h2">One platform,<br />tailored experiences.</h2>
+          <p className="sec-p">Whether you're managing a whole campus, recording class grades, or checking a student's fees, we have a portal built for you.</p>
+        </div>
+
+        <div className="portal-cards">
+          <div className="pcard reveal">
+            <div className="pcard-icon si-v"><SchoolIcon size={24} /></div>
+            <h3>School Management</h3>
+            <p>Complete institution oversight, finance management, and platform configuration for administrators.</p>
+            <Link to="/login" className="pcard-link">Open Admin Portal <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2.5 7h9M8 3.5l3.5 3.5L8 10.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" /></svg></Link>
+          </div>
+
+          <div className="pcard reveal reveal-delay-1">
+            <div className="pcard-icon si-g"><UserIcon size={24} /></div>
+            <h3>Staff Portal</h3>
+            <p>Optimized for mobile use. Teachers can record marks, take attendance, and manage class lessons on the go.</p>
+            <Link to="/staff/login" className="pcard-link">Open Staff Portal <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2.5 7h9M8 3.5l3.5 3.5L8 10.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" /></svg></Link>
+          </div>
+
+          <div className="pcard reveal reveal-delay-2">
+            <div className="pcard-icon si-y"><GraduationIcon size={24} /></div>
+            <h3>Parent Portal</h3>
+            <p>Access learner results, check outstanding balances, and view school announcements in real-time.</p>
+            <Link to="/portal/login" className="pcard-link">Open Parent Portal <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2.5 7h9M8 3.5l3.5 3.5L8 10.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" /></svg></Link>
+          </div>
         </div>
       </section>
 

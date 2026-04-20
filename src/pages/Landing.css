@@ -561,3 +561,140 @@ footer.landing-footer{
   .ft-col-news{grid-column:span 1}
   .ft-bottom{flex-direction:column;gap:24px;align-items:flex-start}
 }
+
+/* ══ PORTAL DROPDOWN ══ */
+.portal-dropdown {
+  position: absolute;
+  top: calc(100% + 12px);
+  right: 0;
+  width: 280px;
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  box-shadow: 0 16px 48px rgba(0,0,0,.12), 0 0 0 1px rgba(0,0,0,.02);
+  padding: 8px;
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.pd-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  border-radius: 14px;
+  text-decoration: none;
+  transition: all .2s;
+}
+.pd-item:hover {
+  background: var(--off);
+}
+.pd-i {
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.pd-t {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+.pd-t strong {
+  font-family: var(--fh);
+  font-size: .85rem;
+  font-weight: 700;
+  color: var(--ink);
+  line-height: 1.2;
+  display: block;
+}
+.pd-t span {
+  font-size: .7rem;
+  color: var(--muted);
+}
+.animate-pop {
+  animation: popIn 0.3s cubic-bezier(0.18, 0.89, 0.32, 1.28) forwards;
+  transform-origin: top right;
+}
+@keyframes popIn {
+  from { opacity: 0; transform: scale(0.95) translateY(-8px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+/* ══ PORTAL GATEWAY SECTION ══ */
+.portals-gateway {
+  border-top: 1px solid var(--border);
+  background: #fff;
+}
+.portal-cards {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+.pcard {
+  background: var(--off);
+  border: 1px solid var(--border);
+  border-radius: 24px;
+  padding: 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  transition: all .3s;
+}
+.pcard:hover {
+  background: #fff;
+  border-color: var(--border2);
+  transform: translateY(-4px);
+  box-shadow: 0 12px 32px rgba(0,0,0,.06);
+}
+.pcard-icon {
+  width: 54px;
+  height: 54px;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 8px;
+}
+.pcard h3 {
+  font-family: var(--fh);
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: var(--ink);
+  letter-spacing: -.02em;
+}
+.pcard p {
+  font-size: .9rem;
+  color: var(--muted);
+  line-height: 1.6;
+  flex: 1;
+}
+.pcard-link {
+  font-size: .85rem;
+  font-weight: 600;
+  color: var(--violet);
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 12px;
+}
+.pcard-link:hover svg {
+  transform: translateX(3px);
+}
+.pcard-link svg {
+  transition: transform .2s;
+}
+
+@media(max-width: 960px) {
+  .portal-cards {
+    grid-template-columns: 1fr;
+    max-width: 520px;
+  }
+}
