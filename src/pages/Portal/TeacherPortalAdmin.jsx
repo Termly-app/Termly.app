@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { getTeachers, getSchoolProfile, updateTeacher } from '../../data/store';
-import { StaffIcon, CheckIcon, RefreshIcon, CopyIcon, EyeIcon, EyeOffIcon, ShieldIcon } from '../../components/CommonIcons';
+import { StaffIcon, CheckIcon, RefreshIcon, CopyIcon, EyeIcon, EyeOffIcon, ShieldIcon, SearchIcon } from '../../components/CommonIcons';
 import { useDialog } from '../../contexts/DialogContext';
 
 export default function TeacherPortalAdmin() {
