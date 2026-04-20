@@ -124,7 +124,6 @@ export default function ParentPortalAdmin() {
               Student Directory
             </h3>
             <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
               <Select
                 value={selectedClass}
                 onChange={e => setSelectedClass(e.target.value)}
