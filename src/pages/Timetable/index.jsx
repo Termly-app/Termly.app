@@ -754,7 +754,7 @@ export default function Timetable({ currentUser, currentPeriodId, periods = [] }
               value={editSubject} onChange={e => setEditSubject(e.target.value)} />
             {suggestedSubs && suggestedSubs.length > 0 && (
               <div className="tt-suggestion-chips" style={{ marginTop:6 }}>
-                {suggestedSubs.slice(0, 8).map(s => (
+                {suggestedSubs.map(s => (
                   <button key={s} className={`tt-chip ${editSubject === s ? 'active' : ''}`}
                     onClick={() => setEditSubject(s)}>
                     {s}
