@@ -6,7 +6,7 @@ import './Landing.css';
 import {
   BookIcon, UserIcon, CheckIcon, CardIcon, SchoolIcon,
   PhoneIcon, DashboardIcon, CalendarIcon, FlagIcon, RocketIcon,
-  GraduationIcon
+  GraduationIcon, ChevronDownIcon
 } from '../components/CommonIcons';
 
 export default function Landing() {
