@@ -38,6 +38,7 @@ export default function Students({ currentUser, currentPeriodId }) {
   const [profile, setProfile] = useState({ activeClasses: [], streamsPerClass: {}, gradeFees: {} });
   const [loading, setLoading] = useState(true);
   const [showTransitionModal, setShowTransitionModal] = useState(false);
+  const [statusMenuId, setStatusMenuId] = useState(null);
   const { confirm, prompt, alert, toast } = useDialog();
 
   const loadData = async () => {
@@ -90,39 +91,15 @@ export default function Students({ currentUser, currentPeriodId }) {
       await alert({ title: 'Save Failed', message: err.message || 'Could not save student record. Please try again.', variant: 'danger' });
     } finally { setLoading(false); }
   };
-  const handleStatusChange = async (id, currentStatus) => {
-    const options = [
-      { id: 'Active', label: 'Active (Re-enroll)' },
-      { id: 'Transferred', label: 'Transferred' },
-      { id: 'Graduated', label: 'Graduated' }
-    ].filter(o => o.id !== currentStatus);
-
-    const newStatus = await prompt({
-      title: 'Change Enrollment Status',
-      message: `Current status: ${currentStatus || 'Active'}. Select the new status for this student.`,
-      inputLabel: 'New Status',
-      inputType: 'select',
-      inputOptions: options,
-      confirmText: 'Update Status',
-      confirmVariant: 'warning'
-    });
-    if (!newStatus) return;
-
-    const reason = await prompt({
-      title: 'Reason (Optional)',
-      message: `Provide a reason for changing status to ${newStatus}.`,
-      inputPlaceholder: 'e.g. Transferred to another school, Graduated 2026...',
-    });
-
+  const handleQuickStatus = async (id, newStatus) => {
+    setStatusMenuId(null);
     setLoading(true);
     try {
-      await archiveStudent(id, newStatus, reason || '');
+      await archiveStudent(id, newStatus, '');
       await refresh();
-      setSelectedStudent(null);
       toast(`Student status changed to ${newStatus}`, 'success');
     } catch (err) {
       console.error(err);
-      await alert({ title: 'Status Change Failed', message: err.message || 'Could not update student status.', variant: 'danger' });
     } finally { setLoading(false); }
   };
   const handleTransfer = async (ids, dir) => {
@@ -285,9 +262,9 @@ export default function Students({ currentUser, currentPeriodId }) {
                     </td>
                     <td data-label="Class"><span className="badge badge-info">{s.class}</span></td>
                     <td data-label="Level"><span className={`level-badge ${lb.cls}`}>{lb.ico} {getLevelForGrade(s.class)}</span></td>
-                    <td data-label="Enrolment">
+                    <td data-label="Enrolment" style={{position:'relative'}}>
                       <span 
-                        onClick={isAdmin ? () => handleStatusChange(s.id, s.status || 'Active') : undefined}
+                        onClick={isAdmin ? (e) => { e.stopPropagation(); setStatusMenuId(statusMenuId === s.id ? null : s.id); } : undefined}
                         style={{ 
                           fontSize: '0.65rem', padding: '2px 8px', borderRadius: 6, fontWeight: 700, textTransform: 'uppercase',
                           backgroundColor: (s.status||'Active') === 'Active' ? '#ecfdf5' : s.status === 'Graduated' ? '#eff6ff' : '#f3f4f6',
@@ -300,7 +277,27 @@ export default function Students({ currentUser, currentPeriodId }) {
                       >
                         {(s.status||'Active') === 'Active' && <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#10b981' }}></span>}
                         {s.status || 'Active'}
+                        {isAdmin && <span style={{fontSize:'0.5rem',marginLeft:2}}>▼</span>}
                       </span>
+                      {statusMenuId === s.id && (
+                        <>
+                          <div style={{position:'fixed',inset:0,zIndex:99}} onClick={()=>setStatusMenuId(null)}/>
+                          <div style={{position:'absolute',top:'100%',left:0,zIndex:100,marginTop:4,background:'var(--bg-card)',border:'1px solid var(--border)',borderRadius:8,boxShadow:'0 4px 16px rgba(0,0,0,0.15)',minWidth:160,overflow:'hidden'}}>
+                            <div style={{padding:'6px 10px',fontSize:'0.65rem',color:'var(--text-muted)',fontWeight:700,textTransform:'uppercase',borderBottom:'1px solid var(--border)'}}>Change Status</div>
+                            {[{v:'Active',c:'#059669',bg:'#ecfdf5'},{v:'Transferred',c:'#4b5563',bg:'#f3f4f6'},{v:'Graduated',c:'#1d4ed8',bg:'#eff6ff'}]
+                              .filter(o=>o.v!==(s.status||'Active'))
+                              .map(o=>(
+                                <div key={o.v} onClick={()=>handleQuickStatus(s.id,o.v)} style={{padding:'8px 12px',fontSize:'0.8rem',fontWeight:600,cursor:'pointer',display:'flex',alignItems:'center',gap:8,color:o.c,transition:'background 0.15s'}}
+                                  onMouseEnter={e=>e.currentTarget.style.background=o.bg}
+                                  onMouseLeave={e=>e.currentTarget.style.background='transparent'}
+                                >
+                                  <span style={{width:8,height:8,borderRadius:'50%',background:o.c,flexShrink:0}}></span>
+                                  {o.v}
+                                </div>
+                              ))}
+                          </div>
+                        </>
+                      )}
                     </td>
                     <td data-label="NEMIS">
                       { (s.upi || s.nemis_number) && s.dob && s.gender && (s.parent_phone || s.parentPhone) ? (
@@ -324,7 +321,6 @@ export default function Students({ currentUser, currentPeriodId }) {
                       <td data-label="Actions" style={{textAlign:'center'}}>
                         <div style={{display:'inline-flex',gap:4}}>
                           <button className="btn btn-ghost btn-sm" onClick={()=>{setEditingStudent(s);setShowModal(true);}} title="Edit Student"><EditIcon size={14} /></button>
-                          <button className="btn btn-ghost btn-sm text-danger" onClick={()=>handleStatusChange(s.id, s.status || 'Active')} title="Change Status"><DeleteIcon size={14} /></button>
                         </div>
                       </td>
                     )}
