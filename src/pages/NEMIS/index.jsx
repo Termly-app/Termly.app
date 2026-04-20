@@ -140,7 +140,7 @@ export default function NEMISDashboard({ currentUser }) {
         </div>
       </div>
 
-      <div className="report-grid-container" style={{ display: 'grid', gridTemplateColumns: '1fr 320px', gap: 20, alignItems: 'start' }}>
+      <div className="nemis-main-grid">
         
         {/* Compliance Issues List */}
         <div className="card">
@@ -336,84 +336,92 @@ export default function NEMISDashboard({ currentUser }) {
 
       {/* Print Styles */}
       <style>{`
-        .no-print { display: block; }
+        /* Desktop/UI Grid Layout */
+        .nemis-main-grid {
+          display: grid;
+          grid-template-columns: 1fr 320px;
+          gap: 20px;
+          align-items: start;
+        }
+
         .print-only { display: none !important; }
+        .no-print { display: block; }
 
         @media print {
-          /* Force hiding no-print elements */
-          .no-print, 
-          .sidebar, .topbar, .mobile-toggle, .sidebar-overlay,
-          .page-header, .sb-footer, .sb-brand, .no-print * {
+          /* Force TOTAL HIDING of non-essential UI */
+          .no-print, .sidebar, .topbar, .mobile-toggle, .sidebar-overlay, .page-header, .no-print *,
+          header, footer, nav {
             display: none !important;
           }
           
-          .main-content, .page-content, .report-grid-container, .app-layout { 
-            margin: 0 !important; 
-            padding: 0 !important; 
-            width: 100% !important; 
-            max-width: none !important; 
+          /* Force EVERYTHING to span 100% width */
+          body, #root, .app-layout, .main-content, .page-content, .nemis-report, .nemis-main-grid, .card {
+            margin: 0 !important;
+            padding: 0 !important;
+            width: 100% !important;
+            max-width: none !important;
+            min-width: 100% !important;
             display: block !important;
+            position: static !important;
           }
           
-          .card { 
-            box-shadow: none !important; 
-            border: none !important; 
-            padding: 0 !important; 
-            width: 100% !important; 
-            max-width: none !important;
-            margin: 0 !important;
-          }
+          .card { border: none !important; box-shadow: none !important; }
           .print-only { display: block !important; }
 
-          /* Header Adjustments - Large and clear */
-          .print-only h1 { font-size: 2.4rem !important; margin-bottom: 8px !important; }
-          .print-only h2 { font-size: 1.3rem !important; color: #000 !important; }
-          .print-only div { font-size: 1rem !important; }
+          /* Header: BIG AND BOLD */
+          .print-only h1 { 
+            font-size: 3rem !important; 
+            margin: 0 0 10px 0 !important; 
+            line-height: 1 !important;
+            letter-spacing: -2px !important;
+          }
+          .print-only h2 { font-size: 1.5rem !important; margin: 0 !important; border-bottom: 2px solid #000; padding-bottom: 5px; }
+          .print-only .meta-info div { font-size: 1.2rem !important; font-weight: 600 !important; }
 
-          /* Table styling for print - BIG and BOLD */
+          /* Table: FULL WIDTH & LARGE TEXT */
           .data-table { 
-            font-size: 1.1rem !important; 
             width: 100% !important;
+            font-size: 1.2rem !important; 
             border-collapse: collapse !important;
-            border: 2px solid #000 !important;
-            margin-top: 20px !important;
+            border: 3px solid #000 !important;
+            margin-top: 30px !important;
           }
           .data-table th { 
             background: #eee !important; 
-            color: #000 !important; 
-            text-align: left !important;
-            font-size: 1.2rem !important;
-            border: 2px solid #000 !important;
-            padding: 12px 15px !important;
+            font-size: 1.3rem !important;
+            font-weight: 800 !important;
+            padding: 15px !important;
+            border-bottom: 3px solid #000 !important;
           }
           .data-table td { 
-            padding: 12px 15px !important; 
+            padding: 15px !important; 
             border: 1px solid #000 !important;
-            color: #000 !important;
             vertical-align: top !important;
-          }
-          
-          /* Student name should be prominent */
-          .data-table div[style*="font-weight: 600"] {
-            font-size: 1.2rem !important;
-            font-weight: 800 !important;
+            line-height: 1.4 !important;
           }
 
-          /* Issue labels - Clear and distinct */
+          /* Important Student Name */
+          .data-table b, .data-table strong, .data-table div[style*="font-weight: 600"] {
+            font-size: 1.4rem !important;
+            display: block !important;
+            margin-bottom: 5px !important;
+          }
+
+          /* Issue Labels: Clear and Big */
           .data-table span[style*="background"] {
             background: #fff !important;
             border: 1px solid #000 !important;
-            color: #000 !important;
-            padding: 4px 8px !important;
-            font-size: 0.9rem !important;
+            padding: 5px 12px !important;
+            font-size: 1rem !important;
+            font-weight: bold !important;
+            border-radius: 6px !important;
+            margin: 4px !important;
             display: inline-block !important;
-            margin: 3px !important;
-            border-radius: 4px !important;
           }
 
           @page {
             size: A4 portrait;
-            margin: 10mm;
+            margin: 15mm;
           }
         }
       `}</style>
