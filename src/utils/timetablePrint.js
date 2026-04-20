@@ -112,8 +112,9 @@ export async function printClassTimetable({ school, classGrade, stream, period, 
         const i = sortedConf.findIndex(c => c.slot_index === cfg.slot_index);
         if (i > 0) {
           const prevSlot = lookup[`${day}__${sortedConf[i-1].slot_index}`];
-          if (prevSlot?.is_double_first) return ''; // Safely omit
+          if (prevSlot?.is_double_first) return ''; // Safely omit HTML element
         }
+        return '<td></td>'; // It's a ghost! Render an empty box to preserve borders and hide phantom data.
       }
 
       if (!s || !s.subject) return '<td></td>';
@@ -185,6 +186,7 @@ export async function printTeacherTimetable({ school, teacher, period, config, s
           const prevSlot = lookup[`${day}__${sortedConf[i-1].slot_index}`];
           if (prevSlot?.is_double_first) return ''; 
         }
+        return '<td></td>';
       }
 
       if (!s || !s.subject) return '<td></td>';
@@ -253,6 +255,7 @@ export async function printAllTeachersTimetables({ school, teachers, period, con
             const prevSlot = lookup[`${day}__${sortedConf[i-1].slot_index}`];
             if (prevSlot?.is_double_first) return ''; 
           }
+          return '<td></td>';
         }
         
         if (!s || !s.subject) return '<td></td>';
