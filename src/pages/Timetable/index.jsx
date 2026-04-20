@@ -40,6 +40,36 @@ import { useDialog } from '../../contexts/DialogContext';
 
 // ── Colour palette for subjects (Modern, Premium Palette) ────────────────
 
+const MOE_ABBREVIATIONS = {
+  'Mathematics': 'MATH',
+  'English': 'ENG',
+  'Kiswahili': 'KISW',
+  'Biology': 'BIO',
+  'Physics': 'PHY',
+  'Chemistry': 'CHEM',
+  'History & Government': 'HIST',
+  'Geography': 'GEO',
+  'Christian Religious Education': 'CRE',
+  'Islamic Religious Education': 'IRE',
+  'Hindu Religious Education': 'HRE',
+  'Business Studies': 'BST',
+  'Agriculture': 'AGR',
+  'Integrated Science': 'SCI',
+  'Social Studies': 'SST',
+  'Literacy Activities': 'LIT',
+  'Mathematical Activities': 'MATH',
+  'Environmental Activities': 'ENV',
+  'Religious Education': 'R.E',
+  'Science & Technology': 'S&T',
+  'Agriculture & Nutrition': 'A&N',
+  'Creative Arts': 'C.A',
+  'Physical Education': 'P.E',
+  'Physical and Health Education': 'P.E',
+  'Life Skills': 'LSE',
+  'ICT': 'ICT',
+  'Home Science': 'H.SCI'
+};
+
 // ── Subject suggestions by school level ──────────────────────────────────
 
 function getLevel(grade) {
