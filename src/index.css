@@ -697,3 +697,27 @@ html body input[type="number"]::-webkit-outer-spin-button {
 html body input[type="number"] {
   -moz-appearance: textfield !important;
 }
+
+/* GLOBAL PRINT STYLES */
+.global-print-element {
+  display: none;
+}
+@media print {
+  .global-print-element {
+    display: block !important;
+    position: fixed;
+    z-index: 9999;
+  }
+  .global-print-header {
+    top: 0;
+    left: 0;
+  }
+  .global-print-footer {
+    bottom: 0;
+    left: 0;
+  }
+  
+  @page {
+    margin: 0; /* Ensures browser headers are hidden globally if needed */
+  }
+}

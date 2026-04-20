@@ -770,6 +770,17 @@ function App() {
           </Suspense>
         </div>
       </main>
+
+      {/* Global Print Overlay Header & Footer */}
+      {profile?.logo && (
+        <div className="global-print-element global-print-header" style={{ margin: '15mm' }}>
+          <img src={profile.logo} alt="School Logo" style={{ height: 50, objectFit: 'contain' }} />
+        </div>
+      )}
+      <div className="global-print-element global-print-footer" style={{ margin: '15mm', opacity: 0.8 }}>
+        <LogoMarkBW size={20} />
+      </div>
+
     </div>
   );
 }
