@@ -33,7 +33,7 @@ import {
 import { 
   CalendarIcon, PrintIcon, BookIcon, CheckIcon, CrossIcon, 
   AlertIcon, UserIcon, HomeIcon, TeacherIcon, PlusIcon,
-  SettingsIcon, ChevronDownIcon
+  SettingsIcon, ChevronDownIcon, AlertCircleIcon
 } from '../../components/CommonIcons';
 import PricingUpgrade from '../../components/PricingUpgrade';
 import { useDialog } from '../../contexts/DialogContext';
@@ -71,16 +71,8 @@ const todayName = ALL_DAYS[new Date().getDay() - 1] || 'Monday';
 
 export default function Timetable({ currentUser, currentPeriodId, periods = [] }) {
   const COLORS = [
-    'hsla(250, 84%, 63%, 0.85)', // Indigo
-    'hsla(158, 82%, 40%, 0.85)', // Emerald
-    'hsla(38, 92%, 50%, 0.85)',  // Amber
-    'hsla(341, 89%, 60%, 0.85)', // Rose
-    'hsla(199, 89%, 48%, 0.85)', // Sky
-    'hsla(271, 91%, 65%, 0.85)', // Violet
-    'hsla(11, 90%, 63%, 0.85)',  // Orange/Coral
-    'hsla(170, 78%, 45%, 0.85)', // Teal
-    'hsla(320, 80%, 60%, 0.85)', // Pink
-    'hsla(45, 93%, 47%, 0.85)',  // Yellow/Gold
+    '#6F52E8', '#10B981', '#F59E0B', '#EF4444', '#3B82F6', '#8B5CF6', 
+    '#F97316', '#06B6D4', '#EC4899', '#D946EF', '#84CC16', '#EAB308'
   ];
 
   const DEFAULT_SLOTS = [
@@ -419,13 +411,30 @@ export default function Timetable({ currentUser, currentPeriodId, periods = [] }
 
   // ── Clear cell ────────────────────────────────────────────────────────
   const handleClearCell = async (day, slotIndex, e) => {
-    e.stopPropagation();
+    e?.stopPropagation();
     if (!isAdmin) return;
+    
+    // Check if it's a double lesson
+    const existing = slotLookup(day, slotIndex, slots);
+    let clearSecond = false;
+    if (existing?.is_double_first) {
+      if (confirm) {
+        clearSecond = await confirm('Clear both slots?', 'This is a double lesson. Would you like to clear both consecutive slots?');
+      } else {
+        clearSecond = window.confirm('This is a double lesson. Clear both slots?');
+      }
+    }
+
     try {
-      await clearTimetableSlot(schoolId, periodId, selClass, selStream || null, day, slotIndex);
-      setSlots(await getTimetableSlots(schoolId, periodId, selClass, selStream || null));
+      await clearTimetableSlot(schoolId, periodId, selClass, selStream || '', day, slotIndex);
+      if (clearSecond) {
+        await clearTimetableSlot(schoolId, periodId, selClass, selStream || '', day, slotIndex + 1);
+      }
+      setSlots(await getTimetableSlots(schoolId, periodId, selClass, selStream || ''));
+      setEditCell(null);
     } catch (e) { setMessage({ type:'err', text: e.message }); }
   };
+
 
   // ── Computed ──────────────────────────────────────────────────────────
   const classStreams    = selClass ? (streams[selClass] || []) : [];
@@ -672,21 +681,24 @@ export default function Timetable({ currentUser, currentPeriodId, periods = [] }
                                 {hasData && !isDoubleSecond && (
                                   <>
                                     <div className="tt-cell-subject" style={{ color: bg }}>
-                                      {cell.subject}
+                                      {MOE_ABBREVIATIONS[cell.subject] || cell.subject}
                                       {isDoubleFirst && <span className="tt-dbl-tag">×2</span>}
                                     </div>
-                                    {view === 'class' && (cell.teachers?.name || teacherName(cell.teacher_id)) && (
-                                      <div style={{display:'flex', flexDirection:'column', gap:2}}>
-                                        <div className="tt-cell-teacher" style={{ color: bg, opacity: 0.8 }}>
-                                          <UserIcon size={12} /> {cell.teachers?.staff_code || teachers.find(t => t.id === cell.teacher_id)?.staff_code || cell.teachers?.name || teacherName(cell.teacher_id)}
-                                        </div>
-                                        {teachers.find(t => t.id === cell.teacher_id)?.on_leave && (
-                                          <div className="tt-leave-warning" style={{fontSize:'0.6rem', background:'var(--warning-light)', color:'var(--warning)', padding:'1px 4px', borderRadius:4, fontWeight:700, display:'inline-flex', alignItems:'center', gap:2}}>
-                                            <AlertIcon size={10} /> COVER NEEDED
+                                    {view === 'class' && (cell.teachers?.name || teacherName(cell.teacher_id)) && (() => {
+                                      const tName = cell.teachers?.name || teacherName(cell.teacher_id);
+                                      const t = teachers.find(x => x.id === cell.teacher_id);
+                                      const tSubs = Array.isArray(t?.subjects) ? t.subjects : (t?.subjects || '').split(',').map(s => s.trim().toLowerCase());
+                                      const searchSub = (cell.subject || '').trim().toLowerCase();
+                                      const isMatch = !searchSub || tSubs.some(s => s === searchSub || s.includes(searchSub) || searchSub.includes(s));
+
+                                      return (
+                                        <div style={{display:'flex', flexDirection:'column', gap:2}}>
+                                          <div className="tt-cell-teacher" style={{ color: bg, opacity: 0.8, display:'flex', alignItems:'center', gap:3 }}>
+                                            {tName} {!isMatch && <AlertCircleIcon size={10} style={{ color: '#F59E0B' }} />}
                                           </div>
-                                        )}
-                                      </div>
-                                    )}
+                                        </div>
+                                      );
+                                    })()}
                                     {view === 'teacher' && cell.class_grade && (
                                       <div className="tt-cell-class" style={{ color: bg, opacity: 0.8 }}>
                                         {cell.class_grade}{cell.stream ? ` · ${cell.stream}` : ''}
