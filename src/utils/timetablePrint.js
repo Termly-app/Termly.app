@@ -13,7 +13,7 @@ const PRINT_CSS = `
   table  { width:100%; border-collapse:collapse; margin-top:8px; table-layout: fixed; }
   th     { background:#1e3a5f; color:#fff; padding:6px 4px; font-size:8pt; text-align:center; border:1px solid #000; }
   th.time-th { width: 85px; }
-  td     { padding:4px 4px; border:1px solid #000; vertical-align:top; min-height:45px; font-size:8pt; word-wrap: break-word; }
+  td     { padding:4px 4px; border:1px solid #000; vertical-align:middle; min-height:45px; font-size:8pt; word-wrap: break-word; text-align: center; }
   td.time-cell  { background:#f8fafc; font-weight:bold; font-size:8pt; text-align:center; color:#333; width: 85px; vertical-align:middle; border-right: 2px solid #000; }
   td.break-cell { background:#f1f5f9; text-align:center; color:#64748b; font-style:italic; font-size:8pt; vertical-align:middle; font-weight: 600; }
   
@@ -58,7 +58,16 @@ export async function printClassTimetable({ school, classGrade, stream, period, 
     }
     const cells = days.map(day => {
       const s = lookup[`${day}__${cfg.slot_index}`];
-      if (s?.is_double_second) return '';
+      
+      // Before omitting this td, ensure the slot ABOVE it genuinely initiated a rowSpan!
+      if (s?.is_double_second) {
+        const sortedConf = [...config].sort((a,b) => a.slot_index - b.slot_index).filter(c => !c.is_break);
+        const i = sortedConf.findIndex(c => c.slot_index === cfg.slot_index);
+        if (i > 0) {
+          const prevSlot = lookup[`${day}__${sortedConf[i-1].slot_index}`];
+          if (prevSlot?.is_double_first) return ''; // Safely omit
+        }
+      }
 
       if (!s || !s.subject) return '<td></td>';
 
@@ -67,7 +76,7 @@ export async function printClassTimetable({ school, classGrade, stream, period, 
 
       return `<td class="${dblClass}"${rowSpanAttr}>
         <div class="cell-subject">${s.subject}</div>
-        ${s.teachers?.staff_code ? `<div class="cell-teacher">${s.teachers.staff_code}</div>` : ''}
+        ${s.teachers?.staff_code && !s.is_double_second ? `<div class="cell-teacher">${s.teachers.staff_code}</div>` : ''}
       </td>`;
     }).join('');
 
@@ -121,7 +130,15 @@ export async function printTeacherTimetable({ school, teacher, period, config, s
     }
     const cells = days.map(day => {
       const s = lookup[`${day}__${cfg.slot_index}`];
-      if (s?.is_double_second) return '';
+      
+      if (s?.is_double_second) {
+        const sortedConf = [...config].sort((a,b) => a.slot_index - b.slot_index).filter(c => !c.is_break);
+        const i = sortedConf.findIndex(c => c.slot_index === cfg.slot_index);
+        if (i > 0) {
+          const prevSlot = lookup[`${day}__${sortedConf[i-1].slot_index}`];
+          if (prevSlot?.is_double_first) return ''; 
+        }
+      }
 
       if (!s || !s.subject) return '<td></td>';
 
@@ -181,7 +198,16 @@ export async function printAllTeachersTimetables({ school, teachers, period, con
       }
       const cells = days.map(day => {
         const s = lookup[`${day}__${cfg.slot_index}`];
-        if (s?.is_double_second) return '';
+        
+        if (s?.is_double_second) {
+          const sortedConf = [...config].sort((a,b) => a.slot_index - b.slot_index).filter(c => !c.is_break);
+          const i = sortedConf.findIndex(c => c.slot_index === cfg.slot_index);
+          if (i > 0) {
+            const prevSlot = lookup[`${day}__${sortedConf[i-1].slot_index}`];
+            if (prevSlot?.is_double_first) return ''; 
+          }
+        }
+        
         if (!s || !s.subject) return '<td></td>';
         
         const rowSpanAttr = s.is_double_first ? ' rowspan="2"' : '';

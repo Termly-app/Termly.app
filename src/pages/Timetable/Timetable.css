@@ -154,11 +154,12 @@
 .tt-cell:hover { background: rgba(111,82,232,0.06); transform: scale(1.01); z-index: 5; }
 .tt-cell-inner {
   border-radius: 10px; padding: 10px; min-height: 60px;
-  display: flex; flex-direction: column; justify-content: center;
+  display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center;
   backdrop-filter: blur(4px);
   box-shadow: 0 4px 12px rgba(0,0,0,0.12);
   border: 1px solid rgba(255,255,255,0.08);
   transition: all 0.2s ease;
+  height: 100%;
 }
 .tt-cell:hover .tt-cell-inner { border-color: rgba(255,255,255,0.2); box-shadow: 0 6px 16px rgba(0,0,0,0.2); }
 .tt-cell.empty .tt-cell-inner { 
