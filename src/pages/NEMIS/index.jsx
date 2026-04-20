@@ -254,9 +254,8 @@ export default function NEMISDashboard({ currentUser }) {
             </tbody>
           </table>
           <div className="print-only" style={{ marginTop: 40, paddingTop: 10, borderTop: '1px solid #ccc', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 6, opacity: 0.6 }}>
+            <div style={{ display: 'flex', alignItems: 'center', opacity: 0.6 }}>
               <LogoMarkBW size={16} />
-              <span style={{ fontSize: '0.65rem', fontWeight: 700, letterSpacing: '0.5px' }}>POWERED BY SHULESOFT</span>
             </div>
             <div style={{ fontSize: '0.65rem', color: '#999' }}>
                NEMIS Compliance Audit Report — Page 1 of 1
