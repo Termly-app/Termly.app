@@ -22,8 +22,8 @@ const PRINT_CSS = `
   td.double-second { border-top:none; background:#fafafa; }
   .cell-subject { font-weight:bold; font-size:9pt; }
   .cell-teacher { font-size:8pt; color:#555; margin-top:2px; }
-  .cell-room    { font-size:7.5pt; color:#888; margin-top:1px; }
   .cell-class   { font-size:8pt; color:#444; font-style:italic; margin-top:2px; }
+
   .double-badge { display:inline-block; padding:0 4px; background:#e0e0e0; border-radius:3px; font-size:7pt; font-weight:bold; margin-left:4px; vertical-align:middle; }
   .double-cont  { font-size:8pt; color:#999; font-style:italic; }
   .footer { text-align:center; font-size:8pt; color:#aaa; margin-top:14px; padding-top:8px; border-top:1px solid #ddd; }
@@ -69,7 +69,6 @@ export function printClassTimetable({ school, classGrade, stream, period, config
       return `<td class="${dblClass}">
         <div class="cell-subject">${s.subject}${dblBadge}</div>
         ${s.teachers?.name ? `<div class="cell-teacher">Teacher: ${s.teachers.name}</div>` : ''}
-        ${s.room ? `<div class="cell-room">Room: ${s.room}</div>` : ''}
         ${contLabel}
       </td>`;
     }).join('');
@@ -125,7 +124,6 @@ export function printTeacherTimetable({ school, teacher, period, config, slots, 
       return `<td class="${dblClass}">
         <div class="cell-subject">${s.subject}${dblBadge}</div>
         <div class="cell-class">${s.class_grade}${s.stream ? ` ${s.stream}` : ''}</div>
-        ${s.room ? `<div class="cell-room">Room: ${s.room}</div>` : ''}
         ${contLabel}
       </td>`;
     }).join('');
@@ -180,7 +178,6 @@ export function printAllTeachersTimetables({ school, teachers, period, config, a
         return `<td>
           <div class="cell-subject">${s.subject}</div>
           <div class="cell-class">${s.class_grade}${s.stream ? ` ${s.stream}` : ''}</div>
-          ${s.room ? `<div class="cell-room">${s.room}</div>` : ''}
         </td>`;
       }).join('');
 
@@ -212,47 +209,4 @@ export function printAllTeachersTimetables({ school, teachers, period, config, a
 /**
  * Print Exam Schedule (List View)
  */
-export function printExamSchedule({ school, title, period, exams }) {
-  const sortedExams = [...exams].sort((a,b) => {
-    const d = (a.date || '').localeCompare(b.date || '');
-    if (d !== 0) return d;
-    return (a.start_time || '').localeCompare(b.start_time || '');
-  });
 
-  const rows = sortedExams.map(ex => `
-    <tr>
-      <td style="white-space:nowrap">${ex.date ? new Date(ex.date).toLocaleDateString('en-KE', { weekday:'short', day:'numeric', month:'short' }) : ex.day_of_week}</td>
-      <td style="text-align:center; white-space:nowrap; font-weight:bold">${ex.start_time} – ${ex.end_time}</td>
-      <td><strong>${ex.subject}</strong></td>
-      <td>${ex.class_grade}${ex.stream ? ` ${ex.stream}` : ''}</td>
-      <td>${ex.room || '—'}</td>
-    </tr>
-  `).join('');
-
-  const html = `
-    <div class="wrap">
-      <div class="school-header">
-        <div class="school-name">${school?.name || 'School'}</div>
-        <div class="doc-title">${title || 'Exam Timetable'}</div>
-        <div class="doc-sub">${period?.year || ''} Term ${period?.term || ''}</div>
-      </div>
-      <table style="margin-top:20px">
-        <thead>
-          <tr>
-            <th style="text-align:left">Date</th>
-            <th>Time</th>
-            <th style="text-align:left">Subject / Paper</th>
-            <th style="text-align:left">Class</th>
-            <th style="text-align:left">Venue</th>
-          </tr>
-        </thead>
-        <tbody>
-          ${rows}
-        </tbody>
-      </table>
-      <div class="footer">School Management System &nbsp;·&nbsp; Generated on ${new Date().toLocaleDateString('en-KE')}</div>
-    </div>
-  `;
-
-  openPrint(html);
-}

@@ -168,7 +168,6 @@ function Sidebar({ isOpen, onClose, onLogout, currentUser, subscriptionActive })
     fees: false,
     sms: false,
     lms: false,
-    exam_scheduling: false,
     teacher_portal: false,
     parent_portal: false,
     mpesa: false,
@@ -180,7 +179,7 @@ function Sidebar({ isOpen, onClose, onLogout, currentUser, subscriptionActive })
     const checkFeatures = async () => {
       const keys = [
         'library', 'timetable', 'attendance', 'grading', 'fees', 'sms', 'lms', 
-        'exam_scheduling', 'teacher_portal', 'parent_portal', 'mpesa', 'whatsapp', 'nemis'
+        'teacher_portal', 'parent_portal', 'mpesa', 'whatsapp', 'nemis'
       ];
       
       try {
@@ -193,6 +192,7 @@ function Sidebar({ isOpen, onClose, onLogout, currentUser, subscriptionActive })
       }
     };
     if (currentUser) checkFeatures();
+
 
     // Re-evaluate features when platform settings change in real-time
     window.addEventListener('platformSettingsChanged', checkFeatures);
@@ -323,7 +323,7 @@ function Sidebar({ isOpen, onClose, onLogout, currentUser, subscriptionActive })
         )}
         
         {(isAdmin || isTeacher) && (
-          <SbLink to="/academics" icon={GradingIcon} label="Grading & Exams" onClick={onClose} locked={!subscriptionActive && !isPlatformAdmin} />
+          <SbLink to="/academics" icon={GradingIcon} label="Academic Results" onClick={onClose} locked={!subscriptionActive && !isPlatformAdmin} />
         )}
         
         {/* Timetable — Reactivated for Sandbox/Production */}
@@ -732,7 +732,8 @@ function App() {
                       <>
                         <Route path="/students"     element={<Students currentUser={currentUser} currentPeriodId={currentPeriodId} />} />
                         <Route path="/attendance"   element={<SectionGate featureSlug="attendance" featureName="Attendance" profile={profile}><Attendance currentUser={currentUser} currentPeriodId={currentPeriodId} /></SectionGate>}  />
-                        <Route path="/academics"    element={<SectionGate featureSlug="grading" featureName="Grading & Exams" profile={profile}><Academics currentUser={currentUser} currentPeriodId={currentPeriodId} /></SectionGate>}  />
+                        <Route path="/academics"    element={<SectionGate featureSlug="grading" featureName="Academic Results" profile={profile}><Academics currentUser={currentUser} currentPeriodId={currentPeriodId} /></SectionGate>}  />
+
                         {/* Timetable and E-Learning routes */}
                         <Route path="/timetable"    element={<SectionGate featureSlug="timetable" featureName="Timetable" profile={profile}><Timetable currentUser={currentUser} currentPeriodId={currentPeriodId} periods={periods} /></SectionGate>} />
                         <Route path="/lms"          element={<SectionGate featureSlug="lms" featureName="E-Learning" profile={profile}><LMS currentUser={currentUser} /></SectionGate>} />

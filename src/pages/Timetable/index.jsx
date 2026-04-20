@@ -24,8 +24,7 @@ import {
 import Select from '../../components/Common/Select';
 import { Helmet } from 'react-helmet-async';
 import {
-  getTeachers, checkTeacherConflict, checkRoomConflict, getSchoolProfile,
-  getTimetableRooms, saveTimetableRoom, deleteTimetableRoom,
+  getTeachers, checkTeacherConflict, getSchoolProfile,
   getTimetableConfig, saveTimetableConfig,
   getTimetableSlots, saveTimetableSlot, clearTimetableSlot,
   getTeacherTimetable
@@ -153,9 +152,10 @@ export default function Timetable({ currentUser, currentPeriodId, periods = [] }
 
   // ── Grid slots ────────────────────────────────────────────────────────
   const [slots,        setSlots]        = useState([]);
-  const [rooms,        setRooms]        = useState([]);
-  const [roomPanel,    setRoomPanel]    = useState('list'); // 'list' | 'add'
-  const [newRoom,      setNewRoom]      = useState({ name: '', building: '' });
+  const [showConfig,   setShowConfig]   = useState(false);
+  const [draftConfig,  setDraftConfig]  = useState([]);
+  const [configSaving, setConfigSaving] = useState(false);
+
 
   const [showUpgrade,    setShowUpgrade]   = useState(false);
   const { alert, confirm } = useDialog();
@@ -164,7 +164,6 @@ export default function Timetable({ currentUser, currentPeriodId, periods = [] }
   const [editCell,        setEditCell]        = useState(null);
   const [editSubject,     setEditSubject]      = useState('');
   const [editTeacher,     setEditTeacher]      = useState('');
-  const [editRoom,        setEditRoom]         = useState('');
   const [editColor,       setEditColor]        = useState(COLORS[0]);
   const [conflictWarning, setConflictWarning]  = useState(null);
   const [cellSaving,      setCellSaving]       = useState(false);
@@ -253,34 +252,7 @@ export default function Timetable({ currentUser, currentPeriodId, periods = [] }
 
 
 
-  // ── Load rooms ────────────────────────────────────────────────────────
-  useEffect(() => {
-    if (!schoolId) return;
-    (async () => {
-      try { setRooms(await getTimetableRooms(schoolId)); }
-      catch (e) { console.error(e); }
-    })();
-  }, [schoolId]);
 
-  const handleSaveRoom = async () => {
-    if (!newRoom.name.trim()) return;
-    try {
-      await saveTimetableRoom(schoolId, newRoom);
-      setRooms(await getTimetableRooms(schoolId));
-      setNewRoom({ name: '', building: '' });
-      setRoomPanel('list');
-      setMessage({ type: 'ok', text: 'Room saved successfully.' });
-    } catch (e) { setMessage({ type: 'err', text: e.message }); }
-  };
-
-  const handleDeleteRoom = async (id) => {
-    if (!await confirm({ title: 'Delete Room', message: 'Are you sure you want to delete this room? It will be removed from future allocations.', variant: 'danger' })) return;
-    try {
-      await deleteTimetableRoom(id);
-      setRooms(await getTimetableRooms(schoolId));
-      setMessage({ type: 'ok', text: 'Room deleted.' });
-    } catch (e) { setMessage({ type: 'err', text: e.message }); }
-  };
 
   // ── Slot lookup helper ────────────────────────────────────────────────
   const slotLookup = useCallback((day, slotIndex, src) => {
@@ -294,7 +266,6 @@ export default function Timetable({ currentUser, currentPeriodId, periods = [] }
     setEditCell({ day, slotIndex, existing });
     setEditSubject(existing?.subject || '');
     setEditTeacher(existing?.teacher_id || '');
-    setEditRoom(existing?.room || '');
     setEditColor(existing?.color || COLORS[0]);
     setIsDouble(existing?.is_double_first || false);
     setConflictWarning(null);
@@ -313,19 +284,11 @@ export default function Timetable({ currentUser, currentPeriodId, periods = [] }
             return;
           }
         }
-        // 2. Room Conflict
-        if (editRoom) {
-          const rClash = await checkRoomConflict(schoolId, periodId, editRoom, editCell.day, editCell.slotIndex, selClass, selStream);
-          if (rClash) {
-            setConflictWarning({ type: 'room', ...rClash });
-            return;
-          }
-        }
         setConflictWarning(null);
       } catch (e) { console.error("Conflict check failed", e); }
     };
     checkConflicts();
-  }, [editTeacher, editRoom, editCell, schoolId, periodId, selClass, selStream]);
+  }, [editTeacher, editCell, schoolId, periodId, selClass, selStream]);
 
   // ── Save cell ─────────────────────────────────────────────────────────
   const handleSaveCell = async () => {
@@ -374,7 +337,6 @@ export default function Timetable({ currentUser, currentPeriodId, periods = [] }
         slot_index  : editCell.slotIndex,
         subject     : editSubject.trim(),
         teacher_id  : editTeacher || null,
-        room        : editRoom.trim() || null,
         color       : editColor,
         is_double_first  : isDoubleSupported,
         is_double_second : false
@@ -389,7 +351,6 @@ export default function Timetable({ currentUser, currentPeriodId, periods = [] }
           slot_index  : nextSlotIndex,
           subject     : editSubject.trim(),
           teacher_id  : editTeacher || null,
-          room        : editRoom.trim() || null,
           color       : editColor,
           is_double_first  : false,
           is_double_second : true
@@ -430,7 +391,7 @@ export default function Timetable({ currentUser, currentPeriodId, periods = [] }
     <div className="tt-root">
       <Helmet>
         <title>School Timetable & Scheduling | ShuleSoft — Master Calendar</title>
-        <meta name="description" content="Generate automated school timetables, manage teacher workloads, and schedule exams with ease." />
+        <meta name="description" content="Generate custom school timetables and manage teacher workloads with flexible time slots." />
       </Helmet>
 
       {/* ── Header ── */}
@@ -450,6 +411,13 @@ export default function Timetable({ currentUser, currentPeriodId, periods = [] }
 
 
         <div className="tt-header-actions">
+          {/* Day Structure Config (Admin only) */}
+          {isAdmin && (
+            <button className="tt-btn tt-btn-primary" onClick={() => { setDraftConfig(config.map(c => ({...c}))); setShowConfig(true); }}>
+              <SettingsIcon size={14} /> Set Up Day Structure
+            </button>
+          )}
+
           {view === 'class' && (
             <button className="tt-btn" onClick={() => printClassTimetable({
               school: { name: currentUser?.schoolName }, classGrade: selClass,
@@ -623,9 +591,7 @@ export default function Timetable({ currentUser, currentPeriodId, periods = [] }
                                         {cell.class_grade}{cell.stream ? ` · ${cell.stream}` : ''}
                                       </div>
                                     )}
-                                    {cell.room && !isDoubleSecond && (
-                                      <div className="tt-cell-room">{cell.room && `Room: ${cell.room}`}</div>
-                                    )}
+
                                   </>
                                 ) : (
                                   <div className="tt-add-hint">
@@ -660,60 +626,7 @@ export default function Timetable({ currentUser, currentPeriodId, periods = [] }
           )}
         </>
 
-      {/* Room Management (inline, below grid) */}
-      {isAdmin && (
-        <div style={{ marginTop: 20, padding: 16, borderRadius: 10, background: 'rgba(0,0,0,.02)', border: '1px solid rgba(0,0,0,.06)' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-            <div style={{ fontSize: '.75rem', fontWeight: 700, color: '#5A6B5C' }}>
-              <HomeIcon size={14} /> Rooms / Locations
-            </div>
-            {roomPanel === 'list' && (
-              <button className="tt-btn tt-btn-sm" onClick={() => setRoomPanel('add')}>
-                <PlusIcon size={12} /> Add Room
-              </button>
-            )}
-          </div>
 
-          {roomPanel === 'list' && (
-            rooms.length === 0 ? (
-              <div style={{ padding: '16px 0', textAlign: 'center', opacity: 0.5, fontSize: '.75rem' }}>
-                No rooms registered yet.
-              </div>
-            ) : (
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-                {rooms.map(r => (
-                  <div key={r.id} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '5px 10px', borderRadius: 6, background: 'white', border: '1px solid rgba(0,0,0,.08)', fontSize: '.72rem' }}>
-                    <strong>{r.name}</strong>
-                    {r.building && <span style={{ opacity: .6 }}>({r.building})</span>}
-                    <button className="tt-btn-icon" style={{ padding: 2, marginLeft: 4 }} onClick={() => handleDeleteRoom(r.id)}>
-                      <CrossIcon size={10} />
-                    </button>
-                  </div>
-                ))}
-              </div>
-            )
-          )}
-
-          {roomPanel === 'add' && (
-            <div style={{ display: 'flex', gap: 10, alignItems: 'flex-end', flexWrap: 'wrap' }}>
-              <div>
-                <label style={{ fontSize: '.6rem', display: 'block', marginBottom: 4 }}>Room Name *</label>
-                <input className="tt-field" type="text" placeholder="e.g. Lab 1"
-                  value={newRoom.name} onChange={e => setNewRoom({...newRoom, name: e.target.value})}
-                  style={{ width: 140 }} />
-              </div>
-              <div>
-                <label style={{ fontSize: '.6rem', display: 'block', marginBottom: 4 }}>Building</label>
-                <input className="tt-field" type="text" placeholder="e.g. Science Wing"
-                  value={newRoom.building} onChange={e => setNewRoom({...newRoom, building: e.target.value})}
-                  style={{ width: 140 }} />
-              </div>
-              <button className="tt-btn tt-btn-primary tt-btn-sm" disabled={!newRoom.name.trim()} onClick={handleSaveRoom}>Save</button>
-              <button className="tt-btn tt-btn-sm" onClick={() => { setRoomPanel('list'); setNewRoom({ name: '', building: '' }); }}>Cancel</button>
-            </div>
-          )}
-        </div>
-      )}
 
 
       {/* ═══════════════════════════════════════════════════════════════
@@ -760,28 +673,18 @@ export default function Timetable({ currentUser, currentPeriodId, periods = [] }
             {/* Conflict warnings */}
             {conflictWarning && (
               <div className="tt-conflict-box" style={{ 
-                borderLeft: `4px solid ${conflictWarning.type === 'room' ? '#FFAD5F' : '#E06C75'}`,
-                background: conflictWarning.type === 'room' ? 'rgba(255,173,95,0.05)' : 'rgba(224,108,117,0.05)'
+                borderLeft: `4px solid #E06C75`,
+                background: 'rgba(224,108,117,0.05)'
               }}>
-                <div className="tt-conflict-title" style={{ color: conflictWarning.type === 'room' ? '#CC8A4A' : '#E06C75' }}>
-                  <AlertIcon size={16} /> {conflictWarning.type === 'room' ? 'Room Occupied' : 'Teacher Unavailable'}
+                <div className="tt-conflict-title" style={{ color: '#E06C75' }}>
+                  <AlertIcon size={16} /> Teacher Unavailable
                 </div>
                 <div className="tt-conflict-body">
-                  {conflictWarning.type === 'room' ? (
-                    <>
-                      <strong style={{ color: '#5A6B5C' }}>{editRoom}</strong> is currently being used for{' '}
-                      <strong>{conflictWarning.subject}</strong> by{' '}
-                      <strong>{conflictWarning.class_grade}{conflictWarning.stream ? ` ${conflictWarning.stream}` : ''}</strong>.
-                    </>
-                  ) : (
-                    <>
-                      <strong style={{ color: '#5A6B5C' }}>{teacherName(editTeacher)}</strong> is already teaching{' '}
-                      <strong>{conflictWarning.subject}</strong> in{' '}
-                      <strong>{conflictWarning.class_grade}{conflictWarning.stream ? ` ${conflictWarning.stream}` : ''}</strong>.
-                    </>
-                  )}
+                  <strong style={{ color: '#5A6B5C' }}>{teacherName(editTeacher)}</strong> is already teaching{' '}
+                  <strong>{conflictWarning.subject}</strong> in{' '}
+                  <strong>{conflictWarning.class_grade}{conflictWarning.stream ? ` ${conflictWarning.stream}` : ''}</strong>.
                   <div style={{ marginTop: 4, fontSize: '0.65rem', opacity: 0.8 }}>
-                    You can still save if this is intentional (e.g., shared hall).
+                    You can still save if this is intentional (shared class).
                   </div>
                 </div>
               </div>
@@ -798,17 +701,7 @@ export default function Timetable({ currentUser, currentPeriodId, periods = [] }
               </div>
             )}
 
-            {/* Room */}
-            <label className="tt-field-label">Room / Location</label>
-            <Select 
-              value={editRoom} 
-              onChange={e => setEditRoom(e.target.value)}
-              options={[
-                { id: '', label: '— No Room Assigned —' },
-                ...rooms.map(r => ({ id: r.name, label: `${r.name}${r.building ? ` (${r.building})` : ''}` }))
-              ]}
-              style={{ width: '100%' }}
-            />
+
 
             {/* Colour */}
             <label className="tt-field-label">Colour</label>
@@ -835,6 +728,82 @@ export default function Timetable({ currentUser, currentPeriodId, periods = [] }
                 disabled={!editSubject.trim() || cellSaving}
                 onClick={handleSaveCell}>
                 {cellSaving ? 'Saving...' : editCell.existing ? 'Update Slot' : 'Add Slot'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ═══════════════════════════════════════════════════════════════
+          DAY STRUCTURE EDITOR MODAL
+         ═══════════════════════════════════════════════════════════════ */}
+      {showConfig && (
+        <div className="tt-modal-overlay">
+          <div className="tt-modal" style={{ maxWidth: 650 }}>
+            <button className="tt-modal-close" onClick={() => setShowConfig(false)}><CrossIcon size={14} /></button>
+            <div className="tt-modal-title">Configure Day Structure</div>
+            <div className="tt-modal-sub">Define your school start times, lesson durations, and breaks.</div>
+
+            <div className="tt-config-list" style={{ maxHeight: 400, overflowY: 'auto', marginTop: 12, paddingRight: 8 }}>
+              {draftConfig.map((item, idx) => (
+                <div key={idx} className="tt-config-item" style={{ display: 'flex', gap: 10, alignItems: 'flex-end', marginBottom: 12, padding: 10, borderRadius: 8, background: 'rgba(0,0,0,.02)', border: '1px solid rgba(0,0,0,.04)' }}>
+                  <div style={{ flex: 2 }}>
+                    <label style={{ fontSize: '.6rem', display: 'block', marginBottom: 4 }}>Label (e.g. Period 1)</label>
+                    <input className="tt-field" value={item.label} onChange={e => {
+                      const nc = [...draftConfig];
+                      nc[idx].label = e.target.value;
+                      setDraftConfig(nc);
+                    }} />
+                  </div>
+                  <div style={{ flex: 1.5 }}>
+                    <label style={{ fontSize: '.6rem', display: 'block', marginBottom: 4 }}>Start</label>
+                    <input className="tt-field" type="time" value={item.start_time} onChange={e => {
+                      const nc = [...draftConfig];
+                      nc[idx].start_time = e.target.value;
+                      setDraftConfig(nc);
+                    }} />
+                  </div>
+                  <div style={{ flex: 1.5 }}>
+                    <label style={{ fontSize: '.6rem', display: 'block', marginBottom: 4 }}>End</label>
+                    <input className="tt-field" type="time" value={item.end_time} onChange={e => {
+                      const nc = [...draftConfig];
+                      nc[idx].end_time = e.target.value;
+                      setDraftConfig(nc);
+                    }} />
+                  </div>
+                  <div style={{ flex: 1, textAlign: 'center' }}>
+                    <label style={{ fontSize: '.6rem', display: 'block', marginBottom: 4 }}>Break?</label>
+                    <input type="checkbox" checked={item.is_break} onChange={e => {
+                      const nc = [...draftConfig];
+                      nc[idx].is_break = e.target.checked;
+                      setDraftConfig(nc);
+                    }} />
+                  </div>
+                  <button className="tt-btn-icon tt-btn-danger" onClick={() => setDraftConfig(draftConfig.filter((_, i) => i !== idx))}>
+                    <CrossIcon size={12} />
+                  </button>
+                </div>
+              ))}
+            </div>
+
+            <button className="tt-btn tt-btn-ghost" style={{ width: '100%', marginTop: 8 }} onClick={() => setDraftConfig([...draftConfig, { label: `Period ${draftConfig.length + 1}`, start_time: '08:00', end_time: '08:40', is_break: false }])}>
+              <PlusIcon size={12} /> Add New Time Slot
+            </button>
+
+            <div className="tt-modal-actions" style={{ marginTop: 24 }}>
+              <button className="tt-btn" style={{ flex: 1 }} onClick={() => setShowConfig(false)}>Cancel</button>
+              <button className="tt-btn tt-btn-primary" style={{ flex: 2 }} disabled={configSaving}
+                onClick={async () => {
+                  setConfigSaving(true);
+                  try {
+                    await saveTimetableConfig(schoolId, periodId, draftConfig);
+                    setConfig(draftConfig);
+                    setShowConfig(false);
+                    setMessage({ type: 'ok', text: 'Day structure updated successfully.' });
+                  } catch (e) { setMessage({ type: 'err', text: e.message }); }
+                  finally { setConfigSaving(false); }
+                }}>
+                {configSaving ? 'Saving...' : 'Save Structure'}
               </button>
             </div>
           </div>
