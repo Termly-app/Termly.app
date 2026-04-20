@@ -893,6 +893,19 @@ export async function getPrintHeader(subtitle) {
   `;
 }
 
+export function getPrintFooter() {
+  return `
+    <div style="position:fixed;bottom:5mm;left:15mm;display:flex;align-items:center;opacity:1;z-index:9999;color:#000;">
+      <svg width="22" height="22" viewBox="0 0 13 13" fill="none" aria-label="ShuleSoft">
+        <rect x="1" y="1" width="4.5" height="4.5" rx="1" fill="#000"/>
+        <rect x="7.5" y="1" width="4.5" height="4.5" rx="1" fill="#000" fill-opacity="0.4"/>
+        <rect x="1" y="7.5" width="4.5" height="4.5" rx="1" fill="#000" fill-opacity="0.4"/>
+        <rect x="7.5" y="7.5" width="4.5" height="4.5" rx="1" fill="#000" fill-opacity="0.2"/>
+      </svg>
+    </div>
+  `;
+}
+
 /**
  * Global helper to calculate grade based on score and school profile
  */

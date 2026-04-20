@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Helmet } from 'react-helmet-async';
-import { getClassResults, setStudentAllMarks, getSubjectRankings, getClassList, getCBC, setCBC, getTeacherPerformance, getCoreCompetencies, getPrintHeader, getSchoolProfile, subscribeToChanges, getGradeForScore, getSubjectAssignments } from '../../data/store';
+import { getClassResults, setStudentAllMarks, getSubjectRankings, getClassList, getCBC, setCBC, getTeacherPerformance, getCoreCompetencies, getPrintHeader, getPrintFooter, getSchoolProfile, subscribeToChanges, getGradeForScore, getSubjectAssignments } from '../../data/store';
 import { CBC_STRUCTURE, CBC_LEVELS, CBC_CORE_COMPETENCIES, STREAMS, getSubjectsForGrade, getLevelForGrade } from '../../data/seedData';
 import { 
   LeafIcon, BookIcon, PrintIcon, DashboardIcon, EditIcon, 
@@ -234,13 +234,15 @@ export default function AssessmentTab({ currentUser, currentPeriodId }) {
       let list = await getClassList(selectedClass);
       if (streamFilter !== 'All') list = list.filter(s => s.stream === streamFilter);
       list.sort((a, b) => String(a.admNo || '').localeCompare(String(b.admNo || ''), undefined, { numeric: true }));
-      const p = await getSchoolProfile();
       const sl = streamFilter === 'All' ? '' : ` - ${streamFilter}`;
+      
+      const headerStr = await getPrintHeader(`${selectedClass}${sl} CLASS LIST | ${examType} | Students: ${list.length}`);
+      const footerStr = getPrintFooter();
+      
       const w = window.open('', '_blank');
       w.document.write(`<html><head><title>Class List - ${selectedClass}</title>
       <style>${excelCSS}</style></head><body>
-      <h2>${p.schoolName || 'School'} - ${selectedClass}${sl} CLASS LIST</h2>
-      <div class="sub">${examType} | Students: ${list.length}</div>
+      ${headerStr}
       <table><thead><tr>
         <th style="width:30px">#</th><th style="width:70px">ADM NO</th>
         <th style="text-align:left;min-width:140px">STUDENT NAME</th>
@@ -250,6 +252,7 @@ export default function AssessmentTab({ currentUser, currentPeriodId }) {
         ${list.map((s, i) => `<tr><td>${i + 1}</td><td>${s.admNo || ''}</td><td class="nm">${s.name}</td>${subjects.map(() => '<td></td>').join('')}<td></td><td></td><td></td></tr>`).join('')}
       </tbody></table>
       <div class="ft"><span>Class Teacher: _________________________ Sign: _____________</span><span>Printed: ${new Date().toLocaleDateString()}</span></div>
+      ${footerStr}
       </body></html>`);
       w.document.close(); w.print();
     } catch (err) { alert({ title: 'Print Error', message: "Print failed: " + err.message, variant: 'danger' }); }
@@ -258,13 +261,15 @@ export default function AssessmentTab({ currentUser, currentPeriodId }) {
   // Print results for current stream selection - clean Excel style
   const printClassResults = async () => {
     try {
-      const p = await getSchoolProfile();
       const sl = streamFilter === 'All' ? ' (All Streams)' : ` - ${streamFilter}`;
+      
+      const headerStr = await getPrintHeader(`${selectedClass}${sl} ${examType} RESULTS | Students: ${results.length}`);
+      const footerStr = getPrintFooter();
+      
       const w = window.open('', '_blank');
       w.document.write(`<html><head><title>Results - ${selectedClass}</title>
       <style>${excelCSS}</style></head><body>
-      <h2>${p.schoolName || 'School'} - ${selectedClass}${sl} ${examType} RESULTS</h2>
-      <div class="sub">Students: ${results.length} | Exam: ${examType}</div>
+      ${headerStr}
       <table><thead><tr>
         <th style="width:30px">#</th><th style="width:70px">ADM NO</th>
         <th style="text-align:left;min-width:140px">STUDENT NAME</th>
@@ -285,6 +290,7 @@ export default function AssessmentTab({ currentUser, currentPeriodId }) {
         }).join('')}
       </tbody></table>
       <div class="ft"><span>Class Teacher: _________________________ Sign: _____________</span><span>H.O.D: _________________________ Sign: _____________</span><span>Printed: ${new Date().toLocaleDateString()}</span></div>
+      ${footerStr}
       </body></html>`);
       w.document.close(); w.print();
     } catch(err) { alert({ title: 'Print Error', message: "Print failed: " + err.message, variant: 'danger' }); }
@@ -293,15 +299,17 @@ export default function AssessmentTab({ currentUser, currentPeriodId }) {
   // Print entire grade (all streams combined, re-ranked together)
   const printGradeResults = async () => {
     try {
-      const p = await getSchoolProfile();
       const all = await getClassResults(selectedClass, examType);
       all.sort((a, b) => b.total - a.total);
       all.forEach((s, i) => { s.rank = i + 1; });
+      
+      const headerStr = await getPrintHeader(`${selectedClass} OVERALL ${examType} RESULTS | All Streams Combined | Students: ${all.length}`);
+      const footerStr = getPrintFooter();
+      
       const w = window.open('', '_blank');
       w.document.write(`<html><head><title>Grade Results - ${selectedClass}</title>
       <style>${excelCSS}</style></head><body>
-      <h2>${p.schoolName || 'School'} - ${selectedClass} OVERALL ${examType} RESULTS</h2>
-      <div class="sub">All Streams Combined | Students: ${all.length} | Exam: ${examType}</div>
+      ${headerStr}
       <table><thead><tr>
         <th style="width:30px">#</th><th style="width:70px">ADM NO</th>
         <th style="text-align:left;min-width:140px">STUDENT NAME</th><th>STR</th>
@@ -320,6 +328,7 @@ export default function AssessmentTab({ currentUser, currentPeriodId }) {
         }).join('')}
       </tbody></table>
       <div class="ft"><span>Principal: _________________________ Sign: _____________</span><span>D.O.S: _________________________ Sign: _____________</span><span>Printed: ${new Date().toLocaleDateString()}</span></div>
+      ${footerStr}
       </body></html>`);
       w.document.close(); w.print();
     } catch(err) { alert({ title: 'Print Error', message: "Print failed: " + err.message, variant: 'danger' }); }
@@ -383,7 +392,8 @@ export default function AssessmentTab({ currentUser, currentPeriodId }) {
       </div>`;
     }).join('');
 
-    w.document.write(`<html><head><title>All Report Cards - ${selectedClass}</title>
+      const footerStr = getPrintFooter();
+      w.document.write(`<html><head><title>All Report Cards - ${selectedClass}</title>
     <style>body{font-family:Arial,sans-serif;padding:0;color:#1e293b;margin:0}
     .report-page{max-width:700px;margin:0 auto;padding:20px;page-break-after:always}
     .report-page:last-child{page-break-after:auto}
@@ -396,7 +406,7 @@ export default function AssessmentTab({ currentUser, currentPeriodId }) {
     .strengths{margin:14px 0;font-size:12px}.strengths strong{color:#1e3a5f}
     .section-title{margin:20px 0 8px;font-size:13px;font-weight:700;color:#1e3a5f;border-bottom:2px solid #e2e8f0;padding-bottom:4px}
       @media print{.report-page{padding:15px}}
-      </style></head><body>${reportCards}</body></html>`);
+      </style></head><body>${reportCards}${footerStr}</body></html>`);
       w.document.close(); w.print();
     } catch(err) { alert({ title: 'Print Error', message: "Print failed: " + err.message, variant: 'danger' }); }
   };
