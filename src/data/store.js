@@ -4501,7 +4501,7 @@ export async function getAssignments(filters = {}) {
   if (!_currentSchoolId) return [];
   let q = supabase
     .from('el_assignments')
-    .select('*, el_assignment_attachments(*), classes(name, stream), users!el_assignments_teacher_id_fkey(name), el_submissions(id, status, score)')
+    .select('*')
     .eq('school_id', _currentSchoolId)
     .order('created_at', { ascending: false });
   if (filters.classId) q = q.eq('class_id', filters.classId);
@@ -4572,23 +4572,18 @@ export async function deleteAssignment(id) {
 export async function getSubmissions(assignmentId) {
   const { data, error } = await supabase
     .from('el_submissions')
-    .select('*, students(name, adm_no, class), el_submission_files(*)')
+    .select('*, students(name, adm_no, class)')
     .eq('assignment_id', assignmentId)
     .order('submitted_at', { ascending: false });
   if (error) throw error;
   return data || [];
 }
 
-export async function gradeSubmission(submissionId, { score, gradeLabel, teacherComment }) {
-  mutationGuard('gradeSubmission');
-  const graderId = (await getUserByAuthId(_currentAuthUser?.id))?.id;
+export async function updateSubmission(submissionId, updates) {
+  mutationGuard('updateSubmission');
   const { data, error } = await supabase
     .from('el_submissions')
-    .update({
-      score, grade_label: gradeLabel, teacher_comment: teacherComment,
-      status: 'graded', graded_at: new Date().toISOString(), graded_by: graderId,
-      updated_at: new Date().toISOString(),
-    })
+    .update(updates)
     .eq('id', submissionId)
     .select()
     .single();
