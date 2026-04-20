@@ -772,13 +772,23 @@ export default function Timetable({ currentUser, currentPeriodId, periods = [] }
                 { id: '', label: '— Unassigned —' },
                 ...teachers.map(t => ({ id: t.id, label: `${t.name}${t.on_leave ? ' (On Leave 🏖️)' : ''}` }))
               ]}
-              style={{ width: '100%' }}
+              style={{ 
+                width: '100%',
+                border: editTeacher && editSubject && (() => {
+                  const t = teachers.find(x => x.id === editTeacher);
+                  const tSubs = Array.isArray(t?.subjects) ? t.subjects : (t?.subjects || '').split(',').map(s => s.trim());
+                  const isMatch = tSubs.some(s => s.toLowerCase().includes(editSubject.toLowerCase()) || editSubject.toLowerCase().includes(s.toLowerCase()));
+                  return (!isMatch && tSubs.length > 0 && tSubs[0] !== '') ? '1.5px solid #d17800' : '1px solid var(--border, rgba(255,255,255,0.1))';
+                })()
+              }}
             />
+
             {editTeacher && editSubject && (() => {
               const t = teachers.find(x => x.id === editTeacher);
               const tSubs = Array.isArray(t?.subjects) ? t.subjects : (t?.subjects || '').split(',').map(s => s.trim());
-              const isMatch = tSubs.some(s => s.toLowerCase() === editSubject.toLowerCase());
+              const isMatch = tSubs.some(s => s.toLowerCase().includes(editSubject.toLowerCase()) || editSubject.toLowerCase().includes(s.toLowerCase()));
               if (!isMatch && tSubs.length > 0 && tSubs[0] !== '') {
+
                 return <div className="tt-competency-warning">
                   <AlertCircleIcon size={12} /> This teacher is not registered to teach {editSubject}
                 </div>;

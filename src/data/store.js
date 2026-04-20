@@ -3540,7 +3540,8 @@ export async function getTimetableSlots(schoolId, periodId, classGrade, stream =
     .eq('class_grade', classGrade);
   
   if (stream) query = query.eq('stream', stream);
-  else query = query.is('stream', null);
+  else query = query.eq('stream', '');
+
 
   const { data, error } = await query.order('slot_index', { ascending: true });
   if (error) throw error;
@@ -3604,7 +3605,7 @@ export async function clearTimetableSlot(schoolId, periodId, classGrade, stream,
     .eq('slot_index', slotIndex);
   
   if (stream) query = query.eq('stream', stream);
-  else query = query.is('stream', null);
+  else query = query.eq('stream', '');
 
   const { error } = await query;
   if (error) throw error;
