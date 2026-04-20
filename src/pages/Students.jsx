@@ -170,18 +170,20 @@ export default function Students({ currentUser, currentPeriodId }) {
 
       {/* Table card */}
       <div className="card">
-        <div className="card-header">
-          <div style={{display:'flex',alignItems:'center',gap:8}}>
-            <h3 style={{margin:0}}>All Students</h3>
-            <span style={{background:'var(--primary)',color:'#fff',fontSize:'0.65rem',fontWeight:700,padding:'2px 8px',borderRadius:12}}>{filtered.length}</span>
-          </div>
-          <div style={{display:'flex',gap:16,flexWrap:'wrap',alignItems:'center'}}>
-            <div className="search-bar" style={{maxWidth:240}}>
-              <span className="search-icon"><SearchIcon size={16} /></span>
-              <input type="text" placeholder="Search students..." value={search} onChange={e=>setSearch(e.target.value)}/>
+        <div className="card-header" style={{flexDirection:'column',gap:12,alignItems:'stretch'}}>
+          <div style={{display:'flex',alignItems:'center',justifyContent:'space-between'}}>
+            <div style={{display:'flex',alignItems:'center',gap:8}}>
+              <h3 style={{margin:0}}>All Students</h3>
+              <span style={{background:'var(--primary)',color:'#fff',fontSize:'0.65rem',fontWeight:700,padding:'2px 8px',borderRadius:12}}>{filtered.length}</span>
             </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <label style={{ fontSize: '0.82rem', fontWeight: 600 }}>Enrollment:</label>
+            <div className="search-bar" style={{maxWidth:260}}>
+              <span className="search-icon"><SearchIcon size={16} /></span>
+              <input type="text" placeholder="Search by name, adm no, phone..." value={search} onChange={e=>setSearch(e.target.value)}/>
+            </div>
+          </div>
+          <div style={{display:'flex',gap:12,flexWrap:'wrap',alignItems:'center',paddingTop:4,borderTop:'1px solid var(--border-light)'}}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+              <span style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-light)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Status</span>
               <Select 
                 value={statusFilter}
                 onChange={e => setStatusFilter(e.target.value)}
@@ -191,11 +193,12 @@ export default function Students({ currentUser, currentPeriodId }) {
                   { id: 'Graduated', label: 'Graduated' },
                   { id: 'All', label: 'All Records' }
                 ]}
-                style={{ minWidth: 130 }}
+                style={{ minWidth: 120 }}
               />
             </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <label style={{ fontSize: '0.82rem', fontWeight: 600 }}>Class:</label>
+            <div style={{width:1,height:20,background:'var(--border)',flexShrink:0}}/>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+              <span style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-light)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Class</span>
               <Select 
                 value={classFilter}
                 onChange={e => { setClassFilter(e.target.value); setStreamFilter('All'); }}
@@ -209,11 +212,12 @@ export default function Students({ currentUser, currentPeriodId }) {
                     return active.map(g => ({ id: g, label: g }));
                   })
                 ]}
-                style={{ minWidth: 150 }}
+                style={{ minWidth: 140 }}
               />
             </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <label style={{ fontSize: '0.82rem', fontWeight: 600 }}>Stream:</label>
+            <div style={{width:1,height:20,background:'var(--border)',flexShrink:0}}/>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+              <span style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-light)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Stream</span>
               <Select 
                 value={streamFilter} 
                 onChange={e => setStreamFilter(e.target.value)}
@@ -224,7 +228,7 @@ export default function Students({ currentUser, currentPeriodId }) {
                     : Object.values(profile.streamsPerClass || {}).flat().filter((v, i, a) => a.indexOf(v) === i)
                   ).map(s => ({ id: s, label: s }))
                 ]}
-                style={{ minWidth: 140 }}
+                style={{ minWidth: 130 }}
               />
             </div>
           </div>
@@ -289,18 +293,21 @@ export default function Students({ currentUser, currentPeriodId }) {
                       </span>
                       {statusMenuId === s.id && (
                         <>
-                          <div style={{position:'fixed',inset:0,zIndex:99}} onClick={()=>setStatusMenuId(null)}/>
-                          <div style={{position:'fixed',top:statusMenuPos.y,left:statusMenuPos.x,zIndex:10000,background:'var(--bg-card)',border:'1px solid var(--border)',borderRadius:8,boxShadow:'0 8px 24px rgba(0,0,0,0.2)',minWidth:160,overflow:'hidden'}}>
-                            <div style={{padding:'6px 10px',fontSize:'0.65rem',color:'var(--text-muted)',fontWeight:700,textTransform:'uppercase',borderBottom:'1px solid var(--border)'}}>Change Status</div>
-                            {[{v:'Active',c:'#059669',bg:'#ecfdf5'},{v:'Transferred',c:'#4b5563',bg:'#f3f4f6'},{v:'Graduated',c:'#1d4ed8',bg:'#eff6ff'}]
+                          <div style={{position:'fixed',inset:0,zIndex:9999}} onClick={()=>setStatusMenuId(null)}/>
+                          <div style={{position:'fixed',top:statusMenuPos.y,left:statusMenuPos.x,zIndex:10000,background:'var(--bg-card)',border:'1px solid var(--border)',borderRadius:10,boxShadow:'0 8px 32px rgba(0,0,0,0.18)',minWidth:180,overflow:'hidden',backdropFilter:'blur(12px)'}}>
+                            <div style={{padding:'8px 12px',fontSize:'0.65rem',color:'var(--text-light)',fontWeight:700,textTransform:'uppercase',letterSpacing:'0.5px',borderBottom:'1px solid var(--border)'}}>Change Status</div>
+                            {[{v:'Active',c:'#059669',bg:'#ecfdf5',icon:'●',desc:'Student is currently enrolled'},{v:'Transferred',c:'#6b7280',bg:'#f3f4f6',icon:'→',desc:'Moved to another school'},{v:'Graduated',c:'#2563eb',bg:'#eff6ff',icon:'🎓',desc:'Completed education'}]
                               .filter(o=>o.v!==(s.status||'Active'))
                               .map(o=>(
-                                <div key={o.v} onClick={()=>handleQuickStatus(s.id,o.v)} style={{padding:'8px 12px',fontSize:'0.8rem',fontWeight:600,cursor:'pointer',display:'flex',alignItems:'center',gap:8,color:o.c,transition:'background 0.15s'}}
-                                  onMouseEnter={e=>e.currentTarget.style.background=o.bg}
-                                  onMouseLeave={e=>e.currentTarget.style.background='transparent'}
+                                <div key={o.v} onClick={()=>handleQuickStatus(s.id,o.v)} style={{padding:'10px 14px',cursor:'pointer',display:'flex',alignItems:'center',gap:10,transition:'all 0.15s',borderBottom:'1px solid var(--border-light)'}}
+                                  onMouseEnter={e=>{e.currentTarget.style.background=o.bg; e.currentTarget.style.transform='translateX(2px)'}}
+                                  onMouseLeave={e=>{e.currentTarget.style.background='transparent'; e.currentTarget.style.transform='translateX(0)'}}
                                 >
-                                  <span style={{width:8,height:8,borderRadius:'50%',background:o.c,flexShrink:0}}></span>
-                                  {o.v}
+                                  <span style={{width:10,height:10,borderRadius:'50%',background:o.c,flexShrink:0,boxShadow:`0 0 6px ${o.c}44`}}></span>
+                                  <div>
+                                    <div style={{fontSize:'0.82rem',fontWeight:600,color:o.c}}>{o.v}</div>
+                                    <div style={{fontSize:'0.65rem',color:'var(--text-light)',marginTop:1}}>{o.desc}</div>
+                                  </div>
                                 </div>
                               ))}
                           </div>
