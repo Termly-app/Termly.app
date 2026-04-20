@@ -3,7 +3,7 @@ import { Helmet } from 'react-helmet-async';
 import { 
   getSchoolProfile, getAssignments, createAssignment, 
   getSubmissions, updateSubmission, fetchLmsContent, getQuizAnalytics,
-  CBC_STRUCTURE, getSubjectsForGrade, updateAssignment
+  CBC_STRUCTURE, getSubjectsForGrade, updateAssignment, deleteAssignment
 } from '../data/store';
 import { 
   BookIcon, CheckIcon, UsersIcon, DownloadIcon, ClockIcon, MessageIcon, GraduationIcon, 
@@ -283,6 +283,21 @@ export default function LMS({ currentUser }) {
       alert({ title: 'Update Failed', message: 'Failed to update the deadline.', variant: 'danger' });
     }
     setLoading(false);
+  };
+
+  const handleDeleteAssignment = async () => {
+    if (await confirm({ title: 'Delete Assignment', message: 'Are you sure you want to delete this assignment and all its submissions? This cannot be undone.', confirmText: 'Yes, Delete', variant: 'danger' })) {
+      setLoading(true);
+      try {
+        await deleteAssignment(selectedSubmissions.assignment.id);
+        toast('Assignment deleted.', 'success');
+        setSelectedSubmissions(null);
+        await loadData();
+      } catch (err) {
+        alert({ title: 'Error', message: 'Failed to delete assignment.', variant: 'danger' });
+      }
+      setLoading(false);
+    }
   };
 
   const [showQuestionModal, setShowQuestionModal] = useState(false);
@@ -647,16 +662,33 @@ export default function LMS({ currentUser }) {
            </div>
         ) : (
           <div className="animate-in" style={{ background: 'var(--bg-card)', borderRadius: 16, border: '1px solid var(--border)', overflow: 'hidden', boxShadow: 'var(--shadow-md)' }}>
-            <div style={{ padding: '24px', borderBottom: '1px solid var(--border)', background: 'var(--bg-sidebar)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div style={{ padding: '24px', borderBottom: '1px solid var(--border)', background: 'var(--bg-sidebar)', borderRadius: '16px 16px 0 0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <div>
-                <h3 style={{ margin: 0, fontSize: '1.2rem', fontWeight: 800, color: 'var(--text-main)' }}>{selectedSubmissions.assignment.title}</h3>
-                <div style={{ fontSize: '0.875rem', color: 'var(--text-muted)', marginTop: 4, display: 'flex', gap: 10 }}>
+                <h3 style={{ margin: 0, fontSize: '1.2rem', fontWeight: 800, color: '#fff' }}>{selectedSubmissions.assignment.title}</h3>
+                <div style={{ fontSize: '0.875rem', color: 'rgba(255,255,255,0.7)', marginTop: 4, display: 'flex', gap: 10 }}>
                    <span><strong>Class:</strong> {selectedSubmissions.assignment.class} {selectedSubmissions.assignment.stream}</span>
                    <span>•</span>
                    <span><strong>Subject:</strong> {selectedSubmissions.assignment.subject}</span>
                 </div>
               </div>
-              <button className="btn btn-ghost" onClick={() => setSelectedSubmissions(null)} style={{ border: '1.5px solid var(--border)', fontWeight: 600 }}>Back to List</button>
+              <div style={{ display: 'flex', gap: 10 }}>
+                <button 
+                  className="btn btn-ghost" 
+                  onClick={handleDeleteAssignment} 
+                  style={{ border: '1.5px solid rgba(255,255,255,0.2)', color: '#fff', fontWeight: 600 }}
+                  title="Delete Assignment"
+                >
+                  <MessageIcon size={16} style={{ display: 'none' }} /> {/* Placeholder, using style to hide if icon missing, but just use pure text */}
+                  🗑️ Delete
+                </button>
+                <button 
+                  className="btn btn-ghost" 
+                  onClick={() => setSelectedSubmissions(null)} 
+                  style={{ border: '1.5px solid rgba(255,255,255,0.2)', color: '#fff', fontWeight: 600 }}
+                >
+                  Back to List
+                </button>
+              </div>
             </div>
             
             <div style={{ padding: 24 }}>
