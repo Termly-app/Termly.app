@@ -21,20 +21,24 @@ import { encryptData as encrypt, decryptData as decrypt } from '../utils/securit
 // ============= CURRENT SCHOOL CONTEXT =============
 // Stored in-memory during session (set after login)
 // Triggering fresh build on Vercel...
-var _currentSchoolId = null;
+var _currentSchoolId = sessionStorage.getItem('shulesoft_portal_school_id') || null;
 var _currentAuthUser = null;
-var _currentPeriodId = null;
-var _currentUserId   = null;
+var _currentPeriodId = sessionStorage.getItem('shulesoft_portal_period_id') || null;
+var _currentUserId   = sessionStorage.getItem('shulesoft_portal_user_id') || null;
 
 /**
- * Initializes the store context for Portal users (who don't have a standard Supabase session).
+ * Initializes the store context for Portal users.
  */
 export function initPortalStore(schoolId, userId = null, periodId = null) {
   console.log(`[PORTAL STORE] Initializing for School: ${schoolId}, User: ${userId}`);
   _currentSchoolId = schoolId;
   _currentUserId = userId;
   _currentPeriodId = periodId;
-  _currentAuthUser = null; // Important: null signifies portal-only mode
+  _currentAuthUser = null; 
+  
+  if (schoolId) sessionStorage.setItem('shulesoft_portal_school_id', schoolId);
+  if (userId) sessionStorage.setItem('shulesoft_portal_user_id', userId);
+  if (periodId) sessionStorage.setItem('shulesoft_portal_period_id', periodId);
 }
 
 // MEMORY CACHE (Performance Optimization)
