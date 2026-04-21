@@ -128,8 +128,16 @@ export default function PortalDashboard({ user, onLogout }) {
           </div>
         </div>
         <div style={{ display: 'flex', gap: 16, color: '#54656f' }}>
-          <ActivityIcon size={22} />
-          <MenuIcon size={22} />
+          <ActivityIcon 
+            size={22} 
+            style={{ cursor: 'pointer' }} 
+            onClick={() => setActiveTab('academics')} 
+          />
+          <MenuIcon 
+            size={22} 
+            style={{ cursor: 'pointer' }} 
+            onClick={() => setActiveTab('profile')} 
+          />
         </div>
       </div>
 
@@ -181,7 +189,12 @@ export default function PortalDashboard({ user, onLogout }) {
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <span style={{ fontWeight: 600, color: '#111b21', fontSize: '1rem' }}>Pending Tasks</span>
-                <span style={{ color: '#1a73e8', fontSize: '0.85rem', fontWeight: 600 }}>See All</span>
+                <span 
+                  onClick={() => setActiveTab('academics')} 
+                  style={{ color: '#1a73e8', fontSize: '0.85rem', fontWeight: 600, cursor: 'pointer' }}
+                >
+                  See All
+                </span>
               </div>
               {assignments.length === 0 && <div style={{ background: '#fff', padding: 20, borderRadius: 16, textAlign: 'center', color: '#667781' }}>No pending assignments! ✨</div>}
               {assignments.slice(0, 3).map(ast => (

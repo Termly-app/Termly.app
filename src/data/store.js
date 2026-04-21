@@ -466,7 +466,26 @@ export async function getSchoolProfile() {
 
   _profilePromise = (async () => {
     try {
-    // Attempt to get all columns first
+    // PORTAL MODE: Use RPC to bypass RLS (portal users have no auth session)
+    if (!_currentAuthUser && _currentSchoolId) {
+      console.log('[PORTAL] Fetching school profile via RPC for school:', _currentSchoolId);
+      try {
+        const { data, error } = await supabase.rpc('portal_get_school_profile', { p_school_id: _currentSchoolId });
+        if (!error && data && data.length > 0) {
+          const mapped = mapProfileData(data[0]);
+          _profileCache = mapped;
+          return mapped;
+        }
+      } catch (rpcErr) {
+        console.warn('[PORTAL] Profile RPC failed, falling back to direct query:', rpcErr.message);
+      }
+      // Fallback: use getSchoolProfileBySchoolId which has its own error handling
+      const fallback = await getSchoolProfileBySchoolId(_currentSchoolId);
+      _profileCache = fallback;
+      return fallback;
+    }
+
+    // ADMIN MODE: Direct table query (has auth session)
     const { data, error } = await supabase
       .from('school_profiles')
       .select(SAFE_PROFILE_COLUMNS + ', school_id, custom_exams, grading_systems')
@@ -3754,6 +3773,15 @@ export function subscribeToSchoolChanges(onSettingsChange, onProfileChange) {
 // ============= TIMETABLE =============
 
 export async function getTimetableConfig(schoolId, periodId) {
+  if (!_currentAuthUser && _currentSchoolId) {
+    const { data, error } = await supabase.rpc('portal_get_timetable_config', { 
+      p_school_id: schoolId, 
+      p_period_id: periodId 
+    });
+    if (error) throw error;
+    return data || [];
+  }
+
   const { data, error } = await supabase
     .from('timetable_configs')
     .select('*')
@@ -3818,6 +3846,16 @@ export async function getAllTimetableSlots(schoolId, periodId) {
 }
 
 export async function getTeacherTimetable(schoolId, periodId, teacherId) {
+  if (!_currentAuthUser && _currentSchoolId) {
+    const { data, error } = await supabase.rpc('portal_get_teacher_timetable', { 
+      p_school_id: schoolId, 
+      p_period_id: periodId,
+      p_teacher_id: teacherId
+    });
+    if (error) throw error;
+    return data || [];
+  }
+
   const { data, error } = await supabase
     .from('timetable_slots')
     .select('*, teachers(id, name, staff_code)')
@@ -4011,6 +4049,16 @@ export async function duplicateTimetable(schoolId, fromPeriodId, toPeriodId) {
  * [NEW] Get summary workload for a teacher
  */
 export async function getTeacherWorkloadSummary(schoolId, periodId, teacherId) {
+  if (!_currentAuthUser && _currentSchoolId) {
+    const { data, error } = await supabase.rpc('portal_get_teacher_workload', { 
+      p_school_id: schoolId, 
+      p_period_id: periodId,
+      p_teacher_id: teacherId
+    });
+    if (error) throw error;
+    return data || 0;
+  }
+
   const { data, error, count } = await supabase
     .from('timetable_slots')
     .select('id', { count: 'exact' })

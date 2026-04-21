@@ -64,11 +64,11 @@ export default function MobileGrading({ user, onLogout }) {
       setExams(activeExams);
       if (activeExams.length > 0) setSelectedExamId(activeExams[0].id);
 
-      if (current && profile?.id) {
+      if (current) {
         const [w, s, c] = await Promise.all([
-          getTeacherWorkloadSummary(profile.id, current.id, teacherRecordId).catch(() => []),
-          getTeacherTimetable(profile.id, current.id, teacherRecordId).catch(() => []),
-          getTimetableConfig(profile.id, current.id).catch(() => [])
+          getTeacherWorkloadSummary(schoolId, current.id, teacherRecordId).catch(() => 0),
+          getTeacherTimetable(schoolId, current.id, teacherRecordId).catch(() => []),
+          getTimetableConfig(schoolId, current.id).catch(() => [])
         ]);
         setWorkload(w);
         setSchedule(s);

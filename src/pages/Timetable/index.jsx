@@ -24,7 +24,7 @@ import {
 import Select from '../../components/Common/Select';
 import { Helmet } from 'react-helmet-async';
 import {
-  getTeachers, checkTeacherConflict, getSchoolProfile,
+  getTeachers, getSchoolProfile,
   getTimetableConfig, saveTimetableConfig,
   getTimetableSlots, saveTimetableSlot, clearTimetableSlot,
   getTeacherTimetable, clearAllTimetableSlots, duplicateTimetable,
