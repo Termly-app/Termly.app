@@ -227,7 +227,11 @@ BEGIN
     )), '[]'::jsonb)
     FROM public.subject_assignments 
     WHERE school_id = p_school_id 
-      AND (teacher_id = p_teacher_id OR teacher_id IN (SELECT id FROM teachers WHERE user_id = p_teacher_id))
+      AND (
+        teacher_id = p_teacher_id 
+        OR teacher_id IN (SELECT user_id FROM teachers WHERE id = p_teacher_id)
+        OR teacher_id IN (SELECT id FROM teachers WHERE user_id = p_teacher_id)
+      )
   );
 END; $$;
 
@@ -248,7 +252,11 @@ DECLARE v_count INTEGER;
 BEGIN
   SELECT COUNT(*) INTO v_count FROM public.timetable_slots 
   WHERE school_id = p_school_id AND period_id = p_period_id 
-    AND (teacher_id = p_teacher_id OR teacher_id IN (SELECT id FROM teachers WHERE user_id = p_teacher_id));
+    AND (
+      teacher_id = p_teacher_id 
+      OR teacher_id IN (SELECT user_id FROM teachers WHERE id = p_teacher_id)
+      OR teacher_id IN (SELECT id FROM teachers WHERE user_id = p_teacher_id)
+    );
   RETURN COALESCE(v_count, 0);
 END; $$;
 
@@ -262,7 +270,11 @@ BEGIN
     )), '[]'::jsonb)
     FROM public.timetable_slots 
     WHERE school_id = p_school_id AND period_id = p_period_id 
-      AND (teacher_id = p_teacher_id OR teacher_id IN (SELECT id FROM teachers WHERE user_id = p_teacher_id))
+      AND (
+        teacher_id = p_teacher_id 
+        OR teacher_id IN (SELECT user_id FROM teachers WHERE id = p_teacher_id)
+        OR teacher_id IN (SELECT id FROM teachers WHERE user_id = p_teacher_id)
+      )
   );
 END; $$;
 
