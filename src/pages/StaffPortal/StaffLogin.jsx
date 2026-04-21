@@ -26,40 +26,40 @@ export default function StaffLogin({ onLogin }) {
   };
 
   return (
-    <div className="login-res-page" style={{ background: 'linear-gradient(135deg, #EEF2FF 0%, #E0E7FF 100%)' }}>
-      <div className="card">
+    <div className="login-res-page" style={{ background: 'linear-gradient(135deg, #312E81 0%, #1E1B4B 100%)' }}>
+      <div className="card" style={{ boxShadow: '0 40px 100px rgba(0,0,0,0.5)' }}>
         {/* RIGHT PANEL - TEACHER THEMED */}
-        <div className="right-panel" style={{ background: 'linear-gradient(148deg, #3730A3 0%, #4338CA 30%, #4F46E5 68%, #6366F1 100%)' }}>
-          <div className="blob b1" style={{ background: 'rgba(99, 102, 241, 0.3)' }}></div>
+        <div className="right-panel" style={{ background: 'linear-gradient(148deg, #4338CA 0%, #3730A3 30%, #312E81 68%, #1E1B4B 100%)' }}>
+          <div className="blob b1" style={{ background: 'rgba(99, 102, 241, 0.4)' }}></div>
           <div className="blob b2"></div>
-          <div className="blob b3" style={{ background: 'rgba(79, 70, 229, 0.2)' }}></div>
+          <div className="blob b3" style={{ background: 'rgba(79, 70, 229, 0.3)' }}></div>
           
           <div className="fblocks">
-            <div className="fb">
-              <span className="fb-ico"><GraduationIcon size={16} color="#fff" /></span>
-              <div className="fb-t">Academic Excellence</div>
-              <div className="fb-d">Enter marks and track curriculum progress from any device.</div>
+            <div className="fb" style={{ background: 'rgba(255, 255, 255, 0.08)', backdropFilter: 'blur(10px)' }}>
+              <span className="fb-ico"><GraduationIcon size={16} color="#A5B4FC" /></span>
+              <div className="fb-t">Classroom Records</div>
+              <div className="fb-d">Instantly sync marks and lesson plans from your mobile device.</div>
               <div className="fb-stat">
-                <div><div className="fb-n">Fast</div><div className="fb-l">mark entry</div></div>
-                <div className="fb-badge">Academia</div>
+                <div><div className="fb-n">Optimized</div><div className="fb-l">for teachers</div></div>
+                <div className="fb-badge" style={{ background: '#4338CA' }}>Staff Portal</div>
               </div>
             </div>
-            <div className="fb">
-              <span className="fb-ico"><BookIcon size={16} color="#fff" /></span>
-              <div className="fb-t">Lesson Mastery</div>
-              <div className="fb-d">Manage your timetable and student attendance seamlessly.</div>
+            <div className="fb" style={{ background: 'rgba(255, 255, 255, 0.08)', backdropFilter: 'blur(10px)' }}>
+              <span className="fb-ico"><BookIcon size={16} color="#A5B4FC" /></span>
+              <div className="fb-t">Instant Attendance</div>
+              <div className="fb-d">Mark roll calls and monitor student participation on the fly.</div>
               <div className="fb-stat">
-                <div><div className="fb-n">Live</div><div className="fb-l">syncing</div></div>
-                <div className="fb-badge">Classroom</div>
+                <div><div className="fb-n">Live</div><div className="fb-l">Cloud Sync</div></div>
+                <div className="fb-badge" style={{ background: '#4338CA' }}>Mobile Ready</div>
               </div>
             </div>
           </div>
 
           <div className="brand-stack">
             <div className="brand-n">
-              ShuleSoft Staff
+               ShuleSoft EDU
             </div>
-            <div className="brand-sub">The Educator's Digital Companion <FlagIcon size={10} /></div>
+            <div className="brand-sub">The Teacher's Professional Workspace <FlagIcon size={10} /></div>
           </div>
         </div>
 
@@ -67,71 +67,72 @@ export default function StaffLogin({ onLogin }) {
         <div className="left-panel">
           <Link to="/" className="res-back-link">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M19 12H5m7 7-7-7 7-7"/></svg>
-            Back to Website
+            BACK TO LANDING
           </Link>
           
-          <Link to="/" className="res-logo">
-            <div className="logo-sq" style={{ background: '#4F46E5' }}>
+          <div className="res-logo">
+            <div className="logo-sq" style={{ background: '#4338CA' }}>
               <TeacherIcon size={18} color="white" />
             </div>
-            Staff Portal
-          </Link>
+            Educator Access
+          </div>
 
           <div className="login-content">
-            <div className="res-ftitle">Teacher Sign-In</div>
-            <p className="res-fsub">Access your academic workspace to manage your classes.</p>
+            <div className="res-ftitle" style={{ color: '#1E1B4B' }}>Staff Login</div>
+            <p className="res-fsub">Sign in to your professional academic dashboard.</p>
 
             {error && <div className="res-error">{error}</div>}
 
             <form onSubmit={handleLogin}>
               <div className="res-field">
                 <div className="res-fico">
-                  <PhoneIcon size={18} color="#94a3b8" />
+                  <PhoneIcon size={18} color="#4338CA" />
                 </div>
                 <input 
                   type="tel" 
-                  placeholder="Primary Phone Number" 
+                  placeholder="Your Registered Phone Number" 
                   value={phone} 
                   onChange={(e) => setPhone(e.target.value)} 
                   required 
+                  style={{ borderBottomColor: '#E0E7FF' }}
                 />
-                <div className="res-uline" style={{ background: '#4F46E5' }}></div>
-                <div className="res-fhint">Use your registered mobile number.</div>
+                <div className="res-uline" style={{ background: '#4338CA' }}></div>
+                <div className="res-fhint">The phone number used for SMS alerts.</div>
               </div>
 
               <div className="res-field">
                 <div className="res-fico">
-                  <ShieldIcon size={18} color="#94a3b8" />
+                  <ShieldIcon size={18} color="#4338CA" />
                 </div>
                 <input 
                   type={showPin ? "text" : "password"} 
-                  placeholder="Access PIN" 
+                  placeholder="Enter 4-6 Digit PIN" 
                   value={pin} 
                   onChange={(e) => setPin(e.target.value)} 
                   required 
                   inputMode="numeric"
                   pattern="[0-9]*"
-                  style={{ paddingRight: 40, letterSpacing: showPin ? 'normal' : '0.5em', textAlign: 'center', fontWeight: '800' }}
+                  style={{ paddingRight: 40, letterSpacing: '0.4em', textAlign: 'center', fontWeight: '900', fontSize: '1.4rem' }}
                 />
                 <button 
                   type="button" 
                   className="res-eye" 
                   onClick={() => setShowPin(!showPin)}
-                  style={{ top: '10px' }}
+                  style={{ color: '#4338CA' }}
                 >
                   {showPin ? <EyeOffIcon size={18} /> : <EyeIcon size={18} />}
                 </button>
-                <div className="res-uline" style={{ background: '#4F46E5' }}></div>
-                <div className="res-fhint" style={{ textAlign: 'center' }}>Enter your unique 4-6 digit PIN.</div>
+                <div className="res-uline" style={{ background: '#4338CA' }}></div>
               </div>
 
-              <button className="res-cta" type="submit" disabled={loading} style={{ marginTop: 24, background: '#4F46E5' }}>
-                {loading ? 'Authenticating...' : <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>Enter Workspace <RocketIcon size={18} /></span>}
+              <button className="res-cta" type="submit" disabled={loading} style={{ marginTop: 24, background: '#4338CA', boxShadow: '0 8px 30px rgba(67, 56, 202, 0.4)' }}>
+                {loading ? 'Validating Access...' : <span style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '1.1rem' }}>Enter Teacher Portal <RocketIcon size={18} /></span>}
               </button>
             </form>
 
             <div className="res-bottom">
-              <span>Need help? Contact your school administrator for PIN reset.</span>
+              <span style={{ color: '#6366F1', fontWeight: 600 }}>Forgot your PIN?</span>
+              <p style={{ marginTop: 8 }}>Please ask your School Admin for a PIN reset.</p>
             </div>
           </div>
         </div>

@@ -56,6 +56,8 @@ const ForgotPassword  = lazy(() => import('./pages/ForgotPassword'));
 const ResetPassword   = lazy(() => import('./pages/ResetPassword'));
 const SetPassword  = lazy(() => import('./pages/SetPassword'));
 const HelpCenter      = lazy(() => import('./pages/HelpCenter'));
+const PortalLogin     = lazy(() => import('./pages/Portal/PortalLogin'));
+const StaffLogin      = lazy(() => import('./pages/StaffPortal/StaffLogin'));
 
 import Loader          from './components/Common/Loader';
 import SyncIndicator from './components/Common/SyncIndicator';
@@ -532,6 +534,10 @@ function App() {
       <Suspense fallback={<Loader />}>
         <Routes>
           <Route path="/"                   element={<Landing />} />
+          
+          <Route path="/portal/login"       element={<PortalLogin onLogin={(u) => { localStorage.setItem('shulesoft_portal_user', JSON.stringify(u)); window.location.href='/portal/dashboard'; }} />} />
+          <Route path="/staff/login"        element={<StaffLogin onLogin={(u) => { localStorage.setItem('shulesoft_staff_user', JSON.stringify(u)); window.location.href='/staff/grading'; }} />} />
+
           <Route path="/portal/*"           element={<PortalManager />} />
           <Route path="/staff/*"            element={<StaffPortalManager />} />
           <Route path="/login"              element={<Login onLogin={setCurrentUser} />} />

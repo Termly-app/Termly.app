@@ -36,40 +36,40 @@ export default function PortalLogin({ onLogin }) {
   };
 
   return (
-    <div className="login-res-page" style={{ background: 'linear-gradient(135deg, #ECFDF5 0%, #D1FAE5 100%)' }}>
-      <div className="card">
+    <div className="login-res-page" style={{ background: 'linear-gradient(135deg, #064E3B 0%, #022C22 100%)' }}>
+      <div className="card" style={{ boxShadow: '0 40px 100px rgba(0,0,0,0.5)' }}>
         {/* RIGHT PANEL - FAMILY THEMED */}
-        <div className="right-panel" style={{ background: 'linear-gradient(148deg, #065F46 0%, #064E3B 30%, #059669 68%, #10B981 100%)' }}>
-          <div className="blob b1" style={{ background: 'rgba(16, 185, 129, 0.3)' }}></div>
+        <div className="right-panel" style={{ background: 'linear-gradient(148deg, #059669 0%, #065F46 30%, #064E3B 68%, #022C22 100%)' }}>
+          <div className="blob b1" style={{ background: 'rgba(16, 185, 129, 0.4)' }}></div>
           <div className="blob b2"></div>
-          <div className="blob b3" style={{ background: 'rgba(5, 150, 105, 0.2)' }}></div>
+          <div className="blob b3" style={{ background: 'rgba(5, 150, 105, 0.3)' }}></div>
           
           <div className="fblocks">
-            <div className="fb">
-              <span className="fb-ico"><GraduationIcon size={16} color="#fff" /></span>
-              <div className="fb-t">Academic Progress</div>
-              <div className="fb-d">Track your child's performance and termly results in real-time.</div>
+            <div className="fb" style={{ background: 'rgba(255, 255, 255, 0.1)', backdropFilter: 'blur(12px)', border: '1px solid rgba(255, 255, 255, 0.2)' }}>
+              <span className="fb-ico"><GraduationIcon size={16} color="#A7F3D0" /></span>
+              <div className="fb-t">Student Results</div>
+              <div className="fb-d">View termly grades and overall academic progress instantly.</div>
               <div className="fb-stat">
-                <div><div className="fb-n">Real-time</div><div className="fb-l">results</div></div>
-                <div className="fb-badge">Academia</div>
+                <div><div className="fb-n">Real-time</div><div className="fb-l">Report cards</div></div>
+                <div className="fb-badge" style={{ background: '#059669' }}>Academic</div>
               </div>
             </div>
-            <div className="fb">
-              <span className="fb-ico"><CardIcon size={16} color="#fff" /></span>
-              <div className="fb-t">Fees & Payments</div>
-              <div className="fb-d">View fee statements and secure payment history instantly.</div>
+            <div className="fb" style={{ background: 'rgba(255, 255, 255, 0.1)', backdropFilter: 'blur(12px)', border: '1px solid rgba(255, 255, 255, 0.2)' }}>
+              <span className="fb-ico"><CardIcon size={16} color="#A7F3D0" /></span>
+              <div className="fb-t">Fee Statements</div>
+              <div className="fb-d">Check balances and securely record M-Pesa payments.</div>
               <div className="fb-stat">
-                <div><div className="fb-n">100%</div><div className="fb-l">transparency</div></div>
-                <div className="fb-badge">Finance</div>
+                <div><div className="fb-n">Secure</div><div className="fb-l">Billing</div></div>
+                <div className="fb-badge" style={{ background: '#059669' }}>Finance Portal</div>
               </div>
             </div>
           </div>
 
           <div className="brand-stack">
             <div className="brand-n">
-              ShuleSoft Portal
+               ShuleSoft FAMILY
             </div>
-            <div className="brand-sub">Modern Education, Connected Families <FlagIcon size={10} /></div>
+            <div className="brand-sub">Modern Education, Connected Homes <FlagIcon size={10} /></div>
           </div>
         </div>
 
@@ -77,56 +77,57 @@ export default function PortalLogin({ onLogin }) {
         <div className="left-panel">
           <Link to="/" className="res-back-link">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M19 12H5m7 7-7-7 7-7"/></svg>
-            Back to Website
+            BACK TO WEBSITE
           </Link>
           
-          <Link to="/" className="res-logo">
+          <div className="res-logo">
             <div className="logo-sq" style={{ background: '#10B981' }}>
               <SchoolIcon size={18} color="white" />
             </div>
-            Parent Portal
-          </Link>
+            Family Access
+          </div>
 
           <div className="login-content">
-            <div className="res-ftitle">Family Sign-In</div>
-            <p className="res-fsub">Access your child's academic and financial records.</p>
+            <div className="res-ftitle" style={{ color: '#064E3B' }}>Parent Login</div>
+            <p className="res-fsub">Sign in to track your child's success and financial history.</p>
 
             {error && <div className="res-error">{error}</div>}
 
             <form onSubmit={handleSubmit}>
               <div className="res-field">
                 <div className="res-fico">
-                  <SchoolIcon size={18} color="#94a3b8" />
+                  <SchoolIcon size={18} color="#10B981" />
                 </div>
                 <input 
                   type="text" 
-                  placeholder="Institution Search (e.g. Alliance High)" 
+                  placeholder="School Name (start typing...)" 
                   value={schoolSearch} 
                   onChange={(e) => setSchoolSearch(e.target.value)} 
                   required 
+                  style={{ borderBottomColor: '#D1FAE5' }}
                 />
                 <div className="res-uline" style={{ background: '#10B981' }}></div>
-                {magicSchool && <div className="res-fhint" style={{ color: '#059669', fontWeight: 'bold' }}>Magic link applied! School detected.</div>}
+                {magicSchool && <div className="res-fhint" style={{ color: '#059669', fontWeight: 'bold' }}>Magic link applied!</div>}
               </div>
 
               <div className="res-field">
                 <div className="res-fico">
-                  <UserIcon size={18} color="#94a3b8" />
+                  <UserIcon size={18} color="#10B981" />
                 </div>
                 <input 
                   type="text" 
-                  placeholder="Student Admission Number" 
+                  placeholder="Child's Admission Number" 
                   value={admNo} 
                   onChange={(e) => setAdmNo(e.target.value)} 
                   required 
-                  style={{ textTransform: 'uppercase' }}
+                  style={{ textTransform: 'uppercase', borderBottomColor: '#D1FAE5' }}
                 />
                 <div className="res-uline" style={{ background: '#10B981' }}></div>
               </div>
 
               <div className="res-field">
                 <div className="res-fico">
-                  <PhoneIcon size={18} color="#94a3b8" />
+                  <PhoneIcon size={18} color="#10B981" />
                 </div>
                 <input 
                   type="tel" 
@@ -134,18 +135,20 @@ export default function PortalLogin({ onLogin }) {
                   value={phone} 
                   onChange={(e) => setPhone(e.target.value)} 
                   required 
+                  style={{ borderBottomColor: '#D1FAE5' }}
                 />
                 <div className="res-uline" style={{ background: '#10B981' }}></div>
-                <div className="res-fhint">The phone number registered with the school.</div>
+                <div className="res-fhint">The number where you receive school SMS notifications.</div>
               </div>
 
-              <button className="res-cta" type="submit" disabled={loading} style={{ marginTop: 24, background: '#10B981' }}>
-                {loading ? 'Authenticating...' : <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>Access Portal <RocketIcon size={18} /></span>}
+              <button className="res-cta" type="submit" disabled={loading} style={{ marginTop: 24, background: '#10B981', boxShadow: '0 8px 30px rgba(16, 185, 129, 0.4)' }}>
+                {loading ? 'Entering Portal...' : <span style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '1.1rem' }}>Access Parent Portal <RocketIcon size={18} /></span>}
               </button>
             </form>
 
             <div className="res-bottom">
-              <span>Need help? Contact the school office for support.</span>
+              <span style={{ color: '#10B981', fontWeight: 600 }}>Login Problems?</span>
+              <p style={{ marginTop: 8 }}>Please contact the school office manager for assistance.</p>
             </div>
           </div>
         </div>
