@@ -2,11 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { 
   getSchoolProfile, getExams, getExamPapers, 
   getExamMarksForPaper, saveExamMarks, getClassList,
-  getTeacherWorkloadSummary, getTeacherTimetable, getTimetableConfig, getPeriods
+  getTeacherWorkloadSummary, getTeacherTimetable, getTimetableConfig, getPeriods,
+  initPortalStore
 } from '../../data/store';
 import { 
   BookIcon, CheckIcon, SignOutIcon, SaveIcon, UserIcon, 
-  GradingIcon, RefreshIcon, ChevronDownIcon, CalendarIcon, DashboardIcon, MenuIcon 
+  GradingIcon, RefreshIcon, ChevronDownIcon, CalendarIcon, DashboardIcon, MenuIcon, LogoutIcon 
 } from '../../components/CommonIcons';
 import { useDialog } from '../../contexts/DialogContext';
 import Loader from '../../components/Common/Loader';
@@ -30,6 +31,10 @@ export default function MobileGrading({ user, onLogout }) {
   const [config, setConfig] = useState([]);
   const [activeTab, setActiveTab] = useState('grading');
   const [activePeriod, setActivePeriod] = useState(null);
+  
+  // Picker State
+  const [pickerOpen, setPickerOpen] = useState(false);
+  const [pickerType, setPickerType] = useState(null); // 'exam' or 'paper'
 
 
   useEffect(() => {
@@ -39,8 +44,11 @@ export default function MobileGrading({ user, onLogout }) {
   const loadInitialData = async () => {
     try {
       setLoading(true);
+      // Initialize store context for portal mode
+      initPortalStore(user.school_id, null); // Period will be fetched and set below
+
       const [activeExams, allPeriods, profile] = await Promise.all([
-        getExams({ status: 'open' }),
+        getExams(),
         getPeriods(),
         getSchoolProfile()
       ]);
@@ -96,7 +104,7 @@ export default function MobileGrading({ user, onLogout }) {
     try {
       setLoading(true);
       const [classList, existingMarks] = await Promise.all([
-        getClassList(paper.classes.name),
+        getClassList(paper.classes.name, paper.class_id),
         getExamMarksForPaper(paper.id)
       ]);
       
@@ -145,7 +153,7 @@ export default function MobileGrading({ user, onLogout }) {
         remarks: ''
       }));
       
-      await saveExamMarks(selectedPaper.id, payload);
+      await saveExamMarks(payload);
       alert({ title: 'Success', message: 'Marks Synchronized to Cloud!', variant: 'success' });
     } catch (err) {
       alert({ title: 'Sync Error', message: 'Failed to save marks. Check connectivity.', variant: 'danger' });
@@ -155,6 +163,21 @@ export default function MobileGrading({ user, onLogout }) {
   };
 
   if (loading && exams.length === 0) return <Loader />;
+
+  const openPicker = (type) => {
+    setPickerType(type);
+    setPickerOpen(true);
+  };
+
+  const selectOption = (val) => {
+    if (pickerType === 'exam') {
+      setSelectedExamId(val);
+    } else {
+      const p = papers.find(pp => pp.id === val);
+      if (p) handlePaperSelect(p);
+    }
+    setPickerOpen(false);
+  };
 
   return (
     <div style={{ width: '100%', maxWidth: 600, margin: '0 auto', background: '#f0f2f5', minHeight: '100vh', display: 'flex', flexDirection: 'column', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif' }}>
@@ -184,41 +207,39 @@ export default function MobileGrading({ user, onLogout }) {
                  <GradingIcon size={18} color="#1a73e8" /> Grade Entry Setup
                </h3>
                <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-                 <div style={{ position: 'relative' }}>
-                   <select 
-                     value={selectedExamId} 
-                     onChange={(e) => setSelectedExamId(e.target.value)}
-                     style={{ width: '100%', padding: '12px 16px', borderRadius: '12px', background: '#f0f2f5', border: 'none', color: '#111b21', fontWeight: 600, fontSize: '0.95rem', appearance: 'none' }}
-                   >
-                     <option value="" disabled>Active Exam Session</option>
-                     {exams.map(e => <option key={e.id} value={e.id}>{e.name}</option>)}
-                     {exams.length === 0 && <option>No Open Exams</option>}
-                   </select>
-                   <div style={{ position: 'absolute', right: 16, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none', color: '#667781' }}>
-                     <ChevronDownIcon size={18} />
+                 {/* Modern Exam Selector */}
+                 <div 
+                   onClick={() => openPicker('exam')}
+                   style={{ 
+                     background: '#f0f2f5', padding: '14px 16px', borderRadius: '12px', 
+                     display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer' 
+                   }}
+                 >
+                   <div>
+                     <div style={{ fontSize: '0.75rem', color: '#667781', fontWeight: 600, textTransform: 'uppercase', marginBottom: 2 }}>Examination</div>
+                     <div style={{ fontSize: '1rem', fontWeight: 700, color: '#111b21' }}>
+                       {exams.find(e => e.id === selectedExamId)?.name || 'Select Exam Session'}
+                     </div>
                    </div>
+                   <ChevronDownIcon size={20} color="#667781" />
                  </div>
 
-                 <div style={{ position: 'relative' }}>
-                   <select 
-                     value={selectedPaper?.id || ''} 
-                     onChange={(e) => {
-                       const p = papers.find(pp => pp.id === e.target.value);
-                       if (p) handlePaperSelect(p);
-                     }}
-                     style={{ width: '100%', padding: '12px 16px', borderRadius: '12px', border: '1px solid #e2e8f0', background: '#fff', color: '#111b21', fontWeight: 600, fontSize: '0.95rem', appearance: 'none' }}
-                   >
-                     <option value="" disabled>Select Class & Subject</option>
-                     {papers.map(p => (
-                       <option key={p.id} value={p.id}>
-                         {p.classes.name} {p.classes.stream} — {p.tt_subjects.name}
-                       </option>
-                     ))}
-                     {papers.length === 0 && <option disabled>No assigned papers found</option>}
-                   </select>
-                   <div style={{ position: 'absolute', right: 16, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none', color: '#667781' }}>
-                     <ChevronDownIcon size={18} />
+                 {/* Modern Paper Selector */}
+                 <div 
+                   onClick={() => openPicker('paper')}
+                   style={{ 
+                     background: '#fff', padding: '14px 16px', borderRadius: '12px', border: '1.5px solid #e2e8f0',
+                     display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer',
+                     opacity: !selectedExamId ? 0.6 : 1
+                   }}
+                 >
+                   <div>
+                     <div style={{ fontSize: '0.75rem', color: '#667781', fontWeight: 600, textTransform: 'uppercase', marginBottom: 2 }}>Class & Subject</div>
+                     <div style={{ fontSize: '1rem', fontWeight: 700, color: '#111b21' }}>
+                       {selectedPaper ? `${selectedPaper.classes.name} — ${selectedPaper.tt_subjects.name}` : 'Tap to Choose Paper'}
+                     </div>
                    </div>
+                   <ChevronDownIcon size={20} color="#667781" />
                  </div>
                </div>
             </div>
@@ -395,10 +416,68 @@ export default function MobileGrading({ user, onLogout }) {
         ))}
       </nav>
 
+      {/* Modern Picker Sheet Overlay */}
+      {pickerOpen && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', zIndex: 2000, display: 'flex', alignItems: 'flex-end', backdropFilter: 'blur(4px)', animation: 'fadeIn 0.2s ease-out' }}>
+          <div style={{ background: '#fff', width: '100%', borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: '20px 0 40px', maxHeight: '80vh', overflowY: 'auto', animation: 'slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1)' }}>
+            <div style={{ width: 40, height: 4, background: '#e2e8f0', borderRadius: 2, margin: '0 auto 20px' }} />
+            
+            <div style={{ padding: '0 24px 16px', borderBottom: '1px solid #f1f5f9' }}>
+              <h3 style={{ margin: 0, fontSize: '1.2rem', fontWeight: 700, color: '#111b21' }}>
+                {pickerType === 'exam' ? 'Select Exam Session' : 'Select Paper'}
+              </h3>
+            </div>
+
+            <div style={{ marginTop: 8 }}>
+              {pickerType === 'exam' ? (
+                exams.length === 0 ? <div style={{ padding: 40, textAlign: 'center', color: '#64748b' }}>No active exams found.</div> :
+                exams.map(e => (
+                  <div 
+                    key={e.id} 
+                    onClick={() => selectOption(e.id)}
+                    style={{ padding: '16px 24px', borderBottom: '1px solid #f8fafc', background: selectedExamId === e.id ? '#f0f9ff' : 'transparent', cursor: 'pointer' }}
+                  >
+                    <div style={{ fontWeight: 600, color: selectedExamId === e.id ? '#1a73e8' : '#111b21', fontSize: '1.05rem' }}>{e.name}</div>
+                    <div style={{ fontSize: '0.8rem', color: '#64748b' }}>Term {e.term} • {e.status}</div>
+                  </div>
+                ))
+              ) : (
+                papers.length === 0 ? <div style={{ padding: 40, textAlign: 'center', color: '#64748b' }}>No assigned papers found for this exam.</div> :
+                papers.map(p => (
+                  <div 
+                    key={p.id} 
+                    onClick={() => selectOption(p.id)}
+                    style={{ padding: '16px 24px', borderBottom: '1px solid #f8fafc', background: selectedPaper?.id === p.id ? '#f0f9ff' : 'transparent', cursor: 'pointer' }}
+                  >
+                    <div style={{ fontWeight: 600, color: selectedPaper?.id === p.id ? '#1a73e8' : '#111b21', fontSize: '1.05rem' }}>
+                      {p.classes.name} {p.classes.stream}
+                    </div>
+                    <div style={{ fontSize: '0.85rem', color: '#64748b' }}>{p.tt_subjects.name}</div>
+                  </div>
+                ))
+              )}
+            </div>
+
+            <div style={{ padding: '24px 24px 0' }}>
+               <button 
+                onClick={() => setPickerOpen(false)}
+                style={{ width: '100%', padding: '14px', borderRadius: 12, border: 'none', background: '#f1f5f9', color: '#475569', fontWeight: 700, fontSize: '1rem', cursor: 'pointer' }}
+               >
+                 Cancel
+               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <style>{`
         @keyframes fadeIn {
-          from { opacity: 0; transform: translateY(5px); }
-          to { opacity: 1; transform: translateY(0); }
+          from { opacity: 0; }
+          to { opacity: 1; }
+        }
+        @keyframes slideUp {
+          from { transform: translateY(100%); }
+          to { transform: translateY(0); }
         }
       `}</style>
     </div>

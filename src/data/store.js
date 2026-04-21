@@ -24,6 +24,18 @@ import { encryptData as encrypt, decryptData as decrypt } from '../utils/securit
 var _currentSchoolId = null;
 var _currentAuthUser = null;
 var _currentPeriodId = null;
+var _currentUserId   = null;
+
+/**
+ * Initializes the store context for Portal users (who don't have a standard Supabase session).
+ */
+export function initPortalStore(schoolId, userId = null, periodId = null) {
+  console.log(`[PORTAL STORE] Initializing for School: ${schoolId}, User: ${userId}`);
+  _currentSchoolId = schoolId;
+  _currentUserId = userId;
+  _currentPeriodId = periodId;
+  _currentAuthUser = null; // Important: null signifies portal-only mode
+}
 
 // MEMORY CACHE (Performance Optimization)
 var _profileCache    = null;
@@ -899,6 +911,13 @@ export async function saveSchoolProfile(profile) {
 // ============= ACADEMIC PERIODS =============
 export async function getPeriods() {
   if (!_currentSchoolId) return [];
+  
+  if (!_currentAuthUser && _currentSchoolId) {
+    const { data, error } = await supabase.rpc('portal_get_periods', { p_school_id: _currentSchoolId });
+    if (error) throw error;
+    return data || [];
+  }
+
   const { data, error } = await supabase
     .from('academic_periods')
     .select('id, year, term, is_active, school_id')
@@ -1587,7 +1606,16 @@ export async function getSubjectRankings(className, examType = _currentExamType)
   return rankings;
 }
 
-export async function getClassList(className) {
+export async function getClassList(className, classId = null) {
+  if (!_currentAuthUser && _currentSchoolId && classId) {
+    const { data, error } = await supabase.rpc('portal_get_class_students', { 
+      p_school_id: _currentSchoolId, 
+      p_class_id: classId 
+    });
+    if (error) throw error;
+    return data || [];
+  }
+
   const students = (await getStudents()).filter(s => s.class === className);
   return students.sort((a, b) => a.name.localeCompare(b.name));
 }
@@ -1596,6 +1624,13 @@ export async function getClassList(className) {
 
 export async function getExams() {
   if (!_currentSchoolId || !_currentPeriodId) return [];
+  
+  if (!_currentAuthUser && _currentSchoolId) {
+    const { data, error } = await supabase.rpc('portal_get_open_exams', { p_school_id: _currentSchoolId });
+    if (error) throw error;
+    return data || [];
+  }
+
   const cacheKey = `exams_${_currentSchoolId}_${_currentPeriodId}`;
   return getCached(cacheKey, async () => {
     const { data, error } = await supabase
@@ -1642,12 +1677,64 @@ export async function updateExam(examId, updates) {
 }
 
 export async function getExamPapers(examId) {
+  if (!_currentSchoolId || !examId) return [];
+  
+  if (!_currentAuthUser && _currentSchoolId) {
+    // Portal mode: Fetch papers via RPC (usually for teachers entering marks)
+    const userId = _currentUserId;
+    const { data, error } = await supabase.rpc('portal_get_teacher_papers', { 
+      p_teacher_id: userId, 
+      p_exam_id: examId 
+    });
+    if (error) throw error;
+    return data || [];
+  }
+
   const { data, error } = await supabase
     .from('exam_papers')
-    .select('*, classes(name, stream), tt_subjects(name)')
+    .select('*, tt_subjects(name), classes(name, stream)')
     .eq('exam_id', examId);
   if (error) throw error;
   return data;
+}
+
+export async function getExamMarksForPaper(paperId) {
+  if (!_currentAuthUser && _currentSchoolId) {
+    const { data, error } = await supabase.rpc('portal_get_exam_marks', { 
+      p_school_id: _currentSchoolId, 
+      p_paper_id: paperId 
+    });
+    if (error) throw error;
+    return data || [];
+  }
+
+  const { data, error } = await supabase
+    .from('exam_marks')
+    .select('*, students(name, adm_no)')
+    .eq('exam_paper_id', paperId);
+  if (error) throw error;
+  return data;
+}
+
+export async function saveExamMarks(paperId, marks) {
+  mutationGuard('saveExamMarks');
+  if (!_currentAuthUser && _currentSchoolId) {
+    const { data, error } = await supabase.rpc('portal_save_exam_marks', { p_marks: marks });
+    if (error) throw error;
+    return data;
+  }
+
+  const rows = marks.map(m => ({
+    ...m,
+    exam_paper_id: paperId,
+    school_id: _currentSchoolId,
+    entered_by: _currentUserId,
+    entered_at: new Date().toISOString()
+  }));
+  const { error } = await supabase
+    .from('exam_marks')
+    .upsert(rows, { onConflict: 'exam_paper_id,student_id' });
+  if (error) throw error;
 }
 
 export async function saveExamPapers(examId, papers) {
@@ -1660,30 +1747,6 @@ export async function saveExamPapers(examId, papers) {
   const { error } = await supabase
     .from('exam_papers')
     .upsert(rows, { onConflict: 'exam_id,class_id,subject_id' });
-  if (error) throw error;
-}
-
-export async function getExamMarksForPaper(paperId) {
-  const { data, error } = await supabase
-    .from('exam_marks')
-    .select('*, students(name, adm_no)')
-    .eq('exam_paper_id', paperId);
-  if (error) throw error;
-  return data;
-}
-
-export async function saveExamMarks(paperId, marks) {
-  mutationGuard('saveExamMarks');
-  const rows = marks.map(m => ({
-    ...m,
-    exam_paper_id: paperId,
-    school_id: _currentSchoolId,
-    entered_by: _currentUserId,
-    entered_at: new Date().toISOString()
-  }));
-  const { error } = await supabase
-    .from('exam_marks')
-    .upsert(rows, { onConflict: 'exam_paper_id,student_id' });
   if (error) throw error;
 }
 
@@ -1701,11 +1764,19 @@ export async function getExamResults(examId) {
  * Fetch results for a specific student, only from PUBLISHED exams.
  */
 export async function getStudentExamResults(studentId) {
+  if (!_currentSchoolId || !studentId) return [];
+
+  // If in portal mode (no auth user but school id set), use RPC
+  if (!_currentAuthUser && _currentSchoolId) {
+    const { data, error } = await supabase.rpc('portal_get_student_results', { p_student_id: studentId });
+    if (error) throw error;
+    return data || [];
+  }
+
   const { data, error } = await supabase
     .from('exam_results')
-    .select('*, exams(name, term, status, exam_type)')
-    .eq('student_id', studentId)
-    .eq('exams.status', 'published');
+    .select('*, exams(name, term, exam_type)')
+    .eq('student_id', studentId);
   
   if (error) throw error;
   // Supabase join filtering might return null for exams if status != published
@@ -1817,8 +1888,33 @@ export async function reconcileStudentFee(studentId, existingRecord = null) {
   return record;
 }
 
-export async function getFees() {
-  if (!_currentSchoolId || !_currentPeriodId) return {};
+export async function getFees(studentId = null) {
+  if (!_currentSchoolId) return studentId ? null : {};
+
+  // If in portal mode or searching for specific student, use RPC if possible
+  if (!_currentAuthUser && studentId) {
+    const { data: feeData, error: feeErr } = await supabase.rpc('portal_get_student_fees', { p_student_id: studentId });
+    const { data: payData, error: payErr } = await supabase.rpc('portal_get_student_payments', { p_student_id: studentId });
+    
+    if (feeErr) throw feeErr;
+    if (!feeData) return null;
+
+    return {
+      totalFee: Number(feeData.total_fee),
+      paid: Number(feeData.paid),
+      balance: Number(feeData.balance),
+      payments: (payData || []).map(p => ({
+        id: p.id,
+        amount: Number(p.amount),
+        date: p.date,
+        method: p.method,
+        reference: p.reference,
+      })),
+      _feeId: feeData.id,
+      periodId: feeData.period_id,
+    };
+  }
+
   const cacheKey = `fees_${_currentSchoolId}_${_currentPeriodId}`;
   return cachedQuery(cacheKey, async () => {
     const { data, error } = await supabase
@@ -4990,6 +5086,13 @@ export async function getSubmissions(assignmentId) {
 
 export async function getAnnouncements(filters = {}) {
   if (!_currentSchoolId) return [];
+
+  if (!_currentAuthUser && _currentSchoolId) {
+    const { data, error } = await supabase.rpc('portal_get_announcements', { p_school_id: _currentSchoolId });
+    if (error) throw error;
+    return data || [];
+  }
+
   let q = supabase
     .from('announcements')
     .select('*, users!announcements_created_by_fkey(name), announcement_reads(user_id)')
