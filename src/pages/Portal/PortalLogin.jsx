@@ -8,6 +8,7 @@ export default function PortalLogin({ onLogin }) {
   const magicSchool = searchParams.get('school');
   
   const [schoolSearch, setSchoolSearch] = useState(magicSchool || '');
+  const [selectedSchoolId, setSelectedSchoolId] = useState(null);
   const [suggestions, setSuggestions] = useState([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [admNo, setAdmNo] = useState('');
@@ -46,7 +47,7 @@ export default function PortalLogin({ onLogin }) {
 
     setLoading(true);
     try {
-      const result = await validateParentLogin(schoolSearch, admNo, phone);
+      const result = await validateParentLogin(schoolSearch, admNo, phone, selectedSchoolId);
       if (result) {
         onLogin(result);
       }
@@ -130,12 +131,13 @@ export default function PortalLogin({ onLogin }) {
                 
                 {showSuggestions && suggestions.length > 0 && (
                   <div className="res-suggestions">
-                    {suggestions.map(s => (
+                    {suggestions.map((s) => (
                       <div 
                         key={s.id} 
                         className="suggestion-item"
                         onClick={() => {
                           setSchoolSearch(s.name);
+                          setSelectedSchoolId(s.id);
                           setShowSuggestions(false);
                         }}
                       >

@@ -8,6 +8,7 @@ export default function StaffLogin({ onLogin }) {
   const magicSchool = searchParams.get('school');
   
   const [schoolSearch, setSchoolSearch] = useState(magicSchool || '');
+  const [selectedSchoolId, setSelectedSchoolId] = useState(null);
   const [suggestions, setSuggestions] = useState([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [phone, setPhone] = useState('');
@@ -47,7 +48,7 @@ export default function StaffLogin({ onLogin }) {
     setError('');
     
     try {
-      const result = await validateStaffLogin(schoolSearch, phone, pin);
+      const result = await validateStaffLogin(schoolSearch, phone, pin, selectedSchoolId);
       onLogin(result);
     } catch (err) {
       setError(err.message || 'Invalid credentials. Please try again.');
@@ -129,12 +130,13 @@ export default function StaffLogin({ onLogin }) {
                 
                 {showSuggestions && suggestions.length > 0 && (
                   <div className="res-suggestions">
-                    {suggestions.map(s => (
+                    {suggestions.map((s) => (
                       <div 
                         key={s.id} 
                         className="suggestion-item"
                         onClick={() => {
                           setSchoolSearch(s.name);
+                          setSelectedSchoolId(s.id);
                           setShowSuggestions(false);
                         }}
                       >

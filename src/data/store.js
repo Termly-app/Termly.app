@@ -2334,20 +2334,36 @@ export async function getSchoolStructure(preFetchedStudents = null, preFetchedMa
 /**
  * Securely validate a staff member (teacher) login using School + Phone + PIN
  */
-export async function validateStaffLogin(schoolSearch, phone, pin) {
-  // 1. Find the school first (by name fuzzy match or exact slug/email)
-  const { data: schools, error: sErr } = await supabase
-    .from('schools')
-    .select('id, name, school_code')
-    .or(`name.ilike.%${schoolSearch}%,school_code.eq.${schoolSearch},email.eq.${schoolSearch}`);
+export async function validateStaffLogin(schoolSearch, phone, pin, schoolId = null) {
+  let selectedSchool;
+  let schoolIds = [];
 
-  if (sErr || !schools || schools.length === 0) {
-    throw new Error('Institution not found. Please check the school name or code.');
+  if (schoolId) {
+    // 1a. Precise ID provided
+    const { data: school, error: sErr } = await supabase
+      .from('schools')
+      .select('id, name, school_code')
+      .eq('id', schoolId)
+      .single();
+    if (sErr || !school) throw new Error('Selected institution record not found.');
+    selectedSchool = school;
+    schoolIds = [schoolId];
+  } else {
+    // 1b. Fallback to fuzzy search
+    const { data: schools, error: sErr } = await supabase
+      .from('schools')
+      .select('id, name, school_code')
+      .or(`name.ilike.%${schoolSearch}%,school_code.eq.${schoolSearch},email.eq.${schoolSearch}`);
+
+    if (sErr || !schools || schools.length === 0) {
+      throw new Error('Institution not found. Please check the school name or code.');
+    }
+    selectedSchool = schools[0];
+    schoolIds = schools.map(s => s.id);
   }
 
-  // 2. Resolve the primary school and check subscription/feature
-  const school = schools[0]; // Take primary match
-  const profile = await getSchoolProfileBySchoolId(school.id);
+  // 2. Resolve profile and check subscription/feature
+  const profile = await getSchoolProfileBySchoolId(selectedSchool.id);
   
   // profile is now guaranteed to be non-null due to fallback logic
 
@@ -2363,10 +2379,8 @@ export async function validateStaffLogin(schoolSearch, phone, pin) {
     throw new Error('The Staff Portal feature is not active for your institution\'s current plan.');
   }
 
-  const schoolIds = schools.map(s => s.id);
-
-  // Clean phone input
-  const cleanedPhone = phone.replace(/\s+/g, '');
+  // Clean phone input (remove all non-digits)
+  const cleanedPhone = phone.replace(/[^0-9]/g, '');
 
   // 3. Find the teacher matching phone
   const { data, error } = await supabase
@@ -2588,23 +2602,37 @@ export async function sendSchoolInvite(email, recipientName) {
 }
 
 /**
- * Securely validate a parent/student portal login
+ * Securely validate a parent login using School + Student Phone + PIN
  */
-export async function validateParentLogin(schoolSearch, admNo, phone) {
-  // 1. Find the school first
-  const { data: schools, error: sErr } = await supabase
-    .from('schools')
-    .select('id, name, school_code')
-    .or(`name.ilike.%${schoolSearch}%,school_code.eq.${schoolSearch},email.eq.${schoolSearch}`);
+export async function validateParentLogin(schoolSearch, admNo, phone, schoolId = null) {
+  let selectedSchool;
+  let schoolIds = [];
 
-  if (sErr || !schools || schools.length === 0) {
-    throw new Error('Institution not found. Please check the school name or code.');
+  if (schoolId) {
+    // 1a. Precise ID provided
+    const { data: school, error: sErr } = await supabase
+      .from('schools')
+      .select('id, name, school_code')
+      .eq('id', schoolId)
+      .single();
+    if (sErr || !school) throw new Error('Selected institution record not found.');
+    selectedSchool = school;
+    schoolIds = [schoolId];
+  } else {
+    // 1b. Fallback to fuzzy search
+    const { data: schools, error: sErr } = await supabase
+      .from('schools')
+      .select('id, name, school_code')
+      .or(`name.ilike.%${schoolSearch}%,school_code.eq.${schoolSearch},email.eq.${schoolSearch}`);
+
+    if (sErr || !schools || schools.length === 0) {
+      throw new Error('Institution not found. Please check the school name or code.');
+    }
+    selectedSchool = schools[0];
+    schoolIds = schools.map(s => s.id);
   }
 
-  const school = schools[0];
-  const profile = await getSchoolProfileBySchoolId(school.id);
-
-  // profile is now guaranteed to be non-null due to fallback logic
+  const profile = await getSchoolProfileBySchoolId(selectedSchool.id);
 
   // Subscription Gate
   const isSubActive = await checkIsSubscriptionActive(profile);
@@ -2617,8 +2645,6 @@ export async function validateParentLogin(schoolSearch, admNo, phone) {
   if (!hasFeature) {
     throw new Error('The Parent Portal feature is not active for your institution\'s current plan.');
   }
-
-  const schoolIds = schools.map(s => s.id);
 
   // 2. Find the student matching ADM No
   const { data: student, error: stErr } = await supabase
