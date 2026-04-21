@@ -191,7 +191,3 @@ export default function PortalLogin({ onLogin }) {
     </div>
   );
 }
-
-    </div>
-  );
-}
