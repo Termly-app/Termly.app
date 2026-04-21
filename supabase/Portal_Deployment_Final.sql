@@ -28,7 +28,7 @@ BEGIN
   -- 3. Validate PIN
   IF COALESCE(v_teacher.pin, '1234') != p_pin THEN RETURN jsonb_build_object('error', 'Invalid PIN code.'); END IF;
 
-  RETURN jsonb_build_object('id', v_teacher.id, 'name', v_teacher.name, 'role', 'teacher', 'schoolId', v_teacher.school_id);
+  RETURN jsonb_build_object('id', v_teacher.id, 'name', v_teacher.name, 'role', 'teacher', 'school_id', v_teacher.school_id);
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
@@ -135,8 +135,9 @@ CREATE OR REPLACE FUNCTION public.portal_get_student_results(p_student_id UUID)
 RETURNS JSONB AS $$
 BEGIN
   RETURN (SELECT COALESCE(jsonb_agg(jsonb_build_object(
-    'id', er.id, 'mean_score', er.mean_score, 'class_position', er.class_position, 'class_size', er.class_size,
-    'exam_info', jsonb_build_object('name', e.name)
+    'id', er.id, 'mean_score', er.mean_score, 'total_marks', er.total_marks, 'total_subjects', er.total_subjects,
+    'class_position', er.class_position, 'class_size', er.class_size,
+    'exams', jsonb_build_object('name', e.name, 'term', e.term, 'exam_type', e.exam_type)
   )), '[]'::jsonb)
   FROM public.exam_results er JOIN public.exams e ON e.id = er.exam_id
   WHERE er.student_id = p_student_id AND e.status = 'published');

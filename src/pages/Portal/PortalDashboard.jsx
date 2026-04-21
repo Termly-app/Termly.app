@@ -35,7 +35,7 @@ export default function PortalDashboard({ user, onLogout }) {
       setLoading(true);
       try {
         // Initialize store context for portal mode
-        initPortalStore(user.school_id, null);
+        initPortalStore(user.school_id, user.id);
 
         const [asts, profile, examRes, schoolNotices] = await Promise.all([
           getAssignments(user.class),

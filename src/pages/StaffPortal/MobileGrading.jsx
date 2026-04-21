@@ -45,7 +45,7 @@ export default function MobileGrading({ user, onLogout }) {
     try {
       setLoading(true);
       // Initialize store context for portal mode
-      initPortalStore(user.school_id, null); // Period will be fetched and set below
+      initPortalStore(user.school_id, user.id); // Period will be fetched and set below
 
       const [activeExams, allPeriods, profile] = await Promise.all([
         getExams(),
