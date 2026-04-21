@@ -1,17 +1,39 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { SchoolIcon, UserIcon, PhoneIcon, RocketIcon, FlagIcon, GraduationIcon, CardIcon, ChevronRightIcon } from '../../components/CommonIcons';
-import { validateParentLogin } from '../../data/store';
+import { validateParentLogin, searchSchools } from '../../data/store';
 
 export default function PortalLogin({ onLogin }) {
   const [searchParams] = useSearchParams();
   const magicSchool = searchParams.get('school');
   
   const [schoolSearch, setSchoolSearch] = useState(magicSchool || '');
+  const [suggestions, setSuggestions] = useState([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
   const [admNo, setAdmNo] = useState('');
   const [phone, setPhone] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    const fetchSuggestions = async () => {
+      if (schoolSearch.length > 1 && !magicSchool) {
+        try {
+          const results = await searchSchools(schoolSearch);
+          setSuggestions(results);
+          setShowSuggestions(true);
+        } catch (err) {
+          console.error("Suggestion fetch failed:", err);
+        }
+      } else {
+        setSuggestions([]);
+        setShowSuggestions(false);
+      }
+    };
+
+    const timer = setTimeout(fetchSuggestions, 300);
+    return () => clearTimeout(timer);
+  }, [schoolSearch, magicSchool]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -91,18 +113,38 @@ export default function PortalLogin({ onLogin }) {
 
             {error && <div className="res-error">{error}</div>}
 
-            <form onSubmit={handleSubmit}>
-              <div className="res-field">
+            <form onSubmit={handleSubmit} autoComplete="off">
+              <div className="res-field" style={{ position: 'relative', zIndex: 100 }}>
                 <div className="res-fico"><SchoolIcon size={18} color="#94a3b8" /></div>
                 <input 
                   type="text" 
                   placeholder="Search for your school..." 
                   value={schoolSearch} 
                   onChange={(e) => setSchoolSearch(e.target.value)} 
+                  onFocus={() => suggestions.length > 0 && setShowSuggestions(true)}
                   required 
+                  autoComplete="off"
                 />
                 <div className="res-uline" style={{ background: '#10B981' }}></div>
                 {magicSchool && <div className="res-fhint" style={{ color: '#059669', fontWeight: 'bold' }}>Magic link applied!</div>}
+                
+                {showSuggestions && suggestions.length > 0 && (
+                  <div className="res-suggestions">
+                    {suggestions.map(s => (
+                      <div 
+                        key={s.id} 
+                        className="suggestion-item"
+                        onClick={() => {
+                          setSchoolSearch(s.name);
+                          setShowSuggestions(false);
+                        }}
+                      >
+                        <div className="s-name">{s.name}</div>
+                        <div className="s-code">{s.school_code}</div>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
 
               <div className="res-field">
@@ -169,8 +211,16 @@ export default function PortalLogin({ onLogin }) {
         .res-field input:focus ~ .res-uline { width: 100%; }
         .res-fhint { font-size: 0.75rem; color: #94A3B8; margin-top: 6px; padding-left: 32px; }
         
-        .res-cta { width: 100%; border: none; border-radius: 100px; padding: 16px; color: white; font-weight: 700; cursor: pointer; transition: all 0.3s; margin-top: 20px; box-shadow: 0 8px 25px rgba(16, 185, 129, 0.3); }
-        .res-cta:hover { transform: translateY(-2px); box-shadow: 0 12px 30px rgba(16, 185, 129, 0.4); }
+        .res-cta { width: 100%; border: none; border-radius: 12px; padding: 14px; color: white; font-weight: 700; cursor: pointer; transition: all 0.3s; margin-top: 32px; box-shadow: 0 8px 25px rgba(16, 185, 129, 0.3); display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 1rem; }
+        .res-cta:hover { transform: translateY(-2px); box-shadow: 0 12px 30px rgba(16, 185, 129, 0.4); opacity: 0.95; }
+        .res-cta:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+
+        .res-suggestions { position: absolute; top: 100%; left: 0; right: 0; background: white; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); border: 1px solid #E2E8F0; margin-top: 5px; max-height: 200px; overflow-y: auto; z-index: 1000; }
+        .suggestion-item { padding: 12px 16px; cursor: pointer; transition: background 0.2s; border-bottom: 1px solid #F1F5F9; }
+        .suggestion-item:last-child { border-bottom: none; }
+        .suggestion-item:hover { background: #F8FAFC; }
+        .s-name { font-size: 0.9rem; font-weight: 700; color: #064E3B; }
+        .s-code { font-size: 0.7rem; color: #94A3B8; text-transform: uppercase; margin-top: 2px; }
         .res-error { background: #fee2e2; color: #b91c1c; padding: 12px; border-radius: 12px; margin-bottom: 20px; font-size: 0.85rem; text-align: center; font-weight: 600; }
         .res-back-link { display: inline-flex; align-items: center; gap: 8px; color: #94a3b8; text-decoration: none; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; margin-bottom: 20px; transition: color 0.2s; }
         .res-back-link:hover { color: #10B981; }

@@ -387,6 +387,20 @@ function loadProfileFromLocal(schoolId) {
 
 const SAFE_PROFILE_COLUMNS = 'id, school_name, motto, phone, email, address, logo, subscription_plan, streams_per_class, custom_subjects, active_classes, grade_fees, subscription_status, subscription_expiry, last_payment_status, mpesa_config, sms_config, grading_systems, custom_exams, curriculum, timetable_label';
 
+/**
+ * Helper to get school profile by optional explicit school ID (useful during login)
+ */
+export async function getSchoolProfileBySchoolId(schoolId) {
+  if (!schoolId) return null;
+  const { data, error } = await supabase
+    .from('school_profiles')
+    .select('*')
+    .eq('school_id', schoolId)
+    .single();
+  if (error) return null;
+  return data;
+}
+
 export async function getSchoolProfile() {
   if (!_currentSchoolId) return { ...DEFAULT_PROFILE };
   if (_profileCache) return _profileCache;
