@@ -46,8 +46,10 @@ export default function MobileGrading({ user, onLogout }) {
       setLoading(true);
       // Initialize store context for portal mode
       const schoolId = user.school_id || user.schoolId;
-      console.log('[STAFF PORTAL] Init with school:', schoolId, 'teacher:', user.id);
-      initPortalStore(schoolId, user.id);
+      // Use teacher_record_id (teachers table ID) for data queries
+      const teacherRecordId = user.teacher_record_id || user.id;
+      console.log('[STAFF PORTAL] Init with school:', schoolId, 'teacher:', user.id, 'teacher_record_id:', teacherRecordId);
+      initPortalStore(schoolId, teacherRecordId);
 
       const [activeExams, allPeriods, profile] = await Promise.all([
         getExams().catch(e => { console.warn('Exams fetch:', e); return []; }),
@@ -64,8 +66,8 @@ export default function MobileGrading({ user, onLogout }) {
 
       if (current && profile?.id) {
         const [w, s, c] = await Promise.all([
-          getTeacherWorkloadSummary(profile.id, current.id, user.id).catch(() => []),
-          getTeacherTimetable(profile.id, current.id, user.id).catch(() => []),
+          getTeacherWorkloadSummary(profile.id, current.id, teacherRecordId).catch(() => []),
+          getTeacherTimetable(profile.id, current.id, teacherRecordId).catch(() => []),
           getTimetableConfig(profile.id, current.id).catch(() => [])
         ]);
         setWorkload(w);
@@ -90,9 +92,11 @@ export default function MobileGrading({ user, onLogout }) {
     try {
       setLoading(true);
       const allPapers = await getExamPapers(selectedExamId);
-      // Filter papers assigned to this teacher
-      // Note: user.id in StaffPortal matches the id in the users table
-      const myPapers = allPapers.filter(p => p.teacher_id === user.id);
+      // In portal mode, the RPC already filters by teacher ID server-side.
+      // In admin mode, we need to filter client-side.
+      const myPapers = user.teacher_record_id 
+        ? allPapers  // Portal mode: RPC pre-filtered
+        : allPapers.filter(p => p.teacher_id === user.id);
       setPapers(myPapers);
       setSelectedPaper(null);
       setStudents([]);

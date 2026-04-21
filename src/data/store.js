@@ -1685,12 +1685,17 @@ export async function getExamPapers(examId) {
   
   if (!_currentAuthUser && _currentSchoolId) {
     // Portal mode: Fetch papers via RPC (usually for teachers entering marks)
-    const userId = _currentUserId;
+    // Use teacher_record_id if available (from staff login), otherwise fall back to userId
+    const teacherId = _currentUserId;
+    console.log('[PORTAL] Fetching papers for teacher:', teacherId, 'exam:', examId);
     const { data, error } = await supabase.rpc('portal_get_teacher_papers', { 
-      p_teacher_id: userId, 
+      p_teacher_id: teacherId, 
       p_exam_id: examId 
     });
-    if (error) throw error;
+    if (error) {
+      console.warn('portal_get_teacher_papers error:', error.message);
+      return [];
+    }
     return data || [];
   }
 
@@ -1898,22 +1903,35 @@ export async function getFees(studentId = null) {
   // If in portal mode or searching for specific student, use RPC if possible
   if (!_currentAuthUser && studentId) {
     const { data: feeData, error: feeErr } = await supabase.rpc('portal_get_student_fees', { p_student_id: studentId });
-    const { data: payData, error: payErr } = await supabase.rpc('portal_get_student_payments', { p_student_id: studentId });
     
-    if (feeErr) throw feeErr;
+    if (feeErr) {
+      console.warn('Portal fee fetch error:', feeErr.message);
+      return null;
+    }
     if (!feeData) return null;
 
+    // Fetch payments separately — don't let payment fetch failure block fee display
+    let payments = [];
+    try {
+      const { data: payData, error: payErr } = await supabase.rpc('portal_get_student_payments', { p_student_id: studentId });
+      if (!payErr && payData) {
+        payments = (Array.isArray(payData) ? payData : []).map(p => ({
+          id: p.id,
+          amount: Number(p.amount || 0),
+          date: p.date,
+          method: p.method || 'Payment',
+          reference: p.reference || '',
+        }));
+      }
+    } catch (payErr) {
+      console.warn('Portal payments fetch error (non-blocking):', payErr.message);
+    }
+
     return {
-      totalFee: Number(feeData.total_fee),
-      paid: Number(feeData.paid),
-      balance: Number(feeData.balance),
-      payments: (payData || []).map(p => ({
-        id: p.id,
-        amount: Number(p.amount),
-        date: p.date,
-        method: p.method,
-        reference: p.reference,
-      })),
+      totalFee: Number(feeData.total_fee || 0),
+      paid: Number(feeData.paid || 0),
+      balance: Number(feeData.balance || 0),
+      payments,
       _feeId: feeData.id,
       periodId: feeData.period_id,
     };
@@ -2472,12 +2490,15 @@ export async function validateStaffLogin(schoolSearch, phone, pin, schoolId = nu
     throw new Error('The Staff Portal feature is not active for your institution\'s current plan.');
   }
 
+  // Pass through both user_id and teacher_record_id for dual-ID matching
   return {
     id: data.id,
     name: data.name,
     role: 'teacher',
     school_id: selectedSchoolId,
-    schoolId: selectedSchoolId  // backward compat
+    schoolId: selectedSchoolId,  // backward compat
+    teacher_record_id: data.teacher_record_id || data.id,  // teachers table ID
+    user_id: data.user_id || data.id  // users table ID
   };
 }
 
@@ -2705,7 +2726,8 @@ export async function validateParentLogin(schoolSearch, admNo, phone, schoolId =
     class: data.class,
     adm_no: data.adm_no,
     school_id: data.school_id,
-    residence_type: data.residence_type
+    residence_type: data.residence_type,
+    parent_phone: data.parent_phone || ''
   };
 }
 
