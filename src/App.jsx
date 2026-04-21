@@ -22,7 +22,7 @@ const Students     = lazy(() => import('./pages/Students'));
 const Teachers     = lazy(() => import('./pages/Teachers'));
 const Academics    = lazy(() => import('./pages/Academics'));
 const Fees         = lazy(() => import('./pages/Fees'));
-const Timetable    = lazy(() => import('./pages/TimeTable'));
+const Timetable    = lazy(() => import('./pages/Timetable'));
 const Attendance   = lazy(() => import('./pages/Attendance'));
 const Library      = lazy(() => import('./pages/Library/index'));
 const Settings     = lazy(() => import('./pages/Settings'));
