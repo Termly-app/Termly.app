@@ -388,17 +388,63 @@ function loadProfileFromLocal(schoolId) {
 const SAFE_PROFILE_COLUMNS = 'id, school_name, motto, phone, email, address, logo, subscription_plan, streams_per_class, custom_subjects, active_classes, grade_fees, subscription_status, subscription_expiry, last_payment_status, mpesa_config, sms_config, grading_systems, custom_exams, curriculum, timetable_label';
 
 /**
+ * Maps raw database profile (snake_case) to application profile (camelCase)
+ */
+function mapSchoolProfile(data) {
+  if (!data) return { ...DEFAULT_PROFILE };
+  
+  return {
+    schoolName: data.school_name || DEFAULT_PROFILE.schoolName,
+    motto: data.motto || '',
+    phone: data.phone || '',
+    email: data.email || '',
+    address: data.address || '',
+    logo: data.logo || '',
+    subscriptionPlan: data.subscription_plan || 'Sandbox',
+    streamsPerClass: (data.streams_per_class) || DEFAULT_PROFILE.streamsPerClass,
+    customSubjects: data.custom_subjects || {},
+    boardingHouses: (data.boarding_houses) || DEFAULT_PROFILE.boardingHouses,
+    custom_exams: (data.custom_exams) || DEFAULT_PROFILE.custom_exams,
+    activeClasses: (data.active_classes) || DEFAULT_PROFILE.activeClasses,
+    gradeFees: data.grade_fees || {},
+    subscriptionStatus: data.subscription_status || 'Inactive',
+    subscriptionExpiry: data.subscription_expiry || null,
+    lastPaymentStatus: data.last_payment_status || 'none',
+    gradingSystems: data.grading_systems || DEFAULT_PROFILE.gradingSystems,
+    mpesa_config: data.mpesa_config || DEFAULT_PROFILE.mpesa_config,
+    sms_config: data.sms_config || DEFAULT_PROFILE.sms_config,
+    curriculum: data.curriculum || 'CBC Only',
+    timetable_label: data.timetable_label || DEFAULT_PROFILE.timetable_label,
+    schoolId: data.school_id,
+    enabledModules: data.custom_subjects?.__shadow_enabled_modules || DEFAULT_PROFILE.enabledModules,
+  };
+}
+
+/**
  * Helper to get school profile by optional explicit school ID (useful during login)
  */
 export async function getSchoolProfileBySchoolId(schoolId) {
-  if (!schoolId) return null;
-  const { data, error } = await supabase
-    .from('school_profiles')
-    .select('*')
-    .eq('school_id', schoolId)
-    .single();
-  if (error) return null;
-  return data;
+  if (!schoolId) return { ...DEFAULT_PROFILE };
+  try {
+    const { data, error } = await supabase
+      .from('school_profiles')
+      .select('*')
+      .eq('school_id', schoolId)
+      .single();
+    
+    if (error || !data) {
+      const { data: school } = await supabase.from('schools').select('name, school_code, plan').eq('id', schoolId).single();
+      return { 
+        ...DEFAULT_PROFILE, 
+        schoolName: school?.name || 'Institutional Portal',
+        subscriptionPlan: school?.plan || 'Sandbox',
+        schoolId: schoolId 
+      };
+    }
+    return mapSchoolProfile(data);
+  } catch (e) {
+    return { ...DEFAULT_PROFILE, schoolId: schoolId };
+  }
 }
 
 export async function getSchoolProfile() {
@@ -2303,7 +2349,7 @@ export async function validateStaffLogin(schoolSearch, phone, pin) {
   const school = schools[0]; // Take primary match
   const profile = await getSchoolProfileBySchoolId(school.id);
   
-  if (!profile) throw new Error('Institutional profile not found.');
+  // profile is now guaranteed to be non-null due to fallback logic
 
   // Subscription Gate
   const isSubActive = await checkIsSubscriptionActive(profile);
@@ -2558,7 +2604,7 @@ export async function validateParentLogin(schoolSearch, admNo, phone) {
   const school = schools[0];
   const profile = await getSchoolProfileBySchoolId(school.id);
 
-  if (!profile) throw new Error('Institutional profile not found.');
+  // profile is now guaranteed to be non-null due to fallback logic
 
   // Subscription Gate
   const isSubActive = await checkIsSubscriptionActive(profile);

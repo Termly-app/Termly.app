@@ -172,8 +172,13 @@ export default function PortalLogin({ onLogin }) {
                 <div className="res-uline" style={{ background: '#10B981' }}></div>
               </div>
 
-              <button className="res-cta" type="submit" disabled={loading} style={{ background: '#10B981' }}>
-                {loading ? 'Validating...' : <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>Access Portal <RocketIcon size={18} /></span>}
+              <button className="res-cta" type="submit" disabled={loading} style={{ background: '#10B981', justifyContent: 'center' }}>
+                {loading ? 'Validating...' : (
+                  <>
+                    Access Portal
+                    <RocketIcon size={18} style={{ marginLeft: 8 }} />
+                  </>
+                )}
               </button>
             </form>
 

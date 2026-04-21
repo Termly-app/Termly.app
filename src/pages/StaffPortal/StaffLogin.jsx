@@ -181,8 +181,13 @@ export default function StaffLogin({ onLogin }) {
                 <div className="res-uline" style={{ background: '#4F46E5' }}></div>
               </div>
 
-              <button className="res-cta" type="submit" disabled={loading} style={{ background: '#4F46E5' }}>
-                {loading ? 'Validating...' : <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>Enter Portal <RocketIcon size={18} /></span>}
+              <button className="res-cta" type="submit" disabled={loading} style={{ background: '#4F46E5', justifyContent: 'center' }}>
+                {loading ? 'Validating...' : (
+                  <>
+                    Enter Portal
+                    <RocketIcon size={18} style={{ marginLeft: 8 }} />
+                  </>
+                )}
               </button>
             </form>
 
