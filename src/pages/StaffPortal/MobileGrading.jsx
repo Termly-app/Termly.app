@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { supabase } from '../../lib/supabase';
 import { 
   getSchoolProfile, getExams, getExamPapers, 
   getExamMarksForPaper, saveExamMarks, getClassList,
@@ -55,6 +56,7 @@ export default function MobileGrading({ user, onLogout }) {
   const [activeTab, setActiveTab] = useState('grading');
   const [activePeriod, setActivePeriod] = useState(null);
   const [schoolProfile, setSchoolProfile] = useState(null);
+  const [assignments_list, setAssignmentsList] = useState([]);
   
   // Picker State
   const [pickerOpen, setPickerOpen] = useState(false);
@@ -85,14 +87,21 @@ export default function MobileGrading({ user, onLogout }) {
       if (activeExams.length > 0) setSelectedExamId(activeExams[0].id);
 
       if (current) {
-        const [w, s, c] = await Promise.all([
+        const [w, s, c, al] = await Promise.all([
           getTeacherWorkloadSummary(schoolId, current.id, teacherRecordId).catch(() => 0),
           getTeacherTimetable(schoolId, current.id, teacherRecordId).catch(() => []),
-          getTimetableConfig(schoolId, current.id).catch(() => [])
+          getTimetableConfig(schoolId, current.id).catch(() => []),
+          // New assignment list RPC
+          supabase.rpc('portal_get_teacher_assignments', { 
+            p_school_id: schoolId, 
+            p_period_id: current.id, 
+            p_teacher_id: teacherRecordId 
+          }).then(r => r.data || []).catch(() => [])
         ]);
         setWorkload(w);
         setSchedule(s);
         setConfig(c);
+        setAssignmentsList(al);
       }
     } catch (err) {
       console.error('Staff Portal Init error:', err);
@@ -238,6 +247,22 @@ export default function MobileGrading({ user, onLogout }) {
         
         {activeTab === 'grading' && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 20, animation: 'fadeIn 0.4s ease-out' }}>
+            
+            {/* New: My Allocations Summary */}
+            {assignments_list.length > 0 && (
+              <div>
+                <h3 style={{ fontSize: '1.1rem', fontWeight: 800, color: '#0f172a', marginBottom: 12 }}>My Allocations</h3>
+                <Card style={{ padding: '20px' }}>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+                    {assignments_list.map((a, idx) => (
+                      <Badge key={idx} bg="#f0fdf4" color="#16a34a">
+                        {a.subject} - {a.class_grade}{a.stream ? ` ${a.stream}` : ''}
+                      </Badge>
+                    ))}
+                  </div>
+                </Card>
+              </div>
+            )}
             
             <Card style={{ padding: '24px' }}>
                <h3 style={{ margin: '0 0 16px', fontSize: '1.1rem', fontWeight: 800, color: '#0f172a' }}>Grade Entry Setup</h3>
