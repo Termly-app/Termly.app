@@ -161,7 +161,7 @@ export default function MobileGrading({ user, onLogout }) {
         remarks: ''
       }));
       
-      await saveExamMarks(payload);
+      await saveExamMarks(selectedPaper.id, payload);
       alert({ title: 'Success', message: 'Marks Synchronized to Cloud!', variant: 'success' });
     } catch (err) {
       alert({ title: 'Sync Error', message: 'Failed to save marks. Check connectivity.', variant: 'danger' });

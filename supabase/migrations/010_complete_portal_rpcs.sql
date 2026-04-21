@@ -84,7 +84,7 @@ BEGIN
       )
     ), '[]'::jsonb)
     FROM public.exams
-    WHERE school_id = p_school_id AND status != 'Draft'
+    WHERE school_id = p_school_id AND status NOT ILIKE 'Draft'
     ORDER BY created_at DESC
   );
 END;
@@ -111,7 +111,7 @@ BEGIN
     ), '[]'::jsonb)
     FROM public.announcements a
     LEFT JOIN public.users u ON u.id = a.created_by
-    WHERE a.school_id = p_school_id AND a.status = 'published'
+    WHERE a.school_id = p_school_id AND a.status ILIKE 'published'
     ORDER BY a.created_at DESC
   );
 END;
@@ -144,7 +144,7 @@ BEGIN
     ), '[]'::jsonb)
     FROM public.exam_results er
     JOIN public.exams e ON e.id = er.exam_id
-    WHERE er.student_id = p_student_id AND e.status = 'Published'
+    WHERE er.student_id = p_student_id AND e.status ILIKE 'Published'
     ORDER BY e.created_at DESC
   );
 END;
@@ -217,6 +217,36 @@ BEGIN
     FROM public.timetable_configs
     WHERE school_id = p_school_id AND period_id = p_period_id
     ORDER BY slot_index ASC
+  );
+END;
+$$;
+
+-- ─── 9. Get Student Fees ────────────────────────────────────
+CREATE OR REPLACE FUNCTION public.portal_get_student_fees(p_student_id UUID)
+RETURNS JSONB
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public, pg_catalog
+AS $$
+DECLARE
+  v_total_fee NUMERIC;
+  v_paid NUMERIC;
+BEGIN
+  -- Total invoiced
+  SELECT COALESCE(SUM(amount), 0) INTO v_total_fee
+  FROM public.fees
+  WHERE student_id = p_student_id;
+  
+  -- Total paid
+  SELECT COALESCE(SUM(fp.amount), 0) INTO v_paid
+  FROM public.fee_payments fp
+  JOIN public.fees f ON f.id = fp.fee_id
+  WHERE f.student_id = p_student_id;
+  
+  RETURN jsonb_build_object(
+    'total_fee', v_total_fee,
+    'paid', v_paid,
+    'balance', v_total_fee - v_paid
   );
 END;
 $$;

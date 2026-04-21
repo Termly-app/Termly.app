@@ -1747,7 +1747,12 @@ export async function getExamMarksForPaper(paperId) {
 export async function saveExamMarks(paperId, marks) {
   mutationGuard('saveExamMarks');
   if (!_currentAuthUser && _currentSchoolId) {
-    const { data, error } = await supabase.rpc('portal_save_exam_marks', { p_marks: marks });
+    const portalMarks = marks.map(m => ({
+      ...m,
+      exam_paper_id: paperId,
+      school_id: _currentSchoolId
+    }));
+    const { data, error } = await supabase.rpc('portal_save_exam_marks', { p_marks: portalMarks });
     if (error) throw error;
     return data;
   }
