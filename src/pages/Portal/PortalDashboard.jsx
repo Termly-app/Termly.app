@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { 
-  LogOut as LogoutIcon, Book as BookIcon, Check as CheckIcon, 
-  MessageSquare as MessageIcon, Activity as ActivityIcon, 
-  CreditCard as CardIcon, User as UserIcon, Calendar as HistoryIcon 
-} from 'lucide-react';
+  LogoutIcon, BookIcon, CheckIcon, 
+  MessageIcon, ActivityIcon, 
+  CardIcon, UserIcon, HistoryIcon 
+} from '../../components/CommonIcons';
 import { 
   getAssignments, getStudentSubmissions, getStudentExamResults, 
   getFees, getGradeForScore, getSchoolProfile, initPortalStore,
@@ -295,7 +295,7 @@ export default function PortalDashboard({ user, onLogout }) {
               {payments.length === 0 ? (
                 <Card style={{ textAlign: 'center', padding: '40px 24px' }}>
                   <HistoryIcon size={32} color="#cbd5e1" style={{ margin: '0 auto 12px' }} />
-                  <div style={{ color: '#64748b', fontWeight: 500, fontSize: '1rem' }}>You're all caught up! ✨</div>
+                  <div style={{ color: '#64748b', fontWeight: 500, fontSize: '1rem' }}>You're all caught up!</div>
                   <div style={{ color: '#94a3b8', fontSize: '0.85rem', marginTop: 8 }}>No recent payments found on record.</div>
                 </Card>
               ) : (
