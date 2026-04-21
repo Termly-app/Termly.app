@@ -295,8 +295,11 @@ export default function PortalDashboard({ user, onLogout }) {
                     ))
                   )}
                 </div>
-          </div>
-        )}
+              </div>
+            </div>
+          )}
+
+
 
         {activeTab === 'profile' && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 16, animation: 'fadeIn 0.3s ease-out' }}>
