@@ -2392,7 +2392,7 @@ export async function validateStaffLogin(schoolSearch, phone, pin, schoolId = nu
   if (error) throw error;
 
   if (!data || data.length === 0) {
-    throw new Error(`Teacher account not found at ${school.name}. Please check your phone number.`);
+    throw new Error(`Teacher account not found at ${selectedSchool.name}. Please check your phone number.`);
   }
 
   const teacher = data[0];
