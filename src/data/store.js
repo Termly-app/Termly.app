@@ -2258,17 +2258,31 @@ export async function getSchoolStructure(preFetchedStudents = null, preFetchedMa
 }
 
 /**
- * Securely validate a staff member (teacher) login using Phone + PIN
+ * Securely validate a staff member (teacher) login using School + Phone + PIN
  */
-export async function validateStaffLogin(phone, pin) {
+export async function validateStaffLogin(schoolSearch, phone, pin) {
+  // 1. Find the school first (by name fuzzy match or email)
+  const { data: schools, error: sErr } = await supabase
+    .from('schools')
+    .select('id, name')
+    .or(`name.ilike.%${schoolSearch}%,email.eq.${schoolSearch}`);
+
+  if (sErr || !schools || schools.length === 0) {
+    throw new Error('Institution not found. Please check the school name.');
+  }
+
+  const schoolIds = schools.map(s => s.id);
+
+  // 2. Find the teacher matching phone within those schools
   const { data, error } = await supabase
     .from('teachers')
     .select('id, name, school_id, pin, status')
     .eq('phone', phone)
+    .in('school_id', schoolIds)
     .single();
 
   if (error || !data) {
-    throw new Error('Teacher not found with this phone number.');
+    throw new Error('Teacher account not found in this school.');
   }
 
   if (data.status === 'Inactive') {

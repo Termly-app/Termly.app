@@ -1,9 +1,13 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
-import { TeacherIcon, ShieldIcon, PhoneIcon, EyeIcon, EyeOffIcon, RocketIcon, FlagIcon, BookIcon, GraduationIcon } from '../../components/CommonIcons';
+import { Link, useSearchParams } from 'react-router-dom';
+import { TeacherIcon, ShieldIcon, PhoneIcon, EyeIcon, EyeOffIcon, RocketIcon, FlagIcon, BookIcon, GraduationIcon, SchoolIcon } from '../../components/CommonIcons';
 import { validateStaffLogin } from '../../data/store';
 
 export default function StaffLogin({ onLogin }) {
+  const [searchParams] = useSearchParams();
+  const magicSchool = searchParams.get('school');
+  
+  const [schoolSearch, setSchoolSearch] = useState(magicSchool || '');
   const [phone, setPhone] = useState('');
   const [pin, setPin] = useState('');
   const [loading, setLoading] = useState(false);
@@ -12,11 +16,16 @@ export default function StaffLogin({ onLogin }) {
 
   const handleLogin = async (e) => {
     e.preventDefault();
+    if (!schoolSearch.trim()) {
+      setError('Please search for your school first.');
+      return;
+    }
+
     setLoading(true);
     setError('');
     
     try {
-      const result = await validateStaffLogin(phone, pin);
+      const result = await validateStaffLogin(schoolSearch, phone, pin);
       onLogin(result);
     } catch (err) {
       setError(err.message || 'Invalid credentials. Please try again.');
@@ -82,6 +91,19 @@ export default function StaffLogin({ onLogin }) {
             {error && <div className="res-error">{error}</div>}
 
             <form onSubmit={handleLogin}>
+              <div className="res-field">
+                <div className="res-fico"><SchoolIcon size={18} color="#94a3b8" /></div>
+                <input 
+                  type="text" 
+                  placeholder="Search for your school..." 
+                  value={schoolSearch} 
+                  onChange={(e) => setSchoolSearch(e.target.value)} 
+                  required 
+                />
+                <div className="res-uline" style={{ background: '#4F46E5' }}></div>
+                {magicSchool && <div className="res-fhint" style={{ color: '#6366F1', fontWeight: 'bold' }}>Magic link applied!</div>}
+              </div>
+
               <div className="res-field">
                 <div className="res-fico"><PhoneIcon size={18} color="#94a3b8" /></div>
                 <input 
