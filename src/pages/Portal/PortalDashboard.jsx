@@ -35,15 +35,17 @@ export default function PortalDashboard({ user, onLogout }) {
       setLoading(true);
       try {
         // Initialize store context for portal mode
-        initPortalStore(user.school_id, user.id);
+        initPortalStore(user.school_id || user.schoolId, user.id);
 
-        const [asts, profile, examRes, schoolNotices] = await Promise.all([
-          getAssignments(user.class),
-          getSchoolProfile(),
-          getStudentExamResults(user.id),
-          getAnnouncements({ status: 'published' })
+        // Fetch data individually so one failure doesn't block others
+        const [profile, examRes, schoolNotices] = await Promise.all([
+          getSchoolProfile().catch(e => { console.warn('Profile fetch:', e); return null; }),
+          getStudentExamResults(user.id).catch(e => { console.warn('Results fetch:', e); return []; }),
+          getAnnouncements({ status: 'published' }).catch(e => { console.warn('Announcements fetch:', e); return []; })
         ]);
         
+        // Assignments may fail due to RLS - that's OK for parent portal
+        const asts = await getAssignments({}).catch(() => []);
         setAssignments(asts);
         setExamResults(examRes);
         setNotices(schoolNotices);
@@ -59,7 +61,7 @@ export default function PortalDashboard({ user, onLogout }) {
           setAcademic({ average: avg.toFixed(1), grade, color, rank: examRes[0].class_position });
         }
 
-        const myFee = await getFees(user.id);
+        const myFee = await getFees(user.id).catch(e => { console.warn('Fees fetch:', e); return null; });
         if (myFee) {
           setFeeBalance(myFee.balance);
           setMpesaAmount(myFee.balance > 0 ? myFee.balance : 0);

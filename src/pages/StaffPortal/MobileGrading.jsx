@@ -45,13 +45,17 @@ export default function MobileGrading({ user, onLogout }) {
     try {
       setLoading(true);
       // Initialize store context for portal mode
-      initPortalStore(user.school_id, user.id); // Period will be fetched and set below
+      const schoolId = user.school_id || user.schoolId;
+      console.log('[STAFF PORTAL] Init with school:', schoolId, 'teacher:', user.id);
+      initPortalStore(schoolId, user.id);
 
       const [activeExams, allPeriods, profile] = await Promise.all([
-        getExams(),
-        getPeriods(),
-        getSchoolProfile()
+        getExams().catch(e => { console.warn('Exams fetch:', e); return []; }),
+        getPeriods().catch(e => { console.warn('Periods fetch:', e); return []; }),
+        getSchoolProfile().catch(e => { console.warn('Profile fetch:', e); return null; })
       ]);
+      
+      console.log('[STAFF PORTAL] Loaded:', { exams: activeExams.length, periods: allPeriods.length });
       
       const current = allPeriods.find(p => p.is_active) || allPeriods[0];
       setActivePeriod(current);
@@ -60,16 +64,16 @@ export default function MobileGrading({ user, onLogout }) {
 
       if (current && profile?.id) {
         const [w, s, c] = await Promise.all([
-          getTeacherWorkloadSummary(profile.id, current.id, user.id),
-          getTeacherTimetable(profile.id, current.id, user.id),
-          getTimetableConfig(profile.id, current.id)
+          getTeacherWorkloadSummary(profile.id, current.id, user.id).catch(() => []),
+          getTeacherTimetable(profile.id, current.id, user.id).catch(() => []),
+          getTimetableConfig(profile.id, current.id).catch(() => [])
         ]);
         setWorkload(w);
         setSchedule(s);
         setConfig(c);
       }
     } catch (err) {
-      console.error(err);
+      console.error('[STAFF PORTAL] Init error:', err);
     } finally {
       setLoading(false);
     }

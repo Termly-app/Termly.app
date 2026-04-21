@@ -1623,13 +1623,17 @@ export async function getClassList(className, classId = null) {
 // ============= FORMAL EXAMS (Phase 4) =============
 
 export async function getExams() {
-  if (!_currentSchoolId || !_currentPeriodId) return [];
+  if (!_currentSchoolId) return [];
   
+  // Portal mode: use RPC (doesn't need period)
   if (!_currentAuthUser && _currentSchoolId) {
     const { data, error } = await supabase.rpc('portal_get_open_exams', { p_school_id: _currentSchoolId });
     if (error) throw error;
     return data || [];
   }
+
+  // Admin mode: needs period
+  if (!_currentPeriodId) return [];
 
   const cacheKey = `exams_${_currentSchoolId}_${_currentPeriodId}`;
   return getCached(cacheKey, async () => {
@@ -2472,7 +2476,8 @@ export async function validateStaffLogin(schoolSearch, phone, pin, schoolId = nu
     id: data.id,
     name: data.name,
     role: 'teacher',
-    schoolId: selectedSchoolId
+    school_id: selectedSchoolId,
+    schoolId: selectedSchoolId  // backward compat
   };
 }
 
