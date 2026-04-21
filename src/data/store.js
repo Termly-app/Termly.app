@@ -2647,11 +2647,12 @@ export async function validateParentLogin(schoolSearch, admNo, phone, schoolId =
   }
 
   // 2. Find the student matching ADM No
+  const cleanedAdm = (admNo || '').trim();
   const { data: student, error: stErr } = await supabase
     .from('students')
     .select('id, name, class, adm_no, school_id, parent_phone, residence_type, status')
     .in('school_id', schoolIds)
-    .ilike('adm_no', admNo)
+    .ilike('adm_no', cleanedAdm)
     .single();
 
   if (stErr || !student) {
