@@ -8,7 +8,7 @@ import {
 } from '../../data/store';
 import { 
   BookIcon, CheckIcon, SaveIcon, UserIcon, 
-  GradingIcon, RefreshIcon, ChevronDownIcon, CalendarIcon, DashboardIcon, MenuIcon, LogoutIcon 
+  GradingIcon, RefreshIcon, ChevronDownIcon, CalendarIcon, DashboardIcon, MenuIcon, LogoutIcon, TeacherIcon 
 } from '../../components/CommonIcons';
 import { useDialog } from '../../contexts/DialogContext';
 
@@ -58,12 +58,17 @@ export default function MobileGrading({ user, onLogout }) {
   const [schoolProfile, setSchoolProfile] = useState(null);
   const [assignments_list, setAssignmentsList] = useState([]);
   
+  const [isDesktop, setIsDesktop] = useState(window.innerWidth > 1024);
+
   // Picker State
   const [pickerOpen, setPickerOpen] = useState(false);
   const [pickerType, setPickerType] = useState(null); // 'exam' or 'paper'
 
   useEffect(() => {
+    const handleResize = () => setIsDesktop(window.innerWidth > 1024);
+    window.addEventListener('resize', handleResize);
     loadInitialData();
+    return () => window.removeEventListener('resize', handleResize);
   }, []);
 
   const loadInitialData = async () => {
@@ -91,7 +96,6 @@ export default function MobileGrading({ user, onLogout }) {
           getTeacherWorkloadSummary(schoolId, current.id, teacherRecordId).catch(() => 0),
           getTeacherTimetable(schoolId, current.id, teacherRecordId).catch(() => []),
           getTimetableConfig(schoolId, current.id).catch(() => []),
-          // New assignment list RPC
           supabase.rpc('portal_get_teacher_assignments', { 
             p_school_id: schoolId, 
             p_period_id: current.id, 
@@ -214,41 +218,105 @@ export default function MobileGrading({ user, onLogout }) {
     setPickerOpen(false);
   };
 
-  return (
-    <div style={{ width: '100%', maxWidth: 480, margin: '0 auto', background: '#f8fafc', minHeight: '100vh', display: 'flex', flexDirection: 'column', fontFamily: '"Inter", -apple-system, sans-serif' }}>
-      
-      {/* Premium Header */}
-      <div style={{ 
-        background: 'rgba(255, 255, 255, 0.8)', backdropFilter: 'blur(12px)', 
-        padding: '20px 24px', position: 'sticky', top: 0, zIndex: 1000, 
-        display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-        borderBottom: '1px solid rgba(0,0,0,0.05)'
-      }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-          <div style={{ 
-            background: 'linear-gradient(135deg, #10b981 0%, #3b82f6 100%)', 
-            color: '#fff', width: 44, height: 44, borderRadius: '14px', 
-            display: 'flex', alignItems: 'center', justifyContent: 'center', 
-            fontSize: '1.4rem', fontWeight: 700, boxShadow: '0 4px 10px rgba(16, 185, 129, 0.3)'
-          }}>
-            {user.name.charAt(0).toUpperCase()}
-          </div>
-          <div>
-            <div style={{ fontSize: '1.2rem', fontWeight: 800, color: '#0f172a', letterSpacing: '-0.5px' }}>{user.name}</div>
-            <div style={{ fontSize: '0.8rem', color: '#64748b', fontWeight: 500 }}>Staff Portal</div>
-          </div>
-        </div>
-        <div onClick={onLogout} style={{ background: '#f1f5f9', padding: '10px', borderRadius: '12px', color: '#64748b', cursor: 'pointer' }}>
-          <LogoutIcon size={20} />
-        </div>
-      </div>
+  const navItems = [
+    { id: 'grading', label: 'Grading', icon: GradingIcon },
+    { id: 'schedule', label: 'Timetable', icon: CalendarIcon },
+    { id: 'profile', label: 'Account', icon: UserIcon }
+  ];
 
-      <div style={{ flex: 1, padding: '24px 20px 100px 20px', boxSizing: 'border-box' }}>
+  return (
+    <div style={{ 
+      width: '100%', minHeight: '100vh', background: '#f8fafc', 
+      display: 'flex', flexDirection: isDesktop ? 'row' : 'column',
+      fontFamily: '"Inter", -apple-system, sans-serif' 
+    }}>
+      
+      {/* DESKTOP SIDEBAR */}
+      {isDesktop && (
+        <div style={{ 
+          width: '280px', background: '#fff', borderRight: '1px solid #e2e8f0',
+          display: 'flex', flexDirection: 'column', padding: '32px 0', position: 'sticky', top: 0, height: '100vh'
+        }}>
+          <div style={{ padding: '0 32px 40px', display: 'flex', alignItems: 'center', gap: 12 }}>
+            <div style={{ width: 40, height: 40, borderRadius: 12, background: '#10b981', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <TeacherIcon size={20} color="#fff" />
+            </div>
+            <div style={{ fontWeight: 900, fontSize: '1.2rem', color: '#0f172a' }}>ShuleSoft</div>
+          </div>
+
+          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 8, padding: '0 16px' }}>
+            {navItems.map(item => (
+              <div 
+                key={item.id}
+                onClick={() => setActiveTab(item.id)}
+                style={{ 
+                  padding: '14px 16px', borderRadius: '12px', cursor: 'pointer',
+                  display: 'flex', alignItems: 'center', gap: 12,
+                  background: activeTab === item.id ? '#f0fdf4' : 'transparent',
+                  color: activeTab === item.id ? '#10b981' : '#64748b',
+                  fontWeight: 700, transition: 'all 0.2s'
+                }}
+              >
+                <item.icon size={22} />
+                {item.label}
+              </div>
+            ))}
+          </div>
+
+          <div style={{ padding: '0 16px' }}>
+             <div onClick={onLogout} style={{ padding: '14px 16px', borderRadius: '12px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 12, color: '#ef4444', fontWeight: 700 }}>
+                <LogoutIcon size={22} /> Logout
+             </div>
+          </div>
+        </div>
+      )}
+
+      {/* MOBILE HEADER */}
+      {!isDesktop && (
+        <div style={{ 
+          background: 'rgba(255, 255, 255, 0.8)', backdropFilter: 'blur(12px)', 
+          padding: '20px 24px', position: 'sticky', top: 0, zIndex: 1000, 
+          display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+          borderBottom: '1px solid rgba(0,0,0,0.05)'
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+            <div style={{ 
+              background: 'linear-gradient(135deg, #10b981 0%, #3b82f6 100%)', 
+              color: '#fff', width: 44, height: 44, borderRadius: '14px', 
+              display: 'flex', alignItems: 'center', justifyContent: 'center', 
+              fontSize: '1.4rem', fontWeight: 700, boxShadow: '0 4px 10px rgba(16, 185, 129, 0.3)'
+            }}>
+              {user.name.charAt(0).toUpperCase()}
+            </div>
+            <div>
+              <div style={{ fontSize: '1.2rem', fontWeight: 800, color: '#0f172a', letterSpacing: '-0.5px' }}>{user.name}</div>
+              <div style={{ fontSize: '0.8rem', color: '#64748b', fontWeight: 500 }}>Staff Portal</div>
+            </div>
+          </div>
+          <div onClick={onLogout} style={{ background: '#f1f5f9', padding: '10px', borderRadius: '12px', color: '#64748b', cursor: 'pointer' }}>
+            <LogoutIcon size={20} />
+          </div>
+        </div>
+      )}
+
+      {/* MAIN CONTENT */}
+      <div style={{ 
+        flex: 1, padding: isDesktop ? '48px 60px' : '24px 20px 100px 20px', 
+        maxWidth: isDesktop ? '1000px' : '100%', boxSizing: 'border-box' 
+      }}>
         
+        {/* Desktop Greeting */}
+        {isDesktop && (
+          <div style={{ marginBottom: 40 }}>
+            <h1 style={{ margin: 0, fontSize: '2.4rem', fontWeight: 900, color: '#0f172a', letterSpacing: '-1px' }}>Welcome back, {user.name}</h1>
+            <p style={{ margin: '8px 0 0', color: '#64748b', fontSize: '1.1rem' }}>Here is what's happening in your classes today.</p>
+          </div>
+        )}
+
         {activeTab === 'grading' && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 20, animation: 'fadeIn 0.4s ease-out' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: isDesktop ? 32 : 20, animation: 'fadeIn 0.4s ease-out' }}>
             
-            {/* New: My Allocations Summary */}
+            {/* My Allocations Summary */}
             {assignments_list.length > 0 && (
               <div>
                 <h3 style={{ fontSize: '1.1rem', fontWeight: 800, color: '#0f172a', marginBottom: 12 }}>My Allocations</h3>
@@ -264,207 +332,202 @@ export default function MobileGrading({ user, onLogout }) {
               </div>
             )}
             
-            <Card style={{ padding: '24px' }}>
-               <h3 style={{ margin: '0 0 16px', fontSize: '1.1rem', fontWeight: 800, color: '#0f172a' }}>Grade Entry Setup</h3>
-               <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-                 
-                 <div onClick={() => openPicker('exam')} style={{ background: '#f8fafc', padding: '16px', borderRadius: '16px', border: '1px solid #e2e8f0', display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer' }}>
-                   <div>
-                     <div style={{ fontSize: '0.75rem', color: '#64748b', fontWeight: 700, textTransform: 'uppercase', marginBottom: 4 }}>Examination</div>
-                     <div style={{ fontSize: '1rem', fontWeight: 700, color: '#0f172a' }}>
-                       {exams.find(e => e.id === selectedExamId)?.name || 'Select Exam Session'}
-                     </div>
-                   </div>
-                   <ChevronDownIcon size={20} color="#94a3b8" />
+            <div style={{ display: 'grid', gridTemplateColumns: isDesktop ? '1fr 2fr' : '1fr', gap: 32 }}>
+               <Card style={{ padding: '24px', alignSelf: 'start' }}>
+                  <h3 style={{ margin: '0 0 16px', fontSize: '1.1rem', fontWeight: 800, color: '#0f172a' }}>Grade Entry Setup</h3>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                    
+                    <div onClick={() => openPicker('exam')} style={{ background: '#f8fafc', padding: '16px', borderRadius: '16px', border: '1px solid #e2e8f0', display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer' }}>
+                      <div>
+                        <div style={{ fontSize: '0.75rem', color: '#64748b', fontWeight: 700, textTransform: 'uppercase', marginBottom: 4 }}>Examination</div>
+                        <div style={{ fontSize: '1rem', fontWeight: 700, color: '#0f172a' }}>
+                          {exams.find(e => e.id === selectedExamId)?.name || 'Select Exam Session'}
+                        </div>
+                      </div>
+                      <ChevronDownIcon size={20} color="#94a3b8" />
+                    </div>
+
+                    <div onClick={() => openPicker('paper')} style={{ background: '#fff', padding: '16px', borderRadius: '16px', border: '2px solid #e2e8f0', display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer', opacity: !selectedExamId ? 0.6 : 1 }}>
+                      <div>
+                        <div style={{ fontSize: '0.75rem', color: '#64748b', fontWeight: 700, textTransform: 'uppercase', marginBottom: 4 }}>Class & Subject</div>
+                        <div style={{ fontSize: '1rem', fontWeight: 700, color: '#0f172a' }}>
+                          {selectedPaper ? `${selectedPaper.classes?.name || 'Class'} - ${selectedPaper.tt_subjects?.name || 'Subject'}` : 'Choose Assigned Paper'}
+                        </div>
+                      </div>
+                      <ChevronDownIcon size={20} color="#94a3b8" />
+                    </div>
+                  </div>
+               </Card>
+
+               {!selectedPaper ? (
+                 <div style={{ textAlign: 'center', padding: '60px 24px', color: '#64748b', background: '#fff', borderRadius: '24px', border: '1px dashed #cbd5e1' }}>
+                   <GradingIcon size={48} color="#cbd5e1" style={{ margin: '0 auto 16px' }} />
+                   <div style={{ fontSize: '1.1rem', fontWeight: 700, color: '#0f172a', marginBottom: 8 }}>Ready for Entry</div>
+                   <div style={{ fontSize: '0.9rem' }}>Select an exam and paper from the left to start entering marks.</div>
                  </div>
-
-                 <div onClick={() => openPicker('paper')} style={{ background: '#fff', padding: '16px', borderRadius: '16px', border: '2px solid #e2e8f0', display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer', opacity: !selectedExamId ? 0.6 : 1 }}>
-                   <div>
-                     <div style={{ fontSize: '0.75rem', color: '#64748b', fontWeight: 700, textTransform: 'uppercase', marginBottom: 4 }}>Class & Subject</div>
-                     <div style={{ fontSize: '1rem', fontWeight: 700, color: '#0f172a' }}>
-                       {selectedPaper ? `${selectedPaper.classes?.name || 'Class'} — ${selectedPaper.tt_subjects?.name || 'Subject'}` : 'Choose Assigned Paper'}
-                     </div>
+               ) : (
+                 <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                     <h3 style={{ fontSize: '1.1rem', fontWeight: 800, color: '#0f172a' }}>Student List ({students.length})</h3>
+                     <button 
+                       onClick={handleSave} 
+                       disabled={saving || loading}
+                       style={{ background: '#10b981', color: 'white', border: 'none', padding: '10px 24px', borderRadius: '14px', fontWeight: 700, fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: 8, boxShadow: '0 4px 12px rgba(16, 185, 129, 0.2)', cursor: 'pointer' }}
+                     >
+                       <SaveIcon size={18} /> {saving ? 'Saving...' : 'Sync to Cloud'}
+                     </button>
                    </div>
-                   <ChevronDownIcon size={20} color="#94a3b8" />
+
+                   <div style={{ display: 'grid', gridTemplateColumns: isDesktop ? '1fr 1fr' : '1fr', gap: 16 }}>
+                     {students.map((s) => {
+                       const data = marksBuffer[s.id] || { score: '', isAbsent: false };
+                       return (
+                         <Card key={s.id} style={{ padding: '16px 20px', display: 'flex', alignItems: 'center', gap: 16 }}>
+                           <div style={{ flex: 1 }}>
+                             <div style={{ fontWeight: 700, color: '#0f172a', fontSize: '1rem' }}>{s.name}</div>
+                             <div style={{ color: '#64748b', fontSize: '0.8rem', fontWeight: 600 }}>ADM: {s.adm_no}</div>
+                           </div>
+                           
+                           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
+                             <label style={{ fontSize: '0.65rem', fontWeight: 800, color: '#94a3b8' }}>ABS</label>
+                             <input 
+                               type="checkbox" 
+                               checked={data.isAbsent}
+                               onChange={(e) => handleMarkChange(s.id, 'isAbsent', e.target.checked)}
+                               style={{ width: 22, height: 22, cursor: 'pointer', accentColor: '#ef4444' }} 
+                             />
+                           </div>
+
+                           <div style={{ width: 64 }}>
+                              <input
+                               type="number"
+                               inputMode="numeric"
+                               disabled={data.isAbsent}
+                               value={data.score ?? ''}
+                               onChange={(e) => handleMarkChange(s.id, 'score', e.target.value)}
+                               style={{ width: '100%', padding: '12px 0', textAlign: 'center', border: '2px solid #e2e8f0', borderRadius: '12px', fontSize: '1.1rem', fontWeight: 800, color: data.isAbsent ? '#cbd5e1' : '#0f172a', background: data.isAbsent ? '#f8fafc' : '#fff', outline: 'none' }}
+                               placeholder="—"
+                             />
+                           </div>
+                         </Card>
+                       );
+                     })}
+                   </div>
                  </div>
-               </div>
-            </Card>
-
-            {!selectedPaper ? (
-              <div style={{ textAlign: 'center', padding: '60px 24px', color: '#64748b' }}>
-                <GradingIcon size={48} color="#cbd5e1" style={{ margin: '0 auto 16px' }} />
-                <div style={{ fontSize: '1.1rem', fontWeight: 700, color: '#0f172a', marginBottom: 8 }}>Ready for Entry</div>
-                <div style={{ fontSize: '0.9rem' }}>Select an exam and paper to start entering marks.</div>
-              </div>
-            ) : (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <h3 style={{ fontSize: '1.1rem', fontWeight: 800, color: '#0f172a' }}>Student List</h3>
-                  <button 
-                    onClick={handleSave} 
-                    disabled={saving || loading}
-                    style={{ background: '#10b981', color: 'white', border: 'none', padding: '10px 20px', borderRadius: '14px', fontWeight: 700, fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: 8, boxShadow: '0 4px 12px rgba(16, 185, 129, 0.2)', cursor: 'pointer', opacity: (saving || loading) ? 0.7 : 1 }}
-                  >
-                    <SaveIcon size={18} /> {saving ? 'Saving...' : 'Sync All'}
-                  </button>
-                </div>
-
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-                  {students.map((s) => {
-                    const data = marksBuffer[s.id] || { score: '', isAbsent: false };
-                    return (
-                      <Card key={s.id} style={{ padding: '16px 20px', display: 'flex', alignItems: 'center', gap: 16 }}>
-                        <div style={{ flex: 1 }}>
-                          <div style={{ fontWeight: 700, color: '#0f172a', fontSize: '1rem' }}>{s.name}</div>
-                          <div style={{ color: '#64748b', fontSize: '0.8rem', fontWeight: 600 }}>ADM: {s.adm_no}</div>
-                        </div>
-                        
-                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
-                          <label style={{ fontSize: '0.65rem', fontWeight: 800, color: '#94a3b8' }}>ABS</label>
-                          <input 
-                            type="checkbox" 
-                            checked={data.isAbsent}
-                            onChange={(e) => handleMarkChange(s.id, 'isAbsent', e.target.checked)}
-                            style={{ width: 22, height: 22, cursor: 'pointer', accentColor: '#ef4444' }} 
-                          />
-                        </div>
-
-                        <div style={{ width: 64 }}>
-                           <input
-                            type="number"
-                            inputMode="numeric"
-                            disabled={data.isAbsent}
-                            value={data.score ?? ''}
-                            onChange={(e) => handleMarkChange(s.id, 'score', e.target.value)}
-                            style={{ width: '100%', padding: '12px 0', textAlign: 'center', border: '2px solid #e2e8f0', borderRadius: '12px', fontSize: '1.1rem', fontWeight: 800, color: data.isAbsent ? '#cbd5e1' : '#0f172a', background: data.isAbsent ? '#f8fafc' : '#fff', outline: 'none' }}
-                            placeholder="—"
-                          />
-                        </div>
-                      </Card>
-                    );
-                  })}
-                </div>
-              </div>
-            )}
+               )}
+            </div>
           </div>
         )}
 
         {activeTab === 'schedule' && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 20, animation: 'fadeIn 0.4s ease-out' }}>
-            <div style={{ 
-              background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)', 
-              padding: '24px', borderRadius: '24px', color: '#fff',
-              boxShadow: '0 12px 24px -8px rgba(15, 23, 42, 0.4)'
-            }}>
-              <div style={{ fontSize: '0.8rem', color: '#94a3b8', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '1px', marginBottom: 8 }}>Weekly Workload</div>
-              <div style={{ fontSize: '2.2rem', fontWeight: 800, lineHeight: 1 }}>{workload} <span style={{ fontSize: '1rem', color: '#94a3b8', fontWeight: 600 }}>Periods</span></div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 24, animation: 'fadeIn 0.4s ease-out' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: isDesktop ? '1fr 1fr 1fr' : '1fr', gap: 20 }}>
+               <div style={{ background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)', padding: '24px', borderRadius: '24px', color: '#fff' }}>
+                  <div style={{ fontSize: '0.8rem', color: '#94a3b8', fontWeight: 700, textTransform: 'uppercase', marginBottom: 8 }}>Weekly Workload</div>
+                  <div style={{ fontSize: '2rem', fontWeight: 800 }}>{workload} <span style={{ fontSize: '0.9rem', color: '#94a3b8' }}>Periods</span></div>
+               </div>
+               <div style={{ background: '#fff', padding: '24px', borderRadius: '24px', border: '1px solid #e2e8f0' }}>
+                  <div style={{ fontSize: '0.8rem', color: '#64748b', fontWeight: 700, textTransform: 'uppercase', marginBottom: 8 }}>Active Term</div>
+                  <div style={{ fontSize: '1.2rem', fontWeight: 800, color: '#0f172a' }}>{activePeriod?.term} {activePeriod?.year}</div>
+               </div>
+               <div style={{ background: '#fff', padding: '24px', borderRadius: '24px', border: '1px solid #e2e8f0' }}>
+                  <div style={{ fontSize: '0.8rem', color: '#64748b', fontWeight: 700, textTransform: 'uppercase', marginBottom: 8 }}>Classes Today</div>
+                  <div style={{ fontSize: '1.2rem', fontWeight: 800, color: '#10b981' }}>{schedule.filter(s => s.day_of_week === new Intl.DateTimeFormat('en-US', {weekday: 'Long'}).format(new Date())).length} Sessions</div>
+               </div>
             </div>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-              <h3 style={{ fontSize: '1.1rem', fontWeight: 800, color: '#0f172a' }}>Class Schedule</h3>
-              
+            <div style={{ display: 'grid', gridTemplateColumns: isDesktop ? 'repeat(5, 1fr)' : '1fr', gap: 16 }}>
               {['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'].map(day => {
                 const dayLessons = schedule.filter(s => s.day_of_week === day).sort((a,b) => a.slot_index - b.slot_index);
-                if (dayLessons.length === 0) return null;
-
+                
                 return (
-                  <div key={day} style={{ marginBottom: 8 }}>
-                    <div style={{ fontSize: '0.8rem', fontWeight: 800, color: '#3b82f6', textTransform: 'uppercase', marginBottom: 12, display: 'flex', alignItems: 'center', gap: 12 }}>
-                      {day} <div style={{ flex: 1, height: 1, background: '#e2e8f0' }} />
+                  <div key={day} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                    <div style={{ fontSize: '0.85rem', fontWeight: 800, color: '#3b82f6', textTransform: 'uppercase', textAlign: isDesktop ? 'center' : 'left' }}>
+                      {day}
                     </div>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                      {dayLessons.map(s => {
-                        const time = config.find(c => c.slot_index === s.slot_index);
-                        return (
-                          <Card key={s.id} style={{ padding: '16px 20px', display: 'flex', gap: 16 }}>
-                            <div style={{ width: 70, borderRight: '1px solid #f1f5f9', paddingRight: 12 }}>
-                              <div style={{ fontSize: '0.9rem', fontWeight: 800, color: '#0f172a' }}>{time?.start_time}</div>
-                              <div style={{ fontSize: '0.7rem', fontWeight: 600, color: '#64748b' }}>{time?.end_time}</div>
-                            </div>
-                            <div style={{ flex: 1 }}>
-                              <div style={{ fontSize: '1rem', fontWeight: 700, color: '#0f172a' }}>{s.subject}</div>
-                              <div style={{ fontSize: '0.8rem', color: '#64748b', fontWeight: 600 }}>{s.class_grade} {s.stream || ''}</div>
-                            </div>
-                          </Card>
-                        );
-                      })}
-                    </div>
+                    {dayLessons.map(s => {
+                      const time = config.find(c => c.slot_index === s.slot_index);
+                      return (
+                        <div key={s.id} style={{ background: '#fff', padding: '12px', borderRadius: '16px', border: '1px solid #e2e8f0', boxShadow: '0 2px 4px rgba(0,0,0,0.02)' }}>
+                          <div style={{ fontSize: '0.75rem', fontWeight: 700, color: '#64748b' }}>{time?.start_time}</div>
+                          <div style={{ fontSize: '0.9rem', fontWeight: 800, color: '#0f172a', margin: '4px 0' }}>{s.subject}</div>
+                          <div style={{ fontSize: '0.75rem', color: '#94a3b8', fontWeight: 600 }}>{s.class_grade} {s.stream}</div>
+                        </div>
+                      );
+                    })}
+                    {dayLessons.length === 0 && <div style={{ padding: '20px', textAlign: 'center', border: '1px dashed #e2e8f0', borderRadius: '16px', fontSize: '0.7rem', color: '#cbd5e1' }}>No Classes</div>}
                   </div>
                 );
               })}
-
-              {schedule.length === 0 && (
-                <Card style={{ textAlign: 'center', padding: '48px 24px' }}>
-                  <CalendarIcon size={40} color="#cbd5e1" style={{ margin: '0 auto 16px' }} />
-                  <div style={{ color: '#64748b', fontWeight: 600 }}>No classes scheduled for you this term.</div>
-                </Card>
-              )}
             </div>
           </div>
         )}
 
         {activeTab === 'profile' && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 20, animation: 'fadeIn 0.4s ease-out' }}>
-            <Card style={{ textAlign: 'center', padding: '40px 24px' }}>
+          <div style={{ maxWidth: 600, margin: '0 auto', animation: 'fadeIn 0.4s ease-out' }}>
+            <Card style={{ textAlign: 'center', padding: '48px 32px' }}>
               <div style={{ 
-                width: 80, height: 80, borderRadius: '24px', background: 'linear-gradient(135deg, #10b981, #3b82f6)',
-                color: '#fff', fontSize: '2rem', fontWeight: 800, display: 'flex', alignItems: 'center', justifyContent: 'center',
-                margin: '0 auto 16px', boxShadow: '0 8px 16px rgba(16, 185, 129, 0.3)'
+                width: 100, height: 100, borderRadius: '32px', background: 'linear-gradient(135deg, #10b981, #3b82f6)',
+                color: '#fff', fontSize: '2.5rem', fontWeight: 800, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                margin: '0 auto 24px', boxShadow: '0 12px 24px rgba(16, 185, 129, 0.3)'
               }}>
                 {user.name.charAt(0).toUpperCase()}
               </div>
-              <h2 style={{ margin: '0 0 4px', fontSize: '1.4rem', color: '#0f172a', fontWeight: 800 }}>{user.name}</h2>
+              <h2 style={{ margin: '0 0 8px', fontSize: '1.8rem', color: '#0f172a', fontWeight: 900 }}>{user.name}</h2>
               <Badge bg="#dcfce7" color="#16a34a">Official Staff Member</Badge>
               
-              <div style={{ marginTop: 32, borderTop: '1px solid #f1f5f9', paddingTop: 24 }}>
-                 <button 
-                  onClick={onLogout}
-                  style={{ width: '100%', background: '#fff1f2', color: '#e11d48', border: 'none', padding: '14px', borderRadius: '16px', fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, cursor: 'pointer' }}
-                 >
-                   <LogoutIcon size={18} /> Sign Out of Portal
-                 </button>
+              <div style={{ marginTop: 48, display: 'flex', flexDirection: 'column', gap: 12 }}>
+                 <div style={{ display: 'flex', justifyContent: 'space-between', padding: '16px', background: '#f8fafc', borderRadius: '16px' }}>
+                    <span style={{ color: '#64748b', fontWeight: 600 }}>Institution</span>
+                    <span style={{ color: '#0f172a', fontWeight: 800 }}>{schoolProfile?.name || 'Marete School'}</span>
+                 </div>
+                 <div style={{ display: 'flex', justifyContent: 'space-between', padding: '16px', background: '#f8fafc', borderRadius: '16px' }}>
+                    <span style={{ color: '#64748b', fontWeight: 600 }}>Phone Number</span>
+                    <span style={{ color: '#0f172a', fontWeight: 800 }}>{user.phone || '0712260057'}</span>
+                 </div>
               </div>
+
+              <button 
+                onClick={onLogout}
+                style={{ width: '100%', background: '#fff1f2', color: '#e11d48', border: 'none', padding: '16px', borderRadius: '16px', fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, cursor: 'pointer', marginTop: 32 }}
+               >
+                 <LogoutIcon size={18} /> Sign Out of Portal
+               </button>
             </Card>
           </div>
         )}
       </div>
 
-      {/* App-like Bottom Navigation */}
-      <nav style={{
-        position: 'fixed', bottom: 0, left: '50%', transform: 'translateX(-50%)', 
-        width: '100%', maxWidth: 480, background: 'rgba(255, 255, 255, 0.9)', 
-        backdropFilter: 'blur(20px)', display: 'flex', justifyContent: 'space-around',
-        padding: '12px 0 calc(12px + env(safe-area-inset-bottom))',
-        borderTop: '1px solid rgba(0,0,0,0.05)', zIndex: 1000
-      }}>
-        {[
-          { id: 'grading', label: 'Grading', icon: GradingIcon },
-          { id: 'schedule', label: 'Timetable', icon: CalendarIcon },
-          { id: 'profile', label: 'Account', icon: UserIcon }
-        ].map(tab => (
-          <div 
-            key={tab.id}
-            onClick={() => setActiveTab(tab.id)}
-            style={{ 
-              display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, 
-              color: activeTab === tab.id ? '#10b981' : '#94a3b8',
-              cursor: 'pointer', flex: 1, position: 'relative'
-            }}
-          >
-            <tab.icon size={22} strokeWidth={activeTab === tab.id ? 2.5 : 2} />
-            <span style={{ fontSize: '0.65rem', fontWeight: activeTab === tab.id ? 700 : 600 }}>{tab.label}</span>
-            {activeTab === tab.id && (
-              <div style={{ position: 'absolute', top: -12, width: 32, height: 4, background: '#10b981', borderRadius: '0 0 4px 4px' }} />
-            )}
-          </div>
-        ))}
-      </nav>
+      {/* MOBILE BOTTOM NAV */}
+      {!isDesktop && (
+        <nav style={{
+          position: 'fixed', bottom: 0, left: 0, width: '100%', background: 'rgba(255, 255, 255, 0.9)', 
+          backdropFilter: 'blur(20px)', display: 'flex', justifyContent: 'space-around',
+          padding: '12px 0 calc(12px + env(safe-area-inset-bottom))',
+          borderTop: '1px solid rgba(0,0,0,0.05)', zIndex: 1000
+        }}>
+          {navItems.map(tab => (
+            <div 
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              style={{ 
+                display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, 
+                color: activeTab === tab.id ? '#10b981' : '#94a3b8',
+                cursor: 'pointer', flex: 1
+              }}
+            >
+              <tab.icon size={22} strokeWidth={activeTab === tab.id ? 2.5 : 2} />
+              <span style={{ fontSize: '0.65rem', fontWeight: activeTab === tab.id ? 700 : 600 }}>{tab.label}</span>
+            </div>
+          ))}
+        </nav>
+      )}
 
       {/* Modern Picker Sheet Overlay */}
       {pickerOpen && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(15, 23, 42, 0.6)', backdropFilter: 'blur(4px)', zIndex: 2000, display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}>
-          <div style={{ background: '#fff', width: '100%', maxWidth: 480, borderTopLeftRadius: 32, borderTopRightRadius: 32, padding: '24px 24px 40px', maxHeight: '80vh', overflowY: 'auto', animation: 'slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1)' }}>
-            <div style={{ width: 48, height: 5, background: '#e2e8f0', borderRadius: 3, margin: '0 auto 24px' }} />
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(15, 23, 42, 0.6)', backdropFilter: 'blur(4px)', zIndex: 2000, display: 'flex', alignItems: isDesktop ? 'center' : 'flex-end', justifyContent: 'center' }}>
+          <div style={{ background: '#fff', width: '100%', maxWidth: 480, borderRadius: isDesktop ? 32 : '32px 32px 0 0', padding: '24px 24px 40px', maxHeight: '80vh', overflowY: 'auto', animation: 'slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1)' }}>
+            {!isDesktop && <div style={{ width: 48, height: 5, background: '#e2e8f0', borderRadius: 3, margin: '0 auto 24px' }} />}
             
             <h3 style={{ margin: '0 0 20px', fontSize: '1.3rem', fontWeight: 800, color: '#0f172a' }}>
               {pickerType === 'exam' ? 'Select Exam Session' : 'Select Assigned Paper'}
