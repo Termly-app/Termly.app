@@ -220,8 +220,9 @@ export default function StaffLogin({ onLogin }) {
         .res-field input:focus ~ .res-uline { width: 100%; }
         .res-fhint { font-size: 0.75rem; color: #94A3B8; margin-top: 6px; padding-left: 32px; }
         
-        .res-cta { width: 100%; border: none; border-radius: 100px; padding: 16px; color: white; font-weight: 700; cursor: pointer; transition: all 0.3s; margin-top: 20px; box-shadow: 0 8px 25px rgba(79, 70, 229, 0.3); }
-        .res-cta:hover { transform: translateY(-2px); box-shadow: 0 12px 30px rgba(79, 70, 229, 0.4); }
+        .res-cta { width: 100%; border: none; border-radius: 12px; padding: 14px; color: white; font-weight: 700; cursor: pointer; transition: all 0.3s; margin-top: 32px; box-shadow: 0 8px 25px rgba(79, 70, 229, 0.3); display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 1rem; }
+        .res-cta:hover { transform: translateY(-2px); box-shadow: 0 12px 30px rgba(79, 70, 229, 0.4); opacity: 0.95; }
+        .res-cta:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
         .res-error { background: #fee2e2; color: #b91c1c; padding: 12px; border-radius: 12px; margin-bottom: 20px; font-size: 0.85rem; text-align: center; font-weight: 600; }
         .res-back-link { display: inline-flex; align-items: center; gap: 8px; color: #94a3b8; text-decoration: none; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; margin-bottom: 20px; transition: color 0.2s; }
         .res-back-link:hover { color: #4F46E5; }

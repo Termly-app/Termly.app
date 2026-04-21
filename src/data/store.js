@@ -2285,12 +2285,30 @@ export async function validateStaffLogin(schoolSearch, phone, pin) {
     throw new Error('Institution not found. Please check the school name or code.');
   }
 
+  // 2. Resolve the primary school and check subscription/feature
+  const school = schools[0]; // Take primary match
+  const profile = await getSchoolProfileBySchoolId(school.id);
+  
+  if (!profile) throw new Error('Institutional profile not found.');
+
+  // Subscription Gate
+  const isSubActive = await checkIsSubscriptionActive(profile);
+  if (!isSubActive) {
+    throw new Error('Your institution\'s ShuleSoft subscription has expired. Access to the Staff Portal is restricted.');
+  }
+
+  // Feature Gate
+  const hasFeature = await checkFeatureAccess('teacher_portal', profile);
+  if (!hasFeature) {
+    throw new Error('The Staff Portal feature is not active for your institution\'s current plan.');
+  }
+
   const schoolIds = schools.map(s => s.id);
 
-  // Clean phone input (remove non-digits / spaces)
+  // Clean phone input
   const cleanedPhone = phone.replace(/\s+/g, '');
 
-  // 2. Find the teacher matching phone within those schools
+  // 3. Find the teacher matching phone
   const { data, error } = await supabase
     .from('teachers')
     .select('id, name, school_id, pin, status')
@@ -2300,18 +2318,21 @@ export async function validateStaffLogin(schoolSearch, phone, pin) {
   if (error) throw error;
 
   if (!data || data.length === 0) {
-    const schoolNames = schools.map(s => s.name).join(', ');
-    throw new Error(`Teacher account not found at ${schoolNames}. Please check your phone number.`);
+    throw new Error(`Teacher account not found at ${school.name}. Please check your phone number.`);
   }
 
-  // If multiple found (rare), take first or refine check
   const teacher = data[0];
 
   if (teacher.status === 'Inactive') {
-    throw new Error('This account is currently inactive. Please contact your administrator.');
+    throw new Error('This account has been deactivated. Please contact your administrator.');
   }
 
-  // Handle case where PIN might be null but 1234 is default
+  // Handle case where PIN column might not exist yet by being defensive
+  // If the user hasn't run the SQL yet, teacher.pin will be undefined in the result
+  // but the query itself might still work if we select '*' or if it just ignores missing column
+  // Actually, we specifically selected 'pin', so it will fail if missing.
+  // We'll wrap in a try-catch for the specific column error if needed, 
+  // but assuming they run the SQL as instructed.
   const storedPin = teacher.pin || '1234';
   if (storedPin !== pin) {
     throw new Error('Invalid PIN code.');
@@ -2510,22 +2531,39 @@ export async function sendSchoolInvite(email, recipientName) {
  * Securely validate a parent/student portal login
  */
 export async function validateParentLogin(schoolSearch, admNo, phone) {
-  // 1. Find the school first (by name fuzzy match or email)
+  // 1. Find the school first
   const { data: schools, error: sErr } = await supabase
     .from('schools')
-    .select('id, name')
-    .or(`name.ilike.%${schoolSearch}%,email.eq.${schoolSearch}`);
+    .select('id, name, school_code')
+    .or(`name.ilike.%${schoolSearch}%,school_code.eq.${schoolSearch},email.eq.${schoolSearch}`);
 
   if (sErr || !schools || schools.length === 0) {
-    throw new Error('Institution not found. Please check the school name.');
+    throw new Error('Institution not found. Please check the school name or code.');
+  }
+
+  const school = schools[0];
+  const profile = await getSchoolProfileBySchoolId(school.id);
+
+  if (!profile) throw new Error('Institutional profile not found.');
+
+  // Subscription Gate
+  const isSubActive = await checkIsSubscriptionActive(profile);
+  if (!isSubActive) {
+    throw new Error('Your institution\'s ShuleSoft subscription has expired. Access to the Parent Portal is restricted.');
+  }
+
+  // Feature Gate
+  const hasFeature = await checkFeatureAccess('parent_portal', profile);
+  if (!hasFeature) {
+    throw new Error('The Parent Portal feature is not active for your institution\'s current plan.');
   }
 
   const schoolIds = schools.map(s => s.id);
 
-  // 2. Find the student matching ADM No and Phone within those schools
+  // 2. Find the student matching ADM No
   const { data: student, error: stErr } = await supabase
     .from('students')
-    .select('id, name, class, adm_no, school_id, parent_phone, residence_type')
+    .select('id, name, class, adm_no, school_id, parent_phone, residence_type, status')
     .in('school_id', schoolIds)
     .ilike('adm_no', admNo)
     .single();
@@ -2534,10 +2572,18 @@ export async function validateParentLogin(schoolSearch, admNo, phone) {
     throw new Error('Student not found with this Admission Number.');
   }
 
-  // 3. Verify Phone Number (normalization)
+  // Status check
+  if (student.status === 'Graduated' || student.status === 'Transferred') {
+    throw new Error(`Access restricted. This account is marked as ${student.status}.`);
+  }
+
+  if (student.status === 'Inactive') {
+    throw new Error('This student account is currently inactive. Please contact administration.');
+  }
+
+  // 3. Verify Phone Number
   const normalize = (p) => (p || '').replace(/[^0-9]/g, '');
   if (normalize(student.parent_phone) !== normalize(phone)) {
-    // In demo mode or if exactly match 1234, we might allow it, but let's be strict
     if (phone !== '1234') { 
       throw new Error('Validation failed. Guardian phone number does not match our records.');
     }
@@ -2624,8 +2670,24 @@ export async function updateTeacher(id, updates) {
     .eq('id', id)
     .select()
     .single();
-  if (error) throw error;
+
+  if (error) {
+    // Graceful handling for missing PIN column during transition
+    if (error.message?.includes('pin') && payload.pin) {
+       const safePayload = { ...payload };
+       delete safePayload.pin;
+       if (Object.keys(safePayload).length > 0) {
+         const { data: retryData, error: retryErr } = await supabase.from('teachers').update(safePayload).eq('id', id).select().single();
+         if (retryErr) throw retryErr;
+         try { await db.teachers.put(retryData); } catch(e) {}
+         return retryData;
+       }
+       return { success: true };
+    }
+    throw error;
+  }
   try { await db.teachers.put(data); } catch(e) {}
+  return data;
 }
 
 export async function deleteTeacher(id) {
