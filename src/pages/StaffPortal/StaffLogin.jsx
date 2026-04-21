@@ -1,18 +1,40 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { TeacherIcon, ShieldIcon, PhoneIcon, EyeIcon, EyeOffIcon, RocketIcon, FlagIcon, BookIcon, GraduationIcon, SchoolIcon } from '../../components/CommonIcons';
-import { validateStaffLogin } from '../../data/store';
+import { validateStaffLogin, searchSchools } from '../../data/store';
 
 export default function StaffLogin({ onLogin }) {
   const [searchParams] = useSearchParams();
   const magicSchool = searchParams.get('school');
   
   const [schoolSearch, setSchoolSearch] = useState(magicSchool || '');
+  const [suggestions, setSuggestions] = useState([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
   const [phone, setPhone] = useState('');
   const [pin, setPin] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [showPin, setShowPin] = useState(false);
+
+  useEffect(() => {
+    const fetchSuggestions = async () => {
+      if (schoolSearch.length > 1 && !magicSchool) {
+        try {
+          const results = await searchSchools(schoolSearch);
+          setSuggestions(results);
+          setShowSuggestions(true);
+        } catch (err) {
+          console.error("Suggestion fetch failed:", err);
+        }
+      } else {
+        setSuggestions([]);
+        setShowSuggestions(false);
+      }
+    };
+
+    const timer = setTimeout(fetchSuggestions, 300);
+    return () => clearTimeout(timer);
+  }, [schoolSearch, magicSchool]);
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -90,18 +112,38 @@ export default function StaffLogin({ onLogin }) {
 
             {error && <div className="res-error">{error}</div>}
 
-            <form onSubmit={handleLogin}>
-              <div className="res-field">
+            <form onSubmit={handleLogin} autoComplete="off">
+              <div className="res-field" style={{ position: 'relative', zIndex: 100 }}>
                 <div className="res-fico"><SchoolIcon size={18} color="#94a3b8" /></div>
                 <input 
                   type="text" 
                   placeholder="Search for your school..." 
                   value={schoolSearch} 
                   onChange={(e) => setSchoolSearch(e.target.value)} 
+                  onFocus={() => suggestions.length > 0 && setShowSuggestions(true)}
                   required 
+                  autoComplete="off"
                 />
                 <div className="res-uline" style={{ background: '#4F46E5' }}></div>
                 {magicSchool && <div className="res-fhint" style={{ color: '#6366F1', fontWeight: 'bold' }}>Magic link applied!</div>}
+                
+                {showSuggestions && suggestions.length > 0 && (
+                  <div className="res-suggestions">
+                    {suggestions.map(s => (
+                      <div 
+                        key={s.id} 
+                        className="suggestion-item"
+                        onClick={() => {
+                          setSchoolSearch(s.name);
+                          setShowSuggestions(false);
+                        }}
+                      >
+                        <div className="s-name">{s.name}</div>
+                        <div className="s-code">{s.school_code}</div>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
 
               <div className="res-field">
@@ -197,6 +239,13 @@ export default function StaffLogin({ onLogin }) {
 
         .res-eye { position: absolute; right: 0; top: 12px; background: none; border: none; color: #B0B7C3; cursor: pointer; padding: 0; display: flex; align-items: center; justify-content: center; transition: color .2s; }
         .res-eye:hover { color: #4F46E5; }
+
+        .res-suggestions { position: absolute; top: 100%; left: 0; right: 0; background: white; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); border: 1px solid #E2E8F0; margin-top: 5px; max-height: 200px; overflow-y: auto; z-index: 1000; }
+        .suggestion-item { padding: 12px 16px; cursor: pointer; transition: background 0.2s; border-bottom: 1px solid #F1F5F9; }
+        .suggestion-item:last-child { border-bottom: none; }
+        .suggestion-item:hover { background: #F8FAFC; }
+        .s-name { font-size: 0.9rem; font-weight: 700; color: #1E1B4B; }
+        .s-code { font-size: 0.7rem; color: #94A3B8; text-transform: uppercase; margin-top: 2px; }
 
         @media (max-width: 768px) { .right-panel { display: none; } .card { max-width: 450px; min-height: auto; } .left-panel { padding: 32px 24px; } }
       `}</style>

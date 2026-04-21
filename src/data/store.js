@@ -150,7 +150,21 @@ export function getCurrentAuthUser() {
 
 // ============= SCHOOLS =============
 export async function getRegisteredSchools() {
-  const { data, error } = await supabase.from('schools').select('id, name, email, plan, owner_id, phone, location, created_at');
+  const { data, error } = await supabase.from('schools').select('id, name, email, plan, owner_id, phone, location, created_at, school_code');
+  if (error) throw error;
+  return data || [];
+}
+
+/**
+ * Rapid fuzzy search for schools by name, code or email
+ */
+export async function searchSchools(query) {
+  if (!query || query.length < 2) return [];
+  const { data, error } = await supabase
+    .from('schools')
+    .select('id, name, school_code, email')
+    .or(`name.ilike.%${query}%,school_code.ilike.%${query}%,email.ilike.%${query}%`)
+    .limit(8);
   if (error) throw error;
   return data || [];
 }
@@ -2261,45 +2275,53 @@ export async function getSchoolStructure(preFetchedStudents = null, preFetchedMa
  * Securely validate a staff member (teacher) login using School + Phone + PIN
  */
 export async function validateStaffLogin(schoolSearch, phone, pin) {
-  // 1. Find the school first (by name fuzzy match or email)
+  // 1. Find the school first (by name fuzzy match or exact slug/email)
   const { data: schools, error: sErr } = await supabase
     .from('schools')
-    .select('id, name')
-    .or(`name.ilike.%${schoolSearch}%,email.eq.${schoolSearch}`);
+    .select('id, name, school_code')
+    .or(`name.ilike.%${schoolSearch}%,school_code.eq.${schoolSearch},email.eq.${schoolSearch}`);
 
   if (sErr || !schools || schools.length === 0) {
-    throw new Error('Institution not found. Please check the school name.');
+    throw new Error('Institution not found. Please check the school name or code.');
   }
 
   const schoolIds = schools.map(s => s.id);
+
+  // Clean phone input (remove non-digits / spaces)
+  const cleanedPhone = phone.replace(/\s+/g, '');
 
   // 2. Find the teacher matching phone within those schools
   const { data, error } = await supabase
     .from('teachers')
     .select('id, name, school_id, pin, status')
-    .eq('phone', phone)
-    .in('school_id', schoolIds)
-    .single();
+    .eq('phone', cleanedPhone)
+    .in('school_id', schoolIds);
 
-  if (error || !data) {
-    throw new Error('Teacher account not found in this school.');
+  if (error) throw error;
+
+  if (!data || data.length === 0) {
+    const schoolNames = schools.map(s => s.name).join(', ');
+    throw new Error(`Teacher account not found at ${schoolNames}. Please check your phone number.`);
   }
 
-  if (data.status === 'Inactive') {
+  // If multiple found (rare), take first or refine check
+  const teacher = data[0];
+
+  if (teacher.status === 'Inactive') {
     throw new Error('This account is currently inactive. Please contact your administrator.');
   }
 
   // Handle case where PIN might be null but 1234 is default
-  const storedPin = data.pin || '1234';
+  const storedPin = teacher.pin || '1234';
   if (storedPin !== pin) {
     throw new Error('Invalid PIN code.');
   }
 
   return {
-    id: data.id,
-    name: data.name,
+    id: teacher.id,
+    name: teacher.name,
     role: 'teacher',
-    schoolId: data.school_id
+    schoolId: teacher.school_id
   };
 }
 
