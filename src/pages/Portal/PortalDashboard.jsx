@@ -556,4 +556,3 @@ export default function PortalDashboard({ user, onLogout }) {
     </div>
   );
 }
-}
