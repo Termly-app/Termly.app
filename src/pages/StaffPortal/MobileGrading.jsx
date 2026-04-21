@@ -432,7 +432,7 @@ export default function MobileGrading({ user, onLogout }) {
                </div>
                <div style={{ background: '#fff', padding: '24px', borderRadius: '24px', border: '1px solid #e2e8f0' }}>
                   <div style={{ fontSize: '0.8rem', color: '#64748b', fontWeight: 700, textTransform: 'uppercase', marginBottom: 8 }}>Classes Today</div>
-                  <div style={{ fontSize: '1.2rem', fontWeight: 800, color: '#10b981' }}>{schedule.filter(s => s.day_of_week === new Intl.DateTimeFormat('en-US', {weekday: 'Long'}).format(new Date())).length} Sessions</div>
+                  <div style={{ fontSize: '1.2rem', fontWeight: 800, color: '#10b981' }}>{schedule.filter(s => s.day_of_week === new Intl.DateTimeFormat('en-US', {weekday: 'long'}).format(new Date())).length} Sessions</div>
                </div>
             </div>
 
