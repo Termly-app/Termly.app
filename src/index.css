@@ -743,6 +743,7 @@ html body input[type="number"]::-webkit-outer-spin-button {
   margin: 0 !important;
 }
 html body input[type="number"] {
+  appearance: textfield !important;
   -moz-appearance: textfield !important;
 }
 
