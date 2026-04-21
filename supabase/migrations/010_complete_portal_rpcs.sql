@@ -52,14 +52,12 @@ END; $$;
 CREATE OR REPLACE FUNCTION public.portal_get_student_fees(p_student_id UUID)
 RETURNS JSONB LANGUAGE plpgsql SECURITY DEFINER SET search_path = public, pg_catalog AS $$
 DECLARE
-  v_total_fee NUMERIC; v_paid NUMERIC;
+  v_fee RECORD;
 BEGIN
-  SELECT COALESCE(SUM(total_fee), 0), COALESCE(SUM(paid), 0)
-  INTO v_total_fee, v_paid
-  FROM public.fees
-  WHERE student_id = p_student_id;
+  SELECT * INTO v_fee FROM public.fees WHERE student_id = p_student_id ORDER BY created_at DESC LIMIT 1;
+  IF v_fee.id IS NULL THEN RETURN NULL; END IF;
   
-  RETURN jsonb_build_object('total_fee', v_total_fee, 'paid', v_paid, 'balance', v_total_fee - v_paid);
+  RETURN jsonb_build_object('id', v_fee.id, 'period_id', v_fee.period_id, 'total_fee', v_fee.total_fee, 'paid', v_fee.paid, 'balance', v_fee.balance);
 END; $$;
 
 -- ─── 7. Get Teacher Timetable ──────────────────────────────
@@ -89,10 +87,10 @@ BEGIN
     'method', p.method,
     'reference', p.reference,
     'status', p.status
-  )), '[]'::jsonb)
+  ) ORDER BY p.date DESC), '[]'::jsonb)
   FROM public.fee_payments p
-  WHERE p.student_id = p_student_id AND (p.status IS NULL OR p.status != 'Voided')
-  ORDER BY p.date DESC);
+  JOIN public.fees f ON f.id = p.fee_id
+  WHERE f.student_id = p_student_id AND (p.status IS NULL OR p.status != 'Voided'));
 END; $$;
 
 -- ─── 10. Get Student Profile ───────────────────────────────

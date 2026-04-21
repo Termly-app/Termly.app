@@ -1954,38 +1954,38 @@ export async function getFees(studentId = null) {
 
   // If in portal mode or searching for specific student, use RPC if possible
   if (!_currentAuthUser && studentId) {
-    const { data: feeData, error: feeErr } = await supabase.rpc('portal_get_student_fees', { p_student_id: studentId });
-    
-    if (feeErr) {
-      console.warn('Portal fee fetch error:', feeErr.message);
-      return null;
-    }
-    if (!feeData) return null;
+    let feeData = null;
+    let payData = [];
 
-    // Fetch payments separately — don't let payment fetch failure block fee display
-    let payments = [];
     try {
-      const { data: payData, error: payErr } = await supabase.rpc('portal_get_student_payments', { p_student_id: studentId });
-      if (!payErr && payData) {
-        payments = (Array.isArray(payData) ? payData : []).map(p => ({
-          id: p.id,
-          amount: Number(p.amount || 0),
-          date: p.date,
-          method: p.method || 'Payment',
-          reference: p.reference || '',
-        }));
-      }
-    } catch (payErr) {
-      console.warn('Portal payments fetch error (non-blocking):', payErr.message);
+      const feeRes = await supabase.rpc('portal_get_student_fees', { p_student_id: studentId });
+      if (!feeRes.error) feeData = feeRes.data;
+    } catch (e) {
+      console.warn('Portal fee fetch error:', e);
     }
+
+    try {
+      const payRes = await supabase.rpc('portal_get_student_payments', { p_student_id: studentId });
+      if (!payRes.error) payData = payRes.data;
+    } catch (e) {
+      console.warn('Portal payments fetch error:', e);
+    }
+
+    const payments = (Array.isArray(payData) ? payData : []).map(p => ({
+      id: p.id,
+      amount: Number(p.amount || 0),
+      date: p.date,
+      method: p.method || 'Payment',
+      reference: p.reference || '',
+    }));
 
     return {
-      totalFee: Number(feeData.total_fee || 0),
-      paid: Number(feeData.paid || 0),
-      balance: Number(feeData.balance || 0),
+      totalFee: Number(feeData?.total_fee || 0),
+      paid: Number(feeData?.paid || 0),
+      balance: Number(feeData?.balance || 0),
       payments,
-      _feeId: feeData.id,
-      periodId: feeData.period_id,
+      _feeId: feeData?.id || null,
+      periodId: feeData?.period_id || null,
     };
   }
 
