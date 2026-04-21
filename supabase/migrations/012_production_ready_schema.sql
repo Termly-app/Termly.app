@@ -214,8 +214,78 @@ ALTER TABLE public.students ADD COLUMN IF NOT EXISTS status TEXT DEFAULT 'Active
 -- Schools Public listing
 ALTER TABLE public.schools ADD COLUMN IF NOT EXISTS publicly_listed BOOLEAN DEFAULT TRUE;
 
--- ─── 5. RE-APPLY MISSING RPCS ──────────────────────────────
--- [Included in final instructions for user]
+-- ─── 5. RE-APPLY CORRECTED RPCS ──────────────────────────────
+-- These RPCs are critical for Teacher Portal functionality.
+-- They bypass RLS (Security Definer) but are scoped by school_id.
+
+CREATE OR REPLACE FUNCTION public.portal_get_teacher_assignments(p_school_id UUID, p_teacher_id UUID)
+RETURNS JSONB LANGUAGE plpgsql SECURITY DEFINER SET search_path = public AS $$
+BEGIN
+  RETURN (
+    SELECT COALESCE(jsonb_agg(jsonb_build_object(
+      'id', id, 'class_grade', class_grade, 'stream', stream, 'subject', subject
+    )), '[]'::jsonb)
+    FROM public.subject_assignments 
+    WHERE school_id = p_school_id 
+      AND (teacher_id = p_teacher_id OR teacher_id IN (SELECT id FROM teachers WHERE user_id = p_teacher_id))
+  );
+END; $$;
+
+CREATE OR REPLACE FUNCTION public.portal_get_timetable_config(p_school_id UUID, p_period_id UUID)
+RETURNS JSONB LANGUAGE plpgsql SECURITY DEFINER SET search_path = public AS $$
+BEGIN
+  RETURN (
+    SELECT COALESCE(jsonb_agg(jsonb_build_object(
+      'id', id, 'slot_index', slot_index, 'start_time', start_time, 'end_time', end_time, 'name', name
+    ) ORDER BY slot_index ASC), '[]'::jsonb)
+    FROM public.timetable_configs WHERE school_id = p_school_id AND period_id = p_period_id
+  );
+END; $$;
+
+CREATE OR REPLACE FUNCTION public.portal_get_teacher_workload(p_school_id UUID, p_period_id UUID, p_teacher_id UUID)
+RETURNS INTEGER LANGUAGE plpgsql SECURITY DEFINER SET search_path = public AS $$
+DECLARE v_count INTEGER;
+BEGIN
+  SELECT COUNT(*) INTO v_count FROM public.timetable_slots 
+  WHERE school_id = p_school_id AND period_id = p_period_id 
+    AND (teacher_id = p_teacher_id OR teacher_id IN (SELECT id FROM teachers WHERE user_id = p_teacher_id));
+  RETURN COALESCE(v_count, 0);
+END; $$;
+
+CREATE OR REPLACE FUNCTION public.portal_get_teacher_timetable(p_school_id UUID, p_period_id UUID, p_teacher_id UUID)
+RETURNS JSONB LANGUAGE plpgsql SECURITY DEFINER SET search_path = public AS $$
+BEGIN
+  RETURN (
+    SELECT COALESCE(jsonb_agg(jsonb_build_object(
+      'id', id, 'day_of_week', day_of_week, 'slot_index', slot_index, 'subject', subject, 
+      'class_grade', class_grade, 'stream', stream, 'start_time', start_time, 'end_time', end_time
+    )), '[]'::jsonb)
+    FROM public.timetable_slots 
+    WHERE school_id = p_school_id AND period_id = p_period_id 
+      AND (teacher_id = p_teacher_id OR teacher_id IN (SELECT id FROM teachers WHERE user_id = p_teacher_id))
+  );
+END; $$;
+
+CREATE OR REPLACE FUNCTION public.portal_get_open_exams(p_school_id UUID)
+RETURNS JSONB LANGUAGE plpgsql SECURITY DEFINER SET search_path = public AS $$
+BEGIN
+  RETURN (
+    SELECT COALESCE(jsonb_agg(jsonb_build_object(
+      'id', id, 'name', name, 'term', term, 'status', status
+    )), '[]'::jsonb)
+    FROM public.exams WHERE school_id = p_school_id AND status != 'Draft'
+  );
+END; $$;
+
+CREATE OR REPLACE FUNCTION public.portal_get_school_profile(p_school_id UUID)
+RETURNS JSONB LANGUAGE plpgsql SECURITY DEFINER SET search_path = public AS $$
+BEGIN
+  RETURN (
+    SELECT COALESCE(jsonb_agg(sp.*), '[]'::jsonb) 
+    FROM public.school_profiles sp 
+    WHERE school_id = p_school_id LIMIT 1
+  );
+END; $$;
 
 -- ─── 6. ENABLE RLS ──────────────────────────────────────────
 ALTER TABLE public.tt_periods ENABLE ROW LEVEL SECURITY;
@@ -236,7 +306,6 @@ ALTER TABLE public.notification_preferences ENABLE ROW LEVEL SECURITY;
 -- ─── 7. POLICIES (Safe re-application) ───────────────────────
 DO $$ 
 BEGIN
-    -- Drop existing if any
     DROP POLICY IF EXISTS "tts_select" ON public.tt_subjects;
     CREATE POLICY "tts_select" ON public.tt_subjects FOR SELECT USING (school_id = public.get_auth_school_id() OR public.is_school_owner(school_id));
     
@@ -248,6 +317,4 @@ BEGIN
 
     DROP POLICY IF EXISTS "exams_modify" ON public.exams;
     CREATE POLICY "exams_modify" ON public.exams FOR ALL USING (public.is_school_owner(school_id) OR public.is_school_admin(school_id));
-    
-    -- ... (add more as needed, or keep it generic)
 END $$;
