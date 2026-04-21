@@ -4,11 +4,13 @@ import PortalLogin from './PortalLogin';
 import PortalDashboard from './PortalDashboard';
 
 export default function PortalManager() {
-  const [portalUser, setPortalUser] = useState(null);
+  const [portalUser, setPortalUser] = useState(() => {
+    const saved = localStorage.getItem('shulesoft_portal_user');
+    return saved ? JSON.parse(saved) : null;
+  });
 
   useEffect(() => {
-    const saved = localStorage.getItem('shulesoft_portal_user');
-    if (saved) setPortalUser(JSON.parse(saved));
+    // any future side effects
   }, []);
 
   const handleLogin = (data) => {

@@ -4,11 +4,13 @@ import StaffLogin from './StaffLogin';
 import MobileGrading from './MobileGrading';
 
 export default function StaffPortalManager() {
-  const [staffUser, setStaffUser] = useState(null);
+  const [staffUser, setStaffUser] = useState(() => {
+    const saved = localStorage.getItem('shulesoft_staff_user');
+    return saved ? JSON.parse(saved) : null;
+  });
 
   useEffect(() => {
-    const saved = localStorage.getItem('shulesoft_staff_user');
-    if (saved) setStaffUser(JSON.parse(saved));
+    // any future side effects
   }, []);
 
   const handleLogin = (data) => {
