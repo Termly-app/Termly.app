@@ -2,9 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { LogoutIcon, UserIcon, CardIcon, MessageIcon, StatusDotIcon, ActivityIcon, CheckIcon, BookIcon, DashboardIcon, HistoryIcon, MenuIcon } from '../../components/CommonIcons';
 import { 
   getFees, simulateMpesaSTKPush, getStudentExamResults, getAnnouncements, 
-  getGradeForScore, getSchoolProfile, initPortalStore 
+  getGradeForScore, getSchoolProfile, initPortalStore,
+  getAssignments, submitAssignment, getStudentSubmissions
 } from '../../data/store';
-import { getAssignments, submitAssignment, getStudentSubmissions } from '../../data/offlineStore';
 import { useDialog } from '../../contexts/DialogContext';
 
 export default function PortalDashboard({ user, onLogout }) {

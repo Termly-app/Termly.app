@@ -5003,6 +5003,15 @@ export async function saveTTWeeklyTarget({ classId, subjectId, minLessons, maxLe
 
 export async function getAssignments(filters = {}) {
   if (!_currentSchoolId) return [];
+
+  if (!_currentAuthUser && _currentSchoolId) {
+    const { data, error } = await supabase.rpc('portal_get_assignments', { 
+      p_school_id: _currentSchoolId,
+      p_class_id: filters.classId || null
+    });
+    if (error) throw error;
+    return data || [];
+  }
   let q = supabase
     .from('el_assignments')
     .select('*')

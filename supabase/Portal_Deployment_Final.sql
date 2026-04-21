@@ -1,6 +1,6 @@
 -- ============================================================
--- SHULESOFT PORTAL DEPLOYMENT SCRIPT (V3 MASTER FIX)
--- Defensive safeguards for search paths and ID matching.
+-- SHULESOFT PORTAL DEPLOYMENT SCRIPT (V4 FINAL)
+-- Defensive safeguards, dual ID matching, and Assignment Sync.
 -- ============================================================
 
 -- ─── 0. SCHEMA SAFEGUARDS —————————————————————————————————──
@@ -10,7 +10,7 @@ ALTER TABLE public.students ADD COLUMN IF NOT EXISTS status TEXT DEFAULT 'Active
 ALTER TABLE public.students ADD COLUMN IF NOT EXISTS parent_phone TEXT;
 ALTER TABLE public.students ADD COLUMN IF NOT EXISTS residence_type TEXT DEFAULT 'day';
 
--- ─── 1. STAFF PORTAL AUTH ———————————————————————————————————
+-- ─── 1. STAFF PORTAL AUTH —————————————————————————————————──
 CREATE OR REPLACE FUNCTION public.validate_staff_portal_login(p_school_search TEXT, p_phone TEXT, p_pin TEXT)
 RETURNS JSONB AS 
 SET search_path = public, pg_catalog
@@ -18,25 +18,15 @@ $$
 DECLARE
   v_school_id UUID; v_school_name TEXT; v_teacher RECORD; v_cleaned_phone TEXT;
 BEGIN
-  -- 1. Find school
   SELECT id, name INTO v_school_id, v_school_name FROM public.schools 
   WHERE id::text = p_school_search OR school_code ILIKE p_school_search 
      OR name ILIKE '%' || p_school_search || '%' OR email ILIKE '%' || p_school_search || '%' LIMIT 1;
-
   IF v_school_id IS NULL THEN RETURN jsonb_build_object('error', 'Institution not found.'); END IF;
-
   v_cleaned_phone := REGEXP_REPLACE(p_phone, '[^0-9]', '', 'g');
-
-  -- 2. Find teacher record
   SELECT id, name, school_id, pin, user_id INTO v_teacher FROM public.teachers
   WHERE school_id = v_school_id AND (phone = v_cleaned_phone OR phone = p_phone) LIMIT 1;
-
-  IF v_teacher.id IS NULL THEN RETURN jsonb_build_object('error', 'Teacher account not found at ' || v_school_name || '.'); END IF;
-  
-  -- 3. Validate PIN
+  IF v_teacher.id IS NULL THEN RETURN jsonb_build_object('error', 'Teacher account not found.'); END IF;
   IF COALESCE(v_teacher.pin, '1234') != p_pin THEN RETURN jsonb_build_object('error', 'Invalid PIN code.'); END IF;
-
-  -- Return Both IDs for matching
   RETURN jsonb_build_object(
     'id', COALESCE(v_teacher.user_id, v_teacher.id), 
     'teacher_record_id', v_teacher.id,
@@ -45,8 +35,7 @@ BEGIN
     'role', 'teacher', 
     'school_id', v_teacher.school_id
   );
-EXCEPTION WHEN OTHERS THEN
-  RETURN jsonb_build_object('error', 'Authentication logic error: ' || SQLERRM);
+EXCEPTION WHEN OTHERS THEN RETURN jsonb_build_object('error', 'Auth Error: ' || SQLERRM);
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
@@ -60,44 +49,48 @@ DECLARE
 BEGIN
   SELECT id INTO v_school_id FROM public.schools 
   WHERE id::text = p_school_search OR school_code ILIKE p_school_search OR name ILIKE '%' || p_school_search || '%' LIMIT 1;
-
   IF v_school_id IS NULL THEN RETURN jsonb_build_object('error', 'Institution not found.'); END IF;
-
-  -- Defensive selection
   SELECT id, name, class, class_id, adm_no, school_id, parent_phone, residence_type INTO v_student FROM public.students
   WHERE school_id = v_school_id AND adm_no ILIKE p_adm_no LIMIT 1;
-
   IF v_student.id IS NULL THEN RETURN jsonb_build_object('error', 'Student not found.'); END IF;
-
-  -- Standardize phones for comparison
   v_parent_phone_clean := REGEXP_REPLACE(COALESCE(v_student.parent_phone, ''), '[^0-9]', '', 'g');
   v_input_phone_clean := REGEXP_REPLACE(COALESCE(p_phone, ''), '[^0-9]', '', 'g');
-
   IF v_parent_phone_clean != v_input_phone_clean AND p_phone != '1234' THEN 
-    RETURN jsonb_build_object('error', 'Security check failed: Guardian phone number does not match.'); 
+    RETURN jsonb_build_object('error', 'Phone number does not match record.'); 
   END IF;
-
-  RETURN jsonb_build_object(
-    'id', v_student.id, 
-    'name', v_student.name, 
-    'class', v_student.class, 
-    'class_id', v_student.class_id, 
-    'adm_no', v_student.adm_no, 
-    'school_id', v_student.school_id, 
-    'residence_type', COALESCE(v_student.residence_type, 'day')
-  );
-EXCEPTION WHEN OTHERS THEN
-  RETURN jsonb_build_object('error', 'Database connection issue: ' || SQLERRM);
+  RETURN jsonb_build_object('id', v_student.id, 'name', v_student.name, 'class', v_student.class, 'class_id', v_student.class_id, 'adm_no', v_student.adm_no, 'school_id', v_student.school_id, 'residence_type', COALESCE(v_student.residence_type, 'day'));
+EXCEPTION WHEN OTHERS THEN RETURN jsonb_build_object('error', 'DB Error: ' || SQLERRM);
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
--- ─── 3. DATA SYNC (DUAL ID SUPPORT) —————————————————————————
+-- ─── 3. SYNC GIRA ———————————————————————————————————————————
+-- Exam Marks Retrieval (for teachers)
+CREATE OR REPLACE FUNCTION public.portal_get_exam_marks(p_school_id UUID, p_paper_id UUID)
+RETURNS JSONB AS SET search_path = public, pg_catalog $$
+BEGIN
+  RETURN (SELECT COALESCE(jsonb_agg(jsonb_build_object(
+    'id', em.id, 'student_id', em.student_id, 'raw_score', em.raw_score, 'is_absent', em.is_absent,
+    'students', jsonb_build_object('name', s.name, 'adm_no', s.adm_no)
+  )), '[]'::jsonb) FROM public.exam_marks em JOIN public.students s ON s.id = em.student_id
+  WHERE em.exam_paper_id = p_paper_id AND em.school_id = p_school_id);
+END; $$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- Assignments Retrieval (for students/parents)
+CREATE OR REPLACE FUNCTION public.portal_get_assignments(p_school_id UUID, p_class_id UUID DEFAULT NULL)
+RETURNS JSONB AS SET search_path = public, pg_catalog $$
+BEGIN
+  RETURN (SELECT COALESCE(jsonb_agg(t), '[]'::jsonb) FROM (
+    SELECT * FROM public.el_assignments 
+    WHERE school_id = p_school_id AND (p_class_id IS NULL OR class_id = p_class_id)
+    ORDER BY created_at DESC
+  ) t);
+END; $$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- Teacher Papers Dual Matching
 CREATE OR REPLACE FUNCTION public.portal_get_teacher_papers(p_teacher_id UUID, p_exam_id UUID)
-RETURNS JSONB AS 
-SET search_path = public, pg_catalog
+RETURNS JSONB AS SET search_path = public, pg_catalog
 $$
 BEGIN
-  -- We match against BOTH the user_id and the teacher_id to ensure visibility
   RETURN (SELECT COALESCE(jsonb_agg(jsonb_build_object(
     'id', ep.id, 'class_id', ep.class_id, 'subject_id', ep.subject_id,
     'classes', jsonb_build_object('name', c.name, 'stream', c.stream),
@@ -108,9 +101,9 @@ BEGIN
   JOIN public.tt_subjects ts ON ts.id = ep.subject_id
   WHERE (ep.teacher_id = p_teacher_id OR ep.teacher_id IN (SELECT user_id FROM public.teachers WHERE id = p_teacher_id))
   AND ep.exam_id = p_exam_id);
-END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+END; $$ LANGUAGE plpgsql SECURITY DEFINER;
 
+-- (CORE SYNC)
 CREATE OR REPLACE FUNCTION public.portal_get_open_exams(p_school_id UUID)
 RETURNS JSONB AS SET search_path = public, pg_catalog $$
 BEGIN
