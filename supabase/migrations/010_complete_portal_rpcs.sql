@@ -54,8 +54,8 @@ RETURNS JSONB LANGUAGE plpgsql SECURITY DEFINER SET search_path = public, pg_cat
 DECLARE
   v_fee RECORD;
 BEGIN
-  SELECT * INTO v_fee FROM public.fees WHERE student_id = p_student_id ORDER BY created_at DESC LIMIT 1;
-  IF v_fee.id IS NULL THEN RETURN NULL; END IF;
+  SELECT * INTO v_fee FROM public.fees WHERE student_id = p_student_id LIMIT 1;
+  IF v_fee IS NULL THEN RETURN NULL; END IF;
   
   RETURN jsonb_build_object('id', v_fee.id, 'period_id', v_fee.period_id, 'total_fee', v_fee.total_fee, 'paid', v_fee.paid, 'balance', v_fee.balance);
 END; $$;
@@ -85,12 +85,11 @@ BEGIN
     'amount', p.amount,
     'date', p.date,
     'method', p.method,
-    'reference', p.reference,
-    'status', p.status
+    'reference', p.reference
   ) ORDER BY p.date DESC), '[]'::jsonb)
   FROM public.fee_payments p
   JOIN public.fees f ON f.id = p.fee_id
-  WHERE f.student_id = p_student_id AND (p.status IS NULL OR p.status != 'Voided'));
+  WHERE f.student_id = p_student_id);
 END; $$;
 
 -- ─── 10. Get Student Profile ───────────────────────────────
