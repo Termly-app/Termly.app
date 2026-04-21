@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { SchoolIcon, UserIcon, PhoneIcon, RocketIcon, FlagIcon, GraduationIcon, CardIcon, ChevronRightIcon } from '../../components/CommonIcons';
 import { validateParentLogin } from '../../data/store';
-import '../Login.css';
 
 export default function PortalLogin({ onLogin }) {
   const [searchParams] = useSearchParams();

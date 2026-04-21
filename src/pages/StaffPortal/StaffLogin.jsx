@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { TeacherIcon, ShieldIcon, PhoneIcon, EyeIcon, EyeOffIcon, RocketIcon, FlagIcon, BookIcon, GraduationIcon } from '../../components/CommonIcons';
 import { validateStaffLogin } from '../../data/store';
-import '../Login.css';
 
 export default function StaffLogin({ onLogin }) {
   const [phone, setPhone] = useState('');
