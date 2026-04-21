@@ -6,7 +6,7 @@ import {
 } from '../../data/store';
 import { 
   BookIcon, CheckIcon, SignOutIcon, SaveIcon, UserIcon, 
-  GradingIcon, RefreshIcon, ChevronDownIcon 
+  GradingIcon, RefreshIcon, ChevronDownIcon, CalendarIcon, DashboardIcon, MenuIcon 
 } from '../../components/CommonIcons';
 import { useDialog } from '../../contexts/DialogContext';
 import Loader from '../../components/Common/Loader';
@@ -28,7 +28,7 @@ export default function MobileGrading({ user, onLogout }) {
   const [workload, setWorkload] = useState(0);
   const [schedule, setSchedule] = useState([]);
   const [config, setConfig] = useState([]);
-  const [showSchedule, setShowSchedule] = useState(false);
+  const [activeTab, setActiveTab] = useState('grading');
   const [activePeriod, setActivePeriod] = useState(null);
 
 
@@ -157,210 +157,247 @@ export default function MobileGrading({ user, onLogout }) {
   if (loading && exams.length === 0) return <Loader />;
 
   return (
-    <div style={{ width: '100%', maxWidth: 600, margin: '0 auto', background: '#f8fafc', minHeight: '100vh', display: 'flex', flexDirection: 'column', fontFamily: 'var(--font)' }}>
+    <div style={{ width: '100%', maxWidth: 600, margin: '0 auto', background: '#f0f2f5', minHeight: '100vh', display: 'flex', flexDirection: 'column', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif' }}>
       
-      {/* Mobile Header Menu */}
-      <div style={{ background: 'linear-gradient(135deg, #1e293b 0%, #0f172a 100%)', color: 'white', padding: '24px 20px 32px', borderBottomLeftRadius: 32, borderBottomRightRadius: 32, boxShadow: '0 10px 25px -5px rgba(15, 23, 42, 0.2)' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
+      {/* App-like Sticky Header */}
+      <div style={{ background: '#fff', padding: '16px 20px', position: 'sticky', top: 0, zIndex: 50, boxShadow: '0 1px 2px rgba(0,0,0,0.05)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+          <div style={{ background: 'linear-gradient(135deg, #1a73e8 0%, #174ea6 100%)', color: '#fff', width: 40, height: 40, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.2rem', fontWeight: 600 }}>
+            {user.name.charAt(0)}
+          </div>
           <div>
-            <div style={{ fontSize: '0.75rem', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.1em', fontWeight: 800, marginBottom: 4 }}>Teacher Portal</div>
-            <div style={{ fontSize: '1.4rem', fontWeight: 900 }}>{user.name}</div>
-          </div>
-          <button onClick={onLogout} style={{ background: 'rgba(255,255,255,0.1)', border: 'none', color: 'white', padding: '10px', borderRadius: '12px', cursor: 'pointer' }}>
-            <SignOutIcon size={20} />
-          </button>
-        </div>
-
-        {/* Workload Stats */}
-        <div style={{ display: 'flex', gap: 12, marginBottom: 20 }}>
-          <div style={{ flex: 1, background: 'rgba(255,255,255,0.1)', padding: '16px', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.05)' }}>
-            <div style={{ fontSize: '0.65rem', color: '#94a3b8', textTransform: 'uppercase', fontWeight: 800 }}>Weekly Workload</div>
-            <div style={{ fontSize: '1.4rem', fontWeight: 900, color: '#fbbf24' }}>{workload} <span style={{ fontSize: '0.8rem', fontWeight: 600, color: '#94a3b8' }}>Periods</span></div>
-          </div>
-          <button 
-            onClick={() => setShowSchedule(true)}
-            style={{ flex: 1, background: 'var(--primary)', color: 'white', border: 'none', padding: '16px', borderRadius: '16px', display: 'flex', flexDirection: 'column', justifyContent: 'center', cursor: 'pointer', boxShadow: '0 8px 20px -5px rgba(59, 130, 246, 0.4)' }}
-          >
-            <div style={{ fontSize: '0.65rem', textTransform: 'uppercase', fontWeight: 800, opacity: 0.8 }}>My Timetable</div>
-            <div style={{ fontSize: '1rem', fontWeight: 800, display: 'flex', alignItems: 'center', gap: 6 }}>View Schedule <ChevronDownIcon size={14} /></div>
-          </button>
-        </div>
-
-
-        {/* Wizard Selectors */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-          <div style={{ position: 'relative' }}>
-            <select 
-              value={selectedExamId} 
-              onChange={(e) => setSelectedExamId(e.target.value)}
-              style={{ width: '100%', padding: '14px 16px', borderRadius: '14px', background: 'rgba(255,255,255,0.1)', color: 'white', fontWeight: 700, fontSize: '0.95rem', appearance: 'none', cursor: 'pointer', border: '1px solid rgba(255,255,255,0.1)' }}
-            >
-              <option value="" disabled style={{ color: '#000' }}>Active Exam Session</option>
-              {exams.map(e => <option key={e.id} value={e.id} style={{ color: '#000' }}>{e.name}</option>)}
-              {exams.length === 0 && <option style={{ color: '#000' }}>No Open Exams</option>}
-            </select>
-            <div style={{ position: 'absolute', right: 16, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none', opacity: 0.6 }}>
-              <ChevronDownIcon size={18} />
-            </div>
-          </div>
-
-          <div style={{ position: 'relative' }}>
-            <select 
-              value={selectedPaper?.id || ''} 
-              onChange={(e) => {
-                const p = papers.find(pp => pp.id === e.target.value);
-                if (p) handlePaperSelect(p);
-              }}
-              style={{ width: '100%', padding: '14px 16px', borderRadius: '14px', border: 'none', background: 'white', color: '#0f172a', fontWeight: 700, fontSize: '0.95rem', appearance: 'none', cursor: 'pointer', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)' }}
-            >
-              <option value="" disabled>Select Your Paper</option>
-              {papers.map(p => (
-                <option key={p.id} value={p.id}>
-                  {p.classes.name} {p.classes.stream} — {p.tt_subjects.name}
-                </option>
-              ))}
-              {papers.length === 0 && <option disabled>No assigned papers found</option>}
-            </select>
-            <div style={{ position: 'absolute', right: 16, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none', color: '#64748b' }}>
-              <ChevronDownIcon size={18} />
-            </div>
+            <div style={{ fontSize: '1.1rem', fontWeight: 600, color: '#111b21', letterSpacing: '-0.3px' }}>{user.name}</div>
+            <div style={{ fontSize: '0.8rem', color: '#667781', display: 'flex', alignItems: 'center', gap: 4 }}>Staff Portal</div>
           </div>
         </div>
+        <button onClick={onLogout} style={{ background: 'none', border: 'none', color: '#54656f', padding: 4, cursor: 'pointer' }}>
+          <SignOutIcon size={22} />
+        </button>
       </div>
 
-      {/* Vertical Data Entry List */}
-      <div style={{ padding: '24px 16px', flex: 1 }}>
-        {!selectedPaper ? (
-          <div style={{ textAlign: 'center', padding: '80px 40px', color: '#94a3b8' }}>
-            <GradingIcon size={64} color="#e2e8f0" style={{ marginBottom: 20 }} />
-            <div style={{ fontSize: '1.2rem', fontWeight: 800, color: '#475569', marginBottom: 8 }}>Ready to grade?</div>
-            <div style={{ fontSize: '0.95rem', lineHeight: 1.5 }}>Select an exam session and one of your assigned subjects to begin entering marks.</div>
-          </div>
-        ) : (
-          <div style={{ animation: 'sIn 0.3s ease-out' }}>
-            
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20, padding: '0 4px' }}>
-              <div>
-                <div style={{ fontSize: '0.75rem', fontWeight: 800, color: 'var(--primary)', textTransform: 'uppercase' }}>{selectedPaper.classes.name} {selectedPaper.classes.stream}</div>
-                <div style={{ fontSize: '1.1rem', fontWeight: 800, color: '#0f172a' }}>{selectedPaper.tt_subjects.name}</div>
-              </div>
-              <button 
-                onClick={handleSave} 
-                disabled={saving || loading}
-                style={{ background: '#10b981', color: 'white', border: 'none', padding: '10px 16px', borderRadius: '12px', fontWeight: 800, fontSize: '0.82rem', display: 'flex', alignItems: 'center', gap: 6, boxShadow: '0 4px 12px rgba(16, 185, 129, 0.2)', opacity: (saving || loading) ? 0.7 : 1, cursor: 'pointer' }}
-              >
-                <SaveIcon size={16} /> {saving ? 'Saving...' : 'Sync Cloud'}
-              </button>
+      <div style={{ flex: 1, padding: '16px 16px 90px 16px', boxSizing: 'border-box' }}>
+        {activeTab === 'grading' && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 16, animation: 'fadeIn 0.3s ease-out' }}>
+            {/* Context Selectors Card */}
+            <div style={{ background: '#fff', borderRadius: 16, padding: '20px', boxShadow: '0 1px 3px rgba(0,0,0,0.08)' }}>
+               <h3 style={{ margin: '0 0 16px', fontSize: '1.05rem', color: '#111b21', display: 'flex', alignItems: 'center', gap: 8 }}>
+                 <GradingIcon size={18} color="#1a73e8" /> Grade Entry Setup
+               </h3>
+               <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                 <div style={{ position: 'relative' }}>
+                   <select 
+                     value={selectedExamId} 
+                     onChange={(e) => setSelectedExamId(e.target.value)}
+                     style={{ width: '100%', padding: '12px 16px', borderRadius: '12px', background: '#f0f2f5', border: 'none', color: '#111b21', fontWeight: 600, fontSize: '0.95rem', appearance: 'none' }}
+                   >
+                     <option value="" disabled>Active Exam Session</option>
+                     {exams.map(e => <option key={e.id} value={e.id}>{e.name}</option>)}
+                     {exams.length === 0 && <option>No Open Exams</option>}
+                   </select>
+                   <div style={{ position: 'absolute', right: 16, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none', color: '#667781' }}>
+                     <ChevronDownIcon size={18} />
+                   </div>
+                 </div>
+
+                 <div style={{ position: 'relative' }}>
+                   <select 
+                     value={selectedPaper?.id || ''} 
+                     onChange={(e) => {
+                       const p = papers.find(pp => pp.id === e.target.value);
+                       if (p) handlePaperSelect(p);
+                     }}
+                     style={{ width: '100%', padding: '12px 16px', borderRadius: '12px', border: '1px solid #e2e8f0', background: '#fff', color: '#111b21', fontWeight: 600, fontSize: '0.95rem', appearance: 'none' }}
+                   >
+                     <option value="" disabled>Select Class & Subject</option>
+                     {papers.map(p => (
+                       <option key={p.id} value={p.id}>
+                         {p.classes.name} {p.classes.stream} — {p.tt_subjects.name}
+                       </option>
+                     ))}
+                     {papers.length === 0 && <option disabled>No assigned papers found</option>}
+                   </select>
+                   <div style={{ position: 'absolute', right: 16, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none', color: '#667781' }}>
+                     <ChevronDownIcon size={18} />
+                   </div>
+                 </div>
+               </div>
             </div>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 12, paddingBottom: 100 }}>
-              {students.map((s, index) => {
-                const data = marksBuffer[s.id] || { score: '', isAbsent: false };
-                return (
-                  <div key={s.id} style={{ background: 'white', padding: '16px 20px', borderRadius: '20px', display: 'flex', alignItems: 'center', gap: 16, boxShadow: '0 1px 3px rgba(0,0,0,0.05)', border: '1px solid #f1f5f9' }}>
-                    <div style={{ flex: 1 }}>
-                      <div style={{ fontWeight: 800, color: '#0f172a', fontSize: '1rem' }}>{s.name}</div>
-                      <div style={{ color: '#94a3b8', fontSize: '0.8rem', marginTop: 2, fontWeight: 600 }}>ADM: {s.adm_no}</div>
-                    </div>
-                    
-                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
-                      <label style={{ fontSize: '0.65rem', fontWeight: 800, color: '#94a3b8' }}>ABSENT</label>
-                      <input 
-                        type="checkbox" 
-                        checked={data.isAbsent}
-                        onChange={(e) => handleMarkChange(s.id, 'isAbsent', e.target.checked)}
-                        style={{ width: 22, height: 22, cursor: 'pointer' }} 
-                      />
-                    </div>
+            {/* Student List */}
+            {!selectedPaper ? (
+              <div style={{ textAlign: 'center', padding: '60px 20px', color: '#667781' }}>
+                <div style={{ background: '#e8f0fe', width: 64, height: 64, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px', color: '#1a73e8' }}>
+                   <CheckIcon size={32} />
+                </div>
+                <div style={{ fontSize: '1.05rem', fontWeight: 600, color: '#111b21', marginBottom: 8 }}>Ready for Marks Entry</div>
+                <div style={{ fontSize: '0.9rem', lineHeight: 1.5 }}>Select a paper from the list above to begin entering scores.</div>
+              </div>
+            ) : (
+              <div style={{ background: '#fff', borderRadius: 16, padding: '16px 0', boxShadow: '0 1px 3px rgba(0,0,0,0.08)' }}>
+                <div style={{ padding: '0 16px 16px', borderBottom: '1px solid #f0f2f5', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <div>
+                    <div style={{ fontSize: '0.8rem', fontWeight: 600, color: '#1a73e8', textTransform: 'uppercase' }}>{selectedPaper.classes.name} {selectedPaper.classes.stream}</div>
+                    <div style={{ fontSize: '1.1rem', fontWeight: 700, color: '#111b21' }}>{selectedPaper.tt_subjects.name}</div>
+                  </div>
+                  <button 
+                    onClick={handleSave} 
+                    disabled={saving || loading}
+                    style={{ background: '#10b981', color: 'white', border: 'none', padding: '8px 16px', borderRadius: 20, fontWeight: 600, fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: 6, opacity: (saving || loading) ? 0.7 : 1, cursor: 'pointer' }}
+                  >
+                    <SaveIcon size={16} /> {saving ? 'Syncing...' : 'Save All'}
+                  </button>
+                </div>
 
-                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
-                       <label style={{ fontSize: '0.6rem', fontWeight: 800, color: data.isAbsent ? '#cbd5e1' : '#64748b' }}>SCORE</label>
-                       <input
-                        type="number"
-                        inputMode="numeric"
-                        disabled={data.isAbsent}
-                        value={data.score ?? ''}
-                        onChange={(e) => handleMarkChange(s.id, 'score', e.target.value)}
-                        style={{ width: 60, padding: '12px 0', textAlign: 'center', border: '2px solid #e2e8f0', borderRadius: '12px', fontSize: '1.1rem', fontWeight: 900, color: data.isAbsent ? '#cbd5e1' : '#0f172a', background: data.isAbsent ? '#f8fafc' : 'white' }}
-                        placeholder="—"
-                      />
+                <div style={{ display: 'flex', flexDirection: 'column' }}>
+                  {students.map((s, index) => {
+                    const data = marksBuffer[s.id] || { score: '', isAbsent: false };
+                    const isLast = index === students.length - 1;
+                    return (
+                      <div key={s.id} style={{ display: 'flex', alignItems: 'center', gap: 16, padding: '16px', borderBottom: isLast ? 'none' : '1px solid #f0f2f5' }}>
+                        <div style={{ flex: 1 }}>
+                          <div style={{ fontWeight: 600, color: '#111b21', fontSize: '0.95rem' }}>{s.name}</div>
+                          <div style={{ color: '#667781', fontSize: '0.8rem', marginTop: 2, fontWeight: 500 }}>ADM: {s.adm_no}</div>
+                        </div>
+                        
+                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
+                          <label style={{ fontSize: '0.65rem', fontWeight: 600, color: '#667781' }}>ABS</label>
+                          <input 
+                            type="checkbox" 
+                            checked={data.isAbsent}
+                            onChange={(e) => handleMarkChange(s.id, 'isAbsent', e.target.checked)}
+                            style={{ width: 20, height: 20, cursor: 'pointer', accentColor: '#ef4444' }} 
+                          />
+                        </div>
+
+                        <div style={{ width: 64 }}>
+                           <input
+                            type="number"
+                            inputMode="numeric"
+                            disabled={data.isAbsent}
+                            value={data.score ?? ''}
+                            onChange={(e) => handleMarkChange(s.id, 'score', e.target.value)}
+                            style={{ width: '100%', padding: '10px 0', textAlign: 'center', border: '1.5px solid #cbd5e1', borderRadius: 10, fontSize: '1rem', fontWeight: 600, color: data.isAbsent ? '#94a3b8' : '#111b21', background: data.isAbsent ? '#f8fafc' : '#fff', boxSizing: 'border-box' }}
+                            placeholder="—"
+                          />
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {activeTab === 'schedule' && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 16, animation: 'fadeIn 0.3s ease-out' }}>
+            <div style={{ background: '#fff', borderRadius: 16, padding: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', boxShadow: '0 1px 3px rgba(0,0,0,0.08)' }}>
+              <div>
+                <div style={{ fontSize: '0.8rem', color: '#667781', fontWeight: 600, textTransform: 'uppercase' }}>Weekly Workload</div>
+                <div style={{ fontSize: '1.6rem', fontWeight: 700, color: '#111b21' }}>{workload} <span style={{ fontSize: '0.9rem', color: '#667781', fontWeight: 500 }}>Periods</span></div>
+              </div>
+              <div style={{ background: '#fdf0d5', padding: 12, borderRadius: '50%', color: '#b47b0e' }}>
+                 <CalendarIcon size={24} />
+              </div>
+            </div>
+
+            <div style={{ background: '#fff', borderRadius: 16, padding: '16px 20px', boxShadow: '0 1px 3px rgba(0,0,0,0.08)' }}>
+              <h3 style={{ margin: '0 0 16px', fontSize: '1.05rem', color: '#111b21', display: 'flex', alignItems: 'center', gap: 8 }}>
+                 <DashboardIcon size={18} color="#1a73e8" /> {activePeriod?.term} Timetable
+              </h3>
+
+              {['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'].map(day => {
+                const dayLessons = schedule.filter(s => s.day_of_week === day).sort((a,b) => a.slot_index - b.slot_index);
+                if (dayLessons.length === 0) return null;
+
+                return (
+                  <div key={day} style={{ marginBottom: 24 }}>
+                    <div style={{ fontSize: '0.8rem', fontWeight: 700, color: '#1a73e8', textTransform: 'uppercase', marginBottom: 12, display: 'flex', alignItems: 'center', gap: 8 }}>
+                      {day} <div style={{ flex: 1, height: 1, background: '#f0f2f5' }} />
+                    </div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                      {dayLessons.map(s => {
+                        const time = config.find(c => c.slot_index === s.slot_index);
+                        return (
+                          <div key={s.id} style={{ display: 'flex', gap: 16, background: '#f8fafc', padding: '12px 16px', borderRadius: 12, border: '1px solid #f0f2f5' }}>
+                            <div style={{ width: 70, borderRight: '1px solid #e2e8f0', paddingRight: 10 }}>
+                              <div style={{ fontSize: '0.85rem', fontWeight: 700, color: '#111b21' }}>{time?.start_time}</div>
+                              <div style={{ fontSize: '0.7rem', fontWeight: 600, color: '#667781' }}>{time?.end_time}</div>
+                            </div>
+                            <div style={{ flex: 1 }}>
+                              <div style={{ fontSize: '0.95rem', fontWeight: 600, color: '#111b21' }}>{s.subject}</div>
+                              <div style={{ fontSize: '0.8rem', color: '#667781' }}>{s.class_grade} {s.stream || ''}</div>
+                            </div>
+                          </div>
+                        );
+                      })}
                     </div>
                   </div>
                 );
               })}
+              {schedule.length === 0 && (
+                <div style={{ textAlign: 'center', padding: '40px 20px', color: '#667781' }}>
+                  <CalendarIcon size={40} color="#cbd5e1" style={{ marginBottom: 12 }} />
+                  <div>No lessons assigned to you yet for this term.</div>
+                </div>
+              )}
             </div>
+          </div>
+        )}
 
-            {/* Sticky Bottom Save Button */}
-            <div style={{ position: 'fixed', bottom: 16, left: 16, right: 16, zIndex: 100 }}>
-              <button 
-                onClick={handleSave} 
-                disabled={saving || loading}
-                style={{ width: '100%', background: 'var(--primary)', color: 'white', border: 'none', padding: '16px', borderRadius: '16px', fontSize: '1rem', fontWeight: 800, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, boxShadow: '0 12px 24px -6px rgba(59, 130, 246, 0.4)', cursor: 'pointer' }}
+        {activeTab === 'profile' && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 16, animation: 'fadeIn 0.3s ease-out' }}>
+            <div style={{ background: '#fff', borderRadius: 16, padding: '24px 20px', textAlign: 'center', boxShadow: '0 1px 3px rgba(0,0,0,0.08)' }}>
+              <div style={{ background: '#e8f0fe', color: '#1a73e8', width: 80, height: 80, borderRadius: '50%', margin: '0 auto 16px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '2rem', fontWeight: 600 }}>
+                {user.name.charAt(0)}
+              </div>
+              <h2 style={{ margin: '0 0 4px', fontSize: '1.4rem', color: '#111b21' }}>{user.name}</h2>
+              <p style={{ margin: 0, color: '#667781', fontSize: '0.95rem' }}>Staff Member • School Portal</p>
+            </div>
+            
+            <div style={{ background: '#fff', borderRadius: 16, overflow: 'hidden', boxShadow: '0 1px 3px rgba(0,0,0,0.08)' }}>
+              <div 
+                onClick={onLogout}
+                style={{ padding: '16px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', color: '#ef4444', fontWeight: 600, cursor: 'pointer' }}
               >
-                {saving ? 'SYNCHRONIZING...' : <><CheckIcon size={20} /> PUSH MARKS TO CLOUD</>}
-              </button>
+                Sign Out <LogoutIcon size={18} />
+              </div>
             </div>
-
           </div>
         )}
       </div>
 
-      {/* Timetable Modal (Mobile View) */}
-      {showSchedule && (
-        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'white', zIndex: 9999, display: 'flex', flexDirection: 'column', animation: 'sIn 0.3s ease-out' }}>
-          <div style={{ padding: '24px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #f1f5f9' }}>
-            <div>
-              <div style={{ fontSize: '1.2rem', fontWeight: 900, color: '#0f172a' }}>My Weekly Schedule</div>
-              <div style={{ fontSize: '0.75rem', color: '#64748b', fontWeight: 600 }}>{activePeriod?.term} {activePeriod?.year}</div>
-            </div>
-            <button onClick={() => setShowSchedule(false)} style={{ background: '#f1f5f9', border: 'none', color: '#0f172a', padding: '12px', borderRadius: '12px', cursor: 'pointer' }}>
-              <SignOutIcon size={20} />
-            </button>
+      {/* App-like Bottom Navigation */}
+      <nav style={{
+        position: 'fixed', bottom: 0, left: 0, right: 0,
+        background: '#fff', display: 'flex', justifyContent: 'space-around',
+        padding: '10px 0 calc(10px + env(safe-area-inset-bottom))',
+        borderTop: '1px solid #e2e8f0', zIndex: 50,
+        boxShadow: '0 -1px 3px rgba(0,0,0,0.03)'
+      }}>
+        {[
+          { id: 'grading', label: 'Grading', icon: GradingIcon },
+          { id: 'schedule', label: 'Timetable', icon: CalendarIcon },
+          { id: 'profile', label: 'Profile', icon: UserIcon }
+        ].map(tab => (
+          <div 
+            key={tab.id}
+            onClick={() => setActiveTab(tab.id)}
+            style={{ 
+              display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, 
+              color: activeTab === tab.id ? '#1a73e8' : '#54656f',
+              cursor: 'pointer', flex: 1
+            }}
+          >
+            <tab.icon size={24} />
+            <span style={{ fontSize: '0.65rem', fontWeight: activeTab === tab.id ? 600 : 500 }}>{tab.label}</span>
           </div>
-
-          <div style={{ flex: 1, overflowY: 'auto', padding: '16px' }}>
-            {['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'].map(day => {
-              const dayLessons = schedule.filter(s => s.day_of_week === day).sort((a,b) => a.slot_index - b.slot_index);
-              if (dayLessons.length === 0) return null;
-
-              return (
-                <div key={day} style={{ marginBottom: 24 }}>
-                  <div style={{ fontSize: '0.75rem', fontWeight: 900, textTransform: 'uppercase', color: 'var(--primary)', letterSpacing: '0.05em', marginBottom: 12, display: 'flex', alignItems: 'center', gap: 8 }}>
-                    {day} <div style={{ flex: 1, height: 1, background: 'var(--border)' }} />
-                  </div>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                    {dayLessons.map(s => {
-                      const time = config.find(c => c.slot_index === s.slot_index);
-                      return (
-                        <div key={s.id} style={{ display: 'flex', gap: 16, background: '#f8fafc', padding: 12, borderRadius: 16, border: '1px solid #f1f5f9' }}>
-                          <div style={{ width: 70, textAlign: 'center' }}>
-                            <div style={{ fontSize: '0.85rem', fontWeight: 900, color: '#0f172a' }}>{time?.start_time}</div>
-                            <div style={{ fontSize: '0.65rem', fontWeight: 700, color: '#94a3b8' }}>TO {time?.end_time}</div>
-                          </div>
-                          <div style={{ flex: 1 }}>
-                            <div style={{ fontSize: '0.95rem', fontWeight: 750, color: '#0f172a' }}>{s.subject}</div>
-                            <div style={{ fontSize: '0.75rem', fontWeight: 600, color: '#64748b' }}>{s.class_grade} {s.stream || ''}</div>
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              );
-            })}
-            {schedule.length === 0 && (
-              <div style={{ textAlign: 'center', padding: '60px 20px', color: '#94a3b8' }}>
-                <CalendarIcon size={48} color="#e2e8f0" style={{ marginBottom: 16 }} />
-                <div>No lessons assigned to you yet for this term.</div>
-              </div>
-            )}
-          </div>
-        </div>
-      )}
+        ))}
+      </nav>
 
       <style>{`
-        @keyframes sIn {
-          from { opacity: 0; transform: translateY(10px); }
+        @keyframes fadeIn {
+          from { opacity: 0; transform: translateY(5px); }
           to { opacity: 1; transform: translateY(0); }
         }
       `}</style>
