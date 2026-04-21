@@ -2335,38 +2335,31 @@ export async function getSchoolStructure(preFetchedStudents = null, preFetchedMa
  * Securely validate a staff member (teacher) login using School + Phone + PIN
  */
 export async function validateStaffLogin(schoolSearch, phone, pin, schoolId = null) {
-  let selectedSchool;
-  let schoolIds = [];
+  const queryParam = schoolId || schoolSearch;
 
-  if (schoolId) {
-    // 1a. Precise ID provided
-    const { data: school, error: sErr } = await supabase
-      .from('schools')
-      .select('id, name, school_code')
-      .eq('id', schoolId)
-      .single();
-    if (sErr || !school) throw new Error('Selected institution record not found.');
-    selectedSchool = school;
-    schoolIds = [schoolId];
-  } else {
-    // 1b. Fallback to fuzzy search
-    const { data: schools, error: sErr } = await supabase
-      .from('schools')
-      .select('id, name, school_code')
-      .or(`name.ilike.%${schoolSearch}%,school_code.eq.${schoolSearch},email.eq.${schoolSearch}`);
+  const { data, error } = await supabase.rpc('validate_staff_portal_login', {
+    p_school_search: queryParam,
+    p_phone: phone,
+    p_pin: pin
+  });
 
-    if (sErr || !schools || schools.length === 0) {
-      throw new Error('Institution not found. Please check the school name or code.');
-    }
-    selectedSchool = schools[0];
-    schoolIds = schools.map(s => s.id);
+  if (error) {
+    throw new Error('Database connection error. Please try again.');
   }
 
-  // 2. Resolve profile and check subscription/feature
-  const profile = await getSchoolProfileBySchoolId(selectedSchool.id);
-  
-  // profile is now guaranteed to be non-null due to fallback logic
+  if (data?.error) {
+    throw new Error(data.error);
+  }
 
+  if (!data || !data.id) {
+    throw new Error('Invalid credentials.');
+  }
+
+  const selectedSchoolId = data.schoolId || data.school_id;
+
+  // 2. Resolve profile and check subscription/feature
+  const profile = await getSchoolProfileBySchoolId(selectedSchoolId);
+  
   // Subscription Gate
   const isSubActive = await checkIsSubscriptionActive(profile);
   if (!isSubActive) {
@@ -2379,44 +2372,11 @@ export async function validateStaffLogin(schoolSearch, phone, pin, schoolId = nu
     throw new Error('The Staff Portal feature is not active for your institution\'s current plan.');
   }
 
-  // Clean phone input (remove all non-digits)
-  const cleanedPhone = phone.replace(/[^0-9]/g, '');
-
-  // 3. Find the teacher matching phone
-  const { data, error } = await supabase
-    .from('teachers')
-    .select('id, name, school_id, pin, status')
-    .eq('phone', cleanedPhone)
-    .in('school_id', schoolIds);
-
-  if (error) throw error;
-
-  if (!data || data.length === 0) {
-    throw new Error(`Teacher account not found at ${selectedSchool.name}. Please check your phone number.`);
-  }
-
-  const teacher = data[0];
-
-  if (teacher.status === 'Inactive') {
-    throw new Error('This account has been deactivated. Please contact your administrator.');
-  }
-
-  // Handle case where PIN column might not exist yet by being defensive
-  // If the user hasn't run the SQL yet, teacher.pin will be undefined in the result
-  // but the query itself might still work if we select '*' or if it just ignores missing column
-  // Actually, we specifically selected 'pin', so it will fail if missing.
-  // We'll wrap in a try-catch for the specific column error if needed, 
-  // but assuming they run the SQL as instructed.
-  const storedPin = teacher.pin || '1234';
-  if (storedPin !== pin) {
-    throw new Error('Invalid PIN code.');
-  }
-
   return {
-    id: teacher.id,
-    name: teacher.name,
+    id: data.id,
+    name: data.name,
     role: 'teacher',
-    schoolId: teacher.school_id
+    schoolId: selectedSchoolId
   };
 }
 
@@ -2601,38 +2561,30 @@ export async function sendSchoolInvite(email, recipientName) {
   return { success: true, message: 'Invite sent successfully!' };
 }
 
-/**
- * Securely validate a parent login using School + Student Phone + PIN
- */
 export async function validateParentLogin(schoolSearch, admNo, phone, schoolId = null) {
-  let selectedSchool;
-  let schoolIds = [];
+  const queryParam = schoolId || schoolSearch;
 
-  if (schoolId) {
-    // 1a. Precise ID provided
-    const { data: school, error: sErr } = await supabase
-      .from('schools')
-      .select('id, name, school_code')
-      .eq('id', schoolId)
-      .single();
-    if (sErr || !school) throw new Error('Selected institution record not found.');
-    selectedSchool = school;
-    schoolIds = [schoolId];
-  } else {
-    // 1b. Fallback to fuzzy search
-    const { data: schools, error: sErr } = await supabase
-      .from('schools')
-      .select('id, name, school_code')
-      .or(`name.ilike.%${schoolSearch}%,school_code.eq.${schoolSearch},email.eq.${schoolSearch}`);
+  const { data, error } = await supabase.rpc('validate_parent_portal_login', {
+    p_school_search: queryParam,
+    p_adm_no: admNo,
+    p_phone: phone
+  });
 
-    if (sErr || !schools || schools.length === 0) {
-      throw new Error('Institution not found. Please check the school name or code.');
-    }
-    selectedSchool = schools[0];
-    schoolIds = schools.map(s => s.id);
+  if (error) {
+    throw new Error('Database connection error. Please try again.');
   }
 
-  const profile = await getSchoolProfileBySchoolId(selectedSchool.id);
+  if (data?.error) {
+    throw new Error(data.error);
+  }
+
+  if (!data || !data.id) {
+    throw new Error('Invalid credentials.');
+  }
+
+  const selectedSchoolId = data.school_id;
+
+  const profile = await getSchoolProfileBySchoolId(selectedSchoolId);
 
   // Subscription Gate
   const isSubActive = await checkIsSubscriptionActive(profile);
@@ -2646,43 +2598,13 @@ export async function validateParentLogin(schoolSearch, admNo, phone, schoolId =
     throw new Error('The Parent Portal feature is not active for your institution\'s current plan.');
   }
 
-  // 2. Find the student matching ADM No
-  const cleanedAdm = (admNo || '').trim();
-  const { data: student, error: stErr } = await supabase
-    .from('students')
-    .select('id, name, class, adm_no, school_id, parent_phone, residence_type, status')
-    .in('school_id', schoolIds)
-    .ilike('adm_no', cleanedAdm)
-    .single();
-
-  if (stErr || !student) {
-    throw new Error('Student not found with this Admission Number.');
-  }
-
-  // Status check
-  if (student.status === 'Graduated' || student.status === 'Transferred') {
-    throw new Error(`Access restricted. This account is marked as ${student.status}.`);
-  }
-
-  if (student.status === 'Inactive') {
-    throw new Error('This student account is currently inactive. Please contact administration.');
-  }
-
-  // 3. Verify Phone Number
-  const normalize = (p) => (p || '').replace(/[^0-9]/g, '');
-  if (normalize(student.parent_phone) !== normalize(phone)) {
-    if (phone !== '1234') { 
-      throw new Error('Validation failed. Guardian phone number does not match our records.');
-    }
-  }
-
   return {
-    id: student.id,
-    name: student.name,
-    class: student.class,
-    adm_no: student.adm_no,
-    school_id: student.school_id,
-    residence_type: student.residence_type || 'day'
+    id: data.id,
+    name: data.name,
+    class: data.class,
+    adm_no: data.adm_no,
+    school_id: data.school_id,
+    residence_type: data.residence_type
   };
 }
 
