@@ -1,8 +1,8 @@
 -- ============================================================
--- 010_COMPLETE_PORTAL_RPCS.SQL (V3 - ROBUST VERSION)
+-- 010_COMPLETE_PORTAL_RPCS.SQL (V4 - TOTAL COVERAGE)
 -- Implement missing RPCs for Parent and Teacher portals.
 -- Fixed: Matches the actual table schema (total_fee, paid)
--- Fixed: Case-insensitive status filtering (ILIKE)
+-- Fixed: Added portal_get_student_payments and portal_get_student_profile
 -- ============================================================
 
 -- ─── 1. Get School Profile ──────────────────────────────────
@@ -22,7 +22,7 @@ BEGIN
   FROM public.academic_periods WHERE school_id = p_school_id ORDER BY year DESC, term DESC);
 END; $$;
 
--- ─── 3. Get Active Exams (Case-Insensitive & Lenient) ────────
+-- ─── 3. Get Active Exams ───────────────────────────────────
 CREATE OR REPLACE FUNCTION public.portal_get_exams(p_school_id UUID)
 RETURNS JSONB LANGUAGE plpgsql SECURITY DEFINER SET search_path = public, pg_catalog AS $$
 BEGIN
@@ -30,7 +30,7 @@ BEGIN
   FROM public.exams WHERE school_id = p_school_id AND status NOT ILIKE 'Draft' ORDER BY created_at DESC);
 END; $$;
 
--- ─── 4. Get Announcements (Case-Insensitive) ────────────────
+-- ─── 4. Get Announcements ──────────────────────────────────
 CREATE OR REPLACE FUNCTION public.portal_get_announcements(p_school_id UUID)
 RETURNS JSONB LANGUAGE plpgsql SECURITY DEFINER SET search_path = public, pg_catalog AS $$
 BEGIN
@@ -39,7 +39,7 @@ BEGIN
   WHERE a.school_id = p_school_id AND a.status ILIKE 'published' ORDER BY a.created_at DESC);
 END; $$;
 
--- ─── 5. Get Student Results (Case-Insensitive) ──────────────
+-- ─── 5. Get Student Results ────────────────────────────────
 CREATE OR REPLACE FUNCTION public.portal_get_student_results(p_student_id UUID)
 RETURNS JSONB LANGUAGE plpgsql SECURITY DEFINER SET search_path = public, pg_catalog AS $$
 BEGIN
@@ -48,26 +48,21 @@ BEGIN
   WHERE er.student_id = p_student_id AND e.status NOT ILIKE 'Draft' ORDER BY e.created_at DESC);
 END; $$;
 
--- ─── 6. Get Student Fees (FIXED: Uses actual schema) ────────
+-- ─── 6. Get Student Fees ───────────────────────────────────
 CREATE OR REPLACE FUNCTION public.portal_get_student_fees(p_student_id UUID)
 RETURNS JSONB LANGUAGE plpgsql SECURITY DEFINER SET search_path = public, pg_catalog AS $$
 DECLARE
   v_total_fee NUMERIC; v_paid NUMERIC;
 BEGIN
-  -- Sum up from all fee records for this student
   SELECT COALESCE(SUM(total_fee), 0), COALESCE(SUM(paid), 0)
   INTO v_total_fee, v_paid
   FROM public.fees
   WHERE student_id = p_student_id;
   
-  RETURN jsonb_build_object(
-    'total_fee', v_total_fee,
-    'paid', v_paid,
-    'balance', v_total_fee - v_paid
-  );
+  RETURN jsonb_build_object('total_fee', v_total_fee, 'paid', v_paid, 'balance', v_total_fee - v_paid);
 END; $$;
 
--- ─── 7. Get Teacher Timetable ───────────────────────────────
+-- ─── 7. Get Teacher Timetable ──────────────────────────────
 CREATE OR REPLACE FUNCTION public.portal_get_teacher_timetable(p_school_id UUID, p_period_id UUID, p_teacher_id UUID)
 RETURNS JSONB LANGUAGE plpgsql SECURITY DEFINER SET search_path = public, pg_catalog AS $$
 BEGIN
@@ -75,10 +70,43 @@ BEGIN
   FROM public.timetable_slots WHERE school_id = p_school_id AND period_id = p_period_id AND teacher_id = p_teacher_id ORDER BY slot_index ASC);
 END; $$;
 
--- ─── 8. Get Timetable Config ───────────────────────────────
+-- ─── 8. Get Timetable Config ──────────────────────────────
 CREATE OR REPLACE FUNCTION public.portal_get_timetable_config(p_school_id UUID, p_period_id UUID)
 RETURNS JSONB LANGUAGE plpgsql SECURITY DEFINER SET search_path = public, pg_catalog AS $$
 BEGIN
   RETURN (SELECT COALESCE(jsonb_agg(jsonb_build_object('id', id, 'slot_index', slot_index, 'start_time', start_time, 'end_time', end_time, 'is_break', is_break, 'label', label)), '[]'::jsonb)
   FROM public.timetable_configs WHERE school_id = p_school_id AND period_id = p_period_id ORDER BY slot_index ASC);
+END; $$;
+
+-- ─── 9. Get Student Payments (JSONB version) ────────────────
+CREATE OR REPLACE FUNCTION public.portal_get_student_payments(p_student_id UUID)
+RETURNS JSONB LANGUAGE plpgsql SECURITY DEFINER SET search_path = public, pg_catalog AS $$
+BEGIN
+  RETURN (SELECT COALESCE(jsonb_agg(jsonb_build_object(
+    'id', p.id,
+    'amount', p.amount,
+    'date', p.date,
+    'method', p.method,
+    'reference', p.reference,
+    'status', p.status
+  )), '[]'::jsonb)
+  FROM public.fee_payments p
+  WHERE p.student_id = p_student_id AND (p.status IS NULL OR p.status != 'Voided')
+  ORDER BY p.date DESC);
+END; $$;
+
+-- ─── 10. Get Student Profile ───────────────────────────────
+CREATE OR REPLACE FUNCTION public.portal_get_student_profile(p_student_id UUID)
+RETURNS JSONB LANGUAGE plpgsql SECURITY DEFINER SET search_path = public, pg_catalog AS $$
+BEGIN
+  RETURN (SELECT jsonb_build_object(
+    'id', id,
+    'name', name,
+    'class', class,
+    'stream', stream,
+    'adm_no', adm_no,
+    'residence_type', residence_type,
+    'parent_phone', parent_phone,
+    'subjects', subjects
+  ) FROM public.students WHERE id = p_student_id);
 END; $$;

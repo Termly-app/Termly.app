@@ -27,7 +27,9 @@ export default function PortalDashboard({ user, onLogout }) {
   const [quizAnswers, setQuizAnswers] = useState({});
   const [examResults, setExamResults] = useState([]);
   const [notices, setNotices] = useState([]);
+  const [localUser, setLocalUser] = useState(user);
   const [loading, setLoading] = useState(true);
+
   const [activeTab, setActiveTab] = useState('home');
 
   useEffect(() => {
@@ -38,11 +40,14 @@ export default function PortalDashboard({ user, onLogout }) {
         initPortalStore(user.school_id || user.schoolId, user.id);
 
         // Fetch data individually so one failure doesn't block others
-        const [profile, examRes, schoolNotices] = await Promise.all([
+        const [profile, freshStudent, examRes, schoolNotices] = await Promise.all([
           getSchoolProfile().catch(e => { console.warn('Profile fetch:', e); return null; }),
+          getStudentProfile(user.id).catch(e => { console.warn('Student profile fetch:', e); return user; }),
           getStudentExamResults(user.id).catch(e => { console.warn('Results fetch:', e); return []; }),
-          getAnnouncements({ status: 'published' }).catch(e => { console.warn('Announcements fetch:', e); return []; })
+          getAnnouncements(user.school_id || user.schoolId).catch(e => { console.warn('Announcements fetch:', e); return []; })
         ]);
+        
+        if (freshStudent) setLocalUser(freshStudent);
         
         // Assignments may fail due to RLS - that's OK for parent portal
         const asts = await getAssignments({}).catch(() => []);
@@ -118,10 +123,10 @@ export default function PortalDashboard({ user, onLogout }) {
       <div style={{ background: '#fff', padding: '16px 20px', position: 'sticky', top: 0, zIndex: 1000, boxShadow: '0 1px 2px rgba(0,0,0,0.05)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
           <div style={{ background: 'linear-gradient(135deg, #1a73e8 0%, #174ea6 100%)', color: '#fff', width: 40, height: 40, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.2rem', fontWeight: 600 }}>
-            {user.name.charAt(0)}
+            {localUser.name.charAt(0)}
           </div>
           <div>
-            <div style={{ fontSize: '1.1rem', fontWeight: 600, color: '#111b21', letterSpacing: '-0.3px' }}>{user.name}</div>
+            <div style={{ fontSize: '1.1rem', fontWeight: 600, color: '#111b21', letterSpacing: '-0.3px' }}>{localUser.name}</div>
             <div style={{ fontSize: '0.8rem', color: '#667781', display: 'flex', alignItems: 'center', gap: 4 }}>
               <StatusDotIcon size={8} color="#10b981" /> Active Session
             </div>
@@ -147,6 +152,14 @@ export default function PortalDashboard({ user, onLogout }) {
         {activeTab === 'home' && (
           <div className="space-y-4" style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
             {/* Quick Status Cards */}
+            {/* Class & Stream Card */}
+            <div style={{ background: 'linear-gradient(135deg, #1a73e8 0%, #174ea6 100%)', padding: 16, borderRadius: 16, boxShadow: '0 4px 12px rgba(26, 115, 232, 0.2)', color: '#fff' }}>
+              <div style={{ opacity: 0.8, fontSize: '0.75rem', fontWeight: 600, textTransform: 'uppercase', marginBottom: 4 }}>Current Placement</div>
+              <div style={{ fontSize: '1.2rem', fontWeight: 700 }}>
+                {localUser.class} {localUser.stream ? `— ${localUser.stream}` : ''}
+              </div>
+            </div>
+
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
               <div style={{ background: '#fff', padding: 16, borderRadius: 16, boxShadow: '0 1px 3px rgba(0,0,0,0.08)' }}>
                 <div style={{ color: '#667781', fontSize: '0.75rem', fontWeight: 600, textTransform: 'uppercase', marginBottom: 4 }}>Fee Balance</div>
@@ -161,6 +174,7 @@ export default function PortalDashboard({ user, onLogout }) {
                 </div>
               </div>
             </div>
+
 
             {/* School Announcements */}
             <div style={{ background: '#fff', borderRadius: 16, overflow: 'hidden', boxShadow: '0 1px 3px rgba(0,0,0,0.08)' }}>
@@ -281,7 +295,6 @@ export default function PortalDashboard({ user, onLogout }) {
                     ))
                   )}
                 </div>
-            </div>
           </div>
         )}
 
@@ -293,18 +306,29 @@ export default function PortalDashboard({ user, onLogout }) {
                 margin: '0 auto 16px', display: 'flex', alignItems: 'center', justifyContent: 'center', 
                 fontSize: '2rem', fontWeight: 600 
               }}>
-                {user.name.charAt(0)}
+                {localUser.name.charAt(0)}
               </div>
-              <h2 style={{ margin: '0 0 4px', fontSize: '1.4rem', color: '#111b21' }}>{user.name}</h2>
-              <p style={{ margin: 0, color: '#667781', fontSize: '0.95rem' }}>{user.adm_no} • Class {user.class}</p>
+              <h2 style={{ margin: '0 0 4px', fontSize: '1.4rem', color: '#111b21' }}>{localUser.name}</h2>
+              <p style={{ margin: 0, color: '#667781', fontSize: '0.95rem' }}>{localUser.adm_no} • {localUser.class} {localUser.stream ? `(${localUser.stream})` : ''}</p>
             </div>
+
+            {localUser.subjects && Array.isArray(localUser.subjects) && localUser.subjects.length > 0 && (
+              <div style={{ background: '#fff', borderRadius: 16, overflow: 'hidden', boxShadow: '0 1px 3px rgba(0,0,0,0.08)' }}>
+                <div style={{ padding: '16px 20px', borderBottom: '1px solid #f0f2f5', fontWeight: 600, color: '#111b21' }}>Assigned Subjects</div>
+                <div style={{ padding: '16px 20px', display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+                  {localUser.subjects.map(sub => (
+                    <span key={sub} style={{ background: '#f0f2f5', color: '#54656f', padding: '6px 12px', borderRadius: 100, fontSize: '0.8rem', fontWeight: 500 }}>{sub}</span>
+                  ))}
+                </div>
+              </div>
+            )}
 
             <div style={{ background: '#fff', borderRadius: 16, overflow: 'hidden', boxShadow: '0 1px 3px rgba(0,0,0,0.08)' }}>
               <div style={{ padding: '16px 20px', borderBottom: '1px solid #f0f2f5', display: 'flex', justifyContent: 'space-between', alignItems: 'center', color: '#111b21', fontWeight: 500 }}>
-                Residence Status <span style={{ color: '#667781', textTransform: 'capitalize' }}>{(user.residence_type || 'day').replace('_', ' ')}</span>
+                Residence Status <span style={{ color: '#667781', textTransform: 'capitalize' }}>{(localUser.residence_type || 'day').replace('_', ' ')}</span>
               </div>
               <div style={{ padding: '16px 20px', borderBottom: '1px solid #f0f2f5', display: 'flex', justifyContent: 'space-between', alignItems: 'center', color: '#111b21', fontWeight: 500 }}>
-                Guardian Phone <span style={{ color: '#667781' }}>{user.parent_phone || 'Not set'}</span>
+                Guardian Phone <span style={{ color: '#667781' }}>{localUser.parent_phone || 'Not set'}</span>
               </div>
               <div 
                 onClick={onLogout}
@@ -315,6 +339,7 @@ export default function PortalDashboard({ user, onLogout }) {
             </div>
           </div>
         )}
+
       </div>
 
       {/* App-like Bottom Navigation */}

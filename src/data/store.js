@@ -1821,6 +1821,30 @@ export async function getStudentExamResults(studentId) {
   return (data || []).filter(r => r.exams);
 }
 
+export async function getStudentProfile(studentId) {
+  if (!_currentSchoolId || !studentId) return null;
+
+  // If in portal mode (no auth user but school id set), use RPC
+  if (!_currentAuthUser && _currentSchoolId) {
+    const { data, error } = await supabase.rpc('portal_get_student_profile', { p_student_id: studentId });
+    if (error) {
+      console.warn('Portal student profile fetch error:', error.message);
+      return null;
+    }
+    return data || null;
+  }
+
+  const { data, error } = await supabase
+    .from('students')
+    .select('*')
+    .eq('id', studentId)
+    .single();
+  
+  if (error) throw error;
+  return data;
+}
+
+
 export async function calculateExamResults(examId) {
   mutationGuard('calculateExamResults');
   
@@ -2752,6 +2776,8 @@ export async function validateParentLogin(schoolSearch, admNo, phone, schoolId =
     id: data.id,
     name: data.name,
     class: data.class,
+    stream: data.stream || '',
+    subjects: data.subjects || [],
     adm_no: data.adm_no,
     school_id: data.school_id,
     residence_type: data.residence_type,

@@ -105,7 +105,7 @@ BEGIN
   LIMIT 1;
   IF v_school_id IS NULL THEN RETURN jsonb_build_object('error', 'Institution not found.'); END IF;
   
-  SELECT id, name, class, adm_no, school_id, parent_phone, residence_type, status 
+  SELECT id, name, class, stream, subjects, adm_no, school_id, parent_phone, residence_type, status 
   INTO v_student FROM public.students 
   WHERE school_id = v_school_id AND adm_no ILIKE p_adm_no LIMIT 1;
   IF v_student.id IS NULL THEN RETURN jsonb_build_object('error', 'Student not found.'); END IF;
@@ -127,6 +127,8 @@ BEGIN
     'id', v_student.id, 
     'name', v_student.name, 
     'class', v_student.class, 
+    'stream', COALESCE(v_student.stream, ''),
+    'subjects', COALESCE(v_student.subjects, '[]'::jsonb),
     'class_id', v_class_id, 
     'adm_no', v_student.adm_no, 
     'school_id', v_student.school_id, 
