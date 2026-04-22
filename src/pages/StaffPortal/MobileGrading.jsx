@@ -179,13 +179,13 @@ export default function MobileGrading({ user, onLogout }) {
     setSelectedPaper(paper);
     try {
       setLoading(true);
-      // Extract stream name if it exists (e.g. "Form 2 yellow" -> "yellow")
+      // Get stream and subject from the paper's RPC data
       const className = paper.classes?.name || 'Class';
-      const streamMatch = className.match(/(yellow|red|blue|green|white|A|B|C)/i);
-      const streamName = streamMatch ? streamMatch[0] : null;
+      const streamName = paper.classes?.stream || null;
+      const subjectName = paper.tt_subjects?.name || paper.subject || null;
 
       const [classList, existingMarks] = await Promise.all([
-        getClassList(className, paper.class_id, paper.subject, streamName),
+        getClassList(className, paper.class_id, subjectName, streamName),
         getExamMarksForPaper(paper.id)
       ]);
       
