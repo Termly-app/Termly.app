@@ -1639,37 +1639,71 @@ export async function getSubjectRankings(className, examType = _currentExamType)
         ...s, mark: (marks[s.id] || {})[sub] || 0,
       })).sort((a, b) => b.mark - a.mark);
     subResults.forEach((r, i) => { r.rank = i + 1; });
-    rankings[sub] = subResults;
+  rankings[sub] = subResults;
   });
   return rankings;
 }
 
-export async function getClassList(className, classId = null, subjectName = null) {
+export async function getClassList(className, classId = null, subjectName = null, streamName = null) {
+  let students = [];
   if (!_currentAuthUser && _currentSchoolId && classId) {
     const { data, error } = await supabase.rpc('portal_get_class_students', { 
       p_school_id: _currentSchoolId,
       p_class_id: classId
     });
     if (error) throw error;
-    
-    // Filter by subject if provided
-    let filtered = data || [];
-    if (subjectName) {
-      filtered = filtered.filter(s => 
-        !s.subjects || s.subjects.length === 0 || s.subjects.includes(subjectName)
-      );
-    }
-    return filtered.sort((a, b) => a.name.localeCompare(b.name));
+    students = data || [];
+  } else {
+    students = (await getStudents()).filter(s => s.class === className);
   }
 
-  const students = (await getStudents()).filter(s => s.class === className);
-  let filtered = students;
+  // 1. Filter by Stream (if provided)
+  if (streamName) {
+    const sLower = streamName.toLowerCase();
+    students = students.filter(s => s.stream?.toLowerCase() === sLower || s.class?.toLowerCase().includes(sLower));
+  }
+
+  // 2. Filter by Subject (Enrolled students only)
   if (subjectName) {
-    filtered = filtered.filter(s => 
-      !s.subjects || s.subjects.length === 0 || s.subjects.includes(subjectName)
+    students = students.filter(s => 
+      s.subjects && s.subjects.length > 0 && s.subjects.includes(subjectName)
     );
   }
-  return filtered.sort((a, b) => a.name.localeCompare(b.name));
+
+  return students.sort((a, b) => a.name.localeCompare(b.name));
+}
+
+export async function getExamMarksForPaper(paperId) {
+  // 1. Get marks from new portal table
+  const { data: portalMarks, error: portalErr } = await supabase
+    .from('exam_marks')
+    .select('student_id, raw_score, is_absent')
+    .eq('exam_paper_id', paperId);
+  
+  // 2. Also get marks from legacy admin table (for two-way sync)
+  const { data: paperDetails } = await supabase
+    .from('exam_papers')
+    .select('subject, exam_id, exams(name)')
+    .eq('id', paperId)
+    .single();
+  
+  let legacyMarks = [];
+  if (paperDetails && paperDetails.exams) {
+    const { data } = await supabase
+      .from('marks')
+      .select('student_id, mark')
+      .eq('school_id', _currentSchoolId)
+      .eq('exam_type', paperDetails.exams.name)
+      .eq('subject', paperDetails.subject); // This might need code mapping (MATH vs Mathematics)
+    legacyMarks = data || [];
+  }
+
+  // Merge: Portal marks take priority, but legacy marks fill the gaps
+  const merged = {};
+  legacyMarks.forEach(m => { merged[m.student_id] = { raw_score: m.mark, is_absent: false }; });
+  (portalMarks || []).forEach(m => { merged[m.student_id] = m; });
+
+  return Object.entries(merged).map(([id, m]) => ({ student_id: id, ...m }));
 }
 
 // ============= FORMAL EXAMS (Phase 4) =============

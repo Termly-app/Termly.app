@@ -180,7 +180,13 @@ export default function MobileGrading({ user, onLogout }) {
     try {
       setLoading(true);
       const [classList, existingMarks] = await Promise.all([
-        getClassList(paper.classes?.name || 'Class', paper.class_id, paper.subject),
+      // Extract stream name if it exists (e.g. "Form 2 yellow" -> "yellow")
+      const className = paper.classes?.name || 'Class';
+      const streamMatch = className.match(/(yellow|red|blue|green|white|A|B|C)/i);
+      const streamName = streamMatch ? streamMatch[0] : null;
+
+      const [classList, existingMarks] = await Promise.all([
+        getClassList(className, paper.class_id, paper.subject, streamName),
         getExamMarksForPaper(paper.id)
       ]);
       
