@@ -1853,7 +1853,7 @@ export async function updateExamStatus(examId, newStatus) {
     .eq('id', examId);
   if (error) throw error;
   
-  clearCache(`exams_${_currentSchoolId}`);
+  invalidateCache(`exams_${_currentSchoolId}`);
   return true;
 }
 
@@ -1864,7 +1864,7 @@ export async function releaseExamToParents(examId, isReleased = true) {
     .eq('id', examId);
   if (error) throw error;
   
-  clearCache(`exams_${_currentSchoolId}`);
+  invalidateCache(`exams_${_currentSchoolId}`);
   return true;
 }
 

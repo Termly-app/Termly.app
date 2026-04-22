@@ -28,7 +28,6 @@ export default function Settings() {
   const [newStream,setNewStream]     = useState({});
   const [newHouse,setNewHouse]       = useState('');
   const [newExam, setNewExam]       = useState('');
-  const [publishNewExam, setPublishNewExam] = useState(true);
   const [newGradeItem, setNewGradeItem] = useState({ symbol: '', min: 0, max: 100, color: '#3b82f6' });
   const [applyGradingToAll, setApplyGradingToAll] = useState(true);
   const [periods, setPeriods]     = useState([]);
@@ -176,7 +175,7 @@ export default function Settings() {
     setLoading(true);
     try {
       const periodId = getCurrentPeriodId() || '2026';
-      const status = publishNewExam ? 'published' : 'draft';
+      const status = 'draft';
       const created = await createExam(val, 'endterm', periodId, status);
       setRobustExams([...robustExams, created]);
       setNewExam('');
@@ -652,10 +651,6 @@ export default function Settings() {
                         </div>
                         <div style={{display:'flex',gap:6,alignItems:'center'}}>
                           <input className="form-input" style={{flex:1,fontSize:'0.82rem'}} value={newExam} onChange={e=>setNewExam(e.target.value)} onKeyDown={e=>e.key==='Enter'&&addExam()} placeholder="e.g. End Term 1 2026"/>
-                          <label style={{display:'flex',alignItems:'center',gap:6,fontSize:'0.75rem',cursor:'pointer',whiteSpace:'nowrap',fontWeight:700,color:'var(--primary)'}}>
-                            <input type="checkbox" checked={publishNewExam} onChange={e=>setPublishNewExam(e.target.checked)} style={{accentColor:'var(--primary)', width: 16, height: 16}}/>
-                            Auto-Release to Parents
-                          </label>
                           <button onClick={addExam} className="btn btn-ghost btn-sm" style={{display:'flex',alignItems:'center',gap:4}}><PlusIcon size={14} /> Create Exam</button>
                         </div>
 
