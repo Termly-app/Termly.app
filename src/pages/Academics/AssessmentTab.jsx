@@ -60,15 +60,16 @@ export default function AssessmentTab({ currentUser, currentPeriodId }) {
         setAssignments(a);
         setRobustExams(e);
         
-        // Initialize examType if not set or if current examType is not in the list
+        let currentExam = examType;
         if (e.length > 0) {
           const exists = e.find(ex => ex.name === examType);
           if (!exists) {
-            setExamType(e[0].name);
+            currentExam = e[0].name;
+            setExamType(currentExam);
           }
         }
 
-        await loadResults();
+        await loadResults(currentExam);
       } catch (err) {
         console.error(err);
       } finally {
@@ -87,7 +88,8 @@ export default function AssessmentTab({ currentUser, currentPeriodId }) {
     };
   }, [selectedClass, streamFilter, selectedPathway, examType, currentUser, currentPeriodId]);
 
-  const loadResults = async () => {
+  const loadResults = async (overrideExamType = null) => {
+    const targetExam = overrideExamType || examType;
     if (!selectedClass || selectedClass === 'All') {
       setResults([]);
       setSubjectRankings([]);
@@ -96,7 +98,7 @@ export default function AssessmentTab({ currentUser, currentPeriodId }) {
       setCoreCompData({});
       return;
     }
-    let r = await getClassResults(selectedClass, examType);
+    let r = await getClassResults(selectedClass, targetExam);
     if (streamFilter !== 'All') r = r.filter(s => s.stream === streamFilter);
     
     r.sort((a, b) => b.total - a.total);
@@ -108,9 +110,9 @@ export default function AssessmentTab({ currentUser, currentPeriodId }) {
     setEditMarks(em);
 
     const [rankD, cbcD, perfD, ccD] = await Promise.all([
-      getSubjectRankings(selectedClass, examType),
+      getSubjectRankings(selectedClass, targetExam),
       getCBC(),
-      getTeacherPerformance(examType),
+      getTeacherPerformance(targetExam),
       getCoreCompetencies()
     ]);
     setSubjectRankings(rankD);

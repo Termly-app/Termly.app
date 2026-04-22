@@ -1577,7 +1577,8 @@ export async function getMarks(examType = _currentExamType) {
 
 export async function setStudentAllMarks(studentId, subjectMarks, examType = _currentExamType) {
   mutationGuard('setStudentAllMarks');
-  const creatorId = (await getUserByAuthId(_currentAuthUser?.id))?.id;
+  const userRecord = await getUserByAuthId(_currentAuthUser?.id);
+  const creatorId = userRecord?.id || _currentUserId;
   
   const rows = Object.entries(subjectMarks).map(([subject, mark]) => ({
     school_id: _currentSchoolId,
@@ -1598,7 +1599,8 @@ export async function setStudentAllMarks(studentId, subjectMarks, examType = _cu
     .upsert(rows, { onConflict: 'school_id,student_id,subject,period_id,exam_type' });
   
   if (error) {
-    console.error('[STORE] Failed to save marks:', error);
+    console.error('[STORE] Failed to save marks. Payload:', { rows: rows.slice(0, 3), total: rows.length });
+    console.error('[STORE] Supabase Error:', error);
     throw error;
   }
 }
@@ -1724,7 +1726,8 @@ async function migrateLegacyExams(examsList) {
  */
 export async function createExam(name, type = 'endterm', term = 'Current') {
   mutationGuard('createExam');
-  const creatorId = (await getUserByAuthId(_currentAuthUser?.id))?.id;
+  const userRecord = await getUserByAuthId(_currentAuthUser?.id);
+  const creatorId = userRecord?.id || _currentUserId;
   
   console.log(`[STORE] Creating exam: ${name} (Type: ${type}, CreatedBy: ${creatorId})`);
   
