@@ -81,7 +81,7 @@ export default function AssessmentTab({ currentUser, currentPeriodId }) {
     // Subscribe to real-time changes using Supabase Realtime
     const unsubMarks = subscribeToTable('exam_marks', () => {
       // Refresh results when marks change
-      loadResults(currentExam);
+      loadResults(); // Uses current state
     });
 
     return () => {
