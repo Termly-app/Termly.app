@@ -1735,13 +1735,19 @@ export async function getExams() {
   // Admin/Standard mode: use direct table query
   const cacheKey = `exams_${_currentSchoolId}_${_currentPeriodId}`;
   return cachedQuery(cacheKey, async () => {
-    const { data, error } = await supabase
+    let query = supabase
       .from('exams')
       .select('*')
-      .eq('school_id', _currentSchoolId)
-      // We return all exams for the school so admins can manage them across terms
-      // but we sort them by period/created_at
-      .order('created_at', { ascending: false });
+      .eq('school_id', _currentSchoolId);
+    
+    // If we are in Staff Portal mode (initialized with teacher id but not parent portal session),
+    // we might want to filter by status. Let's check if there is a teacher session.
+    const isTeacherPortal = !!sessionStorage.getItem('shulesoft_teacher_id');
+    if (isTeacherPortal) {
+      query = query.eq('status', 'published'); // Published here means 'Open for Teachers'
+    }
+
+    const { data, error } = await query.order('created_at', { ascending: false });
     if (error) throw error;
     return data || [];
   });
@@ -1840,15 +1846,26 @@ export async function updateExam(examId, updates) {
 /**
  * Updates the status of an exam (e.g., 'published', 'draft', 'closed')
  */
-export async function updateExamStatus(examId, status) {
-  mutationGuard('updateExamStatus');
+export async function updateExamStatus(examId, newStatus) {
   const { error } = await supabase
     .from('exams')
-    .update({ status })
+    .update({ status: newStatus })
     .eq('id', examId);
-
   if (error) throw error;
-  invalidateCache(`exams_${_currentSchoolId}_${_currentPeriodId}`);
+  
+  clearCache(`exams_${_currentSchoolId}`);
+  return true;
+}
+
+export async function releaseExamToParents(examId, isReleased = true) {
+  const { error } = await supabase
+    .from('exams')
+    .update({ released_to_parents: isReleased })
+    .eq('id', examId);
+  if (error) throw error;
+  
+  clearCache(`exams_${_currentSchoolId}`);
+  return true;
 }
 
 /**
@@ -2000,6 +2017,16 @@ export async function getStudentProfile(studentId) {
   
   if (error) throw error;
   return data;
+}
+
+export async function getSubjectDetails(studentId) {
+  if (!_currentSchoolId || !studentId) return [];
+  const { data, error } = await supabase.rpc('portal_get_subject_details', { p_student_id: studentId });
+  if (error) {
+    console.warn('Subject details fetch error:', error.message);
+    return [];
+  }
+  return data || [];
 }
 
 
@@ -2264,7 +2291,7 @@ export async function recordPayment(studentId, amount, method, reference) {
   const upToDatePaid = Number(reconciled?.paid || currentFee.paid);
 
   // Missing RPC fallback: Perform the operation client-side
-  const paymentDate = new Date().toISOString().split('T')[0];
+  const paymentDate = new Date().toISOString(); // Full timestamp for minute-level precision
   const amountNum = Number(amount);
 
   // 2. Insert the payment record with the required fee_id

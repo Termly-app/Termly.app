@@ -575,29 +575,88 @@ export default function Settings() {
                       <div style={{display:'flex',flexDirection:'column',gap:10}}>
                         <div style={{display:'flex',flexWrap:'wrap',gap:8,marginBottom:10,minHeight:36}}>
                           {robustExams.map(e=>(
-                            <div key={e.id} style={{display:'inline-flex',alignItems:'center',gap:8,padding:'6px 12px',borderRadius:20,background:e.status==='published'?'var(--primary-light)':'var(--bg-card)',border:'1px solid var(--border)',fontSize:'0.82rem',transition:'all 0.2s'}}>
-                              <span style={{fontWeight:600}}>{e.name}</span>
-                              <span style={{fontSize:'0.65rem',textTransform:'uppercase',fontWeight:800,color:e.status==='published'?'var(--primary)':'var(--text-muted)'}}>
-                                {e.status==='published' ? 'Live' : 'Draft'}
-                              </span>
+                            <div key={e.id} style={{
+                              display:'inline-flex',
+                              alignItems:'center',
+                              gap:10,
+                              padding:'8px 16px',
+                              borderRadius:24,
+                              background: e.status==='published' ? 'linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%)' : 'var(--bg-card)',
+                              border: e.status==='published' ? '1.5px solid #22c55e' : '1.5px solid var(--border)',
+                              fontSize:'0.82rem',
+                              transition:'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                              boxShadow: e.status==='published' ? '0 4px 12px rgba(34, 197, 94, 0.15)' : 'none'
+                            }}>
+                              <span style={{fontWeight:700, color: 'var(--text-main)'}}>{e.name}</span>
+                              
+                              <div style={{ display: 'flex', alignItems: 'center', gap: 6, borderLeft: '1.5px solid var(--border)', paddingLeft: 10 }}>
+                                <button 
+                                  onClick={() => toggleExamStatus(e)}
+                                  style={{ 
+                                    fontSize:'0.6rem', 
+                                    textTransform:'uppercase', 
+                                    fontWeight:900, 
+                                    padding: '4px 8px',
+                                    borderRadius: 6,
+                                    background: e.status === 'published' ? 'var(--primary-light)' : '#f1f5f9',
+                                    color: e.status === 'published' ? 'var(--primary)' : '#64748b',
+                                    border: 'none',
+                                    cursor: 'pointer'
+                                  }}
+                                >
+                                  {e.status === 'published' ? 'Staff: Grading Active' : 'Staff: Locked'}
+                                </button>
+                                
+                                <button 
+                                  onClick={() => releaseExamToParents(e.id, !e.released_to_parents)}
+                                  style={{ 
+                                    fontSize:'0.6rem', 
+                                    textTransform:'uppercase', 
+                                    fontWeight:900, 
+                                    padding: '4px 8px',
+                                    borderRadius: 6,
+                                    background: e.released_to_parents ? '#22c55e' : '#f1f5f9',
+                                    color: e.released_to_parents ? '#fff' : '#64748b',
+                                    border: 'none',
+                                    cursor: 'pointer',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: 3
+                                  }}
+                                >
+                                  {e.released_to_parents ? <><RocketIcon size={10} /> Released to Parents</> : 'Parents Hidden'}
+                                </button>
+                              </div>
+
                               <button 
                                 onClick={() => toggleExamStatus(e)}
-                                title={e.status==='published'?'Unpublish from Portal':'Publish to Portal'}
-                                style={{background:'none',border:'none',cursor:'pointer',padding:0,display:'flex',alignItems:'center',color:'var(--text-light)'}}
+                                title={e.status==='published'?'Hide from Parent Portal':'Release to Parent Portal'}
+                                style={{
+                                  background: e.status==='published' ? '#22c55e' : 'var(--bg)',
+                                  border: 'none',
+                                  cursor:'pointer',
+                                  padding: '5px',
+                                  borderRadius: '50%',
+                                  display:'flex',
+                                  alignItems:'center',
+                                  justifyContent: 'center',
+                                  color: e.status==='published' ? '#fff' : 'var(--text-light)',
+                                  transition: 'all 0.2s'
+                                }}
                               >
-                                {e.status==='published' ? <EyeOffIcon size={12} /> : <EyeIcon size={12} />}
+                                {e.status==='published' ? <CheckIcon size={12} /> : <EyeIcon size={12} />}
                               </button>
-                              <button onClick={()=>removeExam(e.name)} style={{background:'none',border:'none',cursor:'pointer',color:'var(--danger)',fontWeight:700,marginLeft:4,fontSize:'1.1rem'}}>×</button>
+                              <button onClick={()=>removeExam(e.name)} style={{background:'none',border:'none',cursor:'pointer',color:'var(--danger)',fontWeight:700,fontSize:'1.1rem', padding: 0}}>×</button>
                             </div>
                           ))}
                         </div>
                         <div style={{display:'flex',gap:6,alignItems:'center'}}>
-                          <input className="form-input" style={{flex:1,fontSize:'0.82rem'}} value={newExam} onChange={e=>setNewExam(e.target.value)} onKeyDown={e=>e.key==='Enter'&&addExam()} placeholder="e.g. Mock Exam"/>
-                          <label style={{display:'flex',alignItems:'center',gap:6,fontSize:'0.75rem',cursor:'pointer',whiteSpace:'nowrap',fontWeight:600,color:'var(--text-light)'}}>
-                            <input type="checkbox" checked={publishNewExam} onChange={e=>setPublishNewExam(e.target.checked)} style={{accentColor:'var(--primary)'}}/>
-                            Publish to Portal
+                          <input className="form-input" style={{flex:1,fontSize:'0.82rem'}} value={newExam} onChange={e=>setNewExam(e.target.value)} onKeyDown={e=>e.key==='Enter'&&addExam()} placeholder="e.g. End Term 1 2026"/>
+                          <label style={{display:'flex',alignItems:'center',gap:6,fontSize:'0.75rem',cursor:'pointer',whiteSpace:'nowrap',fontWeight:700,color:'var(--primary)'}}>
+                            <input type="checkbox" checked={publishNewExam} onChange={e=>setPublishNewExam(e.target.checked)} style={{accentColor:'var(--primary)', width: 16, height: 16}}/>
+                            Auto-Release to Parents
                           </label>
-                          <button onClick={addExam} className="btn btn-ghost btn-sm" style={{display:'flex',alignItems:'center',gap:4}}><PlusIcon size={14} /> Add</button>
+                          <button onClick={addExam} className="btn btn-ghost btn-sm" style={{display:'flex',alignItems:'center',gap:4}}><PlusIcon size={14} /> Create Exam</button>
                         </div>
 
                       {/* Timetable label - WIP (module disabled)
