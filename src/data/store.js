@@ -1557,20 +1557,42 @@ export async function transferStudents(selectedIds, direction = 'promote') {
 export async function getMarks(examType = _currentExamType) {
   if (!_currentSchoolId || !_currentPeriodId) return {};
   const cacheKey = `marks_${_currentSchoolId}_${_currentPeriodId}_${examType}`;
+  
   return cachedQuery(cacheKey, async () => {
-    const { data, error } = await supabase
+    // 1. Fetch Legacy Marks
+    const { data: legacyData, error: legacyErr } = await supabase
       .from('marks')
-      .select('id, student_id, subject, mark, period_id, exam_type, school_id')
+      .select('student_id, subject, mark')
       .eq('school_id', _currentSchoolId)
       .eq('period_id', _currentPeriodId)
       .eq('exam_type', examType);
-    if (error) throw error;
-    // Convert flat rows to nested { studentId: { subject: mark } }
+    
+    // 2. Fetch New Exam Marks (from Teacher Portal)
+    const { data: portalData, error: portalErr } = await supabase
+      .from('exam_marks')
+      .select('student_id, raw_score, is_absent, exam_papers(subject)')
+      .eq('school_id', _currentSchoolId)
+      .eq('exam_papers.exam_id', (await getExams()).find(e => e.name === examType)?.id);
+
+    if (legacyErr) console.error('Legacy marks error:', legacyErr);
+    
     const marks = {};
-    (data || []).forEach(row => {
+    
+    // Process Legacy Data
+    (legacyData || []).forEach(row => {
       if (!marks[row.student_id]) marks[row.student_id] = {};
       marks[row.student_id][row.subject] = row.mark;
     });
+
+    // Process Portal Data (Overrides legacy if conflict)
+    (portalData || []).forEach(row => {
+      const subjectName = row.exam_papers?.subject;
+      if (subjectName && !row.is_absent) {
+        if (!marks[row.student_id]) marks[row.student_id] = {};
+        marks[row.student_id][subjectName] = row.raw_score;
+      }
+    });
+
     return marks;
   });
 }
