@@ -179,20 +179,28 @@ export default function AssessmentTab({ currentUser, currentPeriodId }) {
     const exam = robustExams.find(e => e.name === examType);
     if (!exam) return;
 
+    const isCurrentlyReleased = exam.released_to_parents;
     const confirmed = await confirm({
-      title: 'Release to Parent Portal?',
-      message: `You are about to make the results for "${exam.name}" visible to all parents. This action should only be taken after all marks are verified.`,
-      variant: 'primary'
+      title: isCurrentlyReleased ? 'Hide from Parents?' : 'Post to Parents?',
+      message: isCurrentlyReleased 
+        ? `Are you sure you want to hide these results? Parents will no longer see them.` 
+        : `Are you sure you want to post these results? They will become immediately visible to all parents.`,
+      variant: isCurrentlyReleased ? 'warning' : 'primary'
     });
 
     if (confirmed) {
       setLoading(true);
       try {
-        await releaseExamToParents(exam.id, true);
-        alert({ title: 'Released!', message: 'Results are now live on the Parent Portal.', variant: 'success' });
-        // Refresh local state if needed
+        await releaseExamToParents(exam.id, !isCurrentlyReleased);
+        alert({ 
+          title: isCurrentlyReleased ? 'Hidden' : 'Posted!', 
+          message: isCurrentlyReleased 
+            ? 'Results have been hidden from the Parent Portal.' 
+            : 'Results are now live on the Parent Portal.', 
+          variant: 'success' 
+        });
       } catch (err) {
-        alert({ title: 'Error', message: 'Failed to release results: ' + err.message, variant: 'danger' });
+        alert({ title: 'Error', message: 'Operation failed: ' + err.message, variant: 'danger' });
       } finally {
         setLoading(true); // Trigger refresh
         setTimeout(() => setLoading(false), 500);
@@ -543,12 +551,12 @@ export default function AssessmentTab({ currentUser, currentPeriodId }) {
                 {robustExams.find(e => e.name === examType)?.status === 'published' ? (
                   <div style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '4px 10px', background: 'var(--primary-light)', color: 'var(--primary)', borderRadius: '8px', fontSize: '0.65rem', fontWeight: 800, border: '1px solid var(--primary-border)' }}>
                     <div style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--primary)' }} />
-                    GRADING ACTIVE
+                    Open for Grading
                   </div>
                 ) : (
                   <div style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '4px 10px', background: '#fef2f2', color: '#991b1b', borderRadius: '8px', fontSize: '0.65rem', fontWeight: 800, border: '1px solid #fee2e2' }}>
                     <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#ef4444' }} />
-                    LOCKED (DRAFT)
+                    Locked
                   </div>
                 )}
               </div>
@@ -566,12 +574,12 @@ export default function AssessmentTab({ currentUser, currentPeriodId }) {
                     border: '1.5px solid #bbf7d0', boxShadow: '0 4px 10px rgba(34, 197, 94, 0.1)' 
                   }}>
                     <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#22c55e', boxShadow: '0 0 10px #22c55e' }} className="animate-pulse" />
-                    LIVE ON PORTAL
+                    Live for Parents
                   </div>
                 ) : (
                   <div style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '5px 12px', background: '#f8fafc', color: '#64748b', borderRadius: '20px', fontSize: '0.7rem', fontWeight: 800, border: '1.5px solid var(--border)' }}>
                     <EyeOffIcon size={12} />
-                    HIDDEN
+                    Hidden
                   </div>
                 )}
               </div>
@@ -579,7 +587,7 @@ export default function AssessmentTab({ currentUser, currentPeriodId }) {
               {isAdmin && (
                 <button
                   onClick={handleReleaseResults}
-                  disabled={loading || robustExams.find(e => e.name === examType)?.released_to_parents}
+                  disabled={loading}
                   className="btn"
                   style={{
                     display: 'flex',
@@ -595,13 +603,13 @@ export default function AssessmentTab({ currentUser, currentPeriodId }) {
                     fontWeight: 800,
                     fontSize: '0.75rem',
                     boxShadow: robustExams.find(e => e.name === examType)?.released_to_parents ? 'none' : '0 6px 15px -3px rgba(16, 185, 129, 0.4)',
-                    cursor: (loading || robustExams.find(e => e.name === examType)?.released_to_parents) ? 'not-allowed' : 'pointer',
+                    cursor: loading ? 'not-allowed' : 'pointer',
                     transition: 'all 0.2s',
                     height: 36
                   }}
                 >
                   <RocketIcon size={16} />
-                  {robustExams.find(e => e.name === examType)?.released_to_parents ? 'Already Posted' : 'Post to Parent Portal'}
+                  {robustExams.find(e => e.name === examType)?.released_to_parents ? 'Hide from Parents' : 'Post to Parents'}
                 </button>
               )}
             </div>
