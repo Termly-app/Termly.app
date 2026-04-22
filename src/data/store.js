@@ -1594,10 +1594,26 @@ export async function getMarks(examType = _currentExamType) {
 
     // Process Portal Data (Overrides legacy if conflict)
     (portalData || []).forEach(row => {
-      const subjectName = row.exam_papers?.subject;
+      let subjectName = row.exam_papers?.subject;
       if (subjectName && !row.is_absent) {
+        // Smart Mapping: "Mathematics" -> "MATH", "English" -> "ENG", etc.
+        const upperSub = subjectName.toUpperCase();
+        let mappedCode = upperSub;
+        if (upperSub.includes('MATH')) mappedCode = 'MATH';
+        else if (upperSub.includes('ENGLISH')) mappedCode = 'ENG';
+        else if (upperSub.includes('KISWAHILI')) mappedCode = 'KIS';
+        else if (upperSub.includes('BIOLOGY')) mappedCode = 'BIO';
+        else if (upperSub.includes('PHYSICS')) mappedCode = 'PHY';
+        else if (upperSub.includes('CHEMISTRY')) mappedCode = 'CHEM';
+        else if (upperSub.includes('GEOGRAPHY')) mappedCode = 'GEO';
+        else if (upperSub.includes('HISTORY')) mappedCode = 'HIST';
+        else if (upperSub.includes('RELIGIOUS')) mappedCode = 'CRE';
+        else if (upperSub.includes('BUSINESS')) mappedCode = 'BST';
+        else if (upperSub.includes('AGRICULTURE')) mappedCode = 'AGRI';
+        else if (upperSub.includes('COMPUTER')) mappedCode = 'COMP';
+
         if (!marks[row.student_id]) marks[row.student_id] = {};
-        marks[row.student_id][subjectName] = row.raw_score;
+        marks[row.student_id][mappedCode] = row.raw_score;
       }
     });
 
