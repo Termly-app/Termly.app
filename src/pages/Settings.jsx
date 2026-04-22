@@ -7,7 +7,7 @@ import {
   ClockIcon, CheckIcon, SaveIcon, SchoolIcon, ImageIcon, FolderIcon,
   BookIcon, CardIcon, DiamondIcon, PhoneIcon, RefreshIcon, CrossIcon, PlusIcon,
   CalendarIcon, DownloadIcon, UploadIcon, PlatformZapIcon, ShieldIcon,
-  EyeIcon, EyeOffIcon
+  EyeIcon, EyeOffIcon, RocketIcon
 } from '../components/CommonIcons';
 
 export default function Settings() {
