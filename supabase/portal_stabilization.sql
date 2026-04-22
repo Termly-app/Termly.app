@@ -1,7 +1,7 @@
 -- ============================================================
--- PORTAL STABILIZATION SCRIPT (V6 - FULL RECOVERY)
+-- PORTAL STABILIZATION SCRIPT (V7 - HARDENED RECOVERY)
 -- Fixes mismatches in Parent/Staff portal RPCs and schemas.
--- Ensures all required tables (tt_teacher_subjects) exist.
+-- Ensures all required tables exist and migrates legacy data safely.
 -- ============================================================
 
 -- 0. Ensure Required Tables Exist
@@ -108,22 +108,24 @@ WHERE s.class_id IS NULL
   AND c.name = s.class 
   AND c.school_id = s.school_id;
 
--- 6. Attempt to migrate legacy subject_assignments to tt_teacher_subjects
--- This assumes subject_assignments has (teacher_id, subject, class_grade, stream)
--- and tt_subjects can be matched by name.
+-- 6. Safely migrate legacy subject_assignments to tt_teacher_subjects
+-- Resolves foreign key violations by ensuring target users exist.
 DO $$ 
 BEGIN
   IF EXISTS (SELECT FROM information_schema.tables WHERE table_name = 'subject_assignments') THEN
     INSERT INTO public.tt_teacher_subjects (school_id, teacher_id, subject_id, class_id)
     SELECT DISTINCT 
       sa.school_id, 
-      sa.teacher_id, 
+      COALESCE(t.user_id, sa.teacher_id), 
       ts.id as subject_id, 
       c.id as class_id
     FROM public.subject_assignments sa
     JOIN public.tt_subjects ts ON ts.name = sa.subject AND ts.school_id = sa.school_id
     JOIN public.classes c ON c.name = sa.class_grade AND c.school_id = sa.school_id
+    LEFT JOIN public.teachers t ON t.id = sa.teacher_id
+    JOIN public.users u ON u.id = COALESCE(t.user_id, sa.teacher_id) -- CRITICAL: Ensure user exists
     ON CONFLICT (teacher_id, subject_id, class_id) DO NOTHING;
   END IF;
 END $$;
+
 
