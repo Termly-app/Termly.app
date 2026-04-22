@@ -218,7 +218,11 @@ ALTER TABLE public.schools ADD COLUMN IF NOT EXISTS publicly_listed BOOLEAN DEFA
 -- These RPCs are critical for Teacher Portal functionality.
 -- They bypass RLS (Security Definer) but are scoped by school_id.
 
-CREATE OR REPLACE FUNCTION public.portal_get_teacher_assignments(p_school_id UUID, p_teacher_id UUID)
+-- DROP overloads to prevent signature mismatch errors
+DROP FUNCTION IF EXISTS public.portal_get_teacher_assignments(uuid, uuid);
+DROP FUNCTION IF EXISTS public.portal_get_teacher_assignments(uuid, uuid, uuid);
+
+CREATE OR REPLACE FUNCTION public.portal_get_teacher_assignments(p_school_id UUID, p_period_id UUID, p_teacher_id UUID)
 RETURNS JSONB LANGUAGE plpgsql SECURITY DEFINER SET search_path = public AS $$
 BEGIN
   RETURN (
@@ -227,6 +231,7 @@ BEGIN
     )), '[]'::jsonb)
     FROM public.subject_assignments 
     WHERE school_id = p_school_id 
+      AND period_id = p_period_id
       AND (
         teacher_id = p_teacher_id 
         OR teacher_id IN (SELECT user_id FROM teachers WHERE id = p_teacher_id)
