@@ -245,7 +245,12 @@ RETURNS JSONB LANGUAGE plpgsql SECURITY DEFINER SET search_path = public AS $$
 BEGIN
   RETURN (
     SELECT COALESCE(jsonb_agg(jsonb_build_object(
-      'id', id, 'slot_index', slot_index, 'start_time', start_time, 'end_time', end_time, 'name', name
+      'id', id, 
+      'slot_index', slot_index, 
+      'start_time', start_time, 
+      'end_time', end_time, 
+      'label', label,
+      'name', label  -- Alias for safety/compatibility
     ) ORDER BY slot_index ASC), '[]'::jsonb)
     FROM public.timetable_configs WHERE school_id = p_school_id AND period_id = p_period_id
   );
