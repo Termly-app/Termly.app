@@ -4,14 +4,17 @@ const supabaseUrl = 'https://bbqggxybzjxvjvkxfevb.supabase.co';
 const supabaseKey = 'sb_publishable_X7NtRr9PuV29pJs90ptC3A_GRNTpcC3';
 const supabase = createClient(supabaseUrl, supabaseKey);
 
-async function test() {
-  const { data, error } = await supabase.from('fees').select('*').limit(1);
-  if (error) console.error("Error:", error);
-  else console.log("Fees columns:", data.length > 0 ? Object.keys(data[0]) : "No fee records found");
-  
-  const { data: stData, error: stErr } = await supabase.from('students').select('*').limit(1);
-  if (stErr) console.error("Error:", stErr);
-  else console.log("Students columns:", stData.length > 0 ? Object.keys(stData[0]) : "No student records found");
+async function checkSchema() {
+  const tables = ['subject_assignments', 'tt_teacher_subjects', 'tt_slots', 'timetable_slots'];
+  for (const t of tables) {
+    const { data, error } = await supabase.from(t).select('*').limit(1);
+    if (error && error.message.includes('does not exist')) {
+      console.log(`[MISSING] Table ${t}`);
+    } else {
+      console.log(`[EXISTS] Table ${t}`);
+      if (data && data.length > 0) console.log(`Sample from ${t}:`, data[0]);
+    }
+  }
 }
 
-test();
+checkSchema();
