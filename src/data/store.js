@@ -1685,7 +1685,7 @@ export async function getExamMarksForPaper(paperId) {
     .from('exam_papers')
     .select('subject, exam_id')
     .eq('id', paperId)
-    .single();
+    .maybeSingle(); // More resilient than .single()
   
   let legacyMarks = [];
   if (paper) {
@@ -1693,7 +1693,7 @@ export async function getExamMarksForPaper(paperId) {
       .from('exams')
       .select('name')
       .eq('id', paper.exam_id)
-      .single();
+      .maybeSingle();
     
     if (exam) {
       const { data } = await supabase
