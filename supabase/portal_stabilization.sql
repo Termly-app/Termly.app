@@ -1,7 +1,7 @@
 -- ============================================================
--- PORTAL STABILIZATION SCRIPT (V7 - HARDENED RECOVERY)
+-- PORTAL STABILIZATION SCRIPT (V8 - FINAL RECOVERY)
 -- Fixes mismatches in Parent/Staff portal RPCs and schemas.
--- Ensures all required tables exist and migrates legacy data safely.
+-- Resolves "column u.photo_url does not exist" error.
 -- ============================================================
 
 -- 0. Ensure Required Tables Exist
@@ -15,7 +15,7 @@ CREATE TABLE IF NOT EXISTS public.tt_teacher_subjects (
   UNIQUE(teacher_id, subject_id, class_id)
 );
 
--- 1. Fix portal_get_subject_details (Fixes "tt_teacher_subjects does not exist" and "sa.subject_id")
+-- 1. Fix portal_get_subject_details (Fixes "column u.photo_url does not exist")
 CREATE OR REPLACE FUNCTION public.portal_get_subject_details(p_student_id UUID)
 RETURNS JSONB LANGUAGE plpgsql SECURITY DEFINER SET search_path = public, pg_catalog AS $$
 BEGIN
@@ -23,7 +23,6 @@ BEGIN
     SELECT COALESCE(jsonb_agg(jsonb_build_object(
       'subject_name', ts.name,
       'teacher_name', u.name,
-      'teacher_photo', u.photo_url,
       'short_code', ts.short_code
     )), '[]'::jsonb)
     FROM public.students s
@@ -33,7 +32,7 @@ BEGIN
     LEFT JOIN public.tt_subjects ts ON ts.id = tts.subject_id
     LEFT JOIN public.users u ON u.id = tts.teacher_id
     WHERE s.id = p_student_id
-      AND ts.id IS NOT NULL -- Only return if we found a subject match
+      AND ts.id IS NOT NULL
   );
 END; $$;
 
@@ -109,23 +108,33 @@ WHERE s.class_id IS NULL
   AND c.school_id = s.school_id;
 
 -- 6. Safely migrate legacy subject_assignments to tt_teacher_subjects
--- Resolves foreign key violations by ensuring target users exist.
+-- Resolves foreign key violations and skips invalid records.
 DO $$ 
 BEGIN
   IF EXISTS (SELECT FROM information_schema.tables WHERE table_name = 'subject_assignments') THEN
     INSERT INTO public.tt_teacher_subjects (school_id, teacher_id, subject_id, class_id)
     SELECT DISTINCT 
       sa.school_id, 
-      COALESCE(t.user_id, sa.teacher_id), 
+      target_user_id, 
       ts.id as subject_id, 
       c.id as class_id
-    FROM public.subject_assignments sa
+    FROM (
+      SELECT 
+        sa.school_id, 
+        sa.subject, 
+        sa.class_grade,
+        COALESCE(
+          (SELECT user_id FROM public.teachers WHERE id = sa.teacher_id),
+          sa.teacher_id
+        ) as target_user_id
+      FROM public.subject_assignments sa
+    ) sa
     JOIN public.tt_subjects ts ON ts.name = sa.subject AND ts.school_id = sa.school_id
     JOIN public.classes c ON c.name = sa.class_grade AND c.school_id = sa.school_id
-    LEFT JOIN public.teachers t ON t.id = sa.teacher_id
-    JOIN public.users u ON u.id = COALESCE(t.user_id, sa.teacher_id) -- CRITICAL: Ensure user exists
+    WHERE EXISTS (SELECT 1 FROM public.users WHERE id = sa.target_user_id) -- Ensure user exists
     ON CONFLICT (teacher_id, subject_id, class_id) DO NOTHING;
   END IF;
 END $$;
+
 
 
