@@ -147,346 +147,287 @@ export default function PortalDashboard({ user, onLogout }) {
       
       {/* Desktop Wrapper */}
       <div style={{ 
-        width: '100%', maxWidth: '1200px', margin: '0 auto', 
-        display: 'flex', flexDirection: 'column', minHeight: '100vh' 
+        width: '100%', maxWidth: '1400px', margin: '0 auto', 
+        display: 'flex', flex: 1, position: 'relative'
       }}>
         
-        {/* Header */}
-        <div style={{ 
-          background: 'rgba(255, 255, 255, 0.8)', backdropFilter: 'blur(12px)', 
-          padding: '20px 24px', position: 'sticky', top: 0, zIndex: 1000, 
-          display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-          borderBottom: '1px solid rgba(0,0,0,0.05)'
+        {/* Desktop Sidebar Navigation */}
+        <nav className="desktop-nav" style={{
+          width: 280, padding: '32px 0', borderRight: '1px solid rgba(0,0,0,0.05)',
+          display: isDesktop ? 'flex' : 'none', flexDirection: 'column', gap: 8,
+          background: '#fff', position: 'sticky', top: 0, height: '100vh'
         }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-            {!isDesktop && (
-              <div style={{ 
-                background: 'linear-gradient(135deg, #10b981 0%, #3b82f6 100%)', 
-                color: '#fff', width: 44, height: 44, borderRadius: '14px', 
-                display: 'flex', alignItems: 'center', justifyContent: 'center', 
-                fontSize: '1.4rem', fontWeight: 700, boxShadow: '0 4px 10px rgba(16, 185, 129, 0.3)'
-              }}>
+          {/* Branding */}
+          <div style={{ padding: '0 24px 32px', display: 'flex', alignItems: 'center', gap: 12 }}>
+            <div style={{ width: 40, height: 40, borderRadius: 12, background: 'linear-gradient(135deg, #10b981, #3b82f6)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <SchoolIcon size={22} color="#fff" />
+            </div>
+            <div style={{ fontWeight: 900, fontSize: '1.4rem', color: '#0f172a', letterSpacing: '-0.5px' }}>ShuleSoft</div>
+          </div>
+
+          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 4, padding: '0 16px' }}>
+            {[
+              { id: 'home', label: 'Dashboard', icon: ActivityIcon },
+              { id: 'academics', label: 'Academic Results', icon: BookIcon },
+              { id: 'fees', label: 'Fees & Payments', icon: CardIcon },
+              { id: 'profile', label: 'Student Profile', icon: UserIcon }
+            ].map(tab => (
+              <div 
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                style={{ 
+                  display: 'flex', alignItems: 'center', gap: 12, padding: '14px 16px',
+                  borderRadius: '12px', cursor: 'pointer',
+                  background: activeTab === tab.id ? '#f0fdf4' : 'transparent',
+                  color: activeTab === tab.id ? '#10b981' : '#64748b',
+                  fontWeight: 700,
+                  transition: 'all 0.2s ease'
+                }}
+              >
+                <tab.icon size={20} strokeWidth={activeTab === tab.id ? 2.5 : 2} />
+                <span>{tab.label}</span>
+              </div>
+            ))}
+          </div>
+
+          {/* User Info in Sidebar */}
+          <div style={{ padding: '24px', borderTop: '1px solid #f1f5f9', marginTop: 'auto' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16 }}>
+              <div style={{ width: 40, height: 40, borderRadius: 20, background: '#e2e8f0', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, color: '#475569' }}>
                 {localUser.name.charAt(0).toUpperCase()}
               </div>
-            )}
-            <div>
-              <div style={{ fontSize: isDesktop ? '1.4rem' : '1.2rem', fontWeight: 900, color: '#0f172a', letterSpacing: '-0.5px' }}>
-                {isDesktop ? 'Parent Portal' : localUser.name}
-              </div>
-              <div style={{ fontSize: '0.8rem', color: '#64748b', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '1px' }}>
-                {schoolProfile?.name || 'Education System'}
+              <div style={{ overflow: 'hidden' }}>
+                <div style={{ fontWeight: 700, fontSize: '0.9rem', color: '#0f172a', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{localUser.name}</div>
+                <div style={{ fontSize: '0.75rem', color: '#64748b' }}>{localUser.adm_no}</div>
               </div>
             </div>
+            <button onClick={onLogout} style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: '10px', borderRadius: '10px', border: '1px solid #e2e8f0', background: 'transparent', color: '#64748b', fontWeight: 600, cursor: 'pointer' }}>
+              <LogoutIcon size={18} /> Logout
+            </button>
           </div>
-          <div onClick={onLogout} style={{ background: '#f1f5f9', padding: '10px', borderRadius: '12px', color: '#64748b', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8 }}>
-            <span style={{ fontSize: '0.85rem', fontWeight: 600, display: isDesktop ? 'block' : 'none' }}>Logout</span>
-            <LogoutIcon size={20} />
-          </div>
-        </div>
+        </nav>
 
-        {/* Main Content Layout */}
-        <div style={{ display: 'flex', flex: 1 }}>
+        {/* Content Area */}
+        <div style={{ flex: 1, minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
           
-          {/* Desktop Sidebar Navigation */}
-          <nav className="desktop-nav" style={{
-            width: 280, padding: '32px 0', borderRight: '1px solid rgba(0,0,0,0.05)',
-            display: isDesktop ? 'flex' : 'none', flexDirection: 'column', gap: 8,
-            background: '#fff', position: 'sticky', top: 80, height: 'calc(100vh - 80px)'
-          }}>
-            {/* Branding Header in Sidebar */}
-            <div style={{ padding: '0 24px 32px', display: 'flex', alignItems: 'center', gap: 12 }}>
-              <div style={{ width: 40, height: 40, borderRadius: 12, background: '#10b981', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <UserIcon size={20} color="#fff" />
-              </div>
+          {/* Header (Mobile & Tablet) */}
+          {!isDesktop && (
+            <div style={{ 
+              background: '#fff', padding: '16px 20px', 
+              display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+              borderBottom: '1px solid #f1f5f9', position: 'sticky', top: 0, zIndex: 100
+            }}>
               <div style={{ fontWeight: 900, fontSize: '1.2rem', color: '#0f172a' }}>ShuleSoft</div>
+              <div onClick={onLogout} style={{ color: '#64748b' }}><LogoutIcon size={24} /></div>
             </div>
+          )}
 
-            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 4, padding: '0 16px' }}>
-              {[
-                { id: 'home', label: 'Dashboard', icon: ActivityIcon },
-                { id: 'academics', label: 'Academic Performance', icon: BookIcon },
-                { id: 'fees', label: 'Financial Records', icon: CardIcon },
-                { id: 'profile', label: 'Student Profile', icon: UserIcon }
-              ].map(tab => (
-                <div 
-                  key={tab.id}
-                  onClick={() => setActiveTab(tab.id)}
-                  style={{ 
-                    display: 'flex', alignItems: 'center', gap: 12, padding: '14px 16px',
-                    borderRadius: '12px', cursor: 'pointer',
-                    background: activeTab === tab.id ? '#f0fdf4' : 'transparent',
-                    color: activeTab === tab.id ? '#10b981' : '#64748b',
-                    fontWeight: 700,
-                    transition: 'all 0.2s ease'
-                  }}
-                >
-                  <tab.icon size={20} strokeWidth={activeTab === tab.id ? 2.5 : 2} />
-                  <span>{tab.label}</span>
-                </div>
-              ))}
-            </div>
-          </nav>
-
-            {/* Page Content */}
-            <div style={{ flex: 1, padding: isDesktop ? '48px 60px' : '24px 20px 100px', boxSizing: 'border-box' }}>
-              
-              {/* Desktop Greeting Header */}
-              {isDesktop && (
-                <div style={{ marginBottom: 40, animation: 'fadeIn 0.5s ease-out' }}>
-                  <h1 style={{ margin: 0, fontSize: '2.6rem', fontWeight: 900, color: '#0f172a', letterSpacing: '-1.5px', lineHeight: 1 }}>
-                    Welcome back, {localUser.name.split(' ')[0]}
-                  </h1>
-                  <p style={{ margin: '12px 0 0', color: '#64748b', fontSize: '1.15rem', fontWeight: 500 }}>
-                    Monitor your child's academic progress and financial standing in real-time.
-                  </p>
-                </div>
-              )}
+          <main style={{ flex: 1, padding: isDesktop ? '48px 60px' : '24px 20px 100px' }}>
             
+            {/* Greeting */}
+            <div style={{ marginBottom: 32 }}>
+              <div style={{ fontSize: '0.85rem', color: '#10b981', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '1px', marginBottom: 8 }}>
+                {schoolProfile?.name || 'ShuleSoft Academy'}
+              </div>
+              <h1 style={{ margin: 0, fontSize: isDesktop ? '2.4rem' : '1.8rem', fontWeight: 900, color: '#0f172a', letterSpacing: '-1px' }}>
+                Welcome, {localUser.name.split(' ')[0]}
+              </h1>
+            </div>
+
             {/* HOME TAB */}
             {activeTab === 'home' && (
-              <div style={{ display: 'grid', gridTemplateColumns: isLargeDesktop ? 'repeat(2, 1fr)' : '1fr', gap: 24, animation: 'fadeIn 0.4s ease-out' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 32, animation: 'fadeIn 0.4s ease-out' }}>
                 
-                {/* Status Overview Card */}
-                <div style={{ 
-                  gridColumn: '1 / -1',
-                  background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)', 
-                  padding: '32px', borderRadius: '32px', color: '#fff',
-                  boxShadow: '0 12px 24px -8px rgba(15, 23, 42, 0.4)',
-                  position: 'relative', overflow: 'hidden'
-                }}>
-                  <div style={{ position: 'absolute', right: -20, top: -20, width: 140, height: 140, background: 'radial-gradient(circle, rgba(59,130,246,0.3) 0%, transparent 70%)', borderRadius: '50%' }} />
-                  <div style={{ fontSize: '0.9rem', color: '#94a3b8', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '1px', marginBottom: 12 }}>
-                    Active Term • {schoolProfile?.academic_year || '2026'}
-                  </div>
-                  <div style={{ display: 'flex', alignItems: 'flex-end', gap: 16, marginBottom: 32 }}>
-                    <span style={{ fontSize: '3.5rem', fontWeight: 800, lineHeight: 1 }}>{localUser.class}</span>
-                    {localUser.stream && (
-                      <span style={{ background: 'rgba(255,255,255,0.1)', padding: '6px 16px', borderRadius: '24px', fontSize: '1rem', fontWeight: 700, marginBottom: 8 }}>
-                        {localUser.stream.toUpperCase()}
-                      </span>
-                    )}
-                  </div>
-                  <div style={{ display: 'flex', gap: 20, flexWrap: 'wrap' }}>
-                    <div style={{ flex: '1 1 200px', background: 'rgba(255,255,255,0.05)', padding: '20px', borderRadius: '24px', border: '1px solid rgba(255,255,255,0.1)' }}>
-                      <div style={{ fontSize: '0.85rem', color: '#94a3b8', marginBottom: 8 }}>Fee Balance</div>
-                      <div style={{ fontSize: '1.5rem', fontWeight: 800, color: feeBalance > 0 ? '#f87171' : '#34d399' }}>
-                        KES {feeBalance.toLocaleString()}
-                      </div>
+                {/* Stats Grid */}
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 20 }}>
+                  <Card style={{ borderLeft: '4px solid #3b82f6' }}>
+                    <div style={{ color: '#64748b', fontSize: '0.9rem', fontWeight: 600, marginBottom: 8 }}>Current Class</div>
+                    <div style={{ fontSize: '1.8rem', fontWeight: 900, color: '#0f172a' }}>{localUser.class} {localUser.stream}</div>
+                    <div style={{ fontSize: '0.8rem', color: '#94a3b8', marginTop: 4 }}>Term {schoolProfile?.academic_year || '2026'}</div>
+                  </Card>
+                  
+                  <Card style={{ borderLeft: '4px solid #ef4444' }}>
+                    <div style={{ color: '#64748b', fontSize: '0.9rem', fontWeight: 600, marginBottom: 8 }}>Fee Balance</div>
+                    <div style={{ fontSize: '1.8rem', fontWeight: 900, color: feeBalance > 0 ? '#ef4444' : '#10b981' }}>
+                      KES {feeBalance.toLocaleString()}
                     </div>
-                    <div style={{ flex: '1 1 200px', background: 'rgba(255,255,255,0.05)', padding: '20px', borderRadius: '24px', border: '1px solid rgba(255,255,255,0.1)' }}>
-                      <div style={{ fontSize: '0.85rem', color: '#94a3b8', marginBottom: 8 }}>Average Grade</div>
-                      <div style={{ fontSize: '1.5rem', fontWeight: 800, color: academic.color !== '#667781' ? academic.color : '#fff' }}>
-                        {academic.grade} ({academic.average}%)
-                      </div>
+                    <div style={{ fontSize: '0.8rem', color: '#94a3b8', marginTop: 4 }}>Last paid: {payments[0] ? new Date(payments[0].date).toLocaleDateString() : 'N/A'}</div>
+                  </Card>
+
+                  <Card style={{ borderLeft: '4px solid #10b981' }}>
+                    <div style={{ color: '#64748b', fontSize: '0.9rem', fontWeight: 600, marginBottom: 8 }}>Average Grade</div>
+                    <div style={{ fontSize: '1.8rem', fontWeight: 900, color: academic.color !== '#667781' ? academic.color : '#0f172a' }}>
+                      {academic.grade}
                     </div>
-                  </div>
+                    <div style={{ fontSize: '0.8rem', color: '#94a3b8', marginTop: 4 }}>Score: {academic.average}%</div>
+                  </Card>
                 </div>
 
-                {/* Announcements Section */}
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
-                  <h3 style={{ fontSize: '1.25rem', fontWeight: 800, color: '#0f172a', marginBottom: 0 }}>School Updates</h3>
-                  {notices.length === 0 ? (
-                    <Card style={{ textAlign: 'center', padding: '48px 24px' }}>
-                      <MessageIcon size={40} color="#cbd5e1" style={{ margin: '0 auto 16px' }} />
-                      <div style={{ color: '#64748b', fontWeight: 600 }}>No announcements at the moment</div>
-                    </Card>
-                  ) : (
-                    notices.map(n => (
-                      <Card key={n.id} style={{ padding: '24px' }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-                          <div style={{ fontWeight: 800, color: '#0f172a', fontSize: '1.05rem' }}>{n.title}</div>
-                          <div style={{ fontSize: '0.8rem', color: '#94a3b8', fontWeight: 600 }}>{new Date(n.created_at).toLocaleDateString()}</div>
+                <div style={{ display: 'grid', gridTemplateColumns: isLargeDesktop ? '1fr 1fr' : '1fr', gap: 32 }}>
+                  {/* Left Column: Updates */}
+                  <section>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+                      <h3 style={{ margin: 0, fontSize: '1.1rem', fontWeight: 800 }}>Recent Updates</h3>
+                      <button onClick={() => setActiveTab('academics')} style={{ background: 'transparent', border: 'none', color: '#3b82f6', fontWeight: 700, fontSize: '0.85rem', cursor: 'pointer' }}>View All</button>
+                    </div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+                      {notices.length === 0 ? (
+                        <div style={{ padding: '40px', textAlign: 'center', background: '#fff', borderRadius: 20, color: '#94a3b8' }}>
+                          No recent announcements
                         </div>
-                        <div style={{ fontSize: '0.95rem', color: '#475569', lineHeight: 1.6 }}>{n.body}</div>
-                      </Card>
-                    ))
-                  )}
-                </div>
+                      ) : (
+                        notices.slice(0, 3).map(n => (
+                          <div key={n.id} style={{ background: '#fff', padding: 20, borderRadius: 20, border: '1px solid #f1f5f9' }}>
+                            <div style={{ fontWeight: 800, color: '#0f172a', marginBottom: 4 }}>{n.title}</div>
+                            <div style={{ fontSize: '0.85rem', color: '#64748b', lineHeight: 1.5, marginBottom: 12 }}>{n.body.substring(0, 120)}...</div>
+                            <div style={{ fontSize: '0.75rem', color: '#94a3b8', fontWeight: 600 }}>{new Date(n.created_at).toLocaleDateString()}</div>
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  </section>
 
-                {/* Recent Activities/Results Summary */}
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
-                  <h3 style={{ fontSize: '1.25rem', fontWeight: 800, color: '#0f172a', marginBottom: 0 }}>Recent Results</h3>
-                  {examResults.slice(0, 3).map(res => (
-                    <Card key={res.id} style={{ padding: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <div style={{ display: 'flex', gap: 16, alignItems: 'center' }}>
-                        <div style={{ background: '#eff6ff', color: '#3b82f6', padding: 12, borderRadius: 16 }}>
-                          <ActivityIcon size={24} />
+                  {/* Right Column: Performance Preview */}
+                  <section>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+                      <h3 style={{ margin: 0, fontSize: '1.1rem', fontWeight: 800 }}>Recent Results</h3>
+                      <button onClick={() => setActiveTab('academics')} style={{ background: 'transparent', border: 'none', color: '#3b82f6', fontWeight: 700, fontSize: '0.85rem', cursor: 'pointer' }}>Details</button>
+                    </div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                      {examResults.length === 0 ? (
+                        <div style={{ padding: '40px', textAlign: 'center', background: '#fff', borderRadius: 20, color: '#94a3b8' }}>
+                          Results will appear here once released
                         </div>
-                        <div>
-                          <div style={{ fontWeight: 800, color: '#0f172a' }}>{res.exams?.name}</div>
-                          <div style={{ fontSize: '0.8rem', color: '#64748b', fontWeight: 600 }}>{res.exams?.term}</div>
-                        </div>
-                      </div>
-                      <div style={{ textAlign: 'right' }}>
-                        <div style={{ fontWeight: 900, color: '#10b981', fontSize: '1.2rem' }}>{res.mean_score?.toFixed(1)}%</div>
-                        <div style={{ fontSize: '0.75rem', color: '#94a3b8', fontWeight: 600 }}>Rank: {res.class_position}</div>
-                      </div>
-                    </Card>
-                  ))}
-                  {examResults.length === 0 && (
-                    <Card style={{ textAlign: 'center', padding: '48px 24px' }}>
-                      <ActivityIcon size={40} color="#cbd5e1" style={{ margin: '0 auto 16px' }} />
-                      <div style={{ color: '#64748b', fontWeight: 600 }}>Results will appear here once released</div>
-                    </Card>
-                  )}
+                      ) : (
+                        examResults.slice(0, 3).map(res => (
+                          <div key={res.id} style={{ background: '#fff', padding: '16px 20px', borderRadius: 16, border: '1px solid #f1f5f9', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <div>
+                              <div style={{ fontWeight: 700, color: '#0f172a' }}>{res.exams?.name}</div>
+                              <div style={{ fontSize: '0.75rem', color: '#64748b' }}>Term {res.exams?.term}</div>
+                            </div>
+                            <div style={{ fontWeight: 900, color: '#10b981', fontSize: '1.1rem' }}>{res.mean_score?.toFixed(1)}%</div>
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  </section>
                 </div>
-
               </div>
             )}
 
             {/* ACADEMICS TAB */}
             {activeTab === 'academics' && (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 32, animation: 'fadeIn 0.4s ease-out' }}>
-                 
-                 {/* Subjects Selection */}
-                 <div>
-                   <h3 style={{ fontSize: '1.25rem', fontWeight: 800, color: '#0f172a', marginBottom: 16 }}>Your Subjects</h3>
-                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 16 }}>
-                     {localUser.subjects?.map((sub, idx) => {
-                       const tInfo = subjectTeachers.find(t => t.subject_name === sub);
-                       return (
-                         <Card 
-                           key={idx} 
-                           onClick={() => setSelectedSubjectDetail(tInfo || { subject_name: sub })}
-                           style={{ padding: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', hover: { transform: 'translateY(-2px)' } }}
-                         >
-                           <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-                             <div style={{ background: '#f8fafc', width: 44, height: 44, borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#64748b' }}>
-                               <BookIcon size={22} />
-                             </div>
-                             <div>
-                               <div style={{ fontWeight: 700, color: '#0f172a' }}>{sub}</div>
-                               <div style={{ fontSize: '0.8rem', color: '#94a3b8', fontWeight: 600 }}>{tInfo ? tInfo.teacher_name : 'No teacher assigned'}</div>
-                             </div>
-                           </div>
-                           <ChevronRightIcon size={18} color="#cbd5e1" />
-                         </Card>
-                       );
-                     })}
-                   </div>
-                 </div>
-
-                 <div>
-                   <h3 style={{ fontSize: '1.25rem', fontWeight: 800, color: '#0f172a', marginBottom: 16 }}>Full Academic Performance</h3>
-                   <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-                    {examResults.length === 0 ? (
-                      <Card style={{ textAlign: 'center', padding: '60px 24px' }}>
-                        <ActivityIcon size={40} color="#cbd5e1" style={{ margin: '0 auto 16px' }} />
-                        <div style={{ color: '#64748b', fontWeight: 600, fontSize: '1.1rem' }}>No released results found</div>
-                        <p style={{ color: '#94a3b8', fontSize: '0.9rem', marginTop: 8 }}>Please check back later once the administration publishes the results.</p>
-                      </Card>
-                    ) : (
-                      examResults.map(res => (
-                        <Card key={res.id} style={{ padding: '24px', display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', gap: 20 }}>
-                           <div style={{ flex: 1, minWidth: 200 }}>
-                             <div style={{ fontWeight: 800, color: '#0f172a', fontSize: '1.2rem', marginBottom: 4 }}>{res.exams?.name}</div>
-                             <div style={{ display: 'flex', gap: 8 }}>
-                               <Badge bg="#e0e7ff" color="#4f46e5">{res.exams?.term}</Badge>
-                               <Badge bg="#f1f5f9" color="#64748b">{res.exams?.exam_type}</Badge>
-                             </div>
-                           </div>
-                           <div style={{ display: 'flex', gap: 32, alignItems: 'center' }}>
-                             <div style={{ textAlign: 'center' }}>
-                               <div style={{ fontSize: '0.75rem', color: '#94a3b8', fontWeight: 700, textTransform: 'uppercase', marginBottom: 4 }}>Mean Score</div>
-                               <div style={{ fontWeight: 900, color: '#10b981', fontSize: '1.8rem' }}>{res.mean_score?.toFixed(1)}%</div>
-                             </div>
-                             <div style={{ width: 1, height: 40, background: '#e2e8f0' }} />
-                             <div style={{ textAlign: 'right' }}>
-                               <div style={{ fontSize: '0.75rem', color: '#94a3b8', fontWeight: 700, textTransform: 'uppercase', marginBottom: 4 }}>Class Position</div>
-                               <div style={{ fontWeight: 800, color: '#0f172a', fontSize: '1.2rem' }}>{res.class_position} / {res.class_size}</div>
-                             </div>
-                           </div>
+                <section>
+                  <h3 style={{ fontSize: '1.1rem', fontWeight: 800, marginBottom: 16 }}>My Subjects</h3>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: 16 }}>
+                    {localUser.subjects?.map((sub, idx) => {
+                      const tInfo = subjectTeachers.find(t => t.subject_name === sub);
+                      return (
+                        <Card 
+                          key={idx}
+                          onClick={() => setSelectedSubjectDetail(tInfo || { subject_name: sub })}
+                          style={{ display: 'flex', alignItems: 'center', gap: 16, padding: '16px 20px' }}
+                        >
+                          <div style={{ width: 44, height: 44, borderRadius: 12, background: '#f8fafc', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#64748b' }}>
+                            <BookIcon size={20} />
+                          </div>
+                          <div style={{ flex: 1 }}>
+                            <div style={{ fontWeight: 700, color: '#0f172a' }}>{sub}</div>
+                            <div style={{ fontSize: '0.75rem', color: '#94a3b8', fontWeight: 600 }}>{tInfo?.teacher_name || 'Teacher not assigned'}</div>
+                          </div>
+                          <ChevronRightIcon size={18} color="#cbd5e1" />
                         </Card>
-                      ))
-                    )}
-                   </div>
-                 </div>
+                      );
+                    })}
+                  </div>
+                </section>
+
+                <section>
+                  <h3 style={{ fontSize: '1.1rem', fontWeight: 800, marginBottom: 16 }}>Detailed Exam Performance</h3>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+                    {examResults.map(res => (
+                      <Card key={res.id} style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 24, padding: 24 }}>
+                        <div style={{ flex: 1, minWidth: 200 }}>
+                          <div style={{ fontWeight: 800, fontSize: '1.2rem', color: '#0f172a', marginBottom: 4 }}>{res.exams?.name}</div>
+                          <div style={{ display: 'flex', gap: 8 }}>
+                            <Badge bg="#e0e7ff" color="#4f46e5">{res.exams?.term}</Badge>
+                            <Badge bg="#f1f5f9" color="#64748b">{res.exams?.exam_type}</Badge>
+                          </div>
+                        </div>
+                        <div style={{ display: 'flex', gap: 40 }}>
+                          <div>
+                            <div style={{ fontSize: '0.7rem', color: '#94a3b8', fontWeight: 700, textTransform: 'uppercase', marginBottom: 4 }}>Average</div>
+                            <div style={{ fontSize: '1.6rem', fontWeight: 900, color: '#10b981' }}>{res.mean_score?.toFixed(1)}%</div>
+                          </div>
+                          <div>
+                            <div style={{ fontSize: '0.7rem', color: '#94a3b8', fontWeight: 700, textTransform: 'uppercase', marginBottom: 4 }}>Rank</div>
+                            <div style={{ fontSize: '1.6rem', fontWeight: 900, color: '#0f172a' }}>#{res.class_position}</div>
+                          </div>
+                        </div>
+                      </Card>
+                    ))}
+                  </div>
+                </section>
               </div>
             )}
 
             {/* FEES TAB */}
             {activeTab === 'fees' && (
-              <div style={{ display: 'grid', gridTemplateColumns: isLargeDesktop ? '380px 1fr' : '1fr', gap: 32, animation: 'fadeIn 0.4s ease-out' }}>
-                
+              <div style={{ display: 'grid', gridTemplateColumns: isLargeDesktop ? '1fr 350px' : '1fr', gap: 32, animation: 'fadeIn 0.4s ease-out' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 32 }}>
+                  <section>
+                    <h3 style={{ fontSize: '1.1rem', fontWeight: 800, marginBottom: 16 }}>Transaction History</h3>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                      {payments.map(p => (
+                        <div key={p.id} style={{ background: '#fff', padding: 20, borderRadius: 20, border: '1px solid #f1f5f9', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+                            <div style={{ width: 44, height: 44, borderRadius: 12, background: '#f8fafc', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#64748b' }}>
+                              <CardIcon size={22} />
+                            </div>
+                            <div>
+                              <div style={{ fontWeight: 700, color: '#0f172a' }}>{p.method}</div>
+                              <div style={{ fontSize: '0.75rem', color: '#94a3b8' }}>{new Date(p.date).toLocaleDateString()} • {p.reference || 'Ref: N/A'}</div>
+                            </div>
+                          </div>
+                          <div style={{ fontWeight: 800, color: '#10b981', fontSize: '1.2rem' }}>+KES {p.amount.toLocaleString()}</div>
+                        </div>
+                      ))}
+                      {payments.length === 0 && <div style={{ padding: 40, textAlign: 'center', background: '#fff', borderRadius: 20, color: '#94a3b8' }}>No payment records found</div>}
+                    </div>
+                  </section>
+                </div>
+
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
-                  <div style={{ 
-                    background: 'linear-gradient(135deg, #ec4899 0%, #8b5cf6 100%)', 
-                    borderRadius: '32px', padding: '40px 32px', color: '#fff', 
-                    boxShadow: '0 12px 24px -8px rgba(236, 72, 153, 0.4)',
-                    textAlign: 'center', position: 'relative', overflow: 'hidden'
-                  }}>
-                    <div style={{ position: 'absolute', left: -20, bottom: -20, width: 120, height: 120, background: 'rgba(255,255,255,0.1)', borderRadius: '50%' }} />
-                    <div style={{ fontSize: '0.9rem', fontWeight: 700, opacity: 0.9, textTransform: 'uppercase', letterSpacing: '1px', marginBottom: 12 }}>
-                      Current Balance
-                    </div>
-                    <div style={{ fontSize: '3rem', fontWeight: 900, marginBottom: 32, letterSpacing: '-1.5px' }}>
-                      KES {feeBalance.toLocaleString()}
-                    </div>
-                    
+                  <Card style={{ background: '#0f172a', color: '#fff', padding: 32, border: 'none' }}>
+                    <div style={{ fontSize: '0.85rem', color: '#94a3b8', fontWeight: 600, textTransform: 'uppercase', marginBottom: 12 }}>Fee Balance</div>
+                    <div style={{ fontSize: '2.4rem', fontWeight: 900, marginBottom: 32 }}>KES {feeBalance.toLocaleString()}</div>
                     <button 
                       onClick={() => setShowMpesaModal(true)}
-                      style={{ 
-                        width: '100%', background: '#fff', color: '#ec4899', border: 'none', 
-                        padding: '18px', borderRadius: '20px', fontWeight: 800, fontSize: '1.15rem', 
-                        cursor: 'pointer', boxShadow: '0 8px 16px rgba(0,0,0,0.1)',
-                        transition: 'transform 0.2s ease'
-                      }}
+                      style={{ width: '100%', padding: '16px', borderRadius: '16px', border: 'none', background: '#10b981', color: '#fff', fontWeight: 800, fontSize: '1.1rem', cursor: 'pointer' }}
                     >
-                      Make Payment
+                      Pay via M-Pesa
                     </button>
-                  </div>
+                  </Card>
 
-                  <Card style={{ padding: '24px' }}>
-                    <h4 style={{ margin: '0 0 16px', fontSize: '1.05rem', fontWeight: 800 }}>Financial Overview</h4>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                        <span style={{ color: '#64748b', fontWeight: 500 }}>Billed Amount</span>
-                        <span style={{ fontWeight: 700 }}>KES {(feeBalance + payments.reduce((a,b)=>a+b.amount, 0)).toLocaleString()}</span>
+                  <Card>
+                    <h4 style={{ margin: '0 0 16px', fontWeight: 800 }}>Summary</h4>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.9rem' }}>
+                        <span style={{ color: '#64748b' }}>Total Billed</span>
+                        <span style={{ fontWeight: 700 }}>KES {(feeBalance + payments.reduce((a,b)=>a+b.amount,0)).toLocaleString()}</span>
                       </div>
-                      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                        <span style={{ color: '#64748b', fontWeight: 500 }}>Total Paid</span>
-                        <span style={{ fontWeight: 700, color: '#10b981' }}>KES {payments.reduce((a,b)=>a+b.amount, 0).toLocaleString()}</span>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.9rem' }}>
+                        <span style={{ color: '#64748b' }}>Total Paid</span>
+                        <span style={{ fontWeight: 700, color: '#10b981' }}>KES {payments.reduce((a,b)=>a+b.amount,0).toLocaleString()}</span>
                       </div>
-                      <div style={{ height: 1, background: '#f1f5f9' }} />
-                      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                        <span style={{ color: '#0f172a', fontWeight: 800 }}>Remaining</span>
-                        <span style={{ fontWeight: 900, color: '#ec4899' }}>KES {feeBalance.toLocaleString()}</span>
+                      <div style={{ height: 1, background: '#f1f5f9', margin: '4px 0' }} />
+                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '1rem' }}>
+                        <span style={{ fontWeight: 800 }}>Remaining</span>
+                        <span style={{ fontWeight: 900, color: '#ef4444' }}>KES {feeBalance.toLocaleString()}</span>
                       </div>
                     </div>
                   </Card>
-                </div>
-
-                <div>
-                  <h3 style={{ fontSize: '1.25rem', fontWeight: 800, color: '#0f172a', marginBottom: 16 }}>Payment History</h3>
-                  {payments.length === 0 ? (
-                    <Card style={{ textAlign: 'center', padding: '60px 24px' }}>
-                      <HistoryIcon size={40} color="#cbd5e1" style={{ margin: '0 auto 16px' }} />
-                      <div style={{ color: '#64748b', fontWeight: 600, fontSize: '1.1rem' }}>No transaction history found</div>
-                    </Card>
-                  ) : (
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-                      {payments.map(p => (
-                        <Card key={p.id} style={{ padding: '20px 24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-                            <div style={{ background: '#f8fafc', padding: '12px', borderRadius: '16px', color: '#64748b' }}>
-                              <CardIcon size={24} />
-                            </div>
-                            <div>
-                              <div style={{ fontWeight: 800, color: '#0f172a', fontSize: '1.05rem' }}>{p.method}</div>
-                              <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: '0.8rem', color: '#94a3b8', fontWeight: 600 }}>
-                                <ClockIcon size={12} />
-                                {formatDateTime(p.date)}
-                                <span style={{ marginLeft: 8 }}>• {p.reference || 'Ref-N/A'}</span>
-                              </div>
-                            </div>
-                          </div>
-                          <div style={{ fontWeight: 900, color: '#10b981', fontSize: '1.3rem' }}>
-                            +{p.amount.toLocaleString()}
-                          </div>
-                        </Card>
-                      ))}
-                    </div>
-                  )}
                 </div>
               </div>
             )}
@@ -494,98 +435,79 @@ export default function PortalDashboard({ user, onLogout }) {
             {/* PROFILE TAB */}
             {activeTab === 'profile' && (
               <div style={{ maxWidth: 800, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 32, animation: 'fadeIn 0.4s ease-out' }}>
-                <Card style={{ textAlign: 'center', padding: '48px 32px' }}>
-                  <div style={{ 
-                    width: 100, height: 100, borderRadius: '32px', background: 'linear-gradient(135deg, #3b82f6, #8b5cf6)',
-                    color: '#fff', fontSize: '2.5rem', fontWeight: 800, display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    margin: '0 auto 20px', boxShadow: '0 8px 16px rgba(59, 130, 246, 0.3)'
-                  }}>
-                    {localUser.name.charAt(0).toUpperCase()}
+                <Card style={{ padding: 40, textAlign: 'center' }}>
+                  <div style={{ width: 80, height: 80, borderRadius: 40, background: '#f1f5f9', color: '#10b981', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '2rem', fontWeight: 800, margin: '0 auto 20px' }}>
+                    {localUser.name.charAt(0)}
                   </div>
-                  <h2 style={{ margin: '0 0 8px', fontSize: '1.8rem', color: '#0f172a', fontWeight: 900 }}>{localUser.name}</h2>
-                  <p style={{ margin: '0 0 24px', color: '#64748b', fontSize: '1.1rem', fontWeight: 600 }}>Admission Number: {localUser.adm_no}</p>
-                  
-                  <div style={{ display: 'flex', gap: 12, justifyContent: 'center' }}>
-                    <Badge bg="#e0e7ff" color="#4f46e5">Active Student</Badge>
-                    {localUser.residence_type && <Badge bg="#fce7f3" color="#db2777">{localUser.residence_type}</Badge>}
-                  </div>
+                  <h2 style={{ margin: '0 0 4px', fontSize: '1.6rem', fontWeight: 900 }}>{localUser.name}</h2>
+                  <div style={{ fontSize: '0.95rem', color: '#64748b', fontWeight: 600 }}>{localUser.adm_no}</div>
                 </Card>
 
                 <div style={{ display: 'grid', gridTemplateColumns: windowWidth > 600 ? '1fr 1fr' : '1fr', gap: 24 }}>
-                  <div>
-                    <h3 style={{ fontSize: '1.1rem', fontWeight: 800, color: '#0f172a', marginBottom: 12 }}>Academic Profile</h3>
-                    <Card style={{ padding: '24px' }}>
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                          <span style={{ color: '#64748b', fontWeight: 500 }}>Current Grade</span>
-                          <span style={{ color: '#0f172a', fontWeight: 700 }}>{localUser.class}</span>
-                        </div>
-                        <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                          <span style={{ color: '#64748b', fontWeight: 500 }}>Stream</span>
-                          <span style={{ color: '#0f172a', fontWeight: 700 }}>{localUser.stream || 'General'}</span>
-                        </div>
-                        <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                          <span style={{ color: '#64748b', fontWeight: 500 }}>Curriculum</span>
-                          <span style={{ color: '#0f172a', fontWeight: 700 }}>{localUser.class?.includes('Grade') ? 'CBC' : '8-4-4'}</span>
-                        </div>
+                  <Card>
+                    <h4 style={{ margin: '0 0 16px', fontWeight: 800 }}>Academic Info</h4>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.9rem' }}>
+                        <span style={{ color: '#64748b' }}>Class</span>
+                        <span style={{ fontWeight: 700 }}>{localUser.class}</span>
                       </div>
-                    </Card>
-                  </div>
-                  <div>
-                    <h3 style={{ fontSize: '1.1rem', fontWeight: 800, color: '#0f172a', marginBottom: 12 }}>Guardian Information</h3>
-                    <Card style={{ padding: '24px' }}>
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                          <span style={{ color: '#64748b', fontWeight: 500 }}>Registered Phone</span>
-                          <span style={{ color: '#0f172a', fontWeight: 700 }}>{localUser.parent_phone || 'Not Provided'}</span>
-                        </div>
-                        <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                          <span style={{ color: '#64748b', fontWeight: 500 }}>SMS Alerts</span>
-                          <span style={{ color: '#10b981', fontWeight: 700 }}>Enabled</span>
-                        </div>
-                        <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                          <span style={{ color: '#64748b', fontWeight: 500 }}>Primary Guardian</span>
-                          <span style={{ color: '#0f172a', fontWeight: 700 }}>Yes</span>
-                        </div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.9rem' }}>
+                        <span style={{ color: '#64748b' }}>Stream</span>
+                        <span style={{ fontWeight: 700 }}>{localUser.stream || 'General'}</span>
                       </div>
-                    </Card>
-                  </div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.9rem' }}>
+                        <span style={{ color: '#64748b' }}>Curriculum</span>
+                        <span style={{ fontWeight: 700 }}>8-4-4 / CBC</span>
+                      </div>
+                    </div>
+                  </Card>
+                  <Card>
+                    <h4 style={{ margin: '0 0 16px', fontWeight: 800 }}>Contact Info</h4>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.9rem' }}>
+                        <span style={{ color: '#64748b' }}>Parent Phone</span>
+                        <span style={{ fontWeight: 700 }}>{localUser.parent_phone}</span>
+                      </div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.9rem' }}>
+                        <span style={{ color: '#64748b' }}>Email Alerts</span>
+                        <span style={{ fontWeight: 700 }}>Disabled</span>
+                      </div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.9rem' }}>
+                        <span style={{ color: '#64748b' }}>SMS Alerts</span>
+                        <span style={{ fontWeight: 700, color: '#10b981' }}>Enabled</span>
+                      </div>
+                    </div>
+                  </Card>
                 </div>
               </div>
             )}
-
-          </div>
+          </main>
         </div>
       </div>
 
-      {/* Mobile-only Bottom Navigation */}
-      <nav className="mobile-nav" style={{
-        position: 'fixed', bottom: 0, left: 0, width: '100%', 
-        background: 'rgba(255, 255, 255, 0.9)', backdropFilter: 'blur(20px)', 
-        display: isDesktop ? 'none' : 'flex', justifyContent: 'space-around',
-        padding: '12px 0 calc(12px + env(safe-area-inset-bottom))',
-        borderTop: '1px solid rgba(0,0,0,0.05)', zIndex: 1000
-      }}>
-        {[
-          { id: 'home', label: 'Home', icon: ActivityIcon },
-          { id: 'academics', label: 'Academics', icon: BookIcon },
-          { id: 'fees', label: 'Fees', icon: CardIcon },
-          { id: 'profile', label: 'Profile', icon: UserIcon }
-        ].map(tab => (
-          <div 
-            key={tab.id}
-            onClick={() => setActiveTab(tab.id)}
-            style={{ 
-              display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, 
-              color: activeTab === tab.id ? '#10b981' : '#94a3b8',
-              cursor: 'pointer', flex: 1
-            }}
-          >
-            <tab.icon size={22} strokeWidth={activeTab === tab.id ? 2.5 : 2} />
-            <span style={{ fontSize: '0.65rem', fontWeight: activeTab === tab.id ? 700 : 600 }}>{tab.label}</span>
-          </div>
-        ))}
-      </nav>
+      {/* Mobile Navigation */}
+      {!isDesktop && (
+        <nav style={{
+          position: 'fixed', bottom: 0, left: 0, width: '100%', 
+          background: '#fff', borderTop: '1px solid #f1f5f9',
+          display: 'flex', justifyContent: 'space-around', padding: '12px 0 24px', zIndex: 1000
+        }}>
+          {[
+            { id: 'home', icon: ActivityIcon },
+            { id: 'academics', icon: BookIcon },
+            { id: 'fees', icon: CardIcon },
+            { id: 'profile', icon: UserIcon }
+          ].map(tab => (
+            <div 
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              style={{ color: activeTab === tab.id ? '#10b981' : '#94a3b8', cursor: 'pointer' }}
+            >
+              <tab.icon size={24} strokeWidth={activeTab === tab.id ? 2.5 : 2} />
+            </div>
+          ))}
+        </nav>
+      )}
 
       {/* Subject Detail Modal */}
       {selectedSubjectDetail && (
@@ -609,7 +531,7 @@ export default function PortalDashboard({ user, onLogout }) {
             </div>
             
             <div style={{ background: '#f8fafc', padding: 20, borderRadius: 24, display: 'flex', alignItems: 'center', gap: 16, marginBottom: 24 }}>
-              <div style={{ width: 48, height: 48, borderRadius: 14, background: '#10b981', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: '1.2rem' }}>
+              <div style={{ width: 48, height: 48, borderRadius: 14, background: 'linear-gradient(135deg, #10b981, #3b82f6)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: '1.2rem' }}>
                 {selectedSubjectDetail.teacher_name?.charAt(0) || '?'}
               </div>
               <div>
@@ -630,9 +552,9 @@ export default function PortalDashboard({ user, onLogout }) {
 
       {/* M-Pesa Modal */}
       {showMpesaModal && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(15, 23, 42, 0.6)', backdropFilter: 'blur(4px)', zIndex: 2000, display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}>
-          <div style={{ background: '#fff', width: '100%', maxWidth: 480, borderTopLeftRadius: 32, borderTopRightRadius: 32, padding: '24px 24px 40px', animation: 'slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1)' }}>
-            <div style={{ width: 48, height: 5, background: '#e2e8f0', borderRadius: 3, margin: '0 auto 24px' }} />
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(15, 23, 42, 0.6)', backdropFilter: 'blur(4px)', zIndex: 2000, display: 'flex', alignItems: isDesktop ? 'center' : 'flex-end', justifyContent: 'center' }}>
+          <div style={{ background: '#fff', width: '100%', maxWidth: 480, borderRadius: isDesktop ? 32 : '32px 32px 0 0', padding: '24px 24px 40px', animation: isDesktop ? 'fadeIn 0.3s ease-out' : 'slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1)' }}>
+            {!isDesktop && <div style={{ width: 48, height: 5, background: '#e2e8f0', borderRadius: 3, margin: '0 auto 24px' }} />}
             <h3 style={{ margin: '0 0 8px', fontSize: '1.4rem', color: '#0f172a', fontWeight: 800 }}>M-Pesa Express</h3>
             <p style={{ margin: '0 0 24px', color: '#64748b', fontSize: '0.95rem' }}>Push an STK prompt to your phone to complete the transaction instantly.</p>
             
@@ -695,9 +617,7 @@ export default function PortalDashboard({ user, onLogout }) {
         input:focus {
           border-color: #3b82f6 !important;
         }
-        @media (min-width: 769px) {
-          .mobile-nav { display: none !important; }
-        }
+        body { margin: 0; }
       `}</style>
     </div>
   );
