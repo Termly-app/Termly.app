@@ -419,40 +419,47 @@ export default function MobileGrading({ user, onLogout }) {
                      </button>
                    </div>
 
-                   <div style={{ display: 'grid', gridTemplateColumns: isDesktop ? '1fr 1fr' : '1fr', gap: 16 }}>
-                     {students.map((s) => {
-                       const data = marksBuffer[s.id] || { score: '', isAbsent: false };
-                       return (
-                         <Card key={s.id} style={{ padding: '16px 20px', display: 'flex', alignItems: 'center', gap: 16 }}>
-                           <div style={{ flex: 1 }}>
-                             <div style={{ fontWeight: 700, color: '#0f172a', fontSize: '1rem' }}>{s.name}</div>
-                             <div style={{ color: '#64748b', fontSize: '0.8rem', fontWeight: 600 }}>ADM: {s.adm_no}</div>
-                           </div>
-                           
-                           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
-                             <label style={{ fontSize: '0.65rem', fontWeight: 800, color: '#94a3b8' }}>ABS</label>
-                             <input 
-                               type="checkbox" 
-                               checked={data.isAbsent}
-                               onChange={(e) => handleMarkChange(s.id, 'isAbsent', e.target.checked)}
-                               style={{ width: 22, height: 22, cursor: 'pointer', accentColor: '#ef4444' }} 
-                             />
-                           </div>
-
-                           <div style={{ width: 64 }}>
-                              <input
-                               type="number"
-                               inputMode="numeric"
-                               disabled={data.isAbsent}
-                               value={data.score ?? ''}
-                               onChange={(e) => handleMarkChange(s.id, 'score', e.target.value)}
-                               style={{ width: '100%', padding: '12px 0', textAlign: 'center', border: '2px solid #e2e8f0', borderRadius: '12px', fontSize: '1.1rem', fontWeight: 800, color: data.isAbsent ? '#cbd5e1' : '#0f172a', background: data.isAbsent ? '#f8fafc' : '#fff', outline: 'none' }}
-                               placeholder="—"
-                             />
-                           </div>
-                         </Card>
-                       );
-                     })}
+                   <div style={{ background: '#fff', borderRadius: '16px', border: '1px solid #e2e8f0', overflow: 'hidden', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)' }}>
+                     <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
+                       <thead>
+                         <tr style={{ background: '#f8fafc', borderBottom: '2px solid #e2e8f0' }}>
+                           <th style={{ padding: '12px 20px', fontSize: '0.8rem', color: '#64748b', fontWeight: 800, textTransform: 'uppercase' }}>Student Name</th>
+                           <th style={{ padding: '12px 20px', fontSize: '0.8rem', color: '#64748b', fontWeight: 800, textTransform: 'uppercase' }}>ADM NO</th>
+                           <th style={{ padding: '12px 20px', fontSize: '0.8rem', color: '#64748b', fontWeight: 800, textTransform: 'uppercase', textAlign: 'center' }}>ABS (Absent)</th>
+                           <th style={{ padding: '12px 20px', fontSize: '0.8rem', color: '#64748b', fontWeight: 800, textTransform: 'uppercase', width: 100, textAlign: 'center' }}>Score</th>
+                         </tr>
+                       </thead>
+                       <tbody>
+                         {students.map((s) => {
+                           const data = marksBuffer[s.id] || { score: '', isAbsent: false };
+                           return (
+                             <tr key={s.id} style={{ borderBottom: '1px solid #f1f5f9', transition: 'background 0.2s' }}>
+                               <td style={{ padding: '14px 20px', fontWeight: 700, color: '#0f172a' }}>{s.name}</td>
+                               <td style={{ padding: '14px 20px', color: '#64748b', fontWeight: 600 }}>{s.adm_no}</td>
+                               <td style={{ padding: '14px 20px', textAlign: 'center' }}>
+                                 <input 
+                                   type="checkbox" 
+                                   checked={data.isAbsent}
+                                   onChange={(e) => handleMarkChange(s.id, 'isAbsent', e.target.checked)}
+                                   style={{ width: 20, height: 20, cursor: 'pointer', accentColor: '#ef4444' }} 
+                                 />
+                               </td>
+                               <td style={{ padding: '10px 20px' }}>
+                                 <input
+                                   type="number"
+                                   inputMode="numeric"
+                                   disabled={data.isAbsent}
+                                   value={data.score ?? ''}
+                                   onChange={(e) => handleMarkChange(s.id, 'score', e.target.value)}
+                                   style={{ width: '100%', padding: '10px', textAlign: 'center', border: '1px solid #e2e8f0', borderRadius: '10px', fontSize: '1.1rem', fontWeight: 800, color: data.isAbsent ? '#cbd5e1' : '#0f172a', background: data.isAbsent ? '#f8fafc' : '#fff', outline: 'none' }}
+                                   placeholder="—"
+                                 />
+                               </td>
+                             </tr>
+                           );
+                         })}
+                       </tbody>
+                     </table>
                    </div>
                  </div>
                )}
