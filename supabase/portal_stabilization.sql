@@ -1,9 +1,21 @@
 -- ============================================================
--- PORTAL STABILIZATION SCRIPT (V5)
+-- PORTAL STABILIZATION SCRIPT (V6 - FULL RECOVERY)
 -- Fixes mismatches in Parent/Staff portal RPCs and schemas.
+-- Ensures all required tables (tt_teacher_subjects) exist.
 -- ============================================================
 
--- 1. Fix portal_get_subject_details (Fixes "sa.subject_id does not exist")
+-- 0. Ensure Required Tables Exist
+CREATE TABLE IF NOT EXISTS public.tt_teacher_subjects (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  school_id UUID NOT NULL REFERENCES public.schools(id) ON DELETE CASCADE,
+  teacher_id UUID NOT NULL REFERENCES public.users(id) ON DELETE CASCADE,
+  subject_id UUID NOT NULL REFERENCES public.tt_subjects(id) ON DELETE CASCADE,
+  class_id UUID NOT NULL REFERENCES public.classes(id) ON DELETE CASCADE,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  UNIQUE(teacher_id, subject_id, class_id)
+);
+
+-- 1. Fix portal_get_subject_details (Fixes "tt_teacher_subjects does not exist" and "sa.subject_id")
 CREATE OR REPLACE FUNCTION public.portal_get_subject_details(p_student_id UUID)
 RETURNS JSONB LANGUAGE plpgsql SECURITY DEFINER SET search_path = public, pg_catalog AS $$
 BEGIN
@@ -15,11 +27,13 @@ BEGIN
       'short_code', ts.short_code
     )), '[]'::jsonb)
     FROM public.students s
-    JOIN public.classes c ON c.name = s.class AND c.school_id = s.school_id
-    JOIN public.tt_teacher_subjects tts ON tts.class_id = c.id
-    JOIN public.tt_subjects ts ON ts.id = tts.subject_id
-    JOIN public.users u ON u.id = tts.teacher_id
+    -- Try to join via modern tt_teacher_subjects first
+    LEFT JOIN public.classes c ON (c.id = s.class_id OR (c.name = s.class AND c.school_id = s.school_id))
+    LEFT JOIN public.tt_teacher_subjects tts ON tts.class_id = c.id
+    LEFT JOIN public.tt_subjects ts ON ts.id = tts.subject_id
+    LEFT JOIN public.users u ON u.id = tts.teacher_id
     WHERE s.id = p_student_id
+      AND ts.id IS NOT NULL -- Only return if we found a subject match
   );
 END; $$;
 
@@ -87,10 +101,29 @@ BEGIN
 END; $$;
 
 -- 5. Helper to ensure classes can be found by name if class_id is missing on student
--- Some older students might only have 'class' (text) set.
 UPDATE public.students s
 SET class_id = c.id
 FROM public.classes c
 WHERE s.class_id IS NULL 
   AND c.name = s.class 
   AND c.school_id = s.school_id;
+
+-- 6. Attempt to migrate legacy subject_assignments to tt_teacher_subjects
+-- This assumes subject_assignments has (teacher_id, subject, class_grade, stream)
+-- and tt_subjects can be matched by name.
+DO $$ 
+BEGIN
+  IF EXISTS (SELECT FROM information_schema.tables WHERE table_name = 'subject_assignments') THEN
+    INSERT INTO public.tt_teacher_subjects (school_id, teacher_id, subject_id, class_id)
+    SELECT DISTINCT 
+      sa.school_id, 
+      sa.teacher_id, 
+      ts.id as subject_id, 
+      c.id as class_id
+    FROM public.subject_assignments sa
+    JOIN public.tt_subjects ts ON ts.name = sa.subject AND ts.school_id = sa.school_id
+    JOIN public.classes c ON c.name = sa.class_grade AND c.school_id = sa.school_id
+    ON CONFLICT (teacher_id, subject_id, class_id) DO NOTHING;
+  END IF;
+END $$;
+
