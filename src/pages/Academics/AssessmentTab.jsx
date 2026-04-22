@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Helmet } from 'react-helmet-async';
-import { getClassResults, setStudentAllMarks, getSubjectRankings, getClassList, getCBC, setCBC, getTeacherPerformance, getCoreCompetencies, getPrintHeader, getPrintFooter, getSchoolProfile, subscribeToChanges, getGradeForScore, getSubjectAssignments, getExams, publishExamToPortal } from '../../data/store';
+import { getClassResults, setStudentAllMarks, getSubjectRankings, getClassList, getCBC, setCBC, getTeacherPerformance, getCoreCompetencies, getPrintHeader, getPrintFooter, getSchoolProfile, subscribeToChanges, getGradeForScore, getSubjectAssignments, getExams } from '../../data/store';
 import { CBC_STRUCTURE, CBC_LEVELS, CBC_CORE_COMPETENCIES, STREAMS, getSubjectsForGrade, getLevelForGrade } from '../../data/seedData';
 import { 
   LeafIcon, BookIcon, PrintIcon, DashboardIcon, EditIcon, 
@@ -60,10 +60,9 @@ export default function AssessmentTab({ currentUser, currentPeriodId }) {
         setAssignments(a);
         setRobustExams(e);
         
-        const examsList = p.custom_exams?.length > 0 ? p.custom_exams : ['CAT 1','CAT 2','Mid Term','End Term'];
         // Initialize examType if not set
-        if (!examType) {
-          setExamType(examsList[0]);
+        if (!examType && e.length > 0) {
+          setExamType(e[0].name);
         }
 
         await loadResults();
@@ -489,40 +488,13 @@ export default function AssessmentTab({ currentUser, currentPeriodId }) {
           <Select 
             value={examType}
             onChange={(e) => setExamType(e.target.value)}
-            options={(profile.custom_exams?.length > 0 ? profile.custom_exams : ['CAT 1','CAT 2','Mid Term','End Term']).map(type => ({
-              id: type, label: type
-            }))}
+            options={robustExams.map(re => ({ id: re.name, label: re.name }))}
             style={{ minWidth: 150 }}
           />
-          {examType && (
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              {robustExams.some(re => re.name === examType && re.status === 'published') ? (
-                <span className="badge badge-success" style={{ fontSize: '0.7rem', display: 'flex', alignItems: 'center', gap: 4 }}>
-                  <RocketIcon size={12} /> Live on Portal
-                </span>
-              ) : (
-                <button 
-                  className="btn btn-sm btn-outline" 
-                  disabled={syncingExam}
-                  onClick={async () => {
-                    setSyncingExam(true);
-                    try {
-                      await publishExamToPortal(examType, currentPeriodId || 'Current');
-                      const fresh = await getExams();
-                      setRobustExams(fresh);
-                      alert({ title: 'Published!', message: `${examType} is now visible to teachers in the Staff Portal.`, variant: 'success' });
-                    } catch (e) {
-                      alert({ title: 'Error', message: e.message, variant: 'danger' });
-                    } finally {
-                      setSyncingExam(false);
-                    }
-                  }}
-                  style={{ fontSize: '0.7rem', padding: '4px 10px' }}
-                >
-                  {syncingExam ? 'Publishing...' : 'Publish to Portal'}
-                </button>
-              )}
-            </div>
+          {examType && robustExams.some(re => re.name === examType && re.status === 'published') && (
+            <span className="badge badge-success" style={{ fontSize: '0.7rem', display: 'flex', alignItems: 'center', gap: 4 }}>
+              <RocketIcon size={12} /> Live on Portal
+            </span>
           )}
         </div>
 

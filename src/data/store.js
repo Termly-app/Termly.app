@@ -401,7 +401,7 @@ function loadProfileFromLocal(schoolId) {
   } catch (e) { return null; }
 }
 
-const SAFE_PROFILE_COLUMNS = 'id, school_name, motto, phone, email, address, logo, subscription_plan, streams_per_class, custom_subjects, active_classes, grade_fees, subscription_status, subscription_expiry, last_payment_status, mpesa_config, sms_config, grading_systems, custom_exams, curriculum, timetable_label';
+const SAFE_PROFILE_COLUMNS = 'id, school_name, motto, phone, email, address, logo, subscription_plan, streams_per_class, custom_subjects, active_classes, grade_fees, subscription_status, subscription_expiry, last_payment_status, mpesa_config, sms_config, grading_systems, curriculum, timetable_label';
 
 /**
  * Maps raw database profile (snake_case) to application profile (camelCase)
@@ -518,6 +518,12 @@ export async function getSchoolProfile() {
     
     if (!data) return { ...DEFAULT_PROFILE };
     const mapped = mapProfileData(data);
+    
+    // Auto-migrate legacy exams if found
+    if (data.custom_exams && data.custom_exams.length > 0) {
+      setTimeout(() => migrateLegacyExams(data.custom_exams), 100);
+    }
+
     _profileCache = mapped;
     saveProfileToLocal(_currentSchoolId, mapped);
     return mapped;
@@ -1652,82 +1658,92 @@ export async function getExams() {
   if (!_currentAuthUser && _currentSchoolId) {
     const { data, error } = await supabase.rpc('portal_get_open_exams', { p_school_id: _currentSchoolId });
     if (error) throw error;
-    
-    // Fallback: If no exams in robust table, check legacy custom_exams
-    if (!data || data.length === 0) {
-      const profile = await getSchoolProfile();
-      const legacyList = profile.custom_exams?.length > 0 ? profile.custom_exams : ['CAT 1','CAT 2','Mid Term','End Term'];
-      return legacyList.map(name => ({
-        id: `legacy_${name}`,
-        name,
-        status: 'published',
-        term: 'Current',
-        is_legacy: true
-      }));
-    }
     return data || [];
   }
 
-  // Admin mode: needs period
-  if (!_currentPeriodId) return [];
-
+  // Admin/Standard mode: use direct table query
   const cacheKey = `exams_${_currentSchoolId}_${_currentPeriodId}`;
   return getCached(cacheKey, async () => {
     const { data, error } = await supabase
       .from('exams')
       .select('*')
       .eq('school_id', _currentSchoolId)
-      .eq('academic_year', _currentPeriodId) // Mapping academic_year to period_id for now
+      // We return all exams for the school so admins can manage them across terms
+      // but we sort them by period/created_at
       .order('created_at', { ascending: false });
     if (error) throw error;
-    return data;
+    return data || [];
   });
 }
 
-export async function createExam(name, examType, term) {
+/**
+ * [UNIFICATION] Auto-migration helper for legacy exams
+ */
+async function migrateLegacyExams(examsList) {
+  if (!examsList || examsList.length === 0 || !_currentSchoolId) return;
+  console.log('[UNIFICATION] Migrating legacy exams:', examsList);
+  
+  const periodId = _currentPeriodId || 'Current';
+  
+  for (const name of examsList) {
+    try {
+      // Check if already exists in robust table
+      const { data: existing } = await supabase
+        .from('exams')
+        .select('id')
+        .eq('school_id', _currentSchoolId)
+        .eq('name', name)
+        .maybeSingle();
+
+      if (!existing) {
+        console.log(`[UNIFICATION] Creating robust record for: ${name}`);
+        await createExam(name, 'endterm', periodId);
+      }
+    } catch (e) {
+      console.error(`[UNIFICATION] Failed to migrate ${name}:`, e.message);
+    }
+  }
+
+  // Clear legacy field to prevent re-migration
+  await supabase
+    .from('school_profiles')
+    .update({ custom_exams: [] })
+    .eq('school_id', _currentSchoolId);
+}
+
+/**
+ * Creates a new unified exam record
+ */
+export async function createExam(name, type = 'endterm', term = 'Current') {
   mutationGuard('createExam');
   const { data, error } = await supabase
     .from('exams')
     .insert({
       school_id: _currentSchoolId,
       name,
-      exam_type: examType,
-      term,
-      academic_year: _currentPeriodId,
-      created_by: _currentUserId,
-      status: 'setup'
+      exam_type: type,
+      term: term,
+      academic_year: term,
+      status: 'published' // Default to published for simplicity
     })
     .select()
     .single();
-  
+
   if (error) throw error;
   invalidateCache(`exams_${_currentSchoolId}_${_currentPeriodId}`);
   return data;
 }
 
-/**
- * [NEW] Bridge: Publish a legacy exam string to the robust exams table
- */
-export async function publishExamToPortal(name, term) {
-  mutationGuard('publishExamToPortal');
-  // Check if already exists
-  const { data: existing } = await supabase
+export async function deleteExam(examId) {
+  mutationGuard('deleteExam');
+  const { error } = await supabase
     .from('exams')
-    .select('id')
-    .eq('school_id', _currentSchoolId)
-    .eq('name', name)
-    .eq('term', term)
-    .maybeSingle();
-
-  if (existing) {
-    // Just update to published
-    await updateExam(existing.id, { status: 'published' });
-    return existing.id;
-  }
-
-  const exam = await createExam(name, 'endterm', term);
-  await updateExam(exam.id, { status: 'published' });
-  return exam.id;
+    .delete()
+    .eq('id', examId);
+  
+  if (error) throw error;
+  invalidateCache(`exams_${_currentSchoolId}_${_currentPeriodId}`);
+  return true;
 }
 
 export async function updateExam(examId, updates) {

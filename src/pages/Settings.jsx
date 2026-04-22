@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { getSchoolProfile, saveSchoolProfile, importData, exportData, CBC_STRUCTURE, TERM_FEE, applyFeeStructure, getPeriods, createPeriod, setActivePeriod, testMpesaConnection, testSmsConnection, getCurrentAuthUser, supabase } from '../data/store';
+import { getSchoolProfile, saveSchoolProfile, importData, exportData, CBC_STRUCTURE, TERM_FEE, applyFeeStructure, getPeriods, createPeriod, setActivePeriod, testMpesaConnection, testSmsConnection, getCurrentAuthUser, supabase, getExams, createExam, deleteExam, getCurrentPeriodId } from '../data/store';
 import Select from '../components/Common/Select';
 import { Helmet } from 'react-helmet-async';
 import { useDialog } from '../contexts/DialogContext';
@@ -35,9 +35,7 @@ export default function Settings() {
   const [testingMpesa, setTestingMpesa] = useState(false);
   const [testingSms, setTestingSms] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
-  const [showMpesaKey, setShowMpesaKey] = useState(false);
-  const [showMpesaSec, setShowMpesaSec] = useState(false);
-  const [showSmsKey, setShowSmsKey] = useState(false);
+  const [robustExams, setRobustExams] = useState([]);
   const fileRef   = useRef(null);
   const backupRef = useRef(null);
 
@@ -51,6 +49,9 @@ export default function Settings() {
         
         const per = await getPeriods();
         setPeriods(per);
+
+        const ex = await getExams();
+        setRobustExams(ex);
 
         const authUser = await getCurrentAuthUser();
         if (authUser) {
@@ -158,16 +159,38 @@ export default function Settings() {
     try{await saveSchoolProfile(profile);await applyFeeStructure();alert({ title: 'Success', message: 'Fee structure applied to students.', variant: 'success' });}
     catch(err){alert({ title: 'Application Error', message: err.message, variant: 'danger' });}finally{setLoading(false);}
   };
-  const addExam=()=>{
+  const addExam=async()=>{
     const val=newExam.trim();if(!val)return;
-    const cur=profile.custom_exams||['CAT 1','CAT 2','Mid Term','End Term'];
+    const cur=robustExams.map(e => e.name);
     if(cur.includes(val))return;
-    setProfile({...profile,custom_exams:[...cur,val]});
-    setNewExam('');setSaved(false);
+    
+    setLoading(true);
+    try {
+      const periodId = getCurrentPeriodId() || '2026';
+      const created = await createExam(val, 'endterm', periodId);
+      setRobustExams([...robustExams, created]);
+      setNewExam('');
+    } catch(err) {
+      alert({ title: 'Error', message: err.message, variant: 'danger' });
+    } finally {
+      setLoading(false);
+    }
   };
-  const removeExam=(exam)=>{
-    const cur=profile.custom_exams||[];
-    setProfile({...profile,custom_exams:cur.filter(e=>e!==exam)});setSaved(false);
+  const removeExam=async(examName)=>{
+    const exam = robustExams.find(e => e.name === examName);
+    if (!exam) return;
+    
+    if (await confirm({ title: 'Delete Exam?', message: `Are you sure you want to delete "${examName}"? This will remove all associated marks.`, variant: 'danger' })) {
+      setLoading(true);
+      try {
+        await deleteExam(exam.id);
+        setRobustExams(robustExams.filter(e => e.id !== exam.id));
+      } catch(err) {
+        alert({ title: 'Error', message: err.message, variant: 'danger' });
+      } finally {
+        setLoading(false);
+      }
+    }
   };
   const addGradeItem=()=>{
     if(!newGradeItem.symbol) return;
@@ -529,10 +552,10 @@ export default function Settings() {
                     <div>
                       <div style={{fontSize:'0.72rem',fontWeight:700,color:'var(--text-light)',textTransform:'uppercase',marginBottom:8}}>Exam Types</div>
                       <div style={{display:'flex',flexWrap:'wrap',gap:6,marginBottom:10,minHeight:36}}>
-                        {(profile.custom_exams||['CAT 1','CAT 2','Mid Term','End Term']).map(e=>(
-                          <div key={e} style={{display:'inline-flex',alignItems:'center',gap:5,padding:'5px 10px',borderRadius:20,background:'var(--bg-card)',border:'1px solid var(--border)',fontSize:'0.82rem'}}>
-                            <span>{e}</span>
-                            <button onClick={()=>removeExam(e)} style={{background:'none',border:'none',cursor:'pointer',color:'var(--danger)',fontWeight:700}}>×</button>
+                        {robustExams.map(e=>(
+                          <div key={e.id} style={{display:'inline-flex',alignItems:'center',gap:5,padding:'5px 10px',borderRadius:20,background:'var(--bg-card)',border:'1px solid var(--border)',fontSize:'0.82rem'}}>
+                            <span>{e.name}</span>
+                            <button onClick={()=>removeExam(e.name)} style={{background:'none',border:'none',cursor:'pointer',color:'var(--danger)',fontWeight:700}}>×</button>
                           </div>
                         ))}
                       </div>
