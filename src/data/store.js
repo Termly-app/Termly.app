@@ -1657,17 +1657,22 @@ export async function getClassList(className, classId = null, subjectName = null
     students = (await getStudents()).filter(s => s.class === className);
   }
 
-  // 1. Filter by Stream (if provided)
+  // 1. Filter by Stream (Strict)
   if (streamName) {
     const sLower = streamName.toLowerCase();
-    students = students.filter(s => s.stream?.toLowerCase() === sLower || s.class?.toLowerCase().includes(sLower));
+    students = students.filter(s => 
+      (s.stream && s.stream.toLowerCase() === sLower) || 
+      (s.class && s.class.toLowerCase().includes(sLower))
+    );
   }
 
-  // 2. Filter by Subject (Enrolled students only)
+  // 2. Filter by Subject (Strict Enrollment Only)
   if (subjectName) {
-    students = students.filter(s => 
-      s.subjects && s.subjects.length > 0 && s.subjects.includes(subjectName)
-    );
+    const subLower = subjectName.toLowerCase();
+    students = students.filter(s => {
+      if (!s.subjects || s.subjects.length === 0) return false;
+      return s.subjects.some(sub => sub.toLowerCase().includes(subLower) || subLower.includes(sub.toLowerCase()));
+    });
   }
 
   return students.sort((a, b) => a.name.localeCompare(b.name));
