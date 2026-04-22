@@ -1567,12 +1567,20 @@ export async function getMarks(examType = _currentExamType) {
       .eq('period_id', _currentPeriodId)
       .eq('exam_type', examType);
     
-    // 2. Fetch New Exam Marks (from Teacher Portal)
-    const { data: portalData, error: portalErr } = await supabase
-      .from('exam_marks')
-      .select('student_id, raw_score, is_absent, exam_papers(subject)')
-      .eq('school_id', _currentSchoolId)
-      .eq('exam_papers.exam_id', (await getExams()).find(e => e.name === examType)?.id);
+    // 2. Fetch New Exam Marks (from Teacher Portal) with Bulletproof Join
+    const targetExam = (await getExams()).find(e => e.name === examType);
+    let portalData = [];
+    
+    if (targetExam) {
+      const { data, error: portalErr } = await supabase
+        .from('exam_marks')
+        .select('student_id, raw_score, is_absent, exam_papers!inner(subject, exam_id)')
+        .eq('school_id', _currentSchoolId)
+        .eq('exam_papers.exam_id', targetExam.id);
+      
+      if (portalErr) console.error('Portal marks fetch error:', portalErr);
+      portalData = data || [];
+    }
 
     if (legacyErr) console.error('Legacy marks error:', legacyErr);
     
