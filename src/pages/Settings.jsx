@@ -591,7 +591,6 @@ export default function Settings() {
                           </label>
                           <button onClick={addExam} className="btn btn-ghost btn-sm" style={{display:'flex',alignItems:'center',gap:4}}><PlusIcon size={14} /> Add</button>
                         </div>
-                      </div>
 
                       {/* Timetable label - WIP (module disabled)
                       <div style={{marginTop: 16}}>
