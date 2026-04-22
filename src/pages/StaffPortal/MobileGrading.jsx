@@ -4,7 +4,7 @@ import {
   getSchoolProfile, getExams, getExamPapers, 
   getExamMarksForPaper, saveExamMarks, getClassList,
   getTeacherWorkloadSummary, getTeacherTimetable, getTimetableConfig, getPeriods,
-  initPortalStore
+  initPortalStore, subscribeToTable
 } from '../../data/store';
 import { 
   BookIcon, CheckIcon, SaveIcon, UserIcon, 
@@ -114,6 +114,46 @@ export default function MobileGrading({ user, onLogout }) {
       setLoading(false);
     }
   };
+
+  // Realtime Subscriptions
+  useEffect(() => {
+    const schoolId = user.school_id || user.schoolId;
+    if (!schoolId) return;
+
+    // Listen for exam changes (status, new exams)
+    const unsubExams = subscribeToTable('exams', () => {
+      getExams().then(setExams).catch(console.error);
+    });
+
+    return () => {
+      unsubExams();
+    };
+  }, [user.school_id, user.schoolId]);
+
+  useEffect(() => {
+    if (!selectedPaper) return;
+
+    // Listen for mark changes in the current paper
+    const unsubMarks = subscribeToTable('exam_marks', (payload) => {
+      // Only refresh if the mark belongs to our current paper
+      if (payload.new?.exam_paper_id === selectedPaper.id || payload.old?.exam_paper_id === selectedPaper.id) {
+        getExamMarksForPaper(selectedPaper.id).then(existingMarks => {
+          const buffer = {};
+          existingMarks.forEach(m => {
+            buffer[m.student_id] = {
+              score: m.raw_score,
+              isAbsent: m.is_absent
+            };
+          });
+          setMarksBuffer(buffer);
+        }).catch(console.error);
+      }
+    });
+
+    return () => {
+      unsubMarks();
+    };
+  }, [selectedPaper]);
 
   useEffect(() => {
     if (selectedExamId) {
@@ -596,7 +636,7 @@ export default function MobileGrading({ user, onLogout }) {
                     style={{ padding: '16px 20px', borderRadius: '16px', background: selectedExamId === e.id ? '#f0fdf4' : '#f8fafc', border: selectedExamId === e.id ? '2px solid #10b981' : '2px solid transparent', cursor: 'pointer' }}
                   >
                     <div style={{ fontWeight: 700, color: selectedExamId === e.id ? '#16a34a' : '#0f172a', fontSize: '1.05rem' }}>{e.name}</div>
-                    <div style={{ fontSize: '0.8rem', color: '#64748b', fontWeight: 600 }}>{e.term} • {e.status}</div>
+                    <div style={{ fontSize: '0.8rem', color: '#64748b', fontWeight: 600 }}>{e.status}</div>
                   </div>
                 ))
               ) : (

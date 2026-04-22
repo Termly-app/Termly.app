@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { getSchoolProfile, saveSchoolProfile, importData, exportData, CBC_STRUCTURE, TERM_FEE, applyFeeStructure, getPeriods, createPeriod, setActivePeriod, testMpesaConnection, testSmsConnection, getCurrentAuthUser, supabase, getExams, createExam, deleteExam, getCurrentPeriodId } from '../data/store';
+import { getSchoolProfile, saveSchoolProfile, importData, exportData, CBC_STRUCTURE, TERM_FEE, applyFeeStructure, getPeriods, createPeriod, setActivePeriod, testMpesaConnection, testSmsConnection, getCurrentAuthUser, supabase, getExams, createExam, deleteExam, getCurrentPeriodId, subscribeToTable } from '../data/store';
 import Select from '../components/Common/Select';
 import { Helmet } from 'react-helmet-async';
 import { useDialog } from '../contexts/DialogContext';
@@ -62,6 +62,14 @@ export default function Settings() {
       }catch(e){console.error(e);}
     })();
   },[]);
+
+  useEffect(() => {
+    // Realtime Exam Sync
+    const unsubExams = subscribeToTable('exams', () => {
+      getExams().then(setRobustExams).catch(console.error);
+    });
+    return () => unsubExams();
+  }, []);
 
   const handleSave=async(e)=>{
     if(e)e.preventDefault(); setLoading(true);

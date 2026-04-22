@@ -1791,6 +1791,33 @@ export async function updateExamStatus(examId, status) {
   invalidateCache(`exams_${_currentSchoolId}_${_currentPeriodId}`);
 }
 
+/**
+ * Subscribes to real-time changes for a specific table and school.
+ */
+export function subscribeToTable(tableName, callback) {
+  const channel = supabase
+    .channel(`${tableName}_realtime`)
+    .on(
+      'postgres_changes',
+      {
+        event: '*',
+        schema: 'public',
+        table: tableName,
+        filter: `school_id=eq.${_currentSchoolId}`
+      },
+      (payload) => {
+        // Invalidate cache when changes occur
+        invalidateCache(); 
+        callback(payload);
+      }
+    )
+    .subscribe();
+
+  return () => {
+    supabase.removeChannel(channel);
+  };
+}
+
 export async function getExamPapers(examId) {
   if (!_currentSchoolId || !examId) return [];
   
