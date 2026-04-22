@@ -1664,8 +1664,9 @@ export async function getClassList(className, classId = null) {
 export async function getExams() {
   if (!_currentSchoolId) return [];
   
-  // Portal mode: use RPC (doesn't need period)
-  if (!_currentAuthUser && _currentSchoolId) {
+  // Portal mode: strictly identify portal users via sessionStorage
+  const isPortalUser = !!sessionStorage.getItem('shulesoft_portal_user_id');
+  if (isPortalUser && _currentSchoolId) {
     const { data, error } = await supabase.rpc('portal_get_open_exams', { p_school_id: _currentSchoolId });
     if (error) throw error;
     return data || [];
