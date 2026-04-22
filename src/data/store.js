@@ -1644,18 +1644,32 @@ export async function getSubjectRankings(className, examType = _currentExamType)
   return rankings;
 }
 
-export async function getClassList(className, classId = null) {
+export async function getClassList(className, classId = null, subjectName = null) {
   if (!_currentAuthUser && _currentSchoolId && classId) {
     const { data, error } = await supabase.rpc('portal_get_class_students', { 
-      p_school_id: _currentSchoolId, 
-      p_class_id: classId 
+      p_school_id: _currentSchoolId,
+      p_class_id: classId
     });
     if (error) throw error;
-    return data || [];
+    
+    // Filter by subject if provided
+    let filtered = data || [];
+    if (subjectName) {
+      filtered = filtered.filter(s => 
+        !s.subjects || s.subjects.length === 0 || s.subjects.includes(subjectName)
+      );
+    }
+    return filtered.sort((a, b) => a.name.localeCompare(b.name));
   }
 
   const students = (await getStudents()).filter(s => s.class === className);
-  return students.sort((a, b) => a.name.localeCompare(b.name));
+  let filtered = students;
+  if (subjectName) {
+    filtered = filtered.filter(s => 
+      !s.subjects || s.subjects.length === 0 || s.subjects.includes(subjectName)
+    );
+  }
+  return filtered.sort((a, b) => a.name.localeCompare(b.name));
 }
 
 // ============= FORMAL EXAMS (Phase 4) =============

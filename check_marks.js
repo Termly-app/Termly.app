@@ -6,8 +6,8 @@ const headers = {
 };
 
 async function debug() {
-  const exams = await (await fetch(`${BASE}/exams?select=*&limit=1`, { headers })).json();
-  console.log('EXAMS COLUMNS:', Object.keys(exams[0] || {}));
+  const marks = await (await fetch(`${BASE}/marks?select=*&limit=1`, { headers })).json();
+  console.log('MARKS COLUMNS:', Object.keys(marks[0] || {}));
 }
 
 debug().catch(console.error);

@@ -180,7 +180,7 @@ export default function MobileGrading({ user, onLogout }) {
     try {
       setLoading(true);
       const [classList, existingMarks] = await Promise.all([
-        getClassList(paper.classes.name, paper.class_id),
+        getClassList(paper.classes?.name || 'Class', paper.class_id, paper.subject),
         getExamMarksForPaper(paper.id)
       ]);
       
