@@ -3881,23 +3881,12 @@ export async function getAllTimetableSlots(schoolId, periodId) {
 }
 
 export async function getTeacherTimetable(schoolId, periodId, teacherId) {
-  if (!_currentAuthUser && _currentSchoolId) {
-    const { data, error } = await supabase.rpc('portal_get_teacher_timetable', { 
-      p_school_id: schoolId, 
-      p_period_id: periodId,
-      p_teacher_id: teacherId
-    });
-    if (error) throw error;
-    return data || [];
-  }
-
-  const { data, error } = await supabase
-    .from('timetable_slots')
-    .select('*, teachers(id, name, staff_code)')
-    .eq('school_id', schoolId)
-    .eq('period_id', periodId)
-    .eq('teacher_id', teacherId)
-    .order('slot_index', { ascending: true });
+  // Use robust RPC for both Admin and Portal to ensure data sync
+  const { data, error } = await supabase.rpc('portal_get_teacher_timetable', { 
+    p_school_id: schoolId, 
+    p_period_id: periodId,
+    p_teacher_id: teacherId
+  });
   if (error) throw error;
   return data || [];
 }

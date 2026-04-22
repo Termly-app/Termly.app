@@ -269,17 +269,23 @@ CREATE OR REPLACE FUNCTION public.portal_get_teacher_timetable(p_school_id UUID,
 RETURNS JSONB LANGUAGE plpgsql SECURITY DEFINER SET search_path = public AS $$
 BEGIN
   RETURN (
+    WITH unique_slots AS (
+      SELECT DISTINCT ON (day_of_week, slot_index, subject, class_grade, stream)
+        id, day_of_week, slot_index, subject, class_grade, stream, start_time, end_time
+      FROM public.timetable_slots 
+      WHERE school_id = p_school_id AND period_id = p_period_id 
+        AND (
+          teacher_id = p_teacher_id 
+          OR teacher_id IN (SELECT user_id FROM teachers WHERE id = p_teacher_id)
+          OR teacher_id IN (SELECT id FROM teachers WHERE user_id = p_teacher_id)
+        )
+      ORDER BY day_of_week, slot_index, subject, class_grade, stream, id
+    )
     SELECT COALESCE(jsonb_agg(jsonb_build_object(
       'id', id, 'day_of_week', day_of_week, 'slot_index', slot_index, 'subject', subject, 
       'class_grade', class_grade, 'stream', stream, 'start_time', start_time, 'end_time', end_time
-    )), '[]'::jsonb)
-    FROM public.timetable_slots 
-    WHERE school_id = p_school_id AND period_id = p_period_id 
-      AND (
-        teacher_id = p_teacher_id 
-        OR teacher_id IN (SELECT user_id FROM teachers WHERE id = p_teacher_id)
-        OR teacher_id IN (SELECT id FROM teachers WHERE user_id = p_teacher_id)
-      )
+    ) ORDER BY slot_index ASC), '[]'::jsonb)
+    FROM unique_slots
   );
 END; $$;
 
