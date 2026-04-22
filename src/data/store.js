@@ -1652,6 +1652,19 @@ export async function getExams() {
   if (!_currentAuthUser && _currentSchoolId) {
     const { data, error } = await supabase.rpc('portal_get_open_exams', { p_school_id: _currentSchoolId });
     if (error) throw error;
+    
+    // Fallback: If no exams in robust table, check legacy custom_exams
+    if (!data || data.length === 0) {
+      const profile = await getSchoolProfile();
+      const legacyList = profile.custom_exams?.length > 0 ? profile.custom_exams : ['CAT 1','CAT 2','Mid Term','End Term'];
+      return legacyList.map(name => ({
+        id: `legacy_${name}`,
+        name,
+        status: 'published',
+        term: 'Current',
+        is_legacy: true
+      }));
+    }
     return data || [];
   }
 
@@ -1690,6 +1703,31 @@ export async function createExam(name, examType, term) {
   if (error) throw error;
   invalidateCache(`exams_${_currentSchoolId}_${_currentPeriodId}`);
   return data;
+}
+
+/**
+ * [NEW] Bridge: Publish a legacy exam string to the robust exams table
+ */
+export async function publishExamToPortal(name, term) {
+  mutationGuard('publishExamToPortal');
+  // Check if already exists
+  const { data: existing } = await supabase
+    .from('exams')
+    .select('id')
+    .eq('school_id', _currentSchoolId)
+    .eq('name', name)
+    .eq('term', term)
+    .maybeSingle();
+
+  if (existing) {
+    // Just update to published
+    await updateExam(existing.id, { status: 'published' });
+    return existing.id;
+  }
+
+  const exam = await createExam(name, 'endterm', term);
+  await updateExam(exam.id, { status: 'published' });
+  return exam.id;
 }
 
 export async function updateExam(examId, updates) {

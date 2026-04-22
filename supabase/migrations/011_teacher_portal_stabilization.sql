@@ -68,7 +68,7 @@ BEGIN
     FROM (
       SELECT id, name, term, exam_type, status, created_at
       FROM public.exams 
-      WHERE school_id = p_school_id AND status != 'closed'
+      WHERE school_id = p_school_id AND status = 'published'
       ORDER BY created_at DESC
     ) t
   );
