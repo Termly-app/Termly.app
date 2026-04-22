@@ -1567,19 +1567,35 @@ export async function getMarks(examType = _currentExamType) {
       .eq('period_id', _currentPeriodId)
       .eq('exam_type', examType);
     
-    // 2. Fetch New Exam Marks (from Teacher Portal) with Bulletproof Join
+    // 2. Fetch New Exam Marks (Direct 2-Step Fetch)
     const targetExam = (await getExams()).find(e => e.name === examType);
     let portalData = [];
     
     if (targetExam) {
-      const { data, error: portalErr } = await supabase
-        .from('exam_marks')
-        .select('student_id, raw_score, is_absent, exam_papers!inner(subject, exam_id)')
-        .eq('school_id', _currentSchoolId)
-        .eq('exam_papers.exam_id', targetExam.id);
+      // Step A: Get all papers for this exam
+      const { data: papers } = await supabase
+        .from('exam_papers')
+        .select('id, subject')
+        .eq('exam_id', targetExam.id);
       
-      if (portalErr) console.error('Portal marks fetch error:', portalErr);
-      portalData = data || [];
+      if (papers && papers.length > 0) {
+        const paperIds = papers.map(p => p.id);
+        const subjectMap = {};
+        papers.forEach(p => { subjectMap[p.id] = p.subject; });
+
+        // Step B: Get all marks for these papers
+        const { data: marks, error: portalErr } = await supabase
+          .from('exam_marks')
+          .select('student_id, raw_score, is_absent, exam_paper_id')
+          .in('exam_paper_id', paperIds);
+        
+        if (!portalErr && marks) {
+          portalData = marks.map(m => ({
+            ...m,
+            exam_papers: { subject: subjectMap[m.exam_paper_id] }
+          }));
+        }
+      }
     }
 
     if (legacyErr) console.error('Legacy marks error:', legacyErr);
@@ -2584,12 +2600,23 @@ export async function getCBC() {
     .eq('school_id', _currentSchoolId)
     .eq('period_id', _currentPeriodId);
   
-  // 2. Fetch Portal Data (from Teacher Portal exam_marks)
-  // We look for any marks that might be competency-based
-  const { data: portalData, error: portalErr } = await supabase
-    .from('exam_marks')
-    .select('student_id, raw_score, exam_papers!inner(subject)')
-    .eq('school_id', _currentSchoolId);
+  // 2. Fetch Portal Data (Direct 2-Step Fetch)
+  const targetExam = (await getExams()).find(e => e.name === _currentExamType);
+  let portalData = [];
+
+  if (targetExam) {
+    const { data: papers } = await supabase.from('exam_papers').select('id, subject').eq('exam_id', targetExam.id);
+    if (papers && papers.length > 0) {
+      const paperIds = papers.map(p => p.id);
+      const subjectMap = {};
+      papers.forEach(p => { subjectMap[p.id] = p.subject; });
+
+      const { data: marks } = await supabase.from('exam_marks').select('student_id, raw_score, exam_paper_id').in('exam_paper_id', paperIds);
+      if (marks) {
+        portalData = marks.map(m => ({ ...m, exam_papers: { subject: subjectMap[m.exam_paper_id] } }));
+      }
+    }
+  }
 
   if (legacyErr) console.error('CBC fetch error:', legacyErr);
   
