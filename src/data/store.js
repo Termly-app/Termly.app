@@ -1557,33 +1557,20 @@ export async function transferStudents(selectedIds, direction = 'promote') {
 export async function getMarks(examType = _currentExamType) {
   if (!_currentSchoolId || !_currentPeriodId) return {};
   const cacheKey = `marks_${_currentSchoolId}_${_currentPeriodId}_${examType}`;
-  
   return cachedQuery(cacheKey, async () => {
-    // Use server-side RPC to bypass RLS and merge legacy + portal marks
-    const { data, error } = await supabase.rpc('get_merged_marks', {
-      p_school_id: _currentSchoolId,
-      p_period_id: _currentPeriodId,
-      p_exam_name: examType
+    const { data, error } = await supabase
+      .from('marks')
+      .select('student_id, subject, mark')
+      .eq('school_id', _currentSchoolId)
+      .eq('period_id', _currentPeriodId)
+      .eq('exam_type', examType);
+    if (error) throw error;
+    const marks = {};
+    (data || []).forEach(row => {
+      if (!marks[row.student_id]) marks[row.student_id] = {};
+      marks[row.student_id][row.subject] = row.mark;
     });
-
-    if (error) {
-      console.error('[getMarks] RPC error, falling back to legacy:', error.message);
-      // Fallback: try legacy marks table directly
-      const { data: legacyData, error: legacyErr } = await supabase
-        .from('marks')
-        .select('student_id, subject, mark')
-        .eq('school_id', _currentSchoolId)
-        .eq('period_id', _currentPeriodId)
-        .eq('exam_type', examType);
-      const marks = {};
-      (legacyData || []).forEach(row => {
-        if (!marks[row.student_id]) marks[row.student_id] = {};
-        marks[row.student_id][row.subject] = row.mark;
-      });
-      return marks;
-    }
-
-    return data || {};
+    return marks;
   });
 }
 
