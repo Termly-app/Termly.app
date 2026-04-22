@@ -2576,17 +2576,52 @@ export function getTodayStr() { return new Date().toISOString().split('T')[0]; }
 // ============= CBC COMPETENCIES =============
 export async function getCBC() {
   if (!_currentSchoolId || !_currentPeriodId) return {};
-  const { data, error } = await supabase
+  
+  // 1. Fetch Legacy CBC Data
+  const { data: legacyData, error: legacyErr } = await supabase
     .from('cbc_assessments')
-    .select('id, student_id, subject, level, period_id, school_id')
+    .select('student_id, subject, level')
     .eq('school_id', _currentSchoolId)
     .eq('period_id', _currentPeriodId);
-  if (error) throw error;
+  
+  // 2. Fetch Portal Data (from Teacher Portal exam_marks)
+  // We look for any marks that might be competency-based
+  const { data: portalData, error: portalErr } = await supabase
+    .from('exam_marks')
+    .select('student_id, raw_score, exam_papers!inner(subject)')
+    .eq('school_id', _currentSchoolId);
+
+  if (legacyErr) console.error('CBC fetch error:', legacyErr);
+  
   const cbc = {};
-  (data || []).forEach(row => {
+  
+  // Process Legacy Data
+  (legacyData || []).forEach(row => {
     if (!cbc[row.student_id]) cbc[row.student_id] = {};
     cbc[row.student_id][row.subject] = row.level;
   });
+
+  // Process Portal Data (Convert numbers to EE/ME/AE/BE if needed)
+  (portalData || []).forEach(row => {
+    const subjectName = row.exam_papers?.subject;
+    if (subjectName) {
+      let level = row.raw_score;
+      // If the teacher entered a 1-4 scale, convert to CBC codes
+      if (level === 4 || level === '4') level = 'EE';
+      else if (level === 3 || level === '3') level = 'ME';
+      else if (level === 2 || level === '2') level = 'AE';
+      else if (level === 1 || level === '1') level = 'BE';
+      // If they entered percentages, map those too
+      else if (Number(level) >= 80) level = 'EE';
+      else if (Number(level) >= 60) level = 'ME';
+      else if (Number(level) >= 40) level = 'AE';
+      else if (Number(level) > 0) level = 'BE';
+
+      if (!cbc[row.student_id]) cbc[row.student_id] = {};
+      cbc[row.student_id][subjectName] = level;
+    }
+  });
+
   return cbc;
 }
 
