@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Helmet } from 'react-helmet-async';
-import { getClassResults, setStudentAllMarks, getSubjectRankings, getClassList, getCBC, setCBC, getTeacherPerformance, getCoreCompetencies, getPrintHeader, getPrintFooter, getSchoolProfile, subscribeToChanges, getGradeForScore, getSubjectAssignments, getExams } from '../../data/store';
+import { getClassResults, setStudentAllMarks, getSubjectRankings, getClassList, getCBC, setCBC, getTeacherPerformance, getCoreCompetencies, getPrintHeader, getPrintFooter, getSchoolProfile, subscribeToTable, getGradeForScore, getSubjectAssignments, getExams } from '../../data/store';
 import { CBC_STRUCTURE, CBC_LEVELS, CBC_CORE_COMPETENCIES, STREAMS, getSubjectsForGrade, getLevelForGrade } from '../../data/seedData';
 import { 
   LeafIcon, BookIcon, PrintIcon, DashboardIcon, EditIcon, 
@@ -78,14 +78,16 @@ export default function AssessmentTab({ currentUser, currentPeriodId }) {
     };
     init();
 
-    // Subscribe to real-time changes
-    const unsubMarks = subscribeToChanges('marks', loadResults);
-    const unsubCBC = subscribeToChanges('cbc_assessments', loadResults);
+    // Subscribe to real-time changes using Supabase Realtime
+    const unsubMarks = subscribeToTable('exam_marks', () => {
+      // Refresh results when marks change
+      loadResults(currentExam);
+    });
 
     return () => {
       unsubMarks();
-      unsubCBC();
     };
+
   }, [selectedClass, streamFilter, selectedPathway, examType, currentUser, currentPeriodId]);
 
   const loadResults = async (overrideExamType = null) => {
