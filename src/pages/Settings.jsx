@@ -28,6 +28,7 @@ export default function Settings() {
   const [newStream,setNewStream]     = useState({});
   const [newHouse,setNewHouse]       = useState('');
   const [newExam, setNewExam]       = useState('');
+  const [publishNewExam, setPublishNewExam] = useState(true);
   const [newGradeItem, setNewGradeItem] = useState({ symbol: '', min: 0, max: 100, color: '#3b82f6' });
   const [applyGradingToAll, setApplyGradingToAll] = useState(true);
   const [periods, setPeriods]     = useState([]);
@@ -167,7 +168,8 @@ export default function Settings() {
     setLoading(true);
     try {
       const periodId = getCurrentPeriodId() || '2026';
-      const created = await createExam(val, 'endterm', periodId);
+      const status = publishNewExam ? 'published' : 'draft';
+      const created = await createExam(val, 'endterm', periodId, status);
       setRobustExams([...robustExams, created]);
       setNewExam('');
     } catch(err) {
@@ -190,6 +192,19 @@ export default function Settings() {
       } finally {
         setLoading(false);
       }
+    }
+  };
+  const toggleExamStatus = async (exam) => {
+    const newStatus = exam.status === 'published' ? 'draft' : 'published';
+    setLoading(true);
+    try {
+      const { updateExamStatus } = await import('../data/store');
+      await updateExamStatus(exam.id, newStatus);
+      setRobustExams(robustExams.map(e => e.id === exam.id ? { ...e, status: newStatus } : e));
+    } catch (err) {
+      alert({ title: 'Error', message: err.message, variant: 'danger' });
+    } finally {
+      setLoading(false);
     }
   };
   const addGradeItem=()=>{
@@ -549,19 +564,33 @@ export default function Settings() {
                   
                   <div className="responsive-grid-stack">
                     {/* Exam Names */}
-                    <div>
-                      <div style={{fontSize:'0.72rem',fontWeight:700,color:'var(--text-light)',textTransform:'uppercase',marginBottom:8}}>Exam Types</div>
-                      <div style={{display:'flex',flexWrap:'wrap',gap:6,marginBottom:10,minHeight:36}}>
-                        {robustExams.map(e=>(
-                          <div key={e.id} style={{display:'inline-flex',alignItems:'center',gap:5,padding:'5px 10px',borderRadius:20,background:'var(--bg-card)',border:'1px solid var(--border)',fontSize:'0.82rem'}}>
-                            <span>{e.name}</span>
-                            <button onClick={()=>removeExam(e.name)} style={{background:'none',border:'none',cursor:'pointer',color:'var(--danger)',fontWeight:700}}>×</button>
-                          </div>
-                        ))}
-                      </div>
-                      <div style={{display:'flex',gap:6}}>
-                        <input className="form-input" style={{flex:1,fontSize:'0.82rem'}} value={newExam} onChange={e=>setNewExam(e.target.value)} onKeyDown={e=>e.key==='Enter'&&addExam()} placeholder="e.g. Mock Exam"/>
-                        <button onClick={addExam} className="btn btn-ghost btn-sm" style={{display:'flex',alignItems:'center',gap:4}}><PlusIcon size={14} /> Add</button>
+                      <div style={{display:'flex',flexDirection:'column',gap:10}}>
+                        <div style={{display:'flex',flexWrap:'wrap',gap:8,marginBottom:10,minHeight:36}}>
+                          {robustExams.map(e=>(
+                            <div key={e.id} style={{display:'inline-flex',alignItems:'center',gap:8,padding:'6px 12px',borderRadius:20,background:e.status==='published'?'var(--primary-light)':'var(--bg-card)',border:'1px solid var(--border)',fontSize:'0.82rem',transition:'all 0.2s'}}>
+                              <span style={{fontWeight:600}}>{e.name}</span>
+                              <span style={{fontSize:'0.65rem',textTransform:'uppercase',fontWeight:800,color:e.status==='published'?'var(--primary)':'var(--text-muted)'}}>
+                                {e.status==='published' ? 'Live' : 'Draft'}
+                              </span>
+                              <button 
+                                onClick={() => toggleExamStatus(e)}
+                                title={e.status==='published'?'Unpublish from Portal':'Publish to Portal'}
+                                style={{background:'none',border:'none',cursor:'pointer',padding:0,display:'flex',alignItems:'center',color:'var(--text-light)'}}
+                              >
+                                {e.status==='published' ? <EyeOffIcon size={12} /> : <EyeIcon size={12} />}
+                              </button>
+                              <button onClick={()=>removeExam(e.name)} style={{background:'none',border:'none',cursor:'pointer',color:'var(--danger)',fontWeight:700,marginLeft:4,fontSize:'1.1rem'}}>×</button>
+                            </div>
+                          ))}
+                        </div>
+                        <div style={{display:'flex',gap:6,alignItems:'center'}}>
+                          <input className="form-input" style={{flex:1,fontSize:'0.82rem'}} value={newExam} onChange={e=>setNewExam(e.target.value)} onKeyDown={e=>e.key==='Enter'&&addExam()} placeholder="e.g. Mock Exam"/>
+                          <label style={{display:'flex',alignItems:'center',gap:6,fontSize:'0.75rem',cursor:'pointer',whiteSpace:'nowrap',fontWeight:600,color:'var(--text-light)'}}>
+                            <input type="checkbox" checked={publishNewExam} onChange={e=>setPublishNewExam(e.target.checked)} style={{accentColor:'var(--primary)'}}/>
+                            Publish to Portal
+                          </label>
+                          <button onClick={addExam} className="btn btn-ghost btn-sm" style={{display:'flex',alignItems:'center',gap:4}}><PlusIcon size={14} /> Add</button>
+                        </div>
                       </div>
 
                       {/* Timetable label - WIP (module disabled)

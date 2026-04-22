@@ -1725,7 +1725,7 @@ async function migrateLegacyExams(examsList) {
 /**
  * Creates a new unified exam record
  */
-export async function createExam(name, type = 'endterm', term = 'Current') {
+export async function createExam(name, type = 'endterm', term = 'Current', status = 'published') {
   mutationGuard('createExam');
   const userRecord = await getUserByAuthId(_currentAuthUser?.id);
   const creatorId = userRecord?.id || _currentUserId;
@@ -1740,7 +1740,7 @@ export async function createExam(name, type = 'endterm', term = 'Current') {
       exam_type: type,
       term: term,
       academic_year: term,
-      status: 'published', // Default to published for simplicity
+      status: status, 
       created_by: creatorId
     })
     .select()
@@ -1773,6 +1773,20 @@ export async function updateExam(examId, updates) {
     .update(updates)
     .eq('id', examId);
   
+  if (error) throw error;
+  invalidateCache(`exams_${_currentSchoolId}_${_currentPeriodId}`);
+}
+
+/**
+ * Updates the status of an exam (e.g., 'published', 'draft', 'closed')
+ */
+export async function updateExamStatus(examId, status) {
+  mutationGuard('updateExamStatus');
+  const { error } = await supabase
+    .from('exams')
+    .update({ status })
+    .eq('id', examId);
+
   if (error) throw error;
   invalidateCache(`exams_${_currentSchoolId}_${_currentPeriodId}`);
 }
