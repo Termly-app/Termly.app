@@ -1559,81 +1559,31 @@ export async function getMarks(examType = _currentExamType) {
   const cacheKey = `marks_${_currentSchoolId}_${_currentPeriodId}_${examType}`;
   
   return cachedQuery(cacheKey, async () => {
-    // 1. Fetch Legacy Marks
-    const { data: legacyData, error: legacyErr } = await supabase
-      .from('marks')
-      .select('student_id, subject, mark')
-      .eq('school_id', _currentSchoolId)
-      .eq('period_id', _currentPeriodId)
-      .eq('exam_type', examType);
-    
-    // 2. Fetch New Exam Marks (Direct 2-Step Fetch)
-    const targetExam = (await getExams()).find(e => e.name === examType);
-    let portalData = [];
-    
-    if (targetExam) {
-      // Step A: Get all papers for this exam
-      const { data: papers } = await supabase
-        .from('exam_papers')
-        .select('id, subject')
-        .eq('exam_id', targetExam.id);
-      
-      if (papers && papers.length > 0) {
-        const paperIds = papers.map(p => p.id);
-        const subjectMap = {};
-        papers.forEach(p => { subjectMap[p.id] = p.subject; });
+    // Use server-side RPC to bypass RLS and merge legacy + portal marks
+    const { data, error } = await supabase.rpc('get_merged_marks', {
+      p_school_id: _currentSchoolId,
+      p_period_id: _currentPeriodId,
+      p_exam_name: examType
+    });
 
-        // Step B: Get all marks for these papers
-        const { data: marks, error: portalErr } = await supabase
-          .from('exam_marks')
-          .select('student_id, raw_score, is_absent, exam_paper_id')
-          .in('exam_paper_id', paperIds);
-        
-        if (!portalErr && marks) {
-          portalData = marks.map(m => ({
-            ...m,
-            exam_papers: { subject: subjectMap[m.exam_paper_id] }
-          }));
-        }
-      }
+    if (error) {
+      console.error('[getMarks] RPC error, falling back to legacy:', error.message);
+      // Fallback: try legacy marks table directly
+      const { data: legacyData, error: legacyErr } = await supabase
+        .from('marks')
+        .select('student_id, subject, mark')
+        .eq('school_id', _currentSchoolId)
+        .eq('period_id', _currentPeriodId)
+        .eq('exam_type', examType);
+      const marks = {};
+      (legacyData || []).forEach(row => {
+        if (!marks[row.student_id]) marks[row.student_id] = {};
+        marks[row.student_id][row.subject] = row.mark;
+      });
+      return marks;
     }
 
-    if (legacyErr) console.error('Legacy marks error:', legacyErr);
-    
-    const marks = {};
-    
-    // Process Legacy Data
-    (legacyData || []).forEach(row => {
-      if (!marks[row.student_id]) marks[row.student_id] = {};
-      marks[row.student_id][row.subject] = row.mark;
-    });
-
-    // Process Portal Data (Overrides legacy if conflict)
-    (portalData || []).forEach(row => {
-      let subjectName = row.exam_papers?.subject;
-      if (subjectName && !row.is_absent) {
-        // Smart Mapping: "Mathematics" -> "MATH", "English" -> "ENG", etc.
-        const upperSub = subjectName.toUpperCase();
-        let mappedCode = upperSub;
-        if (upperSub.includes('MATH')) mappedCode = 'MATH';
-        else if (upperSub.includes('ENGLISH')) mappedCode = 'ENG';
-        else if (upperSub.includes('KISWAHILI')) mappedCode = 'KIS';
-        else if (upperSub.includes('BIOLOGY')) mappedCode = 'BIO';
-        else if (upperSub.includes('PHYSICS')) mappedCode = 'PHY';
-        else if (upperSub.includes('CHEMISTRY')) mappedCode = 'CHEM';
-        else if (upperSub.includes('GEOGRAPHY')) mappedCode = 'GEO';
-        else if (upperSub.includes('HISTORY')) mappedCode = 'HIST';
-        else if (upperSub.includes('RELIGIOUS')) mappedCode = 'CRE';
-        else if (upperSub.includes('BUSINESS')) mappedCode = 'BST';
-        else if (upperSub.includes('AGRICULTURE')) mappedCode = 'AGRI';
-        else if (upperSub.includes('COMPUTER')) mappedCode = 'COMP';
-
-        if (!marks[row.student_id]) marks[row.student_id] = {};
-        marks[row.student_id][mappedCode] = row.raw_score;
-      }
-    });
-
-    return marks;
+    return data || {};
   });
 }
 
@@ -2592,63 +2542,17 @@ export function getTodayStr() { return new Date().toISOString().split('T')[0]; }
 // ============= CBC COMPETENCIES =============
 export async function getCBC() {
   if (!_currentSchoolId || !_currentPeriodId) return {};
-  
-  // 1. Fetch Legacy CBC Data
-  const { data: legacyData, error: legacyErr } = await supabase
+  const { data, error } = await supabase
     .from('cbc_assessments')
     .select('student_id, subject, level')
     .eq('school_id', _currentSchoolId)
     .eq('period_id', _currentPeriodId);
-  
-  // 2. Fetch Portal Data (Direct 2-Step Fetch)
-  const targetExam = (await getExams()).find(e => e.name === _currentExamType);
-  let portalData = [];
-
-  if (targetExam) {
-    const { data: papers } = await supabase.from('exam_papers').select('id, subject').eq('exam_id', targetExam.id);
-    if (papers && papers.length > 0) {
-      const paperIds = papers.map(p => p.id);
-      const subjectMap = {};
-      papers.forEach(p => { subjectMap[p.id] = p.subject; });
-
-      const { data: marks } = await supabase.from('exam_marks').select('student_id, raw_score, exam_paper_id').in('exam_paper_id', paperIds);
-      if (marks) {
-        portalData = marks.map(m => ({ ...m, exam_papers: { subject: subjectMap[m.exam_paper_id] } }));
-      }
-    }
-  }
-
-  if (legacyErr) console.error('CBC fetch error:', legacyErr);
-  
+  if (error) throw error;
   const cbc = {};
-  
-  // Process Legacy Data
-  (legacyData || []).forEach(row => {
+  (data || []).forEach(row => {
     if (!cbc[row.student_id]) cbc[row.student_id] = {};
     cbc[row.student_id][row.subject] = row.level;
   });
-
-  // Process Portal Data (Convert numbers to EE/ME/AE/BE if needed)
-  (portalData || []).forEach(row => {
-    const subjectName = row.exam_papers?.subject;
-    if (subjectName) {
-      let level = row.raw_score;
-      // If the teacher entered a 1-4 scale, convert to CBC codes
-      if (level === 4 || level === '4') level = 'EE';
-      else if (level === 3 || level === '3') level = 'ME';
-      else if (level === 2 || level === '2') level = 'AE';
-      else if (level === 1 || level === '1') level = 'BE';
-      // If they entered percentages, map those too
-      else if (Number(level) >= 80) level = 'EE';
-      else if (Number(level) >= 60) level = 'ME';
-      else if (Number(level) >= 40) level = 'AE';
-      else if (Number(level) > 0) level = 'BE';
-
-      if (!cbc[row.student_id]) cbc[row.student_id] = {};
-      cbc[row.student_id][subjectName] = level;
-    }
-  });
-
   return cbc;
 }
 
