@@ -615,7 +615,7 @@ export default function Settings() {
                                     cursor: 'pointer'
                                   }}
                                 >
-                                  {e.status === 'published' ? 'Staff: Grading Active' : 'Staff: Locked'}
+                                  {e.status === 'published' ? 'Open for Teachers' : 'Locked'}
                                 </button>
                                 
                                 <button 

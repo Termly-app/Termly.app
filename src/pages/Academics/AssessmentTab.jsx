@@ -1,11 +1,11 @@
 import { useState, useEffect } from 'react';
 import { Helmet } from 'react-helmet-async';
-import { getClassResults, setStudentAllMarks, getSubjectRankings, getClassList, getCBC, setCBC, getTeacherPerformance, getCoreCompetencies, getPrintHeader, getPrintFooter, getSchoolProfile, subscribeToTable, getGradeForScore, getSubjectAssignments, getExams } from '../../data/store';
+import { getClassResults, setStudentAllMarks, getSubjectRankings, getClassList, getCBC, setCBC, getTeacherPerformance, getCoreCompetencies, getPrintHeader, getPrintFooter, getSchoolProfile, subscribeToTable, getGradeForScore, getSubjectAssignments, getExams, releaseExamToParents } from '../../data/store';
 import { CBC_STRUCTURE, CBC_LEVELS, CBC_CORE_COMPETENCIES, STREAMS, getSubjectsForGrade, getLevelForGrade } from '../../data/seedData';
 import { 
   LeafIcon, BookIcon, PrintIcon, DashboardIcon, EditIcon, 
   FlagIcon, RocketIcon, TeacherIcon, SchoolIcon, SaveIcon,
-  SparklesIcon, TrendUpIcon, ChartBarIcon, SettingsIcon, CrossIcon
+  SparklesIcon, TrendUpIcon, ChartBarIcon, SettingsIcon, CrossIcon, EyeOffIcon
 } from '../../components/CommonIcons';
 import Select from '../../components/Common/Select';
 import { useDialog } from '../../contexts/DialogContext';
