@@ -619,7 +619,6 @@ export default function Settings() {
                                 </button>
                                 
                                 <button 
-                                <button 
                                   onClick={() => handleReleaseToggle(e.id, !e.released_to_parents)}
                                   style={{ 
                                     fontSize:'0.65rem', 
