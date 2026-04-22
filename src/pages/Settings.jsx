@@ -214,6 +214,18 @@ export default function Settings() {
       setLoading(false);
     }
   };
+  const handleReleaseToggle = async (examId, isReleased) => {
+    setLoading(true);
+    try {
+      const { releaseExamToParents } = await import('../data/store');
+      await releaseExamToParents(examId, isReleased);
+      setRobustExams(robustExams.map(e => e.id === examId ? { ...e, released_to_parents: isReleased } : e));
+    } catch (err) {
+      alert({ title: 'Error', message: err.message, variant: 'danger' });
+    } finally {
+      setLoading(false);
+    }
+  };
   const addGradeItem=()=>{
     if(!newGradeItem.symbol) return;
     if(newGradeItem.min >= newGradeItem.max) {
@@ -607,45 +619,29 @@ export default function Settings() {
                                 </button>
                                 
                                 <button 
-                                  onClick={() => releaseExamToParents(e.id, !e.released_to_parents)}
+                                <button 
+                                  onClick={() => handleReleaseToggle(e.id, !e.released_to_parents)}
                                   style={{ 
-                                    fontSize:'0.6rem', 
+                                    fontSize:'0.65rem', 
                                     textTransform:'uppercase', 
-                                    fontWeight:900, 
-                                    padding: '4px 8px',
-                                    borderRadius: 6,
-                                    background: e.released_to_parents ? '#22c55e' : '#f1f5f9',
+                                    fontWeight:800, 
+                                    padding: '5px 10px',
+                                    borderRadius: 8,
+                                    background: e.released_to_parents ? '#10b981' : '#f1f5f9',
                                     color: e.released_to_parents ? '#fff' : '#64748b',
-                                    border: 'none',
+                                    border: `1px solid ${e.released_to_parents ? '#059669' : '#e2e8f0'}`,
                                     cursor: 'pointer',
                                     display: 'flex',
                                     alignItems: 'center',
-                                    gap: 3
+                                    gap: 5,
+                                    transition: 'all 0.2s'
                                   }}
                                 >
-                                  {e.released_to_parents ? <><RocketIcon size={10} /> Released to Parents</> : 'Parents Hidden'}
+                                  {e.released_to_parents ? <><CheckIcon size={12} /> Results Posted</> : 'Post to Parents'}
                                 </button>
                               </div>
 
-                              <button 
-                                onClick={() => toggleExamStatus(e)}
-                                title={e.status==='published'?'Hide from Parent Portal':'Release to Parent Portal'}
-                                style={{
-                                  background: e.status==='published' ? '#22c55e' : 'var(--bg)',
-                                  border: 'none',
-                                  cursor:'pointer',
-                                  padding: '5px',
-                                  borderRadius: '50%',
-                                  display:'flex',
-                                  alignItems:'center',
-                                  justifyContent: 'center',
-                                  color: e.status==='published' ? '#fff' : 'var(--text-light)',
-                                  transition: 'all 0.2s'
-                                }}
-                              >
-                                {e.status==='published' ? <CheckIcon size={12} /> : <EyeIcon size={12} />}
-                              </button>
-                              <button onClick={()=>removeExam(e.name)} style={{background:'none',border:'none',cursor:'pointer',color:'var(--danger)',fontWeight:700,fontSize:'1.1rem', padding: 0}}>×</button>
+                              <button onClick={()=>removeExam(e.name)} style={{background:'none',border:'none',cursor:'pointer',color:'var(--danger)',fontWeight:700,fontSize:'1.1rem', padding: 0}} title="Delete Exam">×</button>
                             </div>
                           ))}
                         </div>
