@@ -57,6 +57,7 @@ export default function MobileGrading({ user, onLogout }) {
   const [activePeriod, setActivePeriod] = useState(null);
   const [schoolProfile, setSchoolProfile] = useState(null);
   const [assignments_list, setAssignmentsList] = useState([]);
+  const [selectedDay, setSelectedDay] = useState(new Intl.DateTimeFormat('en-US', {weekday: 'long'}).format(new Date()));
   
   const [isDesktop, setIsDesktop] = useState(window.innerWidth > 1024);
 
@@ -421,6 +422,7 @@ export default function MobileGrading({ user, onLogout }) {
 
         {activeTab === 'schedule' && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 24, animation: 'fadeIn 0.4s ease-out' }}>
+            {/* Summary Cards */}
             <div style={{ display: 'grid', gridTemplateColumns: isDesktop ? '1fr 1fr 1fr' : '1fr', gap: 20 }}>
                <div style={{ background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)', padding: '24px', borderRadius: '24px', color: '#fff' }}>
                   <div style={{ fontSize: '0.8rem', color: '#94a3b8', fontWeight: 700, textTransform: 'uppercase', marginBottom: 8 }}>Weekly Workload</div>
@@ -436,26 +438,77 @@ export default function MobileGrading({ user, onLogout }) {
                </div>
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: isDesktop ? 'repeat(5, 1fr)' : '1fr', gap: 16 }}>
-              {['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'].map(day => {
+            {/* Mobile Day Selector */}
+            {!isDesktop && (
+              <div style={{ display: 'flex', gap: 8, overflowX: 'auto', paddingBottom: 8, margin: '0 -4px' }}>
+                {['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'].map(day => (
+                  <div 
+                    key={day}
+                    onClick={() => setSelectedDay(day)}
+                    style={{ 
+                      padding: '10px 20px', borderRadius: '16px', fontSize: '0.85rem', fontWeight: 700,
+                      background: selectedDay === day ? '#10b981' : '#fff',
+                      color: selectedDay === day ? '#fff' : '#64748b',
+                      border: selectedDay === day ? '1px solid #10b981' : '1px solid #e2e8f0',
+                      whiteSpace: 'nowrap', cursor: 'pointer', transition: 'all 0.2s'
+                    }}
+                  >
+                    {day}
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Timetable Grid/Timeline */}
+            <div style={{ display: 'grid', gridTemplateColumns: isDesktop ? 'repeat(5, 1fr)' : '1fr', gap: 20 }}>
+              {(isDesktop ? ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'] : [selectedDay]).map(day => {
                 const dayLessons = schedule.filter(s => s.day_of_week === day).sort((a,b) => a.slot_index - b.slot_index);
                 
+                // MERGING LOGIC: Combine contiguous slots of same subject/class
+                const merged = [];
+                if (dayLessons.length > 0) {
+                  let current = { ...dayLessons[0], mergedCount: 1 };
+                  for (let i = 1; i < dayLessons.length; i++) {
+                    const next = dayLessons[i];
+                    if (next.slot_index === current.slot_index + 1 && 
+                        next.subject === current.subject && 
+                        next.class_grade === current.class_grade && 
+                        next.stream === current.stream) {
+                      current.end_time = next.end_time;
+                      current.mergedCount++;
+                    } else {
+                      merged.push(current);
+                      current = { ...next, mergedCount: 1 };
+                    }
+                  }
+                  merged.push(current);
+                }
+
                 return (
-                  <div key={day} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-                    <div style={{ fontSize: '0.85rem', fontWeight: 800, color: '#3b82f6', textTransform: 'uppercase', textAlign: isDesktop ? 'center' : 'left' }}>
-                      {day}
-                    </div>
-                    {dayLessons.map(s => {
-                      const time = config.find(c => c.slot_index === s.slot_index);
-                      return (
-                        <div key={s.id} style={{ background: '#fff', padding: '12px', borderRadius: '16px', border: '1px solid #e2e8f0', boxShadow: '0 2px 4px rgba(0,0,0,0.02)' }}>
-                          <div style={{ fontSize: '0.75rem', fontWeight: 700, color: '#64748b' }}>{time?.start_time}</div>
-                          <div style={{ fontSize: '0.9rem', fontWeight: 800, color: '#0f172a', margin: '4px 0' }}>{s.subject}</div>
-                          <div style={{ fontSize: '0.75rem', color: '#94a3b8', fontWeight: 600 }}>{s.class_grade} {s.stream}</div>
+                  <div key={day} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+                    {isDesktop && (
+                      <div style={{ fontSize: '0.9rem', fontWeight: 800, color: '#3b82f6', textTransform: 'uppercase', textAlign: 'center', background: '#eff6ff', padding: '8px', borderRadius: '12px' }}>
+                        {day}
+                      </div>
+                    )}
+                    {merged.map(s => (
+                      <Card key={s.id} style={{ padding: '16px', borderLeft: '4px solid #10b981', background: '#fff' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 8 }}>
+                          <div style={{ fontSize: '0.75rem', fontWeight: 700, color: '#10b981', background: '#f0fdf4', padding: '2px 8px', borderRadius: '6px' }}>
+                            {s.start_time.slice(0,5)} — {s.end_time.slice(0,5)}
+                          </div>
+                          {s.mergedCount > 1 && <Badge bg="#eff6ff" color="#3b82f6">Double</Badge>}
                         </div>
-                      );
-                    })}
-                    {dayLessons.length === 0 && <div style={{ padding: '20px', textAlign: 'center', border: '1px dashed #e2e8f0', borderRadius: '16px', fontSize: '0.7rem', color: '#cbd5e1' }}>No Classes</div>}
+                        <div style={{ fontSize: '1.05rem', fontWeight: 800, color: '#0f172a', marginBottom: 4 }}>{s.subject}</div>
+                        <div style={{ fontSize: '0.85rem', color: '#64748b', fontWeight: 600 }}>{s.class_grade} {s.stream}</div>
+                      </Card>
+                    ))}
+                    {merged.length === 0 && (
+                      <div style={{ padding: '40px 20px', textAlign: 'center', border: '2px dashed #e2e8f0', borderRadius: '24px', color: '#cbd5e1' }}>
+                        <CalendarIcon size={32} style={{ opacity: 0.3, marginBottom: 12 }} />
+                        <div style={{ fontSize: '0.8rem', fontWeight: 700 }}>No Classes</div>
+                      </div>
+                    )}
                   </div>
                 );
               })}
