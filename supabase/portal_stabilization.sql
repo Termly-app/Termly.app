@@ -1,7 +1,7 @@
 -- ============================================================
--- PORTAL STABILIZATION SCRIPT (V9 - ATOMIC RECOVERY)
--- This script nukes old functions to clear Supabase cache 
--- and re-creates them with absolute schema alignment.
+-- PORTAL STABILIZATION SCRIPT (V10 - THE NUKE)
+-- This version uses dynamic SQL to drop ALL overloaded portal 
+-- functions and re-creates them with absolute consistency.
 -- ============================================================
 
 -- 0. Ensure Infrastructure
@@ -15,11 +15,27 @@ CREATE TABLE IF NOT EXISTS public.tt_teacher_subjects (
   UNIQUE(teacher_id, subject_id, class_id)
 );
 
--- 1. Nuke functions to clear PostgREST signature cache
-DROP FUNCTION IF EXISTS public.portal_get_subject_details(uuid);
-DROP FUNCTION IF EXISTS public.portal_get_student_results(uuid);
-DROP FUNCTION IF EXISTS public.portal_get_announcements(uuid);
-DROP FUNCTION IF EXISTS public.portal_get_assignments(uuid, uuid);
+-- 1. DYNAMIC NUKE: Drop ALL overloaded versions of these functions
+DO $$ 
+DECLARE
+    _func_record record;
+BEGIN
+    FOR _func_record IN 
+        SELECT oid::regprocedure as signature
+        FROM pg_proc 
+        WHERE proname IN (
+          'portal_get_subject_details', 
+          'portal_get_student_results', 
+          'portal_get_announcements', 
+          'portal_get_assignments'
+        )
+        AND pronamespace = (SELECT oid FROM pg_namespace WHERE nspname = 'public')
+    LOOP
+        EXECUTE 'DROP FUNCTION ' || _func_record.signature;
+    END LOOP;
+EXCEPTION WHEN OTHERS THEN
+    RAISE NOTICE 'Nuke failed: %', SQLERRM;
+END $$;
 
 -- 2. RE-CREATE: Subject Details (Hardened, no photo_url)
 CREATE OR REPLACE FUNCTION public.portal_get_subject_details(p_student_id UUID)
@@ -77,7 +93,7 @@ BEGIN
   );
 END; $$;
 
--- 5. RE-CREATE: Assignments
+-- 5. RE-CREATE: Assignments (Matching 2-parameter call in store.js)
 CREATE OR REPLACE FUNCTION public.portal_get_assignments(p_school_id UUID, p_class_id UUID DEFAULT NULL)
 RETURNS JSONB LANGUAGE plpgsql SECURITY DEFINER SET search_path = public, pg_catalog AS $$
 BEGIN
@@ -92,7 +108,7 @@ BEGIN
   );
 END; $$;
 
--- 6. DATA RECOVERY: Safe Migration (Wrapped in Exception block)
+-- 6. DATA RECOVERY: Safe Migration
 DO $$ 
 BEGIN
   -- Fix missing class_ids
@@ -116,5 +132,5 @@ BEGIN
   END IF;
 
 EXCEPTION WHEN OTHERS THEN
-  RAISE NOTICE 'Migration failed but continuing script: %', SQLERRM;
+  RAISE NOTICE 'Migration step failed but script continuing: %', SQLERRM;
 END $$;

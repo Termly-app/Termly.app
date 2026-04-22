@@ -4,7 +4,7 @@ import {
   MessageIcon, ActivityIcon, 
   CardIcon, UserIcon, HistoryIcon,
   TeacherIcon, ChevronRightIcon,
-  ClockIcon
+  ClockIcon, SchoolIcon
 } from '../../components/CommonIcons';
 import { 
   getAssignments, getStudentSubmissions, getStudentExamResults, 
