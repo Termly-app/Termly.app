@@ -1892,23 +1892,6 @@ export async function getExamPapers(examId) {
   return data;
 }
 
-export async function getExamMarksForPaper(paperId) {
-  if (!_currentAuthUser && _currentSchoolId) {
-    const { data, error } = await supabase.rpc('portal_get_exam_marks', { 
-      p_school_id: _currentSchoolId, 
-      p_paper_id: paperId 
-    });
-    if (error) throw error;
-    return data || [];
-  }
-
-  const { data, error } = await supabase
-    .from('exam_marks')
-    .select('*, students(name, adm_no)')
-    .eq('exam_paper_id', paperId);
-  if (error) throw error;
-  return data;
-}
 
 export async function saveExamMarks(paperId, marks) {
   mutationGuard('saveExamMarks');
