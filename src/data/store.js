@@ -1577,6 +1577,8 @@ export async function getMarks(examType = _currentExamType) {
 
 export async function setStudentAllMarks(studentId, subjectMarks, examType = _currentExamType) {
   mutationGuard('setStudentAllMarks');
+  const creatorId = (await getUserByAuthId(_currentAuthUser?.id))?.id;
+  
   const rows = Object.entries(subjectMarks).map(([subject, mark]) => ({
     school_id: _currentSchoolId,
     student_id: studentId,
@@ -1584,15 +1586,21 @@ export async function setStudentAllMarks(studentId, subjectMarks, examType = _cu
     mark: Math.max(0, Math.min(100, Number(mark) || 0)),
     period_id: _currentPeriodId,
     exam_type: examType,
+    created_by: creatorId
   }));
 
   if (rows.length === 0) return;
+  
+  console.log(`[STORE] Saving ${rows.length} marks for student ${studentId} (Exam: ${examType}, CreatedBy: ${creatorId})`);
   
   const { error } = await supabase
     .from('marks')
     .upsert(rows, { onConflict: 'school_id,student_id,subject,period_id,exam_type' });
   
-  if (error) throw error;
+  if (error) {
+    console.error('[STORE] Failed to save marks:', error);
+    throw error;
+  }
 }
 
 export async function getClassResults(className, examType = _currentExamType) {
@@ -1663,7 +1671,7 @@ export async function getExams() {
 
   // Admin/Standard mode: use direct table query
   const cacheKey = `exams_${_currentSchoolId}_${_currentPeriodId}`;
-  return getCached(cacheKey, async () => {
+  return cachedQuery(cacheKey, async () => {
     const { data, error } = await supabase
       .from('exams')
       .select('*')
@@ -1716,6 +1724,10 @@ async function migrateLegacyExams(examsList) {
  */
 export async function createExam(name, type = 'endterm', term = 'Current') {
   mutationGuard('createExam');
+  const creatorId = (await getUserByAuthId(_currentAuthUser?.id))?.id;
+  
+  console.log(`[STORE] Creating exam: ${name} (Type: ${type}, CreatedBy: ${creatorId})`);
+  
   const { data, error } = await supabase
     .from('exams')
     .insert({
@@ -1724,12 +1736,16 @@ export async function createExam(name, type = 'endterm', term = 'Current') {
       exam_type: type,
       term: term,
       academic_year: term,
-      status: 'published' // Default to published for simplicity
+      status: 'published', // Default to published for simplicity
+      created_by: creatorId
     })
     .select()
     .single();
 
-  if (error) throw error;
+  if (error) {
+    console.error('[STORE] Failed to create exam:', error);
+    throw error;
+  }
   invalidateCache(`exams_${_currentSchoolId}_${_currentPeriodId}`);
   return data;
 }

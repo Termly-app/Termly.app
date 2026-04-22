@@ -60,9 +60,12 @@ export default function AssessmentTab({ currentUser, currentPeriodId }) {
         setAssignments(a);
         setRobustExams(e);
         
-        // Initialize examType if not set
-        if (!examType && e.length > 0) {
-          setExamType(e[0].name);
+        // Initialize examType if not set or if current examType is not in the list
+        if (e.length > 0) {
+          const exists = e.find(ex => ex.name === examType);
+          if (!exists) {
+            setExamType(e[0].name);
+          }
         }
 
         await loadResults();
@@ -128,11 +131,17 @@ export default function AssessmentTab({ currentUser, currentPeriodId }) {
 
   const saveAllMarks = async () => {
     setLoading(true);
+    setSyncingExam(true);
     try {
       await Promise.all(Object.entries(editMarks).map(([sid, m]) => setStudentAllMarks(sid, m, examType)));
       setEditMode(false); 
       await loadResults();
-    } catch(err) { alert({ title: 'Save Error', message: err.message, variant: 'danger' }); } finally { setLoading(false); }
+    } catch(err) { 
+      alert({ title: 'Save Error', message: err.message, variant: 'danger' }); 
+    } finally { 
+      setLoading(false); 
+      setSyncingExam(false);
+    }
   };
 
   const handleCBCChange = async (sid, sub, lv) => { 
@@ -427,8 +436,11 @@ export default function AssessmentTab({ currentUser, currentPeriodId }) {
             <button className="btn btn-ghost" onClick={printGradeResults}><ChartBarIcon size={16} /> Grade Results</button>
             <button className="btn btn-accent" onClick={printAllReportCards}><BookIcon size={16} /> Print All Report Cards</button>
             {activeTab === 'marks' && !isEarlyYears && currentUser?.role?.toLowerCase() !== 'finance' && (editMode ? (
-              <><button className="btn btn-ghost" onClick={() => { setEditMode(false); loadResults(); }}>Cancel</button>
-              <button className="btn btn-success" onClick={saveAllMarks}><SaveIcon size={16} /> Save Marks</button></>
+              <><button className="btn btn-ghost" onClick={() => { setEditMode(false); loadResults(); }} disabled={syncingExam}>Cancel</button>
+              <button className="btn btn-success" onClick={saveAllMarks} disabled={syncingExam}>
+                {syncingExam ? <span className="animate-spin" style={{ display: 'inline-block', marginRight: 8 }}>↻</span> : <SaveIcon size={16} />}
+                {syncingExam ? 'Saving...' : 'Save Marks'}
+              </button></>
             ) : (
               (isAdmin || (isTeacher && Object.keys(assignments[selectedClass] || {}).some(str => 
                 typeof assignments[selectedClass][str] === 'string' ? assignments[selectedClass][str] === currentUser?.id :
