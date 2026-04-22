@@ -1681,21 +1681,29 @@ export async function getExamMarksForPaper(paperId) {
     .eq('exam_paper_id', paperId);
   
   // 2. Also get marks from legacy admin table (for two-way sync)
-  const { data: paperDetails } = await supabase
+  const { data: paper } = await supabase
     .from('exam_papers')
-    .select('subject, exam_id, exams(name)')
+    .select('subject, exam_id')
     .eq('id', paperId)
     .single();
   
   let legacyMarks = [];
-  if (paperDetails && paperDetails.exams) {
-    const { data } = await supabase
-      .from('marks')
-      .select('student_id, mark')
-      .eq('school_id', _currentSchoolId)
-      .eq('exam_type', paperDetails.exams.name)
-      .eq('subject', paperDetails.subject); // This might need code mapping (MATH vs Mathematics)
-    legacyMarks = data || [];
+  if (paper) {
+    const { data: exam } = await supabase
+      .from('exams')
+      .select('name')
+      .eq('id', paper.exam_id)
+      .single();
+    
+    if (exam) {
+      const { data } = await supabase
+        .from('marks')
+        .select('student_id, mark')
+        .eq('school_id', _currentSchoolId)
+        .eq('exam_type', exam.name)
+        .eq('subject', paper.subject);
+      legacyMarks = data || [];
+    }
   }
 
   // Merge: Portal marks take priority, but legacy marks fill the gaps
