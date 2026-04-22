@@ -159,20 +159,22 @@ export default function PortalDashboard({ user, onLogout }) {
           borderBottom: '1px solid rgba(0,0,0,0.05)'
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-            <div style={{ 
-              background: 'linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%)', 
-              color: '#fff', width: 44, height: 44, borderRadius: '14px', 
-              display: 'flex', alignItems: 'center', justifyContent: 'center', 
-              fontSize: '1.4rem', fontWeight: 700, boxShadow: '0 4px 10px rgba(59, 130, 246, 0.3)'
-            }}>
-              {localUser.name.charAt(0).toUpperCase()}
-            </div>
-            <div>
-              <div style={{ fontSize: '1.2rem', fontWeight: 800, color: '#0f172a', letterSpacing: '-0.5px' }}>
-                {localUser.name}
+            {!isDesktop && (
+              <div style={{ 
+                background: 'linear-gradient(135deg, #10b981 0%, #3b82f6 100%)', 
+                color: '#fff', width: 44, height: 44, borderRadius: '14px', 
+                display: 'flex', alignItems: 'center', justifyContent: 'center', 
+                fontSize: '1.4rem', fontWeight: 700, boxShadow: '0 4px 10px rgba(16, 185, 129, 0.3)'
+              }}>
+                {localUser.name.charAt(0).toUpperCase()}
               </div>
-              <div style={{ fontSize: '0.8rem', color: '#64748b', fontWeight: 500 }}>
-                {schoolProfile?.name || 'Portal Access'}
+            )}
+            <div>
+              <div style={{ fontSize: isDesktop ? '1.4rem' : '1.2rem', fontWeight: 900, color: '#0f172a', letterSpacing: '-0.5px' }}>
+                {isDesktop ? 'Parent Portal' : localUser.name}
+              </div>
+              <div style={{ fontSize: '0.8rem', color: '#64748b', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '1px' }}>
+                {schoolProfile?.name || 'Education System'}
               </div>
             </div>
           </div>
@@ -187,35 +189,58 @@ export default function PortalDashboard({ user, onLogout }) {
           
           {/* Desktop Sidebar Navigation */}
           <nav className="desktop-nav" style={{
-            width: 260, padding: '32px 16px', borderRight: '1px solid rgba(0,0,0,0.05)',
-            display: isDesktop ? 'flex' : 'none', flexDirection: 'column', gap: 8
+            width: 280, padding: '32px 0', borderRight: '1px solid rgba(0,0,0,0.05)',
+            display: isDesktop ? 'flex' : 'none', flexDirection: 'column', gap: 8,
+            background: '#fff', position: 'sticky', top: 80, height: 'calc(100vh - 80px)'
           }}>
-            {[
-              { id: 'home', label: 'Dashboard', icon: ActivityIcon },
-              { id: 'academics', label: 'Academics', icon: BookIcon },
-              { id: 'fees', label: 'Finances', icon: CardIcon },
-              { id: 'profile', label: 'Profile', icon: UserIcon }
-            ].map(tab => (
-              <div 
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                style={{ 
-                  display: 'flex', alignItems: 'center', gap: 12, padding: '14px 20px',
-                  borderRadius: '16px', cursor: 'pointer',
-                  background: activeTab === tab.id ? 'rgba(59, 130, 246, 0.08)' : 'transparent',
-                  color: activeTab === tab.id ? '#3b82f6' : '#64748b',
-                  fontWeight: activeTab === tab.id ? 700 : 500,
-                  transition: 'all 0.2s ease'
-                }}
-              >
-                <tab.icon size={20} strokeWidth={activeTab === tab.id ? 2.5 : 2} />
-                <span>{tab.label}</span>
+            {/* Branding Header in Sidebar */}
+            <div style={{ padding: '0 24px 32px', display: 'flex', alignItems: 'center', gap: 12 }}>
+              <div style={{ width: 40, height: 40, borderRadius: 12, background: '#10b981', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <UserIcon size={20} color="#fff" />
               </div>
-            ))}
+              <div style={{ fontWeight: 900, fontSize: '1.2rem', color: '#0f172a' }}>ShuleSoft</div>
+            </div>
+
+            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 4, padding: '0 16px' }}>
+              {[
+                { id: 'home', label: 'Dashboard', icon: ActivityIcon },
+                { id: 'academics', label: 'Academic Performance', icon: BookIcon },
+                { id: 'fees', label: 'Financial Records', icon: CardIcon },
+                { id: 'profile', label: 'Student Profile', icon: UserIcon }
+              ].map(tab => (
+                <div 
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id)}
+                  style={{ 
+                    display: 'flex', alignItems: 'center', gap: 12, padding: '14px 16px',
+                    borderRadius: '12px', cursor: 'pointer',
+                    background: activeTab === tab.id ? '#f0fdf4' : 'transparent',
+                    color: activeTab === tab.id ? '#10b981' : '#64748b',
+                    fontWeight: 700,
+                    transition: 'all 0.2s ease'
+                  }}
+                >
+                  <tab.icon size={20} strokeWidth={activeTab === tab.id ? 2.5 : 2} />
+                  <span>{tab.label}</span>
+                </div>
+              ))}
+            </div>
           </nav>
 
-          {/* Page Content */}
-          <div style={{ flex: 1, padding: '32px 24px 100px', boxSizing: 'border-box' }}>
+            {/* Page Content */}
+            <div style={{ flex: 1, padding: isDesktop ? '48px 60px' : '24px 20px 100px', boxSizing: 'border-box' }}>
+              
+              {/* Desktop Greeting Header */}
+              {isDesktop && (
+                <div style={{ marginBottom: 40, animation: 'fadeIn 0.5s ease-out' }}>
+                  <h1 style={{ margin: 0, fontSize: '2.6rem', fontWeight: 900, color: '#0f172a', letterSpacing: '-1.5px', lineHeight: 1 }}>
+                    Welcome back, {localUser.name.split(' ')[0]}
+                  </h1>
+                  <p style={{ margin: '12px 0 0', color: '#64748b', fontSize: '1.15rem', fontWeight: 500 }}>
+                    Monitor your child's academic progress and financial standing in real-time.
+                  </p>
+                </div>
+              )}
             
             {/* HOME TAB */}
             {activeTab === 'home' && (
@@ -293,7 +318,7 @@ export default function PortalDashboard({ user, onLogout }) {
                         </div>
                       </div>
                       <div style={{ textAlign: 'right' }}>
-                        <div style={{ fontWeight: 900, color: '#3b82f6', fontSize: '1.2rem' }}>{res.mean_score?.toFixed(1)}%</div>
+                        <div style={{ fontWeight: 900, color: '#10b981', fontSize: '1.2rem' }}>{res.mean_score?.toFixed(1)}%</div>
                         <div style={{ fontSize: '0.75rem', color: '#94a3b8', fontWeight: 600 }}>Rank: {res.class_position}</div>
                       </div>
                     </Card>
@@ -363,7 +388,7 @@ export default function PortalDashboard({ user, onLogout }) {
                            <div style={{ display: 'flex', gap: 32, alignItems: 'center' }}>
                              <div style={{ textAlign: 'center' }}>
                                <div style={{ fontSize: '0.75rem', color: '#94a3b8', fontWeight: 700, textTransform: 'uppercase', marginBottom: 4 }}>Mean Score</div>
-                               <div style={{ fontWeight: 900, color: '#3b82f6', fontSize: '1.8rem' }}>{res.mean_score?.toFixed(1)}%</div>
+                               <div style={{ fontWeight: 900, color: '#10b981', fontSize: '1.8rem' }}>{res.mean_score?.toFixed(1)}%</div>
                              </div>
                              <div style={{ width: 1, height: 40, background: '#e2e8f0' }} />
                              <div style={{ textAlign: 'right' }}>
@@ -552,7 +577,7 @@ export default function PortalDashboard({ user, onLogout }) {
             onClick={() => setActiveTab(tab.id)}
             style={{ 
               display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, 
-              color: activeTab === tab.id ? '#3b82f6' : '#94a3b8',
+              color: activeTab === tab.id ? '#10b981' : '#94a3b8',
               cursor: 'pointer', flex: 1
             }}
           >
@@ -575,7 +600,7 @@ export default function PortalDashboard({ user, onLogout }) {
             <div style={{ textAlign: 'center', marginBottom: 24 }}>
               <div style={{ 
                 width: 72, height: 72, borderRadius: 24, background: '#f1f5f9',
-                margin: '0 auto 16px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#3b82f6'
+                margin: '0 auto 16px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#10b981'
               }}>
                 <TeacherIcon size={32} />
               </div>
@@ -584,7 +609,7 @@ export default function PortalDashboard({ user, onLogout }) {
             </div>
             
             <div style={{ background: '#f8fafc', padding: 20, borderRadius: 24, display: 'flex', alignItems: 'center', gap: 16, marginBottom: 24 }}>
-              <div style={{ width: 48, height: 48, borderRadius: 14, background: '#3b82f6', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: '1.2rem' }}>
+              <div style={{ width: 48, height: 48, borderRadius: 14, background: '#10b981', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: '1.2rem' }}>
                 {selectedSubjectDetail.teacher_name?.charAt(0) || '?'}
               </div>
               <div>
