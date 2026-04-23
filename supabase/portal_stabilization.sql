@@ -1,10 +1,10 @@
 -- ============================================================
--- PORTAL STABILIZATION SCRIPT (V10 - THE NUKE)
--- This version uses dynamic SQL to drop ALL overloaded portal 
--- functions and re-creates them with absolute consistency.
+-- PORTAL STABILIZATION SCRIPT (V11 - TABLE RETURN FIX)
+-- Reverts JSONB returns to TABLE returns for better PostgREST
+-- compatibility and signature matching.
 -- ============================================================
 
--- 0. Ensure Infrastructure
+-- 0. Infrastructure
 CREATE TABLE IF NOT EXISTS public.tt_teacher_subjects (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   school_id UUID NOT NULL REFERENCES public.schools(id) ON DELETE CASCADE,
@@ -15,7 +15,7 @@ CREATE TABLE IF NOT EXISTS public.tt_teacher_subjects (
   UNIQUE(teacher_id, subject_id, class_id)
 );
 
--- 1. DYNAMIC NUKE: Drop ALL overloaded versions of these functions
+-- 1. DYNAMIC NUKE (Ensures no signature mismatch)
 DO $$ 
 DECLARE
     _func_record record;
@@ -33,82 +33,95 @@ BEGIN
     LOOP
         EXECUTE 'DROP FUNCTION ' || _func_record.signature;
     END LOOP;
-EXCEPTION WHEN OTHERS THEN
-    RAISE NOTICE 'Nuke failed: %', SQLERRM;
 END $$;
 
--- 2. RE-CREATE: Subject Details (Hardened, no photo_url)
+-- 2. RE-CREATE: Subject Details (RETURNS TABLE)
 CREATE OR REPLACE FUNCTION public.portal_get_subject_details(p_student_id UUID)
-RETURNS JSONB LANGUAGE plpgsql SECURITY DEFINER SET search_path = public, pg_catalog AS $$
+RETURNS TABLE (
+  subject_name TEXT,
+  teacher_name TEXT,
+  short_code TEXT
+) LANGUAGE plpgsql SECURITY DEFINER SET search_path = public, pg_catalog AS $$
 BEGIN
-  RETURN (
-    SELECT COALESCE(jsonb_agg(jsonb_build_object(
-      'subject_name', ts.name,
-      'teacher_name', u.name,
-      'short_code', ts.short_code
-    )), '[]'::jsonb)
-    FROM public.students s
-    JOIN public.classes c ON (c.id = s.class_id OR (c.name = s.class AND c.school_id = s.school_id))
-    JOIN public.tt_teacher_subjects tts ON tts.class_id = c.id
-    JOIN public.tt_subjects ts ON ts.id = tts.subject_id
-    JOIN public.users u ON u.id = tts.teacher_id
-    WHERE s.id = p_student_id
-  );
+  RETURN QUERY
+  SELECT 
+    ts.name::TEXT,
+    u.name::TEXT,
+    ts.short_code::TEXT
+  FROM public.students s
+  JOIN public.classes c ON (c.id = s.class_id OR (c.name = s.class AND c.school_id = s.school_id))
+  JOIN public.tt_teacher_subjects tts ON tts.class_id = c.id
+  JOIN public.tt_subjects ts ON ts.id = tts.subject_id
+  JOIN public.users u ON u.id = tts.teacher_id
+  WHERE s.id = p_student_id;
 END; $$;
 
--- 3. RE-CREATE: Student Results
+-- 3. RE-CREATE: Student Results (RETURNS TABLE)
 CREATE OR REPLACE FUNCTION public.portal_get_student_results(p_student_id UUID)
-RETURNS JSONB LANGUAGE plpgsql SECURITY DEFINER SET search_path = public, pg_catalog AS $$
+RETURNS TABLE (
+  id UUID,
+  total_marks NUMERIC,
+  mean_score NUMERIC,
+  class_position INTEGER,
+  class_size INTEGER,
+  exam_name TEXT,
+  exam_term TEXT,
+  exam_type TEXT
+) LANGUAGE plpgsql SECURITY DEFINER SET search_path = public, pg_catalog AS $$
 BEGIN
-  RETURN (
-    SELECT COALESCE(jsonb_agg(jsonb_build_object(
-      'id', er.id, 
-      'total_marks', er.total_marks, 
-      'mean_score', er.mean_score, 
-      'class_position', er.class_position, 
-      'class_size', er.class_size, 
-      'exams', jsonb_build_object('name', e.name, 'term', e.term, 'exam_type', e.exam_type)
-    )), '[]'::jsonb)
-    FROM public.exam_results er 
-    JOIN public.exams e ON e.id = er.exam_id
-    WHERE er.student_id = p_student_id 
-      AND e.status ILIKE 'published'
-    ORDER BY e.created_at DESC
-  );
+  RETURN QUERY
+  SELECT 
+    er.id,
+    er.total_marks,
+    er.mean_score,
+    er.class_position,
+    er.class_size,
+    e.name::TEXT as exam_name,
+    e.term::TEXT as exam_term,
+    e.exam_type::TEXT as exam_type
+  FROM public.exam_results er 
+  JOIN public.exams e ON e.id = er.exam_id
+  WHERE er.student_id = p_student_id 
+    AND e.status ILIKE 'published'
+  ORDER BY e.created_at DESC;
 END; $$;
 
--- 4. RE-CREATE: Announcements
+-- 4. RE-CREATE: Announcements (RETURNS TABLE)
 CREATE OR REPLACE FUNCTION public.portal_get_announcements(p_school_id UUID)
-RETURNS JSONB LANGUAGE plpgsql SECURITY DEFINER SET search_path = public, pg_catalog AS $$
+RETURNS TABLE (
+  id UUID,
+  title TEXT,
+  body TEXT,
+  created_at TIMESTAMPTZ,
+  author_name TEXT
+) LANGUAGE plpgsql SECURITY DEFINER SET search_path = public, pg_catalog AS $$
 BEGIN
-  RETURN (
-    SELECT COALESCE(jsonb_agg(jsonb_build_object(
-      'id', a.id, 'title', a.title, 'body', a.body, 'created_at', a.created_at, 'author_name', u.name
-    )), '[]'::jsonb)
-    FROM public.announcements a 
-    LEFT JOIN public.users u ON u.id = a.created_by
-    WHERE a.school_id = p_school_id 
-      AND a.status ILIKE 'published' 
-    ORDER BY a.created_at DESC
-  );
+  RETURN QUERY
+  SELECT 
+    a.id,
+    a.title::TEXT,
+    a.body::TEXT,
+    a.created_at,
+    u.name::TEXT as author_name
+  FROM public.announcements a 
+  LEFT JOIN public.users u ON u.id = a.created_by
+  WHERE a.school_id = p_school_id 
+    AND a.status ILIKE 'published' 
+  ORDER BY a.created_at DESC;
 END; $$;
 
--- 5. RE-CREATE: Assignments (Matching 2-parameter call in store.js)
+-- 5. RE-CREATE: Assignments (RETURNS SETOF el_assignments)
 CREATE OR REPLACE FUNCTION public.portal_get_assignments(p_school_id UUID, p_class_id UUID DEFAULT NULL)
-RETURNS JSONB LANGUAGE plpgsql SECURITY DEFINER SET search_path = public, pg_catalog AS $$
+RETURNS SETOF public.el_assignments LANGUAGE plpgsql SECURITY DEFINER SET search_path = public, pg_catalog AS $$
 BEGIN
-  RETURN (
-    SELECT COALESCE(jsonb_agg(t), '[]'::jsonb) 
-    FROM (
-      SELECT * FROM public.el_assignments 
-      WHERE school_id = p_school_id 
-        AND (p_class_id IS NULL OR class_id = p_class_id) 
-      ORDER BY created_at DESC
-    ) t
-  );
+  RETURN QUERY
+  SELECT * FROM public.el_assignments 
+  WHERE school_id = p_school_id 
+    AND (p_class_id IS NULL OR class_id = p_class_id) 
+  ORDER BY created_at DESC;
 END; $$;
 
--- 6. DATA RECOVERY: Safe Migration
+-- 6. DATA RECOVERY
 DO $$ 
 BEGIN
   -- Fix missing class_ids
@@ -130,7 +143,6 @@ BEGIN
     WHERE EXISTS (SELECT 1 FROM public.users WHERE id = sa.target_user_id)
     ON CONFLICT (teacher_id, subject_id, class_id) DO NOTHING;
   END IF;
-
 EXCEPTION WHEN OTHERS THEN
-  RAISE NOTICE 'Migration step failed but script continuing: %', SQLERRM;
+  RAISE NOTICE 'Migration failed: %', SQLERRM;
 END $$;

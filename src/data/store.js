@@ -1982,7 +1982,15 @@ export async function getStudentExamResults(studentId) {
   if (!_currentAuthUser && _currentSchoolId) {
     const { data, error } = await supabase.rpc('portal_get_student_results', { p_student_id: studentId });
     if (error) throw error;
-    return data || [];
+    // Map flat TABLE results to nested structure expected by UI
+    return (data || []).map(r => ({
+      ...r,
+      exams: {
+        name: r.exam_name,
+        term: r.exam_term,
+        exam_type: r.exam_type
+      }
+    }));
   }
 
   const { data, error } = await supabase
