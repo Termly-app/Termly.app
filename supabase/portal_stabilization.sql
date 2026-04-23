@@ -1,7 +1,7 @@
 -- ============================================================
--- PORTAL STABILIZATION SCRIPT (V14 - JSONB COMPATIBILITY)
--- Uses JSONB returns to bypass PostgREST schema cache issues
--- and resolve persistent 400 Bad Request errors.
+-- PORTAL STABILIZATION SCRIPT (V14.1 - CLEANUP & JSONB FIX)
+-- Drops existing _v2 functions to allow changing return types
+-- and resolves persistent 400 Bad Request errors.
 -- ============================================================
 
 -- 0. Infrastructure
@@ -15,7 +15,14 @@ CREATE TABLE IF NOT EXISTS public.tt_teacher_subjects (
   UNIQUE(teacher_id, subject_id, class_id)
 );
 
--- 1. RE-CREATE: Student Results (JSONB)
+-- 1. CLEANUP: Drop existing functions to allow return type change
+DROP FUNCTION IF EXISTS public.portal_get_student_results_v2(UUID);
+DROP FUNCTION IF EXISTS public.portal_get_announcements_v2(UUID);
+DROP FUNCTION IF EXISTS public.portal_get_assignments_v2(UUID, UUID);
+DROP FUNCTION IF EXISTS public.portal_get_student_fees_v2(UUID);
+DROP FUNCTION IF EXISTS public.portal_get_student_payments_v2(UUID);
+
+-- 2. RE-CREATE: Student Results (JSONB)
 CREATE OR REPLACE FUNCTION public.portal_get_student_results_v2(p_student_id UUID)
 RETURNS JSONB LANGUAGE plpgsql SECURITY DEFINER SET search_path = public, pg_catalog AS $$
 DECLARE
@@ -29,7 +36,7 @@ BEGIN
   RETURN COALESCE(_res, '[]'::JSONB);
 END; $$;
 
--- 2. RE-CREATE: Announcements (JSONB)
+-- 3. RE-CREATE: Announcements (JSONB)
 CREATE OR REPLACE FUNCTION public.portal_get_announcements_v2(p_school_id UUID)
 RETURNS JSONB LANGUAGE plpgsql SECURITY DEFINER SET search_path = public, pg_catalog AS $$
 DECLARE
@@ -43,7 +50,7 @@ BEGIN
   RETURN COALESCE(_res, '[]'::JSONB);
 END; $$;
 
--- 3. RE-CREATE: Assignments (JSONB)
+-- 4. RE-CREATE: Assignments (JSONB)
 CREATE OR REPLACE FUNCTION public.portal_get_assignments_v2(p_school_id UUID, p_class_id UUID DEFAULT NULL)
 RETURNS JSONB LANGUAGE plpgsql SECURITY DEFINER SET search_path = public, pg_catalog AS $$
 DECLARE
@@ -57,7 +64,7 @@ BEGIN
   RETURN COALESCE(_res, '[]'::JSONB);
 END; $$;
 
--- 4. RE-CREATE: Student Fees (JSONB)
+-- 5. RE-CREATE: Student Fees (JSONB)
 CREATE OR REPLACE FUNCTION public.portal_get_student_fees_v2(p_student_id UUID)
 RETURNS JSONB LANGUAGE plpgsql SECURITY DEFINER SET search_path = public, pg_catalog AS $$
 DECLARE
@@ -72,7 +79,7 @@ BEGIN
   RETURN _res;
 END; $$;
 
--- 5. RE-CREATE: Student Payments (JSONB)
+-- 6. RE-CREATE: Student Payments (JSONB)
 CREATE OR REPLACE FUNCTION public.portal_get_student_payments_v2(p_student_id UUID)
 RETURNS JSONB LANGUAGE plpgsql SECURITY DEFINER SET search_path = public, pg_catalog AS $$
 DECLARE
@@ -91,5 +98,5 @@ BEGIN
   RETURN COALESCE(_res, '[]'::JSONB);
 END; $$;
 
--- 6. RELOAD SCHEMA CACHE
+-- 7. RELOAD SCHEMA CACHE
 NOTIFY pgrst, 'reload schema';
