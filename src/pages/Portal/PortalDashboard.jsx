@@ -47,6 +47,7 @@ export default function PortalDashboard({ user, onLogout }) {
   const [examResults, setExamResults] = useState([]);
   const [academic, setAcademic] = useState({ average: 0, grade: 'N/A', rank: '-', color: '#667781' });
   const [feeBalance, setFeeBalance] = useState(0);
+  const [feeSummary, setFeeSummary] = useState({ billed: 0, paid: 0 });
   const [payments, setPayments] = useState([]);
   const [notices, setNotices] = useState([]);
   const [schoolProfile, setSchoolProfile] = useState(null);
@@ -106,9 +107,15 @@ export default function PortalDashboard({ user, onLogout }) {
         const myFee = await getFees(user.id).catch(() => null);
         if (myFee) {
           setFeeBalance(myFee.balance || 0);
+          setFeeSummary({
+            billed: myFee.billed || 0,
+            paid: myFee.paid || 0
+          });
           setMpesaAmount((myFee.balance || 0) > 0 ? myFee.balance : 0);
-          // Sort payments by date descending
-          const sortedPayments = (myFee.payments || []).sort((a, b) => new Date(b.date) - new Date(a.date));
+          // Sort payments by date descending (filter out voided if any leak through)
+          const sortedPayments = (myFee.payments || [])
+            .filter(p => p.status !== 'Voided')
+            .sort((a, b) => new Date(b.date) - new Date(a.date));
           setPayments(sortedPayments);
         }
       } catch (err) {
@@ -415,11 +422,11 @@ export default function PortalDashboard({ user, onLogout }) {
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.9rem' }}>
                         <span style={{ color: '#64748b' }}>Total Billed</span>
-                        <span style={{ fontWeight: 700 }}>KES {(feeBalance + payments.reduce((a,b)=>a+b.amount,0)).toLocaleString()}</span>
+                        <span style={{ fontWeight: 700 }}>KES {feeSummary.billed.toLocaleString()}</span>
                       </div>
                       <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.9rem' }}>
                         <span style={{ color: '#64748b' }}>Total Paid</span>
-                        <span style={{ fontWeight: 700, color: '#10b981' }}>KES {payments.reduce((a,b)=>a+b.amount,0).toLocaleString()}</span>
+                        <span style={{ fontWeight: 700, color: '#10b981' }}>KES {feeSummary.paid.toLocaleString()}</span>
                       </div>
                       <div style={{ height: 1, background: '#f1f5f9', margin: '4px 0' }} />
                       <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '1rem' }}>
