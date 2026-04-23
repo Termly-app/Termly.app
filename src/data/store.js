@@ -1980,7 +1980,7 @@ export async function getStudentExamResults(studentId) {
 
   // If in portal mode (no auth user but school id set), use RPC
   if (!_currentAuthUser && _currentSchoolId) {
-    const { data, error } = await supabase.rpc('portal_get_student_results', { p_student_id: studentId });
+    const { data, error } = await supabase.rpc('portal_get_student_results_v2', { p_student_id: studentId });
     if (error) throw error;
     // Map flat TABLE results to nested structure expected by UI
     return (data || []).map(r => ({
@@ -2151,14 +2151,14 @@ export async function getFees(studentId = null) {
     let payData = [];
 
     try {
-      const feeRes = await supabase.rpc('portal_get_student_fees', { p_student_id: studentId });
+      const feeRes = await supabase.rpc('portal_get_student_fees_v2', { p_student_id: studentId });
       if (!feeRes.error) feeData = feeRes.data;
     } catch (e) {
       console.warn('Portal fee fetch error:', e);
     }
 
     try {
-      const payRes = await supabase.rpc('portal_get_student_payments', { p_student_id: studentId });
+      const payRes = await supabase.rpc('portal_get_student_payments_v2', { p_student_id: studentId });
       if (!payRes.error) payData = payRes.data;
     } catch (e) {
       console.warn('Portal payments fetch error:', e);
@@ -5295,7 +5295,7 @@ export async function getAssignments(filters = {}) {
   if (!_currentSchoolId) return [];
 
   if (!_currentAuthUser && _currentSchoolId) {
-    const { data, error } = await supabase.rpc('portal_get_assignments', { 
+    const { data, error } = await supabase.rpc('portal_get_assignments_v2', { 
       p_school_id: _currentSchoolId,
       p_class_id: filters.classId || null
     });
@@ -5392,7 +5392,7 @@ export async function getAnnouncements(filters = {}) {
   if (!_currentSchoolId) return [];
 
   if (!_currentAuthUser && _currentSchoolId) {
-    const { data, error } = await supabase.rpc('portal_get_announcements', { p_school_id: _currentSchoolId });
+    const { data, error } = await supabase.rpc('portal_get_announcements_v2', { p_school_id: _currentSchoolId });
     if (error) throw error;
     return data || [];
   }

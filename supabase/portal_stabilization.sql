@@ -69,7 +69,7 @@ BEGIN
 END; $$;
 
 -- 3. RE-CREATE: Student Results
-CREATE OR REPLACE FUNCTION public.portal_get_student_results(p_student_id UUID)
+CREATE OR REPLACE FUNCTION public.portal_get_student_results_v2(p_student_id UUID)
 RETURNS TABLE (
   id UUID, total_marks NUMERIC, mean_score NUMERIC, class_position INTEGER, class_size INTEGER, exam_name TEXT, exam_term TEXT, exam_type TEXT
 ) LANGUAGE plpgsql SECURITY DEFINER SET search_path = public, pg_catalog AS $$
@@ -81,7 +81,7 @@ BEGIN
 END; $$;
 
 -- 4. RE-CREATE: Announcements
-CREATE OR REPLACE FUNCTION public.portal_get_announcements(p_school_id UUID)
+CREATE OR REPLACE FUNCTION public.portal_get_announcements_v2(p_school_id UUID)
 RETURNS TABLE (
   id UUID, title TEXT, body TEXT, created_at TIMESTAMPTZ, author_name TEXT
 ) LANGUAGE plpgsql SECURITY DEFINER SET search_path = public, pg_catalog AS $$
@@ -93,7 +93,7 @@ BEGIN
 END; $$;
 
 -- 5. RE-CREATE: Assignments
-CREATE OR REPLACE FUNCTION public.portal_get_assignments(p_school_id UUID, p_class_id UUID DEFAULT NULL)
+CREATE OR REPLACE FUNCTION public.portal_get_assignments_v2(p_school_id UUID, p_class_id UUID DEFAULT NULL)
 RETURNS SETOF public.el_assignments LANGUAGE plpgsql SECURITY DEFINER SET search_path = public, pg_catalog AS $$
 BEGIN
   RETURN QUERY
@@ -101,7 +101,7 @@ BEGIN
 END; $$;
 
 -- 6. RE-CREATE: Student Fees (RETURNS TABLE for consistency)
-CREATE OR REPLACE FUNCTION public.portal_get_student_fees(p_student_id UUID)
+CREATE OR REPLACE FUNCTION public.portal_get_student_fees_v2(p_student_id UUID)
 RETURNS TABLE (
   id UUID, total_fee NUMERIC, paid NUMERIC, balance NUMERIC
 ) LANGUAGE plpgsql SECURITY DEFINER SET search_path = public, pg_catalog AS $$
@@ -114,7 +114,7 @@ BEGIN
 END; $$;
 
 -- 7. RE-CREATE: Student Payments (Harden: Exclude Voided)
-CREATE OR REPLACE FUNCTION public.portal_get_student_payments(p_student_id UUID)
+CREATE OR REPLACE FUNCTION public.portal_get_student_payments_v2(p_student_id UUID)
 RETURNS TABLE (
   id UUID, amount NUMERIC, date TIMESTAMPTZ, method TEXT, reference TEXT, status TEXT
 ) LANGUAGE plpgsql SECURITY DEFINER SET search_path = public, pg_catalog AS $$
