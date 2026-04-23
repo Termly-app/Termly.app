@@ -175,6 +175,7 @@ export default function PortalDashboard({ user, onLogout }) {
           <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 4, padding: '0 16px' }}>
             {[
               { id: 'home', label: 'Dashboard', icon: ActivityIcon },
+              { id: 'announcements', label: 'Announcements', icon: MessageIcon },
               { id: 'academics', label: 'Academic Results', icon: BookIcon },
               { id: 'fees', label: 'Fees & Payments', icon: CardIcon },
               { id: 'profile', label: 'Student Profile', icon: UserIcon }
@@ -275,7 +276,7 @@ export default function PortalDashboard({ user, onLogout }) {
                   <section>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
                       <h3 style={{ margin: 0, fontSize: '1.1rem', fontWeight: 800 }}>Recent Updates</h3>
-                      <button onClick={() => setActiveTab('academics')} style={{ background: 'transparent', border: 'none', color: '#3b82f6', fontWeight: 700, fontSize: '0.85rem', cursor: 'pointer' }}>View All</button>
+                      <button onClick={() => setActiveTab('announcements')} style={{ background: 'transparent', border: 'none', color: '#3b82f6', fontWeight: 700, fontSize: '0.85rem', cursor: 'pointer' }}>View All</button>
                     </div>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
                       {notices.length === 0 ? (
@@ -318,6 +319,48 @@ export default function PortalDashboard({ user, onLogout }) {
                       )}
                     </div>
                   </section>
+                </div>
+              </div>
+            )}
+            
+            {/* ANNOUNCEMENTS TAB */}
+            {activeTab === 'announcements' && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 24, animation: 'fadeIn 0.4s ease-out' }}>
+                <h3 style={{ fontSize: '1.4rem', fontWeight: 900, marginBottom: 8 }}>School Announcements</h3>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+                  {notices.length === 0 ? (
+                    <Card style={{ padding: '60px', textAlign: 'center', color: '#94a3b8' }}>
+                      <div style={{ marginBottom: 16, opacity: 0.3 }}>
+                        <MessageIcon size={48} />
+                      </div>
+                      <div style={{ fontSize: '1.1rem', fontWeight: 600 }}>No announcements yet</div>
+                      <p style={{ margin: '8px 0 0', fontSize: '0.9rem' }}>Check back later for school updates.</p>
+                    </Card>
+                  ) : (
+                    notices.map(n => (
+                      <Card key={n.id} style={{ padding: 32 }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 16 }}>
+                          <h4 style={{ margin: 0, fontSize: '1.25rem', fontWeight: 800, color: '#0f172a', flex: 1 }}>{n.title}</h4>
+                          <Badge bg="#f0fdf4" color="#10b981">{new Date(n.created_at).toLocaleDateString()}</Badge>
+                        </div>
+                        <div style={{ 
+                          fontSize: '1rem', color: '#475569', lineHeight: 1.7, 
+                          background: '#f8fafc', padding: 24, borderRadius: 16, border: '1px solid #f1f5f9' 
+                        }}>
+                          {n.body}
+                        </div>
+                        <div style={{ marginTop: 24, display: 'flex', alignItems: 'center', gap: 12 }}>
+                          <div style={{ width: 32, height: 32, borderRadius: 16, background: '#e2e8f0', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.8rem', fontWeight: 700 }}>
+                            {n.author_name?.charAt(0) || 'A'}
+                          </div>
+                          <div>
+                            <div style={{ fontSize: '0.85rem', fontWeight: 700, color: '#0f172a' }}>{n.author_name || 'School Administration'}</div>
+                            <div style={{ fontSize: '0.75rem', color: '#94a3b8', fontWeight: 600 }}>Official Update</div>
+                          </div>
+                        </div>
+                      </Card>
+                    ))
+                  )}
                 </div>
               </div>
             )}
@@ -501,6 +544,7 @@ export default function PortalDashboard({ user, onLogout }) {
         }}>
           {[
             { id: 'home', icon: ActivityIcon },
+            { id: 'announcements', icon: MessageIcon },
             { id: 'academics', icon: BookIcon },
             { id: 'fees', icon: CardIcon },
             { id: 'profile', icon: UserIcon }
