@@ -1,10 +1,10 @@
 -- ============================================================
--- PORTAL STABILIZATION SCRIPT (V11 - TABLE RETURN FIX)
--- Reverts JSONB returns to TABLE returns for better PostgREST
--- compatibility and signature matching.
+-- PORTAL STABILIZATION SCRIPT (V12 - LEGACY SYNC FIX)
+-- Ensures portal functions read from both legacy and new
+-- assignment tables to prevent "Teacher not assigned" errors.
 -- ============================================================
 
--- 0. Infrastructure
+-- 0. Infrastructure (Keep existing)
 CREATE TABLE IF NOT EXISTS public.tt_teacher_subjects (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   school_id UUID NOT NULL REFERENCES public.schools(id) ON DELETE CASCADE,
@@ -15,7 +15,7 @@ CREATE TABLE IF NOT EXISTS public.tt_teacher_subjects (
   UNIQUE(teacher_id, subject_id, class_id)
 );
 
--- 1. DYNAMIC NUKE (Ensures no signature mismatch)
+-- 1. DYNAMIC NUKE
 DO $$ 
 DECLARE
     _func_record record;
@@ -35,7 +35,7 @@ BEGIN
     END LOOP;
 END $$;
 
--- 2. RE-CREATE: Subject Details (RETURNS TABLE)
+-- 2. RE-CREATE: Subject Details (Unified Legacy + New)
 CREATE OR REPLACE FUNCTION public.portal_get_subject_details(p_student_id UUID)
 RETURNS TABLE (
   subject_name TEXT,
@@ -44,19 +44,45 @@ RETURNS TABLE (
 ) LANGUAGE plpgsql SECURITY DEFINER SET search_path = public, pg_catalog AS $$
 BEGIN
   RETURN QUERY
-  SELECT 
-    ts.name::TEXT,
-    u.name::TEXT,
-    ts.short_code::TEXT
-  FROM public.students s
-  JOIN public.classes c ON (c.id = s.class_id OR (c.name = s.class AND c.school_id = s.school_id))
-  JOIN public.tt_teacher_subjects tts ON tts.class_id = c.id
-  JOIN public.tt_subjects ts ON ts.id = tts.subject_id
-  JOIN public.users u ON u.id = tts.teacher_id
-  WHERE s.id = p_student_id;
+  WITH student_info AS (
+    SELECT s.school_id, s.class, s.class_id, s.stream
+    FROM public.students s
+    WHERE s.id = p_student_id
+  ),
+  all_assignments AS (
+    -- 1. New Timetable Assignments
+    SELECT 
+      ts.name::TEXT as s_name,
+      u.name::TEXT as t_name,
+      ts.short_code::TEXT as s_code,
+      1 as priority
+    FROM student_info si
+    JOIN public.classes c ON (c.id = si.class_id OR (c.name = si.class AND c.school_id = si.school_id))
+    JOIN public.tt_teacher_subjects tts ON tts.class_id = c.id
+    JOIN public.tt_subjects ts ON ts.id = tts.subject_id
+    JOIN public.users u ON u.id = tts.teacher_id
+    
+    UNION ALL
+    
+    -- 2. Legacy Subject Assignments
+    SELECT 
+      sa.subject::TEXT as s_name,
+      u.name::TEXT as t_name,
+      ''::TEXT as s_code,
+      2 as priority
+    FROM student_info si
+    JOIN public.subject_assignments sa ON sa.school_id = si.school_id 
+      AND sa.class_grade = si.class 
+      AND (sa.stream = si.stream OR sa.stream IS NULL OR sa.stream = '' OR sa.stream = 'General')
+    JOIN public.users u ON u.id = sa.teacher_id
+  )
+  SELECT DISTINCT ON (s_name) 
+    s_name, t_name, s_code
+  FROM all_assignments
+  ORDER BY s_name, priority ASC;
 END; $$;
 
--- 3. RE-CREATE: Student Results (RETURNS TABLE)
+-- 3. RE-CREATE: Student Results
 CREATE OR REPLACE FUNCTION public.portal_get_student_results(p_student_id UUID)
 RETURNS TABLE (
   id UUID,
@@ -86,7 +112,7 @@ BEGIN
   ORDER BY e.created_at DESC;
 END; $$;
 
--- 4. RE-CREATE: Announcements (RETURNS TABLE)
+-- 4. RE-CREATE: Announcements
 CREATE OR REPLACE FUNCTION public.portal_get_announcements(p_school_id UUID)
 RETURNS TABLE (
   id UUID,
@@ -110,7 +136,7 @@ BEGIN
   ORDER BY a.created_at DESC;
 END; $$;
 
--- 5. RE-CREATE: Assignments (RETURNS SETOF el_assignments)
+-- 5. RE-CREATE: Assignments
 CREATE OR REPLACE FUNCTION public.portal_get_assignments(p_school_id UUID, p_class_id UUID DEFAULT NULL)
 RETURNS SETOF public.el_assignments LANGUAGE plpgsql SECURITY DEFINER SET search_path = public, pg_catalog AS $$
 BEGIN
@@ -120,29 +146,3 @@ BEGIN
     AND (p_class_id IS NULL OR class_id = p_class_id) 
   ORDER BY created_at DESC;
 END; $$;
-
--- 6. DATA RECOVERY
-DO $$ 
-BEGIN
-  -- Fix missing class_ids
-  UPDATE public.students s
-  SET class_id = c.id
-  FROM public.classes c
-  WHERE s.class_id IS NULL AND c.name = s.class AND c.school_id = s.school_id;
-
-  -- Migrate legacy assignments
-  IF EXISTS (SELECT FROM information_schema.tables WHERE table_name = 'subject_assignments') THEN
-    INSERT INTO public.tt_teacher_subjects (school_id, teacher_id, subject_id, class_id)
-    SELECT DISTINCT sa.school_id, v.target_user_id, ts.id, c.id
-    FROM (
-      SELECT *, COALESCE((SELECT user_id FROM public.teachers WHERE id = sa.teacher_id), sa.teacher_id) as target_user_id
-      FROM public.subject_assignments sa
-    ) sa
-    JOIN public.tt_subjects ts ON ts.name = sa.subject AND ts.school_id = sa.school_id
-    JOIN public.classes c ON c.name = sa.class_grade AND c.school_id = sa.school_id
-    WHERE EXISTS (SELECT 1 FROM public.users WHERE id = sa.target_user_id)
-    ON CONFLICT (teacher_id, subject_id, class_id) DO NOTHING;
-  END IF;
-EXCEPTION WHEN OTHERS THEN
-  RAISE NOTICE 'Migration failed: %', SQLERRM;
-END $$;
