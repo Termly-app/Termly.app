@@ -129,3 +129,7 @@ BEGIN
     AND (p.status IS NULL OR p.status NOT ILIKE 'voided')
   ORDER BY p.date DESC;
 END; $$;
+
+-- 8. RELOAD SCHEMA CACHE
+-- Forces PostgREST to recognize the new TABLE return types immediately
+NOTIFY pgrst, 'reload schema';

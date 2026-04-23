@@ -2172,13 +2172,16 @@ export async function getFees(studentId = null) {
       reference: p.reference || '',
     }));
 
+    const actualFeeData = Array.isArray(feeData) ? feeData[0] : feeData;
+
     return {
-      totalFee: Number(feeData?.total_fee || 0),
-      paid: Number(feeData?.paid || 0),
-      balance: Number(feeData?.balance || 0),
+      totalFee: Number(actualFeeData?.total_fee || 0),
+      billed: Number(actualFeeData?.total_fee || 0),
+      paid: Number(actualFeeData?.paid || 0),
+      balance: Number(actualFeeData?.balance || 0),
       payments,
-      _feeId: feeData?.id || null,
-      periodId: feeData?.period_id || null,
+      _feeId: actualFeeData?.id || null,
+      periodId: actualFeeData?.period_id || null,
     };
   }
 
