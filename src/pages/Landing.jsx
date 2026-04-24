@@ -208,8 +208,6 @@ export default function Landing() {
             ShuleSoft
           </Link>
           <a href="#features" className="nlink">Features</a>
-          <a href="#modules" className="nlink">Modules</a>
-          <a href="#pricing" className="nlink">Pricing</a>
           <Link to="/contact" className="nlink">Contact</Link>
           <div className="nsep"></div>
           
