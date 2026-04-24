@@ -106,7 +106,7 @@ DECLARE
   _res JSON;
 BEGIN
   SELECT row_to_json(t) INTO _res FROM (
-    SELECT s.id, s.name, s.adm_no, s.class_grade, s.stream, s.gender, s.parent_name, s.parent_phone
+    SELECT s.id, s.name, s.adm_no, s.class, s.stream, s.gender, s.parent as parent_name, s.parent_phone
     FROM public.students s
     WHERE s.id = p_student_id
   ) t;
@@ -121,7 +121,7 @@ DECLARE
 BEGIN
   -- Logic to fetch subjects for the student's class/grade
   SELECT json_agg(t) INTO _res FROM (
-    SELECT sub.id, sub.name, sub.code
+    SELECT sub.id, sub.name, sub.short_code as code
     FROM public.tt_subjects sub
     JOIN public.students s ON s.id = p_student_id
     WHERE sub.school_id = s.school_id
