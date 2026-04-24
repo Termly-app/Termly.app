@@ -29,7 +29,7 @@ export default defineConfig({
       },
       workbox: {
         // Precache all built assets
-        globPatterns: ['**/*.{js,css,html,ico,svg,png,woff2,txt}'],
+        globPatterns: ['**/*.{js,css,html,ico,woff2}'],
         // Runtime caching for Supabase API calls
         runtimeCaching: [
           {
