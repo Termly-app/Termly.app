@@ -33,11 +33,6 @@ function validateEnv() {
     errors.push('VITE_SUPABASE_ANON_KEY appears to be a service_role key — this must NEVER be used in the frontend bundle.');
   }
 
-  // Domain 4 & 5: Payment and SMS keys
-  if (import.meta.env.PROD) {
-    if (!import.meta.env.VITE_SMS_API_KEY) errors.push('VITE_SMS_API_KEY is missing (Africa\'s Talking).');
-    if (!import.meta.env.VITE_MPESA_CONSUMER_KEY) errors.push('VITE_MPESA_CONSUMER_KEY is missing (Safaricom Daraja).');
-  }
 
   if (errors.length > 0) {
     const errorHtml = errors.map(e => `<li>${e}</li>`).join('');
