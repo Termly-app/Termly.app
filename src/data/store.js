@@ -2043,19 +2043,28 @@ export async function getExamResults(examId) {
 export async function getStudentExamResults(studentId) {
   if (!_currentSchoolId || !studentId) return [];
 
-  // If in portal mode (no auth user but school id set), use RPC
+  // Portal mode: try direct query (works for authenticated portal users)
   if (!_currentAuthUser && _currentSchoolId) {
-    const { data, error } = await supabase.rpc('portal_get_student_results_v2', { p_student_id: studentId });
-    if (error) throw error;
-    // Map flat TABLE results to nested structure expected by UI
-    return (data || []).map(r => ({
-      ...r,
-      exams: {
-        name: r.exam_name,
-        term: r.exam_term,
-        exam_type: r.exam_type
-      }
-    }));
+    try {
+      const { data, error } = await supabase
+        .from('exam_results')
+        .select('*, exams(name, term, exam_type)')
+        .eq('student_id', studentId);
+      if (!error && data) return (data || []).filter(r => r.exams);
+    } catch (e) {
+      console.warn('[Portal] Direct exam results query failed, trying RPC:', e.message);
+    }
+    // Fallback to RPC
+    try {
+      const { data, error } = await supabase.rpc('portal_get_student_results_v2', { p_student_id: studentId });
+      if (!error && data) return (data || []).map(r => ({
+        ...r,
+        exams: { name: r.exam_name, term: r.exam_term, exam_type: r.exam_type }
+      }));
+    } catch (e) {
+      console.warn('[Portal] RPC exam results also failed:', e.message);
+    }
+    return [];
   }
 
   const { data, error } = await supabase
@@ -2072,14 +2081,26 @@ export async function getStudentExamResults(studentId) {
 export async function getStudentProfile(studentId) {
   if (!_currentSchoolId || !studentId) return null;
 
-  // If in portal mode (no auth user but school id set), use RPC
+  // Portal mode: try direct query first
   if (!_currentAuthUser && _currentSchoolId) {
-    const { data, error } = await supabase.rpc('portal_get_student_profile', { p_student_id: studentId });
-    if (error) {
-      console.warn('Portal student profile fetch error:', error.message);
-      return null;
+    try {
+      const { data, error } = await supabase
+        .from('students')
+        .select('id, name, adm_no, class, stream, gender, parent, parent_phone')
+        .eq('id', studentId)
+        .single();
+      if (!error && data) return { ...data, parent_name: data.parent };
+    } catch (e) {
+      console.warn('[Portal] Direct student profile query failed:', e.message);
     }
-    return data || null;
+    // Fallback to RPC
+    try {
+      const { data, error } = await supabase.rpc('portal_get_student_profile', { p_student_id: studentId });
+      if (!error) return data || null;
+    } catch (e) {
+      console.warn('[Portal] RPC student profile also failed:', e.message);
+    }
+    return null;
   }
 
   const { data, error } = await supabase
@@ -2094,12 +2115,24 @@ export async function getStudentProfile(studentId) {
 
 export async function getSubjectDetails(studentId) {
   if (!_currentSchoolId || !studentId) return [];
-  const { data, error } = await supabase.rpc('portal_get_subject_details', { p_student_id: studentId });
-  if (error) {
-    console.warn('Subject details fetch error:', error.message);
-    return [];
+  // Try direct query first
+  try {
+    const { data, error } = await supabase
+      .from('tt_subjects')
+      .select('id, name, short_code')
+      .eq('school_id', _currentSchoolId);
+    if (!error && data) return data.map(s => ({ ...s, code: s.short_code }));
+  } catch (e) {
+    console.warn('[Portal] Direct subjects query failed:', e.message);
   }
-  return data || [];
+  // Fallback to RPC
+  try {
+    const { data, error } = await supabase.rpc('portal_get_subject_details', { p_student_id: studentId });
+    if (!error) return data || [];
+  } catch (e) {
+    console.warn('[Portal] RPC subject details also failed:', e.message);
+  }
+  return [];
 }
 
 
@@ -2215,18 +2248,41 @@ export async function getFees(studentId = null) {
     let feeData = null;
     let payData = [];
 
+    // Try direct query first, fallback to RPC
     try {
-      const feeRes = await supabase.rpc('portal_get_student_fees_v2', { p_student_id: studentId });
-      if (!feeRes.error) feeData = feeRes.data;
+      const { data, error } = await supabase
+        .from('fees')
+        .select('id, total_fee, paid, balance')
+        .eq('student_id', studentId)
+        .limit(1)
+        .maybeSingle();
+      if (!error && data) feeData = data;
     } catch (e) {
-      console.warn('Portal fee fetch error:', e);
+      console.warn('[Portal] Direct fees query failed:', e.message);
+    }
+    if (!feeData) {
+      try {
+        const feeRes = await supabase.rpc('portal_get_student_fees_v2', { p_student_id: studentId });
+        if (!feeRes.error) feeData = feeRes.data;
+      } catch (e) { /* silently ignore RPC fallback failure */ }
     }
 
     try {
-      const payRes = await supabase.rpc('portal_get_student_payments_v2', { p_student_id: studentId });
-      if (!payRes.error) payData = payRes.data;
+      const { data, error } = await supabase
+        .from('fee_payments')
+        .select('id, amount, date, method, reference')
+        .in('fee_id', [
+          ...(feeData?.id ? [feeData.id] : [])
+        ]);
+      if (!error && data) payData = data;
     } catch (e) {
-      console.warn('Portal payments fetch error:', e);
+      console.warn('[Portal] Direct payments query failed:', e.message);
+    }
+    if ((!payData || payData.length === 0) && feeData?.id) {
+      try {
+        const payRes = await supabase.rpc('portal_get_student_payments_v2', { p_student_id: studentId });
+        if (!payRes.error) payData = payRes.data;
+      } catch (e) { /* silently ignore RPC fallback failure */ }
     }
 
     const payments = (Array.isArray(payData) ? payData : []).map(p => ({
@@ -5455,12 +5511,30 @@ export async function getAssignments(filters = {}) {
   if (!_currentSchoolId) return [];
 
   if (!_currentAuthUser && _currentSchoolId) {
-    const { data, error } = await supabase.rpc('portal_get_assignments_v2', { 
-      p_school_id: _currentSchoolId,
-      p_class_id: filters.classId || null
-    });
-    if (error) throw error;
-    return data || [];
+    // Try direct query first
+    try {
+      let q = supabase
+        .from('el_assignments')
+        .select('id, title, description, due_date, subject_id, class_id, created_at')
+        .eq('school_id', _currentSchoolId)
+        .order('created_at', { ascending: false });
+      if (filters.classId) q = q.eq('class_id', filters.classId);
+      const { data, error } = await q;
+      if (!error && data) return data;
+    } catch (e) {
+      console.warn('[Portal] Direct assignments query failed:', e.message);
+    }
+    // Fallback to RPC
+    try {
+      const { data, error } = await supabase.rpc('portal_get_assignments_v2', { 
+        p_school_id: _currentSchoolId,
+        p_class_id: filters.classId || null
+      });
+      if (!error) return data || [];
+    } catch (e) {
+      console.warn('[Portal] RPC assignments also failed:', e.message);
+    }
+    return [];
   }
   let q = supabase
     .from('el_assignments')
@@ -5552,9 +5626,26 @@ export async function getAnnouncements(filters = {}) {
   if (!_currentSchoolId) return [];
 
   if (!_currentAuthUser && _currentSchoolId) {
-    const { data, error } = await supabase.rpc('portal_get_announcements_v2', { p_school_id: _currentSchoolId });
-    if (error) throw error;
-    return data || [];
+    // Try direct query first
+    try {
+      const { data, error } = await supabase
+        .from('announcements')
+        .select('id, title, body, created_at, status')
+        .eq('school_id', _currentSchoolId)
+        .eq('status', 'published')
+        .order('created_at', { ascending: false });
+      if (!error && data) return data;
+    } catch (e) {
+      console.warn('[Portal] Direct announcements query failed:', e.message);
+    }
+    // Fallback to RPC
+    try {
+      const { data, error } = await supabase.rpc('portal_get_announcements_v2', { p_school_id: _currentSchoolId });
+      if (!error) return data || [];
+    } catch (e) {
+      console.warn('[Portal] RPC announcements also failed:', e.message);
+    }
+    return [];
   }
 
   let q = supabase
