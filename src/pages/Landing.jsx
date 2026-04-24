@@ -288,7 +288,6 @@ export default function Landing() {
               Get access
               <svg width="15" height="15" viewBox="0 0 15 15" fill="none"><path d="M2.5 7.5h10M9 3.5l4 4-4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" /></svg>
             </Link>
-            <a href="#pricing" className="btn-s">View pricing</a>
           </div>
         </div>
 
@@ -494,35 +493,36 @@ export default function Landing() {
           <div className="fc" style={{ background: '#fff' }}>
             <div className="fc-role" style={{ color: '#4F46E5', background: '#E0E7FF' }}>Academic</div>
             <ul style={{ listStyle: 'none', padding: 0, margin: '20px 0 0 0' }}>
-              <li style={{ padding: '12px 0', borderBottom: '1px solid #f1f5f9', display: 'flex', alignItems: 'center', gap: 12 }}><GraduationIcon size={18} color="#64748b"/> <strong>Exam Module:</strong> Full KNEC/CBC reporting</li>
-              <li style={{ padding: '12px 0', borderBottom: '1px solid #f1f5f9', display: 'flex', alignItems: 'center', gap: 12 }}><CalendarIcon size={18} color="#64748b"/> <strong>Timetable:</strong> Smart scheduling</li>
-              <li style={{ padding: '12px 0', display: 'flex', alignItems: 'center', gap: 12 }}><CheckIcon size={18} color="#64748b"/> <strong>Attendance:</strong> Digital registers</li>
+              <li style={{ padding: '12px 0', borderBottom: '1px solid #f1f5f9', display: 'flex', alignItems: 'center', gap: 12 }}><GraduationIcon size={18} color="#64748b"/> <strong>Exam Results:</strong> 8-4-4 & automated ranking</li>
+              <li style={{ padding: '12px 0', borderBottom: '1px solid #f1f5f9', display: 'flex', alignItems: 'center', gap: 12 }}><BookIcon size={18} color="#64748b"/> <strong>CBC Tracking:</strong> Core competencies & rubrics</li>
+              <li style={{ padding: '12px 0', display: 'flex', alignItems: 'center', gap: 12 }}><CheckIcon size={18} color="#64748b"/> <strong>Report Cards:</strong> Instant KNEC-standard generation</li>
             </ul>
           </div>
 
           <div className="fc" style={{ background: '#fff' }}>
             <div className="fc-role" style={{ color: '#16A34A', background: '#DCFCE7' }}>Finance</div>
             <ul style={{ listStyle: 'none', padding: 0, margin: '20px 0 0 0' }}>
-              <li style={{ padding: '12px 0', borderBottom: '1px solid #f1f5f9', display: 'flex', alignItems: 'center', gap: 12 }}><CardIcon size={18} color="#64748b"/> <strong>Fee Management:</strong> Automated M-PESA</li>
-              <li style={{ padding: '12px 0', display: 'flex', alignItems: 'center', gap: 12 }}><UserIcon size={18} color="#64748b"/> <strong>Payroll:</strong> Staff salary tracking</li>
+              <li style={{ padding: '12px 0', borderBottom: '1px solid #f1f5f9', display: 'flex', alignItems: 'center', gap: 12 }}><CardIcon size={18} color="#64748b"/> <strong>Fee Collection:</strong> Fully automated M-PESA sync</li>
+              <li style={{ padding: '12px 0', borderBottom: '1px solid #f1f5f9', display: 'flex', alignItems: 'center', gap: 12 }}><CalendarIcon size={18} color="#64748b"/> <strong>Expense tracking:</strong> Daily institutional ledger</li>
+              <li style={{ padding: '12px 0', display: 'flex', alignItems: 'center', gap: 12 }}><UserIcon size={18} color="#64748b"/> <strong>Payroll:</strong> Staff salary & deductions</li>
             </ul>
           </div>
 
           <div className="fc" style={{ background: '#fff' }}>
             <div className="fc-role" style={{ color: '#EA580C', background: '#FFEDD5' }}>Communication</div>
             <ul style={{ listStyle: 'none', padding: 0, margin: '20px 0 0 0' }}>
-              <li style={{ padding: '12px 0', borderBottom: '1px solid #f1f5f9', display: 'flex', alignItems: 'center', gap: 12 }}><PhoneIcon size={18} color="#64748b"/> <strong>SMS Alerts:</strong> Instant notifications</li>
-              {/* <li style={{ padding: '12px 0', borderBottom: '1px solid #f1f5f9', display: 'flex', alignItems: 'center', gap: 12 }}><BookIcon size={18} color="#64748b"/> <strong>Parent Portal:</strong> Real-time access</li> */}
-              <li style={{ padding: '12px 0', display: 'flex', alignItems: 'center', gap: 12 }}><FlagIcon size={18} color="#64748b"/> <strong>Email Notifications:</strong> Statements & updates</li>
+              <li style={{ padding: '12px 0', borderBottom: '1px solid #f1f5f9', display: 'flex', alignItems: 'center', gap: 12 }}><PhoneIcon size={18} color="#64748b"/> <strong>SMS Blasts:</strong> Instant mass parent alerts</li>
+              <li style={{ padding: '12px 0', borderBottom: '1px solid #f1f5f9', display: 'flex', alignItems: 'center', gap: 12 }}><FlagIcon size={18} color="#64748b"/> <strong>Auto-statements:</strong> Email fee balances</li>
+              <li style={{ padding: '12px 0', display: 'flex', alignItems: 'center', gap: 12 }}><SchoolIcon size={18} color="#64748b"/> <strong>Announcements:</strong> Internal staff messaging</li>
             </ul>
           </div>
 
           <div className="fc" style={{ background: '#fff' }}>
             <div className="fc-role" style={{ color: '#9333EA', background: '#F3E8FF' }}>Administration</div>
             <ul style={{ listStyle: 'none', padding: 0, margin: '20px 0 0 0' }}>
-              <li style={{ padding: '12px 0', borderBottom: '1px solid #f1f5f9', display: 'flex', alignItems: 'center', gap: 12 }}><SchoolIcon size={18} color="#64748b"/> <strong>Multi-Campus:</strong> Network oversight</li>
-              <li style={{ padding: '12px 0', borderBottom: '1px solid #f1f5f9', display: 'flex', alignItems: 'center', gap: 12 }}><RocketIcon size={18} color="#64748b"/> <strong>Transport:</strong> Bus route management</li>
-              <li style={{ padding: '12px 0', display: 'flex', alignItems: 'center', gap: 12 }}><BookIcon size={18} color="#64748b"/> <strong>Library:</strong> Inventory & checkouts</li>
+              <li style={{ padding: '12px 0', borderBottom: '1px solid #f1f5f9', display: 'flex', alignItems: 'center', gap: 12 }}><CheckIcon size={18} color="#64748b"/> <strong>NEMIS Compliance:</strong> Standardized reporting</li>
+              <li style={{ padding: '12px 0', borderBottom: '1px solid #f1f5f9', display: 'flex', alignItems: 'center', gap: 12 }}><RocketIcon size={18} color="#64748b"/> <strong>Role Security:</strong> Granular access permissions</li>
+              <li style={{ padding: '12px 0', display: 'flex', alignItems: 'center', gap: 12 }}><SchoolIcon size={18} color="#64748b"/> <strong>Multi-Campus:</strong> Manage multiple branches</li>
             </ul>
           </div>
 
