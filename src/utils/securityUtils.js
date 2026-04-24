@@ -101,7 +101,7 @@ export function applySecurityHeaders() {
   const csp = [
     "default-src 'self'",
     "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://*.africastalking.com https://cdn.jsdelivr.net",
-    `connect-src 'self' ${supabaseUrl} wss://*.supabase.co https://*.supabase.co https://*.africastalking.com https://*.safaricom.co.ke https://cdn.jsdelivr.net`,
+    `connect-src 'self' ${supabaseUrl} wss://*.supabase.co https://*.supabase.co https://*.africastalking.com https://*.safaricom.co.ke https://cdn.jsdelivr.net https://fonts.googleapis.com https://fonts.gstatic.com`,
     "img-src 'self' data: https://*.supabase.co https://*.googleusercontent.com",
     "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
     "font-src 'self' https://fonts.gstatic.com",
