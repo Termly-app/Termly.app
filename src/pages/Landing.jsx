@@ -207,10 +207,10 @@ export default function Landing() {
             </div>
             ShuleSoft
           </Link>
+          <a href="#features" className="nlink">Features</a>
+          <a href="#modules" className="nlink">Modules</a>
           <a href="#pricing" className="nlink">Pricing</a>
-          <Link to="/blog" className="nlink">Blog</Link>
-          <Link to="/partners" className="nlink">Partners</Link>
-          <Link to="/docs" className="nlink">Docs</Link>
+          <Link to="/contact" className="nlink">Contact</Link>
           <div className="nsep"></div>
           
           <div className="nav-dropdown-w" style={{ position: 'relative' }}>
@@ -599,7 +599,7 @@ export default function Landing() {
           <div className="ft-col">
             <h4 className="ft-h">System</h4>
             <ul className="ft-links">
-              <li><Link to="/docs">Documentation</Link></li>
+              {/* <li><Link to="/docs">Documentation</Link></li> */}
               <li><Link to="/legal/terms">Terms of Service</Link></li>
               <li><Link to="/legal/privacy">Privacy Policy</Link></li>
               <li><Link to="/legal/acceptable-use">Acceptable Use</Link></li>
