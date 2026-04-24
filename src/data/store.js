@@ -3471,22 +3471,37 @@ export async function logPlatformActivity(type, description, schoolId = null) {
 }
 
 /**
- * Log a school-level audit event
+ * Log a school-level audit event. Supports both positional and object arguments.
  */
-export async function logAuditEvent({ action, target_table, target_id, metadata = {}, school_id = null }) {
+export async function logAuditEvent(arg1, arg2, arg3, arg4) {
+  let action, target_table, target_id, metadata, school_id;
+
+  if (typeof arg1 === 'object' && arg1 !== null && !Array.isArray(arg1)) {
+    // Destructured style: logAuditEvent({ action, ... })
+    ({ action, target_table, target_id, metadata = {}, school_id = null } = arg1);
+  } else {
+    // Positional style: logAuditEvent(action, target_table, target_id, metadata)
+    action = arg1;
+    target_table = arg2;
+    target_id = arg3;
+    metadata = arg4 || {};
+  }
+
   try {
+    const { data: { user } } = await supabase.auth.getUser();
+    
     const { error } = await supabase
       .from('audit_logs')
       .insert({
         school_id: school_id || _currentSchoolId,
-        actor_id: (await supabase.auth.getUser()).data.user?.id,
-        actor_email: _currentAuthUser?.email,
-        actor_role: _currentAuthUser?.role,
+        actor_id: user?.id || null,
+        actor_email: user?.email || _currentAuthUser?.email,
+        actor_role: user?.user_metadata?.role || _currentAuthUser?.role,
         action,
         target_table,
         target_id,
         metadata,
-        ip_address: null // Could be fetched if needed
+        ip_address: null
       });
     if (error) console.error('Failed to log audit event:', error);
   } catch (err) {
@@ -5740,30 +5755,6 @@ window.addEventListener('online', triggerSync);
 
 // ============= DOMAIN 6: AUDIT LOGGING =============
 
-/**
- * Log an audit event to the audit_logs table.
- */
-export async function logAuditEvent(action, targetTable, targetId = null, metadata = {}) {
-  try {
-    const { data: { user } } = await supabase.auth.getUser();
-    
-    await supabase.from('audit_logs').insert({
-      school_id: _currentSchoolId,
-      actor_id: user?.id || null,
-      actor_email: user?.email || null,
-      actor_role: user?.user_metadata?.role || null,
-      action,
-      action_type: action,
-      target_table: targetTable,
-      table_name: targetTable,
-      target_id: targetId,
-      record_id: targetId,
-      metadata,
-    });
-  } catch (err) {
-    console.warn('[Audit] Failed to log event:', action, err?.message);
-  }
-}
 
 // ============= DOMAIN 10: REPORTS & ANALYTICS =============
 
