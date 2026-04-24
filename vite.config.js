@@ -7,7 +7,7 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['favicon.svg', 'assets/**/*'],
+      includeAssets: ['favicon.svg'],
       manifest: {
         name: 'ShuleSoft',
         short_name: 'ShuleSoft',
@@ -29,7 +29,7 @@ export default defineConfig({
       },
       workbox: {
         // Precache all built assets
-        globPatterns: ['**/*.{js,css,html,ico,svg,png,woff2}'],
+        globPatterns: ['**/*.{js,css,html,ico,svg,png,woff2,txt}'],
         // Runtime caching for Supabase API calls
         runtimeCaching: [
           {
