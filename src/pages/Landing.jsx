@@ -239,13 +239,13 @@ export default function Landing() {
                     <span>For Teachers & Staff</span>
                   </div>
                 </Link>
-                <Link to="/portal/login" className="pd-item" onClick={() => setShowLoginDropdown(false)}>
+                {/* <Link to="/portal/login" className="pd-item" onClick={() => setShowLoginDropdown(false)}>
                   <div className="pd-i si-y"><GraduationIcon size={14} /></div>
                   <div className="pd-t">
                     <strong>Parent Portal</strong>
                     <span>For Results & Fees</span>
                   </div>
-                </Link>
+                </Link> */}
               </div>
             )}
           </div>
@@ -514,7 +514,7 @@ export default function Landing() {
             <div className="fc-role" style={{ color: '#EA580C', background: '#FFEDD5' }}>Communication</div>
             <ul style={{ listStyle: 'none', padding: 0, margin: '20px 0 0 0' }}>
               <li style={{ padding: '12px 0', borderBottom: '1px solid #f1f5f9', display: 'flex', alignItems: 'center', gap: 12 }}><PhoneIcon size={18} color="#64748b"/> <strong>SMS Alerts:</strong> Instant notifications</li>
-              <li style={{ padding: '12px 0', borderBottom: '1px solid #f1f5f9', display: 'flex', alignItems: 'center', gap: 12 }}><BookIcon size={18} color="#64748b"/> <strong>Parent Portal:</strong> Real-time access</li>
+              {/* <li style={{ padding: '12px 0', borderBottom: '1px solid #f1f5f9', display: 'flex', alignItems: 'center', gap: 12 }}><BookIcon size={18} color="#64748b"/> <strong>Parent Portal:</strong> Real-time access</li> */}
               <li style={{ padding: '12px 0', display: 'flex', alignItems: 'center', gap: 12 }}><FlagIcon size={18} color="#64748b"/> <strong>Email Notifications:</strong> Statements & updates</li>
             </ul>
           </div>
@@ -553,12 +553,12 @@ export default function Landing() {
             <Link to="/staff/login" className="pcard-link">Open Staff Portal <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2.5 7h9M8 3.5l3.5 3.5L8 10.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" /></svg></Link>
           </div>
 
-          <div className="pcard reveal reveal-delay-2">
+          {/* <div className="pcard reveal reveal-delay-2">
             <div className="pcard-icon si-y"><GraduationIcon size={24} /></div>
             <h3>Parent Portal</h3>
             <p>Access learner results, check outstanding balances, and view school announcements in real-time.</p>
             <Link to="/portal/login" className="pcard-link">Open Parent Portal <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2.5 7h9M8 3.5l3.5 3.5L8 10.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" /></svg></Link>
-          </div>
+          </div> */}
         </div>
       </section>
 

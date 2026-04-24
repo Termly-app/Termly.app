@@ -506,7 +506,7 @@ export default function Settings() {
         </div>
 
           {/* Portal Access Settings */}
-          <div className="card">
+          {/* <div className="card">
             <div className="card-header">
               <div style={{display:'flex',alignItems:'center',gap:10}}>
                 <div style={{background:'#f3e8ff',color:'#7c3aed',padding:8,borderRadius:10,display:'flex'}}>
@@ -568,7 +568,7 @@ export default function Settings() {
                 <p style={{fontSize:'0.85rem',color:'var(--text-muted)',textAlign:'center',padding:20}}>Loading portal settings…</p>
               )}
             </div>
-          </div>
+          </div> */}
 
         {/* Academic Configuration */}
         <div className="card">

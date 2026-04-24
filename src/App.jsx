@@ -333,9 +333,9 @@ function Sidebar({ isOpen, onClose, onLogout, onLock, currentUser, subscriptionA
           <SbLink to="/portal/teacher" icon={StaffIcon} label="Teacher Portal" onClick={onClose} locked={!subscriptionActive && !isPlatformAdmin} />
         )}
 
-        {isAdmin && (useFeature('parent_portal').enabled || isSandbox) && (
+        {/* {isAdmin && (useFeature('parent_portal').enabled || isSandbox) && (
           <SbLink to="/portal/parent" icon={UserIcon} label="Parent Portal" onClick={onClose} locked={(!subscriptionActive || (isSandbox && !useFeature('parent_portal').enabled)) && !isPlatformAdmin} />
-        )}
+        )} */}
         {/* Compliance section - Admins ONLY (as requested: no finance) */}
         {isAdmin && (
           <>
@@ -882,7 +882,7 @@ function App() {
                       <Route path="/settings" element={<Settings currentUser={currentUser} />} />
                       <Route path="/billing"  element={<Billing currentUser={currentUser} />} />
                       <Route path="/portal/teacher" element={<SectionGate featureSlug="teacher_portal" featureName="Teacher Portal" profile={profile}><TeacherPortalAdmin /></SectionGate>} />
-                      <Route path="/portal/parent"  element={<SectionGate featureSlug="parent_portal"  featureName="Parent Portal"  profile={profile}><ParentPortalAdmin /></SectionGate>} />
+                      {/* <Route path="/portal/parent"  element={<SectionGate featureSlug="parent_portal"  featureName="Parent Portal"  profile={profile}><ParentPortalAdmin /></SectionGate>} /> */}
 
                       <Route path="*"         element={<div style={{padding:48, textAlign:'center'}}><h2>403 - Unauthorized</h2><p>You don't have permission to access this module.</p></div>} />
                     </>
