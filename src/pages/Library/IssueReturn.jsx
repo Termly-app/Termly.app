@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { getStudents, getSchoolProfile } from '../../data/store';
-import { issueBook, returnBook, getOverdueBooks } from '../../data/libraryStore';
-import { supabase } from '../../lib/supabase';
+import { issueBook, returnBook, getOverdueBooks, searchAvailableCopies, getActiveLoans } from '../../data/libraryStore';
 import { 
   SearchIcon, CheckIcon, UserIcon, BookIcon, AlertIcon, 
   ClockIcon, PlatformZapIcon
@@ -139,13 +138,12 @@ function IssueTab({ currentUser, students, alert, toast }) {
       return;
     }
     const timer = setTimeout(async () => {
-      // Find available copies by code or title
-      const { data } = await supabase.from('book_copies')
-        .select('*, books!inner(title, category, subject)')
-        .eq('status', 'available')
-        .or(`copy_code.ilike.%${copySearch}%,books.title.ilike.%${copySearch}%`)
-        .limit(10);
-      setAvailableCopies(data || []);
+      try {
+        const data = await searchAvailableCopies(copySearch);
+        setAvailableCopies(data || []);
+      } catch(e) {
+        console.error(e);
+      }
     }, 400);
     return () => clearTimeout(timer);
   }, [copySearch]);
@@ -352,19 +350,15 @@ function ReturnTab({ currentUser, students, alert, toast }) {
   };
 
   const fetchActiveLoans = async (filter) => {
-    let query = supabase.from('borrow_records')
-      .select('*, students(name, adm_no), book_copies!inner(copy_code, condition, books(title, book_code))')
-      .eq('status', 'borrowed')
-      .eq('school_id', currentUser.school_id);
-
-    if (filter.student_id) query = query.eq('student_id', filter.student_id);
-    if (filter.copy_code) query = query.eq('book_copies.copy_code', filter.copy_code);
-
-    const { data } = await query;
-    setActiveLoans(data || []);
-    
-    if (data && data.length === 0 && filter.copy_code) {
-      alert({ title: "Not Found", message: "No active loan found for that copy code.", variant: 'warning' });
+    try {
+      const data = await getActiveLoans(filter);
+      setActiveLoans(data || []);
+      
+      if (data && data.length === 0 && filter.copy_code) {
+        alert({ title: "Not Found", message: "No active loan found for that copy code.", variant: 'warning' });
+      }
+    } catch (e) {
+      console.error(e);
     }
   };
 

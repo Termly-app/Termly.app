@@ -6,6 +6,9 @@ import {
   BookIcon, PlatformZapIcon, AlertIcon, MenuIcon
 } from '../../components/CommonIcons';
 
+import { useFeature } from '../../contexts/FeaturesContext';
+import FeatureGate from '../../components/FeatureGate';
+
 const Dashboard = lazy(() => import('./Dashboard'));
 const BooksManagement = lazy(() => import('./BooksManagement'));
 const IssueReturn = lazy(() => import('./IssueReturn'));
@@ -78,6 +81,11 @@ function LibrarySubNav({ currentUser }) {
 }
 
 export default function LibraryModule({ currentUser, currentPeriodId }) {
+  const { enabled: hasAccess, loading: featureLoading } = useFeature('library');
+
+  if (featureLoading) return <Loader />;
+  if (!hasAccess) return <FeatureGate featureName="Library Management" />;
+
   return (
     <div className="animate-in">
       <Helmet>

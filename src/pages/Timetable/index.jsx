@@ -36,8 +36,10 @@ import {
   AlertIcon, UserIcon, HomeIcon, TeacherIcon, PlusIcon,
   SettingsIcon, ChevronDownIcon
 } from '../../components/CommonIcons';
-import PricingUpgrade from '../../components/PricingUpgrade';
+import FeatureGate from '../../components/FeatureGate';
 import { useDialog } from '../../contexts/DialogContext';
+
+import { useFeature } from '../../contexts/FeaturesContext';
 
 // ── Colour palette for subjects (Modern, Premium Palette) ────────────────
 
@@ -188,7 +190,6 @@ export default function Timetable({ currentUser, currentPeriodId, periods = [] }
 
 
 
-  const [showUpgrade,    setShowUpgrade]   = useState(false);
   const { alert, confirm } = useDialog();
 
   // ── Cell edit modal ───────────────────────────────────────────────────
@@ -200,12 +201,10 @@ export default function Timetable({ currentUser, currentPeriodId, periods = [] }
   const [cellSaving,      setCellSaving]       = useState(false);
   const [isDouble,        setIsDouble]         = useState(false);
 
-
-
-  // ── UI ────────────────────────────────────────────────────────────────
   const [loading,  setLoading]  = useState(false);
-
   const [message,  setMessage]  = useState(null);
+
+  const { enabled: hasAccess, loading: featureLoading } = useFeature('timetable');
 
   const schoolId = currentUser?.school_id;
   const isAdmin  = currentUser?.role?.toLowerCase() === 'admin';
@@ -219,7 +218,7 @@ export default function Timetable({ currentUser, currentPeriodId, periods = [] }
 
   // ── Load school profile (classes, streams, teachers) ──────────────────
   useEffect(() => {
-    if (!schoolId) return;
+    if (!schoolId || !hasAccess) return;
     (async () => {
       try {
         setLoading(true);
@@ -251,7 +250,11 @@ export default function Timetable({ currentUser, currentPeriodId, periods = [] }
         setLoading(false);
       }
     })();
-  }, [schoolId]);
+  }, [schoolId, hasAccess]);
+
+  if (featureLoading) return <div className="p-4"><div className="tt-spin" /></div>;
+  if (!hasAccess) return <FeatureGate featureName="Timetable Builder" />;
+
 
 
   // ── Load config when period changes (auto-apply template if empty) ───
@@ -1021,7 +1024,7 @@ export default function Timetable({ currentUser, currentPeriodId, periods = [] }
           <div style={{ position: 'absolute', top: 30, right: 30, zIndex: 10001 }}>
             <button className="tt-btn tt-btn-ghost" onClick={() => setShowUpgrade(false)} style={{ fontSize: '1.5rem' }}>&times;</button>
           </div>
-          <PricingUpgrade featureName="Timetable" />
+          <FeatureGate featureName="Timetable" />
         </div>
       )}
     </div>

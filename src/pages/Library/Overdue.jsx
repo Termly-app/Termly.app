@@ -1,7 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { getOverdueBooks, markBookLost, markBookReplaced, returnBook } from '../../data/libraryStore';
-import { supabase } from '../../lib/supabase';
-import { getCurrentSchoolId } from '../../data/store';
+import { getOverdueBooks, markBookLost, markBookReplaced, returnBook, getLostBooks } from '../../data/libraryStore';
 import { getSchoolProfile } from '../../data/store';
 import { useDialog } from '../../contexts/DialogContext';
 import Select from '../../components/Common/Select';
@@ -29,11 +27,7 @@ export default function Overdue({ currentUser, currentPeriodId }) {
       ]);
       setOverdueRecords(records);
       setProfile(pf);
-      // Also fetch lost (pending replacement) records
-      const { data: lost } = await supabase.from('borrow_records')
-        .select('*, students(id, name, class, adm_no), book_copies(copy_code, books(title))')
-        .eq('school_id', getCurrentSchoolId())
-        .eq('status', 'lost');
+      const lost = await getLostBooks();
       setLostBooks(lost || []);
     } catch (e) {
       console.error('Overdue load error:', e);

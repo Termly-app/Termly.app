@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { SchoolIcon, UserIcon, PhoneIcon, RocketIcon, FlagIcon, GraduationIcon, CardIcon, ChevronRightIcon } from '../../components/CommonIcons';
-import { validateParentLogin, searchSchools } from '../../data/store';
+import { validateParentLogin, getSchoolsForPortalSearch } from '../../data/store';
 
 export default function PortalLogin({ onLogin }) {
   const [searchParams] = useSearchParams();
@@ -20,7 +20,7 @@ export default function PortalLogin({ onLogin }) {
     const fetchSuggestions = async () => {
       if (schoolSearch.length > 1 && !magicSchool) {
         try {
-          const results = await searchSchools(schoolSearch);
+          const results = await getSchoolsForPortalSearch(schoolSearch);
           setSuggestions(results);
           setShowSuggestions(true);
         } catch (err) {

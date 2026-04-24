@@ -10,9 +10,12 @@ import {
 import Select from '../../components/Common/Select';
 import { useDialog } from '../../contexts/DialogContext';
 import { getProfessionalRemark } from '../../utils/remarkUtils';
+import { useFeature } from '../../contexts/FeaturesContext';
 
 export default function AssessmentTab({ currentUser, currentPeriodId }) {
   const { alert, confirm } = useDialog();
+  const { enabled: hasTeacherPortal } = useFeature('teacher_portal');
+  const { enabled: hasParentPortal } = useFeature('parent_portal');
   const allGrades = Object.values(CBC_STRUCTURE).flatMap(l => l.grades);
   const [selectedClass, setSelectedClass] = useState(sessionStorage.getItem('grading_class') || 'All');
   const [streamFilter, setStreamFilter] = useState('All');
@@ -543,7 +546,8 @@ export default function AssessmentTab({ currentUser, currentPeriodId }) {
           />
           {examType && (
             <div style={{ display: 'flex', alignItems: 'center', gap: 15, marginLeft: 15, paddingLeft: 15, borderLeft: '1.5px solid var(--border)' }}>
-              {/* STAFF STATUS */}
+              {/* STAFF STATUS — only show if teacher_portal feature is enabled */}
+              {hasTeacherPortal && (
               <div style={{ display: 'flex', flexDirection: 'column' }}>
                 <span style={{ fontSize: '0.6rem', fontWeight: 900, color: 'var(--text-light)', textTransform: 'uppercase', marginBottom: 2, letterSpacing: '0.05em' }}>
                   Staff Portal
@@ -560,8 +564,10 @@ export default function AssessmentTab({ currentUser, currentPeriodId }) {
                   </div>
                 )}
               </div>
+              )}
 
-              {/* PARENT STATUS */}
+              {/* PARENT STATUS — only show if parent_portal feature is enabled */}
+              {hasParentPortal && (
               <div style={{ display: 'flex', flexDirection: 'column' }}>
                 <span style={{ fontSize: '0.6rem', fontWeight: 900, color: 'var(--text-light)', textTransform: 'uppercase', marginBottom: 2, letterSpacing: '0.05em' }}>
                   Parent Portal
@@ -583,8 +589,9 @@ export default function AssessmentTab({ currentUser, currentPeriodId }) {
                   </div>
                 )}
               </div>
+              )}
 
-              {isAdmin && (
+              {isAdmin && hasParentPortal && (
                 <button
                   onClick={handleReleaseResults}
                   disabled={loading}
@@ -655,7 +662,7 @@ export default function AssessmentTab({ currentUser, currentPeriodId }) {
           <div className="card-body" style={{ padding: 0, overflowX: 'auto' }}>
             {isEarlyYears ? (
               /* Early Years: competency-focused view */
-              <table className="data-table">
+              <table className="data-table responsive-table">
                 <thead><tr><th>Student</th>{subjects.map(s => <th key={s} style={{ fontSize: '0.72rem' }}>{subjectAbbr(s)}</th>)}<th>Overall</th></tr></thead>
                 <tbody>
                   {results.length === 0 ? (
@@ -664,7 +671,7 @@ export default function AssessmentTab({ currentUser, currentPeriodId }) {
                     const studentCbc = cbcData[s.id] || {};
                     return (
                       <tr key={s.id}>
-                        <td>
+                        <td data-label="Student">
                           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                             <strong style={{ cursor: 'pointer', color: 'var(--primary)' }} onClick={() => setShowReport(s)}>{s.name}</strong>
                             <button 
@@ -705,7 +712,7 @@ export default function AssessmentTab({ currentUser, currentPeriodId }) {
               </table>
             ) : (
               /* Upper Primary / Junior Secondary: marks-based view */
-              <table className="data-table">
+              <table className="data-table responsive-table">
                 <thead><tr><th>Rank</th><th>Adm No</th><th>Name</th>{subjects.map(s => <th key={s} style={{ fontSize: '0.72rem' }}>{subjectAbbr(s)}</th>)}<th>Total</th><th>Avg</th><th>Grade</th><th>Action</th></tr></thead>
                 <tbody>
                   {results.length === 0 ? (
@@ -816,43 +823,105 @@ export default function AssessmentTab({ currentUser, currentPeriodId }) {
 
       {/* CBC COMPETENCIES TAB */}
       {activeTab === 'cbc' && (
-        <div className="card">
-          <div className="card-header"><h3><FlagIcon size={20} /> CBC Competency Levels — {selectedClass} <span className="badge badge-info" style={{ fontSize: '0.7rem', marginLeft: 8 }}>{level}</span></h3></div>
-          <div className="card-body" style={{ padding: 0, overflowX: 'auto' }}>
-            <table className="data-table">
-              <thead><tr><th>Student</th>{subjects.map(s => <th key={s} style={{ fontSize: '0.7rem' }}>{subjectAbbr(s)}</th>)}</tr></thead>
-              <tbody>
-                {results.map(s => (
-                  <tr key={s.id}>
-                    <td><strong>{s.name}</strong></td>
-                    {subjects.map(sub => {
-                      const lv = (cbcData[s.id] || {})[sub] || 'Meeting Expectation';
-                      return (
-                        <td key={sub}>
-                          <Select 
-                            value={lv} 
-                            onChange={e => handleCBCChange(s.id, sub, e.target.value)}
-                            options={CBC_LEVELS.map(l => ({ id: l, label: l.split(' ')[0] }))}
-                            variant="minimal"
-                            style={{ 
-                              padding: '2px 4px', 
-                              fontSize: '0.72rem', 
-                              border: `2px solid ${cbcColor(lv)}`, 
-                              borderRadius: 6,
-                              background: `${cbcColor(lv)}15`, 
-                              color: cbcColor(lv), 
-                              fontWeight: 600, 
-                              width: '100%', 
-                              minWidth: 70 
-                            }}
-                          />
-                        </td>
-                      );
-                    })}
+        <div className="animate-in">
+          <div className="card" style={{ marginBottom: 24 }}>
+            <div className="card-header">
+              <h3><FlagIcon size={20} /> CBC Competency Matrix — {selectedClass}</h3>
+            </div>
+            <div className="card-body" style={{ padding: 0, overflowX: 'auto' }}>
+              <table className="data-table">
+                <thead>
+                  <tr>
+                    <th>Student</th>
+                    {subjects.map(s => <th key={s} style={{ fontSize: '0.7rem' }}>{subjectAbbr(s)}</th>)}
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {results.map(s => (
+                    <tr key={s.id}>
+                      <td><strong>{s.name}</strong></td>
+                      {subjects.map(sub => {
+                        const lv = (cbcData[s.id] || {})[sub] || 'Meeting Expectation';
+                        return (
+                          <td key={sub}>
+                            <Select 
+                              value={lv} 
+                              onChange={e => handleCBCChange(s.id, sub, e.target.value)}
+                              options={CBC_LEVELS.map(l => ({ id: l, label: l.split(' ')[0] }))}
+                              variant="minimal"
+                              style={{ 
+                                padding: '2px 4px', 
+                                fontSize: '0.72rem', 
+                                border: `2px solid ${cbcColor(lv)}`, 
+                                borderRadius: 6,
+                                background: `${cbcColor(lv)}15`, 
+                                color: cbcColor(lv), 
+                                fontWeight: 600, 
+                                width: '100%', 
+                                minWidth: 70 
+                              }}
+                            />
+                          </td>
+                        );
+                      })}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div className="card">
+            <div className="card-header">
+              <h3><LeafIcon size={20} /> Core Competencies — {selectedClass}</h3>
+            </div>
+            <div className="card-body" style={{ padding: 0, overflowX: 'auto' }}>
+              <table className="data-table">
+                <thead>
+                  <tr>
+                    <th>Student</th>
+                    {CBC_CORE_COMPETENCIES.map(c => <th key={c} style={{ fontSize: '0.7rem' }}>{c.split(' ').slice(0,2).join(' ')}</th>)}
+                  </tr>
+                </thead>
+                <tbody>
+                  {results.map(s => (
+                    <tr key={s.id}>
+                      <td><strong>{s.name}</strong></td>
+                      {CBC_CORE_COMPETENCIES.map(comp => {
+                        const lv = (coreCompData[s.id] || {})[comp] || 'Meeting Expectation';
+                        return (
+                          <td key={comp}>
+                            <Select 
+                              value={lv} 
+                              onChange={async (e) => {
+                                try {
+                                  await import('../../data/store').then(m => m.setCoreCompetency(s.id, comp, e.target.value));
+                                  const newData = await import('../../data/store').then(m => m.getCoreCompetencies());
+                                  setCoreCompData(newData);
+                                } catch(err) { alert({ title: 'Update Error', message: err.message, variant: 'danger' }); }
+                              }}
+                              options={CBC_LEVELS.map(l => ({ id: l, label: l.split(' ')[0] }))}
+                              variant="minimal"
+                              style={{ 
+                                padding: '2px 4px', 
+                                fontSize: '0.72rem', 
+                                border: `2px solid ${cbcColor(lv)}`, 
+                                borderRadius: 6,
+                                background: `${cbcColor(lv)}15`, 
+                                color: cbcColor(lv), 
+                                fontWeight: 600, 
+                                width: '100%', 
+                                minWidth: 70 
+                              }}
+                            />
+                          </td>
+                        );
+                      })}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
         </div>
       )}

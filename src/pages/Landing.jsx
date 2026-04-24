@@ -8,6 +8,7 @@ import {
   PhoneIcon, DashboardIcon, CalendarIcon, FlagIcon, RocketIcon,
   GraduationIcon, ChevronDownIcon
 } from '../components/CommonIcons';
+import { Helmet } from 'react-helmet-async';
 
 export default function Landing() {
   const ringFillRef = useRef(null);
@@ -188,6 +189,11 @@ export default function Landing() {
 
   return (
     <>
+      <Helmet>
+        <title>ShuleSoft — High Performance CBC School Management System</title>
+        <meta name="description" content="Kenya's #1 CBC-compliant school management system. Manage finances, learner portfolios, and generate KNEC-standard reports instantly." />
+        <meta name="keywords" content="ShuleSoft, School Management System Kenya, CBC Grading, School ERP, Student Information System" />
+      </Helmet>
       <div className="nav-wrap">
         <nav className="landing-nav">
           <Link to="/" className="nav-logo">
@@ -479,46 +485,49 @@ export default function Landing() {
         </div>
       </section>
 
-      <section className="pricing" id="pricing">
+      <section className="section" id="modules" style={{ background: '#fafafa' }}>
         <div className="sec-head reveal">
-          <div className="eyebrow">Pricing</div>
-          <h2 className="landing-h2">Simple, transparent pricing.</h2>
-          <p className="sec-p">All plans include M-PESA integration and digital attendance. Billed per term — no lock-in.</p>
+          <div className="eyebrow">Modules & Features</div>
+          <h2 className="landing-h2">Everything your school needs.</h2>
+          <p className="sec-p">Mix and match the exact features your school needs. No rigid plans, just full flexibility.</p>
         </div>
-        <div className="p-grid">
-          {Object.entries(settings?.pricing || {})
-            .filter(([_, p]) => p.active !== false)
-            .sort((a, b) => (a[1].price || 0) - (b[1].price || 0))
-            .map(([name, p], idx) => (
-              <div key={name} className={`pc reveal ${idx === 1 ? 'pc-pop' : ''}`}>
-                {idx === 1 && <div className="pop-tag">Most Common</div>}
-                <div className="pplan">{name}</div>
-                <div className="pprice"><sup>KSh</sup> {p.price?.toLocaleString() || '0'}</div>
-                <div className="pp">per term · up to {p.limit?.toLocaleString() || '0'} students</div>
-                <hr className="pdiv" />
-                <ul className="pfeats">
-                  {(() => {
-                    const displayFeatures = getPlanDisplayFeatures(p);
-                    return displayFeatures.length > 0 ? (
-                      displayFeatures.map((f, i) => (
-                        <li key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: 8, marginBottom: 8 }}>
-                          <CheckIcon size={14} color="var(--te)" style={{ marginTop: 2, flexShrink: 0 }} />
-                          <span>{f.replace(/_/g, ' ')}</span>
-                        </li>
-                      ))
-                    ) : (
-                      <>
-                        <li style={{ display: 'flex', alignItems: 'flex-start', gap: 8, marginBottom: 8 }}><CheckIcon size={14} color="var(--te)" style={{ marginTop: 2, flexShrink: 0 }} /><span>Core management features</span></li>
-                        <li style={{ display: 'flex', alignItems: 'flex-start', gap: 8, marginBottom: 8 }}><CheckIcon size={14} color="var(--te)" style={{ marginTop: 2, flexShrink: 0 }} /><span>Student & staff profiles</span></li>
-                        <li style={{ display: 'flex', alignItems: 'flex-start', gap: 8, marginBottom: 8 }}><CheckIcon size={14} color="var(--te)" style={{ marginTop: 2, flexShrink: 0 }} /><span>M-PESA integration</span></li>
-                        <li style={{ display: 'flex', alignItems: 'flex-start', gap: 8, marginBottom: 8 }}><CheckIcon size={14} color="var(--te)" style={{ marginTop: 2, flexShrink: 0 }} /><span>Support included</span></li>
-                      </>
-                    );
-                  })()}
-                </ul>
-                <Link to={`/register?plan=${name}`} className="pbtn">Get started</Link>
-              </div>
-            ))}
+        <div className="reveal" style={{ maxWidth: 1000, margin: '0 auto', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 24, padding: '0 24px' }}>
+          
+          <div className="fc" style={{ background: '#fff' }}>
+            <div className="fc-role" style={{ color: '#4F46E5', background: '#E0E7FF' }}>Academic</div>
+            <ul style={{ listStyle: 'none', padding: 0, margin: '20px 0 0 0' }}>
+              <li style={{ padding: '12px 0', borderBottom: '1px solid #f1f5f9', display: 'flex', alignItems: 'center', gap: 12 }}><GraduationIcon size={18} color="#64748b"/> <strong>Exam Module:</strong> Full KNEC/CBC reporting</li>
+              <li style={{ padding: '12px 0', borderBottom: '1px solid #f1f5f9', display: 'flex', alignItems: 'center', gap: 12 }}><CalendarIcon size={18} color="#64748b"/> <strong>Timetable:</strong> Smart scheduling</li>
+              <li style={{ padding: '12px 0', display: 'flex', alignItems: 'center', gap: 12 }}><CheckIcon size={18} color="#64748b"/> <strong>Attendance:</strong> Digital registers</li>
+            </ul>
+          </div>
+
+          <div className="fc" style={{ background: '#fff' }}>
+            <div className="fc-role" style={{ color: '#16A34A', background: '#DCFCE7' }}>Finance</div>
+            <ul style={{ listStyle: 'none', padding: 0, margin: '20px 0 0 0' }}>
+              <li style={{ padding: '12px 0', borderBottom: '1px solid #f1f5f9', display: 'flex', alignItems: 'center', gap: 12 }}><CardIcon size={18} color="#64748b"/> <strong>Fee Management:</strong> Automated M-PESA</li>
+              <li style={{ padding: '12px 0', display: 'flex', alignItems: 'center', gap: 12 }}><UserIcon size={18} color="#64748b"/> <strong>Payroll:</strong> Staff salary tracking</li>
+            </ul>
+          </div>
+
+          <div className="fc" style={{ background: '#fff' }}>
+            <div className="fc-role" style={{ color: '#EA580C', background: '#FFEDD5' }}>Communication</div>
+            <ul style={{ listStyle: 'none', padding: 0, margin: '20px 0 0 0' }}>
+              <li style={{ padding: '12px 0', borderBottom: '1px solid #f1f5f9', display: 'flex', alignItems: 'center', gap: 12 }}><PhoneIcon size={18} color="#64748b"/> <strong>SMS Alerts:</strong> Instant notifications</li>
+              <li style={{ padding: '12px 0', borderBottom: '1px solid #f1f5f9', display: 'flex', alignItems: 'center', gap: 12 }}><BookIcon size={18} color="#64748b"/> <strong>Parent Portal:</strong> Real-time access</li>
+              <li style={{ padding: '12px 0', display: 'flex', alignItems: 'center', gap: 12 }}><FlagIcon size={18} color="#64748b"/> <strong>Email Notifications:</strong> Statements & updates</li>
+            </ul>
+          </div>
+
+          <div className="fc" style={{ background: '#fff' }}>
+            <div className="fc-role" style={{ color: '#9333EA', background: '#F3E8FF' }}>Administration</div>
+            <ul style={{ listStyle: 'none', padding: 0, margin: '20px 0 0 0' }}>
+              <li style={{ padding: '12px 0', borderBottom: '1px solid #f1f5f9', display: 'flex', alignItems: 'center', gap: 12 }}><SchoolIcon size={18} color="#64748b"/> <strong>Multi-Campus:</strong> Network oversight</li>
+              <li style={{ padding: '12px 0', borderBottom: '1px solid #f1f5f9', display: 'flex', alignItems: 'center', gap: 12 }}><RocketIcon size={18} color="#64748b"/> <strong>Transport:</strong> Bus route management</li>
+              <li style={{ padding: '12px 0', display: 'flex', alignItems: 'center', gap: 12 }}><BookIcon size={18} color="#64748b"/> <strong>Library:</strong> Inventory & checkouts</li>
+            </ul>
+          </div>
+
         </div>
       </section>
 
@@ -608,18 +617,18 @@ export default function Landing() {
             </ul>
           </div>
           <div className="ft-col">
-            <h4 className="ft-h">Kaulani Corp HQ</h4>
+            <h4 className="ft-h">ShuleSoft HQ</h4>
             <ul className="ft-links">
               <li><Link to="/about">About Us</Link></li>
-              <li><Link to="/security-trust">Security & Trust</Link></li>
-              <li><Link to="/blog">Blog</Link></li>
-              <li><Link to="/partners">Partners</Link></li>
+              <li><Link to="/contact">Contact</Link></li>
+              <li><Link to="/legal/privacy">Privacy Policy</Link></li>
+              <li><Link to="/legal/terms">Terms of Service</Link></li>
             </ul>
           </div>
 
         </div>
         <div className="ft-bottom">
-          <span className="ft-copy">© 2025 Kaulani Corp · ShuleSoft is a product of Kaulani Corp</span>
+          <span className="ft-copy">© 2025 ShuleSoft</span>
           <div className="ft-b-links">
             <span>All rights reserved.</span>
           </div>

@@ -4,6 +4,7 @@ import { getPlatformSettings } from '../data/store';
 import { 
   RocketIcon, GraduationIcon, EditIcon, CardIcon, ShieldIcon, SettingsIcon 
 } from '../components/CommonIcons';
+import { Helmet } from 'react-helmet-async';
 
 export default function Docs() {
   const [activeSec, setActiveSec] = useState('getting-started');
@@ -18,6 +19,11 @@ export default function Docs() {
 
   return (
     <PremiumLayout>
+      <Helmet>
+        <title>Documentation | ShuleSoft — How It Works</title>
+        <meta name="description" content="Comprehensive documentation for ShuleSoft school management system. Learn about student management, CBC grading, fees, and security." />
+        <link rel="canonical" href="https://shulesoft.com/docs" />
+      </Helmet>
       <section className="section" style={{ minHeight: '100vh', paddingTop: '120px' }}>
         <div className="sec-head reveal">
           <div className="eyebrow">Documentation</div>

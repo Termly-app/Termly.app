@@ -5,17 +5,21 @@ import {
 } from '../data/store';
 import { CBC_STRUCTURE } from '../data/seedData';
 import { 
-  CheckIcon, ClockIcon, CrossIcon, PrintIcon, DashboardIcon, FlagIcon, PlatformZapIcon 
+  CheckIcon, ClockIcon, CrossIcon, PrintIcon, DashboardIcon, FlagIcon, PlatformZapIcon, SendIcon 
 } from '../components/CommonIcons';
+import { dispatchSMS, generateAttendanceMessage } from '../utils/sms';
 import Select from '../components/Common/Select';
 import { Helmet } from 'react-helmet-async';
-import PricingUpgrade from '../components/PricingUpgrade';
+import FeatureGate from '../components/FeatureGate';
 import { useDialog } from '../contexts/DialogContext';
+
+import { useFeature } from '../contexts/FeaturesContext';
 
 export default function Attendance({ currentUser, currentPeriodId }) {
   const { alert, confirm } = useDialog();
   const [selectedClass, setSelectedClass] = useState('All');
   const [streamFilter, setStreamFilter] = useState('All');
+  const [selectedSession, setSelectedSession] = useState('Morning');
   const [selectedDate, setSelectedDate] = useState(getTodayStr());
   const [showPrintOptions, setShowPrintOptions] = useState(false);
   const [reportType, setReportType] = useState('day');
@@ -27,11 +31,14 @@ export default function Attendance({ currentUser, currentPeriodId }) {
   const [loading, setLoading] = useState(true);
   const [alertModal, setAlertModal] = useState({ open: false, sending: false });
   const [showUpgrade, setShowUpgrade] = useState(false);
+  
+  const { enabled: hasAccess, loading: featureLoading } = useFeature('attendance');
 
   const userRole = currentUser?.role?.toLowerCase() || 'teacher';
   const isTeacher = userRole === 'teacher';
 
   useEffect(() => { 
+    if (!hasAccess) return;
     const init = async () => {
       setLoading(true);
       try {
@@ -43,12 +50,16 @@ export default function Attendance({ currentUser, currentPeriodId }) {
       finally { setLoading(false); }
     };
     init();
-  }, [selectedClass, streamFilter, selectedDate, currentPeriodId]);
+  }, [selectedClass, streamFilter, selectedSession, selectedDate, currentPeriodId, hasAccess]);
+
+  if (featureLoading) return <div className="p-4"><div className="spinner"></div></div>;
+  if (!hasAccess) return <FeatureGate featureName="Attendance" />;
+
 
   const calcSummary = (attData, studentList) => {
     let present = 0, late = 0, absent = 0;
     studentList.forEach(s => {
-      const status = attData[s.id];
+      const status = attData[s.id]?.[selectedSession] || attData[s.id]; // Fallback to flat if legacy
       if (status === 'present') present++;
       else if (status === 'late') late++;
       else if (status === 'absent') absent++;
@@ -74,12 +85,16 @@ export default function Attendance({ currentUser, currentPeriodId }) {
 
   const handleMark = async (studentId, status) => {
     // Optimistic UI Update
-    const newAtt = { ...attendance, [studentId]: status };
+    const currentStudentAtt = attendance[studentId] || {};
+    const newAtt = { 
+      ...attendance, 
+      [studentId]: typeof currentStudentAtt === 'string' ? status : { ...currentStudentAtt, [selectedSession]: status }
+    };
     setAttendance(newAtt);
     setSummary(calcSummary(newAtt, students));
 
     // Fire and forget
-    markAttendance(selectedDate, studentId, status).catch(async (err) => {
+    markAttendance(selectedDate, studentId, status, selectedSession).catch(async (err) => {
       alert({ title: 'Attendance Error', message: err.message, variant: 'danger' });
       await refresh();
     });
@@ -88,7 +103,7 @@ export default function Attendance({ currentUser, currentPeriodId }) {
   const markAllPresent = async () => {
     setLoading(true);
     try {
-      await Promise.all(students.map(s => markAttendance(selectedDate, s.id, 'present')));
+      await Promise.all(students.map(s => markAttendance(selectedDate, s.id, 'present', selectedSession)));
       await refresh();
     } catch(err) { alert({ title: 'Attendance Error', message: err.message, variant: 'danger' }); }
     finally { setLoading(false); }
@@ -198,6 +213,38 @@ export default function Attendance({ currentUser, currentPeriodId }) {
     finally { setLoading(false); setShowPrintOptions(false); }
   };
 
+  const handleSendSMS = async () => {
+    const absentees = students.filter(s => (attendance[s.id]?.[selectedSession] || attendance[s.id]) === 'absent');
+    if (absentees.length === 0) {
+      alert({ title: 'No Absentees', message: 'There are no students marked absent today.', variant: 'info' });
+      return;
+    }
+
+    const ok = await confirm({
+      title: 'Send SMS Alerts',
+      message: `Send absence notification to parents of ${absentees.length} students?`,
+      confirmText: 'Send Now',
+      variant: 'primary'
+    });
+
+    if (ok) {
+      setLoading(true);
+      try {
+        let sentCount = 0;
+        for (const s of absentees) {
+          const msg = generateAttendanceMessage(s.name, 'absent', selectedDate);
+          await dispatchSMS(s.parentPhone, msg);
+          sentCount++;
+        }
+        alert({ title: 'SMS Dispatched', message: `${sentCount} SMS alerts sent successfully.`, variant: 'success' });
+      } catch (err) {
+        alert({ title: 'SMS Error', message: err.message, variant: 'danger' });
+      } finally {
+        setLoading(false);
+      }
+    }
+  };
+
   return (
     <div className="animate-in">
       <Helmet>
@@ -213,21 +260,16 @@ export default function Attendance({ currentUser, currentPeriodId }) {
             </div>
             {loading && <span className="text-muted" style={{ fontSize: '0.85rem' }}>Loading...</span>}
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-            {/* summary.absent > 0 && (
-              <button className="btn btn-warning" onClick={async () => {
-                const enabled = await isFeatureEnabled('sms');
-                if (!enabled) {
-                  setShowUpgrade(true);
-                } else {
-                  setAlertModal({ open: true, sending: false });
-                }
-              }}>
-                <PlatformZapIcon size={16} /> Notify Parents ({summary.absent})
-              </button>
-            ) */}
-            <button className="btn btn-ghost" onClick={() => setShowPrintOptions(true)}><PrintIcon size={16} /> Print Report</button>
-            <button className="btn btn-success" onClick={markAllPresent}><CheckIcon size={16} /> Mark All Present</button>
+          <div style={{ display: 'flex', gap: 10 }}>
+            <button className="btn btn-ghost" onClick={handleSendSMS} disabled={loading}>
+              <SendIcon size={16} /> Send SMS Alerts
+            </button>
+            <button className="btn btn-ghost" onClick={() => setShowPrintOptions(true)} disabled={loading}>
+              <PrintIcon size={16} /> Print Report
+            </button>
+            <button className="btn btn-success" onClick={markAllPresent} disabled={loading}>
+              <CheckIcon size={16} /> Mark All Present
+            </button>
           </div>
         </div>
       </div>
@@ -298,6 +340,19 @@ export default function Attendance({ currentUser, currentPeriodId }) {
           />
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <label style={{ fontSize: '0.82rem', fontWeight: 600 }}>Session:</label>
+          <Select 
+            value={selectedSession} 
+            onChange={(e) => setSelectedSession(e.target.value)}
+            options={[
+              { id: 'Morning', label: 'Morning Session' },
+              { id: 'Afternoon', label: 'Afternoon Session' },
+              { id: 'Evening', label: 'Evening Session' }
+            ]}
+            style={{ minWidth: 140 }}
+          />
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           <label style={{ fontSize: '0.82rem', fontWeight: 600 }}>Date:</label>
           <input type="date" className="form-input" style={{ width: 'auto', padding: '6px 12px' }} value={selectedDate} onChange={e => setSelectedDate(e.target.value)} />
         </div>
@@ -324,7 +379,8 @@ export default function Attendance({ currentUser, currentPeriodId }) {
                 <tr><td colSpan="6" className="text-center text-muted" style={{ padding: '40px' }}>No students found</td></tr>
               ) : (
                 students.map((s, i) => {
-                  const status = attendance[s.id] || '';
+                  const studentAtt = attendance[s.id] || {};
+                  const status = typeof studentAtt === 'string' ? studentAtt : (studentAtt[selectedSession] || '');
                   return (
                     <tr key={s.id}>
                       <td data-label="#" className="text-muted">{i + 1}</td>
@@ -464,7 +520,7 @@ export default function Attendance({ currentUser, currentPeriodId }) {
           <div style={{ position: 'absolute', top: 30, right: 30, zIndex: 10001 }}>
             <button className="btn btn-ghost" onClick={() => setShowUpgrade(false)} style={{ fontSize: '1.5rem' }}>&times;</button>
           </div>
-          <PricingUpgrade featureName="Communications" />
+          <FeatureGate featureName="Communications" />
         </div>
       )}
     </div>

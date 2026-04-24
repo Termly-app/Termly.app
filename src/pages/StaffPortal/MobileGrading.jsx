@@ -1,16 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabase';
 import { 
-  getSchoolProfile, getExams, getExamPapers, 
-  getExamMarksForPaper, saveExamMarks, getClassList,
+  getSchoolProfile, getExamMarksForPaper, getClassList,
   getTeacherWorkloadSummary, getTeacherTimetable, getTimetableConfig, getPeriods,
   initPortalStore, subscribeToTable
 } from '../../data/store';
+import { getExams, getOpenExamsForTeacher, getExamPapers, saveExamMarks } from '../../data/academicsStore';
 import { 
   BookIcon, CheckIcon, SaveIcon, UserIcon, 
   GradingIcon, RefreshIcon, ChevronDownIcon, CalendarIcon, DashboardIcon, MenuIcon, LogoutIcon, TeacherIcon 
 } from '../../components/CommonIcons';
 import { useDialog } from '../../contexts/DialogContext';
+import { Helmet } from 'react-helmet-async';
 
 // Premium UI Components
 const Card = ({ children, style, onClick }) => (
@@ -53,7 +54,8 @@ export default function MobileGrading({ user, onLogout }) {
   const [workload, setWorkload] = useState(0);
   const [schedule, setSchedule] = useState([]);
   const [config, setConfig] = useState([]);
-  const [activeTab, setActiveTab] = useState('grading');
+  const [activeTab, setActiveTab] = useState('dashboard');
+  const [activeSubTab, setActiveSubTab] = useState('attendance'); // for attendance sub-sections if needed
   const [activePeriod, setActivePeriod] = useState(null);
   const [schoolProfile, setSchoolProfile] = useState(null);
   const [assignments_list, setAssignmentsList] = useState([]);
@@ -81,7 +83,7 @@ export default function MobileGrading({ user, onLogout }) {
       initPortalStore(schoolId, teacherRecordId);
 
       const [activeExams, allPeriods, profile] = await Promise.all([
-        getExams().catch(() => []),
+        getOpenExamsForTeacher().catch(() => []),
         getPeriods().catch(() => []),
         getSchoolProfile().catch(() => null)
       ]);
@@ -122,7 +124,7 @@ export default function MobileGrading({ user, onLogout }) {
 
     // Listen for exam changes (status, new exams)
     const unsubExams = subscribeToTable('exams', () => {
-      getExams().then(setExams).catch(console.error);
+      getOpenExamsForTeacher().then(setExams).catch(console.error);
     });
 
     return () => {
@@ -265,7 +267,9 @@ export default function MobileGrading({ user, onLogout }) {
   };
 
   const navItems = [
+    { id: 'dashboard', label: 'Dashboard', icon: DashboardIcon },
     { id: 'grading', label: 'Grading', icon: GradingIcon },
+    { id: 'attendance', label: 'Attendance', icon: CheckIcon },
     { id: 'schedule', label: 'Timetable', icon: CalendarIcon },
     { id: 'profile', label: 'Account', icon: UserIcon }
   ];
@@ -276,6 +280,10 @@ export default function MobileGrading({ user, onLogout }) {
       display: 'flex', flexDirection: isDesktop ? 'row' : 'column',
       fontFamily: '"Inter", -apple-system, sans-serif' 
     }}>
+      <Helmet>
+        <title>{user?.name || 'Dashboard'} | Staff Portal — ShuleSoft</title>
+        <meta name="description" content="Manage grading, attendance, and timetable on the go." />
+      </Helmet>
       
       {/* DESKTOP SIDEBAR */}
       {isDesktop && (
@@ -356,6 +364,57 @@ export default function MobileGrading({ user, onLogout }) {
           <div style={{ marginBottom: 40 }}>
             <h1 style={{ margin: 0, fontSize: '2.4rem', fontWeight: 900, color: '#0f172a', letterSpacing: '-1px' }}>Welcome back, {user.name}</h1>
             <p style={{ margin: '8px 0 0', color: '#64748b', fontSize: '1.1rem' }}>Here is what's happening in your classes today.</p>
+          </div>
+        )}
+
+        {activeTab === 'dashboard' && (
+          <div className="animate-in" style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: isDesktop ? '1fr 1fr 1fr' : '1fr', gap: 20 }}>
+              <Card style={{ background: 'linear-gradient(135deg, #10b981, #059669)', color: '#fff' }} onClick={() => setActiveTab('attendance')}>
+                <div style={{ fontSize: '0.75rem', opacity: 0.8, fontWeight: 700, textTransform: 'uppercase', marginBottom: 8 }}>Quick Action</div>
+                <div style={{ fontSize: '1.2rem', fontWeight: 800 }}>Mark Attendance</div>
+                <div style={{ fontSize: '0.8rem', marginTop: 12 }}>{schedule.filter(s => s.day_of_week === selectedDay).length} lessons today</div>
+              </Card>
+              <Card style={{ background: 'linear-gradient(135deg, #3b82f6, #2563eb)', color: '#fff' }} onClick={() => setActiveTab('grading')}>
+                <div style={{ fontSize: '0.75rem', opacity: 0.8, fontWeight: 700, textTransform: 'uppercase', marginBottom: 8 }}>Quick Action</div>
+                <div style={{ fontSize: '1.2rem', fontWeight: 800 }}>Enter Marks</div>
+                <div style={{ fontSize: '0.8rem', marginTop: 12 }}>{exams.length} active sessions</div>
+              </Card>
+              <Card style={{ background: 'linear-gradient(135deg, #8b5cf6, #7c3aed)', color: '#fff' }} onClick={() => setActiveTab('schedule')}>
+                <div style={{ fontSize: '0.75rem', opacity: 0.8, fontWeight: 700, textTransform: 'uppercase', marginBottom: 8 }}>Quick Action</div>
+                <div style={{ fontSize: '1.2rem', fontWeight: 800 }}>View Timetable</div>
+                <div style={{ fontSize: '0.8rem', marginTop: 12 }}>Next: {schedule[0]?.subject || 'None'}</div>
+              </Card>
+            </div>
+
+            {assignments_list.length > 0 && (
+              <div>
+                <h3 style={{ fontSize: '1.1rem', fontWeight: 800, color: '#0f172a', marginBottom: 12 }}>My Class Assignments</h3>
+                <Card style={{ padding: '20px' }}>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+                    {assignments_list.map((a, idx) => (
+                      <Badge key={idx} bg="#f0fdf4" color="#16a34a">
+                        {a.subject} - {a.class_grade}{a.stream ? ` ${a.stream}` : ''}
+                      </Badge>
+                    ))}
+                  </div>
+                </Card>
+              </div>
+            )}
+          </div>
+        )}
+
+        {activeTab === 'attendance' && (
+          <div className="animate-in">
+             <h3 style={{ fontSize: '1.4rem', fontWeight: 900, color: '#0f172a', marginBottom: 20 }}>Quick Attendance</h3>
+             {/* Note: In a real app, this would reuse the Attendance logic from the main page but mobile-optimized */}
+             <div style={{ background: '#fff', borderRadius: 24, padding: 32, textAlign: 'center', border: '1px dashed #cbd5e1' }}>
+                <CheckIcon size={48} color="#cbd5e1" style={{ margin: '0 auto 16px' }} />
+                <p style={{ color: '#64748b', fontWeight: 600 }}>Marking daily attendance is now integrated with the main Attendance module.</p>
+                <button className="btn btn-primary" style={{ marginTop: 16 }} onClick={() => window.location.href = '/attendance'}>
+                   Open Main Attendance Module
+                </button>
+             </div>
           </div>
         )}
 

@@ -1,8 +1,14 @@
 import LegalLayout from './LegalLayout';
+import { Helmet } from 'react-helmet-async';
 
 export default function PrivacyPolicy() {
   return (
     <LegalLayout title="Privacy Policy" lastUpdated="March 2026">
+      <Helmet>
+        <title>Privacy Policy | ShuleSoft — Kenya Data Protection</title>
+        <meta name="description" content="How ShuleSoft collects, uses, and protects your school's data. Compliant with the Kenya Data Protection Act 2019." />
+        <link rel="canonical" href="https://shulesoft.com/legal/privacy" />
+      </Helmet>
       <section>
         <p>ShuleSoft is committed to protecting the privacy and security of the data entrusted to us by schools in Kenya. This policy explains how we collect, use, and safeguard your institution's information.</p>
         
@@ -47,8 +53,39 @@ export default function PrivacyPolicy() {
       </section>
 
       <section>
-        <h3>5. Contact Us</h3>
-        <p>If you have questions about our privacy practices or your data, please visit our <a href="/support" style={{ color: 'var(--primary)', fontWeight: 600 }}>Support Page</a> for direct contact assistance.</p>
+        <h3>5. Your Rights under KDP Act 2019</h3>
+        <p>Under the Kenya Data Protection Act 2019, you have the right to:</p>
+        <ul>
+          <li>Access your personal data held by us.</li>
+          <li>Rectify inaccurate or incomplete data.</li>
+          <li>Request erasure of data where it is no longer necessary.</li>
+          <li>Object to processing or request restriction of processing.</li>
+          <li>Data portability in a structured, commonly used format.</li>
+        </ul>
+      </section>
+
+      <section>
+        <h3>6. Data Retention</h3>
+        <p>Student records are maintained for the duration of enrolment plus 3 years. Upon account termination, data is deleted after a 30-day grace period unless retention is required by law.</p>
+      </section>
+
+      <section>
+        <h3>7. Third-Party Processors</h3>
+        <p>We use the following sub-processors to provide our services:</p>
+        <ul>
+          <li><strong>Supabase:</strong> Database and Authentication hosting.</li>
+          <li><strong>Resend:</strong> Transactional email delivery.</li>
+          <li><strong>Africa's Talking:</strong> SMS notification delivery.</li>
+          <li><strong>Sentry/PostHog:</strong> Performance monitoring and error tracking (Non-PII only).</li>
+        </ul>
+      </section>
+
+      <section>
+        <h3>8. Contact & DPO</h3>
+        <p>For any privacy-related inquiries, please contact our Data Protection Officer:</p>
+        <p><strong>Email:</strong> dpo@shulesoft.app</p>
+        <p><strong>Address:</strong> ShuleSoft HQ, Nairobi, Kenya</p>
+        <p>You also have the right to lodge a complaint with the <strong>Office of the Data Protection Commissioner (ODPC)</strong> at <a href="https://www.odpc.go.ke" target="_blank" rel="noreferrer" style={{ color: 'var(--primary)' }}>www.odpc.go.ke</a>.</p>
       </section>
     </LegalLayout>
   );

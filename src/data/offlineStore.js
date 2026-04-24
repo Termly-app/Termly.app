@@ -3,7 +3,7 @@ import Dexie from 'dexie';
 export const db = new Dexie('ShuleSoftOffline');
 
 // Schema definition
-db.version(6).stores({
+db.version(7).stores({
   students: 'id, school_id, name, adm_no, parent_phone, class, status, residence_type',
   teachers: 'id, school_id, name, pin, phone, on_leave',
   marks: '[period_id+student_id+subject], period_id, student_id, school_id',
@@ -11,7 +11,9 @@ db.version(6).stores({
   communications: '++id, type, target, timestamp, user',
   assignments: '++id, class, stream, subject, title, dueDate, timestamp, teacher',
   submissions: '++id, assignment_id, student_id, student_name, workflow_status, timestamp, [assignment_id+student_id]',
-  syncQueue: '++id, type, payload, status, created_at'
+  syncQueue: '++id, type, payload, status, created_at',
+  mpesa_transactions: '++id, checkout_id, student_id, amount, status, timestamp',
+  sms_queue: '++id, phoneNumber, message, status, retry_count, created_at'
 });
 
 export const syncTypes = {
@@ -127,4 +129,52 @@ export async function getStudentSubmissions(student_id) {
  */
 export async function updateSubmissionGrade(submissionId, data) {
   return await db.submissions.update(submissionId, data);
+}
+
+/**
+ * Domain 15: Resilient Background Sync
+ * Processes queued items when the network is available.
+ */
+export async function runBackgroundSync(handlers = {}) {
+  const pending = await db.syncQueue.where('status').equals('pending').toArray();
+  const smsPending = await db.sms_queue.where('status').equals('pending').toArray();
+  
+  if (pending.length === 0 && smsPending.length === 0) return { processed: 0 };
+
+  console.log(`[SYNC] Processing ${pending.length + smsPending.length} items...`);
+  let processed = 0;
+
+  // Process standard sync queue
+  for (const item of pending) {
+    const handler = handlers[item.type];
+    if (handler) {
+      try {
+        await handler(item.payload);
+        await updateSyncStatus(item.id, 'synced');
+        processed++;
+      } catch (err) {
+        await updateSyncStatus(item.id, 'failed', err.message);
+      }
+    }
+  }
+
+  // Process SMS queue (if handler provided)
+  if (handlers.SMS && smsPending.length > 0) {
+    for (const sms of smsPending) {
+      try {
+        await handlers.SMS(sms);
+        await db.sms_queue.update(sms.id, { status: 'sent', sent_at: new Date().toISOString() });
+        processed++;
+      } catch (err) {
+        const newCount = (sms.retry_count || 0) + 1;
+        await db.sms_queue.update(sms.id, { 
+          retry_count: newCount, 
+          status: newCount > 3 ? 'failed' : 'pending',
+          error: err.message 
+        });
+      }
+    }
+  }
+
+  return { processed };
 }

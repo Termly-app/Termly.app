@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { getFeaturedPartners } from '../data/store';
 import { SchoolIcon, FlagIcon, StarIcon, HomeIcon } from '../components/CommonIcons';
+import { Helmet } from 'react-helmet-async';
 import './Partners.css';
 
 export default function Partners() {
@@ -19,6 +20,11 @@ export default function Partners() {
 
   return (
     <div className="partners-container animate-in">
+      <Helmet>
+        <title>Partner Schools | ShuleSoft — Trusted by Schools Across Kenya</title>
+        <meta name="description" content="See the forward-thinking institutions across Kenya that trust ShuleSoft. Join the community of schools transforming education." />
+        <link rel="canonical" href="https://shulesoft.com/partners" />
+      </Helmet>
       <nav style={{ 
         position: 'sticky', top: 0, zIndex: 100, 
         padding: '14px 32px', 

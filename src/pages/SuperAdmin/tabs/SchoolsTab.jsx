@@ -64,14 +64,14 @@ export default function SchoolsTab({
               <thead>
                 <tr>
                   <th className="col-school">School</th>
-                  <th className="col-plan">Plan</th>
+                  <th className="col-plan">Features</th>
                   <th className="col-usage">Staff Usage</th>
                   <th className="col-loc">Location</th>
                   <th className="col-stud">Students</th>
                   <th className="col-joined">Joined</th>
                   <th className="col-status">Status</th>
                   <th className="col-rev">Revenue</th>
-                  <th className="col-sub">Sub</th>
+                  <th className="col-sub">Features</th>
                   <th className="col-act">Action</th>
                 </tr>
               </thead>
@@ -106,14 +106,14 @@ export default function SchoolsTab({
                         {s.phone && <div className="td-sub">{s.phone}</div>}
                       </td>
 
-                      <td data-label="Plan" className="col-plan">
-                        <span className="p-pill">{curPlan}</span>
+                      <td data-label="Features" className="col-features">
+                        <span className="p-pill">{s.features_count || 0} / 16</span>
                       </td>
 
                       <td data-label="Staff Usage" className="col-usage">
                         <div style={{ display:'flex', alignItems:'center', gap:6 }}>
                           <div className="td-m" style={{ color: 'var(--txt)' }}>
-                            {s._staffCount || 0} / {adminLimit}
+                            {s._staffCount || 0}
                           </div>
                           <button className="mini-btn" onClick={() => handleOpenStaffModal(s.id, s.name)}>Details</button>
                         </div>
@@ -123,7 +123,6 @@ export default function SchoolsTab({
 
                       <td data-label="Students" className="col-stud">
                         <div className="td-b" style={{ fontSize: '0.9rem' }}>{s._studentCount || 0}</div>
-                        <div className="td-sub">Cap: {studentLimit}</div>
                       </td>
 
                       <td data-label="Joined" className="col-joined">{fmtDate(p.created_at || s.created_at)}</td>
@@ -140,9 +139,9 @@ export default function SchoolsTab({
                         </div>
                       </td>
 
-                      <td data-label="Sub" className="col-sub">
-                        <button className="row-btn" onClick={() => { setPlanModal({ schoolId:s.id, schoolName:s.name, currentPlan:curPlan }); setChosenPlan(''); }}>
-                          Change Plan
+                      <td data-label="Features" className="col-sub">
+                        <button className="row-btn" onClick={() => setPlanModal({ schoolId:s.id, schoolName:s.name })}>
+                          Manage Features
                         </button>
                       </td>
 

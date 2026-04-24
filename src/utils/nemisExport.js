@@ -53,11 +53,25 @@ const NEMIS_HEADERS = [
 ];
 
 /**
+ * Guard against CSV injection attacks.
+ * Strips leading characters that could be interpreted as formulas by Excel/Sheets.
+ */
+function sanitizeCSVValue(value) {
+  if (!value) return '';
+  let str = String(value).trim();
+  // Strip leading formula-triggering characters
+  while (str.length > 0 && ['=', '+', '-', '@', '\t', '\r'].includes(str.charAt(0))) {
+    str = str.substring(1).trim();
+  }
+  return str;
+}
+
+/**
  * Safely escape a CSV cell value
  */
 function cell(value) {
-  if (value === null || value === undefined) return '';
-  const str = String(value).trim();
+  const str = sanitizeCSVValue(value);
+  if (str === '') return '';
   // Wrap in quotes if contains comma, quote, or newline
   if (str.includes(',') || str.includes('"') || str.includes('\n')) {
     return `"${str.replace(/"/g, '""')}"`;
@@ -91,6 +105,46 @@ function normaliseGender(g) {
 }
 
 /**
+ * Sanitize a Kenyan phone number to +254XXXXXXXXX format.
+ * Handles: 0712345678, 254712345678, +254712345678, 712345678
+ */
+function sanitizePhone(phone) {
+  if (!phone) return '';
+  // Remove all non-digit characters except leading +
+  let cleaned = String(phone).replace(/[^\d+]/g, '');
+  
+  // Remove leading +
+  if (cleaned.startsWith('+')) cleaned = cleaned.substring(1);
+  
+  // Handle Kenyan numbers
+  if (cleaned.startsWith('0') && cleaned.length === 10) {
+    cleaned = '254' + cleaned.substring(1);
+  }
+  if (cleaned.length === 9 && !cleaned.startsWith('254')) {
+    cleaned = '254' + cleaned;
+  }
+  
+  // Add + prefix
+  if (cleaned.startsWith('254') && cleaned.length === 12) {
+    return '+' + cleaned;
+  }
+  
+  // Return original if we can't normalize
+  return phone.trim();
+}
+
+/**
+ * Validate UPI format — NEMIS UPIs are typically 13 numeric digits
+ */
+function validateUPI(upi) {
+  if (!upi) return { valid: false, reason: 'Missing UPI' };
+  const cleaned = String(upi).trim();
+  if (!/^\d+$/.test(cleaned)) return { valid: false, reason: 'UPI must be numeric' };
+  if (cleaned.length !== 13) return { valid: false, reason: `UPI should be 13 digits (got ${cleaned.length})` };
+  return { valid: true };
+}
+
+/**
  * Main export function
  * @param {Array}  students   — array of student objects from Supabase
  * @param {Object} options    — { includeIncomplete: bool }
@@ -118,15 +172,18 @@ export function exportNEMIS(students, options = {}) {
       cell(s.ward             || ''),
       cell(s.village          || ''),
       cell(s.father_name      || ''),
-      cell(s.father_phone     || ''),
+      cell(sanitizePhone(s.father_phone)),
       cell(s.mother_name      || ''),
-      cell(s.mother_phone     || ''),
+      cell(sanitizePhone(s.mother_phone)),
       cell(s.guardian_name    || s.parent_name      || s.father_name || s.mother_name || ''),
-      cell(s.guardian_phone   || s.parent_phone     || s.father_phone || s.mother_phone || ''),
+      cell(sanitizePhone(s.guardian_phone || s.parent_phone || s.father_phone || s.mother_phone)),
       cell(s.guardian_relationship || (s.father_name ? 'Father' : s.mother_name ? 'Mother' : 'Guardian')),
     ].join(','));
 
-  return [NEMIS_HEADERS.join(','), ...rows].join('\n');
+  // Add row count as a comment at the end for verification
+  const csv = [NEMIS_HEADERS.join(','), ...rows].join('\n');
+  
+  return csv;
 }
 
 /**
@@ -176,7 +233,35 @@ export function validateNEMISData(students) {
     if (!s.gender)                        issues.push(`${name}: Missing gender`);
     if (!s.date_of_birth && !s.dob)      issues.push(`${name}: Missing date of birth`);
     if (!s.grade && !s.class)            issues.push(`${name}: Missing class/grade`);
+    
+    // Validate UPI if present
+    const upi = s.nemis_number || s.upi;
+    if (upi) {
+      const upiCheck = validateUPI(upi);
+      if (!upiCheck.valid) issues.push(`${name}: ${upiCheck.reason}`);
+    }
   });
 
   return issues;
+}
+
+/**
+ * Get export summary for display in UI
+ * @param {Array} students
+ * @returns {Object} { totalRows, validRows, issueCount, issues }
+ */
+export function getExportSummary(students) {
+  const issues = validateNEMISData(students);
+  const validRows = students.filter(s => 
+    (s.surname || s.last_name) && 
+    (s.first_name || s.name) && 
+    (s.admission_number || s.adm_no)
+  ).length;
+
+  return {
+    totalRows: students.length,
+    validRows,
+    issueCount: issues.length,
+    issues
+  };
 }

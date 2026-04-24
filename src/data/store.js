@@ -12,6 +12,7 @@ import { CBC_STRUCTURE, CBC_CORE_COMPETENCIES, TERM_FEE, getLevelForGrade, getSu
 export { CBC_STRUCTURE, CBC_CORE_COMPETENCIES, TERM_FEE, getLevelForGrade, getSubjectsForGrade };
 
 import { encryptData as encrypt, decryptData as decrypt } from '../utils/securityUtils';
+import { withRetry } from '../utils/resilience';
 
 
 // ============= SaaS Subscription Tiers =============
@@ -21,10 +22,10 @@ import { encryptData as encrypt, decryptData as decrypt } from '../utils/securit
 // ============= CURRENT SCHOOL CONTEXT =============
 // Stored in-memory during session (set after login)
 // Triggering fresh build on Vercel...
-var _currentSchoolId = sessionStorage.getItem('shulesoft_portal_school_id') || null;
-var _currentAuthUser = null;
-var _currentPeriodId = sessionStorage.getItem('shulesoft_portal_period_id') || null;
-var _currentUserId   = sessionStorage.getItem('shulesoft_portal_user_id') || null;
+export var _currentSchoolId = sessionStorage.getItem('shulesoft_portal_school_id') || null;
+export var _currentAuthUser = null;
+export var _currentPeriodId = sessionStorage.getItem('shulesoft_portal_period_id') || null;
+export var _currentUserId   = sessionStorage.getItem('shulesoft_portal_user_id') || null;
 
 /**
  * Initializes the store context for Portal users.
@@ -52,7 +53,7 @@ export const isShadowMode = () => {
   return sessionStorage.getItem('shulesoft_acting_as_admin') === 'true';
 };
 
-const mutationGuard = (fnName) => {
+export const mutationGuard = (fnName) => {
   if (isShadowMode()) {
     console.warn(`[SHADOW MODE] Blocked mutation attempt in ${fnName}`);
     throw new Error('Action blocked: You are currently in View-Only Shadow Mode (Watching TV).');
@@ -74,7 +75,7 @@ function shouldFetchCloud(key, ttl = 10000) { // 10s default TTL
 
 // Memory caching for direct Supabase reads to prevent spamming
 const _dbCache = {};
-async function cachedQuery(key, fetcher, ttl = 10000) {
+export async function cachedQuery(key, fetcher, ttl = 10000) {
   const now = Date.now();
   if (_dbCache[key] && (now - _dbCache[key].time) < ttl) {
     return _dbCache[key].promise;
@@ -90,7 +91,7 @@ async function cachedQuery(key, fetcher, ttl = 10000) {
   return promise;
 }
 
-function invalidateCache(key) {
+export function invalidateCache(key) {
   if (key) delete _dbCache[key];
   else {
     // Clear all if no key
@@ -100,31 +101,54 @@ function invalidateCache(key) {
 
 // Consolidated into Super Admin Pricing Table
 
-/**
- * Get limits for a plan, favoring DB settings if available
- */
-export async function getPlanLimits(planNameRaw) {
-  const planName = (planNameRaw || 'Sandbox').toLowerCase();
-  try {
-    const settings = await getPlatformSettings();
-    if (settings?.pricing) {
-      // Case-insensitive lookup in Super Admin Pricing table
-      const pricingKeys = Object.keys(settings.pricing);
-      const matchedKey = pricingKeys.find(k => k.toLowerCase() === planName);
-      const p = matchedKey ? settings.pricing[matchedKey] : settings.pricing['Sandbox'] || settings.pricing['Starter Plan'];
-      
-      if (p) {
-        return {
-          students: p.limit || p.students || 0,
-          admins: p.admins || 0,
-          price: p.price || 0
-        };
-      }
-    }
-  } catch (e) { console.error("Error fetching plan limits:", e); }
+// ============= FEATURE TOGGLES (Replaces Plans) =============
+const _featureCache = new Map(); // Cache map: { `${schoolId}_${featureKey}`: { value: boolean, timestamp: number } }
+const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+
+export async function hasFeature(schoolId, featureKey) {
+  if (!schoolId || !featureKey) return false;
   
-  // Final safeguard-defaults if pricing table is empty (Sandbox rules)
-  return { students: 150, admins: 5, price: 0 };
+  const cacheKey = `${schoolId}_${featureKey}`;
+  const cached = _featureCache.get(cacheKey);
+  const now = Date.now();
+
+  // Return cached if within TTL
+  if (cached && (now - cached.timestamp < CACHE_TTL)) {
+    return cached.value;
+  }
+
+  try {
+    const { data, error } = await supabase
+      .from('school_features')
+      .select('is_enabled')
+      .eq('school_id', schoolId)
+      .eq('feature_key', featureKey)
+      .maybeSingle();
+      
+    if (error && error.code !== 'PGRST116') {
+      console.error(`Error checking feature ${featureKey}:`, error);
+      return false; // Fail safe
+    }
+    
+    const isEnabled = data?.is_enabled || false;
+    _featureCache.set(cacheKey, { value: isEnabled, timestamp: now });
+    return isEnabled;
+  } catch (err) {
+    console.error(`Exception checking feature ${featureKey}:`, err);
+    return false;
+  }
+}
+
+export function invalidateFeatureCache(schoolId) {
+  if (!schoolId) {
+    _featureCache.clear();
+    return;
+  }
+  for (const key of _featureCache.keys()) {
+    if (key.startsWith(`${schoolId}_`)) {
+      _featureCache.delete(key);
+    }
+  }
 }
 
 export function setCurrentSchoolContext(schoolId, authUser) {
@@ -143,7 +167,7 @@ export function getCurrentPeriodId() {
   return _currentPeriodId;
 }
 
-var _currentExamType = 'End Term';
+export var _currentExamType = 'End Term';
 export function setCurrentExamType(type) {
   _currentExamType = type;
   window.dispatchEvent(new Event('examTypeChanged'));
@@ -649,46 +673,82 @@ export async function checkIsSubscriptionActive(profile) {
   return profile.subscriptionStatus === 'Active';
 }
 
-/**
- * Check if the active school has access to a specific premium feature
- * based on their current subscription plan.
- */
-export async function checkFeatureAccess(featureName, profile) {
-  // 1. PLATFORM OVERRIDE: Platform Admins bypass all feature restrictions
-  const isAdmin = await checkIsPlatformAdmin(_currentAuthUser?.email);
-  if (isAdmin) return true;
+// ============= PORTAL ACCESS SETTINGS =============
+export async function getPortalAccessSettings() {
+  if (!_currentSchoolId) return null;
+  const { data, error } = await supabase
+    .from('school_profiles')
+    .select('portal_settings')
+    .eq('school_id', _currentSchoolId)
+    .maybeSingle();
+  if (error) { console.error('getPortalAccessSettings error:', error); return null; }
+  return data?.portal_settings || {
+    parent_portal_enabled: true,
+    teacher_portal_enabled: true,
+    parent_can_view_fees: true,
+    parent_can_view_results: true,
+    parent_can_view_attendance: true,
+    allow_parent_self_register: false
+  };
+}
 
-  // 2. Load platform settings to get plan details
-  const settings = await getPlatformSettings();
-  if (!settings?.pricing) return false;
+export async function updatePortalAccessSettings(settings) {
+  mutationGuard('updatePortalAccessSettings');
+  if (!_currentSchoolId) throw new Error('No school context');
+  const { error } = await supabase
+    .from('school_profiles')
+    .update({ portal_settings: settings })
+    .eq('school_id', _currentSchoolId);
+  if (error) throw error;
+}
 
-  // 3. Resolve the plan name (handling legacy field names)
-  const planNameRaw = profile?.subscriptionPlan || profile?.subscription_plan || 'Sandbox';
-  const planName = planNameRaw.toLowerCase();
+// ============= PLATFORM USAGE STATS =============
+export async function getPlatformUsageStats() {
+  const { data: schools } = await supabase.from('schools').select('id');
+  const { data: students } = await supabase.from('students').select('id');
+  const { data: users } = await supabase.from('users').select('id');
+  return {
+    totalSchools: schools?.length || 0,
+    totalStudents: students?.length || 0,
+    totalUsers: users?.length || 0
+  };
+}
 
-  // 4. HARD-GATE FOR SANDBOX: Allow evaluation of core modules, but stay restricted on system integrations
-  if (planName === 'sandbox') {
-    const sandboxModules = [
-      'student_mgmt', 'staff_mgmt', 'settings', 'dashboard', 
-      'attendance', 'grading', 'fees', 'library', 'timetable', 
-      'lms', 'sms', 'teacher_portal', 'parent_portal'
-    ];
-    return sandboxModules.includes(featureName.toLowerCase());
+export async function getPlatformSchoolProfiles() {
+  const { data, error } = await supabase
+    .from('school_profiles')
+    .select('*')
+    .order('created_at', { ascending: false });
+  if (error) { console.error('getPlatformSchoolProfiles error:', error); return []; }
+  return data || [];
+}
+
+// ============= PORTAL SCHOOL SEARCH =============
+export async function getSchoolsForPortalSearch(searchTerm = '') {
+  let query = supabase.from('schools').select('id, name, school_code, county');
+  if (searchTerm) {
+    query = query.or(`name.ilike.%${searchTerm}%,school_code.ilike.%${searchTerm}%`);
   }
+  const { data, error } = await query.limit(20);
+  if (error) { console.error('getSchoolsForPortalSearch error:', error); return []; }
+  return data || [];
+}
 
-  // 5. Find the plan in the pricing dictionary (Case-Insensitive lookup)
-  const pricingKeys = Object.keys(settings.pricing);
-  const matchedKey = pricingKeys.find(k => k.toLowerCase() === planName);
-  const plan = matchedKey ? settings.pricing[matchedKey] : null;
+// ============= SCHEMA MIGRATIONS =============
+export async function getSchemaStatus() {
+  try {
+    const { data, error } = await supabase.rpc('get_schema_version');
+    if (error) return { version: 'unknown', status: 'error', message: error.message };
+    return data || { version: '1.0', status: 'current' };
+  } catch {
+    return { version: 'unknown', status: 'unavailable' };
+  }
+}
 
-  if (!plan) return false;
-
-  // 6. MODULE-BASED GATING: Check if the module slug is enabled for this plan
-  // We check the 'modules' array (hard control) instead of the 'features' array (marketing text)
-  return Array.isArray(plan.modules) && plan.modules.some(m => 
-    m.toLowerCase() === featureName.toLowerCase() || 
-    m.toLowerCase().includes(featureName.toLowerCase())
-  );
+export async function runSchemaMigration(migrationName) {
+  const { data, error } = await supabase.rpc('run_migration', { migration_name: migrationName });
+  if (error) throw error;
+  return data;
 }
 
 export async function submitPayment(amount, transactionCode, notes = '') {
@@ -1225,11 +1285,11 @@ export async function getStudents() {
   const fetchCloud = async () => {
     if (!shouldFetchCloud(`students_${_currentSchoolId}`)) return;
     try {
-      const { data, error } = await supabase
+      const { data, error } = await withRetry(() => supabase
         .from('students')
         .select('*')
         .eq('school_id', _currentSchoolId)
-        .order('name');
+        .order('name'));
       if (error) throw error;
       if (data) {
         // Update offline cache
@@ -1436,6 +1496,7 @@ export async function addStudent(student) {
   // Sync to local DB immediately for UI responsiveness
   try { await db.students.put(data); } catch(e) {}
 
+  await logAuditEvent('student_created', 'students', data.id, { name: student.name, class: student.class });
   return newStudent;
 }
 
@@ -1473,6 +1534,8 @@ export async function updateStudent(id, updates) {
   
   // Sync to local DB immediately
   try { await db.students.put(data); } catch(e) {}
+  
+  await logAuditEvent('student_updated', 'students', id, { updates: row });
   return data ? { ...data, admNo: data.adm_no, parentPhone: data.parent_phone, joinDate: data.join_date, residenceType: data.residence_type || 'day', house: data.house || null, subjects: data.subjects || [], status: data.status || 'Active' } : null;
 }
 
@@ -1522,6 +1585,8 @@ export async function archiveStudent(id, targetStatus = 'Transferred', reason = 
   
   // Update local cache
   try { await db.students.update(id, { status: targetStatus }); } catch(e) {}
+  
+  await logAuditEvent('student_archived', 'students', id, { targetStatus, reason });
   await logPlatformActivity('STUDENT_ARCHIVE', `Archived student (Status: ${targetStatus}): ${data.name}`);
   return data;
 }
@@ -2187,11 +2252,11 @@ export async function getFees(studentId = null) {
 
   const cacheKey = `fees_${_currentSchoolId}_${_currentPeriodId}`;
   return cachedQuery(cacheKey, async () => {
-    const { data, error } = await supabase
+    const { data, error } = await withRetry(() => supabase
       .from('fees')
       .select('id, student_id, total_fee, paid, balance, period_id, school_id, fee_payments(id, amount, date, method, reference)')
       .eq('school_id', _currentSchoolId)
-      .eq('period_id', _currentPeriodId);
+      .eq('period_id', _currentPeriodId));
     if (error) throw error;
     
     const fees = {};
@@ -2335,6 +2400,13 @@ export async function recordPayment(studentId, amount, method, reference) {
     .eq('period_id', _currentPeriodId);
 
   if (updateErr) throw updateErr;
+
+  await logAuditEvent('payment_recorded', 'fee_payments', paymentRecord.id, { 
+    student_id: studentId, 
+    amount: amountNum, 
+    method: method || 'Cash',
+    reference: sanitizedRef
+  });
 
   // 3.5 Invalidate caches so the UI sees the new balance immediately
   invalidateCache(`fees_${_currentSchoolId}_${_currentPeriodId}`);
@@ -3338,6 +3410,45 @@ export async function checkIsPlatformAdmin(email) {
   }
 }
 
+/**
+ * Get all platform admins (Super Admin only)
+ */
+export async function getPlatformAdmins() {
+  const { data, error } = await supabase
+    .from('platform_admins')
+    .select('*')
+    .order('created_at', { ascending: false });
+  if (error) throw error;
+  return data || [];
+}
+
+/**
+ * Add a new platform admin
+ */
+export async function addPlatformAdmin(email, role = 'admin') {
+  mutationGuard('addPlatformAdmin');
+  const { error } = await supabase
+    .from('platform_admins')
+    .insert({ email, role });
+  if (error) throw error;
+  
+  await logPlatformActivity('PLATFORM_ADMIN_ADDED', `Added new platform admin: ${email}`);
+}
+
+/**
+ * Remove a platform admin
+ */
+export async function removePlatformAdmin(email) {
+  mutationGuard('removePlatformAdmin');
+  const { error } = await supabase
+    .from('platform_admins')
+    .delete()
+    .eq('email', email);
+  if (error) throw error;
+
+  await logPlatformActivity('PLATFORM_ADMIN_REMOVED', `Removed platform admin: ${email}`);
+}
+
 // ============= PLATFORM MANAGEMENT (SUPER ADMIN) =============
 
 /**
@@ -3360,8 +3471,29 @@ export async function logPlatformActivity(type, description, schoolId = null) {
 }
 
 /**
- * Fetch global activity logs (Super Admin only)
+ * Log a school-level audit event
  */
+export async function logAuditEvent({ action, target_table, target_id, metadata = {}, school_id = null }) {
+  try {
+    const { error } = await supabase
+      .from('audit_logs')
+      .insert({
+        school_id: school_id || _currentSchoolId,
+        actor_id: (await supabase.auth.getUser()).data.user?.id,
+        actor_email: _currentAuthUser?.email,
+        actor_role: _currentAuthUser?.role,
+        action,
+        target_table,
+        target_id,
+        metadata,
+        ip_address: null // Could be fetched if needed
+      });
+    if (error) console.error('Failed to log audit event:', error);
+  } catch (err) {
+    console.error('Audit log error:', err);
+  }
+}
+
 export async function getPlatformActivities(limit = 50) {
   const { data, error } = await supabase
     .from('platform_activity_logs')
@@ -3370,6 +3502,19 @@ export async function getPlatformActivities(limit = 50) {
     .limit(limit);
   if (error) throw error;
   return data;
+}
+
+/**
+ * Get platform-wide audit logs (Super Admin only)
+ */
+export async function getGlobalAuditLogs(limit = 100) {
+  const { data, error } = await supabase
+    .from('audit_logs')
+    .select('*, schools(name)')
+    .order('created_at', { ascending: false })
+    .limit(limit);
+  if (error) throw error;
+  return data || [];
 }
 
 /**
@@ -3395,8 +3540,8 @@ export async function getPlatformSettings() {
       const result = {
         billing: settings.billing || { 
           mpesa_number: "+254712260057", 
-          mpesa_name: "Peter Kaulani",
-          instructions: "Send money to +254712260057 (Peter Kaulani)", 
+          mpesa_name: "ShuleSoft Pay",
+          instructions: "Send money to +254712260057 (ShuleSoft Pay)", 
           term_price: 5000, 
           trial_days: 30,
           expiry_date: null
@@ -5592,3 +5737,130 @@ export function subscribeToMessages(userId, callback) {
 // Auto-sync every 60s if online
 setInterval(triggerSync, 60000);
 window.addEventListener('online', triggerSync);
+
+// ============= DOMAIN 6: AUDIT LOGGING =============
+
+/**
+ * Log an audit event to the audit_logs table.
+ */
+export async function logAuditEvent(action, targetTable, targetId = null, metadata = {}) {
+  try {
+    const { data: { user } } = await supabase.auth.getUser();
+    
+    await supabase.from('audit_logs').insert({
+      school_id: _currentSchoolId,
+      actor_id: user?.id || null,
+      actor_email: user?.email || null,
+      actor_role: user?.user_metadata?.role || null,
+      action,
+      action_type: action,
+      target_table: targetTable,
+      table_name: targetTable,
+      target_id: targetId,
+      record_id: targetId,
+      metadata,
+    });
+  } catch (err) {
+    console.warn('[Audit] Failed to log event:', action, err?.message);
+  }
+}
+
+// ============= DOMAIN 10: REPORTS & ANALYTICS =============
+
+/**
+ * Aggregates financial data for the current term.
+ */
+export async function getTermFinancialSummary() {
+  if (!_currentSchoolId || !_currentPeriodId) return null;
+  
+  const [students, fees] = await Promise.all([
+    getStudents(),
+    getFees()
+  ]);
+
+  let totalExpected = 0;
+  let totalCollected = 0;
+  let fullyPaidCount = 0;
+  let partialPaidCount = 0;
+  let unpaidCount = 0;
+
+  students.forEach(s => {
+    const f = fees[s.id] || { total_fee: 0, paid: 0, balance: 0 };
+    totalExpected += Number(f.total_fee || 0);
+    totalCollected += Number(f.paid || 0);
+    
+    const balance = Number(f.balance || 0);
+    if (balance <= 0 && f.total_fee > 0) fullyPaidCount++;
+    else if (f.paid > 0) partialPaidCount++;
+    else unpaidCount++;
+  });
+
+  return {
+    totalExpected,
+    totalCollected,
+    totalOutstanding: totalExpected - totalCollected,
+    fullyPaidCount,
+    partialPaidCount,
+    unpaidCount,
+    collectionRate: totalExpected > 0 ? ((totalCollected / totalExpected) * 100).toFixed(1) : 0,
+  };
+}
+
+export async function getPortalActivity(limit = 10) {
+  const { data, error } = await supabase
+    .from('portal_activity_log')
+    .select('*')
+    .eq('school_id', _currentSchoolId)
+    .order('created_at', { ascending: false })
+    .limit(limit);
+  
+  if (error) throw error;
+  return data.map(item => ({
+    ...item,
+    date: new Date(item.created_at).toLocaleString('en-KE', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })
+  }));
+}
+
+export async function logPortalActivity(action, targetType, metadata = {}) {
+  const { error } = await supabase
+    .from('portal_activity_log')
+    .insert({
+      school_id: _currentSchoolId,
+      actor_type: 'staff',
+      actor_name: _currentUserName || 'System',
+      action,
+      target_type: targetType,
+      metadata
+    });
+  if (error) console.error('Failed to log portal activity:', error);
+}
+
+// ============= BULK STUDENT IMPORT =============
+export async function bulkImportStudents(studentsData, onProgress) {
+  mutationGuard('bulkImportStudents');
+  if (!_currentSchoolId) throw new Error('No school context');
+
+  const BATCH_SIZE = 50;
+  let successCount = 0;
+
+  for (let i = 0; i < studentsData.length; i += BATCH_SIZE) {
+    const batch = studentsData.slice(i, i + BATCH_SIZE).map(s => ({
+      ...s,
+      school_id: _currentSchoolId,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
+    }));
+
+    const { error } = await supabase.from('students').insert(batch);
+    if (error) {
+      console.error('Batch import error:', error);
+      throw error;
+    }
+
+    successCount += batch.length;
+    if (onProgress) onProgress(successCount, studentsData.length);
+  }
+
+  await logPlatformActivity('STUDENTS_IMPORT', `Imported ${successCount} students in bulk`, _currentSchoolId);
+  return { success: true, count: successCount };
+}

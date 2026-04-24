@@ -1,53 +1,78 @@
-import React, { Component } from 'react';
-import { AlertIcon, RefreshIcon } from './Common/Icons';
+import React from 'react';
 
-export class ErrorBoundary extends Component {
+/**
+ * Global Error Boundary (Domain 8 & 9)
+ * Catches rendering errors anywhere in the app to prevent the "white screen of death"
+ * and provides a fallback UI. In production, this would also ping Sentry/PostHog.
+ */
+export class ErrorBoundary extends React.Component {
   constructor(props) {
     super(props);
     this.state = { hasError: false, error: null };
   }
 
   static getDerivedStateFromError(error) {
+    // Update state so the next render will show the fallback UI.
     return { hasError: true, error };
   }
 
   componentDidCatch(error, errorInfo) {
-    console.error("ErrorBoundary caught an error:", error, errorInfo);
+    // Analytics/Monitoring hook (Sentry / PostHog stub)
+    console.error('[ErrorBoundary] Caught a UI crash:', error, errorInfo);
+    // TODO: Sentry.captureException(error);
   }
 
   render() {
     if (this.state.hasError) {
-      // Check if it's a network-like error
-      const isNetworkError = this.state.error?.message?.toLowerCase().includes('failed to fetch') || 
-                             this.state.error?.message?.toLowerCase().includes('network');
-
       return (
         <div style={{
-          display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-          minHeight: '400px', padding: '40px', textAlign: 'center', background: '#f8fafc', borderRadius: '16px', margin: '20px'
+          minHeight: '100vh', display: 'flex', flexDirection: 'column',
+          alignItems: 'center', justifyContent: 'center', background: '#f8fafc',
+          padding: '24px', textAlign: 'center', fontFamily: '"Inter", sans-serif'
         }}>
-          <AlertIcon size={48} style={{ color: '#ef4444', marginBottom: '16px' }} />
-          <h2 style={{ fontSize: '1.5rem', fontWeight: 700, color: 'var(--text)', marginBottom: '8px' }}>
-            {isNetworkError ? 'Connection Lost' : 'Something went wrong'}
-          </h2>
-          <p style={{ color: 'var(--text-light)', maxWidth: '400px', marginBottom: '24px' }}>
-            {isNetworkError 
-              ? 'We could not reach the server. Please check your internet connection and try again.' 
-              : 'An unexpected error occurred while loading this module. Our team has been notified.'}
-          </p>
-          <button 
-            onClick={() => window.location.reload()}
-            className="btn btn-primary"
-            style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '12px 24px' }}
-          >
-            <RefreshIcon size={18} /> Refresh Page
-          </button>
+          <div style={{
+            background: '#fff', padding: '40px', borderRadius: '24px',
+            boxShadow: '0 20px 40px -10px rgba(0,0,0,0.1)', maxWidth: '500px', width: '100%'
+          }}>
+            <div style={{
+              width: '64px', height: '64px', borderRadius: '32px',
+              background: '#fee2e2', color: '#ef4444', display: 'flex',
+              alignItems: 'center', justifyContent: 'center', fontSize: '32px',
+              margin: '0 auto 24px auto'
+            }}>
+              ⚠️
+            </div>
+            <h1 style={{ margin: '0 0 16px 0', color: '#0f172a', fontSize: '1.5rem', fontWeight: 800 }}>
+              Oops! Something went wrong.
+            </h1>
+            <p style={{ color: '#64748b', marginBottom: '32px', lineHeight: 1.6 }}>
+              The application encountered an unexpected error. Our team has been notified.
+            </p>
+            <div style={{
+              background: '#f1f5f9', padding: '16px', borderRadius: '12px',
+              color: '#334155', fontSize: '0.85rem', textAlign: 'left',
+              overflowX: 'auto', marginBottom: '32px', fontFamily: 'monospace'
+            }}>
+              {this.state.error?.toString()}
+            </div>
+            <button
+              onClick={() => window.location.reload()}
+              style={{
+                background: '#4f46e5', color: '#fff', border: 'none',
+                padding: '12px 24px', borderRadius: '12px', fontWeight: 600,
+                cursor: 'pointer', width: '100%', fontSize: '1rem',
+                transition: 'background 0.2s'
+              }}
+              onMouseOver={(e) => e.target.style.background = '#4338ca'}
+              onMouseOut={(e) => e.target.style.background = '#4f46e5'}
+            >
+              Refresh Application
+            </button>
+          </div>
         </div>
       );
     }
 
-    return this.props.children;
+    return this.props.children; 
   }
 }
-
-export default ErrorBoundary;

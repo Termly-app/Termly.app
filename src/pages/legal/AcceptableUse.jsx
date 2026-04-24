@@ -1,8 +1,13 @@
 import LegalLayout from './LegalLayout';
+import { Helmet } from 'react-helmet-async';
 
 export default function AcceptableUse() {
   return (
     <LegalLayout title="Acceptable Use Policy" lastUpdated="March 2026">
+      <Helmet>
+        <title>Acceptable Use Policy | ShuleSoft</title>
+        <meta name="description" content="ShuleSoft Acceptable Use Policy. Guidelines for responsible use of the school management platform." />
+      </Helmet>
       <section>
         <p>This Acceptable Use Policy (AUP) outlines the rules and guidelines for using the ShuleSoft platform. By using our services, you agree to adhere to these standards to ensure a safe and productive environment for all schools.</p>
         

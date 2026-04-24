@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { supabase } from '../../lib/supabase';
 import { getCurrentSchoolId, getStudents, getSchoolProfile, getPrintHeader } from '../../data/store';
+import { getAllActiveBorrows, getStudentBorrowHistory } from '../../data/libraryStore';
 import { CBC_STRUCTURE, getSubjectsForGrade } from '../../data/seedData';
 import Select from '../../components/Common/Select';
 import Loader from '../../components/Common/Loader';
@@ -96,12 +96,7 @@ function ByClassReport({ profile, students }) {
     (async () => {
       setLoading(true);
       try {
-        const schoolId = getCurrentSchoolId();
-        const { data: borrows } = await supabase.from('borrow_records')
-          .select('id, borrow_date, due_date, status, students(id, name, class, adm_no), book_copies(copy_code, books(title, subject))')
-          .eq('school_id', schoolId)
-          .in('status', ['borrowed', 'overdue', 'lost'])
-          .order('due_date', { ascending: true });
+        const borrows = await getAllActiveBorrows();
         setData(borrows || []);
       } catch (e) { console.error('Report error:', e); } 
       finally { setLoading(false); }
@@ -224,12 +219,7 @@ function BySubjectReport({ profile, students }) {
     (async () => {
       setLoading(true);
       try {
-        const schoolId = getCurrentSchoolId();
-        const { data: borrows } = await supabase.from('borrow_records')
-          .select('id, borrow_date, due_date, status, students(id, name, class, adm_no), book_copies(copy_code, books(title, subject))')
-          .eq('school_id', schoolId)
-          .in('status', ['borrowed', 'overdue', 'lost'])
-          .order('due_date', { ascending: true });
+        const borrows = await getAllActiveBorrows();
         setData(borrows || []);
       } catch (e) { console.error('Report error:', e); } 
       finally { setLoading(false); }
@@ -321,7 +311,7 @@ function StudentHistoryReport({ students }) {
     setSearchInput(s.name);
     setLoading(true);
     try {
-      const { data } = await supabase.from('borrow_records').select('*, book_copies(copy_code, books(title, category))').eq('student_id', s.id).order('created_at', { ascending: false });
+      const data = await getStudentBorrowHistory(s.id);
       setHistory(data || []);
     } catch (e) { console.error('Student history error:', e); } 
     finally { setLoading(false); }

@@ -2,11 +2,13 @@ import { useState, useEffect } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { registerSchool, getPlatformSettings } from '../data/store';
+import { checkSchoolExists } from '../data/authStore';
 import { 
   BookIcon, CardIcon, SchoolIcon, FlagIcon, ClockIcon, RocketIcon, CheckIcon, HomeIcon,
   EyeIcon, EyeOffIcon
 } from '../components/CommonIcons';
 import { SANDBOX_PLAN } from '../data/constants';
+import { Helmet } from 'react-helmet-async';
 import { useDialog } from '../contexts/DialogContext';
 
 export default function Register() {
@@ -155,13 +157,7 @@ export default function Register() {
       }
 
       // 2. Check if a school already exists for this user (by owner_id)
-      const { data: existingSchool, error: findSchoolErr } = await supabase
-        .from('schools')
-        .select('id')
-        .eq('owner_id', authUserId)
-        .maybeSingle();
-
-      if (findSchoolErr) throw findSchoolErr;
+      const existingSchool = await checkSchoolExists(authUserId);
 
       if (existingSchool) {
         // School already exists — take them to success or redirect
@@ -204,6 +200,11 @@ export default function Register() {
 
   return (
     <div className="res-page">
+      <Helmet>
+        <title>Register Your School | ShuleSoft — Free Sandbox Workspace</title>
+        <meta name="description" content="Register your school on ShuleSoft for free. Get a Sandbox workspace to explore CBC grading, fee tracking, and all modules instantly." />
+        <link rel="canonical" href="https://shulesoft.com/register" />
+      </Helmet>
       <div className="card">
         {/* RIGHT PANEL - DECORATIVE */}
         <div className="right-panel">

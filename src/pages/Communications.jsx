@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { 
-  getStudents, getSchoolProfile, logCommunication, getAnnouncements, 
+  isFeatureEnabled, getStudents, getSchoolProfile, logCommunication, getAnnouncements, 
   sendSMSMessage, sendWhatsAppMessage, CBC_STRUCTURE
 } from '../data/store';
 import { 
@@ -9,7 +9,9 @@ import {
 } from '../components/CommonIcons';
 import Select from '../components/Common/Select';
 import { Helmet } from 'react-helmet-async';
+import FeatureGate from '../components/FeatureGate';
 import { useDialog } from '../contexts/DialogContext';
+import { useFeature } from '../contexts/FeaturesContext';
 
 export default function Communications({ currentUser }) {
   const { alert, confirm } = useDialog();
@@ -31,10 +33,15 @@ export default function Communications({ currentUser }) {
   const [showSuccess, setShowSuccess] = useState(false);
   const [channel, setChannel] = useState('sms');
   const [smsLogs, setSmsLogs] = useState([]);
+  
+  const { enabled: hasAccess, loading: featureLoading } = useFeature('sms');
 
   useEffect(() => {
-    loadData();
-  }, []);
+    if (hasAccess) loadData();
+  }, [hasAccess]);
+
+  if (featureLoading) return <div className="p-4"><div className="spinner"></div></div>;
+  if (!hasAccess) return <FeatureGate featureName="Communications & SMS" />;
 
   const loadData = async () => {
     try {

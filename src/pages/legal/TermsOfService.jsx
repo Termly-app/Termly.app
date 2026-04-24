@@ -1,8 +1,14 @@
 import LegalLayout from './LegalLayout';
+import { Helmet } from 'react-helmet-async';
 
 export default function TermsOfService() {
   return (
     <LegalLayout title="Terms of Service" lastUpdated="March 2026">
+      <Helmet>
+        <title>Terms of Service | ShuleSoft</title>
+        <meta name="description" content="ShuleSoft Terms of Service. Read about account registration, subscriptions, data usage, and governing law under Kenyan jurisdiction." />
+        <link rel="canonical" href="https://shulesoft.com/legal/terms" />
+      </Helmet>
       <section>
         <p>Welcome to ShuleSoft. These Terms of Service ("Terms") govern your use of the ShuleSoft school management platform. By registering a school account or accessing our services, you agree to comply with these terms.</p>
         
@@ -63,7 +69,17 @@ export default function TermsOfService() {
       </section>
 
       <section>
-        <h3>11. Acceptance of Terms</h3>
+        <h3>11. Governing Law & Jurisdiction</h3>
+        <p>These Terms shall be governed by and construed in accordance with the <strong>Laws of Kenya</strong>. Any disputes arising under these Terms shall be subject to the exclusive jurisdiction of the Kenyan courts.</p>
+      </section>
+
+      <section>
+        <h3>12. Data Processing Agreement</h3>
+        <p>By using ShuleSoft, the School (Data Controller) appoints ShuleSoft (Data Processor) to process personal data in accordance with the <strong>Kenya Data Protection Act 2019</strong>. ShuleSoft shall only process data on the documented instructions of the School.</p>
+      </section>
+
+      <section>
+        <h3>13. Acceptance of Terms</h3>
         <p>By creating an account or using ShuleSoft, you agree to these Terms of Service.</p>
       </section>
     </LegalLayout>

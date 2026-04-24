@@ -1,5 +1,8 @@
 import { useState, useEffect, useRef } from 'react';
-import { getSchoolProfile, saveSchoolProfile, importData, exportData, CBC_STRUCTURE, TERM_FEE, applyFeeStructure, getPeriods, createPeriod, setActivePeriod, testMpesaConnection, testSmsConnection, getCurrentAuthUser, supabase, getExams, createExam, deleteExam, getCurrentPeriodId, subscribeToTable } from '../data/store';
+import { getSchoolProfile, saveSchoolProfile, importData, exportData, TERM_FEE, applyFeeStructure, getPeriods, createPeriod, setActivePeriod, testMpesaConnection, testSmsConnection, getCurrentAuthUser, supabase, getCurrentPeriodId, subscribeToTable, getPortalAccessSettings, updatePortalAccessSettings } from '../data/store';
+import { getUserRole } from '../data/authStore';
+import { getExams, createExam, deleteExam, previewClassPromotion, promoteClasses } from '../data/academicsStore';
+import { CBC_STRUCTURE } from '../data/seedData';
 import Select from '../components/Common/Select';
 import { Helmet } from 'react-helmet-async';
 import { useDialog } from '../contexts/DialogContext';
@@ -36,6 +39,12 @@ export default function Settings() {
   const [testingSms, setTestingSms] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
   const [robustExams, setRobustExams] = useState([]);
+  const [promotionPreview, setPromotionPreview] = useState(null);
+  const [promotionLoading, setPromotionLoading] = useState(false);
+  const [promotionConfirmText, setPromotionConfirmText] = useState('');
+  const [showPromotionModal, setShowPromotionModal] = useState(false);
+  const [portalSettings, setPortalSettings] = useState(null);
+  const [portalSaving, setPortalSaving] = useState(false);
   const fileRef   = useRef(null);
   const backupRef = useRef(null);
 
@@ -51,11 +60,13 @@ export default function Settings() {
         setPeriods(per);
 
         const ex = await getExams();
+        const ps = await getPortalAccessSettings();
+        if (ps) setPortalSettings(ps);
         setRobustExams(ex);
 
         const authUser = await getCurrentAuthUser();
         if (authUser) {
-          const { data: userData } = await supabase.from('users').select('role').eq('auth_user_id', authUser.id).single();
+          const userData = await getUserRole(authUser.id);
           setIsAdmin(userData?.role === 'Admin');
         }
       }catch(e){console.error(e);}
@@ -296,6 +307,39 @@ export default function Settings() {
     } finally { setTestingSms(false); }
   };
 
+  const handlePreviewPromotion = async () => {
+    setPromotionLoading(true);
+    try {
+      const fromYear = new Date().getFullYear();
+      const preview = await previewClassPromotion(fromYear, fromYear + 1);
+      setPromotionPreview(preview);
+      setShowPromotionModal(true);
+      setPromotionConfirmText('');
+    } catch (err) {
+      alert({ title: 'Preview Error', message: err.message, variant: 'danger' });
+    } finally {
+      setPromotionLoading(false);
+    }
+  };
+
+  const handleConfirmPromotion = async () => {
+    const fromYear = new Date().getFullYear();
+    if (promotionConfirmText !== `PROMOTE ${fromYear}`) {
+      alert({ title: 'Invalid Confirmation', message: `Please type exactly 'PROMOTE ${fromYear}'`, variant: 'warning' });
+      return;
+    }
+    setPromotionLoading(true);
+    try {
+      const res = await promoteClasses(fromYear, fromYear + 1);
+      setShowPromotionModal(false);
+      alert({ title: 'Promotion Complete', message: `Successfully promoted ${res.promotedStreams} streams and graduated ${res.graduatedStudents} students.`, variant: 'success' });
+    } catch (err) {
+      alert({ title: 'Promotion Error', message: err.message, variant: 'danger' });
+    } finally {
+      setPromotionLoading(false);
+    }
+  };
+
   const levels=Object.keys(CBC_STRUCTURE);
 
   /* shared styles */
@@ -460,6 +504,71 @@ export default function Settings() {
             </div>
           </div>
         </div>
+
+          {/* Portal Access Settings */}
+          <div className="card">
+            <div className="card-header">
+              <div style={{display:'flex',alignItems:'center',gap:10}}>
+                <div style={{background:'#f3e8ff',color:'#7c3aed',padding:8,borderRadius:10,display:'flex'}}>
+                  <EyeIcon size={20} />
+                </div>
+                <div>
+                  <h3 style={{margin:0}}>Portal Access</h3>
+                  <p style={{fontSize:'0.75rem',color:'var(--text-light)',margin:0}}>Control parent and teacher portal visibility</p>
+                </div>
+              </div>
+            </div>
+            <div className="card-body">
+              {portalSettings ? (
+                <div style={{display:'flex',flexDirection:'column',gap:14}}>
+                  {[
+                    { key: 'parent_portal_enabled', label: 'Parent Portal', desc: 'Allow parents to login and view student data' },
+                    { key: 'teacher_portal_enabled', label: 'Teacher Portal', desc: 'Allow teachers to login to their staff portal' },
+                    { key: 'parent_can_view_fees', label: 'Fee Balances Visible', desc: 'Parents can view outstanding fee balances' },
+                    { key: 'parent_can_view_results', label: 'Results Visible', desc: 'Parents can view released exam results' },
+                    { key: 'parent_can_view_attendance', label: 'Attendance Visible', desc: 'Parents can view attendance records' },
+                    { key: 'allow_parent_self_register', label: 'Self-Registration', desc: 'Allow parents to create their own portal accounts' },
+                  ].map(item => (
+                    <div key={item.key} style={{display:'flex',justifyContent:'space-between',alignItems:'center',padding:14,background:'var(--bg-card)',borderRadius:12,border:'1px solid var(--border)'}}>
+                      <div>
+                        <div style={{fontWeight:700,fontSize:'0.9rem'}}>{item.label}</div>
+                        <div style={{fontSize:'0.75rem',color:'var(--text-light)'}}>{item.desc}</div>
+                      </div>
+                      <label className="switch" style={{position:'relative',display:'inline-block',width:44,height:24}}>
+                        <input 
+                          type="checkbox" 
+                          checked={portalSettings[item.key] !== false}
+                          onChange={async (e) => {
+                            const updated = { ...portalSettings, [item.key]: e.target.checked };
+                            setPortalSettings(updated);
+                            setPortalSaving(true);
+                            try { await updatePortalAccessSettings(updated); }
+                            catch(err) { alert({ title: 'Error', message: err.message, variant: 'danger' }); }
+                            finally { setPortalSaving(false); }
+                          }}
+                          style={{opacity:0,width:0,height:0}}
+                        />
+                        <span style={{
+                          position:'absolute',cursor:'pointer',top:0,left:0,right:0,bottom:0,
+                          backgroundColor: portalSettings[item.key] !== false ? 'var(--primary)' : 'var(--border)',
+                          transition:'.3s',borderRadius:24
+                        }}>
+                          <span style={{
+                            position:'absolute',height:18,width:18,left:3,bottom:3,
+                            backgroundColor:'white',transition:'.3s',borderRadius:'50%',
+                            transform: portalSettings[item.key] !== false ? 'translateX(20px)' : 'translateX(0)'
+                          }} />
+                        </span>
+                      </label>
+                    </div>
+                  ))}
+                  {portalSaving && <p style={{fontSize:'0.72rem',color:'var(--primary)',fontWeight:600,textAlign:'center'}}>Saving portal settings…</p>}
+                </div>
+              ) : (
+                <p style={{fontSize:'0.85rem',color:'var(--text-muted)',textAlign:'center',padding:20}}>Loading portal settings…</p>
+              )}
+            </div>
+          </div>
 
         {/* Academic Configuration */}
         <div className="card">
@@ -985,7 +1094,88 @@ export default function Settings() {
             </div>
           </div>
 
+        {/* Academic Year Promotion */}
+        <div className="card">
+          <div className="card-header">
+            <div>
+              <h3><RocketIcon size={20} /> Academic Year Promotion</h3>
+              <p style={{fontSize:'0.78rem',color:'var(--text-light)',margin:'2px 0 0'}}>Advance all active streams to the next class and carry forward teachers.</p>
+            </div>
+            <button 
+              className="btn btn-primary" 
+              onClick={handlePreviewPromotion} 
+              disabled={promotionLoading}
+            >
+              {promotionLoading ? 'Loading Preview...' : 'Preview Promotion'}
+            </button>
+          </div>
+        </div>
+
       </div>
+
+      {showPromotionModal && promotionPreview && (
+        <div style={{position:'fixed',top:0,left:0,right:0,bottom:0,background:'rgba(0,0,0,0.5)',display:'flex',alignItems:'center',justifyContent:'center',zIndex:9999,padding:20}}>
+          <div style={{background:'var(--bg)',width:'100%',maxWidth:600,borderRadius:16,boxShadow:'0 20px 40px rgba(0,0,0,0.2)',display:'flex',flexDirection:'column',maxHeight:'90vh'}}>
+            <div style={{padding:'20px 24px',borderBottom:'1px solid var(--border)',display:'flex',justifyContent:'space-between',alignItems:'center'}}>
+              <h3 style={{margin:0,fontSize:'1.2rem',display:'flex',alignItems:'center',gap:8}}><RocketIcon size={20} color="var(--primary)" /> Promotion Preview</h3>
+              <button onClick={()=>setShowPromotionModal(false)} style={{background:'none',border:'none',cursor:'pointer',color:'var(--text-light)',padding:4}}><CrossIcon size={20} /></button>
+            </div>
+            
+            <div style={{padding:24,overflowY:'auto',flex:1}}>
+              <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr',gap:12,marginBottom:20}}>
+                <div style={{background:'var(--primary-light)',padding:16,borderRadius:12,textAlign:'center'}}>
+                  <div style={{fontSize:'1.5rem',fontWeight:800,color:'var(--primary)'}}>{promotionPreview.studentsPromoted}</div>
+                  <div style={{fontSize:'0.75rem',fontWeight:600,color:'var(--primary)'}}>Students Moving Up</div>
+                </div>
+                <div style={{background:'#dcfce7',padding:16,borderRadius:12,textAlign:'center'}}>
+                  <div style={{fontSize:'1.5rem',fontWeight:800,color:'#166534'}}>{promotionPreview.studentsGraduated}</div>
+                  <div style={{fontSize:'0.75rem',fontWeight:600,color:'#166534'}}>Graduating</div>
+                </div>
+                <div style={{background:'#f3e8ff',padding:16,borderRadius:12,textAlign:'center'}}>
+                  <div style={{fontSize:'1.5rem',fontWeight:800,color:'#6b21a8'}}>{promotionPreview.teachersCarriedForward}</div>
+                  <div style={{fontSize:'0.75rem',fontWeight:600,color:'#6b21a8'}}>Teachers Forwarded</div>
+                </div>
+              </div>
+
+              <h4 style={{margin:'0 0 12px',fontSize:'0.9rem'}}>Stream Actions</h4>
+              <div style={{display:'flex',flexDirection:'column',gap:8,background:'var(--bg-card)',padding:12,borderRadius:12,border:'1px solid var(--border)'}}>
+                {promotionPreview.details.map((detail, idx) => (
+                  <div key={idx} style={{fontSize:'0.8rem',display:'flex',flexDirection:'column',gap:2,padding:'8px 0',borderBottom:idx===promotionPreview.details.length-1?'none':'1px solid var(--border)'}}>
+                    <strong style={{color:'var(--text-main)'}}>{detail.stream}</strong>
+                    <span style={{color:'var(--text-light)'}}>{detail.status}</span>
+                  </div>
+                ))}
+              </div>
+
+              <div style={{marginTop:24,padding:16,background:'#fee2e2',borderRadius:12,border:'1px solid #fca5a5'}}>
+                <label style={{fontSize:'0.85rem',fontWeight:700,color:'#991b1b',display:'block',marginBottom:8}}>
+                  Type <strong>PROMOTE {new Date().getFullYear()}</strong> to confirm
+                </label>
+                <input 
+                  className="form-input" 
+                  value={promotionConfirmText}
+                  onChange={e=>setPromotionConfirmText(e.target.value)}
+                  placeholder={`PROMOTE ${new Date().getFullYear()}`}
+                  style={{background:'#fff',borderColor:'#fca5a5'}}
+                />
+              </div>
+            </div>
+
+            <div style={{padding:'16px 24px',borderTop:'1px solid var(--border)',display:'flex',justifyContent:'flex-end',gap:12,background:'var(--bg-card)',borderBottomLeftRadius:16,borderBottomRightRadius:16}}>
+              <button className="btn btn-ghost" onClick={()=>setShowPromotionModal(false)}>Cancel</button>
+              <button 
+                className="btn btn-primary" 
+                onClick={handleConfirmPromotion}
+                disabled={promotionConfirmText !== `PROMOTE ${new Date().getFullYear()}` || promotionLoading}
+                style={{background:promotionConfirmText === `PROMOTE ${new Date().getFullYear()}` ? '#dc2626' : 'var(--text-light)'}}
+              >
+                {promotionLoading ? 'Promoting...' : 'Confirm Promotion'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }

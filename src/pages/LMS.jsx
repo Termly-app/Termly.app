@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { 
-  getSchoolProfile, getAssignments, createAssignment, 
+  isFeatureEnabled, getSchoolProfile, getAssignments, createAssignment, 
   getSubmissions, updateSubmission, fetchLmsContent, getQuizAnalytics,
   CBC_STRUCTURE, getSubjectsForGrade, updateAssignment, deleteAssignment
 } from '../data/store';
@@ -10,7 +10,10 @@ import {
   DashboardIcon, TrendingUpIcon, AlertIcon, ArrowRightIcon
 } from '../components/CommonIcons';
 import Select from '../components/Common/Select';
+import FeatureGate from '../components/FeatureGate';
 import { useDialog } from '../contexts/DialogContext';
+
+import { useFeature } from '../contexts/FeaturesContext';
 
 /**
  * Moodle-Inspired LMS Module (Assignment Hub)
@@ -167,6 +170,8 @@ export default function LMS({ currentUser }) {
   const [gradingSubmission, setGradingSubmission] = useState(null);
   const [showAnalytics, setShowAnalytics] = useState(null);
   const [loading, setLoading] = useState(false);
+  
+  const { enabled: hasAccess, loading: featureLoading } = useFeature('lms');
 
   // Form State (Moodle-inspired Setup)
   const [formData, setFormData] = useState({
@@ -185,8 +190,12 @@ export default function LMS({ currentUser }) {
   });
 
   useEffect(() => {
-    loadData();
-  }, []);
+    if (hasAccess) loadData();
+  }, [hasAccess]);
+
+  if (featureLoading) return <div className="p-4"><div className="spinner"></div></div>;
+  if (!hasAccess) return <FeatureGate featureName="E-Learning & LMS" />;
+
 
   const loadData = async () => {
     const prof = await getSchoolProfile();

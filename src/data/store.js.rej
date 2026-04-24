@@ -1,0 +1,9 @@
+diff a/src/data/store.js b/src/data/store.js	(rejected hunks)
+@@ -12,6 +12,7 @@ import { CBC_STRUCTURE, CBC_CORE_COMPETENCIES, TERM_FEE, getLevelForGrade, getSu
+ export { CBC_STRUCTURE, CBC_CORE_COMPETENCIES, TERM_FEE, getLevelForGrade, getSubjectsForGrade };
+ 
+ import { encryptData as encrypt, decryptData as decrypt } from '../utils/securityUtils';
++import { sendEmail, emailTemplates } from '../utils/email';
+ 
+ 
+ // ============= SaaS Subscription Tiers =============@@ -185,6 +186,46 @@ export async function searchSchools(query) {

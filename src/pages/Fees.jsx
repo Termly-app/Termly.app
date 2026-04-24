@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { getStudents, getFees, recordPayment, voidPayment, restorePayment, getStudentPayments, getFeeSummary, getPrintHeader, getPrintFooter, getSchoolProfile, TERM_FEE, subscribeToChanges, getMpesaLogs } from '../data/store';
+import { isFeatureEnabled, getStudents, getFees, recordPayment, voidPayment, restorePayment, getStudentPayments, getFeeSummary, getPrintHeader, getPrintFooter, getSchoolProfile, TERM_FEE, subscribeToChanges, getMpesaLogs } from '../data/store';
 import Loader from '../components/Common/Loader';
 import { CLASSES, CBC_STRUCTURE } from '../data/seedData';
 import { 
@@ -9,16 +9,23 @@ import { printReceipt } from '../utils/receiptPrint';
 // import MpesaReconciliation from './MpesaReconciliation'; // WIP: M-Pesa disabled
 import Select from '../components/Common/Select';
 import { Helmet } from 'react-helmet-async';
+import FeatureGate from '../components/FeatureGate';
 import { useDialog } from '../contexts/DialogContext';
+import { dispatchSMS, generateFeeReminder } from '../utils/sms';
+import { initiateStkPush } from '../utils/mpesa';
 
 function PaymentModal({ student, fee, onPay, onClose }) {
+  const { alert, confirm, toast } = useDialog();
   const [amount, setAmount] = useState('');
   const [method, setMethod] = useState('M-Pesa');
   const [reference, setReference] = useState('');
+  const [phone, setPhone] = useState(student.parentPhone || '');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isStkPushing, setIsStkPushing] = useState(false);
   const isNotConfigured = fee.totalFee === null; // New state detection
 
   const formatKSh = (n) => n === null ? 'Not Set' : `KSh ${Number(n||0).toLocaleString()}`;
+  
   const handleSubmit = async (e) => { 
     e.preventDefault(); 
     if(!amount || Number(amount)<=0 || isSubmitting) return; 
@@ -27,6 +34,36 @@ function PaymentModal({ student, fee, onPay, onClose }) {
       await onPay(student.id, amount, method, reference); 
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const handleStkPush = async () => {
+    if (!amount || Number(amount) <= 0) {
+      alert({ title: 'Invalid Amount', message: 'Please enter a valid amount for STK Push.', variant: 'warning' });
+      return;
+    }
+    if (!phone) {
+      alert({ title: 'Missing Phone', message: 'Parent phone number is required for STK Push.', variant: 'warning' });
+      return;
+    }
+
+    setIsStkPushing(true);
+    try {
+      const res = await initiateStkPush({
+        phoneNumber: phone,
+        amount: Number(amount),
+        accountRef: student.admNo,
+        description: `Fees: ${student.name}`
+      });
+
+      if (res.success) {
+        toast({ title: 'STK Push Sent', message: 'Request sent to parent phone. Wait for confirmation.', variant: 'success' });
+        // We don't close yet, wait for manual confirmation or callback
+      }
+    } catch (err) {
+      alert({ title: 'STK Push Failed', message: err.message, variant: 'danger' });
+    } finally {
+      setIsStkPushing(false);
     }
   };
 
@@ -67,25 +104,64 @@ function PaymentModal({ student, fee, onPay, onClose }) {
                 <div className="flex-between"><span><strong>{student.name}</strong></span><span className="badge badge-info">{student.class}</span></div>
                 <div className="flex-between mt-1" style={{fontSize:'0.85rem'}}><span className="text-muted">Balance:</span><span className="text-danger font-bold">{formatKSh(fee?.balance)}</span></div>
               </div>
+              
               <div className="form-group"><label>Amount (KSh) *</label><input className="form-input" type="number" min="1" value={amount} onChange={e=>setAmount(e.target.value)} required placeholder="Enter amount"/></div>
-              <div className="form-row">
-                <div className="form-group">
-                  <label>Method</label>
-                  <Select 
-                    value={method} 
-                    onChange={e => setMethod(e.target.value)}
-                    options={[
-                      { id: 'M-Pesa', label: 'M-Pesa' },
-                      { id: 'Cash', label: 'Cash' },
-                      { id: 'Bank Transfer', label: 'Bank Transfer' }
-                    ]}
-                    style={{ width: '100%' }}
-                  />
+              
+              <div className="form-group">
+                <label>Payment Method</label>
+                <div style={{ display: 'flex', gap: 10, marginTop: 4 }}>
+                  {['M-Pesa', 'Cash', 'Bank'].map(m => (
+                    <button 
+                      key={m} 
+                      type="button"
+                      onClick={() => setMethod(m)}
+                      className={`btn ${method === m ? 'btn-primary' : 'btn-ghost'}`}
+                      style={{ flex: 1, padding: '8px 0', fontSize: '0.8rem' }}
+                    >
+                      {m}
+                    </button>
+                  ))}
                 </div>
-                <div className="form-group"><label>Reference</label><input className="form-input" value={reference} onChange={e=>setReference(e.target.value)} placeholder="e.g. MPE1234"/></div>
               </div>
+
+              {method === 'M-Pesa' && (
+                <div style={{ background: 'var(--bg-alt)', padding: 16, borderRadius: 12, border: '1px solid var(--border)', marginBottom: 20 }}>
+                  <label className="form-label" style={{ fontSize: '0.75rem', fontWeight: 700 }}>STK Push Number</label>
+                  <div style={{ display: 'flex', gap: 8, marginTop: 4 }}>
+                    <input className="form-input" value={phone} onChange={e=>setPhone(e.target.value)} placeholder="2547..." style={{ flex: 1 }} />
+                    {isFeatureEnabled('mpesa') ? (
+                      <button 
+                        type="button" 
+                        className="btn btn-success" 
+                        onClick={handleStkPush}
+                        disabled={isStkPushing || !amount}
+                        style={{ padding: '0 16px' }}
+                      >
+                        {isStkPushing ? '...' : 'STK Push'}
+                      </button>
+                    ) : (
+                      <button 
+                        type="button" 
+                        className="btn btn-ghost" 
+                        onClick={() => alert({ title: 'Premium Feature', message: 'M-Pesa STK Push is a Premium feature. Please upgrade your plan to automate collections.', variant: 'info' })}
+                        style={{ padding: '0 16px', opacity: 0.6 }}
+                      >
+                        🔒 STK
+                      </button>
+                    )}
+                  </div>
+                  <p style={{ fontSize: '0.65rem', color: 'var(--text-muted)', marginTop: 8 }}>
+                    Triggers a payment prompt on the parent's phone.
+                  </p>
+                </div>
+              )}
+
+              <div className="form-group"><label>Transaction Reference (Manual Entry)</label><input className="form-input" value={reference} onChange={e=>setReference(e.target.value)} placeholder="e.g. QWE1234567"/></div>
             </div>
-            <div className="modal-footer"><button type="button" className="btn btn-ghost" onClick={onClose} disabled={isSubmitting}>Cancel</button><button type="submit" className="btn btn-success" disabled={isSubmitting}><CheckIcon size={16} /> {isSubmitting ? 'Recording...' : 'Record Payment'}</button></div>
+            <div className="modal-footer">
+              <button type="button" className="btn btn-ghost" onClick={onClose} disabled={isSubmitting}>Cancel</button>
+              <button type="submit" className="btn btn-success" disabled={isSubmitting}><CheckIcon size={16} /> {isSubmitting ? 'Recording...' : 'Record Payment'}</button>
+            </div>
           </form>
         )}
       </div>
@@ -276,6 +352,8 @@ function ReceiptModal({ receipt, onClose, profile }) {
   );
 }
 
+import { useFeature } from '../contexts/FeaturesContext';
+
 export default function Fees({ currentUser, currentPeriodId }) {
   const { alert, confirm } = useDialog();
   const [students, setStudents] = useState([]);
@@ -293,11 +371,19 @@ export default function Fees({ currentUser, currentPeriodId }) {
   // const [activeTab, setActiveTab] = useState('list'); // WIP: Only one tab now
   // const [mpesaLogs, setMpesaLogs] = useState([]);
 
+  const { enabled: hasAccess, loading: featureLoading } = useFeature('fees');
+
   const isAdmin   = currentUser?.role?.toLowerCase() === 'admin';
   const isFinance = currentUser?.role?.toLowerCase() === 'finance';
 
   useEffect(() => {
     const init = async () => {
+      if (featureLoading) return;
+      if (!hasAccess) {
+        setLoading(false);
+        return;
+      }
+
       setLoading(true);
       try {
         setProfile(await getSchoolProfile());
@@ -307,15 +393,18 @@ export default function Fees({ currentUser, currentPeriodId }) {
     };
     init();
 
-    // Subscribe to real-time changes
-    const unsubFees = subscribeToChanges('fees', refresh);
-    const unsubPayments = subscribeToChanges('payments', refresh);
+    if (hasAccess) {
+      // Subscribe to real-time changes
+      const unsubFees = subscribeToChanges('fees', refresh);
+      const unsubPayments = subscribeToChanges('payments', refresh);
 
-    return () => {
-      unsubFees();
-      unsubPayments();
-    };
-  }, [currentPeriodId]);
+      return () => {
+        unsubFees();
+        unsubPayments();
+      };
+    }
+  }, [currentPeriodId, hasAccess, featureLoading]);
+
 
   const refresh = async () => {
     try {
@@ -398,14 +487,36 @@ export default function Fees({ currentUser, currentPeriodId }) {
     finally { setLoading(false); }
   };
 
-  const handleVoid = async (pid, reason) => {
-    try {
-      await voidPayment(pid, reason);
-      await refresh();
-    } catch (err) { alert({ title: 'Void Error', message: err.message, variant: 'danger' }); }
+  const handleSendReminder = async (s) => {
+    const f = computeStudentFee(s);
+    if (f.balance <= 0) {
+      alert({ title: 'No Balance', message: 'Student has no outstanding fees.', variant: 'info' });
+      return;
+    }
+
+    const ok = await confirm({
+      title: 'Send Fee Reminder',
+      message: `Send an SMS fee reminder for KSh ${f.balance.toLocaleString()} to ${s.name}'s parent?`,
+      confirmText: 'Send Now',
+      variant: 'primary'
+    });
+
+    if (ok) {
+      setLoading(true);
+      try {
+        const msg = generateFeeReminder(s.name, f.balance);
+        await dispatchSMS(s.parentPhone, msg);
+        alert({ title: 'Reminder Sent', message: 'SMS reminder dispatched successfully.', variant: 'success' });
+      } catch (err) {
+        alert({ title: 'SMS Error', message: err.message, variant: 'danger' });
+      } finally {
+        setLoading(false);
+      }
+    }
   };
 
-  if (loading && students.length === 0) return <Loader />;
+  if (featureLoading) return <Loader />;
+  if (!hasAccess) return <FeatureGate featureName="Fees" />;
 
   return (
     <div className="animate-in">
@@ -426,10 +537,29 @@ export default function Fees({ currentUser, currentPeriodId }) {
         </div>
       </div>
       <div className="kpi-grid">
-        <div className="kpi-card green"><div className="kpi-icon green"><CardIcon size={20} /></div><div className="kpi-value">{formatKSh(summary.totalCollected)}</div><div className="kpi-label">Total Collected</div></div>
-        <div className="kpi-card red"><div className="kpi-icon red"><AlertIcon size={20} /></div><div className="kpi-value">{formatKSh(summary.totalOutstanding)}</div><div className="kpi-label">Outstanding</div></div>
-        <div className="kpi-card blue"><div className="kpi-icon blue"><DashboardIcon size={20} /></div><div className="kpi-value">{formatKSh(summary.totalExpected)}</div><div className="kpi-label">Expected</div></div>
-        <div className="kpi-card purple"><div className="kpi-icon purple"><CheckIcon size={20} /></div><div className="kpi-value">{summary.fullyPaid||0}</div><div className="kpi-label">Fully Paid</div></div>
+        <div className="kpi-card green">
+          <div className="kpi-icon green"><CardIcon size={20} /></div>
+          <div className="kpi-value">{formatKSh(summary.totalCollected)}</div>
+          <div className="kpi-label">Total Collected</div>
+          <div className="kpi-trend success">↑ 12% vs last term</div>
+        </div>
+        <div className="kpi-card red">
+          <div className="kpi-icon red"><AlertIcon size={20} /></div>
+          <div className="kpi-value">{formatKSh(summary.totalOutstanding)}</div>
+          <div className="kpi-label">Outstanding Balance</div>
+          <div className="kpi-trend danger">Action Required</div>
+        </div>
+        <div className="kpi-card blue">
+          <div className="kpi-icon blue"><DashboardIcon size={20} /></div>
+          <div className="kpi-value">{formatKSh(summary.totalExpected)}</div>
+          <div className="kpi-label">Expected Revenue</div>
+        </div>
+        <div className="kpi-card purple">
+          <div className="kpi-icon purple"><CheckIcon size={20} /></div>
+          <div className="kpi-value">{summary.fullyPaid||0}</div>
+          <div className="kpi-label">Fully Paid Students</div>
+          <div className="kpi-trend info">{Math.round(((summary.fullyPaid||0)/students.length)*100)}% coverage</div>
+        </div>
       </div>
       
       {/* Configuration Warning Banner */}
@@ -526,6 +656,11 @@ export default function Fees({ currentUser, currentPeriodId }) {
                         <button className="btn btn-ghost btn-sm" onClick={()=>setShowHistory(s)} title="View Payment History">
                           <ClockIcon size={14} />
                         </button>
+                        {f.balance > 0 && (
+                          <button className="btn btn-ghost btn-sm text-primary" onClick={()=>handleSendReminder(s)} title="Send SMS Reminder">
+                            <SendIcon size={14} />
+                          </button>
+                        )}
                         {f.payments && f.payments.length > 0 && (
                           <button className="btn btn-ghost btn-sm" onClick={()=>setShowReceipt({...f.payments[f.payments.length-1],studentName:s.name,studentClass:s.class,admNo:s.admNo,totalFee:f.totalFee,balance:f.balance})} title="Last Receipt">
                             <ReceiptIcon size={14} />

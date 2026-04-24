@@ -11,6 +11,7 @@ import {
 } from '../components/CommonIcons';
 import { useDialog } from '../contexts/DialogContext';
 import Select from '../components/Common/Select';
+import SkeletonTable from '../components/Common/SkeletonTable';
 import StudentImporter from '../components/StudentImporter';
 import { Helmet } from 'react-helmet-async';
 
@@ -30,6 +31,8 @@ export default function Students({ currentUser, currentPeriodId }) {
   const [search, setSearch]           = useState('');
   const [classFilter, setClassFilter] = useState('All');
   const [streamFilter, setStreamFilter] = useState('All');
+  const [genderFilter, setGenderFilter] = useState('All');
+  const [feeFilter, setFeeFilter] = useState('All');
   const [statusFilter, setStatusFilter] = useState('Active');
   const [showModal, setShowModal]     = useState(false);
   const [showImportModal, setShowImportModal] = useState(false);
@@ -83,7 +86,19 @@ export default function Students({ currentUser, currentPeriodId }) {
     const matchSearch = (!q || (s.name||'').toLowerCase().includes(q) || (s.admNo||'').toLowerCase().includes(q) || (s.parentPhone||'').includes(q));
     const matchClass = (classFilter === 'All' || s.class === classFilter);
     const matchStream = (streamFilter === 'All' || s.stream === streamFilter);
-    return matchStatus && matchSearch && matchClass && matchStream;
+    const matchGender = (genderFilter === 'All' || s.gender === genderFilter);
+    
+    let matchFee = true;
+    if (feeFilter !== 'All') {
+      const fd = fees[s.id] || {};
+      const cv = profile.gradeFees?.[s.class];
+      const cf = typeof cv === 'object' ? (Number(cv[(s.residenceType || 'day').toLowerCase()]) || Number(cv.day) || TERM_FEE) : (Number(cv) || TERM_FEE);
+      const b = fd.balance !== undefined ? fd.balance : cf;
+      if (feeFilter === 'Cleared') matchFee = b <= 0;
+      if (feeFilter === 'Owing') matchFee = b > 0;
+    }
+    
+    return matchStatus && matchSearch && matchClass && matchStream && matchGender && matchFee;
   });
 
   const handleSave = async (st) => {
@@ -152,8 +167,6 @@ export default function Students({ currentUser, currentPeriodId }) {
   const initials = (n='') => n.split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase();
   const pal = ['#0EA5E9','#8B5CF6','#10B981','#F59E0B','#EF4444','#F97316'];
   const avBg  = (n='') => pal[n.charCodeAt(0) % pal.length];
-
-  if (loading && students.length === 0) return <Loader />;
 
   return (
     <div className="animate-in">
@@ -247,9 +260,40 @@ export default function Students({ currentUser, currentPeriodId }) {
                 style={{ minWidth: 130 }}
               />
             </div>
+            <div style={{width:1,height:20,background:'var(--border)',flexShrink:0}}/>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+              <span style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-light)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Gender</span>
+              <Select 
+                value={genderFilter} 
+                onChange={e => setGenderFilter(e.target.value)}
+                options={[
+                  { id: 'All', label: 'All' },
+                  { id: 'Male', label: 'Male' },
+                  { id: 'Female', label: 'Female' }
+                ]}
+                style={{ minWidth: 100 }}
+              />
+            </div>
+            <div style={{width:1,height:20,background:'var(--border)',flexShrink:0}}/>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+              <span style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-light)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Fees</span>
+              <Select 
+                value={feeFilter} 
+                onChange={e => setFeeFilter(e.target.value)}
+                options={[
+                  { id: 'All', label: 'Any Status' },
+                  { id: 'Cleared', label: 'Cleared' },
+                  { id: 'Owing', label: 'With Balance' }
+                ]}
+                style={{ minWidth: 130 }}
+              />
+            </div>
           </div>
         </div>
-        <div style={{opacity:loading?0.6:1}}>
+        <div style={{opacity:loading && students.length > 0 ? 0.6 : 1}}>
+          {loading && students.length === 0 ? (
+            <SkeletonTable rows={10} columns={7} />
+          ) : (
           <table className="data-table responsive-table">
             <thead>
               <tr>
@@ -371,6 +415,7 @@ export default function Students({ currentUser, currentPeriodId }) {
               })}
             </tbody>
           </table>
+          )}
         </div>
       </div>
 

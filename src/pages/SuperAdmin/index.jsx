@@ -22,7 +22,9 @@ import {
   deleteSchool, repairSchoolProfile, getDiscoveryMetrics, deactivateSchool,
   getTeachersBySchool, deleteTeacher,
   wipeAllNonAdminSchools,
-  setCurrentSchoolContext, setCurrentPeriodId
+  setCurrentSchoolContext, setCurrentPeriodId,
+  getPlatformUsageStats, getPlatformSchoolProfiles,
+  getGlobalAuditLogs
 } from '../../data/store';
 
 // Components
@@ -33,14 +35,10 @@ import Select           from '../../components/Common/Select';
 // Tabs
 import OverviewTab        from './tabs/OverviewTab';
 import SchoolsTab         from './tabs/SchoolsTab';
-import PaymentsTab        from './tabs/PaymentsTab';
-import PaymentHistoryTab  from './tabs/PaymentHistoryTab';
-import SubscriptionsTab   from './tabs/SubscriptionsTab';
-import RevenueTab         from './tabs/RevenueTab';
+import SchoolDetailTab    from './tabs/SchoolDetailTab';
 import ActivityTab        from './tabs/ActivityTab';
 import SettingsTab        from './tabs/SettingsTab';
-import RecoveryTab        from './tabs/RecoveryTab';
-import SecurityTab        from './tabs/SecurityTab';
+import AdminsTab          from './tabs/AdminsTab';
 import { CrossIcon } from '../../components/CommonIcons';
 
 // Modals
@@ -82,6 +80,7 @@ export default function SuperAdmin({ currentUser, isPlatformAdmin, sidebarOpen, 
   const [allPayments,     setAllPayments]     = useState([]);
   const [schools,         setSchools]         = useState([]);
   const [activity,        setActivity]        = useState([]);
+  const [auditLogs,       setAuditLogs]       = useState([]);
   const [settings,        setSettings]        = useState({});
   const [pStats,          setPStats]          = useState(null);
   const [loading,         setLoading]         = useState(true);
@@ -183,31 +182,24 @@ export default function SuperAdmin({ currentUser, isPlatformAdmin, sidebarOpen, 
           const rawSchools = await getAllSchools();
 
           // Per-school stats aggregation
-          let userCounts = {};
-          let studentCounts = {};
           try {
-            const [{ data: allUsers }, { data: allStudents }] = await Promise.all([
-              supabase.from('users').select('school_id'),
-              supabase.from('students').select('school_id')
-            ]);
-            if (allUsers) allUsers.forEach(u => { if (u.school_id) userCounts[u.school_id] = (userCounts[u.school_id] || 0) + 1; });
-            if (allStudents) allStudents.forEach(s => { if (s.school_id) studentCounts[s.school_id] = (studentCounts[s.school_id] || 0) + 1; });
-          } catch (e) { console.warn('Could not fetch usage counts', e); }
+            const { userCounts, studentCounts } = await getPlatformUsageStats();
+            let enriched = rawSchools
+              .filter(s => !s.name?.toLowerCase().includes('shulesoft hq')) // 1. EXCLUDE PLATFORM HQ
+              .map(s => ({
+                ...s,
+                _staffCount: userCounts[s.id] || 0,
+                _studentCount: studentCounts[s.id] || 0
+              }));
+            setSchools(enriched);
+          } catch (e) {
+            console.warn('Could not fetch usage counts', e);
+            setSchools(rawSchools.filter(s => !s.name?.toLowerCase().includes('shulesoft hq')));
+          }
 
-          const enriched = rawSchools
-            .filter(s => !s.name?.toLowerCase().includes('shulesoft hq')) // 1. EXCLUDE PLATFORM HQ
-            .map(s => ({
-              ...s,
-              _staffCount: userCounts[s.id] || 0,
-              _studentCount: studentCounts[s.id] || 0
-            }));
-          setSchools(enriched);
-
-          // Optional profile merge (catches anything the join missed)
+          // Optional profile merge
           try {
-            // Using safe columns to avoid 400 mismatch errors (matched to migration.sql)
-            const cols = 'id, school_id, school_name, motto, phone, email, address, logo, subscription_plan';
-            const { data: profiles } = await supabase.from('school_profiles').select(cols);
+            const profiles = await getPlatformSchoolProfiles();
             
             if (profiles?.length > 0) {
               setSchools(prevSchools => prevSchools.map(s => {
@@ -226,6 +218,7 @@ export default function SuperAdmin({ currentUser, isPlatformAdmin, sidebarOpen, 
           } catch (e) { console.warn('SuperAdmin: Could not fetch profiles', e); }
         })(),
         fetch(getPlatformActivities, setActivity,      []),
+        fetch(getGlobalAuditLogs,    setAuditLogs,     []),
         fetch(getPlatformStats,      setPStats,         null),
         fetch(getDiscoveryMetrics,   setDiscoveryMeta,  { orphans: [], legacy: [] }),
       ]);
@@ -359,6 +352,9 @@ export default function SuperAdmin({ currentUser, isPlatformAdmin, sidebarOpen, 
   );
   const filteredPayments = pendingPayments.filter(p =>
     !q || p.school_profiles?.school_name?.toLowerCase().includes(q) || p.transaction_code?.toLowerCase().includes(q)
+  );
+  const filteredAuditLogs = auditLogs.filter(a =>
+    !q || a.action?.toLowerCase().includes(q) || a.actor_email?.toLowerCase().includes(q) || a.schools?.name?.toLowerCase().includes(q)
   );
 
   // ══ REVENUE CHART DATA ═════════════════════════════════════════════════
@@ -771,7 +767,13 @@ export default function SuperAdmin({ currentUser, isPlatformAdmin, sidebarOpen, 
 
   const handleLoginAs = async (school) => {
     try {
-      // 1. Get the current active period for this school
+      // 1. Server-side check: Verify this user is genuinely a Platform Admin
+      const { data: shadowCheck, error: shadowErr } = await supabase.functions.invoke('validate-shadow-session');
+      if (shadowErr || !shadowCheck?.isValid) {
+        throw new Error('Shadow mode access denied: Platform Admin verification failed.');
+      }
+
+      // 2. Get the current active period for this school
       const { data: period } = await supabase
         .from('academic_periods')
         .select('id')
@@ -779,18 +781,18 @@ export default function SuperAdmin({ currentUser, isPlatformAdmin, sidebarOpen, 
         .eq('is_active', true)
         .maybeSingle();
 
-      // 2. Set the context in store
+      // 3. Set the context in store
       setCurrentSchoolContext(school.id, currentUser);
       if (period) {
         setCurrentPeriodId(period.id);
       }
 
-      // 3. Persist in session for the app to pick up on reload
+      // 4. Persist in session for the app to pick up on reload
       sessionStorage.setItem('shulesoft_school_id', school.id);
       if (period) sessionStorage.setItem('shulesoft_period_id', period.id);
       sessionStorage.setItem('shulesoft_acting_as_admin', 'true');
 
-      // 4. Force redirect to dashboard
+      // 5. Force redirect to dashboard
       window.location.href = '/dashboard';
     } catch (err) {
       setMessage({ type: 'error', text: 'Login As failed: ' + err.message });
@@ -814,16 +816,12 @@ export default function SuperAdmin({ currentUser, isPlatformAdmin, sidebarOpen, 
 
   // ══ NAV ITEMS ═════════════════════════════════════════════════════════
   const navItems = [
-    { id:'overview',      cls:'ni-v', label:'Overview',        icon: <CardIcon size={15} /> },
+    { id:'overview',      cls:'ni-v', label:'Dashboard',       icon: <CardIcon size={15} /> },
     { id:'schools',       cls:'ni-t', label:'Schools',         icon: <SchoolIcon size={15} /> },
-    { id:'payments',      cls:'ni-a', label:'Payments',        icon: <CardIcon size={15} /> },
-    { id:'history',       cls:'ni-s', label:'Payment History', icon: <ClockIcon size={15} /> },
-    { id:'subscriptions', cls:'ni-s', label:'Subscriptions',   icon: <RocketIcon size={15} /> },
-    { id:'revenue',       cls:'ni-v', label:'Revenue',         icon: <CardIcon size={15} /> },
-    { id:'activity',      cls:'ni-t', label:'Activity Log',    icon: <ClockIcon size={15} /> },
-    { id:'security',      cls:'ni-v', label:'Security',        icon: <ShieldIcon size={15} /> },
-    { id:'config',        cls:'ni-d', label:'Settings',        icon: <ShieldIcon size={15} /> },
-    { id:'recovery',      cls:'ni-r', label:'Data Recovery',   icon: <ShieldIcon size={15} /> },
+    { id:'features',      cls:'ni-a', label:'Features',        icon: <RocketIcon size={15} /> },
+    { id:'admins',        cls:'ni-s', label:'Admins',          icon: <ShieldIcon size={15} /> },
+    { id:'activity',      cls:'ni-t', label:'Audit Log',       icon: <ClockIcon size={15} /> },
+    { id:'config',        cls:'ni-d', label:'System Settings', icon: <ShieldIcon size={15} /> },
   ];
 
   const expiryInfo = calcExpiry(subEndDate);
@@ -837,6 +835,7 @@ export default function SuperAdmin({ currentUser, isPlatformAdmin, sidebarOpen, 
     recentSchools, approvedPayments, expiredSchools, isSchoolActive,
     showFilter, setShowFilter, filterStatus, setFilterStatus,
     periodFilter, setPeriodFilter,
+    filteredAuditLogs,
   };
 
   // ════════ RENDER ════════════════════════════════════════════════════════════
@@ -971,15 +970,23 @@ export default function SuperAdmin({ currentUser, isPlatformAdmin, sidebarOpen, 
 
             {loading ? <SuperAdminLoader /> : (
               <>
-                {activeTab === 'overview'      && <OverviewTab       {...commonProps} revChartRef={revChartRef} growChartRef={growChartRef} subChartRef={subChartRef} weekChartRef={weekChartRef} />}
-                {activeTab === 'schools'       && <SchoolsTab        {...commonProps} handleBulkActivate={handleBulkActivate} handleBulkDeactivate={handleBulkDeactivate} handleDeactivate={handleDeactivate} handleRowDeleteSchool={handleRowDeleteSchool} handleOpenStaffModal={handleOpenStaffModal} setActivateModal={setActivateModal} setPayMethod={setPayMethod} setPayRef={setPayRef} setActivateSuccess={setActivateSuccess} setPlanModal={setPlanModal} setChosenPlan={setChosenPlan} onNEMISExport={setNemisSchool} handleLoginAs={handleLoginAs} />}
-                {activeTab === 'payments'      && <PaymentsTab       {...commonProps} handleApprove={handleApprove} handleReject={handleReject} payChartRef={payChartRef} />}
-                {activeTab === 'history'       && <PaymentHistoryTab allPayments={allPayments} historyStatusFilter={historyStatusFilter} setHistoryStatusFilter={setHistoryStatusFilter} historySchoolFilter={historySchoolFilter} setHistorySchoolFilter={setHistorySchoolFilter} />}
-                {activeTab === 'subscriptions' && <SubscriptionsTab  {...commonProps} settings={settings} subBreakRef={subBreakRef} />}
-                {activeTab === 'revenue'       && <RevenueTab        {...commonProps} revPeriod={revPeriod} setRevPeriod={setRevPeriod} revPeriodLabel={revPeriodLabel} revBigRef={revBigRef} />}
-                {activeTab === 'activity'      && <ActivityTab       filteredActivity={filteredActivity} />}
-                {activeTab === 'config'        && <SettingsTab       gwInstructions={gwInstructions} setGwInstructions={setGwInstructions} statusMsg={statusMsg} setStatusMsg={setStatusMsg} subEndDate={subEndDate} setSubEndDate={setSubEndDate} plans={plans} setPlans={setPlans} smsConfig={smsConfig} setSmsConfig={setSmsConfig} mpesaConfig={mpesaConfig} setMpesaConfig={setMpesaConfig} priceSaved={priceSaved} setPriceSaved={setPriceSaved} handleUpdateSetting={handleUpdateSetting} updatePlatformSetting={updatePlatformSetting} loadData={loadData} setMessage={setMessage} onWipeSchools={handleWipeSchools} />}
-                {activeTab === 'recovery'      && <RecoveryTab       discoveryMeta={discoveryMeta} repairingId={repairingId} handleRepair={handleRepair} />}
+                {planModal ? (
+                  <SchoolDetailTab
+                    school={{ id: planModal.schoolId, name: planModal.schoolName }}
+                    onBack={() => setPlanModal(null)}
+                    setActivateModal={setActivateModal}
+                    handleRowDeleteSchool={handleRowDeleteSchool}
+                  />
+                ) : (
+                  <>
+                    {activeTab === 'overview' && <OverviewTab {...commonProps} revChartRef={revChartRef} growChartRef={growChartRef} subChartRef={subChartRef} weekChartRef={weekChartRef} />}
+                    {activeTab === 'schools' && <SchoolsTab {...commonProps} handleBulkActivate={handleBulkActivate} handleBulkDeactivate={handleBulkDeactivate} handleDeactivate={handleDeactivate} handleRowDeleteSchool={handleRowDeleteSchool} handleOpenStaffModal={handleOpenStaffModal} setActivateModal={setActivateModal} setPayMethod={setPayMethod} setPayRef={setPayRef} setActivateSuccess={setActivateSuccess} setPlanModal={setPlanModal} setChosenPlan={setChosenPlan} onNEMISExport={setNemisSchool} handleLoginAs={handleLoginAs} />}
+                    {activeTab === 'features' && <div className="panel" style={{marginTop:20}}><h3>Features Registry</h3><p style={{ color: 'var(--sub)' }}>Manage all available platform features here. This allows defining new modules that can be toggled per school.</p></div>}
+                    {activeTab === 'admins' && <AdminsTab />}
+                    {activeTab === 'activity' && <ActivityTab filteredActivity={filteredActivity} filteredAuditLogs={filteredAuditLogs} />}
+                    {activeTab === 'config' && <SettingsTab gwInstructions={gwInstructions} setGwInstructions={setGwInstructions} statusMsg={statusMsg} setStatusMsg={setStatusMsg} subEndDate={subEndDate} setSubEndDate={setSubEndDate} plans={plans} setPlans={setPlans} smsConfig={smsConfig} setSmsConfig={setSmsConfig} mpesaConfig={mpesaConfig} setMpesaConfig={setMpesaConfig} priceSaved={priceSaved} setPriceSaved={setPriceSaved} handleUpdateSetting={handleUpdateSetting} updatePlatformSetting={updatePlatformSetting} loadData={loadData} setMessage={setMessage} onWipeSchools={handleWipeSchools} />}
+                  </>
+                )}
 
                 {/* Footer */}
                 <div style={{ padding:'24px 0 6px', textAlign:'center', opacity:.2, borderTop:'1px solid var(--edge)', marginTop:20 }}>

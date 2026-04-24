@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { supabase } from '../lib/supabase';
 import { useNavigate, Link } from 'react-router-dom';
 import { EyeIcon, EyeOffIcon } from '../components/CommonIcons';
+import { Helmet } from 'react-helmet-async';
 
 const ResetPassword = () => {
     const [password, setPassword] = useState('');
@@ -44,6 +45,10 @@ const ResetPassword = () => {
 
     return (
         <div className="login-page">
+            <Helmet>
+                <title>Reset Password | ShuleSoft</title>
+                <meta name="description" content="Set a new password for your ShuleSoft school management account." />
+            </Helmet>
             <div className="card">
                 {/* RIGHT PANEL - VISUALS */}
                 <div className="right-panel">

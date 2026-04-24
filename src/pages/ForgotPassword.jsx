@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { supabase } from '../lib/supabase';
 import { Link } from 'react-router-dom';
+import { Helmet } from 'react-helmet-async';
 
 const ForgotPassword = () => {
     const [email, setEmail] = useState('');
@@ -46,6 +47,10 @@ const ForgotPassword = () => {
 
     return (
         <div className="login-page">
+            <Helmet>
+                <title>Forgot Password | ShuleSoft</title>
+                <meta name="description" content="Reset your ShuleSoft account password. Enter your email to receive a secure recovery link." />
+            </Helmet>
             <div className="card">
                 {/* RIGHT PANEL - VISUALS */}
                 <div className="right-panel">

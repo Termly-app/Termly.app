@@ -1,13 +1,21 @@
 import React from 'react';
 import { RocketIcon, CheckIcon, CardIcon, GraduationIcon, ClockIcon, BookIcon, MessageIcon, UsersIcon, TeacherIcon } from './CommonIcons';
+import { SettingsIcon } from './Common/Icons';
 import { useNavigate } from 'react-router-dom';
 
 /**
- * Redesigned PricingUpgrade Component
- * Provides a high-end, 'WOW' experience for Sandbox users encountering locked features.
+ * PricingUpgrade Component
+ * 
+ * Two modes:
+ * 1. Sandbox users → Premium upgrade CTA (navigate to /billing)
+ * 2. Paid users with module disabled by admin → "Module Disabled" notice (navigate to /settings)
  */
-export default function PricingUpgrade({ featureName, requiredPlan = "Professional Plan" }) {
+export default function PricingUpgrade({ featureName, requiredPlan = "Professional Plan", profile }) {
   const navigate = useNavigate();
+
+  // Determine if this is a paid user who just has the module turned off
+  const planName = profile?.subscriptionPlan?.toLowerCase() || 'sandbox';
+  const isPaidUser = planName !== 'sandbox' && planName !== '';
 
   const featureDetails = {
     'Fees': {
@@ -69,6 +77,145 @@ export default function PricingUpgrade({ featureName, requiredPlan = "Profession
     color: '#6366F1'
   };
 
+  // ═══════════════════════════════════════════════════════════════════
+  // PAID USER — MODULE DISABLED BY ADMINISTRATOR
+  // ═══════════════════════════════════════════════════════════════════
+  if (isPaidUser) {
+    return (
+      <div className="upgrade-container animate-in" style={{
+        minHeight: '80vh',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: '40px 20px',
+        background: 'transparent'
+      }}>
+        <div style={{
+          maxWidth: 640,
+          width: '100%',
+          background: 'rgba(255, 255, 255, 0.85)',
+          backdropFilter: 'blur(20px) saturate(180%)',
+          WebkitBackdropFilter: 'blur(20px) saturate(180%)',
+          borderRadius: 32,
+          border: '1px solid rgba(255, 255, 255, 0.4)',
+          boxShadow: '0 25px 60px rgba(0,0,0,0.12)',
+          overflow: 'hidden',
+          position: 'relative'
+        }}>
+          {/* Amber accent bar */}
+          <div style={{ height: 8, background: 'linear-gradient(90deg, #F59E0B 0%, #EAB308 100%)', width: '100%' }}></div>
+
+          <div style={{ padding: '60px 50px', position: 'relative', zIndex: 10, textAlign: 'center' }}>
+            <div style={{
+              width: 96, height: 96,
+              background: 'rgba(245, 158, 11, 0.1)',
+              color: '#F59E0B',
+              borderRadius: 24,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              margin: '0 auto 28px',
+              border: '1.5px solid rgba(245, 158, 11, 0.2)',
+              boxShadow: '0 12px 30px rgba(245, 158, 11, 0.1)'
+            }}>
+              <SettingsIcon size={48} />
+            </div>
+
+            <div style={{
+              display: 'inline-block',
+              padding: '6px 14px',
+              background: 'rgba(245, 158, 11, 0.1)',
+              color: '#B45309',
+              borderRadius: 20,
+              fontSize: '0.72rem',
+              fontWeight: 800,
+              textTransform: 'uppercase',
+              letterSpacing: '0.12em',
+              marginBottom: 16
+            }}>
+              Module Not Active
+            </div>
+
+            <h1 style={{
+              fontSize: '2.2rem',
+              fontWeight: 900,
+              color: '#0F172A',
+              letterSpacing: '-1px',
+              marginBottom: 16
+            }}>
+              {featureName} is Disabled
+            </h1>
+
+            <p style={{
+              fontSize: '1.05rem',
+              lineHeight: 1.7,
+              color: '#475569',
+              maxWidth: 480,
+              margin: '0 auto 12px'
+            }}>
+              Your <strong style={{ color: '#0F172A' }}>{profile?.subscriptionPlan || 'paid'}</strong> plan includes this module. 
+              It just needs to be enabled in your school's System Settings.
+            </p>
+
+            <p style={{
+              fontSize: '0.85rem',
+              color: '#94A3B8',
+              marginBottom: 40
+            }}>
+              Ask your school administrator to enable this module, or go to Settings → Module Management.
+            </p>
+
+            <div style={{ display: 'flex', gap: 16, justifyContent: 'center', flexWrap: 'wrap' }}>
+              <button
+                onClick={() => navigate('/settings')}
+                className="btn"
+                style={{
+                  background: '#F59E0B',
+                  color: '#fff',
+                  padding: '16px 36px',
+                  fontSize: '1.05rem',
+                  fontWeight: 700,
+                  borderRadius: 16,
+                  boxShadow: '0 10px 25px rgba(245, 158, 11, 0.35)',
+                  transition: 'all 0.2s ease'
+                }}
+              >
+                Enable in Settings
+              </button>
+              <button
+                onClick={() => navigate('/dashboard')}
+                className="btn btn-ghost"
+                style={{
+                  padding: '16px 36px',
+                  fontSize: '1.05rem',
+                  fontWeight: 600,
+                  borderRadius: 16,
+                  background: 'rgba(0,0,0,0.05)',
+                  color: '#475569'
+                }}
+              >
+                Back to Dashboard
+              </button>
+            </div>
+          </div>
+
+          {/* Decorative background */}
+          <div style={{
+            position: 'absolute',
+            top: -120, right: -120,
+            width: 250, height: 250,
+            background: 'rgba(245, 158, 11, 0.08)',
+            filter: 'blur(80px)',
+            borderRadius: '50%'
+          }}></div>
+        </div>
+      </div>
+    );
+  }
+
+  // ═══════════════════════════════════════════════════════════════════
+  // SANDBOX USER — UPGRADE CTA
+  // ═══════════════════════════════════════════════════════════════════
   return (
     <div className="upgrade-container animate-in" style={{
       minHeight: '80vh',

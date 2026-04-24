@@ -96,17 +96,18 @@ export default function PremiumLayout({ children }) {
             </ul>
           </div>
           <div className="ft-col">
-            <h4 className="ft-h">Kaulani Corp</h4>
+            <h4 className="ft-h">ShuleSoft HQ</h4>
             <ul className="ft-links">
-              <li><Link to="/about">About Us</Link></li>
-              <li><Link to="/security-trust">Security & Trust</Link></li>
-              <li><a href="#">Blog</a></li>
+              <li><Link to="/about">About</Link></li>
+              <li><Link to="/contact">Contact</Link></li>
+              <li><Link to="/legal/privacy">Privacy</Link></li>
+              <li><Link to="/legal/terms">Terms</Link></li>
             </ul>
           </div>
 
         </div>
-        <div className="ft-bottom">
-          <span className="ft-copy">© 2025 Kaulani Corp · Made in Nairobi, Kenya</span>
+        <div className="ft-btm">
+          <span className="ft-copy">© 2025 ShuleSoft HQ · Made in Nairobi, Kenya</span>
           <div className="ft-b-links">
              <span>All rights reserved.</span>
           </div>

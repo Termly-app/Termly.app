@@ -1,8 +1,15 @@
 import PremiumLayout from '../components/PremiumLayout';
+import { Helmet } from 'react-helmet-async';
 
 export default function AboutUs() {
   return (
     <PremiumLayout>
+      <Helmet>
+        <title>About Us | ShuleSoft — Digitizing Kenyan Education</title>
+        <meta name="description" content="ShuleSoft is an operating system for the future of Kenyan schools. Learn about our mission to digitize education management across Kenya." />
+        <meta name="keywords" content="ShuleSoft, about, Kenya education technology, school management, CBC, ShuleSoft HQ" />
+        <link rel="canonical" href="https://shulesoft.com/about" />
+      </Helmet>
       <section className="section">
         <div className="sec-head reveal">
           <div className="eyebrow">Our Story</div>
@@ -18,7 +25,7 @@ export default function AboutUs() {
 
           <div className="fc reveal reveal-delay-1">
             <div className="fc-title">The ShuleSoft Mission</div>
-            <p className="fc-desc">ShuleSoft was developed by Kaulani Corp with a simple goal: to build software that understands the Kenyan context. From CBC compliance to M-Pesa integration, we build for the real-world needs of Kenyan educators.</p>
+            <p className="fc-desc">ShuleSoft was developed with a simple goal: to build software that understands the Kenyan context. From CBC compliance to M-Pesa integration, we build for the real-world needs of Kenyan educators.</p>
           </div>
 
           <div className="fc reveal reveal-delay-2">

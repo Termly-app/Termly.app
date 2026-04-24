@@ -4,7 +4,7 @@ import {
   getStudents, getFeeSummary, getAttendanceSummary, getTodayStr,
   getFees, getSchoolStructure, getTeachers, getSchoolProfile,
   getMarks, getAttendance, subscribeToChanges, getUsers, getPlatformSettings,
-  getPeriods, setActivePeriod, checkIsSubscriptionActive
+  getPeriods, setActivePeriod, checkIsSubscriptionActive, getPortalActivity
 } from '../data/store';
 import Loader from '../components/Common/Loader';
 import {
@@ -13,6 +13,7 @@ import {
   LeafIcon, GraduationIcon, ChevronDownIcon, CheckIcon
 } from '../components/CommonIcons';
 import SetupWizard from '../components/SetupWizard';
+import SyncIndicator from '../components/Common/SyncIndicator';
 import { Helmet } from 'react-helmet-async';
 import Select from '../components/Common/Select';
 
@@ -28,10 +29,10 @@ export default function Dashboard({ currentUser, onLogout, currentPeriodId }) {
     const loadData = async () => {
       try {
         const wrap = (p, fb = []) => p.catch(e => { console.error(e); return fb; });
-        const [students, fees, marks, teachers, profile, attendance, adminUsers, platformSettings, allPeriods] = await Promise.all([
+        const [students, fees, marks, teachers, profile, attendance, adminUsers, platformSettings, allPeriods, portalActivity] = await Promise.all([
           wrap(getStudents()), wrap(getFees(), {}), wrap(getMarks(), {}), wrap(getTeachers()), 
           wrap(getSchoolProfile(), {}), wrap(getAttendance(), {}), wrap(getUsers()), 
-          wrap(getPlatformSettings(), {}), wrap(getPeriods())
+          wrap(getPlatformSettings(), {}), wrap(getPeriods()), wrap(getPortalActivity(5))
         ]);
         
         const prof = profile || {};
@@ -57,6 +58,7 @@ export default function Dashboard({ currentUser, onLogout, currentPeriodId }) {
           totalStudents: students.length, totalTeachers: teachers.length,
           collectionRate: Number(collectionRate), feeSummary,
           attendance: todayAtt, recentPayments: allPayments.slice(0, 5),
+          portalActivity: portalActivity || [],
           schoolStructure, profile: prof, adminUsers: adminUsers || [], platformSettings: platformSettings || {},
         };
         setData(newData);
@@ -230,7 +232,8 @@ export default function Dashboard({ currentUser, onLogout, currentPeriodId }) {
                   />
                 </div>
               </div>
-              <div className="inline-flex" style={{ gap: 10 }}>
+              <div className="inline-flex" style={{ gap: 10, alignItems: 'center' }}>
+                <SyncIndicator />
                 {!isAccountActive && (
                   <div style={{ background: 'rgba(239,68,68,0.1)', color: 'var(--danger)', padding: '6px 14px', borderRadius: 8, fontSize: '0.75rem', fontWeight: 700, border: '1px solid var(--danger)', display:'flex', alignItems:'center', gap:5 }}>
                     <AlertIcon size={14} /> Subscription Expired
@@ -297,9 +300,34 @@ export default function Dashboard({ currentUser, onLogout, currentPeriodId }) {
             )}
           </div>
         </div>
-
-        {/* Quick Actions removed */}
-
+        {/* Portal Activity Feed */}
+        <div className="card">
+          <div className="card-header">
+            <h3><RocketIcon size={18} /> Portal Activity</h3>
+          </div>
+          <div className="card-body" style={{ padding: 0 }}>
+            {data.portalActivity.length === 0 ? (
+              <div className="empty-state" style={{ padding: '40px 20px' }}>
+                <div className="empty-state-icon" style={{ marginBottom: 12, opacity: 0.5 }}><RocketIcon size={40} /></div>
+                <p style={{ margin: '0 0 16px 0', fontSize: '0.85rem' }}>No portal activity yet.</p>
+              </div>
+            ) : (
+              data.portalActivity.map((a, i) => (
+                <div className="activity-item" key={i} style={{ padding: '11px 18px' }}>
+                  <div className="activity-icon" style={{ background: 'var(--primary-light)', color: 'var(--primary)' }}>
+                    {a.actor_type === 'parent' ? <UserIcon size={14} /> : <TeacherIcon size={14} />}
+                  </div>
+                  <div className="activity-body">
+                    <div style={{ fontSize: '0.7rem', fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase' }}>{a.actor_name}</div>
+                    <div className="activity-title" style={{ fontSize: '0.85rem' }}>{a.action.replace(/_/g, ' ')}</div>
+                    <div className="activity-sub">{a.target_type}</div>
+                  </div>
+                  <div className="activity-time">{a.date}</div>
+                </div>
+              ))
+            )}
+          </div>
+        </div>
 
       </div>
 

@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
-import { getTeachers, addTeacher, updateTeacher, deleteTeacher, getSubjectAssignments, setAssignment, getTeacherWorkload, getTeacherPerformance, getPrintHeader, getSchoolProfile, getPlatformSettings, getUsers, setTeacherLeaveStatus, isStaffCodeAvailable } from '../data/store';
+import { getTeachers, addTeacher, updateTeacher, deleteTeacher, getTeacherWorkload, getTeacherPerformance, getPrintHeader, getSchoolProfile, getPlatformSettings, getUsers, setTeacherLeaveStatus, isStaffCodeAvailable } from '../data/store';
+import { getTeacherAssignments, assignTeacher, removeTeacherAssignment, getClassStreams } from '../data/academicsStore';
 import { sanitizeName, sanitizeString } from '../utils/sanitize';
 import Loader from '../components/Common/Loader';
 import { CBC_STRUCTURE, getSubjectsForGrade, getLevelForGrade } from '../data/seedData';
@@ -23,24 +24,27 @@ export default function Teachers({ currentUser, currentPeriodId }) {
   const [profile, setProfile] = useState({ streams: [], activeClasses: [] });
   const [settings, setSettings] = useState({});
   const [registeredUsers, setRegisteredUsers] = useState([]);
+  const [streams, setStreams] = useState([]);
   const [loading, setLoading] = useState(true);
   const { alert, confirm, toast } = useDialog();
 
   const loadData = async () => {
     setLoading(true);
     try {
-      const [tData, aData, pData, sData, uData] = await Promise.all([
+      const [tData, aData, pData, sData, uData, stData] = await Promise.all([
         getTeachers(),
-        getSubjectAssignments(),
+        getTeacherAssignments(),
         getSchoolProfile(),
         getPlatformSettings(),
-        getUsers()
+        getUsers(),
+        getClassStreams()
       ]);
       setTeachers(tData);
-      setAssignments(aData);
+      setAssignments(aData || []);
       setProfile(pData);
       setSettings(sData || {});
       setRegisteredUsers(uData || []);
+      setStreams(stData || []);
     } catch (err) {
       console.error(err);
     } finally {
@@ -52,9 +56,10 @@ export default function Teachers({ currentUser, currentPeriodId }) {
 
   const refresh = async () => {
     try {
-      const [tData, aData] = await Promise.all([getTeachers(), getSubjectAssignments()]);
+      const [tData, aData, stData] = await Promise.all([getTeachers(), getTeacherAssignments(), getClassStreams()]);
       setTeachers(tData);
-      setAssignments(aData);
+      setAssignments(aData || []);
+      setStreams(stData || []);
     } catch (err) { }
   };
 
@@ -94,9 +99,14 @@ export default function Teachers({ currentUser, currentPeriodId }) {
     }
   };
 
-  const handleAssign = async (cls, stream, sub, teacherId) => {
+  const handleAssign = async (streamId, subject, teacherId, existingAssignmentId) => {
     try { 
-      await setAssignment(cls, stream, sub, teacherId); 
+      if (!teacherId) {
+        if (existingAssignmentId) await removeTeacherAssignment(existingAssignmentId);
+      } else {
+        if (!streamId) throw new Error("Stream not initialized for this class. Promote classes in Settings.");
+        await assignTeacher(teacherId, streamId, subject);
+      }
       await refresh(); 
       toast('Class assignment updated', 'success');
     } catch(err){ alert({ title: 'Assignment Error', message: err.message, variant: 'danger' }); }
@@ -107,32 +117,16 @@ export default function Teachers({ currentUser, currentPeriodId }) {
 
   const getTeacherSubjects = (teacherId) => {
     const subs = new Set();
-    for (const [, classData] of Object.entries(assignments)) {
-      for (const [key, val] of Object.entries(classData)) {
-        if (typeof val === 'string') {
-          if (val === teacherId) subs.add(key);
-        } else {
-          for (const [sub, tid] of Object.entries(val)) {
-            if (tid === teacherId) subs.add(sub);
-          }
-        }
-      }
+    if (Array.isArray(assignments)) {
+      assignments.filter(a => a.teacher_id === teacherId && a.is_active).forEach(a => subs.add(a.subject));
     }
     return [...subs];
   };
 
   const getTeacherClasses = (teacherId) => {
     const cls = new Set();
-    for (const [clsName, classData] of Object.entries(assignments)) {
-      for (const [key, val] of Object.entries(classData)) {
-        if (typeof val === 'string') {
-          if (val === teacherId) cls.add(clsName);
-        } else {
-          for (const [, tid] of Object.entries(val)) {
-            if (tid === teacherId) cls.add(`${clsName} (${key})`);
-          }
-        }
-      }
+    if (Array.isArray(assignments)) {
+      assignments.filter(a => a.teacher_id === teacherId && a.is_active && a.stream).forEach(a => cls.add(`${a.stream.level} (${a.stream.name})`));
     }
     return [...cls];
   };
@@ -219,7 +213,7 @@ export default function Teachers({ currentUser, currentPeriodId }) {
       )}
 
       {activeTab === 'assignments' && (
-        <AssignmentsTab assignments={assignments} teachers={teachers} onAssign={handleAssign} profile={profile} />
+        <AssignmentsTab assignments={assignments} teachers={teachers} onAssign={handleAssign} profile={profile} streams={streams} />
       )}
 
       {activeTab === 'reports' && (
@@ -314,7 +308,7 @@ function RecordsTab({ teachers, search, setSearch, total, getTeacherSubjects, ge
 }
 
 // ========== ASSIGNMENTS TAB ==========
-function AssignmentsTab({ assignments, teachers, onAssign, profile }) {
+function AssignmentsTab({ assignments, teachers, onAssign, profile, streams }) {
   const activeClasses = profile.activeClasses && profile.activeClasses.length > 0 
     ? profile.activeClasses 
     : Object.values(CBC_STRUCTURE).flatMap(l => l.grades).slice(0, 10); // Default to first 10 if none active
@@ -328,8 +322,8 @@ function AssignmentsTab({ assignments, teachers, onAssign, profile }) {
   const subjects = getSubjectsForGrade(selectedClass, profile);
   const level = getLevelForGrade(selectedClass);
   const activeTeachers = teachers.filter(t => t.status === 'Active');
-  const streams = profile.streamsPerClass?.[selectedClass] || ['General'];
-  const [selectedStream, setSelectedStream] = useState(streams[0] || 'General');
+  const classStreams = profile.streamsPerClass?.[selectedClass] || ['General'];
+  const [selectedStream, setSelectedStream] = useState(classStreams[0] || 'General');
 
   useEffect(() => {
     const currentStreams = profile.streamsPerClass?.[selectedClass] || ['General'];
@@ -344,6 +338,9 @@ function AssignmentsTab({ assignments, teachers, onAssign, profile }) {
     'Junior Secondary': '#8b5cf6',
     'Senior Secondary': '#ec4899'
   };
+
+  const activeStreamRecord = streams.find(s => s.level === selectedClass && s.name === selectedStream && s.is_active);
+  const streamId = activeStreamRecord ? activeStreamRecord.id : null;
 
   return (
     <>
@@ -368,9 +365,14 @@ function AssignmentsTab({ assignments, teachers, onAssign, profile }) {
             <Select 
               value={selectedStream} 
               onChange={e => setSelectedStream(e.target.value)}
-              options={streams.map(s => ({ id: s, label: s }))}
+              options={classStreams.map(s => ({ id: s, label: s }))}
               style={{ minWidth: 120 }}
             />
+            {!streamId && (
+              <span className="badge badge-warning" style={{marginLeft: 'auto'}}>
+                Stream not initialized. <a href="/settings" style={{padding: '0 4px', fontWeight: 'bold', color: 'inherit'}}>Promote Classes</a>
+              </span>
+            )}
           </div>
         </div>
       </div>
@@ -389,26 +391,22 @@ function AssignmentsTab({ assignments, teachers, onAssign, profile }) {
             </thead>
             <tbody>
               {subjects.map(sub => {
-                let teacherId = null;
-                if (assignments[selectedClass] && assignments[selectedClass][selectedStream]) {
-                  teacherId = assignments[selectedClass][selectedStream][sub] || '';
-                } else if (assignments[selectedClass] && typeof assignments[selectedClass][sub] === 'string') {
-                  teacherId = assignments[selectedClass][sub] || ''; // legacy fallback
-                }
+                const assignment = Array.isArray(assignments) ? assignments.find(a => a.stream_id === streamId && a.subject === sub && a.is_active) : null;
+                const teacherId = assignment ? assignment.teacher_id : '';
 
-                const teacher = teachers.find(t => t.id === teacherId);
                 return (
                   <tr key={sub}>
                     <td><strong>{sub}</strong></td>
                     <td>
                       <Select 
-                        value={teacherId || ''} 
-                        onChange={e => onAssign(selectedClass, selectedStream, sub, e.target.value)}
+                        value={teacherId} 
+                        onChange={e => onAssign(streamId, sub, e.target.value, assignment?.id)}
                         options={[
                           { id: '', label: '— Unassigned —' },
                           ...activeTeachers.map(t => ({ id: t.id, label: t.name }))
                         ]}
                         style={{ minWidth: 200 }}
+                        disabled={!streamId}
                       />
                     </td>
                   </tr>
@@ -420,24 +418,21 @@ function AssignmentsTab({ assignments, teachers, onAssign, profile }) {
           {/* Mobile cards */}
           <div className="show-mobile-only" style={{ display: 'none', padding: 12 }}>
             {subjects.map(sub => {
-              let teacherId = null;
-              if (assignments[selectedClass] && assignments[selectedClass][selectedStream]) {
-                teacherId = assignments[selectedClass][selectedStream][sub] || '';
-              } else if (assignments[selectedClass] && typeof assignments[selectedClass][sub] === 'string') {
-                teacherId = assignments[selectedClass][sub] || ''; // legacy fallback
-              }
+              const assignment = Array.isArray(assignments) ? assignments.find(a => a.stream_id === streamId && a.subject === sub && a.is_active) : null;
+              const teacherId = assignment ? assignment.teacher_id : '';
 
               return (
                 <div key={sub} style={{ marginBottom: 12, padding: 12, background: 'var(--bg)', borderRadius: 8, border: '1px solid var(--border-light)' }}>
                   <div style={{ fontWeight: 600, fontSize: '0.88rem', marginBottom: 8 }}>{sub}</div>
                   <Select 
-                    value={teacherId || ''} 
-                    onChange={e => onAssign(selectedClass, selectedStream, sub, e.target.value)}
+                    value={teacherId} 
+                    onChange={e => onAssign(streamId, sub, e.target.value, assignment?.id)}
                     options={[
                       { id: '', label: '— Unassigned —' },
                       ...activeTeachers.map(t => ({ id: t.id, label: t.name }))
                     ]}
                     style={{ width: '100%' }}
+                    disabled={!streamId}
                   />
                 </div>
               );
@@ -474,7 +469,7 @@ function ReportsTab() {
       const header = await getPrintHeader();
       const printWin = window.open('', '_blank');
       const teachers = data.teachers;
-      const assignments = await getSubjectAssignments();
+      const assignments = await getTeacherAssignments();
 
       printWin.document.write(`<html><head><title>Staff Report</title>
         <style>
@@ -500,15 +495,7 @@ function ReportsTab() {
             <thead><tr><th>#</th><th>Name</th><th>Phone</th><th>Status</th><th>Assignments</th></tr></thead>
             <tbody>
               ${teachers.map((t, idx) => {
-                const subs = [];
-                for (const classData of Object.values(assignments)) {
-                  for (const streams of Object.values(classData)) {
-                    if (typeof streams === 'string') continue;
-                    for (const [sub, tid] of Object.entries(streams)) {
-                      if (tid === t.id) subs.push(sub);
-                    }
-                  }
-                }
+                const subs = assignments.filter(a => a.teacher_id === t.id && a.is_active).map(a => a.subject);
                 const uniqueSubs = [...new Set(subs)];
                 return `<tr>
                   <td>${idx+1}</td>
@@ -523,16 +510,12 @@ function ReportsTab() {
       } else if (type === 'by-class') {
         title = 'Staff per Class Assignment';
         const classMap = {};
-        for (const [cls, classData] of Object.entries(assignments)) {
-          classMap[cls] = new Set();
-          for (const streams of Object.values(classData)) {
-            if (typeof streams === 'string') continue;
-            for (const [sub, tid] of Object.entries(streams)) {
-              const t = teachers.find(teach => teach.id === tid);
-              if (t) classMap[cls].add(`${t.name} <span style="font-size: 0.8em; color: #555;">(${sub})</span>`);
-            }
-          }
-        }
+        assignments.filter(a => a.is_active && a.stream).forEach(a => {
+          const cls = `${a.stream.level} (${a.stream.name})`;
+          if (!classMap[cls]) classMap[cls] = new Set();
+          const t = teachers.find(teach => teach.id === a.teacher_id);
+          if (t) classMap[cls].add(`${t.name} <span style="font-size: 0.8em; color: #555;">(${a.subject})</span>`);
+        });
         tableContent = `
           <table>
             <thead><tr><th>Class</th><th>Assigned Teachers (Subjects)</th></tr></thead>

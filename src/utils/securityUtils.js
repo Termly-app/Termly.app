@@ -88,3 +88,70 @@ export async function decryptData(encryptedStr, schoolId) {
     return null; 
   }
 }
+
+/**
+ * Domain 16: Security Headers & CSP
+ * In a real production environment, these are usually set at the CDN/Server level (Vercel/Nginx).
+ * This function generates the <meta> tag equivalent for client-side enforcement.
+ */
+export function applySecurityHeaders() {
+  const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || '';
+  const supabaseDomain = supabaseUrl ? new URL(supabaseUrl).hostname : '';
+  
+  const csp = [
+    "default-src 'self'",
+    "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://*.africastalking.com",
+    `connect-src 'self' ${supabaseUrl} https://*.supabase.co https://*.africastalking.com https://*.safaricom.co.ke`,
+    "img-src 'self' data: https://*.supabase.co https://*.googleusercontent.com",
+    "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+    "font-src 'self' https://fonts.gstatic.com",
+    "frame-src 'none'",
+    "object-src 'none'"
+  ].join('; ');
+
+  // Inject Meta CSP
+  let meta = document.querySelector('meta[http-equiv="Content-Security-Policy"]');
+  if (!meta) {
+    meta = document.createElement('meta');
+    meta.httpEquiv = "Content-Security-Policy";
+    document.head.appendChild(meta);
+  }
+  meta.content = csp;
+
+  console.log('[SECURITY] Security headers applied (CSP Restricted).');
+}
+
+/**
+ * Domain 1: Granular RBAC Permissions
+ */
+const ROLE_PERMISSIONS = {
+  admin: ['*'], // All permissions
+  finance: [
+    'fees:read', 'fees:write', 'fees:delete',
+    'students:read',
+    'reports:read'
+  ],
+  teacher: [
+    'students:read',
+    'academics:read', 'academics:write',
+    'attendance:read', 'attendance:write',
+    'lms:read', 'lms:write'
+  ],
+  librarian: [
+    'library:read', 'library:write',
+    'students:read'
+  ],
+  parent: [
+    'portal:read',
+    'student:read'
+  ]
+};
+
+export function checkPermission(role, action) {
+  if (!role) return false;
+  const normalizedRole = role.toLowerCase();
+  const permissions = ROLE_PERMISSIONS[normalizedRole] || [];
+  
+  if (permissions.includes('*')) return true;
+  return permissions.includes(action);
+}

@@ -1,8 +1,14 @@
 import PremiumLayout from '../components/PremiumLayout';
+import { Helmet } from 'react-helmet-async';
 
 export default function FAQ() {
   return (
     <PremiumLayout>
+      <Helmet>
+        <title>FAQ | ShuleSoft — Frequently Asked Questions</title>
+        <meta name="description" content="Answers to common questions about ShuleSoft, CBC compliance, payments, offline use, data ownership, and teacher training." />
+        <link rel="canonical" href="https://shulesoft.com/faq" />
+      </Helmet>
       <section className="section">
         <div className="sec-head reveal">
           <div className="eyebrow">FAQ</div>

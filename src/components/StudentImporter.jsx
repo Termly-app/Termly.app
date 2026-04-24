@@ -1,29 +1,32 @@
 import { useState, useRef } from 'react';
+import Papa from 'papaparse';
 import { useDialog } from '../contexts/DialogContext';
-import { 
-  UploadIcon, CheckIcon, AlertIcon, DeleteIcon, EditIcon, 
-  SearchIcon, StudentIcon, XIcon, FileIcon, RefreshIcon 
+import { bulkImportStudents } from '../data/store';
+import {
+  UploadIcon, CheckIcon, AlertIcon, DeleteIcon,
+  XIcon, FileIcon
 } from './CommonIcons';
 
 export default function StudentImporter({ profile, onImport, onClose }) {
   const { alert, confirm } = useDialog();
-  const [step, setStep] = useState(1); // 1: Upload, 2: Review
+  const [step, setStep] = useState(1); // 1: Upload, 2: Review, 3: Importing, 4: Done
   const [dragActive, setDragActive] = useState(false);
   const [rawFile, setRawFile] = useState(null);
   const [data, setData] = useState([]);
   const [mappings, setMappings] = useState({});
   const [errors, setErrors] = useState([]);
+  const [progress, setProgress] = useState({ imported: 0, total: 0 });
+  const [result, setResult] = useState(null);
   const fileInputRef = useRef(null);
 
-  const REQUIRED_FIELDS = ['name', 'class'];
   const FIELD_MAP = {
-    name: ['name', 'full name', 'student name', 'learner name', 'jina'],
-    admNo: ['adm', 'admission', 'reg', 'registration', 'no', 'number'],
+    name: ['name', 'full name', 'student name', 'learner name', 'jina', 'student'],
+    admNo: ['adm', 'admission', 'reg', 'registration', 'no', 'number', 'adm no', 'admission number'],
     class: ['class', 'grade', 'level', 'form'],
-    stream: ['stream', 'house', 'extra'],
+    stream: ['stream', 'house', 'section'],
     gender: ['gender', 'sex', 'm/f'],
     parent: ['parent', 'guardian', 'father', 'mother'],
-    parentPhone: ['phone', 'contact', 'mobile', 'tel']
+    parentPhone: ['phone', 'contact', 'mobile', 'tel', 'parent phone']
   };
 
   const handleDrag = (e) => {
@@ -44,69 +47,67 @@ export default function StudentImporter({ profile, onImport, onClose }) {
 
   const processFile = (file) => {
     setRawFile(file);
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      const text = e.target.result;
-      parseCSV(text);
-    };
-    reader.readAsText(file);
-  };
-
-  const parseCSV = async (text) => {
-    const lines = text.split(/\r?\n/).filter(line => line.trim());
-    if (lines.length < 2) {
-      await alert({ 
-        title: 'Empty File', 
-        message: 'The uploaded file is too short or empty. Please check your CSV data.', 
-        variant: 'warning' 
-      });
-      return;
-    }
-
-    const headers = lines[0].split(',').map(h => h.trim().toLowerCase());
-    const newMappings = {};
-    
-    // Fuzzy matching
-    Object.keys(FIELD_MAP).forEach(field => {
-      const match = headers.findIndex(h => FIELD_MAP[field].some(syn => h.includes(syn)));
-      if (match !== -1) newMappings[field] = match;
-    });
-
-    const parsedData = lines.slice(1).map((line, idx) => {
-      const values = line.split(',').map(v => v.trim());
-      const row = { id: `row-${idx}` };
-      
-      Object.keys(newMappings).forEach(field => {
-        let val = values[newMappings[field]] || '';
-        
-        // Normalization
-        if (field === 'gender') {
-          if (/^m/i.test(val)) val = 'Male';
-          else if (/^f/i.test(val)) val = 'Female';
+    Papa.parse(file, {
+      header: true,
+      skipEmptyLines: 'greedy',
+      transformHeader: (h) => h.trim().toLowerCase().replace(/[^\w\s]/g, ''),
+      complete: (results) => {
+        if (!results.data || results.data.length === 0) {
+          alert({ title: 'Empty File', message: 'The uploaded file contains no data rows.', variant: 'warning' });
+          return;
         }
-        
-        row[field] = val;
-      });
 
-      // Default values for missing mandatory fields
-      if (!row.class) row.class = profile.activeClasses?.[0] || 'Grade 1';
-      if (!row.gender) row.gender = 'Male';
+        const headers = results.meta.fields || [];
+        const newMappings = {};
 
-      return row;
+        // Fuzzy column matching
+        Object.keys(FIELD_MAP).forEach(field => {
+          const match = headers.find(h => FIELD_MAP[field].some(syn => h.includes(syn)));
+          if (match) newMappings[field] = match;
+        });
+
+        const parsedData = results.data.map((row, idx) => {
+          const mapped = { id: `row-${idx}` };
+
+          Object.keys(newMappings).forEach(field => {
+            let val = (row[newMappings[field]] || '').trim();
+
+            // Normalize gender
+            if (field === 'gender') {
+              if (/^m/i.test(val)) val = 'Male';
+              else if (/^f/i.test(val)) val = 'Female';
+            }
+
+            mapped[field] = val;
+          });
+
+          // Defaults for missing mandatory fields
+          if (!mapped.class) mapped.class = profile.activeClasses?.[0] || 'Grade 1';
+          if (!mapped.gender) mapped.gender = 'Male';
+
+          return mapped;
+        });
+
+        setData(parsedData);
+        setMappings(newMappings);
+        validateData(parsedData);
+        setStep(2);
+      },
+      error: (err) => {
+        alert({ title: 'Parse Error', message: `Could not parse file: ${err.message}`, variant: 'danger' });
+      }
     });
-
-    setData(parsedData);
-    setMappings(newMappings);
-    validateData(parsedData);
-    setStep(2);
   };
 
   const validateData = (rows) => {
     const newErrors = [];
+    const seenAdm = new Set();
     rows.forEach((row, idx) => {
       const rowErrors = {};
-      if (!row.name) rowErrors.name = "Name is required";
+      if (!row.name || row.name.length < 2) rowErrors.name = "Name is required (min 2 chars)";
       if (!profile.activeClasses?.includes(row.class)) rowErrors.class = "Invalid class";
+      if (row.admNo && seenAdm.has(row.admNo.toLowerCase())) rowErrors.admNo = "Duplicate admission number";
+      if (row.admNo) seenAdm.add(row.admNo.toLowerCase());
       if (Object.keys(rowErrors).length > 0) {
         newErrors.push({ idx, errors: rowErrors });
       }
@@ -128,6 +129,8 @@ export default function StudentImporter({ profile, onImport, onClose }) {
   };
 
   const handleImport = async () => {
+    let rowsToImport = data;
+
     if (errors.length > 0) {
       const ok = await confirm({
         title: 'Import with Issues',
@@ -135,12 +138,32 @@ export default function StudentImporter({ profile, onImport, onClose }) {
         variant: 'warning'
       });
       if (!ok) return;
-      const validRows = data.filter((_, i) => !errors.find(e => e.idx === i));
-      onImport(validRows);
-    } else {
-      onImport(data);
+      rowsToImport = data.filter((_, i) => !errors.find(e => e.idx === i));
+    }
+
+    if (rowsToImport.length === 0) {
+      await alert({ title: 'Nothing to Import', message: 'No valid rows to import.', variant: 'warning' });
+      return;
+    }
+
+    setStep(3);
+    setProgress({ imported: 0, total: rowsToImport.length });
+
+    try {
+      const res = await bulkImportStudents(rowsToImport, (imported, total) => {
+        setProgress({ imported, total });
+      });
+      setResult(res);
+      setStep(4);
+      // Notify parent to refresh
+      if (onImport) onImport(res);
+    } catch (err) {
+      await alert({ title: 'Import Failed', message: err.message, variant: 'danger' });
+      setStep(2);
     }
   };
+
+  const pct = progress.total > 0 ? Math.round((progress.imported / progress.total) * 100) : 0;
 
   return (
     <div className="importer-overlay" onClick={onClose}>
@@ -152,15 +175,21 @@ export default function StudentImporter({ profile, onImport, onClose }) {
             </div>
             <div>
               <h3>Bulk Student Importer</h3>
-              <p>{step === 1 ? 'Upload your student CSV file to get started' : `Reviewing ${data.length} student records`}</p>
+              <p>
+                {step === 1 && 'Upload your student CSV or Excel file'}
+                {step === 2 && `Reviewing ${data.length} student records`}
+                {step === 3 && 'Importing students...'}
+                {step === 4 && 'Import complete!'}
+              </p>
             </div>
           </div>
           <button className="importer-close" onClick={onClose}><XIcon size={20} /></button>
         </div>
 
         <div className="importer-body">
-          {step === 1 ? (
-            <div 
+          {/* Step 1: File Upload */}
+          {step === 1 && (
+            <div
               className={`importer-dropzone ${dragActive ? 'active' : ''}`}
               onDragEnter={handleDrag}
               onDragLeave={handleDrag}
@@ -168,15 +197,18 @@ export default function StudentImporter({ profile, onImport, onClose }) {
               onDrop={handleDrop}
               onClick={() => fileInputRef.current.click()}
             >
-              <input type="file" ref={fileInputRef} onChange={(e) => e.target.files[0] && processFile(e.target.files[0])} style={{ display: 'none' }} accept=".csv" />
+              <input type="file" ref={fileInputRef} onChange={(e) => e.target.files[0] && processFile(e.target.files[0])} style={{ display: 'none' }} accept=".csv,.tsv,.txt" />
               <div className="dropzone-content">
                 <div className="dropzone-icon"><FileIcon size={48} color="var(--primary)" /></div>
                 <h4>Drag & Drop CSV File</h4>
                 <p>or click to browse from your computer</p>
-                <div className="dropzone-hint">Required columns: Name, Class</div>
+                <div className="dropzone-hint">Supports CSV, TSV, and tab-delimited files • Required columns: Name, Class</div>
               </div>
             </div>
-          ) : (
+          )}
+
+          {/* Step 2: Review */}
+          {step === 2 && (
             <div className="importer-review">
               <div className="importer-stats">
                 <div className="i-stat">
@@ -191,6 +223,16 @@ export default function StudentImporter({ profile, onImport, onClose }) {
                   <span className="i-stat-v">{data.length - errors.length}</span>
                   <span className="i-stat-l">Ready to Import</span>
                 </div>
+              </div>
+
+              {/* Column mapping summary */}
+              <div style={{ background: '#f0f9ff', border: '1px solid #bae6fd', borderRadius: 12, padding: '12px 16px', marginBottom: 20, fontSize: '0.82rem' }}>
+                <strong style={{ color: '#0369a1' }}>Detected Columns:</strong>{' '}
+                {Object.entries(mappings).map(([field, col]) => (
+                  <span key={field} style={{ display: 'inline-block', background: '#e0f2fe', padding: '2px 8px', borderRadius: 6, margin: '2px 4px', fontWeight: 600 }}>
+                    {field} ← {col}
+                  </span>
+                ))}
               </div>
 
               <div className="importer-table-container">
@@ -212,27 +254,30 @@ export default function StudentImporter({ profile, onImport, onClose }) {
                       return (
                         <tr key={row.id} className={rowError ? 'has-error' : ''}>
                           <td>
-                            <input 
-                              value={row.name} 
-                              onChange={e => handleUpdate(idx, 'name', e.target.value)} 
+                            <input
+                              value={row.name}
+                              onChange={e => handleUpdate(idx, 'name', e.target.value)}
                               className={rowError?.errors?.name ? 'error' : ''}
                             />
                             {rowError?.errors?.name && <span className="err-hint">{rowError.errors.name}</span>}
                           </td>
-                          <td><input value={row.admNo} onChange={e => handleUpdate(idx, 'admNo', e.target.value)} /></td>
+                          <td>
+                            <input value={row.admNo || ''} onChange={e => handleUpdate(idx, 'admNo', e.target.value)} className={rowError?.errors?.admNo ? 'error' : ''} />
+                            {rowError?.errors?.admNo && <span className="err-hint">{rowError.errors.admNo}</span>}
+                          </td>
                           <td>
                             <select value={row.class} onChange={e => handleUpdate(idx, 'class', e.target.value)} className={rowError?.errors?.class ? 'error' : ''}>
                               {profile.activeClasses?.map(c => <option key={c} value={c}>{c}</option>)}
                             </select>
                           </td>
-                          <td><input value={row.stream} onChange={e => handleUpdate(idx, 'stream', e.target.value)} /></td>
+                          <td><input value={row.stream || ''} onChange={e => handleUpdate(idx, 'stream', e.target.value)} /></td>
                           <td>
                             <select value={row.gender} onChange={e => handleUpdate(idx, 'gender', e.target.value)}>
                               <option value="Male">Male</option>
                               <option value="Female">Female</option>
                             </select>
                           </td>
-                          <td><input value={row.parentPhone} onChange={e => handleUpdate(idx, 'parentPhone', e.target.value)} /></td>
+                          <td><input value={row.parentPhone || ''} onChange={e => handleUpdate(idx, 'parentPhone', e.target.value)} /></td>
                           <td><button className="i-row-del" onClick={() => handleRemove(idx)}><DeleteIcon size={14} /></button></td>
                         </tr>
                       );
@@ -242,15 +287,78 @@ export default function StudentImporter({ profile, onImport, onClose }) {
               </div>
             </div>
           )}
+
+          {/* Step 3: Progress */}
+          {step === 3 && (
+            <div style={{ textAlign: 'center', padding: '60px 20px' }}>
+              <div style={{ fontSize: '3rem', marginBottom: 20 }}>📥</div>
+              <h3 style={{ marginBottom: 8 }}>Importing Students...</h3>
+              <p className="text-muted" style={{ marginBottom: 24 }}>{progress.imported} of {progress.total} processed</p>
+              <div style={{ height: 12, background: '#e2e8f0', borderRadius: 100, overflow: 'hidden', maxWidth: 400, margin: '0 auto' }}>
+                <div style={{
+                  height: '100%',
+                  width: `${pct}%`,
+                  background: 'linear-gradient(135deg, #6366f1 0%, #4338ca 100%)',
+                  borderRadius: 100,
+                  transition: 'width 0.3s ease'
+                }} />
+              </div>
+              <p style={{ fontSize: '0.8rem', color: '#94a3b8', marginTop: 12 }}>{pct}% complete</p>
+            </div>
+          )}
+
+          {/* Step 4: Results */}
+          {step === 4 && result && (
+            <div style={{ textAlign: 'center', padding: '40px 20px' }}>
+              <div style={{ fontSize: '3.5rem', marginBottom: 16 }}>✅</div>
+              <h3 style={{ marginBottom: 8, color: '#16a34a' }}>Import Complete!</h3>
+
+              <div className="importer-stats" style={{ maxWidth: 500, margin: '24px auto' }}>
+                <div className="i-stat success">
+                  <span className="i-stat-v">{result.imported}</span>
+                  <span className="i-stat-l">Imported</span>
+                </div>
+                <div className="i-stat warning">
+                  <span className="i-stat-v">{result.skipped}</span>
+                  <span className="i-stat-l">Plan-Capped</span>
+                </div>
+                <div className="i-stat" style={{ background: result.errors.length > 0 ? '#fef2f2' : '#f8fafc' }}>
+                  <span className="i-stat-v" style={{ color: result.errors.length > 0 ? '#dc2626' : '#1e293b' }}>{result.errors.length}</span>
+                  <span className="i-stat-l">Batch Errors</span>
+                </div>
+              </div>
+
+              {result.errors.length > 0 && (
+                <div style={{ textAlign: 'left', maxWidth: 500, margin: '0 auto', background: '#fef2f2', padding: 16, borderRadius: 12, border: '1px solid #fecaca' }}>
+                  <strong style={{ color: '#991b1b', fontSize: '0.85rem' }}>Error Details:</strong>
+                  {result.errors.map((e, i) => (
+                    <div key={i} style={{ fontSize: '0.8rem', color: '#7f1d1d', marginTop: 6 }}>
+                      Batch {e.batch}: {e.message}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
         </div>
 
         <div className="importer-footer">
-          <button className="i-btn-ghost" onClick={step === 2 ? () => setStep(1) : onClose}>
-            {step === 2 ? 'Upload Different File' : 'Cancel'}
-          </button>
+          {step === 1 && (
+            <button className="i-btn-ghost" onClick={onClose}>Cancel</button>
+          )}
           {step === 2 && (
-            <button className="i-btn-primary" onClick={handleImport}>
-              <CheckIcon size={16} /> Import {data.length - errors.length} Students
+            <>
+              <button className="i-btn-ghost" onClick={() => { setStep(1); setData([]); setErrors([]); setRawFile(null); }}>
+                Upload Different File
+              </button>
+              <button className="i-btn-primary" onClick={handleImport} disabled={data.length === 0}>
+                <CheckIcon size={16} /> Import {data.length - errors.length} Students
+              </button>
+            </>
+          )}
+          {step === 4 && (
+            <button className="i-btn-primary" onClick={onClose}>
+              <CheckIcon size={16} /> Done
             </button>
           )}
         </div>
@@ -306,11 +414,12 @@ export default function StudentImporter({ profile, onImport, onClose }) {
           .i-stat.success { background: #f0fdf4; border-color: #dcfce7; }
           .i-stat.success .i-stat-v { color: #16a34a; }
 
-          .importer-table-container { border: 1px solid #eef2f6; border-radius: 16px; overflow: hidden; }
+          .importer-table-container { border: 1px solid #eef2f6; border-radius: 16px; overflow: auto; max-height: 400px; }
           .importer-table { width: 100%; border-collapse: collapse; font-size: 0.875rem; }
-          .importer-table th { background: #f8fafc; padding: 12px 16px; text-align: left; color: #64748b; font-weight: 600; border-bottom: 1px solid #eef2f6; }
+          .importer-table th { background: #f8fafc; padding: 12px 16px; text-align: left; color: #64748b; font-weight: 600; border-bottom: 1px solid #eef2f6; position: sticky; top: 0; z-index: 1; }
           .importer-table td { padding: 8px 12px; border-bottom: 1px solid #f1f5f9; }
           .importer-table tr:last-child td { border-bottom: none; }
+          .importer-table tr.has-error { background: #fef2f2; }
           .importer-table input, .importer-table select {
             width: 100%; padding: 8px 12px; border: 1px solid #e2e8f0; border-radius: 8px;
             font-size: 0.875rem; transition: all 0.2s; outline: none;
@@ -324,13 +433,14 @@ export default function StudentImporter({ profile, onImport, onClose }) {
           .importer-footer { padding: 24px 32px; background: #f8fafc; border-top: 1px solid #eef2f6; display: flex; justify-content: flex-end; gap: 12px; }
           .i-btn-ghost { padding: 10px 20px; border-radius: 12px; border: 1px solid #e2e8f0; background: white; color: #64748b; font-weight: 600; cursor: pointer; transition: all 0.2s; }
           .i-btn-ghost:hover { background: #f1f5f9; }
-          .i-btn-primary { 
-            padding: 10px 24px; border-radius: 12px; border: none; 
-            background: linear-gradient(135deg, #6366f1 0%, #4338ca 100%); 
+          .i-btn-primary {
+            padding: 10px 24px; border-radius: 12px; border: none;
+            background: linear-gradient(135deg, #6366f1 0%, #4338ca 100%);
             color: white; font-weight: 600; cursor: pointer; transition: all 0.2s;
             display: flex; align-items: center; gap: 8px; box-shadow: 0 4px 12px rgba(79, 70, 229, 0.2);
           }
           .i-btn-primary:hover { transform: translateY(-1px); box-shadow: 0 6px 16px rgba(79, 70, 229, 0.3); }
+          .i-btn-primary:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
 
           @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
         `}</style>

@@ -1,4 +1,4 @@
-import { useState, useEffect, Component, lazy, Suspense } from 'react';
+import { useState, useEffect, useRef, Component, lazy, Suspense } from 'react';
 import { Routes, Route, NavLink, useLocation, Navigate } from 'react-router-dom';
 import { supabase } from './lib/supabase';
 import {
@@ -14,6 +14,11 @@ import {
   checkIsSubscriptionActive,
   subscribeToSchoolChanges,
   isShadowMode,
+  getUnreadNotificationCount,
+  subscribeToNotifications,
+  getNotifications,
+  markNotificationRead,
+  markAllNotificationsRead,
 } from './data/store';
 
 // Pages (Lazy Loaded)
@@ -59,12 +64,15 @@ const HelpCenter      = lazy(() => import('./pages/HelpCenter'));
 const PortalLogin     = lazy(() => import('./pages/Portal/PortalLogin'));
 const StaffLogin      = lazy(() => import('./pages/StaffPortal/StaffLogin'));
 
+import { initAnalytics, trackEvent } from './utils/analytics';
 import Loader          from './components/Common/Loader';
 import SyncIndicator from './components/Common/SyncIndicator';
 import PricingUpgrade from './components/PricingUpgrade';
 import Select from './components/Common/Select';
-import ErrorBoundary from './components/ErrorBoundary';
+import { ErrorBoundary } from './components/ErrorBoundary';
 import useNetworkStatus from './hooks/useNetworkStatus';
+import { FeaturesProvider, useFeature } from './contexts/FeaturesContext';
+import LockScreen from './components/Common/LockScreen';
 
 import {
   DashboardIcon, UserIcon, StudentsIcon, StaffIcon, AttendanceIcon, GradingIcon,
@@ -72,7 +80,7 @@ import {
   BillingIcon, SignOutIcon, MenuIcon, CloseIcon, ChevronDownIcon,
   OverviewIcon, SchoolsIcon, PaymentsIcon, HistoryIcon, RevenueIcon,
   ActivityIcon, RecoveryIcon, StatusDotIcon, ZapIcon, SubscriptionsIcon, MessageIcon,
-  DownloadIcon, UploadIcon, RefreshIcon, LogoMarkBW, BookIcon, FlagIcon
+  DownloadIcon, UploadIcon, RefreshIcon, LogoMarkBW, BookIcon, FlagIcon, LockIcon, BellIcon
 } from './components/Common/Icons';
 
 // --- Sidebar nav link helper ------------------------------------------------
@@ -106,7 +114,7 @@ function SbSection({ label }) {
 }
 
 // === SIDEBAR ================================================================
-function Sidebar({ isOpen, onClose, onLogout, currentUser, subscriptionActive }) {
+function Sidebar({ isOpen, onClose, onLogout, onLock, currentUser, subscriptionActive }) {
   const [schoolName,     setSchoolName]     = useState('ShuleSoft');
   const [profile,        setProfile]        = useState(null);
   const [periods,        setPeriods]        = useState([]);
@@ -130,6 +138,7 @@ function Sidebar({ isOpen, onClose, onLogout, currentUser, subscriptionActive })
   };
 
   useEffect(() => {
+    initAnalytics();
     loadProfile();
     loadPeriods();
     window.addEventListener('schoolProfileChanged', loadProfile);
@@ -164,48 +173,8 @@ function Sidebar({ isOpen, onClose, onLogout, currentUser, subscriptionActive })
     setSelectedPeriod(periodId);
   };
 
-  const [features, setFeatures] = useState({
-    library: false,
-    timetable: false,
-    attendance: false,
-    grading: false,
-    fees: false,
-    sms: false,
-    lms: false,
-    teacher_portal: false,
-    parent_portal: false,
-    mpesa: false,
-    whatsapp: false,
-    nemis: false,
-  });
-
-  useEffect(() => {
-    const checkFeatures = async () => {
-      const keys = [
-        'library', 'timetable', 'attendance', 'grading', 'fees', 'sms', 'lms', 
-        'teacher_portal', 'parent_portal', 'mpesa', 'whatsapp', 'nemis'
-      ];
-      
-      try {
-        const results = await Promise.all(keys.map(k => isFeatureEnabled(k)));
-        const f = {};
-        keys.forEach((k, i) => { f[k] = results[i]; });
-        setFeatures(f);
-      } catch (err) {
-        console.error("Feature check failed:", err);
-      }
-    };
-    if (currentUser) checkFeatures();
-
-
-    // Re-evaluate features when platform settings change in real-time
-    window.addEventListener('platformSettingsChanged', checkFeatures);
-    window.addEventListener('schoolProfileChanged', checkFeatures);
-    return () => {
-      window.removeEventListener('platformSettingsChanged', checkFeatures);
-      window.removeEventListener('schoolProfileChanged', checkFeatures);
-    };
-  }, [currentUser, profile]);
+  // Replaced manual feature state with useFeature() hook inside components below
+  // useEffect removed as FeaturesProvider handles real-time updates via events
 
   const role        = currentUser?.role?.toLowerCase() || 'teacher';
   const isAdmin     = role === 'admin';
@@ -216,8 +185,7 @@ function Sidebar({ isOpen, onClose, onLogout, currentUser, subscriptionActive })
   // Sandbox plan: show all modules in sidebar but locked with UPGRADE badge
   const isSandbox   = profile?.subscriptionPlan?.toLowerCase() === 'sandbox';
 
-  const isPlatformAdmin = currentUser?.email === 'admin@shulesoft.com'
-    || currentUser?.email === 'shulesoft8@gmail.com';
+  const isPlatformAdmin = (import.meta.env.VITE_PLATFORM_ADMIN_WHITELIST || '').split(',').includes(currentUser?.email);
 
   // --- Platform Admin sidebar ------------------------------------------------
   if (isPlatformAdmin) {
@@ -276,10 +244,16 @@ function Sidebar({ isOpen, onClose, onLogout, currentUser, subscriptionActive })
               {profile?.schoolName || 'ShuleSoft HQ'}
             </div>
           </div>
-          <button className="sb-signout-btn" onClick={onLogout}>
-            <SignOutIcon size={15} strokeWidth={1.75} />
-            <span>Sign Out</span>
-          </button>
+          <div style={{ display: 'flex', gap: '8px', marginTop: '16px' }}>
+            <button className="sb-signout-btn" onClick={onLock} style={{ flex: 1, justifyContent: 'center' }}>
+              <LockIcon size={15} strokeWidth={1.75} />
+              <span>Lock</span>
+            </button>
+            <button className="sb-signout-btn" onClick={onLogout} style={{ flex: 1, justifyContent: 'center' }}>
+              <SignOutIcon size={15} strokeWidth={1.75} />
+              <span>Sign Out</span>
+            </button>
+          </div>
         </div>
       </aside>
     );
@@ -313,16 +287,16 @@ function Sidebar({ isOpen, onClose, onLogout, currentUser, subscriptionActive })
         )}
 
         {/* Librarians, Teachers, and Admins can see the Library catalog */}
-        {(isLibrarian || isTeacher || isAdmin) && (features.library || isSandbox) && (
-          <SbLink to="/library" icon={BookIcon} label="Library" onClick={onClose} locked={(!subscriptionActive || (isSandbox && !features.library)) && !isPlatformAdmin} />
+        {(isLibrarian || isTeacher || isAdmin) && (useFeature('library').enabled || isSandbox) && (
+          <SbLink to="/library" icon={BookIcon} label="Library" onClick={onClose} locked={(!subscriptionActive || (isSandbox && !useFeature('library').enabled)) && !isPlatformAdmin} />
         )}
 
         {/* Academic section - always visible for Sandbox, else gated */}
-        {(isTeacher || isAdmin) && (isSandbox || features.attendance || features.grading || features.timetable || features.lms) && (
+        {(isTeacher || isAdmin) && (isSandbox || useFeature('attendance').enabled || useFeature('grading').enabled || useFeature('timetable').enabled || useFeature('lms').enabled) && (
           <SbSection label="Academics" />
         )}
         
-        {(isAdmin || isTeacher) && (features.attendance || isSandbox) && (
+        {(isAdmin || isTeacher) && (useFeature('attendance').enabled || isSandbox) && (
           <SbLink to="/attendance" icon={AttendanceIcon} label="Attendance" onClick={onClose} locked={!subscriptionActive && !isPlatformAdmin} />
         )}
         
@@ -331,36 +305,36 @@ function Sidebar({ isOpen, onClose, onLogout, currentUser, subscriptionActive })
         )}
         
         {/* Timetable — Reactivated for Sandbox/Production */}
-        {(isTeacher || isAdmin) && (features.timetable || isSandbox) && (
+        {(isTeacher || isAdmin) && (useFeature('timetable').enabled || isSandbox) && (
           <SbLink to="/timetable" icon={TimetableIcon} label="Timetable" onClick={onClose} locked={!subscriptionActive && !isPlatformAdmin} />
         )}
 
         {/* E-Learning — Reactivated for Sandbox/Production */}
-        {(isTeacher || isAdmin) && (features.lms || isSandbox) && (
+        {(isTeacher || isAdmin) && (useFeature('lms').enabled || isSandbox) && (
           <SbLink to="/lms" icon={ActivityIcon} label="E-Learning" onClick={onClose} locked={!subscriptionActive && !isPlatformAdmin} />
         )}
 
         {/* Administration/Finance section - always visible for Sandbox, else gated */}
-        {(isAdmin || isFinance) && (isSandbox || features.fees || isAdmin) && (
+        {(isAdmin || isFinance) && (isSandbox || useFeature('fees').enabled || isAdmin) && (
           <SbSection label="Administration" />
         )}
         
-        {(isAdmin || isFinance) && (features.fees || isSandbox) && (
+        {(isAdmin || isFinance) && (useFeature('fees').enabled || isSandbox) && (
           <SbLink to="/fees" icon={FeesIcon} label="Fees & Billing" onClick={onClose} locked={!subscriptionActive && !isPlatformAdmin} />
         )}
 
         
 
-        {isAdmin && (features.sms || isSandbox) && (
+        {isAdmin && (useFeature('sms').enabled || isSandbox) && (
           <SbLink to="/communications" icon={MessageIcon} label="Comm. Center" onClick={onClose} locked={!subscriptionActive && !isPlatformAdmin} />
         )}
 
-        {(isAdmin || isTeacher) && (features.teacher_portal || isSandbox) && (
+        {(isAdmin || isTeacher) && (useFeature('teacher_portal').enabled || isSandbox) && (
           <SbLink to="/portal/teacher" icon={StaffIcon} label="Teacher Portal" onClick={onClose} locked={!subscriptionActive && !isPlatformAdmin} />
         )}
 
-        {isAdmin && (features.parent_portal || isSandbox) && (
-          <SbLink to="/portal/parent" icon={UserIcon} label="Parent Portal" onClick={onClose} locked={(!subscriptionActive || (isSandbox && !features.parent_portal)) && !isPlatformAdmin} />
+        {isAdmin && (useFeature('parent_portal').enabled || isSandbox) && (
+          <SbLink to="/portal/parent" icon={UserIcon} label="Parent Portal" onClick={onClose} locked={(!subscriptionActive || (isSandbox && !useFeature('parent_portal').enabled)) && !isPlatformAdmin} />
         )}
         {/* Compliance section - Admins ONLY (as requested: no finance) */}
         {isAdmin && (
@@ -405,10 +379,16 @@ function Sidebar({ isOpen, onClose, onLogout, currentUser, subscriptionActive })
             </div>
           </div>
         </div>
-        <button className="sb-logout-btn" onClick={onLogout}>
-          <SignOutIcon size={15} strokeWidth={1.75} />
-          <span>Sign Out</span>
-        </button>
+        <div style={{ display: 'flex', gap: '8px', marginTop: '16px' }}>
+          <button className="sb-logout-btn" onClick={onLock} style={{ flex: 1, justifyContent: 'center' }}>
+            <LockIcon size={15} strokeWidth={1.75} />
+            <span>Lock</span>
+          </button>
+          <button className="sb-logout-btn" onClick={onLogout} style={{ flex: 1, justifyContent: 'center' }}>
+            <SignOutIcon size={15} strokeWidth={1.75} />
+            <span>Sign Out</span>
+          </button>
+        </div>
       </div>
     </aside>
   );
@@ -427,6 +407,66 @@ function App() {
   const [profile,            setProfile]            = useState(null);
   const location = useLocation();
   const isOnline = useNetworkStatus();
+  const [isLocked, setIsLocked] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
+  const [showNotifPanel, setShowNotifPanel] = useState(false);
+  const [notifications, setNotifications] = useState([]);
+  const [notifLoading, setNotifLoading] = useState(false);
+  const notifRef = useRef(null);
+
+  // Close notification panel when clicking outside
+  useEffect(() => {
+    if (!showNotifPanel) return;
+    const handleClick = (e) => {
+      if (notifRef.current && !notifRef.current.contains(e.target)) {
+        setShowNotifPanel(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClick);
+    return () => document.removeEventListener('mousedown', handleClick);
+  }, [showNotifPanel]);
+
+  useEffect(() => {
+    if (currentUser?.id) {
+      getUnreadNotificationCount().then(setUnreadCount);
+      const sub = subscribeToNotifications(currentUser.id, () => {
+        getUnreadNotificationCount().then(setUnreadCount);
+      });
+      return () => {
+        if (sub && typeof sub.unsubscribe === 'function') sub.unsubscribe();
+      };
+    }
+  }, [currentUser]);
+
+  // Inactivity tracking (15 minutes)
+  useEffect(() => {
+    if (!currentUser) return;
+
+    let timer;
+    const INACTIVITY_LIMIT = 15 * 60 * 1000; // 15 minutes
+
+    const resetTimer = () => {
+      clearTimeout(timer);
+      timer = setTimeout(() => {
+        if (!isLocked) setIsLocked(true);
+      }, INACTIVITY_LIMIT);
+    };
+
+    const events = ['mousedown', 'mousemove', 'keypress', 'scroll', 'touchstart'];
+    events.forEach(name => document.addEventListener(name, resetTimer));
+
+    resetTimer();
+
+    return () => {
+      clearTimeout(timer);
+      events.forEach(name => document.removeEventListener(name, resetTimer));
+    };
+  }, [currentUser, isLocked]);
+  
+  // Auto-close sidebar on mobile navigation
+  useEffect(() => {
+    setSidebarOpen(false);
+  }, [location.pathname]);
 
   useEffect(() => {
     const handlePeriodChange = () => setPeriodId(getCurrentPeriodId());
@@ -572,15 +612,15 @@ function App() {
           <Suspense fallback={<Loader />}>
             <Routes>
               <Route path="/super-admin" element={
-                <ErrorBoundary>
-                  <SuperAdmin
-                    currentUser={currentUser}
-                    isPlatformAdmin={isPlatformAdmin}
-                    sidebarOpen={sidebarOpen}
-                    setSidebarOpen={setSidebarOpen}
-                    onSignOut={handleLogout}
-                  />
-                </ErrorBoundary>
+                    <ErrorBoundary>
+                      <SuperAdmin
+                        currentUser={currentUser}
+                        isPlatformAdmin={isPlatformAdmin}
+                        sidebarOpen={sidebarOpen}
+                        setSidebarOpen={setSidebarOpen}
+                        onSignOut={handleLogout}
+                      />
+                    </ErrorBoundary>
               } />
                 <Route path="/academics" element={<Suspense fallback={<Loader />}><Academics /></Suspense>} />
                 <Route path="/lms" element={<Suspense fallback={<Loader />}><LMS /></Suspense>} />
@@ -610,187 +650,255 @@ function App() {
 
   // --- School portal ---
   return (
-    <div className="app-layout app-shell">
-      {!isOnline && (
-        <div style={{
-          position: 'fixed', top: 0, left: 0, right: 0, zIndex: 9999, 
-          background: '#ef4444', color: '#fff', padding: '8px', 
-          textAlign: 'center', fontWeight: 'bold', fontSize: '14px',
-          boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
-        }}>
-          You are currently offline. Critical actions have been paused to prevent data loss.
-        </div>
-      )}
-
-      {isShadowMode() && (
-        <div style={{
-          position: 'fixed', top: 0, left: 0, right: 0, zIndex: 10000, 
-          background: 'linear-gradient(90deg, #F97316 0%, #EF4444 100%)', // Deep Orange to Red
-          color: '#fff', padding: '12px 20px', 
-          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-          fontWeight: '700', fontSize: '13px', textTransform: 'uppercase', letterSpacing: '0.05em',
-          boxShadow: '0 4px 15px rgba(239, 68, 68, 0.4)'
-        }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <SecurityIcon size={18} />
-            <span>Read-Only Shadow Mode: You are viewing {profile?.schoolName || 'School'} as an Administrator</span>
-          </div>
-          <button 
-            onClick={() => {
-              sessionStorage.removeItem('shulesoft_acting_as_admin');
-              sessionStorage.removeItem('shulesoft_school_id');
-              window.location.href = '/super-admin';
-            }}
-            style={{
-              background: 'rgba(255,255,255,0.2)', color: '#fff', border: '1px solid rgba(255,255,255,0.4)',
-              padding: '4px 12px', borderRadius: '6px', fontSize: '11px', fontWeight: '800',
-              cursor: 'pointer', transition: 'all 0.2s'
-            }}
-          >
-            EXIT SHADOW MODE
-          </button>
-        </div>
-      )}
-
-      {/* Mobile hamburger */}
-      <button
-        className="mobile-toggle"
-        onClick={() => setSidebarOpen(o => !o)}
-        aria-label={sidebarOpen ? 'Close menu' : 'Open menu'}
-      >
-        {sidebarOpen
-          ? <CloseIcon  size={18} color="currentColor" />
-          : <MenuIcon   size={18} color="currentColor" />
-        }
-      </button>
-
-      {sidebarOpen && (
-        <div className="sidebar-overlay" onClick={() => setSidebarOpen(false)} />
-      )}
-
-      <Sidebar
-        isOpen={sidebarOpen}
-        onClose={() => setSidebarOpen(false)}
-        onLogout={handleLogout}
-        currentUser={currentUser}
-        subscriptionActive={subscriptionActive}
-      />
-
-      <main className="main-content">
-        {/* Top bar */}
-        <div className="topbar">
-          <div className="topbar-left">
-            <div className="topbar-title desktop-only">Administration</div>
-            <div className="topbar-title mobile-only">ShuleSoft</div>
-          </div>
-          <div className="topbar-actions">
-            <SyncIndicator />
-              <div className="topbar-period">
-                <span className="topbar-period-label">Period:</span>
-                <Select
-                  value={currentPeriodId || ''}
-                  options={periods}
-                  onChange={async (e) => { await setActivePeriod(e.target.value); }}
-                  className="topbar-period-select"
-                  style={{ minWidth: 220, whiteSpace: 'nowrap' }}
-                />
-              </div>
-            <div
-              className="topbar-avatar"
-              title={currentUser?.name}
-              style={{ border: '2px solid var(--primary-light)' }}
-            >
-              {currentUser?.name?.charAt(0)?.toUpperCase() || 'U'}
-            </div>
-          </div>
-        </div>
-
-        {/* Global Print Overlay Header (In Flow to push content down) */}
-        {profile?.logo && (
-          <div className="global-print-flow-header" style={{ margin: '15mm 15mm 0', paddingBottom: '10px', alignItems: 'center', gap: '15px' }}>
-            <img src={profile.logo} alt="School Logo" style={{ height: 60, objectFit: 'contain' }} />
+    <>
+      {isLocked && <LockScreen user={currentUser} onUnlock={() => setIsLocked(false)} />}
+      <FeaturesProvider user={currentUser}>
+      <div className="app-layout app-shell">
+        {!isOnline && (
+          <div style={{
+            position: 'fixed', top: 0, left: 0, right: 0, zIndex: 9999, 
+            background: '#ef4444', color: '#fff', padding: '8px', 
+            textAlign: 'center', fontWeight: 'bold', fontSize: '14px',
+            boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
+          }}>
+            You are currently offline. Critical actions have been paused to prevent data loss.
           </div>
         )}
 
-        {/* Page content */}
-        <div className="page-content">
-          <Suspense fallback={<Loader />}>
-            <ErrorBoundary>
-              <Routes>
-                {!subscriptionActive ? (
-                  <>
-                    <Route path="/billing"  element={<Billing currentUser={currentUser} />} />
-                    <Route path="/support"  element={<ContactSupport />} />
-                    <Route path="/login"    element={<Navigate to="/billing" replace />} />
-                    <Route path="/"        element={<Navigate to="/billing" replace />} />
-                    <Route path="*"        element={<Navigate to="/billing" replace />} />
-                  </>
-                ) : (
-                  <>
-                    {/* Redirects for logged-in users */}
-                    <Route path="/login"     element={<Navigate to="/dashboard" replace />} />
-                    <Route path="/"         element={<Navigate to="/dashboard" replace />} />
+        {isShadowMode() && (
+          <div style={{
+            position: 'fixed', top: 0, left: 0, right: 0, zIndex: 10000, 
+            background: 'linear-gradient(90deg, #F97316 0%, #EF4444 100%)', // Deep Orange to Red
+            color: '#fff', padding: '12px 20px', 
+            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+            fontWeight: '700', fontSize: '13px', textTransform: 'uppercase', letterSpacing: '0.05em',
+            boxShadow: '0 4px 15px rgba(239, 68, 68, 0.4)'
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+              <SecurityIcon size={18} />
+              <span>Read-Only Shadow Mode: You are viewing {profile?.schoolName || 'School'} as an Administrator</span>
+            </div>
+            <button 
+              onClick={() => {
+                sessionStorage.removeItem('shulesoft_acting_as_admin');
+                sessionStorage.removeItem('shulesoft_school_id');
+                window.location.href = '/super-admin';
+              }}
+              style={{
+                background: 'rgba(255,255,255,0.2)', color: '#fff', border: '1px solid rgba(255,255,255,0.4)',
+                padding: '4px 12px', borderRadius: '6px', fontSize: '11px', fontWeight: '800',
+                cursor: 'pointer', transition: 'all 0.2s'
+              }}
+            >
+              EXIT SHADOW MODE
+            </button>
+          </div>
+        )}
 
-                    {/* Shared Dashboard */}
-                    <Route path="/dashboard" element={<Dashboard currentUser={currentUser} onLogout={handleLogout} currentPeriodId={currentPeriodId} />} />
-                    <Route path="/help"      element={<HelpCenter />} />
-                    
-                    {/* Academic Routes: Admin & Teacher */}
-                    {(isAdmin || isTeacher) && (
-                      <>
-                        <Route path="/students"     element={<Students currentUser={currentUser} currentPeriodId={currentPeriodId} />} />
-                        <Route path="/attendance"   element={<SectionGate featureSlug="attendance" featureName="Attendance" profile={profile}><Attendance currentUser={currentUser} currentPeriodId={currentPeriodId} /></SectionGate>}  />
-                        <Route path="/academics"    element={<SectionGate featureSlug="grading" featureName="Academic Results" profile={profile}><Academics currentUser={currentUser} currentPeriodId={currentPeriodId} /></SectionGate>}  />
+        {/* Mobile hamburger */}
+        <button
+          className="mobile-toggle"
+          onClick={() => setSidebarOpen(o => !o)}
+          aria-label={sidebarOpen ? 'Close menu' : 'Open menu'}
+        >
+          {sidebarOpen
+            ? <CloseIcon  size={18} color="currentColor" />
+            : <MenuIcon   size={18} color="currentColor" />
+          }
+        </button>
 
-                        {/* Timetable and E-Learning routes */}
-                        <Route path="/timetable"    element={<SectionGate featureSlug="timetable" featureName="Timetable" profile={profile}><Timetable currentUser={currentUser} currentPeriodId={currentPeriodId} periods={periods} /></SectionGate>} />
-                        <Route path="/lms"          element={<SectionGate featureSlug="lms" featureName="E-Learning" profile={profile}><LMS currentUser={currentUser} /></SectionGate>} />
-                      </>
-                    )}
+        {sidebarOpen && (
+          <div className="sidebar-overlay" onClick={() => setSidebarOpen(false)} />
+        )}
 
-                    {/* Finance Routes: Admin & Finance */}
-                    {(isAdmin || isFinance) && (
-                      <>
-                        <Route path="/fees"      element={<SectionGate featureSlug="fees" featureName="Fees" profile={profile}><Fees currentUser={currentUser} currentPeriodId={currentPeriodId} /></SectionGate>} />
-                      </>
-                    )}
+        <Sidebar
+          isOpen={sidebarOpen}
+          onClose={() => setSidebarOpen(false)}
+          onLogout={handleLogout}
+          onLock={() => setIsLocked(true)}
+          currentUser={currentUser}
+          subscriptionActive={subscriptionActive}
+        />
 
-                    {/* Communications Routes: Admin */}
-                    {isAdmin && (
-                      <Route path="/communications" element={<SectionGate featureSlug="sms" featureName="Communications" profile={profile}><Communications currentUser={currentUser} /></SectionGate>} />
-                    )}
+        <main className="main-content">
+          {/* Top bar */}
+          <div className="topbar">
+            <div className="topbar-left">
+              <div className="topbar-title desktop-only">Administration</div>
+              <div className="topbar-title mobile-only">ShuleSoft</div>
+            </div>
+            <div className="topbar-actions">
+              <SyncIndicator />
+              
+              <div className="topbar-notif" ref={notifRef} style={{ position: 'relative' }}>
+                <button className="notif-btn" title="Notifications" onClick={async () => {
+                  const next = !showNotifPanel;
+                  setShowNotifPanel(next);
+                  if (next) {
+                    setNotifLoading(true);
+                    try { const n = await getNotifications(); setNotifications(n); } catch(e) { console.error(e); }
+                    finally { setNotifLoading(false); }
+                  }
+                }}>
+                  <BellIcon size={20} />
+                  {unreadCount > 0 && <span className="notif-badge">{unreadCount}</span>}
+                </button>
 
-                    {/* Library Routes: Admin, Librarian & Teacher (View Only) */}
-                    {(isAdmin || isLibrarian || isTeacher) && (
-                      <Route path="/library/*" element={<SectionGate featureSlug="library" featureName="Library" profile={profile}><Library currentUser={currentUser} currentPeriodId={currentPeriodId} /></SectionGate>} />
-                    )}
-
-                    {/* Admin-Only Routes */}
-                    {isAdmin && (
-                      <>
-                        <Route path="/teachers" element={<Teachers currentUser={currentUser} currentPeriodId={currentPeriodId} />} />
-                        <Route path="/security" element={<Security currentUser={currentUser} />} />
-                        <Route path="/settings" element={<Settings currentUser={currentUser} />} />
-                        <Route path="/billing"  element={<Billing currentUser={currentUser} />} />
-                        <Route path="/compliance/nemis" element={<NEMISDashboard currentUser={currentUser} />} />
-                        <Route path="/portal/teacher" element={<SectionGate featureSlug="teacher_portal" featureName="Teacher Portal" profile={profile}><TeacherPortalAdmin /></SectionGate>} />
-                        <Route path="/portal/parent"  element={<SectionGate featureSlug="parent_portal"  featureName="Parent Portal"  profile={profile}><ParentPortalAdmin /></SectionGate>} />
-                      </>
-                    )}
-
-                    <Route path="*"         element={<div style={{padding:48, textAlign:'center'}}><h2>403 - Unauthorized</h2><p>You don't have permission to access this module.</p></div>} />
-                  </>
+                {showNotifPanel && (
+                  <div className="notif-panel animate-in" style={{
+                    position: 'absolute', top: '100%', right: 0, marginTop: 8,
+                    width: 380, maxHeight: 480, background: 'var(--bg-card)',
+                    borderRadius: 16, boxShadow: '0 20px 50px rgba(0,0,0,0.18)',
+                    border: '1px solid var(--border)', zIndex: 9999,
+                    display: 'flex', flexDirection: 'column', overflow: 'hidden'
+                  }}>
+                    <div style={{
+                      padding: '16px 20px', borderBottom: '1px solid var(--border)',
+                      display: 'flex', justifyContent: 'space-between', alignItems: 'center'
+                    }}>
+                      <h4 style={{ margin: 0, fontSize: '1rem', fontWeight: 800 }}>Notifications</h4>
+                      {unreadCount > 0 && (
+                        <button onClick={async () => {
+                          await markAllNotificationsRead();
+                          setNotifications(n => n.map(x => ({ ...x, is_read: true })));
+                          setUnreadCount(0);
+                        }} style={{
+                          background: 'none', border: 'none', cursor: 'pointer',
+                          fontSize: '0.72rem', fontWeight: 700, color: 'var(--primary)'
+                        }}>Mark all read</button>
+                      )}
+                    </div>
+                    <div style={{ flex: 1, overflowY: 'auto', padding: '8px 0' }}>
+                      {notifLoading ? (
+                        <div style={{ padding: 40, textAlign: 'center', color: 'var(--text-light)', fontSize: '0.85rem' }}>Loading…</div>
+                      ) : notifications.length === 0 ? (
+                        <div style={{ padding: 40, textAlign: 'center', color: 'var(--text-muted)' }}>
+                          <BellIcon size={32} color="var(--border)" />
+                          <p style={{ marginTop: 12, fontSize: '0.85rem', fontWeight: 600 }}>No notifications yet</p>
+                        </div>
+                      ) : notifications.map(n => (
+                        <div key={n.id} onClick={async () => {
+                          if (!n.is_read) {
+                            await markNotificationRead(n.id);
+                            setNotifications(prev => prev.map(x => x.id === n.id ? { ...x, is_read: true } : x));
+                            setUnreadCount(c => Math.max(0, c - 1));
+                          }
+                        }} style={{
+                          padding: '12px 20px', cursor: 'pointer',
+                          borderBottom: '1px solid var(--border-light)',
+                          background: n.is_read ? 'transparent' : 'rgba(79, 70, 229, 0.04)',
+                          transition: 'background 0.15s'
+                        }}>
+                          <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
+                            <div style={{
+                              width: 8, height: 8, borderRadius: '50%', marginTop: 6, flexShrink: 0,
+                              background: n.is_read ? 'transparent' : (
+                                n.type === 'warning' ? '#F59E0B' : n.type === 'alert' ? '#EF4444' : n.type === 'success' ? '#10B981' : 'var(--primary)'
+                              )
+                            }} />
+                            <div style={{ flex: 1, minWidth: 0 }}>
+                              <div style={{ fontWeight: n.is_read ? 500 : 700, fontSize: '0.85rem', color: 'var(--text-main)' }}>{n.title}</div>
+                              {n.body && <div style={{ fontSize: '0.78rem', color: 'var(--text-light)', marginTop: 2, lineHeight: 1.4 }}>{n.body}</div>}
+                              <div style={{ fontSize: '0.65rem', color: 'var(--text-muted)', marginTop: 4 }}>
+                                {new Date(n.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
                 )}
-              </Routes>
-            </ErrorBoundary>
-          </Suspense>
-        </div>
-      </main>
-      <div className="global-print-fixed-footer">
-        <LogoMarkBW size={22} color="#000" />
-      </div>
+              </div>
 
-    </div>
+                <div className="topbar-period">
+                  <span className="topbar-period-label">Period:</span>
+                  <Select
+                    value={currentPeriodId || ''}
+                    options={periods}
+                    onChange={async (e) => { await setActivePeriod(e.target.value); }}
+                    className="topbar-period-select"
+                    style={{ minWidth: 220, whiteSpace: 'nowrap' }}
+                  />
+                </div>
+              <div
+                className="topbar-avatar"
+                title={currentUser?.name}
+                style={{ border: '2px solid var(--primary-light)' }}
+              >
+                {currentUser?.name?.charAt(0)?.toUpperCase() || 'U'}
+              </div>
+            </div>
+          </div>
+
+          {/* Global Print Overlay Header (In Flow to push content down) */}
+          {profile?.logo && (
+            <div className="global-print-flow-header" style={{ margin: '15mm 15mm 0', paddingBottom: '10px', alignItems: 'center', gap: '15px' }}>
+              <img src={profile.logo} alt="School Logo" style={{ height: 60, objectFit: 'contain' }} />
+            </div>
+          )}
+
+          {/* Page content */}
+          <div className="page-content">
+            <Suspense fallback={<Loader />}>
+              <ErrorBoundary>
+                <Routes>
+                  {!subscriptionActive ? (
+                    <>
+                      <Route path="/billing"  element={<Billing currentUser={currentUser} />} />
+                      <Route path="/support"  element={<ContactSupport />} />
+                      <Route path="/login"    element={<Navigate to="/billing" replace />} />
+                      <Route path="/"        element={<Navigate to="/billing" replace />} />
+                      <Route path="*"        element={<Navigate to="/billing" replace />} />
+                    </>
+                  ) : (
+                    <>
+                      {/* Redirects for logged-in users */}
+                      <Route path="/login"     element={<Navigate to="/dashboard" replace />} />
+                      <Route path="/"         element={<Navigate to="/dashboard" replace />} />
+
+                      {/* Shared Dashboard */}
+                      <Route path="/dashboard" element={<Dashboard currentUser={currentUser} onLogout={handleLogout} currentPeriodId={currentPeriodId} />} />
+                      <Route path="/help"      element={<HelpCenter />} />
+                      
+                      {/* Academic Results Section */}
+                      <Route path="/academics"    element={<SectionGate featureSlug="grading" featureName="Academic Results" profile={profile}><Academics currentUser={currentUser} currentPeriodId={currentPeriodId} /></SectionGate>}  />
+                      
+                      {/* Student and Teacher Management */}
+                      <Route path="/students"     element={<Students currentUser={currentUser} currentPeriodId={currentPeriodId} />} />
+                      <Route path="/teachers" element={<Teachers currentUser={currentUser} currentPeriodId={currentPeriodId} />} />
+
+                      {/* Feature Gated Modules */}
+                      <Route path="/attendance"   element={<SectionGate featureSlug="attendance" featureName="Attendance" profile={profile}><Attendance currentUser={currentUser} currentPeriodId={currentPeriodId} /></SectionGate>}  />
+                      <Route path="/timetable"    element={<SectionGate featureSlug="timetable" featureName="Timetable" profile={profile}><Timetable currentUser={currentUser} currentPeriodId={currentPeriodId} periods={periods} /></SectionGate>} />
+                      <Route path="/lms"          element={<SectionGate featureSlug="lms" featureName="E-Learning" profile={profile}><LMS currentUser={currentUser} /></SectionGate>} />
+                      <Route path="/fees"      element={<SectionGate featureSlug="fees" featureName="Fees" profile={profile}><Fees currentUser={currentUser} currentPeriodId={currentPeriodId} /></SectionGate>} />
+                      <Route path="/communications" element={<SectionGate featureSlug="sms" featureName="Communications" profile={profile}><Communications currentUser={currentUser} /></SectionGate>} />
+                      <Route path="/library/*" element={<SectionGate featureSlug="library" featureName="Library" profile={profile}><Library currentUser={currentUser} currentPeriodId={currentPeriodId} /></SectionGate>} />
+                      <Route path="/compliance/nemis" element={<NEMISDashboard currentUser={currentUser} />} />
+
+                      {/* Admin/Portal Management */}
+                      <Route path="/security" element={<Security currentUser={currentUser} />} />
+                      <Route path="/settings" element={<Settings currentUser={currentUser} />} />
+                      <Route path="/billing"  element={<Billing currentUser={currentUser} />} />
+                      <Route path="/portal/teacher" element={<SectionGate featureSlug="teacher_portal" featureName="Teacher Portal" profile={profile}><TeacherPortalAdmin /></SectionGate>} />
+                      <Route path="/portal/parent"  element={<SectionGate featureSlug="parent_portal"  featureName="Parent Portal"  profile={profile}><ParentPortalAdmin /></SectionGate>} />
+
+                      <Route path="*"         element={<div style={{padding:48, textAlign:'center'}}><h2>403 - Unauthorized</h2><p>You don't have permission to access this module.</p></div>} />
+                    </>
+                  )}
+                </Routes>
+              </ErrorBoundary>
+            </Suspense>
+          </div>
+        </main>
+        <div className="global-print-fixed-footer">
+          <LogoMarkBW size={22} color="#000" />
+        </div>
+
+      </div>
+    </FeaturesProvider>
+    </>
   );
 }
 
@@ -810,7 +918,7 @@ function SectionGate({ featureSlug, featureName, children, profile }) {
   }, [featureSlug, profile]);
 
   if (hasAccess === null) return <Loader />;
-  if (!hasAccess) return <PricingUpgrade featureName={featureName} />;
+  if (!hasAccess) return <PricingUpgrade featureName={featureName} profile={profile} />;
   
   return children;
 }

@@ -115,6 +115,17 @@ export async function updateBookCopy(id, updates) {
     return data;
 }
 
+export async function searchAvailableCopies(searchQuery) {
+    const { data, error } = await supabase.from('book_copies')
+        .select('*, books!inner(title, category, subject)')
+        .eq('status', 'available')
+        .eq('school_id', getSchoolId())
+        .or(`copy_code.ilike.%${searchQuery}%,books.title.ilike.%${searchQuery}%`)
+        .limit(10);
+    if (error) throw error;
+    return data || [];
+}
+
 // --- BORROW / RETURN ---
 
 export async function issueBook(studentId, bookCopyId, dueDate, notes, issuedBy) {
@@ -139,6 +150,30 @@ export async function returnBook(borrowRecordId, returnedTo, condition, notes) {
     });
     if (error) throw error;
     return data;
+}
+
+export async function getActiveLoans(filter = {}) {
+    let query = supabase.from('borrow_records')
+      .select('*, students(name, adm_no), book_copies!inner(copy_code, condition, books(title, book_code))')
+      .eq('status', 'borrowed')
+      .eq('school_id', getSchoolId());
+
+    if (filter.student_id) query = query.eq('student_id', filter.student_id);
+    if (filter.copy_code) query = query.eq('book_copies.copy_code', filter.copy_code);
+
+    const { data, error } = await query;
+    if (error) throw error;
+    return data || [];
+}
+
+export async function getStudentBorrowHistory(studentId) {
+    const { data, error } = await supabase.from('borrow_records')
+        .select('*, book_copies(copy_code, books(title, category))')
+        .eq('student_id', studentId)
+        .eq('school_id', getSchoolId())
+        .order('created_at', { ascending: false });
+    if (error) throw error;
+    return data || [];
 }
 
 // --- OVERDUE ---
@@ -229,6 +264,25 @@ export async function markBookReplaced(borrowRecordId) {
     }).eq('id', borrowRecordId);
 
     return { newCopy, newCode, oldCode: lostCopy.copy_code };
+}
+
+export async function getLostBooks() {
+    const { data, error } = await supabase.from('borrow_records')
+        .select('*, students(id, name, class, adm_no), book_copies(copy_code, books(title))')
+        .eq('school_id', getSchoolId())
+        .eq('status', 'lost');
+    if (error) throw error;
+    return data || [];
+}
+
+export async function getAllActiveBorrows() {
+    const { data, error } = await supabase.from('borrow_records')
+        .select('id, borrow_date, due_date, status, students(id, name, class, adm_no), book_copies(copy_code, books(title, subject))')
+        .eq('school_id', getSchoolId())
+        .in('status', ['borrowed', 'overdue', 'lost'])
+        .order('due_date', { ascending: true });
+    if (error) throw error;
+    return data || [];
 }
 
 // --- DASHBOARD REPORTS ---

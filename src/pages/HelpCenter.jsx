@@ -5,6 +5,7 @@ import {
   CheckIcon, InfoIcon, FlagIcon
 } from '../components/CommonIcons';
 import { Link } from 'react-router-dom';
+import { Helmet } from 'react-helmet-async';
 
 /**
  * HelpCenter Component
@@ -102,6 +103,11 @@ export default function HelpCenter() {
 
   return (
     <div className="animate-in" style={{ paddingBottom: 60 }}>
+      <Helmet>
+        <title>Help Center | ShuleSoft — Knowledge Base & Guides</title>
+        <meta name="description" content="Search our knowledge base for guides on student management, CBC grading, fees, timetabling, and NEMIS compliance in ShuleSoft." />
+        <link rel="canonical" href="https://shulesoft.com/help" />
+      </Helmet>
       {/* Header Section */}
       <div style={{ 
         background: 'linear-gradient(135deg, #4A32E0 0%, #6155FF 100%)',

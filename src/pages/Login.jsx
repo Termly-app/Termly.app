@@ -8,7 +8,12 @@ import {
   getSchoolByCode,
   searchPublicSchools,
 } from '../data/store';
+import { 
+  getAuthUserDetails, getHqSchool, getUserByEmail, upsertAuthUser, 
+  getMatchedUser, updateUserAuthId, getOwnedSchools, getUserRecords 
+} from '../data/authStore';
 import { CardIcon, DashboardIcon, RocketIcon, FlagIcon, EyeIcon, EyeOffIcon } from '../components/CommonIcons';
+import { Helmet } from 'react-helmet-async';
 
 export default function Login({ onLogin }) {
   const { schoolCode } = useParams();
@@ -119,18 +124,12 @@ export default function Login({ onLogin }) {
       const authUser = authData.user;
 
       // 2. Fetch all known user records (memberships) for this auth identity
-      const { data: userRecords } = await supabase
-        .from('users')
-        .select('*, schools(id, name, plan)')
-        .eq('auth_user_id', authUser.id);
+      const userRecords = await getUserRecords(authUser.id);
 
       const knownSchoolIds = userRecords?.map(u => u.school_id) || [];
 
       // 3. Fallback: Check if they are the owner of any schools
-      const { data: ownedSchools } = await supabase
-        .from('schools')
-        .select('*')
-        .eq('owner_id', authUser.id);
+      const ownedSchools = await getOwnedSchools(authUser.id);
         
       ownedSchools?.forEach(s => {
         if (!knownSchoolIds.includes(s.id)) knownSchoolIds.push(s.id);
@@ -140,17 +139,18 @@ export default function Login({ onLogin }) {
 
       // 4. Resolve target school intelligently 
       if (!targetSchoolId && schoolEmail && schoolEmail.trim()) {
-        // If they typed a schoolEmail, try to find that specific school
-        const { data: ownerAuth } = await supabase.from('users').select('school_id').eq('email', schoolEmail.trim().toLowerCase()).eq('role', 'Admin').maybeSingle();
+        const emailLower = schoolEmail.trim().toLowerCase();
+        // Check if platform admin email
+        const isPlat = (import.meta.env.VITE_PLATFORM_ADMIN_WHITELIST || '').split(',').map(e=>e.trim()).includes(emailLower);
+        
+        const ownerAuth = await getAuthUserDetails(emailLower);
         if (ownerAuth) {
           targetSchoolId = ownerAuth.school_id;
-        } else {
-           const { data: schoolsByName } = await supabase.from('schools').select('id, owner_id').limit(50);
-           if (schoolsByName) {
-             const { data: ownerUser } = await supabase.from('users').select('school_id').eq('email', schoolEmail.trim().toLowerCase()).limit(1);
-             if (ownerUser?.length > 0) targetSchoolId = ownerUser[0].school_id;
-           }
+        } else if (isPlat) {
+          const hqSchool = await getHqSchool(emailLower);
+          if (hqSchool) targetSchoolId = hqSchool.id;
         }
+        
         if (!targetSchoolId) throw new Error('No school workspace found for that school email.');
       }
 
@@ -162,7 +162,7 @@ export default function Login({ onLogin }) {
           throw new Error('Your account belongs to multiple schools. Please enter the School Workspace Email to specify which one you want to log into.');
         } else {
            // Fallback matching by email (legacy)
-           const { data: emailMatch } = await supabase.from('users').select('id, school_id').eq('email', email.toLowerCase()).limit(1);
+           const emailMatch = await getUserByEmail(email.toLowerCase());
            if (emailMatch && emailMatch.length > 0) {
              targetSchoolId = emailMatch[0].school_id;
            } else {
@@ -177,21 +177,19 @@ export default function Login({ onLogin }) {
       if (!activeUser && ownedSchools?.find(s => s.id === targetSchoolId)) {
          // Auto-provision owner missing an explicit users row
          const oSchool = ownedSchools.find(s => s.id === targetSchoolId);
-         const { data: newUser, error: newUserErr } = await supabase.from('users')
-          .upsert({
-            school_id: oSchool.id, auth_user_id: authUser.id,
-            name: (authUser.user_metadata?.full_name || oSchool.name + ' Admin'),
-            email: authUser.email, role: 'Admin',
-          }).select().single();
-         if (newUserErr) throw newUserErr;
+         const newUser = await upsertAuthUser(
+            oSchool.id, authUser.id, 
+            (authUser.user_metadata?.full_name || oSchool.name + ' Admin'), 
+            authUser.email
+         );
          activeUser = { ...newUser, schools: { name: oSchool.name }};
       }
       
       if (!activeUser) {
         // Fallback email matcher check
-        const { data: emailMatchUser } = await supabase.from('users').select('*, schools(id, name, plan)').eq('school_id', targetSchoolId).eq('email', email.toLowerCase()).maybeSingle();
+        const emailMatchUser = await getMatchedUser(targetSchoolId, email.toLowerCase());
         if (emailMatchUser) {
-           await supabase.from('users').update({ auth_user_id: authUser.id }).eq('id', emailMatchUser.id);
+           await updateUserAuthId(emailMatchUser.id, authUser.id);
            activeUser = emailMatchUser;
         }
       }
@@ -223,6 +221,10 @@ export default function Login({ onLogin }) {
 
   return (
     <div className="login-res-page">
+      <Helmet>
+        <title>Login | ShuleSoft Academic Portal</title>
+        <meta name="description" content="Secure portal login for ShuleSoft administrators and staff." />
+      </Helmet>
       <div className="card">
         {/* ... existing decorative panel ... */}
         <div className="right-panel">

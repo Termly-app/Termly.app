@@ -1,8 +1,13 @@
 import LegalLayout from './LegalLayout';
+import { Helmet } from 'react-helmet-async';
 
 export default function ServiceLevel() {
   return (
     <LegalLayout title="Service Level / Availability Statement" lastUpdated="March 2026">
+      <Helmet>
+        <title>Service Level Agreement | ShuleSoft</title>
+        <meta name="description" content="ShuleSoft SLA commitment: 99.9% uptime, scheduled maintenance, and responsive support from Nairobi." />
+      </Helmet>
       <section>
         <p>ShuleSoft is dedicated to providing reliable infrastructure for modern school administration. Our Service Level Statement outlines our commitment to availability.</p>
         

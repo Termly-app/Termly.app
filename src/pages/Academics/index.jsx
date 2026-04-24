@@ -1,32 +1,83 @@
-import { Suspense, lazy } from 'react';
+import { Suspense, lazy, useState, useEffect } from 'react';
 import { Helmet } from 'react-helmet-async';
 import Loader from '../../components/Common/Loader';
-import { BookIcon } from '../../components/CommonIcons';
+import FeatureGate from '../../components/FeatureGate';
+import { isFeatureEnabled } from '../../data/store';
+import { BookIcon, UsersIcon, TeacherIcon, DashboardIcon, RocketIcon } from '../../components/CommonIcons';
 
 const AssessmentTab = lazy(() => import('./AssessmentTab'));
+const StreamManager = lazy(() => import('./StreamManager'));
+const TeacherAssignmentManager = lazy(() => import('./TeacherAssignmentManager'));
+const PromotionManager = lazy(() => import('./PromotionManager'));
 
 export default function AcademicCenter({ currentUser, currentPeriodId }) {
+  const [activeSubTab, setActiveSubTab] = useState('assessment');
+  const [hasAccess, setHasAccess] = useState(null);
+
+  useEffect(() => {
+    isFeatureEnabled('grading').then(setHasAccess);
+  }, []);
+
+  if (hasAccess === null) return <Loader />;
+  if (hasAccess === false) return <FeatureGate featureName="Grading" />;
+
   return (
     <div className="academic-center-page animate-in">
       <Helmet>
         <title>Academic Center | ShuleSoft</title>
-        <meta name="description" content="Manage school assessments and formal exam sessions in one place." />
+        <meta name="description" content="Manage school assessments, class streams, and teacher assignments." />
       </Helmet>
 
       <div className="page-header" style={{ marginBottom: 0, paddingBottom: 0 }}>
-        <div style={{ padding: '0 24px' }}>
-          <h1 style={{ fontSize: '1.8rem', fontWeight: 800, color: 'var(--text)' }}>Academic Center</h1>
-          <p style={{ color: 'var(--text-muted)', marginTop: '4px' }}>Unified results management for daily assessment and formal exams</p>
+        <div style={{ padding: '0 24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div>
+            <h1 style={{ fontSize: '1.8rem', fontWeight: 800, color: 'var(--text)' }}>Academic Center</h1>
+            <p style={{ color: 'var(--text-muted)', marginTop: '4px' }}>Unified management for teaching and learning</p>
+          </div>
+          
+          <div className="tab-nav" style={{ display: 'flex', gap: 8, background: 'rgba(0,0,0,0.05)', padding: 6, borderRadius: 12 }}>
+            <button 
+              className={`btn btn-sm ${activeSubTab === 'assessment' ? 'btn-primary' : 'btn-ghost'}`}
+              onClick={() => setActiveSubTab('assessment')}
+            >
+              <DashboardIcon size={14} /> Assessments
+            </button>
+            <button 
+              className={`btn btn-sm ${activeSubTab === 'streams' ? 'btn-primary' : 'btn-ghost'}`}
+              onClick={() => setActiveSubTab('streams')}
+            >
+              <UsersIcon size={14} /> Class Streams
+            </button>
+            <button 
+              className={`btn btn-sm ${activeSubTab === 'assignments' ? 'btn-primary' : 'btn-ghost'}`}
+              onClick={() => setActiveSubTab('assignments')}
+            >
+              <TeacherIcon size={14} /> Assignments
+            </button>
+            <button 
+              className={`btn btn-sm ${activeSubTab === 'promotion' ? 'btn-primary' : 'btn-ghost'}`}
+              onClick={() => setActiveSubTab('promotion')}
+            >
+              <RocketIcon size={14} /> Promotion
+            </button>
+          </div>
         </div>
       </div>
 
       <div className="academic-content" style={{ padding: '24px' }}>
         <Suspense fallback={<Loader />}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px' }}>
-            <BookIcon size={24} color="var(--primary)" />
-            <h2 style={{ fontSize: '1.4rem', fontWeight: 800, color: 'var(--text)' }}>Assessment & Grading</h2>
-          </div>
-          <AssessmentTab currentUser={currentUser} currentPeriodId={currentPeriodId} />
+          {activeSubTab === 'assessment' && (
+            <AssessmentTab currentUser={currentUser} currentPeriodId={currentPeriodId} />
+          )}
+          {activeSubTab === 'streams' && (
+            <StreamManager />
+          )}
+          {activeSubTab === 'assignments' && (
+            <TeacherAssignmentManager />
+          )}
+          {activeSubTab === 'promotion' && (
+            <PromotionManager />
+          )}
         </Suspense>
       </div>
 
@@ -34,6 +85,15 @@ export default function AcademicCenter({ currentUser, currentPeriodId }) {
         .academic-center-page {
           min-height: 100vh;
           background: var(--bg);
+        }
+        .tab-nav button {
+          border-radius: 8px;
+          padding: 8px 16px;
+          font-weight: 700;
+          font-size: 0.85rem;
+          display: flex;
+          align-items: center;
+          gap: 8px;
         }
       `}</style>
     </div>

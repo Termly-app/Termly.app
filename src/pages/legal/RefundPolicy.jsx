@@ -1,8 +1,13 @@
 import LegalLayout from './LegalLayout';
+import { Helmet } from 'react-helmet-async';
 
 export default function RefundPolicy() {
   return (
     <LegalLayout title="Refund Policy" lastUpdated="March 2026">
+      <Helmet>
+        <title>Refund Policy | ShuleSoft</title>
+        <meta name="description" content="ShuleSoft subscription refund policy for Kenyan schools. Learn about our non-refundable terms and exceptional circumstances." />
+      </Helmet>
       <section>
         <p>At ShuleSoft, we strive to provide the best possible service for Kenyan schools. Please review our policy regarding subscription refunds.</p>
         

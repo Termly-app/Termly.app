@@ -3,7 +3,7 @@
 
 var CBC_STRUCTURE = {
   'Early Years': {
-    grades: ['PP1', 'PP2', 'Grade 1', 'Grade 2', 'Grade 3'],
+    grades: ['Playgroup', 'PP1', 'PP2', 'Grade 1', 'Grade 2', 'Grade 3'],
     subjects: [
       'Literacy Activities',
       'Mathematical Activities',

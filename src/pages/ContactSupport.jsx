@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import PremiumLayout from '../components/PremiumLayout';
+import { Helmet } from 'react-helmet-async';
 import { getPlatformSettings } from '../data/store';
 
 export default function ContactSupport() {
@@ -15,6 +16,11 @@ export default function ContactSupport() {
 
   return (
     <PremiumLayout>
+      <Helmet>
+        <title>Contact Support | ShuleSoft</title>
+        <meta name="description" content="Get help from the ShuleSoft team in Nairobi. Contact us for technical support, onboarding, and account questions." />
+        <link rel="canonical" href="https://shulesoft.com/contact" />
+      </Helmet>
       <section className="section">
         <div className="sec-head reveal">
           <div className="eyebrow">Support</div>

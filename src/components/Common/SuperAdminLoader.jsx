@@ -136,7 +136,7 @@ export default function SuperAdminLoader({ visible = true }) {
 
       <div className="sa-loader-pill">
         <div className="sa-loader-pdot" />
-        Kaulani Corp · Platform Admin
+        ShuleSoft HQ · Platform Admin
       </div>
     </div>
   );

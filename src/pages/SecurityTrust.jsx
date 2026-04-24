@@ -1,8 +1,14 @@
 import PremiumLayout from '../components/PremiumLayout';
+import { Helmet } from 'react-helmet-async';
 
 export default function SecurityTrust() {
   return (
     <PremiumLayout>
+      <Helmet>
+        <title>Security & Trust | ShuleSoft — Bank-Grade Data Protection</title>
+        <meta name="description" content="ShuleSoft uses 256-bit encryption, automated backups, zero-trust access, and row-level security to protect your school's data." />
+        <link rel="canonical" href="https://shulesoft.com/security" />
+      </Helmet>
       <section className="section">
         <div className="sec-head reveal">
           <div className="eyebrow">Security & Trust</div>

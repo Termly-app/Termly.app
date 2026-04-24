@@ -6,11 +6,13 @@ import {
   TeacherIcon, ChevronRightIcon,
   ClockIcon, SchoolIcon
 } from '../../components/CommonIcons';
+import { Helmet } from 'react-helmet-async';
 import { 
   getAssignments, getStudentSubmissions, getStudentExamResults, 
   getFees, getGradeForScore, getSchoolProfile, initPortalStore,
   getStudentProfile, getAnnouncements, getSubjectDetails
 } from '../../data/store';
+import { subscribe, unsubscribeAll } from '../../utils/realtimeManager';
 
 // Premium UI Components
 const Card = ({ children, style, onClick }) => (
@@ -40,6 +42,7 @@ export default function PortalDashboard({ user, onLogout }) {
   const [localUser, setLocalUser] = useState(user);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('home');
+  const [lastSync, setLastSync] = useState(null);
 
   // Data states
   const [assignments, setAssignments] = useState([]);
@@ -69,6 +72,37 @@ export default function PortalDashboard({ user, onLogout }) {
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
+
+  // Helper to reload fee data
+  const refreshFees = async () => {
+    try {
+      const myFee = await getFees(user.id);
+      if (myFee) {
+        setFeeBalance(myFee.balance || 0);
+        setFeeSummary({ billed: myFee.billed || 0, paid: myFee.paid || 0 });
+        setMpesaAmount((myFee.balance || 0) > 0 ? myFee.balance : 0);
+        const sortedPayments = (myFee.payments || [])
+          .filter(p => p.status !== 'Voided')
+          .sort((a, b) => new Date(b.date) - new Date(a.date));
+        setPayments(sortedPayments);
+        setLastSync(new Date());
+      }
+    } catch (e) { console.warn('Fee refresh error:', e); }
+  };
+
+  // Helper to reload exam results
+  const refreshResults = async () => {
+    try {
+      const examRes = await getStudentExamResults(user.id);
+      setExamResults(examRes);
+      if (examRes.length > 0) {
+        const avg = examRes.reduce((acc, curr) => acc + (curr.total_marks / (curr.total_subjects || 1)), 0) / examRes.length;
+        const { grade, color } = getGradeForScore(avg, user.class, schoolProfile);
+        setAcademic({ average: avg.toFixed(1), grade, color, rank: examRes[0].class_position });
+      }
+      setLastSync(new Date());
+    } catch (e) { console.warn('Results refresh error:', e); }
+  };
 
   useEffect(() => {
     async function init() {
@@ -112,12 +146,13 @@ export default function PortalDashboard({ user, onLogout }) {
             paid: myFee.paid || 0
           });
           setMpesaAmount((myFee.balance || 0) > 0 ? myFee.balance : 0);
-          // Sort payments by date descending (filter out voided if any leak through)
           const sortedPayments = (myFee.payments || [])
             .filter(p => p.status !== 'Voided')
             .sort((a, b) => new Date(b.date) - new Date(a.date));
           setPayments(sortedPayments);
         }
+
+        setLastSync(new Date());
       } catch (err) {
         console.error('Portal init failed:', err);
       } finally {
@@ -125,6 +160,22 @@ export default function PortalDashboard({ user, onLogout }) {
       }
     }
     init();
+
+    // Real-time subscriptions for live updates
+    const schoolId = user.school_id || user.schoolId;
+    const unsubFees = subscribe(`portal_fees_${user.id}`, 'fee_payments', refreshFees, { column: 'school_id', value: schoolId });
+    const unsubResults = subscribe(`portal_results_${user.id}`, 'exam_results', refreshResults, { column: 'student_id', value: user.id });
+    const unsubAnnouncements = subscribe(`portal_notices_${schoolId}`, 'announcements', async () => {
+      const fresh = await getAnnouncements(schoolId).catch(() => []);
+      setNotices(fresh);
+      setLastSync(new Date());
+    }, { column: 'school_id', value: schoolId });
+
+    return () => {
+      unsubFees();
+      unsubResults();
+      unsubAnnouncements();
+    };
   }, [user]);
 
   const handleMpesaPay = () => {
@@ -151,6 +202,10 @@ export default function PortalDashboard({ user, onLogout }) {
 
   return (
     <div style={{ width: '100%', background: '#f8fafc', minHeight: '100vh', display: 'flex', flexDirection: 'column', fontFamily: '"Inter", sans-serif' }}>
+      <Helmet>
+        <title>{localUser?.name || 'Dashboard'} | Parent Portal — ShuleSoft</title>
+        <meta name="description" content="View academic performance, track fees, and communicate with teachers." />
+      </Helmet>
       
       {/* Desktop Wrapper */}
       <div style={{ 
@@ -234,8 +289,16 @@ export default function PortalDashboard({ user, onLogout }) {
             
             {/* Greeting */}
             <div style={{ marginBottom: 32 }}>
-              <div style={{ fontSize: '0.85rem', color: '#10b981', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '1px', marginBottom: 8 }}>
-                {schoolProfile?.name || 'ShuleSoft Academy'}
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+                <div style={{ fontSize: '0.85rem', color: '#10b981', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '1px' }}>
+                  {schoolProfile?.name || 'ShuleSoft Academy'}
+                </div>
+                {lastSync && (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginLeft: 'auto', fontSize: '0.7rem', color: '#94a3b8', fontWeight: 600 }}>
+                    <div style={{ width: 6, height: 6, borderRadius: 3, background: '#10b981', animation: 'pulse 2s infinite' }} />
+                    Live
+                  </div>
+                )}
               </div>
               <h1 style={{ margin: 0, fontSize: isDesktop ? '2.4rem' : '1.8rem', fontWeight: 900, color: '#0f172a', letterSpacing: '-1px' }}>
                 Welcome, {localUser.name.split(' ')[0]}

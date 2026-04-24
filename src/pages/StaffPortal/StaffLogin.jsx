@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { TeacherIcon, ShieldIcon, PhoneIcon, EyeIcon, EyeOffIcon, RocketIcon, FlagIcon, BookIcon, GraduationIcon, SchoolIcon } from '../../components/CommonIcons';
-import { validateStaffLogin, searchSchools } from '../../data/store';
+import { validateStaffLogin, getSchoolsForPortalSearch } from '../../data/store';
+import { Helmet } from 'react-helmet-async';
 
 export default function StaffLogin({ onLogin }) {
   const [searchParams] = useSearchParams();
@@ -21,7 +22,7 @@ export default function StaffLogin({ onLogin }) {
     const fetchSuggestions = async () => {
       if (schoolSearch.length > 1 && !magicSchool) {
         try {
-          const results = await searchSchools(schoolSearch);
+          const results = await getSchoolsForPortalSearch(schoolSearch);
           setSuggestions(results);
           setShowSuggestions(true);
         } catch (err) {
@@ -59,6 +60,10 @@ export default function StaffLogin({ onLogin }) {
 
   return (
     <div className="login-res-page" style={{ background: 'linear-gradient(135deg, #1E1B4B 0%, #312E81 100%)' }}>
+      <Helmet>
+        <title>Staff Portal Login | ShuleSoft</title>
+        <meta name="description" content="Secure login for school teachers and staff members." />
+      </Helmet>
       <div className="card">
         {/* RIGHT PANEL */}
         <div className="right-panel" style={{ background: 'linear-gradient(148deg, #3730A3 0%, #4338CA 30%, #4F46E5 68%, #6366F1 100%)' }}>
