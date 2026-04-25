@@ -871,7 +871,6 @@ function App() {
                       {/* <Route path="/portal/parent"  element={<SectionGate featureSlug="parent_portal"  featureName="Parent Portal"  profile={profile}><ParentPortalAdmin /></SectionGate>} /> */}
 
                       <Route path="*"         element={<div style={{padding:48, textAlign:'center'}}><h2>403 - Unauthorized</h2><p>You don't have permission to access this module.</p></div>} />
-                    </>
                   </Routes>
               </ErrorBoundary>
             </Suspense>
