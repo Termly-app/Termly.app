@@ -112,7 +112,7 @@ export default function Security({ currentUser }) {
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
             <div>
               <h2>Security & Access</h2>
-              <p>Manage administrator roles and subscription limits</p>
+              <p>Manage administrator roles and access control</p>
             </div>
             {loading && <span className="text-muted" style={{ fontSize: '0.85rem' }}>Loading...</span>}
           </div>
@@ -130,7 +130,7 @@ export default function Security({ currentUser }) {
         </div>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) 300px', gap: 24, alignItems: 'start' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: 24, alignItems: 'start' }}>
         
         {/* Users Table */}
         <div className="card">
@@ -142,7 +142,6 @@ export default function Security({ currentUser }) {
             <table className="table">
               <thead>
                 <tr>
-                  <th>ID</th>
                   <th>Name</th>
                   <th>Email</th>
                   <th>Role</th>
@@ -154,11 +153,6 @@ export default function Security({ currentUser }) {
                   const isSelf = currentUser && currentUser.id === u.id;
                   return (
                     <tr key={u.id}>
-                      <td>
-                        <span className="badge" title={u.id}>
-                          {u.id.substring(0, 8)}...
-                        </span>
-                      </td>
                       <td style={{ fontWeight: 600 }}>{u.name} {isSelf && <span style={{ color: 'var(--primary)', fontSize: '0.75rem', marginLeft: 4 }}>(You)</span>}</td>
                       <td>{u.email}</td>
                       <td>
@@ -180,50 +174,6 @@ export default function Security({ currentUser }) {
                 })}
               </tbody>
             </table>
-          </div>
-        </div>
-
-        {/* Subscription Sidebar info */}
-        <div className="card" style={{ borderLeft: '4px solid var(--primary)' }}>
-          <div className="card-header">
-            <h3><DiamondIcon size={18} /> Active Plan</h3>
-          </div>
-          <div className="card-body">
-            <div style={{ marginBottom: 16 }}>
-              <div className="text-muted" style={{ fontSize: '0.82rem', marginBottom: 4 }}>Current Tier</div>
-              <div style={{ fontWeight: 700, fontSize: '1.2rem', color: 'var(--primary)' }}>{planName}</div>
-            </div>
-            
-            <div style={{ marginBottom: 16 }}>
-              <div className="text-muted" style={{ fontSize: '0.82rem', marginBottom: 4 }}>Price</div>
-              <div style={{ fontWeight: 600 }}>
-                {planDetails.price > 0 ? (
-                  <>KSh {planDetails.price.toLocaleString()}/term</>
-                ) : (
-                  <span style={{ color: '#10B981' }}>Free / Evaluation</span>
-                )}
-              </div>
-            </div>
-
-            <div style={{ borderBottom: '1px solid #e2e8f0', margin: '16px 0' }}></div>
-
-            <h4 style={{ fontSize: '0.9rem', marginBottom: 8, color: 'var(--text-main)' }}>Plan Limits</h4>
-            <ul style={{ listStyle: 'none', padding: 0, margin: 0, fontSize: '0.85rem', color: 'var(--text-light)', display: 'flex', flexDirection: 'column', gap: 8 }}>
-              <li style={{ display: 'flex', justifyContent: 'space-between' }}>
-                <span>Max Students:</span>
-                <strong>{(planDetails.limit || 150).toLocaleString()}</strong>
-              </li>
-              <li style={{ display: 'flex', justifyContent: 'space-between', color: isAtLimit ? 'var(--danger)' : 'inherit' }}>
-                <span>Total Staff (Admins + Teachers):</span>
-                <strong>{actualStaffCount} / {seatLimit}</strong>
-              </li>
-            </ul>
-            
-            {isAtLimit && (
-              <div style={{ marginTop: 16, padding: 12, background: '#fee2e2', color: '#b91c1c', borderRadius: 6, fontSize: '0.85rem' }}>
-                You have reached your seat limit of {seatLimit}. Delete inactive staff or contact ShuleSoft to upgrade.
-              </div>
-            )}
           </div>
         </div>
 

@@ -136,7 +136,7 @@ var CBC_CORE_COMPETENCIES = [
   'Self-Efficacy',
 ];
 
-var TERM_FEE = 15000; // KSh per term
+var TERM_FEE = 0; // KSh per term (Default 0, set by admin)
 var STREAMS = ['East', 'West', 'North', 'South'];
 
 // ============= SEED USERS =============

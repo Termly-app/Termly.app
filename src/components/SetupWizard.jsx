@@ -38,6 +38,7 @@ export default function SetupWizard({ profile, onComplete, totalStudents }) {
   }, [profile]);
 
   const [saving, setSaving] = useState(false);
+  const [showContactPopup, setShowContactPopup] = useState(false);
   const [activeLevel, setActiveLevel] = useState('Upper Primary');
   const [newStream, setNewStream] = useState('');
   const [newSubject, setNewSubject] = useState('');
@@ -72,7 +73,7 @@ export default function SetupWizard({ profile, onComplete, totalStudents }) {
       }
 
       if (step === 6) {
-        onComplete();
+        setShowContactPopup(true);
       } else {
         handleNext();
       }
@@ -420,16 +421,76 @@ export default function SetupWizard({ profile, onComplete, totalStudents }) {
             <div className="wizard-success text-center animate-fade-in">
               <div className="success-icon"><CheckIcon size={48} /></div>
               <h1>Configuration Ready!</h1>
-              <p>Your school architecture is verified. You can now access your dashboard and start managing students.</p>
+              <p>Your school is set up. To start using modules, contact ShuleSoft support to activate them for your school.</p>
               
               <div className="summary-box">
                 <div className="sum-row"><strong>Institution:</strong> <span>{formData.schoolName}</span></div>
                 <div className="sum-row"><strong>Type:</strong> <span>{formData.schoolType} School</span></div>
                 <div className="sum-row"><strong>Structure:</strong> <span>{formData.activeClasses.length} Grades Enabled</span></div>
-                <div className="sum-row"><strong>Status:</strong> <span className="text-success">Ready for Term</span></div>
+                <div className="sum-row"><strong>Next Step:</strong> <span style={{ color: '#f59e0b', fontWeight: 800 }}>Contact Support</span></div>
               </div>
               
               <div className="security-tag"><ShieldIcon size={14} /> Encrypted Cloud Instance Active</div>
+            </div>
+          )}
+
+          {/* Contact Support Popup */}
+          {showContactPopup && (
+            <div style={{
+              position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+              background: 'rgba(15, 23, 42, 0.6)', backdropFilter: 'blur(8px)',
+              zIndex: 10000, display: 'flex', alignItems: 'center', justifyContent: 'center',
+              padding: 20
+            }}>
+              <div style={{
+                background: '#fff', borderRadius: 24, padding: '48px 40px', maxWidth: 460,
+                width: '100%', textAlign: 'center', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.25)',
+                border: '1px solid rgba(0,0,0,0.05)'
+              }}>
+                <div style={{
+                  width: 72, height: 72, borderRadius: '50%', background: '#fef3c7',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  margin: '0 auto 24px', fontSize: 32
+                }}>📞</div>
+                <h2 style={{ fontSize: '1.5rem', color: '#0f172a', marginBottom: 8 }}>Almost There!</h2>
+                <p style={{ color: '#64748b', lineHeight: 1.6, marginBottom: 28 }}>
+                  Your school has been configured successfully. To activate modules like <strong>Students</strong>, <strong>Grading</strong>, <strong>Fees</strong>, and more, please contact the ShuleSoft team.
+                </p>
+                
+                <div style={{ background: '#f8fafc', borderRadius: 16, padding: 20, marginBottom: 28, textAlign: 'left' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16 }}>
+                    <span style={{ fontSize: 20 }}>📧</span>
+                    <div>
+                      <div style={{ fontSize: '0.7rem', color: '#94a3b8', fontWeight: 700, textTransform: 'uppercase' }}>Email</div>
+                      <a href="mailto:support@shulesoft.com" style={{ color: '#3b82f6', fontWeight: 700, textDecoration: 'none' }}>support@shulesoft.com</a>
+                    </div>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16 }}>
+                    <span style={{ fontSize: 20 }}>📱</span>
+                    <div>
+                      <div style={{ fontSize: '0.7rem', color: '#94a3b8', fontWeight: 700, textTransform: 'uppercase' }}>Phone / WhatsApp</div>
+                      <a href="tel:+254700000000" style={{ color: '#3b82f6', fontWeight: 700, textDecoration: 'none' }}>+254 700 000 000</a>
+                    </div>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                    <span style={{ fontSize: 20 }}>🌐</span>
+                    <div>
+                      <div style={{ fontSize: '0.7rem', color: '#94a3b8', fontWeight: 700, textTransform: 'uppercase' }}>Website</div>
+                      <a href="https://shulesoft.com" target="_blank" rel="noopener noreferrer" style={{ color: '#3b82f6', fontWeight: 700, textDecoration: 'none' }}>shulesoft.com</a>
+                    </div>
+                  </div>
+                </div>
+
+                <button
+                  onClick={() => { setShowContactPopup(false); onComplete(); }}
+                  style={{
+                    width: '100%', padding: '14px 28px', borderRadius: 12,
+                    background: '#3b82f6', color: '#fff', border: 'none',
+                    fontWeight: 700, fontSize: '1rem', cursor: 'pointer',
+                    transition: 'background 0.2s'
+                  }}
+                >Go to Dashboard</button>
+              </div>
             </div>
           )}
         </div>

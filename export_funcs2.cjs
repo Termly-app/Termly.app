@@ -1,0 +1,1 @@
+let st = fs.readFileSync('src/data/store.js', 'utf8'); st = st.replace('const invalidateCache = (key)', 'export const invalidateCache = (key)').replace('const mutationGuard = (fnName)', 'export const mutationGuard = (fnName)'); fs.writeFileSync('src/data/store.js', st);  

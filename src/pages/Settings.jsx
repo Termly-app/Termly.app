@@ -6,6 +6,7 @@ import { CBC_STRUCTURE } from '../data/seedData';
 import Select from '../components/Common/Select';
 import { Helmet } from 'react-helmet-async';
 import { useDialog } from '../contexts/DialogContext';
+import { useFeature } from '../contexts/FeaturesContext';
 import {
   ClockIcon, CheckIcon, SaveIcon, SchoolIcon, ImageIcon, FolderIcon,
   BookIcon, CardIcon, DiamondIcon, PhoneIcon, RefreshIcon, CrossIcon, PlusIcon,
@@ -275,9 +276,22 @@ export default function Settings() {
   const handleAddPeriod = async () => {
     setLoading(true);
     try {
+      const existingYears = (periods || []).map(p => Number(p.year));
+      const maxYear = Math.max(...existingYears, 0);
+
       await createPeriod(newPeriod.year, newPeriod.term);
       const per = await getPeriods();
       setPeriods(per);
+
+      if (Number(newPeriod.year) > maxYear && maxYear > 0) {
+        if (await confirm({ 
+          title: 'New Academic Year', 
+          message: `You've started ${newPeriod.year}. Would you like to promote students from ${maxYear} to the next grade level?`,
+          variant: 'primary'
+        })) {
+          handlePreviewPromotion(maxYear, Number(newPeriod.year));
+        }
+      }
     } catch (err) { alert({ title: 'Configuration Error', message: err.message, variant: 'danger' }); }
     finally { setLoading(false); }
   };
@@ -307,12 +321,14 @@ export default function Settings() {
     } finally { setTestingSms(false); }
   };
 
-  const handlePreviewPromotion = async () => {
+  const handlePreviewPromotion = async (fYear, tYear) => {
+    const fromYear = fYear || new Date().getFullYear();
+    const toYear = tYear || (fromYear + 1);
+    
     setPromotionLoading(true);
     try {
-      const fromYear = new Date().getFullYear();
-      const preview = await previewClassPromotion(fromYear, fromYear + 1);
-      setPromotionPreview(preview);
+      const preview = await previewClassPromotion(fromYear, toYear);
+      setPromotionPreview({ ...preview, fromYear, toYear });
       setShowPromotionModal(true);
       setPromotionConfirmText('');
     } catch (err) {
@@ -323,16 +339,16 @@ export default function Settings() {
   };
 
   const handleConfirmPromotion = async () => {
-    const fromYear = new Date().getFullYear();
+    const { fromYear, toYear } = promotionPreview;
     if (promotionConfirmText !== `PROMOTE ${fromYear}`) {
       alert({ title: 'Invalid Confirmation', message: `Please type exactly 'PROMOTE ${fromYear}'`, variant: 'warning' });
       return;
     }
     setPromotionLoading(true);
     try {
-      const res = await promoteClasses(fromYear, fromYear + 1);
+      const res = await promoteClasses(fromYear, toYear);
       setShowPromotionModal(false);
-      alert({ title: 'Promotion Complete', message: `Successfully promoted ${res.promotedStreams} streams and graduated ${res.graduatedStudents} students.`, variant: 'success' });
+      alert({ title: 'Promotion Complete', message: `Successfully promoted ${res.promotedStreams} streams and graduated ${res.graduatedStudents} students to ${toYear}.`, variant: 'success' });
     } catch (err) {
       alert({ title: 'Promotion Error', message: err.message, variant: 'danger' });
     } finally {
@@ -710,6 +726,7 @@ export default function Settings() {
                               <span style={{fontWeight:700, color: 'var(--text-main)'}}>{e.name}</span>
                               
                               <div style={{ display: 'flex', alignItems: 'center', gap: 6, borderLeft: '1.5px solid var(--border)', paddingLeft: 10 }}>
+                                {useFeature('teacher_portal').enabled && (
                                 <button 
                                   onClick={() => toggleExamStatus(e)}
                                   style={{ 
@@ -726,7 +743,9 @@ export default function Settings() {
                                 >
                                   {e.status === 'published' ? 'Open for Teachers' : 'Locked'}
                                 </button>
+                                )}
                                 
+                                {useFeature('parent_portal').enabled && (
                                 <button 
                                   onClick={() => handleReleaseToggle(e.id, !e.released_to_parents)}
                                   style={{ 
@@ -747,6 +766,7 @@ export default function Settings() {
                                 >
                                   {e.released_to_parents ? <><CheckIcon size={12} /> Results Posted</> : 'Post to Parents'}
                                 </button>
+                                )}
                               </div>
 
                               <button onClick={()=>removeExam(e.name)} style={{background:'none',border:'none',cursor:'pointer',color:'var(--danger)',fontWeight:700,fontSize:'1.1rem', padding: 0}} title="Delete Exam">×</button>

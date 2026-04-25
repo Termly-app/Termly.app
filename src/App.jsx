@@ -92,18 +92,27 @@ function SbLink({ to, icon: Icon, label, onClick, exact = false, locked = false,
 
   const finalClass = `nav-item${isActive ? ' active' : ''}${locked ? ' nav-locked' : ''}${red ? ' nav-red' : ''}`;
 
+  const handleClick = (e) => {
+    if (locked) {
+      e.preventDefault();
+      return;
+    }
+    if (onClick) onClick();
+  };
+
   return (
     <NavLink
-      to={to}
+      to={locked ? '#' : to}
       end={exact}
       className={finalClass}
-      onClick={onClick}
+      onClick={handleClick}
+      style={locked ? { opacity: 0.5, cursor: 'not-allowed' } : {}}
     >
       <span className="nav-icon">
         <Icon size={16} strokeWidth={1.75} />
       </span>
       <span className="nav-label">{label}</span>
-      {locked && <span className="nav-lock-badge" style={{ fontSize:'0.55rem', background:'var(--danger)', color:'white', padding:'2px 6px', borderRadius:10, marginLeft:'auto', fontWeight: 800 }}>UPGRADE</span>}
+      {locked && <span className="nav-lock-badge" style={{ fontSize:'0.55rem', background:'#94a3b8', color:'white', padding:'2px 6px', borderRadius:10, marginLeft:'auto', fontWeight: 800 }}>LOCKED</span>}
     </NavLink>
   );
 }
@@ -287,55 +296,55 @@ function Sidebar({ isOpen, onClose, onLogout, onLock, currentUser, subscriptionA
         )}
 
         {/* Librarians, Teachers, and Admins can see the Library catalog */}
-        {(isLibrarian || isTeacher || isAdmin) && useFeature('library').enabled && (
+        {(isLibrarian || isTeacher || isAdmin) && (
           <SbLink to="/library" icon={BookIcon} label="Library" onClick={onClose} locked={!useFeature('library').enabled && !isPlatformAdmin} />
         )}
 
-        {/* Academic section - always visible for Sandbox, else gated */}
-        {(isTeacher || isAdmin) && (useFeature('attendance').enabled || useFeature('grading').enabled || useFeature('timetable').enabled || useFeature('lms').enabled) && (
+        {/* Academic section */}
+        {(isTeacher || isAdmin) && (
           <SbSection label="Academics" />
         )}
         
-        {(isAdmin || isTeacher) && useFeature('attendance').enabled && (
+        {(isAdmin || isTeacher) && (
           <SbLink to="/attendance" icon={AttendanceIcon} label="Attendance" onClick={onClose} locked={!useFeature('attendance').enabled && !isPlatformAdmin} />
         )}
         
-        {(isAdmin || isTeacher) && useFeature('grading').enabled && (
+        {(isAdmin || isTeacher) && (
           <SbLink to="/academics" icon={GradingIcon} label="Academic Results" onClick={onClose} locked={!useFeature('grading').enabled && !isPlatformAdmin} />
         )}
         
         {/* Timetable — Reactivated for Sandbox/Production */}
-        {(isTeacher || isAdmin) && useFeature('timetable').enabled && (
+        {(isTeacher || isAdmin) && (
           <SbLink to="/timetable" icon={TimetableIcon} label="Timetable" onClick={onClose} locked={!useFeature('timetable').enabled && !isPlatformAdmin} />
         )}
 
         {/* E-Learning — Reactivated for Sandbox/Production */}
-        {(isTeacher || isAdmin) && useFeature('lms').enabled && (
+        {(isTeacher || isAdmin) && (
           <SbLink to="/lms" icon={ActivityIcon} label="E-Learning" onClick={onClose} locked={!useFeature('lms').enabled && !isPlatformAdmin} />
         )}
 
-        {/* Administration section - dynamically shown if any child is enabled */}
-        {(isAdmin || isFinance) && (useFeature('fees').enabled || useFeature('communications').enabled) && (
+        {/* Administration section */}
+        {(isAdmin || isFinance) && (
           <SbSection label="Administration" />
         )}
         
-        {(isAdmin || isFinance) && useFeature('fees').enabled && (
+        {(isAdmin || isFinance) && (
           <SbLink to="/fees" icon={FeesIcon} label="Fees & Billing" onClick={onClose} locked={!useFeature('fees').enabled && !isPlatformAdmin} />
         )}
 
-        {isAdmin && useFeature('communications').enabled && (
+        {isAdmin && (
           <SbLink to="/communications" icon={MessageIcon} label="Comm. Center" onClick={onClose} locked={!useFeature('communications').enabled && !isPlatformAdmin} />
         )}
 
-        {(isAdmin || isTeacher) && useFeature('teacher_portal').enabled && (
+        {(isAdmin || isTeacher) && (
           <SbLink to="/portal/teacher" icon={StaffIcon} label="Teacher Portal" onClick={onClose} locked={!useFeature('teacher_portal').enabled && !isPlatformAdmin} />
         )}
 
-        {/* Compliance section - Admins ONLY (as requested: no finance) */}
+        {/* Compliance section - Admins ONLY, gated behind feature */}
         {isAdmin && (
           <>
             <SbSection label="Compliance" />
-            <SbLink to="/compliance/nemis" icon={FlagIcon} label="NEMIS Audit" onClick={onClose} locked={false} />
+            <SbLink to="/compliance/nemis" icon={FlagIcon} label="NEMIS Audit" onClick={onClose} locked={!useFeature('nemis').enabled && !isPlatformAdmin} />
           </>
         )}
 

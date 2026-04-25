@@ -197,7 +197,7 @@ export function getCurrentPeriodId() {
   return _currentPeriodId;
 }
 
-export var _currentExamType = 'End Term';
+export var _currentExamType = '';
 export function setCurrentExamType(type) {
   _currentExamType = type;
   window.dispatchEvent(new Event('examTypeChanged'));

@@ -1,0 +1,681 @@
+diff --git a/src/data/store.js b/src/data/store.js
+index 8cefd7f..a4224c9 100644
+--- a/src/data/store.js
++++ b/src/data/store.js
+@@ -12,6 +12,7 @@ import { CBC_STRUCTURE, CBC_CORE_COMPETENCIES, TERM_FEE, getLevelForGrade, getSu
+ export { CBC_STRUCTURE, CBC_CORE_COMPETENCIES, TERM_FEE, getLevelForGrade, getSubjectsForGrade };
+ 
+ import { encryptData as encrypt, decryptData as decrypt } from '../utils/securityUtils';
++import { sendEmail, emailTemplates } from '../utils/email';
+ 
+ 
+ // ============= SaaS Subscription Tiers =============@@ -185,6 +186,46 @@ export async function searchSchools(query) {
+   return data || [];
+ }
+ 
++/**
++ * Portal Search: Excludes ShuleSoft HQ and Sandbox schools
++ * Relies on DB-level RLS to enforce the `is_platform_account = false` rule.
++ */
++export async function getSchoolsForPortalSearch(query) {
++  if (!query || query.length < 2) return [];
++  const { data, error } = await supabase
++    .from('schools')
++    .select('id, name, school_code') // Only return non-sensitive fields
++    .ilike('name', `%${query}%`)
++    .eq('status', 'active')
++    .neq('is_platform_account', true)
++    .limit(8);
++  if (error) throw error;
++  return data || [];
++}
++
++/**
++ * Domain 12A: Portal Access Management
++ */
++export async function createPortalUser(studentId, guardianName, guardianPhone, guardianEmail, type = 'parent') {
++  if (!_currentSchoolId) throw new Error("No school context selected");
++  
++  const { data, error } = await supabase
++    .from('portal_users')
++    .insert({
++      school_id: _currentSchoolId,
++      student_id: studentId,
++      name: guardianName,
++      phone: guardianPhone,
++      email: guardianEmail,
++      type: type
++    })
++    .select()
++    .single();
++
++  if (error) throw error;
++  return data;
++}
++
+ export async function registerSchool(name, email, plan, authUserId, adminName, adminEmail, phone = '', location = '', curriculum = 'CBC Only') {
+   // 1. Create the school row
+   const baseCode = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');@@ -244,6 +285,24 @@ export async function registerSchool(name, email, plan, authUserId, adminName, a
+   if (periodErr) throw periodErr;
+   
+   await logPlatformActivity('REGISTRATION', `New school registered: ${name}`, school.id);
++
++  // 5. Send Welcome Email
++  try {
++    await sendEmail({
++      to: adminEmail,
++      subject: `Welcome to ShuleSoft - ${name}`,
++      template: emailTemplates.WELCOME,
++      data: {
++        schoolName: name,
++        adminName: adminName,
++        schoolCode: school.school_code,
++        plan: plan
++      }
++    });
++  } catch (emailErr) {
++    console.warn('Welcome email failed', emailErr);
++  }
++
+   return school;
+ }
+ @@ -974,6 +1033,24 @@ export async function createPeriod(year, term, setAsActive = false) {
+       .eq('school_id', _currentSchoolId)
+       .neq('id', data.id);
+     _currentPeriodId = data.id;
++
++    // Send New Term Email to Admin
++    if (_currentAuthUser?.email) {
++      try {
++        await sendEmail({
++          to: _currentAuthUser.email,
++          subject: `New Term Started: ${term} ${year}`,
++          template: emailTemplates.NEW_TERM_STARTED,
++          data: {
++            year,
++            term,
++            adminName: _currentAuthUser.name || 'Admin'
++          }
++        });
++      } catch (e) {
++        console.warn('New term email failed', e);
++      }
++    }
+   }
+   return data;
+ }@@ -1071,17 +1148,27 @@ export function getPrintFooter() {
+ /**
+  * Global helper to calculate grade based on score and school profile
+  */
+-export function getGradeForScore(score, className, profile) {
++export function getGradeForScore(score, className, profile, subjectName = null) {
+   const level = getLevelForGrade(className);
+-  const scale = profile.gradingSystems?.[className] || 
+-                profile.gradingSystems?.[level] || 
+-                profile.gradingSystems?.default || [
+-                  {min: 80, max: 100, grade: 'A', color: '#10b981'},
+-                  {min: 70, max: 79, grade: 'B', color: '#3b82f6'},
+-                  {min: 60, max: 69, grade: 'C', color: '#f59e0b'},
+-                  {min: 50, max: 59, grade: 'D', color: '#f97316'},
+-                  {min: 0, max: 49, grade: 'E', color: '#ef4444'}
+-                ];
++  
++  // 1. Check for subject-specific grading scale
++  let scale = null;
++  if (subjectName && profile.subjectConfigs?.[className]?.[subjectName]?.gradingScale) {
++    scale = profile.subjectConfigs[className][subjectName].gradingScale;
++  }
++  
++  // 2. Fallback to class/level/default
++  if (!scale) {
++    scale = profile.gradingSystems?.[className] || 
++            profile.gradingSystems?.[level] || 
++            profile.gradingSystems?.default || [
++              {min: 80, max: 100, grade: 'A', color: '#10b981'},
++              {min: 70, max: 79, grade: 'B', color: '#3b82f6'},
++              {min: 60, max: 69, grade: 'C', color: '#f59e0b'},
++              {min: 50, max: 59, grade: 'D', color: '#f97316'},
++              {min: 0, max: 49, grade: 'E', color: '#ef4444'}
++            ];
++  }
+   
+   const matched = scale.find(s => score >= s.min && score <= s.max);
+   if (matched) return { grade: matched.grade || matched.symbol, color: matched.color };@@ -1439,6 +1526,90 @@ export async function addStudent(student) {
+   return newStudent;
+ }
+ 
++/**
++ * Bulk import students in idempotent 50-row batches.
++ * @param {Array} rows - Array of { name, admNo, class, stream, gender, parentPhone, parent, residenceType }
++ * @param {Function} onProgress - Optional callback(imported, total)
++ * @returns {{ imported: number, skipped: number, errors: Array }}
++ */
++export async function bulkImportStudents(rows, onProgress = null) {
++  mutationGuard('bulkImportStudents');
++  if (!_currentSchoolId || !_currentPeriodId) throw new Error('No school/period context');
++
++  const profile = await getSchoolProfile();
++  const planName = profile.subscriptionPlan || 'Sandbox';
++  const planLimits = await getPlanLimits(planName);
++  const maxStudents = planLimits.students || 5;
++  const currentStudents = await getStudents();
++  const remaining = Math.max(0, maxStudents - currentStudents.length);
++
++  if (remaining === 0) {
++    throw new Error(`Student limit reached for your ${planName} plan (${maxStudents} students). Cannot import.`);
++  }
++
++  const capped = rows.slice(0, remaining);
++  const skipped = rows.length - capped.length;
++  const BATCH_SIZE = 50;
++  let imported = 0;
++  const errorList = [];
++
++  for (let i = 0; i < capped.length; i += BATCH_SIZE) {
++    const batch = capped.slice(i, i + BATCH_SIZE);
++    const inserts = batch.map((row, batchIdx) => {
++      const globalIdx = currentStudents.length + imported + batchIdx + 1;
++      return {
++        school_id: _currentSchoolId,
++        adm_no: row.admNo || `SS-${new Date().getFullYear()}-${String(globalIdx).padStart(4, '0')}`,
++        name: sanitizeName(row.name),
++        class: row.class,
++        stream: row.stream || 'General',
++        parent: sanitizeName(row.parent || ''),
++        residence_type: (row.residenceType || 'day').toLowerCase(),
++        parent_phone: row.parentPhone || '',
++        gender: row.gender || '',
++        dob: row.dob || '',
++        join_date: row.joinDate || new Date().toISOString().split('T')[0],
++        status: 'Active',
++        subjects: getSubjectsForGrade(row.class, profile)
++      };
++    });
++
++    try {
++      const { data: batchData, error } = await supabase
++        .from('students')
++        .upsert(inserts, { onConflict: 'school_id, adm_no', ignoreDuplicates: true })
++        .select('id, class');
++
++      if (error) {
++        errorList.push({ batch: i / BATCH_SIZE + 1, message: error.message });
++      } else {
++        imported += batchData?.length || batch.length;
++        if (batchData && batchData.length > 0) {
++          const feeInserts = batchData.map(s => {
++            const baseFee = profile.gradeFees?.[s.class] || TERM_FEE;
++            const feeVal = typeof baseFee === 'object' ? Number(baseFee.day) || 0 : Number(baseFee) || 0;
++            return {
++              school_id: _currentSchoolId,
++              student_id: s.id,
++              period_id: _currentPeriodId,
++              total_fee: feeVal,
++              paid: 0,
++              balance: feeVal
++            };
++          });
++          await supabase.from('fees').upsert(feeInserts, { onConflict: 'school_id, student_id, period_id', ignoreDuplicates: true });
++        }
++      }
++    } catch (err) {
++      errorList.push({ batch: i / BATCH_SIZE + 1, message: err.message });
++    }
++    if (onProgress) onProgress(imported, capped.length);
++  }
++
++  await logPlatformActivity('BULK_IMPORT', `Imported ${imported} students from CSV upload`);
++  return { imported, skipped, errors: errorList };
++}
++
+ export async function updateStudent(id, updates) {
+   mutationGuard('updateStudent');
+   const row = {};@@ -1538,6 +1709,8 @@ export async function transferStudents(selectedIds, direction = 'promote') {
+     if (direction === 'promote') {
+       if (idx >= 0 && idx < allGrades.length - 1) {
+         updates.push({ id: s.id, newClass: allGrades[idx + 1] });
++      } else if (idx === allGrades.length - 1) {
++        updates.push({ id: s.id, newClass: 'Graduated' });
+       }
+     } else if (direction === 'demote') {
+       if (idx > 0) {@@ -1546,10 +1719,35 @@ export async function transferStudents(selectedIds, direction = 'promote') {
+     }
+   });
+ 
+-  for (const u of updates) {
+-    const { error } = await supabase.from('students').update({ class: u.newClass }).eq('id', u.id);
+-    if (error) throw error;
++  // Use the advanced RPC if it exists, fallback to single updates
++  try {
++    // Group by target class to minimize RPC calls if needed, 
++    // but the RPC handles an array of IDs for a single target class.
++    // For simplicity here, we'll loop if classes are different, 
++    // but usually promotions happen class-by-class.
++    const classes = [...new Set(updates.map(u => u.newClass))];
++    for (const cls of classes) {
++      const ids = updates.filter(u => u.newClass === cls).map(u => u.id);
++      const { data, error } = await supabase.rpc('promote_students', {
++        p_school_id: _currentSchoolId,
++        p_student_ids: ids,
++        p_target_class: cls,
++        p_new_period_id: _currentPeriodId // Usually would be NEXT period
++      });
++      if (error) throw error;
++    }
++  } catch (err) {
++    console.warn('Advanced RPC failed, falling back to basic updates:', err);
++    for (const u of updates) {
++      const { error } = await supabase.from('students').update({ 
++        class: u.newClass,
++        status: u.newClass === 'Graduated' ? 'Graduated' : 'Active'
++      }).eq('id', u.id);
++      if (error) throw error;
++    }
+   }
++  
++  invalidateCache('students');
+   return await getStudents();
+ }
+ @@ -2567,30 +2416,28 @@ export async function getFeeSummary(preFetchedFees = null, preFetchedStudents =
+ // ============= ATTENDANCE =============
+ export async function getAttendance() {
+   if (!_currentSchoolId || !_currentPeriodId) return {};
+-  const cacheKey = `att_${_currentSchoolId}_${_currentPeriodId}`;
+-  return cachedQuery(cacheKey, async () => {
++  return cachedQuery('attendance', async () => {
+     const { data, error } = await supabase
+       .from('attendance')
+-      .select('id, student_id, date, status, period_id, school_id')
+-      .eq('school_id', _currentSchoolId)
+-      .eq('period_id', _currentPeriodId);
++      .select('date, student_id, status, session')
++      .eq('school_id', _currentSchoolId);
+     if (error) throw error;
+-    // Convert to { date: { studentId: status } }
+     const att = {};
+-    (data || []).forEach(row => {
++    data?.forEach(row => {
+       if (!att[row.date]) att[row.date] = {};
+-      att[row.date][row.student_id] = row.status;
++      if (!att[row.date][row.student_id]) att[row.date][row.student_id] = {};
++      att[row.date][row.student_id][row.session || 'Morning'] = row.status;
+     });
+     return att;
+   });
+ }
+ 
+-export async function markAttendance(date, studentId, status) {
++export async function markAttendance(date, studentId, status, session = 'Morning') {
+   const { error } = await supabase
+     .from('attendance')
+     .upsert(
+-      { school_id: _currentSchoolId, date, student_id: studentId, status, period_id: _currentPeriodId },
+-      { onConflict: 'school_id,date,student_id,period_id' }
++      { school_id: _currentSchoolId, date, student_id: studentId, status, period_id: _currentPeriodId, session },
++      { onConflict: 'school_id,date,student_id,session,period_id' }
+     );
+   if (error) throw error;
+ }@@ -2934,6 +2781,38 @@ export async function sendSchoolInvite(email, recipientName) {
+ export async function validateParentLogin(schoolSearch, admNo, phone, schoolId = null) {
+   const queryParam = schoolId || schoolSearch;
+ 
++  // 1. New System: Try logging in with Supabase Auth
++  const syntheticEmail = `${phone.replace(/\D/g, '')}@portal.shulesoft.local`;
++  
++  // Need to ensure supabase is available here
++  const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
++    email: syntheticEmail,
++    password: admNo,
++  });
++
++  if (authData?.user && !authError) {
++    // Auth login succeeded! Fetch portal_users record
++    const { data: portalUser, error: pError } = await supabase
++      .from('portal_users')
++      .select('*')
++      .eq('id', authData.user.id)
++      .single();
++      
++    if (portalUser) {
++      return {
++        id: portalUser.student_id,
++        studentId: portalUser.student_id,
++        token: authData.session.access_token,
++        school_id: portalUser.school_id,
++        schoolId: portalUser.school_id,
++        parent_phone: portalUser.phone,
++        name: portalUser.name,
++        schoolName: schoolSearch
++      };
++    }
++  }
++
++  // 2. Legacy System: Fallback to the old RPC logic
+   const { data, error } = await supabase.rpc('validate_parent_portal_login', {
+     p_school_search: queryParam,
+     p_adm_no: admNo,@@ -2954,6 +2833,25 @@ export async function validateParentLogin(schoolSearch, admNo, phone, schoolId =
+ 
+   const selectedSchoolId = data.school_id;
+ 
++  // 3. Auto-Migration: If legacy auth works, create their new Supabase Auth account
++  const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
++    email: syntheticEmail,
++    password: admNo,
++  });
++
++  if (signUpData?.user && !signUpError) {
++    // Attempt to create portal_users record
++    await supabase.from('portal_users').insert({
++      id: signUpData.user.id,
++      school_id: selectedSchoolId,
++      student_id: data.id,
++      type: 'parent',
++      name: data.parent_name || 'Parent',
++      phone: phone,
++      email: syntheticEmail
++    });
++  }
++
+   const profile = await getSchoolProfileBySchoolId(selectedSchoolId);
+ 
+   // Subscription Gate@@ -2970,12 +2868,14 @@ export async function validateParentLogin(schoolSearch, admNo, phone, schoolId =
+ 
+   return {
+     id: data.id,
++    studentId: data.id,
+     name: data.name,
+     class: data.class,
+     stream: data.stream || '',
+     subjects: data.subjects || [],
+     adm_no: data.adm_no,
+     school_id: data.school_id,
++    schoolId: data.school_id,
+     residence_type: data.residence_type,
+     parent_phone: data.parent_phone || ''
+   };@@ -3318,7 +3218,7 @@ export function getCurrentSchool() {
+ export async function checkIsPlatformAdmin(email) {
+   if (!email) return false;
+   try {
+-    const ROOT_ADMINS = ['admin@shulesoft.com', 'shulesoft8@gmail.com'];
++    const ROOT_ADMINS = (import.meta.env.VITE_PLATFORM_ADMIN_WHITELIST || '').split(',').map(e => e.trim());
+     if (ROOT_ADMINS.includes(email)) return true;
+ 
+     const { data, error } = await supabase@@ -3541,7 +3441,7 @@ export async function deleteSchool(schoolId) {
+  * PROTECTING only the ShuleSoft HQ / Super Admin school.
+  */
+ export async function wipeAllNonAdminSchools() {
+-  const PLATFORM_ADMINS = ['admin@shulesoft.com', 'shulesoft8@gmail.com'];
++  const PLATFORM_ADMINS = (import.meta.env.VITE_PLATFORM_ADMIN_WHITELIST || '').split(',').map(e => e.trim());
+   
+   // 1. Fetch all schools
+   const { data: schools, error } = await supabase.from('schools').select('id, name, owner_id');@@ -3570,7 +3470,7 @@ export async function wipeAllNonAdminSchools() {
+   }
+ 
+   // 2. Also clear global activity logs that aren't linked to a specific school (optional, but good for reset)
+-  // await supabase.from('platform_activity').delete().neq('user_email', 'admin@shulesoft.com');
++  // await supabase.from('platform_activity').delete().neq('user_email', ROOT_ADMINS[0]);
+ 
+   return { success: true, totalDeleted: deletedCount };
+ }@@ -5589,6 +5489,262 @@ export function subscribeToMessages(userId, callback) {
+   return () => { supabase.removeChannel(channel); };
+ }
+ 
++// ================================
++// MOCK SMS (Domain 14C)
++// ================================
++
++/**
++ * Mock SMS sender — logs to console and creates an in-app notification.
++ * Replace with real Africa's Talking / Twilio integration when ready.
++ */
++export async function mockSendSMS({ phone, message, recipientUserId }) {
++  console.log(`[SMS MOCK] To: ${phone} | Message: ${message}`);
++  
++  // Create an in-app notification if we have a user ID
++  if (recipientUserId && _currentSchoolId) {
++    try {
++      await supabase.from('notifications').insert({
++        school_id: _currentSchoolId,
++        user_id: recipientUserId,
++        type: 'info',
++        title: 'SMS Notification',
++        body: message,
++        reference_type: 'sms',
++      });
++    } catch (e) {
++      console.warn('[SMS MOCK] Failed to create notification:', e);
++    }
++  }
++  
++  return { success: true, mock: true, phone, message };
++}
++
++// ================================
++// PORTAL ACCESS SETTINGS (Domain 14D)
++// ================================
++
++export async function getPortalAccessSettings() {
++  if (!_currentSchoolId) return null;
++  const { data, error } = await supabase
++    .from('portal_access_settings')
++    .select('*')
++    .eq('school_id', _currentSchoolId)
++    .maybeSingle();
++
++  if (error && error.code !== 'PGRST116') throw error;
++  
++  // Return defaults if no row exists
++  return data || {
++    parent_portal_enabled: true,
++    teacher_portal_enabled: true,
++    parent_can_view_fees: true,
++    parent_can_view_results: true,
++    parent_can_view_attendance: true,
++    allow_parent_self_register: false,
++  };
++}
++
++export async function updatePortalAccessSettings(settings) {
++  mutationGuard('updatePortalAccessSettings');
++  if (!_currentSchoolId) throw new Error('No school context');
++  
++  const { data, error } = await supabase
++    .from('portal_access_settings')
++    .upsert({
++      school_id: _currentSchoolId,
++      ...settings,
++      updated_at: new Date().toISOString()
++    }, { onConflict: 'school_id' })
++    .select()
++    .single();
++
++  if (error) throw error;
++  return data;
++}
++
+ // Auto-sync every 60s if online
+ setInterval(triggerSync, 60000);
+ window.addEventListener('online', triggerSync);
++
++/**
++ * Domain 14: Schema Migration Management
++ */
++const REQUIRED_SCHEMA_VERSION = 12; // Update this when new SQL patches are released
++
++export async function getSchemaStatus() {
++  try {
++    const { data, error } = await supabase
++      .from('schema_versions')
++      .select('version')
++      .order('version', { ascending: false })
++      .limit(1)
++      .maybeSingle();
++
++    if (error && error.code !== 'PGRST116') throw error;
++    
++    const currentVersion = data?.version || 0;
++    return {
++      currentVersion,
++      requiredVersion: REQUIRED_SCHEMA_VERSION,
++      outdated: currentVersion < REQUIRED_SCHEMA_VERSION
++    };
++  } catch (err) {
++    console.warn("[Migration] Could not fetch schema version:", err);
++    return { currentVersion: 0, requiredVersion: REQUIRED_SCHEMA_VERSION, outdated: true };
++  }
++}
++
++export async function runSchemaMigration(sql) {
++  mutationGuard('runSchemaMigration');
++  
++  // This invokes the edge function responsible for executing raw SQL
++  // The edge function must verify the platform admin JWT claim.
++  const { data, error } = await supabase.functions.invoke('execute-migration', {
++    body: { sql }
++  });
++
++  if (error) throw error;
++  return data;
++}
++
++
++
++
++
++
++
++
++
++
++
++
++
++
++// ==========================================
++// DOMAIN 12B: EXAM PUBLISH WORKFLOW
++// ==========================================
++
++
++
++
++
++
++
++
++// ================================
++// AUDIT LOGS (Domain 6)
++// ================================
++
++/**
++ * Fetch audit logs for the current school.
++ * @param {object} filters - { tableName, actionType, limit, offset }
++ */
++export async function getAuditLogs(filters = {}) {
++  if (!_currentSchoolId) return [];
++  
++  let q = supabase
++    .from('audit_logs')
++    .select('*')
++    .eq('school_id', _currentSchoolId)
++    .order('created_at', { ascending: false })
++    .limit(filters.limit || 50);
++
++  if (filters.tableName) q = q.eq('table_name', filters.tableName);
++  if (filters.actionType) q = q.eq('action_type', filters.actionType);
++  if (filters.offset) q = q.range(filters.offset, filters.offset + (filters.limit || 50) - 1);
++
++  const { data, error } = await q;
++  if (error) throw error;
++  return data || [];
++}
++
++/**
++ * Fetch all audit logs across schools (platform admin only).
++ */
++export async function getAllAuditLogs(filters = {}) {
++  let q = supabase
++    .from('audit_logs')
++    .select('*, schools(name)')
++    .order('created_at', { ascending: false })
++    .limit(filters.limit || 100);
++
++  if (filters.tableName) q = q.eq('table_name', filters.tableName);
++  if (filters.actionType) q = q.eq('action_type', filters.actionType);
++
++  const { data, error } = await q;
++  if (error) throw error;
++  return data || [];
++}
++
++// ================================
++// DOMAIN 16: ACADEMIC PROGRESSION
++// ================================
++
++const defaultProgressionMap = {
++  'Grade 1': 'Grade 2',
++  'Grade 2': 'Grade 3',
++  'Grade 3': 'Grade 4',
++  'Grade 4': 'Grade 5',
++  'Grade 5': 'Grade 6',
++  'Grade 6': 'Grade 7',
++  'Grade 7': 'Grade 8',
++  'Grade 8': 'Grade 9',
++  'Form 1': 'Form 2',
++  'Form 2': 'Form 3',
++  'Form 3': 'Form 4',
++  'Form 4': 'Graduated'
++};
++
++
++
++
++
++// ================================
++// DOMAIN 16E: PERIOD CONTINUITY
++// ================================
++
++
++
++
++
++export async function carryForwardFeeStructure(fromPeriodId, toPeriodId) {
++  mutationGuard('carryForwardFeeStructure');
++  if (!_currentSchoolId) throw new Error('No school context');
++
++  const { data: fees, error: fetchErr } = await supabase
++    .from('fees')
++    .select('*')
++    .eq('school_id', _currentSchoolId)
++    .eq('period_id', fromPeriodId);
++
++  if (fetchErr) throw fetchErr;
++  if (!fees || fees.length === 0) return { success: true, count: 0 };
++
++  const { data: students } = await supabase.from('students').select('id, status').eq('school_id', _currentSchoolId).eq('status', 'Enrolled');
++  const enrolledIds = new Set(students?.map(s => s.id) || []);
++
++  const newFees = fees
++    .filter(f => enrolledIds.has(f.student_id))
++    .map(f => {
++      const arrears = Math.max(0, Number(f.total_fee || f.total_expected || 0) - Number(f.paid));
++      return {
++        school_id: _currentSchoolId,
++        student_id: f.student_id,
++        period_id: toPeriodId,
++        total_fee: arrears, // Base for new period before term fees are applied
++        paid: 0,
++        balance: arrears,
++        status: arrears > 0 ? 'Unpaid' : 'Paid'
++      };
++    });
++
++  if (newFees.length === 0) return { success: true, count: 0 };
++
++  const { error: insertErr } = await supabase
++    .from('fees')
++    .upsert(newFees, { onConflict: 'school_id, student_id, period_id' });
++
++  if (insertErr) throw insertErr;
++  await logPlatformActivity('FEES_CARRIED_FORWARD', `Copied ${newFees.length} fee balances to period ${toPeriodId}`);
++  return { success: true, count: newFees.length };
++}
