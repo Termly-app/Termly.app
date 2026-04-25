@@ -676,7 +676,20 @@ export async function getPortalAccessSettings() {
     .select('*')
     .eq('school_id', _currentSchoolId)
     .maybeSingle();
-  if (error) { console.error('getPortalAccessSettings error:', error); return null; }
+  if (error) { 
+    if (error.code === 'PGRST116' || error.message?.includes('does not exist')) {
+      return {
+        parent_portal_enabled: true,
+        teacher_portal_enabled: true,
+        parent_can_view_fees: true,
+        parent_can_view_results: true,
+        parent_can_view_attendance: true,
+        allow_parent_self_register: false
+      };
+    }
+    console.error('getPortalAccessSettings error:', error); 
+    return null; 
+  }
   
   if (!data) {
     return {

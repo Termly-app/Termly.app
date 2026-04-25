@@ -1,6 +1,7 @@
 -- FIX FOR 400 ERRORS (MISSING TABLES/COLUMNS)
 
--- 1. Ensure portal_access_settings table exists
+-- 1. Ensure portal_access_settings table exists (Drop view if exists as it might be an old alias)
+DROP VIEW IF EXISTS portal_access_settings;
 CREATE TABLE IF NOT EXISTS portal_access_settings (
   id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
   school_id uuid REFERENCES schools(id) ON DELETE CASCADE UNIQUE,
