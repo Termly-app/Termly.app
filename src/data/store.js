@@ -1851,7 +1851,7 @@ async function migrateLegacyExams(examsList) {
 /**
  * Creates a new unified exam record
  */
-export async function createExam(name, type = 'endterm', term = 'Current', status = 'published') {
+export async function createExam(name, type = 'endterm', term = 'Current', status = 'setup') {
   mutationGuard('createExam');
   const userRecord = await getUserByAuthId(_currentAuthUser?.id);
   const creatorId = userRecord?.id || _currentUserId;

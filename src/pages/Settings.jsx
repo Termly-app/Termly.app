@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { getSchoolProfile, saveSchoolProfile, importData, exportData, TERM_FEE, applyFeeStructure, getPeriods, createPeriod, setActivePeriod, testMpesaConnection, testSmsConnection, getCurrentAuthUser, supabase, getCurrentPeriodId, subscribeToTable, getPortalAccessSettings, updatePortalAccessSettings } from '../data/store';
 import { getUserRole } from '../data/authStore';
-import { getExams, createExam, deleteExam, previewClassPromotion, promoteClasses } from '../data/academicsStore';
+import { getExams, createExam, deleteExam, deleteAllExams, previewClassPromotion, promoteClasses, updateExam, releaseExamToParents } from '../data/academicsStore';
 import { CBC_STRUCTURE } from '../data/seedData';
 import Select from '../components/Common/Select';
 import { Helmet } from 'react-helmet-async';
@@ -213,12 +213,29 @@ export default function Settings() {
       }
     }
   };
+  const handleClearAllExams = async () => {
+    if (await confirm({ 
+      title: 'Clear All Exams?', 
+      message: 'This will permanently delete ALL exams and their marks for this school. This cannot be undone. Are you sure you want a clean slate?', 
+      variant: 'danger' 
+    })) {
+      setLoading(true);
+      try {
+        await deleteAllExams();
+        setRobustExams([]);
+        alert({ title: 'Success', message: 'All exams have been cleared.', variant: 'success' });
+      } catch(err) {
+        alert({ title: 'Error', message: err.message, variant: 'danger' });
+      } finally {
+        setLoading(false);
+      }
+    }
+  };
   const toggleExamStatus = async (exam) => {
     const newStatus = exam.status === 'published' ? 'draft' : 'published';
     setLoading(true);
     try {
-      const { updateExamStatus } = await import('../data/store');
-      await updateExamStatus(exam.id, newStatus);
+      await updateExam(exam.id, { status: newStatus });
       setRobustExams(robustExams.map(e => e.id === exam.id ? { ...e, status: newStatus } : e));
     } catch (err) {
       alert({ title: 'Error', message: err.message, variant: 'danger' });
@@ -229,7 +246,6 @@ export default function Settings() {
   const handleReleaseToggle = async (examId, isReleased) => {
     setLoading(true);
     try {
-      const { releaseExamToParents } = await import('../data/store');
       await releaseExamToParents(examId, isReleased);
       setRobustExams(robustExams.map(e => e.id === examId ? { ...e, released_to_parents: isReleased } : e));
     } catch (err) {
@@ -704,7 +720,14 @@ export default function Settings() {
 
                 {/* Grading & Exams */}
                 <div style={sectionBox}>
-                  <div style={{fontWeight:700,fontSize:'0.9rem',color:'var(--text-main)',marginBottom:15}}><BookIcon size={20} /> Grading & Exam Types</div>
+                  <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:15}}>
+                    <div style={{fontWeight:700,fontSize:'0.9rem',color:'var(--text-main)'}}><BookIcon size={20} /> Grading & Exam Types</div>
+                    {robustExams.length > 0 && (
+                      <button onClick={handleClearAllExams} style={{fontSize:'0.65rem',background:'none',border:'none',color:'var(--danger)',cursor:'pointer',fontWeight:700,display:'flex',alignItems:'center',gap:4}} title="Remove all unconfigured exams">
+                        <CrossIcon size={12} /> Clear All
+                      </button>
+                    )}
+                  </div>
                   
                   <div className="responsive-grid-stack">
                     {/* Exam Names */}

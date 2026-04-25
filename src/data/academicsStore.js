@@ -83,7 +83,7 @@ async function migrateLegacyExams(examsList) {
 /**
  * Creates a new unified exam record
  */
-export async function createExam(name, type = 'endterm', term = 'Current', status = 'published') {
+export async function createExam(name, type = 'endterm', term = 'Current', status = 'setup') {
   mutationGuard('createExam');
   const userRecord = await getUserByAuthId(_currentAuthUser?.id);
   const creatorId = userRecord?.id || _currentUserId;
@@ -118,6 +118,19 @@ export async function deleteExam(examId) {
     .from('exams')
     .delete()
     .eq('id', examId);
+  
+  if (error) throw error;
+  invalidateCache(`exams_${_currentSchoolId}_${_currentPeriodId}`);
+  return true;
+}
+
+export async function deleteAllExams() {
+  mutationGuard('deleteAllExams');
+  if (!_currentSchoolId) return;
+  const { error } = await supabase
+    .from('exams')
+    .delete()
+    .eq('school_id', _currentSchoolId);
   
   if (error) throw error;
   invalidateCache(`exams_${_currentSchoolId}_${_currentPeriodId}`);
