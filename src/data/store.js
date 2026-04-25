@@ -180,6 +180,15 @@ export async function updateSchoolFeature(schoolId, featureKey, isEnabled, expir
   _featureCache.delete(`${schoolId}_${featureKey}`);
 }
 
+export async function getSchoolFeatures(schoolId) {
+  const { data, error } = await supabase
+    .from('school_features')
+    .select('*')
+    .eq('school_id', schoolId);
+  if (error) throw error;
+  return data || [];
+}
+
 
 export function setCurrentSchoolContext(schoolId, authUser) {
   _currentSchoolId = schoolId;

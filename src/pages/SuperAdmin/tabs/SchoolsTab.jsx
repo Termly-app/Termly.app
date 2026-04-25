@@ -14,7 +14,7 @@ export default function SchoolsTab({
   setActivateModal, setPayMethod, setPayRef, setActivateSuccess,
   handleDeactivate,
   handleRowDeleteSchool,
-  setPlanModal, setChosenPlan,
+  setFeaturesModal,
   handleOpenStaffModal,
   onNEMISExport,          // ← new: opens NEMIS export modal for a school
   approvedPayments,
@@ -128,7 +128,7 @@ export default function SchoolsTab({
                       </td>
 
                       <td data-label="Features" className="col-sub">
-                        <button className="row-btn" onClick={() => setPlanModal({ schoolId:s.id, schoolName:s.name })}>
+                        <button className="row-btn" onClick={() => setFeaturesModal({ id:s.id, name:s.name })}>
                           Manage Features
                         </button>
                       </td>

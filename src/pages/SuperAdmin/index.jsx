@@ -47,6 +47,7 @@ import PlanModal        from './modals/PlanModal';
 import DeleteModal      from './modals/DeleteModal';
 import StaffModal       from './modals/StaffModal';
 import NEMISExportModal from './modals/NEMISExportModal';
+import FeaturesModal    from './modals/FeaturesModal';
 
 // Shared dialog hook
 import { useDialog } from '../../contexts/DialogContext';
@@ -111,6 +112,7 @@ export default function SuperAdmin({ currentUser, isPlatformAdmin, sidebarOpen, 
   const [repairingId,     setRepairingId]     = useState(null);
   const [staffModal,      setStaffModal]      = useState(null);
   const [loadingStaff,    setLoadingStaff]    = useState(false);
+  const [featuresModal,   setFeaturesModal]   = useState(null);
 
   // ── Settings form state ──────────────────────────────────────────────────
   const [gwInstructions, setGwInstructions] = useState('');
@@ -980,7 +982,7 @@ export default function SuperAdmin({ currentUser, isPlatformAdmin, sidebarOpen, 
                 ) : (
                   <>
                     {activeTab === 'overview' && <OverviewTab {...commonProps} revChartRef={revChartRef} growChartRef={growChartRef} subChartRef={subChartRef} weekChartRef={weekChartRef} />}
-                    {activeTab === 'schools' && <SchoolsTab {...commonProps} handleBulkActivate={handleBulkActivate} handleBulkDeactivate={handleBulkDeactivate} handleDeactivate={handleDeactivate} handleRowDeleteSchool={handleRowDeleteSchool} handleOpenStaffModal={handleOpenStaffModal} setActivateModal={setActivateModal} setPayMethod={setPayMethod} setPayRef={setPayRef} setActivateSuccess={setActivateSuccess} setPlanModal={setPlanModal} setChosenPlan={setChosenPlan} onNEMISExport={setNemisSchool} handleLoginAs={handleLoginAs} />}
+                    {activeTab === 'schools' && <SchoolsTab {...commonProps} handleBulkActivate={handleBulkActivate} handleBulkDeactivate={handleBulkDeactivate} handleDeactivate={handleDeactivate} handleRowDeleteSchool={handleRowDeleteSchool} handleOpenStaffModal={handleOpenStaffModal} setActivateModal={setActivateModal} setPayMethod={setPayMethod} setPayRef={setPayRef} setActivateSuccess={setActivateSuccess} setFeaturesModal={setFeaturesModal} onNEMISExport={setNemisSchool} handleLoginAs={handleLoginAs} />}
                     {activeTab === 'features' && <div className="panel" style={{marginTop:20}}><h3>Features Registry</h3><p style={{ color: 'var(--sub)' }}>Manage all available platform features here. This allows defining new modules that can be toggled per school.</p></div>}
                     {activeTab === 'admins' && <AdminsTab />}
                     {activeTab === 'activity' && <ActivityTab filteredActivity={filteredActivity} filteredAuditLogs={filteredAuditLogs} />}
@@ -1006,11 +1008,10 @@ export default function SuperAdmin({ currentUser, isPlatformAdmin, sidebarOpen, 
               handleConfirmActivate={handleConfirmActivate}
               settings={settings}
             />
-            <PlanModal
-              planModal={planModal} setPlanModal={setPlanModal}
-              chosenPlan={chosenPlan} setChosenPlan={setChosenPlan}
-              planSaving={planSaving} handleChangePlan={handleChangePlan}
-              settings={settings}
+            <FeaturesModal
+              school={featuresModal}
+              onClose={() => setFeaturesModal(null)}
+              setMessage={setMessage}
             />
             <DeleteModal
               deleteModal={deleteModal} setDeleteModal={setDeleteModal}
