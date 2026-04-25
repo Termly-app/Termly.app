@@ -24,7 +24,7 @@ export default function FeaturesModal({ school, onClose, setMessage }) {
       
       const featMap = {};
       schoolFeats.forEach(f => {
-        featMap[f.feature_key] = f.is_enabled;
+        featMap[f.feature_key] = f;
       });
       setSchoolFeatures(featMap);
     } catch (err) {
@@ -35,20 +35,28 @@ export default function FeaturesModal({ school, onClose, setMessage }) {
   };
 
   const toggleFeature = async (featureKey) => {
-    const isEnabled = !schoolFeatures[featureKey];
-    setSaving(featureKey); // Track which one is saving
+    const current = schoolFeatures[featureKey];
+    const isEnabled = !current?.is_enabled;
+    setSaving(featureKey); 
     try {
       await updateSchoolFeature(school.id, featureKey, isEnabled);
-      setSchoolFeatures(prev => ({ ...prev, [featureKey]: isEnabled }));
+      // Refresh the whole map to get latest dates etc.
+      const schoolFeats = await getSchoolFeatures(school.id);
+      const featMap = {};
+      schoolFeats.forEach(f => { featMap[f.feature_key] = f; });
+      setSchoolFeatures(featMap);
+      
       setMessage({ type: 'success', text: `${isEnabled ? 'Enabled' : 'Disabled'} feature successfully.` });
     } catch (err) {
-      setMessage({ type: 'error', text: 'Failed to update feature.' });
+      setMessage({ type: 'error', text: err.message || 'Failed to update feature.' });
     } finally {
       setSaving(false);
     }
   };
 
   if (!school) return null;
+
+  const now = new Date();
 
   return (
     <div className={`mo ${school ? 'open' : ''}`}>
@@ -58,7 +66,7 @@ export default function FeaturesModal({ school, onClose, setMessage }) {
         <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24 }}>
           <div style={{ 
             width: 42, height: 42, borderRadius: 10, background: 'rgba(99, 102, 241, 0.1)', 
-            display: 'flex', alignItems: 'center', justifyCenter: 'center', color: '#6366f1' 
+            display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#6366f1' 
           }}>
             <RocketIcon size={20} />
           </div>
@@ -76,9 +84,21 @@ export default function FeaturesModal({ school, onClose, setMessage }) {
           <div style={{ maxHeight: '400px', overflowY: 'auto', paddingRight: 8 }}>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: 8 }}>
               {registry.map(feat => {
-                const isEnabled = !!schoolFeatures[feat.feature_key];
+                const featData = schoolFeatures[feat.feature_key];
+                const isEnabled = !!featData?.is_enabled;
+                const expiresAt = featData?.expires_at ? new Date(featData.expires_at) : null;
+                const isExpired = isEnabled && expiresAt && expiresAt < now;
                 const isSaving = saving === feat.feature_key;
                 
+                let statusText = isEnabled ? 'ACTIVE' : 'INACTIVE';
+                let statusColor = isEnabled ? '#10b981' : 'var(--sub)';
+                let bgOpacity = isEnabled ? '0.1' : '0.05';
+                
+                if (isExpired) {
+                  statusText = 'EXPIRED';
+                  statusColor = '#ef4444';
+                }
+
                 return (
                   <div 
                     key={feat.feature_key}
@@ -88,9 +108,14 @@ export default function FeaturesModal({ school, onClose, setMessage }) {
                       justifyContent: 'space-between', transition: 'all 0.2s'
                     }}
                   >
-                    <div>
+                    <div style={{ flex: 1 }}>
                       <div style={{ color: '#fff', fontWeight: 600, fontSize: '0.85rem' }}>{feat.feature_name}</div>
                       <div style={{ color: 'var(--sub)', fontSize: '0.7rem', marginTop: 2 }}>{feat.description || 'No description available'}</div>
+                      {expiresAt && isEnabled && (
+                        <div style={{ fontSize: '0.65rem', color: isExpired ? '#ef4444' : 'var(--te)', marginTop: 4, fontWeight: 500 }}>
+                          {isExpired ? 'Expired on ' : 'Expires '} {expiresAt.toLocaleDateString()}
+                        </div>
+                      )}
                     </div>
                     
                     <button 
@@ -98,15 +123,15 @@ export default function FeaturesModal({ school, onClose, setMessage }) {
                       disabled={isSaving}
                       style={{ 
                         padding: '6px 12px', borderRadius: 8, fontSize: '0.7rem', fontWeight: 700,
-                        background: isEnabled ? 'rgba(16, 185, 129, 0.1)' : 'rgba(255,255,255,0.05)',
+                        background: isEnabled ? `rgba(${isExpired ? '239, 68, 68' : '16, 185, 129'}, ${bgOpacity})` : 'rgba(255,255,255,0.05)',
                         border: '1px solid',
-                        borderColor: isEnabled ? 'rgba(16, 185, 129, 0.3)' : 'rgba(255,255,255,0.1)',
-                        color: isEnabled ? '#10b981' : 'var(--sub)',
+                        borderColor: isEnabled ? `rgba(${isExpired ? '239, 68, 68' : '16, 185, 129'}, 0.3)` : 'rgba(255,255,255,0.1)',
+                        color: statusColor,
                         cursor: 'pointer', opacity: isSaving ? 0.5 : 1, transition: 'all 0.2s',
                         minWidth: 80, textAlign: 'center'
                       }}
                     >
-                      {isSaving ? 'Saving...' : (isEnabled ? 'ACTIVE' : 'INACTIVE')}
+                      {isSaving ? 'Saving...' : statusText}
                     </button>
                   </div>
                 );

@@ -182,7 +182,11 @@ export default function SuperAdmin({ currentUser, isPlatformAdmin, sidebarOpen, 
     }
   };
 
-  useEffect(() => { loadData(); }, []);
+  useEffect(() => {
+    // Ensure we are NOT in shadow mode when in Super Admin dashboard
+    sessionStorage.removeItem('shulesoft_acting_as_admin');
+    loadData();
+  }, []);
 
   const setTab = (t) => { setSearchParams({ tab: t }); };
 
