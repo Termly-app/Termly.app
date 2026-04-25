@@ -6,7 +6,7 @@
  */
 
 import { useState, useEffect } from 'react';
-import { DeleteIcon, AlertIcon, DashboardIcon } from '../CommonIcons';
+import { DeleteIcon, AlertIcon, DashboardIcon, LockIcon, ZapIcon } from '../CommonIcons';
 
 
 export default function ConfirmModal({

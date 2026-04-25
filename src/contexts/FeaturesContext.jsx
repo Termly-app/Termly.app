@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { supabase } from '../lib/supabase';
 import { hasFeature, getCurrentSchoolId } from '../data/store';
 
 const FeaturesContext = createContext();
