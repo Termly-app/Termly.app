@@ -672,28 +672,35 @@ export async function checkIsSubscriptionActive(profile) {
 export async function getPortalAccessSettings() {
   if (!_currentSchoolId) return null;
   const { data, error } = await supabase
-    .from('school_profiles')
-    .select('portal_settings')
+    .from('portal_access_settings')
+    .select('*')
     .eq('school_id', _currentSchoolId)
     .maybeSingle();
   if (error) { console.error('getPortalAccessSettings error:', error); return null; }
-  return data?.portal_settings || {
-    parent_portal_enabled: true,
-    teacher_portal_enabled: true,
-    parent_can_view_fees: true,
-    parent_can_view_results: true,
-    parent_can_view_attendance: true,
-    allow_parent_self_register: false
-  };
+  
+  if (!data) {
+    return {
+      parent_portal_enabled: true,
+      teacher_portal_enabled: true,
+      parent_can_view_fees: true,
+      parent_can_view_results: true,
+      parent_can_view_attendance: true,
+      allow_parent_self_register: false
+    };
+  }
+  return data;
 }
 
 export async function updatePortalAccessSettings(settings) {
   mutationGuard('updatePortalAccessSettings');
   if (!_currentSchoolId) throw new Error('No school context');
   const { error } = await supabase
-    .from('school_profiles')
-    .update({ portal_settings: settings })
-    .eq('school_id', _currentSchoolId);
+    .from('portal_access_settings')
+    .upsert({ 
+      school_id: _currentSchoolId,
+      ...settings,
+      updated_at: new Date().toISOString()
+    }, { onConflict: 'school_id' });
   if (error) throw error;
 }
 
