@@ -12,8 +12,8 @@
   --edge     : rgba(255,255,255,0.06) !important;
   --edge2    : rgba(255,255,255,0.09) !important;
   --txt      : #ffffff !important;
-  --sub      : #d1d1d1 !important; /* Brighter silver for better readability */
-  --dim      : #3f3f46 !important;
+  --sub      : #d4d4d8 !important; /* Tailwind Zinc-300 */
+  --dim      : #71717a !important; /* Tailwind Zinc-500 for better visibility */
   --vi       : #71717a !important; 
   --te       : #ffffff !important; /* Success -> White */
   --am       : #a1a1aa !important; /* Warning -> Silver */
@@ -244,9 +244,9 @@
 .sa .ai { display:flex; align-items:flex-start; gap:12px; padding:12px 0; border-bottom:1px solid rgba(255,255,255,0.03) !important; }
 .sa .ai-t { font-size:.78rem; font-weight:600; color:#fff !important; line-height:1.3; }
 .sa .ai-s { font-size:.65rem; color:#a1a1aa !important; margin-top:2px; }
-.sa .ai-time { font-size:.62rem; color:#3f3f46 !important; margin-left:auto; white-space:nowrap; }
+.sa .ai-time { font-size:.62rem; color:#71717a !important; margin-left:auto; white-space:nowrap; }
 
-.sa .empty { padding:48px; text-align:center; color:#3f3f46 !important; font-size:.8rem; }
+.sa .empty { padding:48px; text-align:center; color:#71717a !important; font-size:.8rem; }
 .sa .empty-ico { font-size:2rem; margin-bottom:12px; opacity:.2; }
 
 /* --- Student Overview Items --- */
@@ -383,7 +383,7 @@
 .sa .kpi-ch     { font-size:.7rem; font-weight:700; display: flex; align-items: center; gap: 4px; }
 .sa .kup        { color:#fff !important; }
 .sa .kdn        { color:#a1a1aa !important; }
-.sa .kpi-note   { font-size:.62rem; color:#3f3f46 !important; }
+.sa .kpi-note   { font-size:.62rem; color:#71717a !important; }
 
 /* ─── Chart panels (Consolidated) ────────────────────────────────────────── */
 .sa .charts-grid   { display:grid; grid-template-columns:2fr 1fr; gap:20px; margin-bottom:20px; min-width:0; }
