@@ -109,7 +109,7 @@ function SbLink({ to, icon: Icon, label, onClick, exact = false, locked = false,
                   <MessageIcon size={16} color="#fff" />
                 </div>
                 <div style={{ flex: 1 }}>
-                  <div style={{ fontSize: '0.7rem', color: '#71717a', fontWeight: 600 }}>WhatsApp / Call</div>
+                  <div style={{ fontSize: '0.7rem', color: '#a1a1aa', fontWeight: 600 }}>WhatsApp / Call</div>
                   <div style={{ fontSize: '0.9rem', fontWeight: 700 }}>{phone}</div>
                 </div>
               </a>
@@ -122,13 +122,13 @@ function SbLink({ to, icon: Icon, label, onClick, exact = false, locked = false,
                   <SettingsIcon size={16} color="#fff" />
                 </div>
                 <div style={{ flex: 1 }}>
-                  <div style={{ fontSize: '0.7rem', color: '#71717a', fontWeight: 600 }}>Official Email</div>
+                  <div style={{ fontSize: '0.7rem', color: '#d4d4d8', fontWeight: 600 }}>Official Email</div>
                   <div style={{ fontSize: '0.9rem', fontWeight: 700 }}>{email}</div>
                 </div>
               </a>
             </div>
             
-            <p style={{ marginTop: 16, fontSize: '0.75rem', color: '#52525b', textAlign: 'center' }}>
+            <p style={{ marginTop: 16, fontSize: '0.75rem', color: '#a1a1aa', textAlign: 'center' }}>
               Mon – Fri, 8:00 AM – 6:00 PM EAT
             </p>
           </div>
