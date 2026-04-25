@@ -1,5 +1,6 @@
-import { fmtMoney, planAmt } from '../superAdminUtils';
-import { CheckIcon, CrossIcon } from '../../../components/CommonIcons';
+import { useState } from 'react';
+import { fmtMoney } from '../superAdminUtils';
+import { CheckIcon, CrossIcon, CardIcon } from '../../../components/CommonIcons';
 
 export default function ActivateModal({
   activateModal, setActivateModal,
@@ -7,9 +8,15 @@ export default function ActivateModal({
   payRef, setPayRef,
   activating, activateSuccess,
   handleConfirmActivate,
-  settings,
 }) {
+  const [manualAmount, setManualAmount] = useState('0');
+
   if (!activateModal) return null;
+
+  const onConfirm = () => {
+    // Pass the manual amount to the confirmation handler
+    handleConfirmActivate(Number(manualAmount));
+  };
 
   return (
     <div
@@ -24,28 +31,31 @@ export default function ActivateModal({
           <div className="li-ico ni-t" style={{ width:36, height:36, borderRadius:9 }}><CheckIcon size={20} /></div>
           <div>
             <div style={{ fontFamily:'var(--fh)', fontSize:'.9rem', fontWeight:700, color:'#fff' }}>
-              Confirm Payment &amp; Activate
+              Confirm Payment & Activate
             </div>
             <div style={{ fontSize:'.68rem', color:'var(--sub)', marginTop:2 }}>
-              School account will be activated immediately
+              Set school status to Active immediately
             </div>
           </div>
         </div>
 
         {/* ── School summary ── */}
-        <div className="mi">
+        <div className="mi" style={{ marginBottom: 20 }}>
           <div className="mir"><span className="mil">School</span><span className="miv">{activateModal.name}</span></div>
-          <div className="mir">
-            <span className="mil">Plan</span>
-            <span style={{ fontSize:'.75rem', color:'var(--txt)', textTransform:'capitalize' }}>
-              {activateModal.school_profiles?.[0]?.subscription_plan || 'Starter Plan'}
-            </span>
-          </div>
-          <div className="mir">
-            <span className="mil">Amount</span>
-            <span style={{ fontFamily:'var(--fh)', fontSize:'.82rem', fontWeight:700, color:'var(--te)' }}>
-              {fmtMoney(planAmt(activateModal.school_profiles?.[0]?.subscription_plan, settings))}
-            </span>
+          <div className="mir"><span className="mil">Workspace</span><span className="miv">{activateModal.school_code || '—'}</span></div>
+        </div>
+
+        {/* ── Amount Input ── */}
+        <div style={{ marginBottom:14 }}>
+          <div className="sb-lbl" style={{ marginBottom:7 }}>Amount Received (KSh)</div>
+          <div style={{ position: 'relative' }}>
+            <span style={{ position: 'absolute', left: 12, top: 11, fontSize: '0.7rem', color: 'var(--sub)' }}>KSh</span>
+            <input 
+              type="number" 
+              value={manualAmount}
+              onChange={e => setManualAmount(e.target.value)}
+              style={{ paddingLeft: 42, fontFamily: 'var(--fh)', fontSize: '0.9rem', fontWeight: 700 }}
+            />
           </div>
         </div>
 
@@ -74,9 +84,9 @@ export default function ActivateModal({
 
         {/* ── Action / success ── */}
         {!activateSuccess ? (
-          <button onClick={handleConfirmActivate} disabled={activating}
+          <button onClick={onConfirm} disabled={activating}
             style={{
-              width:'100%', padding:12, borderRadius:9,
+              width:'100%', padding:14, borderRadius:9,
               background:'linear-gradient(135deg,#fff,#a1a1aa)',
               color:'#000', fontFamily:'var(--fb)', fontSize:'.88rem', fontWeight:700,
               border:'none', cursor:'pointer',

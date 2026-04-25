@@ -649,11 +649,19 @@ export default function SuperAdmin({ currentUser, isPlatformAdmin, sidebarOpen, 
     catch (err) { setMessage({ type:'error', text: err.message }); }
   };
 
-  const handleConfirmActivate = async () => {
+  const handleConfirmActivate = async (manualAmount = 0) => {
     if (!activateModal) return;
     setActivating(true);
     try {
+      // 1. Activate the school
       await restoreSchool(activateModal.id);
+      
+      // 2. Record payment if amount > 0
+      if (manualAmount > 0) {
+        // We'll use the existing manualExtendSubscription logic or similar
+        await manualExtendSubscription(activateModal.id, manualAmount, 4); // Extend by 4 months by default
+      }
+
       setActivateSuccess(true);
       setMessage({ type:'success', text:`Successfully activated ${activateModal.name}` });
       loadData();
@@ -664,17 +672,7 @@ export default function SuperAdmin({ currentUser, isPlatformAdmin, sidebarOpen, 
     } finally { setActivating(false); }
   };
 
-  const handleChangePlan = async () => {
-    if (!chosenPlan || !planModal) return;
-    setPlanSaving(true);
-    try {
-      await updateSchoolPlan(planModal.schoolId, chosenPlan);
-      setMessage({ type:'success', text:`${planModal.schoolName} switched to ${chosenPlan}.` });
-      setPlanModal(null); setChosenPlan('');
-      loadData();
-    } catch (err) { setMessage({ type:'error', text: err.message }); }
-    finally { setPlanSaving(false); }
-  };
+
 
   const handleDeleteSchool = async () => {
     if (!deleteModal) return;
