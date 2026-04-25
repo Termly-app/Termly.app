@@ -10,6 +10,7 @@ import {
 import { SANDBOX_PLAN } from '../data/constants';
 import { Helmet } from 'react-helmet-async';
 import { useDialog } from '../contexts/DialogContext';
+import Select from '../components/Common/Select';
 
 export default function Register() {
   const [searchParams] = useSearchParams();
@@ -336,22 +337,24 @@ export default function Register() {
               </div>
 
               <div className="res-sec-lbl">Curriculum Focus</div>
-              <div className="res-field">
+              <div className="res-field" style={{ marginBottom: 32 }}>
                 <div className="res-fico">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                     <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
                   </svg>
                 </div>
-                <select 
-                  name="curriculum" 
-                  value={formData.curriculum} 
+                <Select 
+                  name="curriculum"
+                  value={formData.curriculum}
                   onChange={handleChange}
-                  style={{ width: '100%', padding: '10px 0 10px 30px', border: 'none', borderBottom: '1.5px solid #E8E8F0', background: 'transparent', fontFamily: 'Inter, sans-serif', fontSize: '.95rem', outline: 'none', cursor: 'pointer' }}
-                >
-                  <option value="CBC Only">CBC Only (Primary)</option>
-                  <option value="8-4-4 Only">8-4-4 Only (Legacy)</option>
-                  <option value="Mixed/Dual Mode">Mixed/Dual Mode (Secondary)</option>
-                </select>
+                  options={[
+                    { value: 'CBC Only', label: 'CBC Only (Primary)' },
+                    { value: '8-4-4 Only', label: '8-4-4 Only (Legacy)' },
+                    { value: 'Mixed/Dual Mode', label: 'Mixed/Dual Mode (Secondary)' }
+                  ]}
+                  style={{ width: '100%' }}
+                  className="res-custom-select"
+                />
                 <div className="res-uline" style={{ width: '100%' }}></div>
               </div>
 
@@ -718,6 +721,24 @@ export default function Register() {
 
         .res-pw-bar { height: 4px; border-radius: 2px; background: #E8E8F0; margin-top: 8px; margin-left: 30px; overflow: hidden; }
         .res-pw-fill { height: 100%; width: 0; transition: all .4s; }
+
+        /* Custom Select Overrides */
+        .res-custom-select .custom-select-trigger {
+          background: transparent !important;
+          border: none !important;
+          border-radius: 0 !important;
+          padding: 10px 0 10px 30px !important;
+          box-shadow: none !important;
+          font-size: .95rem !important;
+          color: #111118 !important;
+          font-weight: 400 !important;
+        }
+        .res-custom-select .custom-select-trigger:hover {
+          background: rgba(91, 62, 245, 0.02) !important;
+        }
+        .res-custom-select .custom-select-trigger.open {
+          color: #5B3EF5 !important;
+        }
 
         .res-btn-row { display: flex; gap: 12px; margin-top: 8px; }
         .res-cta {
