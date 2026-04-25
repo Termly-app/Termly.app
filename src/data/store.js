@@ -3849,16 +3849,16 @@ export async function getAllSchools() {
     return acc;
   }, {});
 
-  const featureCounts = (featuresRes.data || []).reduce((acc, curr) => {
-    acc[curr.school_id] = (acc[curr.school_id] || 0) + 1;
-    return acc;
-  }, {});
+  // 3. Filter registry to get "Public" features total (e.g. 14)
+  const { data: registry } = await supabase.from('features_registry').select('feature_key').eq('is_beta', false);
+  const totalCount = (registry?.length || 14); // Fallback to 14
 
   return (schools || []).map(s => ({
     ...s,
     _studentCount: studentCounts[s.id] || 0,
     _staffCount: staffCounts[s.id] || 0,
-    features_count: featureCounts[s.id] || 0
+    features_count: featureCounts[s.id] || 0,
+    features_total: totalCount
   }));
 }
 

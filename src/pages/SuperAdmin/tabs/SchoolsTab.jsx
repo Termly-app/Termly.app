@@ -101,7 +101,7 @@ export default function SchoolsTab({
                       </td>
 
                       <td data-label="Modules" className="col-features">
-                        <span className="p-pill">{s.features_count || 0} / 16</span>
+                        <span className="p-pill">{s.features_count || 0} / {s.features_total || 14}</span>
                       </td>
 
                       <td data-label="Staff Usage" className="col-usage">

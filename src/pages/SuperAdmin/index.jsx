@@ -343,14 +343,65 @@ export default function SuperAdmin({ currentUser, isPlatformAdmin, sidebarOpen, 
     setActivating(true);
     try {
       await restoreSchool(activateModal.id);
-      setActivateSuccess(true);
-      setMessage({ type:'success', text:`Successfully activated ${activateModal.name}` });
+      setMessage({ type: 'success', text: `School ${activateModal.name} activated.` });
+      setActivateModal(null);
       loadData();
-      setTimeout(() => { setActivateModal(null); setActivateSuccess(false); setActivationNote(''); }, 2800);
     } catch (err) {
       setMessage({ type:'error', text: err.message || 'Failed to activate school' });
-      setActivateModal(null);
     } finally { setActivating(false); }
+  };
+
+  const handleDeactivate = async (schoolId, name) => {
+    const ok = await confirm({ title: 'Deactivate School', message: `Are you sure you want to deactivate ${name}? This will lock all their features immediately.`, confirmText: 'Deactivate', variant: 'danger' });
+    if (!ok) return;
+    try {
+      await deactivateSchool(schoolId);
+      setMessage({ type: 'success', text: `School ${name} deactivated.` });
+      loadData();
+    } catch (err) {
+      setMessage({ type: 'error', text: err.message });
+    }
+  };
+
+  const handleRowDeleteSchool = async (schoolId, name) => {
+    const ok = await confirm({ title: 'Terminate School', message: `CRITICAL: This will PERMANENTLY DELETE all data for ${name}. This action cannot be undone.`, confirmText: 'Terminate', variant: 'danger' });
+    if (!ok) return;
+    try {
+      await deleteSchool(schoolId);
+      setMessage({ type: 'success', text: `School ${name} terminated.` });
+      loadData();
+    } catch (err) {
+      setMessage({ type: 'error', text: err.message });
+    }
+  };
+
+  const handleOpenStaffModal = async (schoolId, name) => {
+    setStaffModal({ id: schoolId, name, staff: [] });
+    setLoadingStaff(true);
+    try {
+      const staff = await getTeachersBySchool(schoolId);
+      setStaffModal({ id: schoolId, name, staff: staff || [] });
+    } catch (e) {
+      console.error('Failed to load staff:', e);
+      setMessage({ type: 'error', text: 'Failed to load staff list' });
+    } finally {
+      setLoadingStaff(false);
+    }
+  };
+
+  const handleDeleteStaff = async (staffId) => {
+    const ok = await confirm({ title: 'Remove Staff', message: 'Remove this staff member from the school?', confirmText: 'Remove', variant: 'danger' });
+    if (!ok) return;
+    try {
+      await deleteTeacher(staffId);
+      setStaffModal(prev => ({
+        ...prev,
+        staff: prev.staff.filter(s => s.id !== staffId)
+      }));
+      setMessage({ type: 'success', text: 'Staff member removed.' });
+    } catch (err) {
+      setMessage({ type: 'error', text: err.message });
+    }
   };
 
   const handleWipeSchools = async () => {
@@ -444,7 +495,7 @@ export default function SuperAdmin({ currentUser, isPlatformAdmin, sidebarOpen, 
             {loading ? <SuperAdminLoader /> : (
               <>
                 {activeTab === 'overview' && <OverviewTab {...commonProps} growChartRef={growChartRef} />}
-                {activeTab === 'schools' && <SchoolsTab {...commonProps} handleDeactivate={handleDeactivate} handleRowDeleteSchool={handleRowDeleteSchool} setActivateModal={setActivateModal} setActivationNote={setActivationNote} setActivateSuccess={setActivateSuccess} setFeaturesModal={setFeaturesModal} onNEMISExport={setNemisSchool} handleLoginAs={handleLoginAs} handleBulkActivate={handleBulkActivate} handleBulkDeactivate={handleBulkDeactivate} />}
+                {activeTab === 'schools' && <SchoolsTab {...commonProps} handleDeactivate={handleDeactivate} handleRowDeleteSchool={handleRowDeleteSchool} setActivateModal={setActivateModal} setActivationNote={setActivationNote} setActivateSuccess={setActivateSuccess} setFeaturesModal={setFeaturesModal} onNEMISExport={setNemisSchool} handleLoginAs={handleLoginAs} handleBulkActivate={handleBulkActivate} handleBulkDeactivate={handleBulkDeactivate} handleOpenStaffModal={handleOpenStaffModal} />}
                 {activeTab === 'admins' && <AdminsTab />}
                 {activeTab === 'activity' && <ActivityTab filteredActivity={filteredActivity} />}
                 {activeTab === 'config' && <SettingsTab statusMsg={statusMsg} setStatusMsg={setStatusMsg} subEndDate={subEndDate} setSubEndDate={setSubEndDate} smsConfig={smsConfig} setSmsConfig={setSmsConfig} handleUpdateSetting={handleUpdateSetting} updatePlatformSetting={updatePlatformSetting} loadData={loadData} setMessage={setMessage} onWipeSchools={handleWipeSchools} />}
@@ -457,7 +508,12 @@ export default function SuperAdmin({ currentUser, isPlatformAdmin, sidebarOpen, 
             <ActivateModal activateModal={activateModal} setActivateModal={setActivateModal} activationNote={activationNote} setActivationNote={setActivationNote} activating={activating} activateSuccess={activateSuccess} handleConfirmActivate={handleConfirmActivate} />
             <FeaturesModal school={featuresModal} onClose={() => setFeaturesModal(null)} setMessage={setMessage} />
             <DeleteModal deleteModal={deleteModal} setDeleteModal={setDeleteModal} deleting={deleting} handleDeleteSchool={handleRowDeleteSchool} />
-            <StaffModal staffModal={null} setStaffModal={() => {}} loadingStaff={false} handleDeleteStaff={() => {}} />
+            <StaffModal 
+              staffModal={staffModal} 
+              setStaffModal={setStaffModal} 
+              loadingStaff={loadingStaff} 
+              handleDeleteStaff={handleDeleteStaff} 
+            />
             <NEMISExportModal school={nemisSchool} onClose={() => setNemisSchool(null)} getStudentsBySchool={getStudentsBySchool} />
           </div>
         </div>

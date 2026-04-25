@@ -318,75 +318,79 @@ function Sidebar({ isOpen, onClose, onLogout, onLock, currentUser, subscriptionA
       {/* Nav */}
       <nav className="sidebar-nav">
         <SbSection label="General" />
-        <SbLink to="/dashboard" icon={DashboardIcon} label="Dashboard" onClick={onClose} locked={!useFeature('dashboard').enabled && !isPlatformAdmin} />
+        <SbLink to="/dashboard" icon={DashboardIcon} label="Dashboard" onClick={onClose} />
         
-        {/* Teachers, Admins, Finance and Librarians manage students */}
+        {/* Core modules always visible for appropriate roles */}
         {(isTeacher || isAdmin || isFinance || isLibrarian) && (
-          <SbLink to="/students"  icon={StudentsIcon}  label="Students"  onClick={onClose} locked={!useFeature('students').enabled && !isPlatformAdmin} />
+          <SbLink to="/students" icon={StudentsIcon} label="Students" onClick={onClose} />
         )}
         
-        {/* Only Admins manage staff */}
         {isAdmin && (
-          <SbLink to="/teachers" icon={StaffIcon} label="Staff" onClick={onClose} locked={!useFeature('academics').enabled && !isPlatformAdmin} />
+          <SbLink to="/teachers" icon={StaffIcon} label="Staff" onClick={onClose} />
         )}
 
-        {/* Librarians, Teachers, and Admins can see the Library catalog */}
-        {(isLibrarian || isTeacher || isAdmin) && (
-          <SbLink to="/library" icon={BookIcon} label="Library" onClick={onClose} locked={!useFeature('library').enabled && !isPlatformAdmin} />
+        {/* Dynamic features based on activation */}
+        {(isLibrarian || isTeacher || isAdmin) && useFeature('library_management').enabled && (
+          <SbLink to="/library" icon={BookIcon} label="Library" onClick={onClose} />
         )}
 
         {/* Academic section */}
         {(isTeacher || isAdmin) && (
-          <SbSection label="Academics" />
-        )}
-        
-        {(isAdmin || isTeacher) && (
-          <SbLink to="/attendance" icon={AttendanceIcon} label="Attendance" onClick={onClose} locked={!useFeature('attendance').enabled && !isPlatformAdmin} />
-        )}
-        
-        {(isAdmin || isTeacher) && (
-          <SbLink to="/academics" icon={GradingIcon} label="Academic Results" onClick={onClose} locked={!useFeature('grading').enabled && !isPlatformAdmin} />
-        )}
-        
-        {/* Timetable — Reactivated for Sandbox/Production */}
-        {(isTeacher || isAdmin) && (
-          <SbLink to="/timetable" icon={TimetableIcon} label="Timetable" onClick={onClose} locked={!useFeature('timetable').enabled && !isPlatformAdmin} />
-        )}
-
-        {/* E-Learning — Reactivated for Sandbox/Production */}
-        {(isTeacher || isAdmin) && (
-          <SbLink to="/lms" icon={ActivityIcon} label="E-Learning" onClick={onClose} locked={!useFeature('lms').enabled && !isPlatformAdmin} />
+          <>
+            {(useFeature('attendance_tracking').enabled || useFeature('exam_module').enabled || useFeature('timetable').enabled) && (
+              <SbSection label="Academics" />
+            )}
+            
+            {useFeature('attendance_tracking').enabled && (
+              <SbLink to="/attendance" icon={AttendanceIcon} label="Attendance" onClick={onClose} />
+            )}
+            
+            {useFeature('exam_module').enabled && (
+              <SbLink to="/academics" icon={GradingIcon} label="Academic Results" onClick={onClose} />
+            )}
+            
+            {useFeature('timetable').enabled && (
+              <SbLink to="/timetable" icon={TimetableIcon} label="Timetable" onClick={onClose} />
+            )}
+            
+            {useFeature('parent_portal').enabled && (
+              <SbLink to="/lms" icon={ActivityIcon} label="E-Learning" onClick={onClose} />
+            )}
+          </>
         )}
 
         {/* Administration section */}
         {(isAdmin || isFinance) && (
-          <SbSection label="Administration" />
-        )}
-        
-        {(isAdmin || isFinance) && (
-          <SbLink to="/fees" icon={FeesIcon} label="Fees & Billing" onClick={onClose} locked={!useFeature('fees').enabled && !isPlatformAdmin} />
+          <>
+            {(useFeature('fee_management').enabled || useFeature('sms_alerts').enabled) && (
+              <SbSection label="Administration" />
+            )}
+            
+            {useFeature('fee_management').enabled && (
+              <SbLink to="/fees" icon={FeesIcon} label="Fees & Billing" onClick={onClose} />
+            )}
+
+            {useFeature('sms_alerts').enabled && (
+              <SbLink to="/communications" icon={MessageIcon} label="Comm. Center" onClick={onClose} />
+            )}
+
+            {useFeature('exam_module').enabled && (
+              <SbLink to="/portal/teacher" icon={StaffIcon} label="Teacher Portal" onClick={onClose} />
+            )}
+          </>
         )}
 
-        {isAdmin && (
-          <SbLink to="/communications" icon={MessageIcon} label="Comm. Center" onClick={onClose} locked={!useFeature('communications').enabled && !isPlatformAdmin} />
-        )}
-
-        {(isAdmin || isTeacher) && (
-          <SbLink to="/portal/teacher" icon={StaffIcon} label="Teacher Portal" onClick={onClose} locked={!useFeature('teacher_portal').enabled && !isPlatformAdmin} />
-        )}
-
-        {/* Compliance section - Admins ONLY, gated behind feature */}
-        {isAdmin && (
+        {/* Compliance section */}
+        {isAdmin && useFeature('bulk_import').enabled && (
           <>
             <SbSection label="Compliance" />
-            <SbLink to="/compliance/nemis" icon={FlagIcon} label="NEMIS Audit" onClick={onClose} locked={!useFeature('nemis').enabled && !isPlatformAdmin} />
+            <SbLink to="/compliance/nemis" icon={FlagIcon} label="NEMIS Audit" onClick={onClose} />
           </>
         )}
 
         <SbSection label="Resources" />
         <SbLink to="/help" icon={BookIcon} label="Help Center" onClick={onClose} />
         
-        {/* Strictly Admin-only settings */}
         {isAdmin && (
           <>
             <SbSection label="System" />
