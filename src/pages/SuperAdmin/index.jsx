@@ -43,7 +43,7 @@ import { CrossIcon } from '../../components/CommonIcons';
 
 // Modals
 import ActivateModal    from './modals/ActivateModal';
-import PlanModal        from './modals/PlanModal';
+
 import DeleteModal      from './modals/DeleteModal';
 import StaffModal       from './modals/StaffModal';
 import NEMISExportModal from './modals/NEMISExportModal';
@@ -55,7 +55,7 @@ import { useDialog } from '../../contexts/DialogContext';
 // Utilities
 import {
   useChart, GC, TC, TIP,
-  fmtDate, fmtMoney, calcExpiry, statusLabel, sPill, planAmt,
+  fmtDate, fmtMoney, calcExpiry, statusLabel, sPill,
 } from './superAdminUtils';
 import {
   CheckIcon, AlertIcon, ClockIcon, SchoolIcon,
@@ -103,9 +103,7 @@ export default function SuperAdmin({ currentUser, isPlatformAdmin, sidebarOpen, 
   const [payRef,          setPayRef]          = useState('');
   const [activating,      setActivating]      = useState(false);
   const [activateSuccess, setActivateSuccess] = useState(false);
-  const [planModal,       setPlanModal]       = useState(null);
-  const [chosenPlan,      setChosenPlan]      = useState('');
-  const [planSaving,      setPlanSaving]      = useState(false);
+
   const [deleteModal,     setDeleteModal]     = useState(null);
   const [deleting,        setDeleting]        = useState(false);
   const [discoveryMeta,   setDiscoveryMeta]   = useState({ orphans: [], legacy: [] });
@@ -118,7 +116,7 @@ export default function SuperAdmin({ currentUser, isPlatformAdmin, sidebarOpen, 
   const [gwInstructions, setGwInstructions] = useState('');
   const [statusMsg,      setStatusMsg]      = useState('');
   const [subEndDate,     setSubEndDate]     = useState('');
-  const [plans,          setPlans]          = useState([]);
+
   const [smsConfig,      setSmsConfig]      = useState({ senderId: '', apiKey: '' });
   const [mpesaConfig,    setMpesaConfig]    = useState({ shortcode: '', consumerKey: '', consumerSecret: '' });
   const [priceSaved,     setPriceSaved]     = useState(false);
@@ -158,14 +156,7 @@ export default function SuperAdmin({ currentUser, isPlatformAdmin, sidebarOpen, 
         // Use both possible expiry field names for consistency with store.js
         const gExp = cf?.billing?.expiry_date || cf?.billing?.term_expiry || '';
         setSubEndDate(gExp);
-        const pricing = cf?.pricing || {};
-        setPlans(Object.entries(pricing).map(([id, p]) => ({
-          id, name: id, price: p.price || 0, limit: p.limit || 0,
-          admins: p.admins || 5, trial_days: p.trial_days || 0,
-          description: p.description || '', color: p.color || '#ffffff',
-          active: p.active !== false, features: p.features || [],
-          modules: p.modules || [],
-        })));
+
       } catch (e) {
         console.error('Failed to load platform settings:', e);
         setError('Could not load pricing settings. Please check your connection.');
@@ -820,7 +811,6 @@ export default function SuperAdmin({ currentUser, isPlatformAdmin, sidebarOpen, 
   const navItems = [
     { id:'overview',      cls:'ni-v', label:'Dashboard',       icon: <CardIcon size={15} /> },
     { id:'schools',       cls:'ni-t', label:'Schools',         icon: <SchoolIcon size={15} /> },
-    { id:'features',      cls:'ni-a', label:'Features',        icon: <RocketIcon size={15} /> },
     { id:'admins',        cls:'ni-s', label:'Admins',          icon: <ShieldIcon size={15} /> },
     { id:'activity',      cls:'ni-t', label:'Audit Log',       icon: <ClockIcon size={15} /> },
     { id:'config',        cls:'ni-d', label:'System Settings', icon: <ShieldIcon size={15} /> },
@@ -972,24 +962,12 @@ export default function SuperAdmin({ currentUser, isPlatformAdmin, sidebarOpen, 
 
             {loading ? <SuperAdminLoader /> : (
               <>
-                {planModal ? (
-                  <SchoolDetailTab
-                    school={{ id: planModal.schoolId, name: planModal.schoolName }}
-                    onBack={() => setPlanModal(null)}
-                    setActivateModal={setActivateModal}
-                    handleRowDeleteSchool={handleRowDeleteSchool}
-                  />
-                ) : (
-                  <>
-                    {activeTab === 'overview' && <OverviewTab {...commonProps} revChartRef={revChartRef} growChartRef={growChartRef} subChartRef={subChartRef} weekChartRef={weekChartRef} />}
-                    {activeTab === 'schools' && <SchoolsTab {...commonProps} handleBulkActivate={handleBulkActivate} handleBulkDeactivate={handleBulkDeactivate} handleDeactivate={handleDeactivate} handleRowDeleteSchool={handleRowDeleteSchool} handleOpenStaffModal={handleOpenStaffModal} setActivateModal={setActivateModal} setPayMethod={setPayMethod} setPayRef={setPayRef} setActivateSuccess={setActivateSuccess} setFeaturesModal={setFeaturesModal} onNEMISExport={setNemisSchool} handleLoginAs={handleLoginAs} />}
-                    {activeTab === 'features' && <div className="panel" style={{marginTop:20}}><h3>Features Registry</h3><p style={{ color: 'var(--sub)' }}>Manage all available platform features here. This allows defining new modules that can be toggled per school.</p></div>}
-                    {activeTab === 'admins' && <AdminsTab />}
-                    {activeTab === 'activity' && <ActivityTab filteredActivity={filteredActivity} filteredAuditLogs={filteredAuditLogs} />}
-                    {activeTab === 'config' && <SettingsTab gwInstructions={gwInstructions} setGwInstructions={setGwInstructions} statusMsg={statusMsg} setStatusMsg={setStatusMsg} subEndDate={subEndDate} setSubEndDate={setSubEndDate} plans={plans} setPlans={setPlans} smsConfig={smsConfig} setSmsConfig={setSmsConfig} mpesaConfig={mpesaConfig} setMpesaConfig={setMpesaConfig} priceSaved={priceSaved} setPriceSaved={setPriceSaved} handleUpdateSetting={handleUpdateSetting} updatePlatformSetting={updatePlatformSetting} loadData={loadData} setMessage={setMessage} onWipeSchools={handleWipeSchools} />}
-                  </>
-                )}
-
+                {activeTab === 'overview' && <OverviewTab {...commonProps} revChartRef={revChartRef} growChartRef={growChartRef} weekChartRef={weekChartRef} />}
+                {activeTab === 'schools' && <SchoolsTab {...commonProps} handleBulkActivate={handleBulkActivate} handleBulkDeactivate={handleBulkDeactivate} handleDeactivate={handleDeactivate} handleRowDeleteSchool={handleRowDeleteSchool} handleOpenStaffModal={handleOpenStaffModal} setActivateModal={setActivateModal} setPayMethod={setPayMethod} setPayRef={setPayRef} setActivateSuccess={setActivateSuccess} setFeaturesModal={setFeaturesModal} onNEMISExport={setNemisSchool} handleLoginAs={handleLoginAs} />}
+                {activeTab === 'admins' && <AdminsTab />}
+                {activeTab === 'activity' && <ActivityTab filteredActivity={filteredActivity} filteredAuditLogs={filteredAuditLogs} />}
+                {activeTab === 'config' && <SettingsTab gwInstructions={gwInstructions} setGwInstructions={setGwInstructions} statusMsg={statusMsg} setStatusMsg={setStatusMsg} subEndDate={subEndDate} setSubEndDate={setSubEndDate} smsConfig={smsConfig} setSmsConfig={setSmsConfig} mpesaConfig={mpesaConfig} setMpesaConfig={setMpesaConfig} priceSaved={priceSaved} setPriceSaved={setPriceSaved} handleUpdateSetting={handleUpdateSetting} updatePlatformSetting={updatePlatformSetting} loadData={loadData} setMessage={setMessage} onWipeSchools={handleWipeSchools} />}
+                
                 {/* Footer */}
                 <div style={{ padding:'24px 0 6px', textAlign:'center', opacity:.2, borderTop:'1px solid var(--edge)', marginTop:20 }}>
                   <div style={{ fontFamily:'var(--fh)', fontSize:'.65rem', color:'var(--sub)' }}>

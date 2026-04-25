@@ -1,6 +1,6 @@
 import { useRef } from 'react';
 import { useChart, GC, TC, TIP, fmtDate, fmtMoney, statusLabel, sPill, getStatusRefined } from '../superAdminUtils';
-import { CheckIcon, AlertIcon, ClockIcon, SchoolIcon, GraduationIcon } from '../../../components/CommonIcons';
+import { CheckIcon, AlertIcon, ClockIcon, SchoolIcon, GraduationIcon, RocketIcon } from '../../../components/CommonIcons';
 import Select from '../../../components/Common/Select';
 
 export default function OverviewTab({
@@ -8,17 +8,14 @@ export default function OverviewTab({
   showFilter, setShowFilter,
   filterStatus, setFilterStatus,
   searchQuery,
-  // computed values
   totalSchools, activeCount, expiredCount, totalRevenue,
   newSchoolsCount, pendingPayments,
   revChangeTxt, revChangeUp, revChange,
   newSchoolsTxt, activeChangeTxt,
-  weeklyRevenue, newSchoolsCount: newSchoolsCt,
-  // data
+  weeklyRevenue,
   schools, recentSchools, filteredSchools, filteredActivity,
   approvedPayments, pStats, isSchoolActive,
-  // chart refs passed in from parent to survive re-renders
-  revChartRef, growChartRef, subChartRef, weekChartRef,
+  revChartRef, growChartRef, weekChartRef,
 }) {
   const now = new Date();
 
@@ -66,11 +63,11 @@ export default function OverviewTab({
       <div className="kpi-grid">
         {[
           { a:'var(--vi)', c:'ni-v', l:'Total Schools',        i:null, v:totalSchools,           ch:newSchoolsTxt,                                          n:'Across Kenya',   up:newSchoolsTxt.includes('↑') },
-          { a:'var(--te)', c:'ni-t', l:'Active Subscriptions', i:<CheckIcon size={14} />, v:activeCount,            ch:activeChangeTxt,                                        n:'Paid & running', up:activeChangeTxt.includes('↑') },
-          { a:'var(--ro)', c:'ni-r', l:'Expired',              i:<AlertIcon size={14} />, v:expiredCount,           ch:expiredCount > 0 ? 'Follow-up needed' : 'All good',     n:'SMS sent',       up:false },
-          { a:'var(--am)', c:'ni-a', l:'Revenue This Term',    i:null, v:fmtMoney(totalRevenue), ch:revChangeTxt,                                           n:'M-PESA',         up:revChangeUp },
-          { a:'var(--sk)', c:'ni-s', l:'New Schools',          i:null, v:newSchoolsCount,        ch:newSchoolsCount > 0 ? `↑ ${newSchoolsCount} registered` : 'No new schools', n:'This month', up:newSchoolsCount > 0 },
-          { a:'rgba(212,80,106,.5)', c:'ni-r', l:'Pending Payments', i:<ClockIcon size={14} />, v:pendingPayments.length, ch:pendingPayments.length > 0 ? 'Awaiting confirmation' : 'All clear', n:'M-PESA queue', up:false },
+          { a:'var(--te)', c:'ni-t', l:'Active Workspaces',    i:<CheckIcon size={14} />, v:activeCount,            ch:activeChangeTxt,                                        n:'Live & running', up:activeChangeTxt.includes('↑') },
+          { a:'var(--ro)', c:'ni-r', l:'Attention Required',   i:<AlertIcon size={14} />, v:expiredCount,           ch:expiredCount > 0 ? 'Follow-up needed' : 'All good',     n:'Inactive schools', up:false },
+          { a:'var(--am)', c:'ni-a', l:'Revenue Collection',   i:null, v:fmtMoney(totalRevenue), ch:revChangeTxt,                                           n:'This Period',    up:revChangeUp },
+          { a:'var(--sk)', c:'ni-s', l:'Module Activations',   i:<RocketIcon size={14} />, v:pStats?.activatedModules || '—', ch:'System Wide', n:'Feature adoption', up:true },
+          { a:'rgba(212,80,106,.5)', c:'ni-r', l:'Pending Verification', i:<ClockIcon size={14} />, v:pendingPayments.length, ch:pendingPayments.length > 0 ? 'Review queue' : 'All clear', n:'M-PESA logs', up:false },
         ].map((k, i) => (
           <div className="kpi-card" key={i}>
             <div className="kpi-accent" style={{ background: k.a }} />
@@ -87,12 +84,12 @@ export default function OverviewTab({
         ))}
       </div>
 
-      {/* ── Revenue + Growth charts ── */}
+      {/* ── Performance charts ── */}
       <div className="charts-grid">
         <div className="panel">
           <div className="panel-hd">
             <div>
-              <div className="panel-lbl">Revenue This Year</div>
+              <div className="panel-lbl">Revenue Collection</div>
               <div className="panel-val">
                 {fmtMoney(totalRevenue)}
                 {revChange !== null && (
@@ -102,57 +99,44 @@ export default function OverviewTab({
                 )}
               </div>
             </div>
-            <div className="panel-per">THIS YEAR ▸</div>
           </div>
           <div className="chart-box"><canvas ref={revChartRef} height="100" /></div>
         </div>
         <div className="panel">
           <div className="panel-hd">
             <div>
-              <div className="panel-lbl">School Growth</div>
+              <div className="panel-lbl">Workspace Growth</div>
               <div className="panel-val">
                 {totalSchools} <span className="cbadge cup">+{newSchoolsCount} new</span>
               </div>
             </div>
-            <div className="panel-per">THIS YEAR ▸</div>
           </div>
           <div className="chart-box"><canvas ref={growChartRef} height="100" /></div>
         </div>
       </div>
 
-      {/* ── Subscription mix + weekly payments ── */}
-      <div className="charts-grid-3">
-        <div className="panel">
-          <div className="panel-hd">
-            <div>
-              <div className="panel-lbl">Subscription Mix</div>
-              <div className="panel-val">{totalSchools} schools</div>
+      {/* ── Weekly Performance ── */}
+      <div className="panel" style={{ marginBottom: 20 }}>
+        <div className="panel-hd">
+          <div>
+            <div className="panel-lbl">Weekly Collection Velocity</div>
+            <div className="panel-val">
+              {fmtMoney(weeklyRevenue)}
+              {weeklyRevenue > 0 && <span className="cbadge cup">this week</span>}
             </div>
           </div>
-          <div className="chart-box"><canvas ref={subChartRef} height="100" /></div>
+          <div className="panel-per">LIVE MONITORING ▸</div>
         </div>
-        <div className="panel">
-          <div className="panel-hd">
-            <div>
-              <div className="panel-lbl">Weekly Payments</div>
-              <div className="panel-val">
-                {fmtMoney(weeklyRevenue)}
-                {weeklyRevenue > 0 && <span className="cbadge cup">this week</span>}
-              </div>
-            </div>
-            <div className="panel-per">THIS WEEK ▸</div>
-          </div>
-          <div className="chart-box"><canvas ref={weekChartRef} height="100" /></div>
-        </div>
+        <div className="chart-box" style={{ height: 160 }}><canvas ref={weekChartRef} /></div>
       </div>
 
       {/* ── Recent schools + activity ── */}
       <div className="bot-grid">
         <div className="panel">
-          <div className="panel-lbl">Recent Schools</div>
+          <div className="panel-lbl">Recent Onboarding</div>
           {(searchQuery ? filteredSchools : recentSchools).length === 0
-            ? <div className="empty">No school data available for this period.</div>
-            : (searchQuery ? filteredSchools : recentSchools).slice(0, 5).map((s, i) => {
+            ? <div className="empty">No schools registered in this period.</div>
+            : (searchQuery ? filteredSchools : recentSchools).slice(0, 6).map((s, i) => {
                 const p   = s.school_profiles?.[0] || {};
                 const cls = ['ni-v', 'ni-t', 'ni-a', 'ni-s', 'ni-r'][i % 5];
                 const active = isSchoolActive(s);
@@ -162,7 +146,7 @@ export default function OverviewTab({
                       <div className={`li-ico ${cls}`}><SchoolIcon size={14} /></div>
                       <div>
                         <div className="li-name">{s.name}</div>
-                        <div className="li-sub">{(p.subscription_plan || 'Starter Plan')} · {p.location || 'Kenya'}</div>
+                        <div className="li-sub">ID: {s.school_code || '—'} · {p.location || 'Kenya'}</div>
                       </div>
                     </div>
                     <div>
@@ -179,10 +163,10 @@ export default function OverviewTab({
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
           <div className="panel" style={{ flex: 1 }}>
-            <div className="panel-lbl">Recent Activity</div>
+            <div className="panel-lbl">Live System Activity</div>
             {filteredActivity.length === 0
               ? <div className="empty">Monitoring live system events...</div>
-              : filteredActivity.slice(0, 4).map(a => (
+              : filteredActivity.slice(0, 5).map(a => (
                   <div className="ai" key={a.id}>
                     <div className="li-ico ni-t"><CheckIcon size={12} /></div>
                     <div className="ai-body">
@@ -195,40 +179,13 @@ export default function OverviewTab({
             }
           </div>
 
-          {/* Student overview panel */}
-          <div className="panel">
-            <div className="panel-lbl"> Student Overview</div>
-            {[
-              { c:'ni-v', e:<GraduationIcon size={14} />, n:'Total Students',  s:'Across all active schools', v:pStats?.students !== undefined ? pStats.students.toLocaleString()  : (pStats?.studCount !== undefined ? pStats.studCount.toLocaleString() : '—'), st:'' },
-              { c:'ni-t', e:<CheckIcon size={14} />, n:'CBC Portfolios',  s:'Generated this term',       v:pStats?.portCount !== undefined ? pStats.portCount.toLocaleString()  : '—', st:'is-ok' },
-              { c:'ni-a', e:<CheckIcon size={14} />, n:'Exams Recorded',  s:'Results entered',           v:pStats?.examCount !== undefined ? pStats.examCount.toLocaleString()  : '—', st:'is-ok' },
-              { c:'ni-s', e:<CheckIcon size={14} />, n:'Attendance Rate', s:'Platform-wide average',     v:pStats?.attendanceRate ? `${pStats.attendanceRate}%`            : '85%', st:'is-ok' },
-            ].map((r, i) => (
-              <div className="ig" key={i}>
-                <div className="ig-l">
-                  <div className={`li-ico ${r.c}`}>{r.e}</div>
-                  <div>
-                    <div className="ig-nm">{r.n}</div>
-                    <div style={{ fontSize: '.58rem', color: 'var(--sub)' }}>{r.s}</div>
-                  </div>
-                </div>
-                <span
-                  className={`ig-st${r.st ? ' ' + r.st : ''}`}
-                  style={{ fontFamily: 'var(--fh)', fontSize: '.85rem', color: r.st ? undefined : '#fff' }}
-                >
-                  {r.v}
-                </span>
-              </div>
-            ))}
-          </div>
-
-          {/* NEW: Platform Health (Supabase Monitor) */}
+          {/* Platform Health (Supabase Monitor) */}
           <div className="panel" style={{ border: '1px solid var(--border)', background: 'rgba(16,185,129,0.02)' }}>
             <div className="panel-hd">
               <div>
-                <div className="panel-lbl" style={{ color: 'var(--te)' }}>Supabase Health</div>
+                <div className="panel-lbl" style={{ color: 'var(--te)' }}>Database Health</div>
                 <div className="panel-val" style={{ fontSize: '0.9rem' }}>
-                  {pStats?.totalRows?.toLocaleString() || '0'} Total Rows
+                  {pStats?.totalRows?.toLocaleString() || '0'} Total Records
                 </div>
               </div>
               <div className="panel-per" style={{ color: (pStats?.dbCapacity > 80 ? 'var(--ro)' : 'var(--te)') }}>
@@ -246,8 +203,7 @@ export default function OverviewTab({
             </div>
             
             <div style={{ fontSize: '0.58rem', color: 'var(--sub)', marginTop: 10, lineHeight: 1.5 }}>
-              Estimated row count towards Supabase Free Tier (500MB DB). 
-              LMS content is stored as files to save database space.
+              Infrastructure monitoring for ShuleSoft HQ.
             </div>
           </div>
         </div>
