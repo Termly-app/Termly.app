@@ -124,7 +124,6 @@ export default function SuperAdmin({ currentUser, isPlatformAdmin, sidebarOpen, 
   // ── Chart refs ───────────────────────────────────────────────────────────
   const revChartRef  = useRef(null);
   const growChartRef = useRef(null);
-  const subChartRef  = useRef(null);
   const weekChartRef = useRef(null);
   const payChartRef  = useRef(null);
   const subBreakRef  = useRef(null);
@@ -413,60 +412,7 @@ export default function SuperAdmin({ currentUser, isPlatformAdmin, sidebarOpen, 
     });
   }, [activeTab, schools]);
 
-  useChart(subChartRef, (ctx) => {
-    // 1. Collect all plan names present in system
-    const activePlanNames = plans.map(p => p.name);
-    const inUsePlanNames  = schools.map(s => s.plan || s.school_profiles?.[0]?.subscription_plan).filter(Boolean);
-    
-    // 2. Unique list, prioritizing active plans and normalizing legacy names
-    let planLabels = [...new Set([...activePlanNames, ...inUsePlanNames])].map(n => {
-      const lower = n?.toLowerCase();
-      if (lower === 'fala' || lower === 'starter') return 'Starter Plan';
-      return n;
-    }).filter(Boolean);
-    
-    // De-duplicate after normalization
-    planLabels = [...new Set(planLabels)];
-    if (planLabels.length === 0) planLabels.push('Starter Plan', 'Growth Plan', 'Pro Plan', 'Enterprise');
 
-    const active = planLabels.map(p => activeSchools.filter(s => {
-      const d = s.school_profiles?.[0] || {};
-      const sPlan = (s.plan || d.subscription_plan || 'Starter Plan').toLowerCase();
-      return sPlan === p.toLowerCase();
-    }).length);
-
-    const deact = planLabels.map(p => deactSchools.filter(s => {
-      const d = s.school_profiles?.[0] || {};
-      const sPlan = (s.plan || d.subscription_plan || 'Starter Plan').toLowerCase();
-      return sPlan === p.toLowerCase();
-    }).length);
-
-    const expd = planLabels.map(p => expiredSchools.filter(s => {
-      const d = s.school_profiles?.[0] || {};
-      const sPlan = (s.plan || d.subscription_plan || 'Starter').toLowerCase();
-      return sPlan === p.toLowerCase();
-    }).length);
-
-    return new window.Chart(ctx, {
-      type: 'bar',
-      data: { 
-        labels: planLabels, 
-        datasets: [
-          { label:'Active',      data:active, backgroundColor:'#ffffff' }, 
-          { label:'Deact/Susp',  data:deact,  backgroundColor:'#a1a1aa' }, 
-          { label:'Expired',     data:expd,   backgroundColor:'#3f3f46' }
-        ] 
-      },
-      options: { 
-        responsive:true, maintainAspectRatio:false, 
-        plugins:{ legend:{display:false}, tooltip:TIP }, 
-        scales:{ 
-          x:{stacked:true, grid:{display:false}, ticks:{color:TC}}, 
-          y:{stacked:true, grid:{color:GC}, ticks:{color:TC, stepSize: 1}} 
-        } 
-      },
-    });
-  }, [activeTab, schools, plans, settings]);
 
   useChart(weekChartRef, (ctx) => {
     const days = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
