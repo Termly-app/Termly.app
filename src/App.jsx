@@ -15,7 +15,7 @@ const Library      = lazy(() => import('./pages/Library/index'));
 const Settings     = lazy(() => import('./pages/Settings'));
 const Login        = lazy(() => import('./pages/Login'));
 const Security     = lazy(() => import('./pages/Security'));
-const Billing      = lazy(() => import('./pages/Billing'));
+
 const Communications = lazy(() => import('./pages/Communications'));
 const SuperAdmin   = lazy(() => import('./pages/SuperAdmin'));
 const Landing      = lazy(() => import('./pages/Landing'));
@@ -265,18 +265,13 @@ function Sidebar({ isOpen, onClose, onLogout, onLock, currentUser, subscriptionA
 
         {/* Nav */}
         <nav className="sidebar-nav">
-          <SbSection label="Overview" />
+          <SbSection label="Operations" />
           <SbLink to="/super-admin"                          icon={OverviewIcon}   label="Dashboard"        onClick={onClose} exact />
           <SbLink to="/super-admin?tab=schools"              icon={SchoolsIcon}    label="Schools"          onClick={onClose} />
-          <SbLink to="/super-admin?tab=payments"             icon={PaymentsIcon}   label="Payments"         onClick={onClose} />
-          <SbLink to="/super-admin?tab=history"              icon={HistoryIcon}    label="Payment History"  onClick={onClose} />
-          <SbSection label="Analytics" />
-          <SbLink to="/super-admin?tab=subscriptions"        icon={BillingIcon}    label="Subscriptions"    onClick={onClose} />
-          <SbLink to="/super-admin?tab=revenue"              icon={RevenueIcon}    label="Revenue"          onClick={onClose} />
-          <SbLink to="/super-admin?tab=activity"             icon={ActivityIcon}   label="Activity Log"     onClick={onClose} />
+          <SbLink to="/super-admin?tab=admins"               icon={ShieldIcon}     label="Admins"           onClick={onClose} />
+          <SbLink to="/super-admin?tab=activity"             icon={ActivityIcon}   label="Audit Log"        onClick={onClose} />
           <SbSection label="System" />
           <SbLink to="/super-admin?tab=config"               icon={SettingsIcon}   label="Settings"         onClick={onClose} />
-          <SbLink to="/super-admin?tab=recovery"             icon={RecoveryIcon}   label="Data Recovery"    onClick={onClose} />
         </nav>
 
         {/* Footer */}
