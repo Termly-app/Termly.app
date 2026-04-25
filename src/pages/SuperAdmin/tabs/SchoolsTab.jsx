@@ -64,13 +64,11 @@ export default function SchoolsTab({
               <thead>
                 <tr>
                   <th className="col-school">School</th>
-                  <th className="col-plan">Features</th>
+                  <th className="col-plan">Modules</th>
                   <th className="col-usage">Staff Usage</th>
                   <th className="col-loc">Location</th>
-                  <th className="col-stud">Students</th>
                   <th className="col-joined">Joined</th>
                   <th className="col-status">Status</th>
-                  <th className="col-rev">Revenue</th>
                   <th className="col-sub">Features</th>
                   <th className="col-act">Action</th>
                 </tr>
@@ -106,7 +104,7 @@ export default function SchoolsTab({
                         {s.phone && <div className="td-sub">{s.phone}</div>}
                       </td>
 
-                      <td data-label="Features" className="col-features">
+                      <td data-label="Modules" className="col-features">
                         <span className="p-pill">{s.features_count || 0} / 16</span>
                       </td>
 
@@ -121,22 +119,12 @@ export default function SchoolsTab({
 
                       <td data-label="Location" className="col-loc">{s.location || p.location || 'Kenya'}</td>
 
-                      <td data-label="Students" className="col-stud">
-                        <div className="td-b" style={{ fontSize: '0.9rem' }}>{s._studentCount || 0}</div>
-                      </td>
-
                       <td data-label="Joined" className="col-joined">{fmtDate(p.created_at || s.created_at)}</td>
 
                       <td data-label="Status" className="col-status">
                         <span className={sPill(getStatusRefined(p, isActive))}>
                           {getStatusRefined(p, isActive)}
                         </span>
-                      </td>
-
-                      <td data-label="Revenue" className="col-rev">
-                        <div className="td-m" style={{ color: 'var(--txt)', opacity: schoolRevenue > 0 ? 1 : 0.4 }}>
-                          {schoolRevenue > 0 ? fmtMoney(schoolRevenue) : '—'}
-                        </div>
                       </td>
 
                       <td data-label="Features" className="col-sub">
@@ -147,7 +135,6 @@ export default function SchoolsTab({
 
                       <td data-label="Action" className="col-act">
                         <div className="act-group">
-                          <button className="act-btn b" onClick={() => handleLoginAs(s)}>Login As</button>
                           {isActive ? (
                             <button className="act-btn" onClick={() => handleDeactivate(s.id, s.name)}>Deactivate</button>
                           ) : (
