@@ -1,45 +1,48 @@
 -- REFRESH SHULESOFT FEATURES REGISTRY
--- This ensures the Super Admin sees the correct names of things offered by ShuleSoft
+-- This ensures the Super Admin sees only the modules actually implemented in the codebase
 
--- 1. Clear existing (optional, but ON CONFLICT will handle it if we want to keep some)
--- DELETE FROM public.features_registry;
-
--- 2. Insert/Update Registry with correct ShuleSoft naming
+-- 1. Insert/Update Registry with strictly verified ShuleSoft modules
 INSERT INTO public.features_registry (feature_key, feature_name, description, category)
 VALUES 
-    -- Academic Core
-    ('students',       'Student Information', 'Enrollment, profiles, and bio-data management', 'academics'),
-    ('academics',      'Academic Center',    'Class streams, subjects, and student promotion', 'academics'),
-    ('grading',        'Exams & Grading',    'Marks entry, exam processing, and report cards', 'academics'),
-    ('attendance',     'Attendance Tracker', 'Daily and lesson-wise tracking for students/staff', 'academics'),
-    ('timetable',      'Timetable Builder',  'Automated weekly scheduling and allocations', 'academics'),
-
-    -- Finance & Operations
-    ('fees',           'Fee Management',     'Fee structures, invoicing, and collections', 'finance'),
-    ('payroll',        'Payroll & HR',       'Staff salaries, tax deductions (NSSF/NHIF), and slips', 'finance'),
-    ('inventory',      'Store & Inventory',  'School assets and stationery tracking', 'finance'),
-    ('billing',        'School Billing',     'Management of school subscription to ShuleSoft', 'finance'),
-    ('mpesa',          'M-PESA Payments',    'Automated fee collection via M-PESA integration', 'finance'),
-
-    -- Communication
-    ('communications', 'SMS & Alerts',       'Customized SMS, fee reminders, and result alerts', 'communication'),
-    ('parent_portal',  'Parent Experience',  'Mobile app and web portal for parent engagement', 'portal'),
-    ('teacher_portal', 'Teacher Portal',     'Portal for marks entry and lesson planning', 'portal'),
-
-    -- Specialized
-    ('library',        'Library Manager',    'Book cataloging and circulation tracking', 'extra'),
-    ('transport',      'Transport & Fleet',  'School bus tracking and route management', 'extra'),
-    ('hostel',         'Hostel Management',  'Dormitory allocation and resident tracking', 'extra'),
-    ('nemis',          'NEMIS Connector',    'Data synchronization with government systems', 'extra'),
-    ('insurance',      'School Insurance',   'Education insurance covers for parents/students', 'extra'),
+    -- General & Dashboard
+    ('dashboard',      'Admin Dashboard',    'Core analytics and school overview', 'core'),
     
-    -- Security/Admin
-    ('audit_logs',     'Security Audit',     'Detailed tracking of all system-wide activities', 'security')
+    -- Academics
+    ('students',       'Student Management', 'Enrollment, profiles, and bio-data management', 'academics'),
+    ('academics',      'Staff & HR',         'Teacher profiles and staff management', 'academics'),
+    ('grading',        'Academic Results',   'Exams, marks entry, and report cards', 'academics'),
+    ('attendance',     'Attendance Tracker', 'Daily tracking for students and staff', 'academics'),
+    ('timetable',      'Timetable Builder',  'Weekly scheduling and teacher assignments', 'academics'),
+    ('library',        'Library Manager',    'Book inventory and circulation tracking', 'academics'),
+    
+    -- Finance
+    ('fees',           'Fees & Billing',     'Fee structures, invoicing, and collections', 'finance'),
+    ('mpesa',          'M-PESA Integration',  'Automated fee collection via STK Push', 'finance'),
+    ('billing',        'ShuleSoft Billing',  'Manage school subscription to platform', 'finance'),
+
+    -- Communication & Portals
+    ('communications', 'Comm. Center',       'SMS broadcasts and automated fee reminders', 'communication'),
+    ('teacher_portal', 'Teacher Portal',     'Dedicated portal for marks and attendance', 'portal'),
+    ('parent_portal',  'Parent Experience',  'Portal for parents to view results/pay fees', 'portal'),
+
+    -- Compliance & Extra
+    ('nemis',          'NEMIS Audit',        'MoE compliance tracking and data export', 'extra'),
+    ('lms',            'E-Learning (LMS)',   'Online courses, assignments, and materials', 'extra'),
+    ('audit_logs',     'Security Audit',     'Detailed tracking of system-wide activity', 'security')
 
 ON CONFLICT (feature_key) DO UPDATE SET
     feature_name = EXCLUDED.feature_name,
     description  = EXCLUDED.description,
     category     = EXCLUDED.category;
+
+-- Remove legacy/invalid features that are not in the codebase
+DELETE FROM public.features_registry 
+WHERE feature_key NOT IN (
+    'dashboard', 'students', 'academics', 'grading', 'attendance', 
+    'timetable', 'library', 'fees', 'mpesa', 'billing', 
+    'communications', 'teacher_portal', 'parent_portal', 
+    'nemis', 'lms', 'audit_logs'
+);
 
 -- Notify schema reload
 NOTIFY pgrst, 'reload schema';
