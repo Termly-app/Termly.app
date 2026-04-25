@@ -46,12 +46,12 @@ ALTER TABLE notifications ENABLE ROW LEVEL SECURITY;
 DROP POLICY IF EXISTS "Users can view own notifications" ON notifications;
 CREATE POLICY "Users can view own notifications"
   ON notifications FOR SELECT
-  USING (auth.uid() IN (SELECT auth_id FROM users WHERE id = notifications.user_id));
+  USING (auth.uid() IN (SELECT auth_user_id FROM users WHERE id = notifications.user_id));
 
 DROP POLICY IF EXISTS "Users can update own notifications" ON notifications;
 CREATE POLICY "Users can update own notifications"
   ON notifications FOR UPDATE
-  USING (auth.uid() IN (SELECT auth_id FROM users WHERE id = notifications.user_id));
+  USING (auth.uid() IN (SELECT auth_user_id FROM users WHERE id = notifications.user_id));
 
 DROP POLICY IF EXISTS "Authenticated users can read portal settings" ON portal_access_settings;
 CREATE POLICY "Authenticated users can read portal settings"
