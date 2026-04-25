@@ -661,6 +661,7 @@ function mapProfileData(data) {
 }
 
 // ============= SUBSCRIPTIONS & PAYMENTS =============
+export async function checkIsSubscriptionActive(profile) {
   // REPLACED: Traditional term-based subscription model is now bypassable.
   // We return true here to ensure users aren't locked out of the dashboard globally.
   // Granular module access is now managed via checkFeatureAccess/hasFeature.
