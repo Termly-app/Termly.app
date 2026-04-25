@@ -303,6 +303,37 @@ export default function SuperAdmin({ currentUser, isPlatformAdmin, sidebarOpen, 
     catch (err) { setMessage({ type:'error', text: err.message }); }
   };
 
+  const handleBulkActivate = async () => {
+    const ok = await confirm({ title: 'Bulk Activate', message: 'Activate ALL schools and extend their module expiries by 4 months?', confirmText: 'Activate All' });
+    if (!ok) return;
+    setLoading(true);
+    try {
+      // Process in sequence to avoid hitting Supabase rate limits
+      for (const s of schools) { await restoreSchool(s.id); }
+      setMessage({ type: 'success', text: 'All schools activated.' });
+      loadData();
+    } catch (err) {
+      setMessage({ type: 'error', text: err.message });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleBulkDeactivate = async () => {
+    const ok = await confirm({ title: 'Bulk Deactivate', message: 'Deactivate ALL schools and lock their features immediately?', confirmText: 'Deactivate All', variant: 'danger' });
+    if (!ok) return;
+    setLoading(true);
+    try {
+      for (const s of schools) { await deactivateSchool(s.id); }
+      setMessage({ type: 'success', text: 'All schools deactivated.' });
+      loadData();
+    } catch (err) {
+      setMessage({ type: 'error', text: err.message });
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleConfirmActivate = async () => {
     if (!activateModal) return;
     setActivating(true);
@@ -409,7 +440,7 @@ export default function SuperAdmin({ currentUser, isPlatformAdmin, sidebarOpen, 
             {loading ? <SuperAdminLoader /> : (
               <>
                 {activeTab === 'overview' && <OverviewTab {...commonProps} growChartRef={growChartRef} />}
-                {activeTab === 'schools' && <SchoolsTab {...commonProps} handleDeactivate={handleDeactivate} handleRowDeleteSchool={handleRowDeleteSchool} setActivateModal={setActivateModal} setActivationNote={setActivationNote} setActivateSuccess={setActivateSuccess} setFeaturesModal={setFeaturesModal} onNEMISExport={setNemisSchool} handleLoginAs={handleLoginAs} />}
+                {activeTab === 'schools' && <SchoolsTab {...commonProps} handleDeactivate={handleDeactivate} handleRowDeleteSchool={handleRowDeleteSchool} setActivateModal={setActivateModal} setActivationNote={setActivationNote} setActivateSuccess={setActivateSuccess} setFeaturesModal={setFeaturesModal} onNEMISExport={setNemisSchool} handleLoginAs={handleLoginAs} handleBulkActivate={handleBulkActivate} handleBulkDeactivate={handleBulkDeactivate} />}
                 {activeTab === 'admins' && <AdminsTab />}
                 {activeTab === 'activity' && <ActivityTab filteredActivity={filteredActivity} />}
                 {activeTab === 'config' && <SettingsTab statusMsg={statusMsg} setStatusMsg={setStatusMsg} subEndDate={subEndDate} setSubEndDate={setSubEndDate} smsConfig={smsConfig} setSmsConfig={setSmsConfig} handleUpdateSetting={handleUpdateSetting} updatePlatformSetting={updatePlatformSetting} loadData={loadData} setMessage={setMessage} onWipeSchools={handleWipeSchools} />}

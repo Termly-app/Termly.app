@@ -3832,23 +3832,24 @@ export async function getAllSchools() {
     return [];
   }
 
-  // 2. Fetch all student counts
-  const { data: students, error: stErr } = await supabase
-    .from('students')
-    .select('school_id');
+  // 2. Fetch counts in parallel
+  const [studentsRes, staffRes, featuresRes] = await Promise.all([
+    supabase.from('students').select('school_id'),
+    supabase.from('users').select('school_id').neq('role', 'Super Admin'),
+    supabase.from('school_features').select('school_id').eq('is_enabled', true)
+  ]);
   
-  // 3. Fetch all staff counts
-  const { data: staff, error: sfErr } = await supabase
-    .from('users')
-    .select('school_id')
-    .neq('role', 'Super Admin'); // Exclude system wide admins
-
-  const studentCounts = (students || []).reduce((acc, curr) => {
+  const studentCounts = (studentsRes.data || []).reduce((acc, curr) => {
     acc[curr.school_id] = (acc[curr.school_id] || 0) + 1;
     return acc;
   }, {});
 
-  const staffCounts = (staff || []).reduce((acc, curr) => {
+  const staffCounts = (staffRes.data || []).reduce((acc, curr) => {
+    acc[curr.school_id] = (acc[curr.school_id] || 0) + 1;
+    return acc;
+  }, {});
+
+  const featureCounts = (featuresRes.data || []).reduce((acc, curr) => {
     acc[curr.school_id] = (acc[curr.school_id] || 0) + 1;
     return acc;
   }, {});
@@ -3856,7 +3857,8 @@ export async function getAllSchools() {
   return (schools || []).map(s => ({
     ...s,
     _studentCount: studentCounts[s.id] || 0,
-    _staffCount: staffCounts[s.id] || 0
+    _staffCount: staffCounts[s.id] || 0,
+    features_count: featureCounts[s.id] || 0
   }));
 }
 
@@ -3864,9 +3866,27 @@ export async function getAllSchools() {
  * Deactivate a school — sets status to 'Deactivated' on both schools and school_profiles
  */
 export async function deactivateSchool(schoolId) {
-  const { error: e2 } = await supabase.from('school_profiles').update({ subscription_status: 'Deactivated' }).eq('school_id', schoolId);
-  if (e2) throw e2;
-  await logPlatformActivity('DEACTIVATION', `School ${schoolId} deactivated by admin`, schoolId);
+  const pastDate = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(); // Yesterday
+  
+  // 1. Update Profile
+  const { error: e1 } = await supabase
+    .from('school_profiles')
+    .update({ subscription_status: 'Deactivated', subscription_expiry: pastDate })
+    .eq('school_id', schoolId);
+  if (e1) throw e1;
+
+  // 2. Expire all features
+  const { error: e2 } = await supabase
+    .from('school_features')
+    .update({ expires_at: pastDate })
+    .eq('school_id', schoolId);
+  
+  if (e2) {
+    console.warn('DeactivateSchool: Failed to expire features, but school profile deactivated.', e2);
+  }
+
+  invalidateFeatureCache(schoolId);
+  await logPlatformActivity('DEACTIVATION', `School ${schoolId} deactivated by admin. Features expired.`, schoolId);
 }
 
 /**
@@ -3880,7 +3900,7 @@ export async function restoreSchool(schoolId, monthsToAdd = 4) {
     .eq('school_id', schoolId)
     .single();
 
-  if (getProfileError) throw getProfileError; // Throw if fetching profile fails
+  if (getProfileError && getProfileError.code !== 'PGRST116') throw getProfileError;
 
   let expiry = new Date();
   if (profileData && profileData.subscription_expiry) {
@@ -3890,16 +3910,34 @@ export async function restoreSchool(schoolId, monthsToAdd = 4) {
     }
   }
   expiry.setMonth(expiry.getMonth() + monthsToAdd);
+  const newExpiryStr = expiry.toISOString();
 
+  // 2. Update School Profile
   const { error: e2 } = await supabase
     .from('school_profiles')
     .update({ 
       subscription_status: 'Active',
-      subscription_expiry: expiry.toISOString()
+      subscription_expiry: newExpiryStr
     })
     .eq('school_id', schoolId);
   if (e2) throw e2;
-  await logPlatformActivity('ACTIVATION', `School ${schoolId} activated by admin (+${monthsToAdd} months)`, schoolId);
+
+  // 3. Re-activate all features that were already enabled (but may have expired)
+  // We extend their expiry to match the new subscription period
+  const { error: e3 } = await supabase
+    .from('school_features')
+    .update({ expires_at: newExpiryStr })
+    .eq('school_id', schoolId)
+    .eq('is_enabled', true);
+  
+  if (e3) {
+    console.warn('RestoreSchool: Failed to update features expiry, but school profile updated.', e3);
+  }
+
+  // Clear cache for this school's features
+  invalidateFeatureCache(schoolId);
+
+  await logPlatformActivity('ACTIVATION', `School ${schoolId} activated by admin (+${monthsToAdd} months). Enabled features extended.`, schoolId);
 }
 
 /**
@@ -3983,6 +4021,9 @@ export async function getPlatformStats() {
     const totalSchools = sData.length;
     const deactivatedSchools = suspendedSchools; 
 
+    // Count activated modules system-wide
+    const { count: activatedModules } = await supabase.from('school_features').select('*', { count: 'exact', head: true }).eq('is_enabled', true);
+
     const thisMonth = new Date();
     thisMonth.setDate(1);
     thisMonth.setHours(0,0,0,0);
@@ -3994,6 +4035,7 @@ export async function getPlatformStats() {
       suspendedSchools: suspendedSchools || 0,
       expiredSchools: expiredSchools || 0,
       deactivatedSchools: deactivatedSchools || 0,
+      activatedModules: activatedModules || 0,
       newSchoolsThisMonth,
       health: activeCount >= expiredSchools ? 'Healthy' : 'Critical',
       studCount: studCount || 0,
