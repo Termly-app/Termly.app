@@ -502,27 +502,17 @@ export default function Landing() {
           <div className="fc" style={{ background: '#fff' }}>
             <div className="fc-role" style={{ color: '#16A34A', background: '#DCFCE7' }}>Finance</div>
             <ul style={{ listStyle: 'none', padding: 0, margin: '20px 0 0 0' }}>
-              <li style={{ padding: '12px 0', borderBottom: '1px solid #f1f5f9', display: 'flex', alignItems: 'center', gap: 12 }}><CardIcon size={18} color="#64748b"/> <strong>Fee Collection:</strong> Fully automated M-PESA sync</li>
-              <li style={{ padding: '12px 0', borderBottom: '1px solid #f1f5f9', display: 'flex', alignItems: 'center', gap: 12 }}><CalendarIcon size={18} color="#64748b"/> <strong>Expense tracking:</strong> Daily institutional ledger</li>
-              <li style={{ padding: '12px 0', display: 'flex', alignItems: 'center', gap: 12 }}><UserIcon size={18} color="#64748b"/> <strong>Payroll:</strong> Staff salary & deductions</li>
+              <li style={{ padding: '12px 0', display: 'flex', alignItems: 'center', gap: 12 }}><CardIcon size={18} color="#64748b"/> <strong>Fee Collection:</strong> Fully automated M-PESA sync</li>
             </ul>
           </div>
 
-          <div className="fc" style={{ background: '#fff' }}>
-            <div className="fc-role" style={{ color: '#EA580C', background: '#FFEDD5' }}>Communication</div>
-            <ul style={{ listStyle: 'none', padding: 0, margin: '20px 0 0 0' }}>
-              <li style={{ padding: '12px 0', borderBottom: '1px solid #f1f5f9', display: 'flex', alignItems: 'center', gap: 12 }}><PhoneIcon size={18} color="#64748b"/> <strong>SMS Blasts:</strong> Instant mass parent alerts</li>
-              <li style={{ padding: '12px 0', borderBottom: '1px solid #f1f5f9', display: 'flex', alignItems: 'center', gap: 12 }}><FlagIcon size={18} color="#64748b"/> <strong>Auto-statements:</strong> Email fee balances</li>
-              <li style={{ padding: '12px 0', display: 'flex', alignItems: 'center', gap: 12 }}><SchoolIcon size={18} color="#64748b"/> <strong>Announcements:</strong> Internal staff messaging</li>
-            </ul>
-          </div>
+
 
           <div className="fc" style={{ background: '#fff' }}>
             <div className="fc-role" style={{ color: '#9333EA', background: '#F3E8FF' }}>Administration</div>
             <ul style={{ listStyle: 'none', padding: 0, margin: '20px 0 0 0' }}>
               <li style={{ padding: '12px 0', borderBottom: '1px solid #f1f5f9', display: 'flex', alignItems: 'center', gap: 12 }}><CheckIcon size={18} color="#64748b"/> <strong>NEMIS Compliance:</strong> Standardized reporting</li>
-              <li style={{ padding: '12px 0', borderBottom: '1px solid #f1f5f9', display: 'flex', alignItems: 'center', gap: 12 }}><RocketIcon size={18} color="#64748b"/> <strong>Role Security:</strong> Granular access permissions</li>
-              <li style={{ padding: '12px 0', display: 'flex', alignItems: 'center', gap: 12 }}><SchoolIcon size={18} color="#64748b"/> <strong>Multi-Campus:</strong> Manage multiple branches</li>
+              <li style={{ padding: '12px 0', display: 'flex', alignItems: 'center', gap: 12 }}><RocketIcon size={18} color="#64748b"/> <strong>Role Security:</strong> Granular access permissions</li>
             </ul>
           </div>
 
