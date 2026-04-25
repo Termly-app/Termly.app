@@ -18,7 +18,6 @@ VALUES
     -- Finance
     ('fees',           'Fees & Billing',     'Fee structures, invoicing, and collections', 'finance'),
     ('mpesa',          'M-PESA Integration',  'Automated fee collection via STK Push', 'finance'),
-    ('billing',        'ShuleSoft Billing',  'Manage school subscription to platform', 'finance'),
 
     -- Communication & Portals
     ('communications', 'Comm. Center',       'SMS broadcasts and automated fee reminders', 'communication'),
@@ -27,8 +26,7 @@ VALUES
 
     -- Compliance & Extra
     ('nemis',          'NEMIS Audit',        'MoE compliance tracking and data export', 'extra'),
-    ('lms',            'E-Learning (LMS)',   'Online courses, assignments, and materials', 'extra'),
-    ('audit_logs',     'Security Audit',     'Detailed tracking of system-wide activity', 'security')
+    ('lms',            'E-Learning (LMS)',   'Online courses, assignments, and materials', 'extra')
 
 ON CONFLICT (feature_key) DO UPDATE SET
     feature_name = EXCLUDED.feature_name,
@@ -39,9 +37,9 @@ ON CONFLICT (feature_key) DO UPDATE SET
 DELETE FROM public.features_registry 
 WHERE feature_key NOT IN (
     'dashboard', 'students', 'academics', 'grading', 'attendance', 
-    'timetable', 'library', 'fees', 'mpesa', 'billing', 
+    'timetable', 'library', 'fees', 'mpesa', 
     'communications', 'teacher_portal', 'parent_portal', 
-    'nemis', 'lms', 'audit_logs'
+    'nemis', 'lms'
 );
 
 -- Notify schema reload

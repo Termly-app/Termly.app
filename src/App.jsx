@@ -886,7 +886,7 @@ function App() {
             <Suspense fallback={<Loader />}>
               <ErrorBoundary>
                 <Routes>
-                  <Route path="/billing"  element={<Billing currentUser={currentUser} />} />
+
                   <Route path="/support"  element={<ContactSupport />} />
                   
                   {/* Redirects for logged-in users */}
