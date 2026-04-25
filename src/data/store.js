@@ -3968,12 +3968,11 @@ export async function getPlatformStats() {
     // 2. Auxiliary Metrics (Graceful Failure)
     let studCount = 0, examCount = 0, attTotal = 0, attPresent = 0, totalRows = 0;
     try {
-      const [sRes, eRes, aRes, apRes, lmsARes, lmsSRes, actRes] = await Promise.all([
+      const [sRes, eRes, aRes, apRes, uRes, actRes] = await Promise.all([
         supabase.from('students').select('*', { count: 'exact', head: true }),
         supabase.from('marks').select('*', { count: 'exact', head: true }), // Using marks instead of non-existent exam_results
         supabase.from('attendance').select('*', { count: 'exact', head: true }),
         supabase.from('attendance').select('*', { count: 'exact', head: true }).eq('status', 'Present'),
-        supabase.from('class_streams').select('*', { count: 'exact', head: true }), // Using class_streams instead of LMS
         supabase.from('users').select('*', { count: 'exact', head: true }),
         supabase.from('platform_activity').select('*', { count: 'exact', head: true })
       ]);
@@ -3983,7 +3982,7 @@ export async function getPlatformStats() {
       attPresent = apRes.count || 0;
       
       // Calculate Platform Health (Row Counts)
-      totalRows = (sRes.count || 0) + (eRes.count || 0) + (aRes.count || 0);
+      totalRows = (sRes.count || 0) + (eRes.count || 0) + (aRes.count || 0) + (uRes.count || 0);
     } catch (e) {
       console.warn('Auxiliary stats fetch failed partially', e);
     }
@@ -4038,7 +4037,6 @@ export async function getPlatformStats() {
       health: activeCount >= expiredSchools ? 'Healthy' : 'Critical',
       studCount: studCount || 0,
       examCount: examCount || 0,
-      portCount: portCount || 0,
       attendanceRate: attendanceRate || 0,
       totalRows: totalRows || 0,
       dbCapacity: (totalRows / 500000) * 100 
