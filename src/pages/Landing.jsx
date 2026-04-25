@@ -486,36 +486,36 @@ export default function Landing() {
         <div className="sec-head reveal">
           <div className="eyebrow">Modules & Features</div>
           <h2 className="landing-h2">Everything your school needs.</h2>
-          <p className="sec-p">Mix and match the exact features your school needs. No rigid plans, just full flexibility.</p>
+          <p className="sec-p">Everything your school needs to operate efficiently, from grading to finance.</p>
         </div>
-        <div className="reveal" style={{ maxWidth: 1000, margin: '0 auto', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 24, padding: '0 24px' }}>
+        <div className="reveal" style={{ maxWidth: 1100, margin: '0 auto', display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 32, padding: '0 24px' }}>
           
-          <div className="fc" style={{ background: '#fff' }}>
+          <div className="fc" style={{ background: '#fff', display: 'flex', flexDirection: 'column' }}>
             <div className="fc-role" style={{ color: '#4F46E5', background: '#E0E7FF' }}>Academic</div>
-            <ul style={{ listStyle: 'none', padding: 0, margin: '20px 0 0 0' }}>
-              <li style={{ padding: '12px 0', borderBottom: '1px solid #f1f5f9', display: 'flex', alignItems: 'center', gap: 12 }}><GraduationIcon size={18} color="#64748b"/> <strong>Exam Results:</strong> 8-4-4 & automated ranking</li>
-              <li style={{ padding: '12px 0', borderBottom: '1px solid #f1f5f9', display: 'flex', alignItems: 'center', gap: 12 }}><BookIcon size={18} color="#64748b"/> <strong>CBC Tracking:</strong> Core competencies & rubrics</li>
-              <li style={{ padding: '12px 0', display: 'flex', alignItems: 'center', gap: 12 }}><CheckIcon size={18} color="#64748b"/> <strong>Report Cards:</strong> Instant KNEC-standard generation</li>
+            <ul style={{ listStyle: 'none', padding: 0, margin: '20px 0 0 0', flex: 1 }}>
+              <li style={{ padding: '16px 0', borderBottom: '1px solid #f1f5f9', display: 'flex', alignItems: 'center', gap: 12 }}><GraduationIcon size={18} color="#64748b"/> <div><strong>Exam Results:</strong><br /><span style={{fontSize:'0.75rem', color:'var(--muted)'}}>8-4-4 & automated ranking</span></div></li>
+              <li style={{ padding: '16px 0', borderBottom: '1px solid #f1f5f9', display: 'flex', alignItems: 'center', gap: 12 }}><BookIcon size={18} color="#64748b"/> <div><strong>CBC Tracking:</strong><br /><span style={{fontSize:'0.75rem', color:'var(--muted)'}}>Core competencies & rubrics</span></div></li>
+              <li style={{ padding: '16px 0', display: 'flex', alignItems: 'center', gap: 12 }}><CheckIcon size={18} color="#64748b"/> <div><strong>Report Cards:</strong><br /><span style={{fontSize:'0.75rem', color:'var(--muted)'}}>Instant KNEC-standard generation</span></div></li>
             </ul>
           </div>
 
-          <div className="fc" style={{ background: '#fff' }}>
+          <div className="fc" style={{ background: '#fff', display: 'flex', flexDirection: 'column' }}>
             <div className="fc-role" style={{ color: '#16A34A', background: '#DCFCE7' }}>Finance</div>
-            <ul style={{ listStyle: 'none', padding: 0, margin: '20px 0 0 0' }}>
-              <li style={{ padding: '12px 0', display: 'flex', alignItems: 'center', gap: 12 }}><CardIcon size={18} color="#64748b"/> <strong>Fee Collection:</strong> Fully automated M-PESA sync</li>
+            <ul style={{ listStyle: 'none', padding: 0, margin: '20px 0 0 0', flex: 1 }}>
+              <li style={{ padding: '16px 0', borderBottom: '1px solid #f1f5f9', display: 'flex', alignItems: 'center', gap: 12 }}><CardIcon size={18} color="#64748b"/> <div><strong>Fee Collection:</strong><br /><span style={{fontSize:'0.75rem', color:'var(--muted)'}}>Fully automated M-PESA sync</span></div></li>
+              <li style={{ padding: '16px 0', borderBottom: '1px solid #f1f5f9', display: 'flex', alignItems: 'center', gap: 12 }}><CalendarIcon size={18} color="#64748b"/> <div><strong>Balance Tracking:</strong><br /><span style={{fontSize:'0.75rem', color:'var(--muted)'}}>Real-time arrears & statements</span></div></li>
+              <li style={{ padding: '16px 0', display: 'flex', alignItems: 'center', gap: 12 }}><UserIcon size={18} color="#64748b"/> <div><strong>Digital Receipts:</strong><br /><span style={{fontSize:'0.75rem', color:'var(--muted)'}}>Instant SMS/Email confirmations</span></div></li>
             </ul>
           </div>
 
-
-
-          <div className="fc" style={{ background: '#fff' }}>
+          <div className="fc" style={{ background: '#fff', display: 'flex', flexDirection: 'column' }}>
             <div className="fc-role" style={{ color: '#9333EA', background: '#F3E8FF' }}>Administration</div>
-            <ul style={{ listStyle: 'none', padding: 0, margin: '20px 0 0 0' }}>
-              <li style={{ padding: '12px 0', borderBottom: '1px solid #f1f5f9', display: 'flex', alignItems: 'center', gap: 12 }}><CheckIcon size={18} color="#64748b"/> <strong>NEMIS Compliance:</strong> Standardized reporting</li>
-              <li style={{ padding: '12px 0', display: 'flex', alignItems: 'center', gap: 12 }}><RocketIcon size={18} color="#64748b"/> <strong>Role Security:</strong> Granular access permissions</li>
+            <ul style={{ listStyle: 'none', padding: 0, margin: '20px 0 0 0', flex: 1 }}>
+              <li style={{ padding: '16px 0', borderBottom: '1px solid #f1f5f9', display: 'flex', alignItems: 'center', gap: 12 }}><CheckIcon size={18} color="#64748b"/> <div><strong>NEMIS Compliance:</strong><br /><span style={{fontSize:'0.75rem', color:'var(--muted)'}}>Standardized Kenyan reporting</span></div></li>
+              <li style={{ padding: '16px 0', borderBottom: '1px solid #f1f5f9', display: 'flex', alignItems: 'center', gap: 12 }}><RocketIcon size={18} color="#64748b"/> <div><strong>Role Security:</strong><br /><span style={{fontSize:'0.75rem', color:'var(--muted)'}}>Granular access permissions</span></div></li>
+              <li style={{ padding: '16px 0', display: 'flex', alignItems: 'center', gap: 12 }}><SchoolIcon size={18} color="#64748b"/> <div><strong>Staff Management:</strong><br /><span style={{fontSize:'0.75rem', color:'var(--muted)'}}>Teacher attendance & profiles</span></div></li>
             </ul>
           </div>
-
         </div>
       </section>
 
