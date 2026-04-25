@@ -88,18 +88,52 @@ function SbLink({ to, icon: Icon, label, onClick, exact = false, locked = false,
         title: 'Module Locked',
         message: (
           <div style={{ textAlign: 'left' }}>
-            <p style={{ marginBottom: 12 }}>This feature is currently disabled for your school or requires a higher plan (Enterprise Edition).</p>
-            <div style={{ background: 'var(--bg)', padding: 16, borderRadius: 12, border: '1px solid var(--border)' }}>
-              <div style={{ fontWeight: 700, fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: 8, textTransform: 'uppercase' }}>Contact Support to Enable</div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 6, fontSize: '0.85rem' }}>
-                <div><strong>WhatsApp/Call:</strong> <a href={`https://wa.me/${phone.replace('+', '')}`} target="_blank" rel="noopener noreferrer" style={{ color: 'var(--primary)' }}>{phone}</a></div>
-                <div><strong>Email:</strong> <a href={`mailto:${email}`} style={{ color: 'var(--primary)' }}>{email}</a></div>
-              </div>
+            <p style={{ marginBottom: 16, fontSize: '0.9rem' }}>This feature is currently disabled for your school or requires a higher tier plan (Enterprise Edition).</p>
+            
+            <div style={{ 
+              background: 'rgba(255,255,255,0.03)', 
+              padding: 20, 
+              borderRadius: 16, 
+              border: '1px solid rgba(255,255,255,0.08)',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: 12
+            }}>
+              <div style={{ fontWeight: 800, fontSize: '0.65rem', color: 'var(--primary-light)', letterSpacing: '0.1em', textTransform: 'uppercase' }}>Contact Support to Activate</div>
+              
+              <a href={`https://wa.me/${phone.replace(/[^0-9]/g, '')}`} target="_blank" rel="noopener noreferrer" style={{ 
+                display: 'flex', alignItems: 'center', gap: 12, color: '#fff', textDecoration: 'none',
+                background: 'rgba(255,255,255,0.04)', padding: '10px 14px', borderRadius: 10, transition: 'all 0.2s'
+              }} onMouseOver={e => e.currentTarget.style.background='rgba(255,255,255,0.08)'} onMouseOut={e => e.currentTarget.style.background='rgba(255,255,255,0.04)'}>
+                <div style={{ width: 32, height: 32, borderRadius: 8, background: '#25D366', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <MessageIcon size={16} color="#fff" />
+                </div>
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontSize: '0.7rem', color: '#71717a', fontWeight: 600 }}>WhatsApp / Call</div>
+                  <div style={{ fontSize: '0.9rem', fontWeight: 700 }}>{phone}</div>
+                </div>
+              </a>
+
+              <a href={`mailto:${email}`} style={{ 
+                display: 'flex', alignItems: 'center', gap: 12, color: '#fff', textDecoration: 'none',
+                background: 'rgba(255,255,255,0.04)', padding: '10px 14px', borderRadius: 10, transition: 'all 0.2s'
+              }} onMouseOver={e => e.currentTarget.style.background='rgba(255,255,255,0.08)'} onMouseOut={e => e.currentTarget.style.background='rgba(255,255,255,0.04)'}>
+                <div style={{ width: 32, height: 32, borderRadius: 8, background: 'var(--primary)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <SettingsIcon size={16} color="#fff" />
+                </div>
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontSize: '0.7rem', color: '#71717a', fontWeight: 600 }}>Official Email</div>
+                  <div style={{ fontSize: '0.9rem', fontWeight: 700 }}>{email}</div>
+                </div>
+              </a>
             </div>
-            <p style={{ marginTop: 12, fontSize: '0.8rem', color: 'var(--text-light)' }}>Our team is available Monday to Friday, 8 AM - 6 PM EAT.</p>
+            
+            <p style={{ marginTop: 16, fontSize: '0.75rem', color: '#52525b', textAlign: 'center' }}>
+              Mon – Fri, 8:00 AM – 6:00 PM EAT
+            </p>
           </div>
         ),
-        confirmText: 'Got it'
+        confirmText: 'Dismiss'
       });
       return;
     }
