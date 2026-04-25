@@ -4673,15 +4673,17 @@ const FEATURE_MAPPING = {
  * Consolidates all gating logic into checkFeatureAccess for consistency.
  */
 export async function isFeatureEnabled(featureSlug) {
+  if (!_currentSchoolId) return false;
   try {
     const profile = await getSchoolProfile();
     
-    // School-level module toggle override
+    // 1. School-level module toggle override (legacy manual switches)
     if (featureSlug === 'attendance' && profile.enabledModules?.attendance === false) {
       return false;
     }
     
-    return await checkFeatureAccess(featureSlug, profile);
+    // 2. Authoritative check via features registry mapping
+    return await hasFeature(_currentSchoolId, featureSlug);
   } catch (e) {
     console.error("Feature gating error:", e);
     return false;
