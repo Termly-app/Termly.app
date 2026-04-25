@@ -288,20 +288,6 @@ export default function SuperAdmin({ currentUser, isPlatformAdmin, sidebarOpen, 
     });
   }, [activeTab, schools]);
 
-  const handleDeactivate = async (id, name) => {
-    const ok = await confirm({ title: 'Deactivate School', message: `Deactivate ${name}? Their staff will lose all access.`, confirmText: 'Deactivate', variant: 'danger' });
-    if (!ok) return;
-    try { await deactivateSchool(id); setMessage({ type:'success', text:`${name} deactivated.` }); loadData(); }
-    catch (err) { setMessage({ type:'error', text: err.message }); }
-  };
-
-  const handleRowDeleteSchool = async (id, name) => {
-    const ok = await confirm({ title: 'Terminate School', message: `Permanently delete ${name} and ALL associated data? This cannot be undone.`, confirmText: 'Yes, Terminate Forever', variant: 'danger' });
-    if (!ok) return;
-    try   { await deleteSchool(id); setMessage({ type:'success', text:`${name} terminated.` }); loadData(); }
-    catch (err) { setMessage({ type:'error', text: err.message || 'Failed to terminate school' }); }
-  };
-
   const handleUpdateSetting = async (key, value) => {
     try   { await updatePlatformSetting(key, { ...(settings[key] || {}), ...value }); setMessage({ type:'success', text:'Settings saved.' }); loadData(); }
     catch (err) { setMessage({ type:'error', text: err.message }); }
