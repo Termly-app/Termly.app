@@ -244,7 +244,8 @@ export async function registerSchool(name, email, plan, authUserId, adminName, a
       auth_user_id: authUserId,
       name: adminName,
       email: adminEmail,
-      role: 'Admin'
+      role: 'Admin',
+      password_changed: true
     });
   if (userErr) throw userErr;
 
