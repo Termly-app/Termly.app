@@ -253,13 +253,13 @@ function Sidebar({ isOpen, onClose, onLogout, onLock, currentUser, subscriptionA
               {profile?.schoolName || 'ShuleSoft HQ'}
             </div>
           </div>
-          <div style={{ display: 'flex', gap: '8px', marginTop: '16px' }}>
-            <button className="sb-signout-btn" onClick={onLock} style={{ flex: 1, justifyContent: 'center' }}>
-              <LockIcon size={15} strokeWidth={1.75} />
+          <div className="sb-footer-actions">
+            <button className="sb-action-btn" onClick={onLock}>
+              <LockIcon size={16} strokeWidth={2} />
               <span>Lock</span>
             </button>
-            <button className="sb-signout-btn" onClick={onLogout} style={{ flex: 1, justifyContent: 'center' }}>
-              <SignOutIcon size={15} strokeWidth={1.75} />
+            <button className="sb-action-btn danger" onClick={onLogout}>
+              <SignOutIcon size={16} strokeWidth={2} />
               <span>Sign Out</span>
             </button>
           </div>
@@ -382,13 +382,13 @@ function Sidebar({ isOpen, onClose, onLogout, onLock, currentUser, subscriptionA
             </div>
           </div>
         </div>
-        <div style={{ display: 'flex', gap: '8px', marginTop: '16px' }}>
-          <button className="sb-logout-btn" onClick={onLock} style={{ flex: 1, justifyContent: 'center' }}>
-            <LockIcon size={15} strokeWidth={1.75} />
+        <div className="sb-footer-actions">
+          <button className="sb-action-btn" onClick={onLock}>
+            <LockIcon size={16} strokeWidth={2} />
             <span>Lock</span>
           </button>
-          <button className="sb-logout-btn" onClick={onLogout} style={{ flex: 1, justifyContent: 'center' }}>
-            <SignOutIcon size={15} strokeWidth={1.75} />
+          <button className="sb-action-btn danger" onClick={onLogout}>
+            <SignOutIcon size={16} strokeWidth={2} />
             <span>Sign Out</span>
           </button>
         </div>
