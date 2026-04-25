@@ -3917,16 +3917,14 @@ export async function suspendSchool(schoolId) {
 export async function getPlatformStats() {
   try {
     // 1. Core Data Queries (Independent)
-    const [schoolsRes, profilesRes, paymentsRes, settingsRes] = await Promise.all([
+    const [schoolsRes, profilesRes, settingsRes] = await Promise.all([
       supabase.from('schools').select('id, created_at, plan'),
       supabase.from('school_profiles').select('school_id, subscription_status, subscription_expiry, created_at'),
-      supabase.from('payments').select('amount, status, created_at'),
       getPlatformSettings()
     ]);
 
     const sData  = schoolsRes.data || [];
     const prData = profilesRes.data || [];
-    const pData  = paymentsRes.data || [];
     const cf     = settingsRes || {};
 
     // 2. Auxiliary Metrics (Graceful Failure)
@@ -3960,8 +3958,6 @@ export async function getPlatformStats() {
     const now             = new Date();
     const isGloballyExpired = globalExpiry && globalExpiry < now;
 
-    const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
-
     const checkActive = (p) => {
       if (!p) return false;
       // PLATFORM OVERRIDE: ShuleSoft HQ is always active
@@ -3985,35 +3981,12 @@ export async function getPlatformStats() {
     const expiredSchools = prData.filter(p => !checkActive(p) && !['Suspended', 'Deactivated'].includes(p.subscription_status)).length;
     
     const totalSchools = sData.length;
-    const deactivatedSchools = suspendedSchools; // Grouped as requested
-    
-    const totalRev = pData
-      .filter(p => p.status === 'Approved')
-      .reduce((acc, curr) => acc + Number(curr.amount), 0);
+    const deactivatedSchools = suspendedSchools; 
 
     const thisMonth = new Date();
     thisMonth.setDate(1);
     thisMonth.setHours(0,0,0,0);
-    // New schools this month should be based on the 'schools' table created_at
     const newSchoolsThisMonth = sData.filter(s => new Date(s.created_at) >= thisMonth).length;
-
-    const revenueHistory = [];
-    const labels = [];
-    for (let i = 5; i >= 0; i--) {
-      const d = new Date();
-      d.setMonth(d.getMonth() - i);
-      d.setDate(1);
-      const monthStart = new Date(d);
-      monthStart.setHours(0,0,0,0);
-      const monthEnd = new Date(d.getFullYear(), d.getMonth() + 1, 0, 23, 59, 59);
-      
-      const monthRev = pData
-        .filter(p => p.status === 'Approved' && new Date(p.created_at) >= monthStart && new Date(p.created_at) <= monthEnd)
-        .reduce((acc, curr) => acc + Number(curr.amount), 0);
-      
-      revenueHistory.push(monthRev);
-      labels.push(d.toLocaleString('default', { month: 'short' }));
-    }
 
     return {
       totalSchools: totalSchools || 0,
@@ -4021,28 +3994,24 @@ export async function getPlatformStats() {
       suspendedSchools: suspendedSchools || 0,
       expiredSchools: expiredSchools || 0,
       deactivatedSchools: deactivatedSchools || 0,
-      revenue: totalRev,
       newSchoolsThisMonth,
-      pendingPayments: pData.filter(p => p.status === 'Pending').length,
-      revenueHistory,
-      labels,
       health: activeCount >= expiredSchools ? 'Healthy' : 'Critical',
       studCount: studCount || 0,
       examCount: examCount || 0,
       portCount: portCount || 0,
       attendanceRate: attendanceRate || 0,
       totalRows: totalRows || 0,
-      dbCapacity: (totalRows / 500000) * 100 // Estimate relative usage based on ~500k row limit guideline for free tier
+      dbCapacity: (totalRows / 500000) * 100 
     };
   } catch (err) {
     console.error('getPlatformStats error:', err);
-    // Return empty stats instead of throwing to keep UI alive
     return {
-      totalSchools: 0, activeSchools: 0, suspendedSchools: 0, expiredSchools: 0, deactivatedSchools: 0, revenue: 0, newSchoolsThisMonth: 0,
-      pendingPayments: 0, revenueHistory: [0,0,0,0,0,0], labels: ['Jan','Feb','Mar','Apr','May','Jun'], health: 'Unknown'
+      totalSchools: 0, activeSchools: 0, suspendedSchools: 0, expiredSchools: 0, deactivatedSchools: 0, newSchoolsThisMonth: 0,
+      health: 'Unknown', studCount: 0, examCount: 0, portCount: 0, attendanceRate: 0, totalRows: 0, dbCapacity: 0
     };
   }
 }
+
 
 /**
  * Reject a payment

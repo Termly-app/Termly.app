@@ -1,4 +1,4 @@
-import { fmtDate, fmtMoney, sPill, getStatusRefined } from '../superAdminUtils';
+import { fmtDate, sPill, getStatusRefined } from '../superAdminUtils';
 import { SchoolIcon } from '../../../components/CommonIcons';
 
 export default function SchoolsTab({
@@ -11,13 +11,12 @@ export default function SchoolsTab({
   isSchoolActive,
   expiredSchools,
   handleBulkActivate, handleBulkDeactivate,
-  setActivateModal, setPayMethod, setPayRef, setActivateSuccess,
+  setActivateModal, setActivationNote, setActivateSuccess,
   handleDeactivate,
   handleRowDeleteSchool,
   setFeaturesModal,
   handleOpenStaffModal,
   onNEMISExport,          // ← new: opens NEMIS export modal for a school
-  approvedPayments,
   handleLoginAs,          // Added handleLoginAs
 }) {
   return (
@@ -93,9 +92,6 @@ export default function SchoolsTab({
                   const studentLimit = planInfo.limit || 150;
                   const adminLimit   = planInfo.admins || 5;
 
-                  const schoolRevenue = (approvedPayments || [])
-                    .filter(ap => ap.school_id === s.id)
-                    .reduce((sum, ap) => sum + (ap.amount || 0), 0);
 
                   return (
                     <tr key={s.id}>
@@ -138,7 +134,7 @@ export default function SchoolsTab({
                           {isActive ? (
                             <button className="act-btn" onClick={() => handleDeactivate(s.id, s.name)}>Deactivate</button>
                           ) : (
-                            <button className="act-btn g" onClick={() => { setActivateModal(s); setPayMethod('mpesa'); setPayRef(''); setActivateSuccess(false); }}>Activate</button>
+                            <button className="act-btn g" onClick={() => { setActivateModal(s); setActivationNote(''); setActivateSuccess(false); }}>Activate</button>
                           )}
                           <button className="act-btn r" onClick={() => handleRowDeleteSchool(s.id, s.name)}>Terminate</button>
                         </div>

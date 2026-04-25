@@ -22,11 +22,9 @@ export function useChart(ref, factory, deps) {
   }, deps);
 }
 
-// ── Date / money formatters ────────────────────────────────────────────────
+// ── Date formatter ─────────────────────────────────────────────────────────
 export const fmtDate = (d) =>
   d ? new Date(d).toLocaleDateString('en-KE', { day: 'numeric', month: 'short', year: 'numeric' }) : '—';
-
-export const fmtMoney = (n) => `KSh ${Number(n || 0).toLocaleString()}`;
 
 // ── Expiry calculator ──────────────────────────────────────────────────────
 export const calcExpiry = (ds) => {

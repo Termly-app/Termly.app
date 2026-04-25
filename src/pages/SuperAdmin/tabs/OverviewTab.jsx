@@ -1,5 +1,5 @@
 import { useRef } from 'react';
-import { useChart, GC, TC, TIP, fmtDate, fmtMoney, statusLabel, sPill, getStatusRefined } from '../superAdminUtils';
+import { useChart, GC, TC, TIP, fmtDate, statusLabel, sPill, getStatusRefined } from '../superAdminUtils';
 import { CheckIcon, AlertIcon, ClockIcon, SchoolIcon, GraduationIcon, RocketIcon } from '../../../components/CommonIcons';
 import Select from '../../../components/Common/Select';
 
@@ -8,14 +8,12 @@ export default function OverviewTab({
   showFilter, setShowFilter,
   filterStatus, setFilterStatus,
   searchQuery,
-  totalSchools, activeCount, expiredCount, totalRevenue,
-  newSchoolsCount, pendingPayments,
-  revChangeTxt, revChangeUp, revChange,
+  totalSchools, activeCount, expiredCount,
+  newSchoolsCount,
   newSchoolsTxt, activeChangeTxt,
-  weeklyRevenue,
   schools, recentSchools, filteredSchools, filteredActivity,
-  approvedPayments, pStats, isSchoolActive,
-  revChartRef, growChartRef, weekChartRef,
+  pStats, isSchoolActive,
+  growChartRef,
 }) {
   const now = new Date();
 
@@ -65,9 +63,9 @@ export default function OverviewTab({
           { a:'var(--vi)', c:'ni-v', l:'Total Schools',        i:null, v:totalSchools,           ch:newSchoolsTxt,                                          n:'Across Kenya',   up:newSchoolsTxt.includes('↑') },
           { a:'var(--te)', c:'ni-t', l:'Active Workspaces',    i:<CheckIcon size={14} />, v:activeCount,            ch:activeChangeTxt,                                        n:'Live & running', up:activeChangeTxt.includes('↑') },
           { a:'var(--ro)', c:'ni-r', l:'Attention Required',   i:<AlertIcon size={14} />, v:expiredCount,           ch:expiredCount > 0 ? 'Follow-up needed' : 'All good',     n:'Inactive schools', up:false },
-          { a:'var(--am)', c:'ni-a', l:'Revenue Collection',   i:null, v:fmtMoney(totalRevenue), ch:revChangeTxt,                                           n:'This Period',    up:revChangeUp },
           { a:'var(--sk)', c:'ni-s', l:'Module Activations',   i:<RocketIcon size={14} />, v:pStats?.activatedModules || '—', ch:'System Wide', n:'Feature adoption', up:true },
-          { a:'rgba(212,80,106,.5)', c:'ni-r', l:'Pending Verification', i:<ClockIcon size={14} />, v:pendingPayments.length, ch:pendingPayments.length > 0 ? 'Review queue' : 'All clear', n:'M-PESA logs', up:false },
+          { a:'var(--am)', c:'ni-a', l:'System Nodes',         i:<RocketIcon size={14} />, v:pStats?.totalSchools || totalSchools, ch:'Healthy', n:'Cluster status', up:true },
+          { a:'rgba(16,185,129,.5)', c:'ni-t', l:'Data Integrity', i:<CheckIcon size={14} />, v:'100%', ch:'Verified', n:'Sync status', up:true },
         ].map((k, i) => (
           <div className="kpi-card" key={i}>
             <div className="kpi-accent" style={{ background: k.a }} />
@@ -85,23 +83,7 @@ export default function OverviewTab({
       </div>
 
       {/* ── Performance charts ── */}
-      <div className="charts-grid">
-        <div className="panel">
-          <div className="panel-hd">
-            <div>
-              <div className="panel-lbl">Revenue Collection</div>
-              <div className="panel-val">
-                {fmtMoney(totalRevenue)}
-                {revChange !== null && (
-                  <span className={`cbadge ${revChangeUp ? 'cup' : 'cdn'}`}>
-                    {revChange >= 0 ? '+' : ''}{revChange}%
-                  </span>
-                )}
-              </div>
-            </div>
-          </div>
-          <div className="chart-box"><canvas ref={revChartRef} height="100" /></div>
-        </div>
+      <div className="charts-grid" style={{ gridTemplateColumns: '1fr' }}>
         <div className="panel">
           <div className="panel-hd">
             <div>
@@ -111,23 +93,8 @@ export default function OverviewTab({
               </div>
             </div>
           </div>
-          <div className="chart-box"><canvas ref={growChartRef} height="100" /></div>
+          <div className="chart-box" style={{ height: 240 }}><canvas ref={growChartRef} /></div>
         </div>
-      </div>
-
-      {/* ── Weekly Performance ── */}
-      <div className="panel" style={{ marginBottom: 20 }}>
-        <div className="panel-hd">
-          <div>
-            <div className="panel-lbl">Weekly Collection Velocity</div>
-            <div className="panel-val">
-              {fmtMoney(weeklyRevenue)}
-              {weeklyRevenue > 0 && <span className="cbadge cup">this week</span>}
-            </div>
-          </div>
-          <div className="panel-per">LIVE MONITORING ▸</div>
-        </div>
-        <div className="chart-box" style={{ height: 160 }}><canvas ref={weekChartRef} /></div>
       </div>
 
       {/* ── Recent schools + activity ── */}
@@ -136,7 +103,7 @@ export default function OverviewTab({
           <div className="panel-lbl">Recent Onboarding</div>
           {(searchQuery ? filteredSchools : recentSchools).length === 0
             ? <div className="empty">No schools registered in this period.</div>
-            : (searchQuery ? filteredSchools : recentSchools).slice(0, 6).map((s, i) => {
+            : (searchQuery ? filteredSchools : recentSchools).slice(0, 8).map((s, i) => {
                 const p   = s.school_profiles?.[0] || {};
                 const cls = ['ni-v', 'ni-t', 'ni-a', 'ni-s', 'ni-r'][i % 5];
                 const active = isSchoolActive(s);
@@ -166,7 +133,7 @@ export default function OverviewTab({
             <div className="panel-lbl">Live System Activity</div>
             {filteredActivity.length === 0
               ? <div className="empty">Monitoring live system events...</div>
-              : filteredActivity.slice(0, 5).map(a => (
+              : filteredActivity.slice(0, 8).map(a => (
                   <div className="ai" key={a.id}>
                     <div className="li-ico ni-t"><CheckIcon size={12} /></div>
                     <div className="ai-body">
