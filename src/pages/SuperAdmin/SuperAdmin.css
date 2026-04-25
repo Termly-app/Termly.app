@@ -258,10 +258,10 @@
 .sa .ig-st.is-ok { color: var(--te) !important; }
 
 /* KILL TR:HOVER LEAK FROM APP.CSS & FIX CONTRAST */
-.theme-onyx .sa table tr { transition: background 0.2s ease; }
+/* REFINED HOVER: Dark background with border, no more white-on-white */
 .theme-onyx .sa table tr:hover td { 
-  background: #ffffff !important; 
-  color: #000000 !important;
+  background: rgba(255,255,255,0.05) !important; 
+  color: #ffffff !important;
   cursor: pointer; 
 }
 .theme-onyx .sa table tr:hover .td-b,
@@ -272,7 +272,7 @@
 .theme-onyx .sa table tr:hover .ig-nm,
 .theme-onyx .sa table tr:hover .p-pill,
 .theme-onyx .sa table tr:hover .td-m {
-  color: #000000 !important;
+  color: #ffffff !important;
 }
 .theme-onyx .sa table tr:hover .pill { 
   border-color: rgba(0, 0, 0, 0.2) !important;
@@ -515,7 +515,13 @@
 .theme-onyx .page-hd, .theme-onyx .top-bar, .theme-onyx th, .theme-onyx .sa-topbar {
   background-color: var(--bg) !important;
 }
-.sa .data-table td { color: var(--sub) !important; font-size: 0.82rem; border-bottom: 1px solid var(--edge) !important; }
+.sa .data-table tr { background: transparent !important; }
+.sa .data-table td { 
+  color: var(--sub) !important; 
+  font-size: 0.82rem; 
+  border-bottom: 1px solid var(--edge) !important;
+  background: transparent !important;
+}
 .sa .data-table td.td-b, .sa .data-table td:first-child { color: #ffffff !important; font-weight: 600; }
 .sa .data-table th { color: #ffffff !important; font-weight: 700; text-transform: uppercase; font-size: 0.65rem; letter-spacing: 0.05em; background: #1a1a1a !important; }
 /* Final polish: hide all horizontal scrollbars but keep functionality */
