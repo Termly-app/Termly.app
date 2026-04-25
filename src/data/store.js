@@ -742,7 +742,7 @@ export async function getPlatformSchoolProfiles() {
   const { data, error } = await supabase
     .from('school_profiles')
     .select('*')
-    .order('created_at', { ascending: false });
+    .order('updated_at', { ascending: false });
   if (error) { console.error('getPlatformSchoolProfiles error:', error); return []; }
   return data || [];
 }
@@ -3537,7 +3537,7 @@ export async function removePlatformAdmin(email) {
 export async function logPlatformActivity(type, description, schoolId = null) {
   try {
     const { error } = await supabase
-      .from('platform_activity_logs')
+      .from('platform_activity')
       .insert({
         type,
         description,
@@ -3591,7 +3591,7 @@ export async function logAuditEvent(arg1, arg2, arg3, arg4) {
 
 export async function getPlatformActivities(limit = 50) {
   const { data, error } = await supabase
-    .from('platform_activity_logs')
+    .from('platform_activity')
     .select('id, type, description, actor_email, created_at, schools(name)')
     .order('created_at', { ascending: false })
     .limit(limit);
@@ -3957,7 +3957,7 @@ export async function getPlatformStats() {
     // 1. Core Data Queries (Independent)
     const [schoolsRes, profilesRes, settingsRes] = await Promise.all([
       supabase.from('schools').select('id, created_at, plan'),
-      supabase.from('school_profiles').select('school_id, subscription_status, subscription_expiry, created_at'),
+      supabase.from('school_profiles').select('school_id, subscription_status, subscription_expiry'),
       getPlatformSettings()
     ]);
 
@@ -3966,26 +3966,24 @@ export async function getPlatformStats() {
     const cf     = settingsRes || {};
 
     // 2. Auxiliary Metrics (Graceful Failure)
-    let studCount = 0, examCount = 0, portCount = 0, attTotal = 0, attPresent = 0, totalRows = 0;
+    let studCount = 0, examCount = 0, attTotal = 0, attPresent = 0, totalRows = 0;
     try {
-      const [sRes, eRes, oRes, aRes, apRes, lmsARes, lmsSRes, actRes] = await Promise.all([
+      const [sRes, eRes, aRes, apRes, lmsARes, lmsSRes, actRes] = await Promise.all([
         supabase.from('students').select('*', { count: 'exact', head: true }),
-        supabase.from('exam_results').select('*', { count: 'exact', head: true }),
-        supabase.from('student_portfolios').select('*', { count: 'exact', head: true }),
+        supabase.from('marks').select('*', { count: 'exact', head: true }), // Using marks instead of non-existent exam_results
         supabase.from('attendance').select('*', { count: 'exact', head: true }),
         supabase.from('attendance').select('*', { count: 'exact', head: true }).eq('status', 'Present'),
-        supabase.from('lms_assignments').select('*', { count: 'exact', head: true }),
-        supabase.from('lms_submissions').select('*', { count: 'exact', head: true }),
+        supabase.from('class_streams').select('*', { count: 'exact', head: true }), // Using class_streams instead of LMS
+        supabase.from('users').select('*', { count: 'exact', head: true }),
         supabase.from('platform_activity').select('*', { count: 'exact', head: true })
       ]);
       studCount = sRes.count || 0;
       examCount = eRes.count || 0;
-      portCount = oRes.count || 0;
       attTotal = aRes.count || 0;
       attPresent = apRes.count || 0;
       
       // Calculate Platform Health (Row Counts)
-      totalRows = (sRes.count || 0) + (eRes.count || 0) + (oRes.count || 0) + (aRes.count || 0) + (lmsARes.count || 0) + (lmsSRes.count || 0) + (actRes.count || 0);
+      totalRows = (sRes.count || 0) + (eRes.count || 0) + (aRes.count || 0);
     } catch (e) {
       console.warn('Auxiliary stats fetch failed partially', e);
     }
