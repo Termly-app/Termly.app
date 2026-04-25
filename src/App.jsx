@@ -1,25 +1,7 @@
 import { useState, useEffect, useRef, Component, lazy, Suspense } from 'react';
 import { Routes, Route, NavLink, useLocation, Navigate } from 'react-router-dom';
 import { supabase } from './lib/supabase';
-import {
-  getSchoolProfile,
-  setCurrentSchoolContext,
-  getUserByAuthId,
-  getPeriods,
-  setActivePeriod,
-  initActivePeriod,
-  getCurrentPeriodId,
-  checkIsPlatformAdmin,
-  isFeatureEnabled,
-  checkIsSubscriptionActive,
-  subscribeToSchoolChanges,
-  isShadowMode,
-  getUnreadNotificationCount,
-  subscribeToNotifications,
-  getNotifications,
-  markNotificationRead,
-  markAllNotificationsRead,
-} from './data/store';
+import { getSchoolProfile, setCurrentSchoolContext, getUserByAuthId, getPeriods, setActivePeriod, initActivePeriod, getCurrentPeriodId, checkIsPlatformAdmin, isFeatureEnabled, checkIsSubscriptionActive, subscribeToSchoolChanges, isShadowMode, getUnreadNotificationCount, subscribeToNotifications, getNotifications, markNotificationRead, markAllNotificationsRead, getPlatformSettings } from './data/store';
 
 // Pages (Lazy Loaded)
 const Dashboard    = lazy(() => import('./pages/Dashboard'));
@@ -72,6 +54,7 @@ import Select from './components/Common/Select';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import useNetworkStatus from './hooks/useNetworkStatus';
 import { FeaturesProvider, useFeature } from './contexts/FeaturesContext';
+import { useDialog } from './contexts/DialogContext';
 import LockScreen from './components/Common/LockScreen';
 
 import {
@@ -86,15 +69,38 @@ import {
 // --- Sidebar nav link helper ------------------------------------------------
 function SbLink({ to, icon: Icon, label, onClick, exact = false, locked = false, red = false }) {
   const location = useLocation();
+  const { alert } = useDialog();
   const isActive = exact
     ? location.pathname === to && location.search === ''
     : location.pathname === to || (to.includes('?') && location.search.includes(to.split('?')[1]));
 
   const finalClass = `nav-item${isActive ? ' active' : ''}${locked ? ' nav-locked' : ''}${red ? ' nav-red' : ''}`;
 
-  const handleClick = (e) => {
+  const handleClick = async (e) => {
     if (locked) {
       e.preventDefault();
+      
+      const settings = await getPlatformSettings();
+      const phone = settings?.support?.phone || '+254712260057';
+      const email = settings?.support?.email || 'shulesoft8@gmail.com';
+      
+      alert({
+        title: 'Module Locked',
+        message: (
+          <div style={{ textAlign: 'left' }}>
+            <p style={{ marginBottom: 12 }}>This feature is currently disabled for your school or requires a higher plan (Enterprise Edition).</p>
+            <div style={{ background: 'var(--bg)', padding: 16, borderRadius: 12, border: '1px solid var(--border)' }}>
+              <div style={{ fontWeight: 700, fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: 8, textTransform: 'uppercase' }}>Contact Support to Enable</div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 6, fontSize: '0.85rem' }}>
+                <div><strong>WhatsApp/Call:</strong> <a href={`https://wa.me/${phone.replace('+', '')}`} target="_blank" rel="noopener noreferrer" style={{ color: 'var(--primary)' }}>{phone}</a></div>
+                <div><strong>Email:</strong> <a href={`mailto:${email}`} style={{ color: 'var(--primary)' }}>{email}</a></div>
+              </div>
+            </div>
+            <p style={{ marginTop: 12, fontSize: '0.8rem', color: 'var(--text-light)' }}>Our team is available Monday to Friday, 8 AM - 6 PM EAT.</p>
+          </div>
+        ),
+        confirmText: 'Got it'
+      });
       return;
     }
     if (onClick) onClick();
