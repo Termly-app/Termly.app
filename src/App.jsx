@@ -274,68 +274,63 @@ function Sidebar({ isOpen, onClose, onLogout, onLock, currentUser, subscriptionA
       {/* Nav */}
       <nav className="sidebar-nav">
         <SbSection label="General" />
-        <SbLink to="/dashboard" icon={DashboardIcon} label="Dashboard" onClick={onClose} locked={(!subscriptionActive && !isSandbox) && !isPlatformAdmin} />
+        <SbLink to="/dashboard" icon={DashboardIcon} label="Dashboard" onClick={onClose} locked={!useFeature('dashboard').enabled && !isPlatformAdmin} />
         
         {/* Teachers, Admins, Finance and Librarians manage students */}
         {(isTeacher || isAdmin || isFinance || isLibrarian) && (
-          <SbLink to="/students"  icon={StudentsIcon}  label="Students"  onClick={onClose} locked={(!subscriptionActive && !isSandbox) && !isPlatformAdmin} />
+          <SbLink to="/students"  icon={StudentsIcon}  label="Students"  onClick={onClose} locked={!useFeature('students').enabled && !isPlatformAdmin} />
         )}
         
         {/* Only Admins manage staff */}
         {isAdmin && (
-          <SbLink to="/teachers" icon={StaffIcon} label="Staff" onClick={onClose} locked={(!subscriptionActive && !isSandbox) && !isPlatformAdmin} />
+          <SbLink to="/teachers" icon={StaffIcon} label="Staff" onClick={onClose} locked={!useFeature('academics').enabled && !isPlatformAdmin} />
         )}
 
         {/* Librarians, Teachers, and Admins can see the Library catalog */}
-        {(isLibrarian || isTeacher || isAdmin) && (useFeature('library').enabled || isSandbox) && (
-          <SbLink to="/library" icon={BookIcon} label="Library" onClick={onClose} locked={(!subscriptionActive || (isSandbox && !useFeature('library').enabled)) && !isPlatformAdmin} />
+        {(isLibrarian || isTeacher || isAdmin) && useFeature('library').enabled && (
+          <SbLink to="/library" icon={BookIcon} label="Library" onClick={onClose} locked={!useFeature('library').enabled && !isPlatformAdmin} />
         )}
 
         {/* Academic section - always visible for Sandbox, else gated */}
-        {(isTeacher || isAdmin) && (isSandbox || useFeature('attendance').enabled || useFeature('grading').enabled || useFeature('timetable').enabled || useFeature('lms').enabled) && (
+        {(isTeacher || isAdmin) && (useFeature('attendance').enabled || useFeature('grading').enabled || useFeature('timetable').enabled || useFeature('lms').enabled) && (
           <SbSection label="Academics" />
         )}
         
-        {(isAdmin || isTeacher) && (useFeature('attendance').enabled || isSandbox) && (
-          <SbLink to="/attendance" icon={AttendanceIcon} label="Attendance" onClick={onClose} locked={!subscriptionActive && !isPlatformAdmin} />
+        {(isAdmin || isTeacher) && useFeature('attendance').enabled && (
+          <SbLink to="/attendance" icon={AttendanceIcon} label="Attendance" onClick={onClose} locked={!useFeature('attendance').enabled && !isPlatformAdmin} />
         )}
         
-        {(isAdmin || isTeacher) && (
-          <SbLink to="/academics" icon={GradingIcon} label="Academic Results" onClick={onClose} locked={!subscriptionActive && !isPlatformAdmin} />
+        {(isAdmin || isTeacher) && useFeature('grading').enabled && (
+          <SbLink to="/academics" icon={GradingIcon} label="Academic Results" onClick={onClose} locked={!useFeature('grading').enabled && !isPlatformAdmin} />
         )}
         
         {/* Timetable — Reactivated for Sandbox/Production */}
-        {(isTeacher || isAdmin) && (useFeature('timetable').enabled || isSandbox) && (
-          <SbLink to="/timetable" icon={TimetableIcon} label="Timetable" onClick={onClose} locked={!subscriptionActive && !isPlatformAdmin} />
+        {(isTeacher || isAdmin) && useFeature('timetable').enabled && (
+          <SbLink to="/timetable" icon={TimetableIcon} label="Timetable" onClick={onClose} locked={!useFeature('timetable').enabled && !isPlatformAdmin} />
         )}
 
         {/* E-Learning — Reactivated for Sandbox/Production */}
-        {(isTeacher || isAdmin) && (useFeature('lms').enabled || isSandbox) && (
-          <SbLink to="/lms" icon={ActivityIcon} label="E-Learning" onClick={onClose} locked={!subscriptionActive && !isPlatformAdmin} />
+        {(isTeacher || isAdmin) && useFeature('lms').enabled && (
+          <SbLink to="/lms" icon={ActivityIcon} label="E-Learning" onClick={onClose} locked={!useFeature('lms').enabled && !isPlatformAdmin} />
         )}
 
-        {/* Administration/Finance section - always visible for Sandbox, else gated */}
-        {(isAdmin || isFinance) && (isSandbox || useFeature('fees').enabled || isAdmin) && (
+        {/* Administration section - dynamically shown if any child is enabled */}
+        {(isAdmin || isFinance) && (useFeature('fees').enabled || useFeature('communications').enabled) && (
           <SbSection label="Administration" />
         )}
         
-        {(isAdmin || isFinance) && (useFeature('fees').enabled || isSandbox) && (
-          <SbLink to="/fees" icon={FeesIcon} label="Fees & Billing" onClick={onClose} locked={!subscriptionActive && !isPlatformAdmin} />
+        {(isAdmin || isFinance) && useFeature('fees').enabled && (
+          <SbLink to="/fees" icon={FeesIcon} label="Fees & Billing" onClick={onClose} locked={!useFeature('fees').enabled && !isPlatformAdmin} />
         )}
 
-        
-
-        {isAdmin && (useFeature('sms').enabled || isSandbox) && (
-          <SbLink to="/communications" icon={MessageIcon} label="Comm. Center" onClick={onClose} locked={!subscriptionActive && !isPlatformAdmin} />
+        {isAdmin && useFeature('communications').enabled && (
+          <SbLink to="/communications" icon={MessageIcon} label="Comm. Center" onClick={onClose} locked={!useFeature('communications').enabled && !isPlatformAdmin} />
         )}
 
-        {(isAdmin || isTeacher) && (useFeature('teacher_portal').enabled || isSandbox) && (
-          <SbLink to="/portal/teacher" icon={StaffIcon} label="Teacher Portal" onClick={onClose} locked={!subscriptionActive && !isPlatformAdmin} />
+        {(isAdmin || isTeacher) && useFeature('teacher_portal').enabled && (
+          <SbLink to="/portal/teacher" icon={StaffIcon} label="Teacher Portal" onClick={onClose} locked={!useFeature('teacher_portal').enabled && !isPlatformAdmin} />
         )}
 
-        {/* {isAdmin && (useFeature('parent_portal').enabled || isSandbox) && (
-          <SbLink to="/portal/parent" icon={UserIcon} label="Parent Portal" onClick={onClose} locked={(!subscriptionActive || (isSandbox && !useFeature('parent_portal').enabled)) && !isPlatformAdmin} />
-        )} */}
         {/* Compliance section - Admins ONLY (as requested: no finance) */}
         {isAdmin && (
           <>
@@ -352,7 +347,6 @@ function Sidebar({ isOpen, onClose, onLogout, onLock, currentUser, subscriptionA
           <>
             <SbSection label="System" />
             <SbLink to="/security" icon={SecurityIcon} label="Security" onClick={onClose} />
-            <SbLink to="/billing"  icon={SubscriptionsIcon}  label="Subscription" onClick={onClose} red={!subscriptionActive} />
             <SbLink to="/settings" icon={SettingsIcon} label="Settings" onClick={onClose} />
           </>
         )}
@@ -374,7 +368,7 @@ function Sidebar({ isOpen, onClose, onLogout, onLock, currentUser, subscriptionA
                   fontWeight : 700
                 }}
               >
-                {profile?.subscriptionPlan || (subscriptionActive ? 'Active' : 'Restricted')}
+                Enterprise Edition
               </span>
             </div>
           </div>
@@ -843,17 +837,10 @@ function App() {
             <Suspense fallback={<Loader />}>
               <ErrorBoundary>
                 <Routes>
-                  {!subscriptionActive ? (
-                    <>
-                      <Route path="/billing"  element={<Billing currentUser={currentUser} />} />
-                      <Route path="/support"  element={<ContactSupport />} />
-                      <Route path="/login"    element={<Navigate to="/billing" replace />} />
-                      <Route path="/"        element={<Navigate to="/billing" replace />} />
-                      <Route path="*"        element={<Navigate to="/billing" replace />} />
-                    </>
-                  ) : (
-                    <>
-                      {/* Redirects for logged-in users */}
+                  <Route path="/billing"  element={<Billing currentUser={currentUser} />} />
+                  <Route path="/support"  element={<ContactSupport />} />
+                  
+                  {/* Redirects for logged-in users */}
                       <Route path="/login"     element={<Navigate to="/dashboard" replace />} />
                       <Route path="/"         element={<Navigate to="/dashboard" replace />} />
 
@@ -880,14 +867,12 @@ function App() {
                       {/* Admin/Portal Management */}
                       <Route path="/security" element={<Security currentUser={currentUser} />} />
                       <Route path="/settings" element={<Settings currentUser={currentUser} />} />
-                      <Route path="/billing"  element={<Billing currentUser={currentUser} />} />
                       <Route path="/portal/teacher" element={<SectionGate featureSlug="teacher_portal" featureName="Teacher Portal" profile={profile}><TeacherPortalAdmin /></SectionGate>} />
                       {/* <Route path="/portal/parent"  element={<SectionGate featureSlug="parent_portal"  featureName="Parent Portal"  profile={profile}><ParentPortalAdmin /></SectionGate>} /> */}
 
                       <Route path="*"         element={<div style={{padding:48, textAlign:'center'}}><h2>403 - Unauthorized</h2><p>You don't have permission to access this module.</p></div>} />
                     </>
-                  )}
-                </Routes>
+                  </Routes>
               </ErrorBoundary>
             </Suspense>
           </div>

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { supabase, logAuditEvent } from '../../../data/store';
+import { supabase, logAuditEvent, updateSchoolFeature } from '../../../data/store';
 import { fmtDate } from '../superAdminUtils';
-import { SchoolIcon, ShieldIcon, MenuIcon, CheckIcon, CrossIcon } from '../../../components/CommonIcons';
+import { SchoolIcon, ShieldIcon, MenuIcon, CheckIcon, CrossIcon, ClockIcon, CalendarIcon } from '../../../components/CommonIcons';
 import { useDialog } from '../../../contexts/DialogContext';
 
 export default function SchoolDetailTab({ school, onBack, setActivateModal, handleRowDeleteSchool }) {
@@ -57,30 +57,19 @@ export default function SchoolDetailTab({ school, onBack, setActivateModal, hand
     }
   };
 
-  const toggleFeature = async (featureKey, currentStatus) => {
+  const handleToggleFeature = async (featureKey, currentStatus, expiry = null) => {
     setSavingFeature(featureKey);
     const newStatus = !currentStatus;
     try {
-      if (newStatus) {
-        await supabase.from('school_features').upsert({
-          school_id: school.id,
-          feature_key: featureKey,
-          is_enabled: true,
-          enabled_at: new Date().toISOString()
-        }, { onConflict: 'school_id, feature_key' });
-      } else {
-        await supabase.from('school_features')
-          .update({ is_enabled: false })
-          .eq('school_id', school.id)
-          .eq('feature_key', featureKey);
-      }
+      await updateSchoolFeature(school.id, featureKey, newStatus, expiry);
+      
       // Refresh local state
       setFeatures(prev => {
         const exists = prev.find(f => f.feature_key === featureKey);
         if (exists) {
           return prev.map(f => f.feature_key === featureKey ? { ...f, is_enabled: newStatus } : f);
         }
-        return [...prev, { feature_key: featureKey, is_enabled: newStatus }];
+        return [...prev, { feature_key: featureKey, is_enabled: newStatus, expires_at: expiry }];
       });
       
       // Log audit
@@ -89,12 +78,37 @@ export default function SchoolDetailTab({ school, onBack, setActivateModal, hand
         action: newStatus ? 'FEATURE_ENABLED' : 'FEATURE_DISABLED',
         target_table: 'school_features',
         target_id: school.id,
-        metadata: { feature_key: featureKey }
+        metadata: { feature_key: featureKey, expiry }
       });
       
     } catch (err) {
       console.error('Toggle error:', err);
       alert({ title: 'Error', message: 'Failed to update feature.' });
+    } finally {
+      setSavingFeature(null);
+    }
+  };
+
+  const handleUpdateExpiry = async (featureKey, expiryDate) => {
+    setSavingFeature(featureKey);
+    try {
+      const feat = features.find(f => f.feature_key === featureKey);
+      const isEnabled = feat ? feat.is_enabled : false;
+      
+      await updateSchoolFeature(school.id, featureKey, isEnabled, expiryDate);
+      
+      setFeatures(prev => prev.map(f => f.feature_key === featureKey ? { ...f, expires_at: expiryDate } : f));
+      
+      await logAuditEvent({
+        school_id: school.id,
+        action: 'FEATURE_EXPIRY_UPDATED',
+        target_table: 'school_features',
+        target_id: school.id,
+        metadata: { feature_key: featureKey, expires_at: expiryDate }
+      });
+    } catch (err) {
+      console.error('Expiry update error:', err);
+      alert({ title: 'Error', message: 'Failed to update expiry date.' });
     } finally {
       setSavingFeature(null);
     }
@@ -125,40 +139,80 @@ export default function SchoolDetailTab({ school, onBack, setActivateModal, hand
 
       {activeTab === 'features' && (
         <div className="panel">
-          <h3 style={{ marginTop: 0 }}>Feature Toggles</h3>
-          <p style={{ color: '#64748b', fontSize: '0.9rem', marginBottom: 20 }}>Enable or disable specific modules for this school. Changes take effect within 5 minutes.</p>
+          <h3 style={{ marginTop: 0 }}>Module & Feature Control</h3>
+          <p style={{ color: '#64748b', fontSize: '0.9rem', marginBottom: 20 }}>
+            Enable modules and set expiration dates. If a date is set, the feature will automatically lock after that time.
+          </p>
           
           {loadingFeatures ? (
             <div style={{ padding: 40, textAlign: 'center' }}>Loading features...</div>
           ) : (
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: 16 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(360px, 1fr))', gap: 20 }}>
               {registry.map(reg => {
                 const schoolFeat = features.find(f => f.feature_key === reg.feature_key);
                 const isEnabled = schoolFeat?.is_enabled || false;
+                const expiry = schoolFeat?.expires_at;
                 const isSaving = savingFeature === reg.feature_key;
+                const isExpired = expiry && new Date(expiry) < new Date();
                 
                 return (
-                  <div key={reg.feature_key} style={{ border: '1px solid #e2e8f0', borderRadius: 8, padding: 16, display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: isEnabled ? '#f8fafc' : '#fff' }}>
-                    <div>
-                      <div style={{ fontWeight: 600, color: '#0f172a', display: 'flex', alignItems: 'center', gap: 8 }}>
-                        {reg.feature_name}
-                        {reg.is_beta && <span style={{ fontSize: '0.7rem', background: '#e0e7ff', color: '#4338ca', padding: '2px 6px', borderRadius: 4 }}>BETA</span>}
+                  <div key={reg.feature_key} style={{ 
+                    border: '1px solid #e2e8f0', 
+                    borderRadius: 12, 
+                    padding: 20, 
+                    background: isEnabled ? '#f8fafc' : '#fff',
+                    transition: 'all 0.2s',
+                    boxShadow: isEnabled ? '0 4px 6px -1px rgba(0, 0, 0, 0.05)' : 'none'
+                  }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 16 }}>
+                      <div>
+                        <div style={{ fontWeight: 700, color: '#0f172a', display: 'flex', alignItems: 'center', gap: 8, fontSize: '1rem' }}>
+                          {reg.feature_name}
+                          {reg.is_beta && <span style={{ fontSize: '0.65rem', background: '#e0e7ff', color: '#4338ca', padding: '2px 6px', borderRadius: 4, fontWeight: 800 }}>BETA</span>}
+                        </div>
+                        <div style={{ fontSize: '0.75rem', color: '#64748b', marginTop: 4, textTransform: 'uppercase', letterSpacing: '0.05em' }}>{reg.category}</div>
                       </div>
-                      <div style={{ fontSize: '0.8rem', color: '#64748b', marginTop: 4 }}>{reg.category}</div>
+                      <button 
+                        onClick={() => handleToggleFeature(reg.feature_key, isEnabled, expiry)}
+                        disabled={isSaving}
+                        style={{
+                          padding: '8px 16px', borderRadius: 30, border: 'none', cursor: 'pointer',
+                          background: isEnabled ? '#10b981' : '#f1f5f9',
+                          color: isEnabled ? '#fff' : '#64748b',
+                          fontWeight: 700, fontSize: '0.75rem',
+                          transition: 'all 0.2s',
+                          minWidth: 80
+                        }}
+                      >
+                        {isSaving ? '...' : isEnabled ? 'Enabled' : 'Disabled'}
+                      </button>
                     </div>
-                    <button 
-                      onClick={() => toggleFeature(reg.feature_key, isEnabled)}
-                      disabled={isSaving}
-                      style={{
-                        padding: '6px 12px', borderRadius: 20, border: 'none', cursor: 'pointer',
-                        background: isEnabled ? '#10b981' : '#e2e8f0',
-                        color: isEnabled ? '#fff' : '#475569',
-                        fontWeight: 600, fontSize: '0.8rem',
-                        transition: 'all 0.2s'
-                      }}
-                    >
-                      {isSaving ? '...' : isEnabled ? 'Enabled' : 'Disabled'}
-                    </button>
+
+                    <div style={{ borderTop: '1px solid #f1f5f9', paddingTop: 16, marginTop: 4 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                          <CalendarIcon size={14} color="#94a3b8" />
+                          <span style={{ fontSize: '0.75rem', fontWeight: 600, color: '#64748b' }}>Expires on:</span>
+                        </div>
+                        {isExpired && <span style={{ fontSize: '0.65rem', fontWeight: 800, color: '#ef4444', background: '#fef2f2', padding: '2px 8px', borderRadius: 10 }}>EXPIRED</span>}
+                      </div>
+                      <input 
+                        type="date" 
+                        defaultValue={expiry ? expiry.split('T')[0] : ''}
+                        onChange={(e) => handleUpdateExpiry(reg.feature_key, e.target.value)}
+                        style={{
+                          width: '100%',
+                          marginTop: 8,
+                          padding: '8px 12px',
+                          borderRadius: 8,
+                          border: '1.5px solid #e2e8f0',
+                          fontSize: '0.875rem',
+                          fontFamily: 'inherit',
+                          color: isExpired ? '#ef4444' : '#0f172a',
+                          background: isExpired ? '#fffcfc' : '#fff'
+                        }}
+                      />
+                    </div>
                   </div>
                 );
               })}

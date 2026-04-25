@@ -202,8 +202,8 @@ export default function Register() {
   return (
     <div className="res-page">
       <Helmet>
-        <title>Register Your School | ShuleSoft — Free Sandbox Workspace</title>
-        <meta name="description" content="Register your school on ShuleSoft for free. Get a Sandbox workspace to explore CBC grading, fee tracking, and all modules instantly." />
+        <title>Register Your School | ShuleSoft — Free Enterprise Workspace</title>
+        <meta name="description" content="Register your school on ShuleSoft for free. Get an Enterprise workspace to explore CBC grading, fee tracking, and all modules instantly." />
         <link rel="canonical" href="https://shulesoft.com/register" />
       </Helmet>
       <div className="card">
@@ -413,7 +413,7 @@ export default function Register() {
 
               <div style={{ marginTop: 20, padding: 16, background: 'rgba(91, 62, 245, 0.05)', borderRadius: 12, border: '1px solid rgba(91, 62, 245, 0.1)' }}>
                 <div style={{ fontSize: '0.65rem', color: 'var(--primary)', fontWeight: 700, textTransform: 'uppercase', marginBottom: 4 }}>Access Tier</div>
-                <div style={{ fontSize: '0.85rem', fontWeight: 700, color: '#111118' }}>Free Sandbox Workspace</div>
+                <div style={{ fontSize: '0.85rem', fontWeight: 700, color: '#111118' }}>Free Enterprise Workspace</div>
                 <div style={{ fontSize: '0.75rem', color: '#6B7280', marginTop: 2 }}>Exploration mode enabled. Add your students & test all features immediately.</div>
               </div>
 

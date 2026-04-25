@@ -204,21 +204,7 @@ export default function Dashboard({ currentUser, onLogout, currentPeriodId }) {
                 <h2 style={{ fontSize: '1.5rem', fontWeight: 800, margin: 0, color: 'var(--text)' }}>
                   {data.profile?.schoolName || 'Dashboard'}
                 </h2>
-                {plan === 'Sandbox' && (
-                  <div style={{ 
-                    background: 'var(--primary)', 
-                    color: '#fff', 
-                    fontSize: '0.65rem', 
-                    fontWeight: 900, 
-                    padding: '2px 8px', 
-                    borderRadius: 20, 
-                    textTransform: 'uppercase', 
-                    letterSpacing: '0.05em',
-                    boxShadow: '0 4px 10px rgba(91, 62, 245, 0.3)'
-                  }}>
-                    Sandbox Mode
-                  </div>
-                )}
+                {/* Removed Sandbox Mode Banner */}
                 <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '4px 12px', background: 'rgba(0,0,0,0.03)', borderRadius: 10, border: '1px solid var(--border)' }}>
                   <span style={{ fontSize: '0.65rem', fontWeight: 700, textTransform: 'uppercase', color: 'var(--text-muted)', letterSpacing: '0.05em' }}>Period:</span>
                   <Select 

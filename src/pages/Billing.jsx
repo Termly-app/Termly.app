@@ -114,9 +114,9 @@ export default function Billing() {
     </div>
   );
 
-  const isSandbox = profile?.subscriptionPlan?.toLowerCase() === 'sandbox';
-  const badgeText = isSandbox ? '● FREE WORKSPACE' : (isActive ? '● ACTIVE SUBSCRIPTION' : '● ACCESS RESTRICTED');
-  const badgeClass = (isActive || isSandbox) ? 'badge-success' : 'badge-danger';
+  const isEnterprise = profile?.subscriptionPlan?.toLowerCase() === 'sandbox';
+  const badgeText = isEnterprise ? '● ENTERPRISE EDITION' : (isActive ? '● ACTIVE SUBSCRIPTION' : '● ACCESS RESTRICTED');
+  const badgeClass = (isActive || isEnterprise) ? 'badge-success' : 'badge-danger';
 
   return (
     <div className="animate-in">
@@ -136,7 +136,7 @@ export default function Billing() {
               padding: '8px 16px', 
               fontWeight: 700,
               letterSpacing: '0.05em',
-              animation: (!isActive && !isSandbox) ? 'pulse 2s infinite' : 'none' 
+              animation: (!isActive && !isEnterprise) ? 'pulse 2s infinite' : 'none' 
             }}>
               {badgeText}
             </div>
@@ -180,8 +180,8 @@ export default function Billing() {
                 </h4>
                 <div style={{ display: 'flex', gap: 8, marginTop: 4 }}>
                   <p style={{ margin: 0, opacity: 0.7, fontSize: '0.9rem', fontWeight: 500 }}>
-                    {isSandbox ? (
-                      'Permanent Access (Free Workspace)'
+                    {isEnterprise ? (
+                      'Lifetime Enterprise Subscription'
                     ) : (settings?.billing?.expiry_date || profile.subscriptionExpiry) ? (
                       `Valid until ${new Date(settings?.billing?.expiry_date || profile.subscriptionExpiry).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}`
                     ) : (

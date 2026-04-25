@@ -25,18 +25,35 @@ export const FeaturesProvider = ({ children, user }) => {
 
     try {
       setLoading(true);
-      const results = await Promise.all(
-        featureSlugs.map(async (slug) => {
-          const enabled = await hasFeature(schoolId, slug);
-          return { slug, enabled };
-        })
-      );
+      
+      // Fetch registry and school toggles in parallel
+      const [{ data: registry }, { data: schoolFeatures }] = await Promise.all([
+        supabase.from('features_registry').select('feature_key'),
+        supabase.from('school_features').select('feature_key, is_enabled, expires_at').eq('school_id', schoolId)
+      ]);
 
+      const now = new Date();
+      const featuresMap = {};
 
-      const featuresMap = results.reduce((acc, curr) => {
-        acc[curr.slug] = curr.enabled;
-        return acc;
-      }, {});
+      // Initialize all registry features as disabled
+      if (registry) {
+        registry.forEach(r => {
+          featuresMap[r.feature_key] = { enabled: false, expires_at: null };
+        });
+      }
+
+      // Layer school-specific settings
+      if (schoolFeatures) {
+        schoolFeatures.forEach(sf => {
+          const isExpired = sf.expires_at && new Date(sf.expires_at) < now;
+          featuresMap[sf.feature_key] = {
+            enabled: sf.is_enabled && !isExpired,
+            expires_at: sf.expires_at,
+            raw_enabled: sf.is_enabled,
+            is_expired: isExpired
+          };
+        });
+      }
 
       setFeatures(featuresMap);
     } catch (error) {
@@ -64,7 +81,9 @@ export const FeaturesProvider = ({ children, user }) => {
     features,
     loading,
     useFeature: (slug) => ({
-      enabled: features[slug] || false,
+      enabled: features[slug]?.enabled || false,
+      expiresAt: features[slug]?.expires_at || null,
+      isExpired: features[slug]?.is_expired || false,
       loading
     })
   };

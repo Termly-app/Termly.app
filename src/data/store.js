@@ -120,7 +120,7 @@ export async function hasFeature(schoolId, featureKey) {
   try {
     const { data, error } = await supabase
       .from('school_features')
-      .select('is_enabled')
+      .select('is_enabled, expires_at')
       .eq('school_id', schoolId)
       .eq('feature_key', featureKey)
       .maybeSingle();
@@ -130,9 +130,13 @@ export async function hasFeature(schoolId, featureKey) {
       return false; // Fail safe
     }
     
+    // Feature is enabled if is_enabled is true AND (no expiry OR expiry is in future)
     const isEnabled = data?.is_enabled || false;
-    _featureCache.set(cacheKey, { value: isEnabled, timestamp: now });
-    return isEnabled;
+    const isExpired = data?.expires_at && new Date(data.expires_at) < now;
+    const finalStatus = isEnabled && !isExpired;
+
+    _featureCache.set(cacheKey, { value: finalStatus, timestamp: now });
+    return finalStatus;
   } catch (err) {
     console.error(`Exception checking feature ${featureKey}:`, err);
     return false;
@@ -150,6 +154,32 @@ export function invalidateFeatureCache(schoolId) {
     }
   }
 }
+
+export async function getAllFeaturesRegistry() {
+  const { data, error } = await supabase
+    .from('features_registry')
+    .select('*')
+    .order('feature_name');
+  if (error) throw error;
+  return data || [];
+}
+
+export async function updateSchoolFeature(schoolId, featureKey, isEnabled, expiresAt = null) {
+  mutationGuard('updateSchoolFeature');
+  const { error } = await supabase
+    .from('school_features')
+    .upsert({
+      school_id: schoolId,
+      feature_key: featureKey,
+      is_enabled: isEnabled,
+      expires_at: expiresAt,
+      updated_at: new Date().toISOString()
+    }, { onConflict: 'school_id, feature_key' });
+  
+  if (error) throw error;
+  _featureCache.delete(`${schoolId}_${featureKey}`);
+}
+
 
 export function setCurrentSchoolContext(schoolId, authUser) {
   _currentSchoolId = schoolId;
@@ -631,47 +661,10 @@ function mapProfileData(data) {
 }
 
 // ============= SUBSCRIPTIONS & PAYMENTS =============
-export async function checkIsSubscriptionActive(profile) {
-  if (!profile) return false;
-  
-  // 1. Sandbox Authority: If the plan is Sandbox, it never expires.
-  // Access is controlled by feature-gating (checkFeatureAccess), not by lockout.
-  const plan = (profile.subscriptionPlan || profile.subscription_plan || '').toLowerCase();
-  if (plan === SANDBOX_PLAN.toLowerCase()) {
-    return true;
-  }
-
-  // 2. PLATFORM OVERRIDE: ShuleSoft HQ or Platform Admins are always active
-  const isAdmin = await checkIsPlatformAdmin(_currentAuthUser?.email);
-  if (isAdmin || profile.schoolName?.toLowerCase().includes('shulesoft hq')) return true;
-
-  const now = new Date();
-
-  // 3. Explicit deactivation/suspension wins
-  if (profile.subscriptionStatus === 'Deactivated' || profile.subscriptionStatus === 'Suspended') return false;
-
-  // 4. INDIVIDUAL FUTURE OVERRIDE - If school has an explicit future expiry, respect it above all
-  if (profile.subscriptionExpiry) {
-    const pExp = new Date(profile.subscriptionExpiry);
-    if (!isNaN(pExp.getTime())) {
-      // Set to end of day to avoid premature cutoff
-      pExp.setHours(23, 59, 59, 999);
-      if (pExp > now) return true;
-    }
-  }
-
-  // 5. GLOBAL TERM EXPIRY - Platform-wide cutoff set by Super Admin (master source of truth)
-  const globalExpiry = await getGlobalTermExpiry();
-  if (globalExpiry) {
-    const expDate = new Date(globalExpiry);
-    if (!isNaN(expDate.getTime())) {
-      // Set to end of day to avoid premature cutoff
-      expDate.setHours(23, 59, 59, 999);
-      if (expDate < now) return false;
-    }
-  }
-  
-  return profile.subscriptionStatus === 'Active';
+  // REPLACED: Traditional term-based subscription model is now bypassable.
+  // We return true here to ensure users aren't locked out of the dashboard globally.
+  // Granular module access is now managed via checkFeatureAccess/hasFeature.
+  return true;
 }
 
 // ============= PORTAL ACCESS SETTINGS =============
