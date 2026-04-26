@@ -34,7 +34,7 @@ export default function Communications({ currentUser }) {
   const [channel, setChannel] = useState('sms');
   const [smsLogs, setSmsLogs] = useState([]);
   
-  const { enabled: hasAccess, loading: featureLoading } = useFeature('sms');
+  const { enabled: hasAccess, loading: featureLoading } = useFeature('communications');
 
   useEffect(() => {
     if (hasAccess) loadData();

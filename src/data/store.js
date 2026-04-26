@@ -105,7 +105,7 @@ export function invalidateCache(key) {
 
 // ============= FEATURE TOGGLES (Replaces Plans) =============
 const _featureCache = new Map(); // Cache map: { `${schoolId}_${featureKey}`: { value: boolean, timestamp: number } }
-const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+const CACHE_TTL = 30 * 1000; // 30 seconds
 
 export async function hasFeature(schoolId, featureKey) {
   if (!schoolId || !featureKey) return false;
@@ -4234,6 +4234,15 @@ export function subscribeToSchoolChanges(onSettingsChange, onProfileChange) {
       filter: `school_id=eq.${_currentSchoolId}`
     }, () => {
       onProfileChange();
+    })
+    // School features
+    .on('postgres_changes', {
+      event: '*', schema: 'public', table: 'school_features',
+      filter: `school_id=eq.${_currentSchoolId}`
+    }, (payload) => {
+      console.log("[REALTIME] Feature changed:", payload.new);
+      invalidateFeatureCache(_currentSchoolId);
+      onSettingsChange();
     })
     // Students added/removed (for sidebar counts, etc.)
     .on('postgres_changes', {
