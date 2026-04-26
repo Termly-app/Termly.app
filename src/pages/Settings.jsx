@@ -48,6 +48,8 @@ export default function Settings() {
   const [showPromotionModal, setShowPromotionModal] = useState(false);
   const [portalSettings, setPortalSettings] = useState(null);
   const [portalSaving, setPortalSaving] = useState(false);
+  const [modules, setModules] = useState([]);
+  const [savingModule, setSavingModule] = useState(null);
   const fileRef   = useRef(null);
   const backupRef = useRef(null);
 
@@ -66,6 +68,10 @@ export default function Settings() {
         const ps = await getPortalAccessSettings();
         if (ps) setPortalSettings(ps);
         setRobustExams(ex);
+
+        // Load modules/features
+        const { data: feats } = await supabase.from('school_features').select('*, features_registry(feature_name)').eq('school_id', p.id);
+        setModules(feats || []);
 
         const authUser = await getCurrentAuthUser();
         if (authUser) {
@@ -371,6 +377,21 @@ export default function Settings() {
       alert({ title: 'Promotion Error', message: err.message, variant: 'danger' });
     } finally {
       setPromotionLoading(false);
+    }
+  };
+
+  const handleToggleModule = async (featureKey, currentStatus) => {
+    setSavingModule(featureKey);
+    try {
+      const newStatus = !currentStatus;
+      const feat = modules.find(m => m.feature_key === featureKey);
+      await updateSchoolFeature(profile.id, featureKey, newStatus, feat?.expires_at);
+      setModules(prev => prev.map(m => m.feature_key === featureKey ? { ...m, is_enabled: newStatus } : m));
+      alert({ title: 'Module Updated', message: `${featureKey.charAt(0).toUpperCase() + featureKey.slice(1)} module has been ${newStatus ? 'enabled' : 'disabled'}.`, variant: 'success' });
+    } catch (err) {
+      alert({ title: 'Error', message: 'Failed to update module status.', variant: 'danger' });
+    } finally {
+      setSavingModule(null);
     }
   };
 
@@ -1056,6 +1077,51 @@ export default function Settings() {
             </div>
           </div>
         )} */}
+
+        {/* Module Management */}
+        <div className="card">
+          <div className="card-header">
+            <div>
+              <h3><PlatformZapIcon size={20} /> Module Management</h3>
+              <p style={{fontSize:'0.78rem',color:'var(--text-light)',margin:'2px 0 0'}}>Enable or disable system features for your school.</p>
+            </div>
+          </div>
+          <div className="card-body">
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 16 }}>
+              {modules.length === 0 ? (
+                <div style={{ padding: 20, textAlign: 'center', color: 'var(--text-light)', gridColumn: '1 / -1' }}>
+                  No optional modules currently available for your school. Contact support to activate features.
+                </div>
+              ) : modules.map(m => {
+                const isSaving = savingModule === m.feature_key;
+                return (
+                  <div key={m.feature_key} style={{ 
+                    padding: 16, borderRadius: 12, border: '1px solid var(--border)', 
+                    background: m.is_enabled ? 'var(--bg-card)' : 'transparent',
+                    display: 'flex', justifyContent: 'space-between', alignItems: 'center'
+                  }}>
+                    <div>
+                      <div style={{ fontWeight: 700, fontSize: '0.9rem', color: 'var(--text-main)' }}>
+                        {m.features_registry?.feature_name || m.feature_key}
+                      </div>
+                      <div style={{ fontSize: '0.7rem', color: 'var(--text-light)', marginTop: 2 }}>
+                        {m.is_enabled ? 'Active' : 'Disabled'}
+                      </div>
+                    </div>
+                    <button 
+                      onClick={() => handleToggleModule(m.feature_key, m.is_enabled)}
+                      disabled={isSaving}
+                      className={`btn btn-sm ${m.is_enabled ? 'btn-ghost' : 'btn-primary'}`}
+                      style={{ minWidth: 80 }}
+                    >
+                      {isSaving ? '...' : m.is_enabled ? 'Disable' : 'Enable'}
+                    </button>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
 
         {/* Academic Eras & Terms */}
           <div className="card">
