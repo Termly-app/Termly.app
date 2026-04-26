@@ -693,11 +693,14 @@ export async function previewClassPromotion(fromYear, toYear) {
   };
 
   for (const stream of streams) {
-    const nextLevel = map[stream.level];
+    const targetLevel = map[stream.level];
+    const isOffered = profile?.activeClasses?.includes(targetLevel);
+    const nextLevel = (isOffered && targetLevel !== 'Graduated') ? targetLevel : 'Graduated';
+
     const streamStudents = students.filter(s => s.stream_id === stream.id && s.status !== 'graduated');
     const streamAssignments = assignments.filter(a => a.stream_id === stream.id);
 
-    if (!nextLevel) {
+    if (!targetLevel) {
       preview.details.push({ stream: `${stream.level} ${stream.name}`, status: 'No mapping found, skipping.' });
       continue;
     }
@@ -706,7 +709,9 @@ export async function previewClassPromotion(fromYear, toYear) {
       preview.studentsGraduated += streamStudents.length;
       preview.details.push({
         stream: `${stream.level} ${stream.name}`,
-        status: `Graduating ${streamStudents.length} students. Teachers will not be carried forward.`
+        status: targetLevel === 'Graduated' 
+          ? `Graduating ${streamStudents.length} students.`
+          : `Graduating ${streamStudents.length} students (Target level ${targetLevel} is not offered by this school).`
       });
     } else {
       preview.streamsPromoted++;
@@ -745,11 +750,14 @@ export async function promoteClasses(fromYear, toYear) {
   let graduatedStudents = 0;
 
   for (const stream of streams) {
-    const nextLevel = map[stream.level];
+    const targetLevel = map[stream.level];
+    const isOffered = profile?.activeClasses?.includes(targetLevel);
+    const nextLevel = (isOffered && targetLevel !== 'Graduated') ? targetLevel : 'Graduated';
+
     const streamStudents = students.filter(s => s.stream_id === stream.id && s.status !== 'graduated');
     const streamAssignments = assignments.filter(a => a.stream_id === stream.id);
 
-    if (!nextLevel) continue;
+    if (!targetLevel) continue;
 
     if (nextLevel === 'Graduated') {
       // Graduate students
