@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
-import { getTeachers, addTeacher, updateTeacher, deleteTeacher, getTeacherWorkload, getTeacherPerformance, getPrintHeader, getSchoolProfile, getPlatformSettings, getUsers, setTeacherLeaveStatus, isStaffCodeAvailable } from '../data/store';
-import { getTeacherAssignments, assignTeacher, removeTeacherAssignment, getClassStreams } from '../data/academicsStore';
+import { getTeachers, addTeacher, updateTeacher, deleteTeacher, getTeacherWorkload, getTeacherPerformance, getPrintHeader, getSchoolProfile, getPlatformSettings, getUsers, setTeacherLeaveStatus, isStaffCodeAvailable, getCurrentPeriodDetails } from '../data/store';
+import { getTeacherAssignments, assignTeacher, removeTeacherAssignment, getClassStreams, initializeStreams } from '../data/academicsStore';
 import { sanitizeName, sanitizeString } from '../utils/sanitize';
 import Loader from '../components/Common/Loader';
 import { CBC_STRUCTURE, getSubjectsForGrade, getLevelForGrade } from '../data/seedData';
@@ -369,9 +369,38 @@ function AssignmentsTab({ assignments, teachers, onAssign, profile, streams }) {
               style={{ minWidth: 120 }}
             />
             {!streamId && (
-              <span className="badge badge-warning" style={{marginLeft: 'auto'}}>
-                Stream not initialized. <a href="/settings" style={{padding: '0 4px', fontWeight: 'bold', color: 'inherit'}}>Promote Classes</a>
-              </span>
+              <div className="badge badge-warning" style={{marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 8, padding: '6px 12px'}}>
+                <AlertIcon size={14} />
+                <span>Stream not initialized for 2026.</span>
+                <button 
+                  className="btn btn-xs btn-primary" 
+                  style={{fontSize: '0.65rem', padding: '2px 8px', borderRadius: 4}}
+                  onClick={async () => {
+                    const ok = await confirm({
+                      title: 'Initialize Classes',
+                      message: `Do you want to set up the default streams for ${selectedClass} in 2026?`,
+                      variant: 'info'
+                    });
+                    if (ok) {
+                      setLoading(true);
+                      try {
+                        const period = await getCurrentPeriodDetails();
+                        await initializeStreams(period?.year || 2026);
+                        toast('Classes initialized successfully', 'success');
+                        await refresh();
+                      } catch (err) {
+                        alert({ title: 'Error', message: err.message, variant: 'danger' });
+                      } finally {
+                        setLoading(false);
+                      }
+                    }
+                  }}
+                >
+                  Initialize Now
+                </button>
+                <span style={{fontSize: '0.7rem', opacity: 0.8}}>or</span>
+                <a href="/settings" style={{fontSize: '0.7rem', fontWeight: 'bold', color: 'inherit', textDecoration: 'underline'}}>Promote from 2025</a>
+              </div>
             )}
           </div>
         </div>

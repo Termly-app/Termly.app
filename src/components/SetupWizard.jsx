@@ -4,7 +4,8 @@ import {
   CheckIcon, RocketIcon, ChevronRightIcon, ChevronLeftIcon,
   PlusIcon, CrossIcon, ShieldIcon
 } from './CommonIcons';
-import { saveSchoolProfile, CBC_STRUCTURE } from '../data/store';
+import { saveSchoolProfile, CBC_STRUCTURE, getCurrentPeriodDetails } from '../data/store';
+import { initializeStreams } from '../data/academicsStore';
 import { useDialog } from '../contexts/DialogContext';
 
 export default function SetupWizard({ profile, onComplete, totalStudents }) {
@@ -73,6 +74,14 @@ export default function SetupWizard({ profile, onComplete, totalStudents }) {
       }
 
       if (step === 6) {
+        // For new schools, initialize the streams for the current academic year
+        try {
+          const period = await getCurrentPeriodDetails();
+          const year = period?.year || new Date().getFullYear();
+          await initializeStreams(year);
+        } catch (initErr) {
+          console.error('Failed to initialize streams during setup:', initErr);
+        }
         setShowContactPopup(true);
       } else {
         handleNext();

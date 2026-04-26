@@ -855,3 +855,46 @@ export async function carryForwardTeacherAssignments(fromPeriodId, toPeriodId) {
   return { success: true, count: assignments.length };
 }
 
+
+/**
+ * Initial setup of streams for a new school or a school with no existing streams for the year.
+ */
+export async function initializeStreams(year) {
+  mutationGuard('initializeStreams');
+  if (!_currentSchoolId) throw new Error('No school context');
+
+  const profile = await getSchoolProfile();
+  const activeClasses = profile?.active_classes || profile?.activeClasses || [];
+  const streamsPerClass = profile?.streams_per_class || profile?.streamsPerClass || {};
+
+  if (activeClasses.length === 0) return { success: true, message: 'No active classes configured.' };
+
+  // Check if any streams already exist for this year
+  const { data: existing } = await supabase.from('class_streams')
+    .select('id').eq('school_id', _currentSchoolId).eq('academic_year', year).limit(1);
+  
+  if (existing && existing.length > 0) {
+    return { success: true, message: 'Streams already initialized for this year.' };
+  }
+
+  const newStreams = [];
+  for (const grade of activeClasses) {
+    const streams = streamsPerClass[grade] || ['General'];
+    for (const name of streams) {
+      newStreams.push({
+        school_id: _currentSchoolId,
+        name: name,
+        level: grade,
+        academic_year: year,
+        is_active: true
+      });
+    }
+  }
+
+  if (newStreams.length > 0) {
+    const { error } = await supabase.from('class_streams').insert(newStreams);
+    if (error) throw error;
+  }
+
+  return { success: true, count: newStreams.length };
+}
