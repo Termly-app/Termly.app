@@ -330,22 +330,22 @@ function Sidebar({ isOpen, onClose, onLogout, onLock, currentUser, subscriptionA
         )}
 
         {/* Dynamic features based on activation */}
-        {(isLibrarian || isTeacher || isAdmin) && useFeature('library_management').enabled && (
+        {(isLibrarian || isTeacher || isAdmin) && useFeature('library').enabled && (
           <SbLink to="/library" icon={BookIcon} label="Library" onClick={onClose} />
         )}
 
         {/* Academic section */}
         {(isTeacher || isAdmin) && (
           <>
-            {(useFeature('attendance_tracking').enabled || useFeature('exam_module').enabled || useFeature('timetable').enabled) && (
+            {(useFeature('attendance').enabled || useFeature('grading').enabled || useFeature('timetable').enabled) && (
               <SbSection label="Academics" />
             )}
             
-            {useFeature('attendance_tracking').enabled && (
+            {useFeature('attendance').enabled && (
               <SbLink to="/attendance" icon={AttendanceIcon} label="Attendance" onClick={onClose} />
             )}
             
-            {useFeature('exam_module').enabled && (
+            {useFeature('grading').enabled && (
               <SbLink to="/academics" icon={GradingIcon} label="Academic Results" onClick={onClose} />
             )}
             
@@ -362,26 +362,26 @@ function Sidebar({ isOpen, onClose, onLogout, onLock, currentUser, subscriptionA
         {/* Administration section */}
         {(isAdmin || isFinance) && (
           <>
-            {(useFeature('fee_management').enabled || useFeature('sms_alerts').enabled) && (
+            {(useFeature('fees').enabled || useFeature('communications').enabled) && (
               <SbSection label="Administration" />
             )}
             
-            {useFeature('fee_management').enabled && (
+            {useFeature('fees').enabled && (
               <SbLink to="/fees" icon={FeesIcon} label="Fees & Billing" onClick={onClose} />
             )}
 
-            {useFeature('sms_alerts').enabled && (
+            {useFeature('communications').enabled && (
               <SbLink to="/communications" icon={MessageIcon} label="Comm. Center" onClick={onClose} />
             )}
 
-            {useFeature('exam_module').enabled && (
+            {useFeature('teacher_portal').enabled && (
               <SbLink to="/portal/teacher" icon={StaffIcon} label="Teacher Portal" onClick={onClose} />
             )}
           </>
         )}
 
         {/* Compliance section */}
-        {isAdmin && useFeature('bulk_import').enabled && (
+        {isAdmin && useFeature('nemis').enabled && (
           <>
             <SbSection label="Compliance" />
             <SbLink to="/compliance/nemis" icon={FlagIcon} label="NEMIS Audit" onClick={onClose} />
@@ -897,25 +897,25 @@ function App() {
                       <Route path="/help"      element={<HelpCenter />} />
                       
                       {/* Academic Results Section */}
-                      <Route path="/academics"    element={<SectionGate featureSlug="exam_module" featureName="Academic Results" profile={profile}><Academics currentUser={currentUser} currentPeriodId={currentPeriodId} /></SectionGate>}  />
+                      <Route path="/academics"    element={<SectionGate featureSlug="grading" featureName="Academic Results" profile={profile}><Academics currentUser={currentUser} currentPeriodId={currentPeriodId} /></SectionGate>}  />
                       
                       {/* Student and Teacher Management */}
                       <Route path="/students"     element={<Students currentUser={currentUser} currentPeriodId={currentPeriodId} />} />
                       <Route path="/teachers"     element={<Teachers currentUser={currentUser} currentPeriodId={currentPeriodId} />} />
  
                       {/* Feature Gated Modules */}
-                      <Route path="/attendance"   element={<SectionGate featureSlug="attendance_tracking" featureName="Attendance" profile={profile}><Attendance currentUser={currentUser} currentPeriodId={currentPeriodId} /></SectionGate>}  />
+                      <Route path="/attendance"   element={<SectionGate featureSlug="attendance" featureName="Attendance" profile={profile}><Attendance currentUser={currentUser} currentPeriodId={currentPeriodId} /></SectionGate>}  />
                       <Route path="/timetable"    element={<SectionGate featureSlug="timetable" featureName="Timetable" profile={profile}><Timetable currentUser={currentUser} currentPeriodId={currentPeriodId} periods={periods} /></SectionGate>} />
-                      <Route path="/lms"          element={<SectionGate featureSlug="parent_portal" featureName="E-Learning" profile={profile}><LMS currentUser={currentUser} /></SectionGate>} />
-                      <Route path="/fees"         element={<SectionGate featureSlug="fee_management" featureName="Fees" profile={profile}><Fees currentUser={currentUser} currentPeriodId={currentPeriodId} /></SectionGate>} />
-                      <Route path="/communications" element={<SectionGate featureSlug="sms_alerts" featureName="Communications" profile={profile}><Communications currentUser={currentUser} /></SectionGate>} />
-                      <Route path="/library/*"    element={<SectionGate featureSlug="library_management" featureName="Library" profile={profile}><Library currentUser={currentUser} currentPeriodId={currentPeriodId} /></SectionGate>} />
-                      <Route path="/compliance/nemis" element={<NEMISDashboard currentUser={currentUser} />} />
+                      <Route path="/lms"          element={<SectionGate featureSlug="lms" featureName="E-Learning" profile={profile}><LMS currentUser={currentUser} /></SectionGate>} />
+                      <Route path="/fees"         element={<SectionGate featureSlug="fees" featureName="Fees" profile={profile}><Fees currentUser={currentUser} currentPeriodId={currentPeriodId} /></SectionGate>} />
+                      <Route path="/communications" element={<SectionGate featureSlug="communications" featureName="Communications" profile={profile}><Communications currentUser={currentUser} /></SectionGate>} />
+                      <Route path="/library/*"    element={<SectionGate featureSlug="library" featureName="Library" profile={profile}><Library currentUser={currentUser} currentPeriodId={currentPeriodId} /></SectionGate>} />
+                      <Route path="/compliance/nemis" element={<SectionGate featureSlug="nemis" featureName="NEMIS Audit" profile={profile}><NEMISDashboard currentUser={currentUser} /></SectionGate>} />
  
                       {/* Admin/Portal Management */}
                       <Route path="/security"     element={<Security currentUser={currentUser} />} />
                       <Route path="/settings"     element={<Settings currentUser={currentUser} />} />
-                      <Route path="/portal/teacher" element={<SectionGate featureSlug="exam_module" featureName="Teacher Portal" profile={profile}><TeacherPortalAdmin /></SectionGate>} />
+                      <Route path="/portal/teacher" element={<SectionGate featureSlug="teacher_portal" featureName="Teacher Portal" profile={profile}><TeacherPortalAdmin /></SectionGate>} />
                       {/* <Route path="/portal/parent"  element={<SectionGate featureSlug="parent_portal"  featureName="Parent Portal"  profile={profile}><ParentPortalAdmin /></SectionGate>} /> */}
 
                       <Route path="*"         element={<div style={{padding:48, textAlign:'center'}}><h2>403 - Unauthorized</h2><p>You don't have permission to access this module.</p></div>} />

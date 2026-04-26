@@ -40,6 +40,8 @@ export function initPortalStore(schoolId, userId = null, periodId = null) {
   if (schoolId) sessionStorage.setItem('shulesoft_portal_school_id', schoolId);
   if (userId) sessionStorage.setItem('shulesoft_portal_user_id', userId);
   if (periodId) sessionStorage.setItem('shulesoft_portal_period_id', periodId);
+  
+  window.dispatchEvent(new Event('schoolProfileChanged'));
 }
 
 // MEMORY CACHE (Performance Optimization)
@@ -195,6 +197,7 @@ export function setCurrentSchoolContext(schoolId, authUser) {
   _currentAuthUser = authUser;
   _profileCache    = null; // Invalidate cache on school switch
   _profilePromise  = null;
+  window.dispatchEvent(new Event('schoolProfileChanged'));
 }
 
 export function setCurrentPeriodId(periodId) {
