@@ -153,8 +153,8 @@ export default function PricingUpgrade({ featureName, requiredPlan = "Profession
               maxWidth: 480,
               margin: '0 auto 12px'
             }}>
-              Your <strong style={{ color: '#0F172A' }}>{profile?.subscriptionPlan || 'paid'}</strong> plan includes this module. 
-              It just needs to be enabled in your school's System Settings.
+              This module is currently disabled for your school. 
+              It can be enabled in your school's System Settings.
             </p>
 
             <p style={{
@@ -271,7 +271,7 @@ export default function PricingUpgrade({ featureName, requiredPlan = "Profession
               letterSpacing: '0.12em',
               marginBottom: 16
             }}>
-              Premium Feature
+              Optional Module
             </div>
             
             <h1 style={{ 
@@ -324,7 +324,7 @@ export default function PricingUpgrade({ featureName, requiredPlan = "Profession
             flexWrap: 'wrap'
           }}>
             <button 
-              onClick={() => navigate('/billing')}
+              onClick={() => navigate('/support')}
               className="btn"
               style={{
                 background: current.color,
@@ -337,7 +337,7 @@ export default function PricingUpgrade({ featureName, requiredPlan = "Profession
                 transition: 'all 0.2s ease'
               }}
             >
-              Upgrade to Unlock Now
+              Contact Support to Enable
             </button>
             <button 
               onClick={() => navigate('/dashboard')}
