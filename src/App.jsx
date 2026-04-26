@@ -200,12 +200,10 @@ function Sidebar({ isOpen, onClose, onLogout, onLock, currentUser, subscriptionA
       () => {
         // Platform settings changed (pricing, features, plans)
         loadProfile();
-        window.dispatchEvent(new Event('platformSettingsChanged'));
       },
       () => {
         // This school's profile changed (plan upgrade, status, etc.)
         loadProfile();
-        window.dispatchEvent(new Event('schoolProfileChanged'));
       }
     );
 
