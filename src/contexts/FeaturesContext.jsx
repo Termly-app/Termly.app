@@ -10,10 +10,9 @@ export const FeaturesProvider = ({ children, user }) => {
 
   // Use the new feature keys mapped from our features_registry seed
   const featureSlugs = [
-    'parent_portal', 'sms_alerts', 'email_notifications', 'exam_module',
-    'timetable', 'library_management', 'transport_management', 'fee_management',
-    'payroll', 'attendance_tracking', 'student_reports', 'analytics_dashboard',
-    'bulk_import', 'multi_campus', 'custom_branding', 'api_access'
+    'grading', 'attendance', 'timetable', 'lms', 'fees',
+    'communications', 'teacher_portal', 'parent_portal', 'library',
+    'transport', 'payroll', 'inventory', 'nemis'
   ];
 
   const refreshFeatures = async () => {

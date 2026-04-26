@@ -63,7 +63,8 @@ import {
   BillingIcon, SignOutIcon, MenuIcon, CloseIcon, ChevronDownIcon,
   OverviewIcon, SchoolsIcon, PaymentsIcon, HistoryIcon, RevenueIcon,
   ActivityIcon, RecoveryIcon, StatusDotIcon, ZapIcon, SubscriptionsIcon, MessageIcon,
-  DownloadIcon, UploadIcon, RefreshIcon, LogoMarkBW, BookIcon, FlagIcon, LockIcon, BellIcon
+  DownloadIcon, UploadIcon, RefreshIcon, LogoMarkBW, BookIcon, FlagIcon, LockIcon, BellIcon,
+  ShieldIcon
 } from './components/Common/Icons';
 
 // --- Sidebar nav link helper ------------------------------------------------
@@ -222,6 +223,17 @@ function Sidebar({ isOpen, onClose, onLogout, onLock, currentUser, subscriptionA
     setSelectedPeriod(periodId);
   };
 
+  // Get all features at the top level to follow Rules of Hooks
+  const libFeature = useFeature('library');
+  const attFeature = useFeature('attendance');
+  const gradFeature = useFeature('grading');
+  const timeFeature = useFeature('timetable');
+  const lmsFeature = useFeature('lms');
+  const feesFeature = useFeature('fees');
+  const commFeature = useFeature('communications');
+  const teacherFeature = useFeature('teacher_portal');
+  const nemisFeature = useFeature('nemis');
+
   // Replaced manual feature state with useFeature() hook inside components below
   // useEffect removed as FeaturesProvider handles real-time updates via events
 
@@ -330,30 +342,30 @@ function Sidebar({ isOpen, onClose, onLogout, onLock, currentUser, subscriptionA
         )}
 
         {/* Dynamic features based on activation */}
-        {(isLibrarian || isTeacher || isAdmin) && useFeature('library').enabled && (
+        {(isLibrarian || isTeacher || isAdmin) && libFeature.enabled && (
           <SbLink to="/library" icon={BookIcon} label="Library" onClick={onClose} />
         )}
 
         {/* Academic section */}
         {(isTeacher || isAdmin) && (
           <>
-            {(useFeature('attendance').enabled || useFeature('grading').enabled || useFeature('timetable').enabled) && (
+            {(attFeature.enabled || gradFeature.enabled || timeFeature.enabled) && (
               <SbSection label="Academics" />
             )}
             
-            {useFeature('attendance').enabled && (
+            {attFeature.enabled && (
               <SbLink to="/attendance" icon={AttendanceIcon} label="Attendance" onClick={onClose} />
             )}
             
-            {useFeature('grading').enabled && (
+            {gradFeature.enabled && (
               <SbLink to="/academics" icon={GradingIcon} label="Academic Results" onClick={onClose} />
             )}
             
-            {useFeature('timetable').enabled && (
+            {timeFeature.enabled && (
               <SbLink to="/timetable" icon={TimetableIcon} label="Timetable" onClick={onClose} />
             )}
             
-            {useFeature('lms').enabled && (
+            {lmsFeature.enabled && (
               <SbLink to="/lms" icon={ActivityIcon} label="E-Learning" onClick={onClose} />
             )}
           </>
@@ -362,26 +374,26 @@ function Sidebar({ isOpen, onClose, onLogout, onLock, currentUser, subscriptionA
         {/* Administration section */}
         {(isAdmin || isFinance) && (
           <>
-            {(useFeature('fees').enabled || useFeature('communications').enabled) && (
+            {(feesFeature.enabled || commFeature.enabled) && (
               <SbSection label="Administration" />
             )}
             
-            {useFeature('fees').enabled && (
+            {feesFeature.enabled && (
               <SbLink to="/fees" icon={FeesIcon} label="Fees & Billing" onClick={onClose} />
             )}
 
-            {useFeature('communications').enabled && (
+            {commFeature.enabled && (
               <SbLink to="/communications" icon={MessageIcon} label="Comm. Center" onClick={onClose} />
             )}
 
-            {useFeature('teacher_portal').enabled && (
+            {teacherFeature.enabled && (
               <SbLink to="/portal/teacher" icon={StaffIcon} label="Teacher Portal" onClick={onClose} />
             )}
           </>
         )}
 
         {/* Compliance section */}
-        {isAdmin && useFeature('nemis').enabled && (
+        {isAdmin && nemisFeature.enabled && (
           <>
             <SbSection label="Compliance" />
             <SbLink to="/compliance/nemis" icon={FlagIcon} label="NEMIS Audit" onClick={onClose} />

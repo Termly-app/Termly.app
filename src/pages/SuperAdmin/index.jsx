@@ -141,19 +141,9 @@ export default function SuperAdmin({ currentUser, isPlatformAdmin, sidebarOpen, 
       await Promise.all([
         (async () => {
           const rawSchools = await getAllSchools();
-          try {
-            const { userCounts, studentCounts } = await getPlatformUsageStats();
-            let enriched = rawSchools
-              .filter(s => !s.name?.toLowerCase().includes('shulesoft hq'))
-              .map(s => ({
-                ...s,
-                _staffCount: userCounts[s.id] || 0,
-                _studentCount: studentCounts[s.id] || 0
-              }));
-            setSchools(enriched);
-          } catch (e) {
-            setSchools(rawSchools.filter(s => !s.name?.toLowerCase().includes('shulesoft hq')));
-          }
+          // getAllSchools already returns schools with _studentCount and _staffCount
+          const filtered = rawSchools.filter(s => !s.name?.toLowerCase().includes('shulesoft hq'));
+          setSchools(filtered);
 
           try {
             const profiles = await getPlatformSchoolProfiles();

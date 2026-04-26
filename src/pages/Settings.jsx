@@ -16,6 +16,8 @@ import {
 
 export default function Settings() {
   const { alert, confirm } = useDialog();
+  const { enabled: teacherPortalEnabled } = useFeature('teacher_portal');
+  const { enabled: parentPortalEnabled } = useFeature('parent_portal');
   const [profile, setProfile] = useState({
     schoolName:'',motto:'',phone:'',email:'',address:'',
     logo:'',subscriptionPlan:'Enterprise',
@@ -749,7 +751,7 @@ export default function Settings() {
                               <span style={{fontWeight:700, color: 'var(--text-main)'}}>{e.name}</span>
                               
                               <div style={{ display: 'flex', alignItems: 'center', gap: 6, borderLeft: '1.5px solid var(--border)', paddingLeft: 10 }}>
-                                {useFeature('teacher_portal').enabled && (
+                                {teacherPortalEnabled && (
                                 <button 
                                   onClick={() => toggleExamStatus(e)}
                                   style={{ 
@@ -768,7 +770,7 @@ export default function Settings() {
                                 </button>
                                 )}
                                 
-                                {useFeature('parent_portal').enabled && (
+                                {parentPortalEnabled && (
                                 <button 
                                   onClick={() => handleReleaseToggle(e.id, !e.released_to_parents)}
                                   style={{ 
