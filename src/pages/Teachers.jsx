@@ -213,7 +213,18 @@ export default function Teachers({ currentUser, currentPeriodId }) {
       )}
 
       {activeTab === 'assignments' && (
-        <AssignmentsTab assignments={assignments} teachers={teachers} onAssign={handleAssign} profile={profile} streams={streams} />
+        <AssignmentsTab 
+          assignments={assignments} 
+          teachers={teachers} 
+          onAssign={handleAssign} 
+          profile={profile} 
+          streams={streams}
+          confirm={confirm}
+          alert={alert}
+          toast={toast}
+          setLoading={setLoading}
+          refresh={refresh}
+        />
       )}
 
       {activeTab === 'reports' && (
@@ -308,7 +319,7 @@ function RecordsTab({ teachers, search, setSearch, total, getTeacherSubjects, ge
 }
 
 // ========== ASSIGNMENTS TAB ==========
-function AssignmentsTab({ assignments, teachers, onAssign, profile, streams }) {
+function AssignmentsTab({ assignments, teachers, onAssign, profile, streams, confirm, alert, toast, setLoading, refresh }) {
   const activeClasses = profile.activeClasses && profile.activeClasses.length > 0 
     ? profile.activeClasses 
     : Object.values(CBC_STRUCTURE).flatMap(l => l.grades).slice(0, 10); // Default to first 10 if none active
