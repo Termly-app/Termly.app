@@ -1014,19 +1014,6 @@ export default function Timetable({ currentUser, currentPeriodId, periods = [] }
         </div>
       )}
 
-      {showUpgrade && (
-        <div style={{
-          position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
-          zIndex: 9999, background: 'rgba(255,255,255,0.95)',
-          overflowY: 'auto',
-          backdropFilter: 'blur(10px)'
-        }}>
-          <div style={{ position: 'absolute', top: 30, right: 30, zIndex: 10001 }}>
-            <button className="tt-btn tt-btn-ghost" onClick={() => setShowUpgrade(false)} style={{ fontSize: '1.5rem' }}>&times;</button>
-          </div>
-          <FeatureGate featureName="Timetable" />
-        </div>
-      )}
     </div>
   );
 }
