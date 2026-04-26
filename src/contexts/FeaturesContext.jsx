@@ -19,6 +19,7 @@ export const FeaturesProvider = ({ children, user }) => {
   const refreshFeatures = async () => {
     const schoolId = getCurrentSchoolId();
     if (!user || !schoolId) {
+      console.log("[FeaturesProvider] Skipping fetch: No user or schoolId", { hasUser: !!user, schoolId });
       setFeatures({});
       setLoading(false);
       return;
@@ -26,25 +27,29 @@ export const FeaturesProvider = ({ children, user }) => {
 
     try {
       setLoading(true);
+      console.log(`[FeaturesProvider] Fetching features for school: ${schoolId}`);
       
-      // Fetch registry and school toggles in parallel
-      const [{ data: registry }, { data: schoolFeatures }] = await Promise.all([
+      const [{ data: registry, error: regErr }, { data: schoolFeatures, error: sfErr }] = await Promise.all([
         supabase.from('features_registry').select('feature_key'),
         supabase.from('school_features').select('feature_key, is_enabled, expires_at').eq('school_id', schoolId)
       ]);
 
+      if (regErr) console.warn("[FeaturesProvider] Registry fetch error:", regErr);
+      if (sfErr) console.error("[FeaturesProvider] School features fetch error:", sfErr);
+
       const now = new Date();
       const featuresMap = {};
 
-      // Initialize all registry features as disabled
+      // 1. Initialize from registry if available
       if (registry) {
         registry.forEach(r => {
           featuresMap[r.feature_key] = { enabled: false, expires_at: null };
         });
       }
 
-      // Layer school-specific settings
-      if (schoolFeatures) {
+      // 2. Layer school-specific settings (Authoritative)
+      if (schoolFeatures && schoolFeatures.length > 0) {
+        console.log(`[FeaturesProvider] Found ${schoolFeatures.length} feature toggles in DB`);
         schoolFeatures.forEach(sf => {
           const isExpired = sf.expires_at && new Date(sf.expires_at) < now;
           featuresMap[sf.feature_key] = {
@@ -54,11 +59,14 @@ export const FeaturesProvider = ({ children, user }) => {
             is_expired: isExpired
           };
         });
+      } else {
+        console.warn("[FeaturesProvider] No features found in school_features table for this school.");
       }
 
+      console.log("[FeaturesProvider] Final Map:", featuresMap);
       setFeatures(featuresMap);
     } catch (error) {
-      console.error("[FeaturesProvider] Failed to load features:", error);
+      console.error("[FeaturesProvider] Exception loading features:", error);
     } finally {
       setLoading(false);
     }

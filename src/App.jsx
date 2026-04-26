@@ -353,7 +353,7 @@ function Sidebar({ isOpen, onClose, onLogout, onLock, currentUser, subscriptionA
               <SbLink to="/timetable" icon={TimetableIcon} label="Timetable" onClick={onClose} />
             )}
             
-            {useFeature('parent_portal').enabled && (
+            {useFeature('lms').enabled && (
               <SbLink to="/lms" icon={ActivityIcon} label="E-Learning" onClick={onClose} />
             )}
           </>
