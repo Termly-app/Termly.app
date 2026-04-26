@@ -6,9 +6,6 @@ import { isFeatureEnabled } from '../../data/store';
 import { BookIcon, UsersIcon, TeacherIcon, DashboardIcon, RocketIcon } from '../../components/CommonIcons';
 
 const AssessmentTab = lazy(() => import('./AssessmentTab'));
-const StreamManager = lazy(() => import('./StreamManager'));
-const TeacherAssignmentManager = lazy(() => import('./TeacherAssignmentManager'));
-const PromotionManager = lazy(() => import('./PromotionManager'));
 
 export default function AcademicCenter({ currentUser, currentPeriodId }) {
   const [activeSubTab, setActiveSubTab] = useState('assessment');
@@ -37,28 +34,10 @@ export default function AcademicCenter({ currentUser, currentPeriodId }) {
           
           <div className="tab-nav" style={{ display: 'flex', gap: 8, background: 'rgba(0,0,0,0.05)', padding: 6, borderRadius: 12 }}>
             <button 
-              className={`btn btn-sm ${activeSubTab === 'assessment' ? 'btn-primary' : 'btn-ghost'}`}
+              className="btn btn-sm btn-primary"
               onClick={() => setActiveSubTab('assessment')}
             >
               <DashboardIcon size={14} /> Assessments
-            </button>
-            <button 
-              className={`btn btn-sm ${activeSubTab === 'streams' ? 'btn-primary' : 'btn-ghost'}`}
-              onClick={() => setActiveSubTab('streams')}
-            >
-              <UsersIcon size={14} /> Class Streams
-            </button>
-            <button 
-              className={`btn btn-sm ${activeSubTab === 'assignments' ? 'btn-primary' : 'btn-ghost'}`}
-              onClick={() => setActiveSubTab('assignments')}
-            >
-              <TeacherIcon size={14} /> Assignments
-            </button>
-            <button 
-              className={`btn btn-sm ${activeSubTab === 'promotion' ? 'btn-primary' : 'btn-ghost'}`}
-              onClick={() => setActiveSubTab('promotion')}
-            >
-              <RocketIcon size={14} /> Promotion
             </button>
           </div>
         </div>
@@ -68,15 +47,6 @@ export default function AcademicCenter({ currentUser, currentPeriodId }) {
         <Suspense fallback={<Loader />}>
           {activeSubTab === 'assessment' && (
             <AssessmentTab currentUser={currentUser} currentPeriodId={currentPeriodId} />
-          )}
-          {activeSubTab === 'streams' && (
-            <StreamManager />
-          )}
-          {activeSubTab === 'assignments' && (
-            <TeacherAssignmentManager />
-          )}
-          {activeSubTab === 'promotion' && (
-            <PromotionManager />
           )}
         </Suspense>
       </div>
