@@ -411,11 +411,6 @@ export default function Register() {
                 <div className="res-uline"></div>
               </div>
 
-              <div style={{ marginTop: 20, padding: 16, background: 'rgba(91, 62, 245, 0.05)', borderRadius: 12, border: '1px solid rgba(91, 62, 245, 0.1)' }}>
-                <div style={{ fontSize: '0.65rem', color: 'var(--primary)', fontWeight: 700, textTransform: 'uppercase', marginBottom: 4 }}>Access Tier</div>
-                <div style={{ fontSize: '0.85rem', fontWeight: 700, color: '#111118' }}>Free School Workspace</div>
-                <div style={{ fontSize: '0.75rem', color: '#6B7280', marginTop: 2 }}>Exploration mode enabled. Add your students & test all features immediately.</div>
-              </div>
 
               <div className="res-check-row" style={{ marginTop: 20 }}>
                 <input 
