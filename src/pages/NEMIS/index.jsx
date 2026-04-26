@@ -114,9 +114,7 @@ export default function NEMISDashboard({ currentUser }) {
             <p style={{ color: 'var(--text-light)', fontSize: '0.875rem' }}>Kenya National Education Management Information System Reporting</p>
           </div>
           <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-            <button className="btn btn-ghost btn-sm no-print" onClick={loadAudit}><RefreshIcon size={14} /> Refresh</button>
             <button className="btn btn-ghost btn-sm no-print" onClick={handlePrint}><PrintIcon size={14} /> Print Report</button>
-            <button className="btn btn-primary btn-sm no-print" onClick={() => handleExport(true)}><DownloadIcon size={14} /> Export CSV{classFilter !== 'All' ? ` (${classFilter})` : ''}</button>
           </div>
         </div>
       </div>
@@ -348,15 +346,8 @@ export default function NEMISDashboard({ currentUser }) {
           <div className="card no-print" style={{ padding: 20, background: 'linear-gradient(135deg, #1e293b 0%, #0f172a 100%)', color: 'white', border: 'none' }}>
             <h4 style={{ margin: '0 0 10px', color: '#38bdf8', fontSize: '0.85rem' }}>Official Submission</h4>
             <p style={{ fontSize: '0.75rem', lineHeight: 1.6, opacity: 0.8, marginBottom: 16 }}>
-              The NEMIS portal (Kenya MoE) requires complete records for funding and placement. Use our CSV export to match their official spreadsheet format.
+              The NEMIS portal (Kenya MoE) requires complete records for funding and placement. Ensure all data gaps are resolved before submitting manually on the MoE portal.
             </p>
-            <button 
-              className="btn btn-primary btn-sm" 
-              style={{ width: '100%', justifyContent: 'center', background: '#38bdf8', border: 'none' }}
-              onClick={() => handleExport(false)}
-            >
-              <DownloadIcon size={14} /> Download Full CSV
-            </button>
             <div style={{ textAlign: 'center', marginTop: 10 }}>
                <a href="https://nemis.education.go.ke" target="_blank" rel="noreferrer" style={{ fontSize: '0.65rem', color: '#94a3b8', textDecoration: 'none' }}>
                  Open NEMIS Portal <ChevronRightIcon size={10} />
