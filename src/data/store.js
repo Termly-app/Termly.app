@@ -586,10 +586,6 @@ export async function getSchoolProfile() {
     if (!data) return { ...DEFAULT_PROFILE };
     const mapped = mapProfileData(data);
     
-    // Auto-migrate legacy exams if found
-    if (data.custom_exams && data.custom_exams.length > 0) {
-      setTimeout(() => migrateLegacyExams(data.custom_exams), 100);
-    }
 
     _profileCache = mapped;
     saveProfileToLocal(_currentSchoolId, mapped);
