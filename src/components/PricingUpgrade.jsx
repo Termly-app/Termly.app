@@ -153,8 +153,8 @@ export default function PricingUpgrade({ featureName, requiredPlan = "Profession
               maxWidth: 480,
               margin: '0 auto 12px'
             }}>
-              This module is currently disabled for your school. 
-              It can be enabled in your school's System Settings.
+              This module is currently inactive for your school. 
+              Please contact ShuleSoft Support to enable this feature.
             </p>
 
             <p style={{
@@ -167,7 +167,7 @@ export default function PricingUpgrade({ featureName, requiredPlan = "Profession
 
             <div style={{ display: 'flex', gap: 16, justifyContent: 'center', flexWrap: 'wrap' }}>
               <button
-                onClick={() => navigate('/settings')}
+                onClick={() => navigate('/support')}
                 className="btn"
                 style={{
                   background: '#F59E0B',
@@ -180,7 +180,7 @@ export default function PricingUpgrade({ featureName, requiredPlan = "Profession
                   transition: 'all 0.2s ease'
                 }}
               >
-                Enable in Settings
+                Contact Support
               </button>
               <button
                 onClick={() => navigate('/dashboard')}
