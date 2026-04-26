@@ -660,7 +660,7 @@ function App() {
   }
 
   // --- Platform Admin ---
-  if (isPlatformAdmin) {
+  if (isPlatformAdmin && !isShadowMode()) {
     return (
       <>
         <div className="admin-layout">

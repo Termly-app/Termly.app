@@ -7,6 +7,7 @@ const FeaturesContext = createContext();
 export const FeaturesProvider = ({ children, user }) => {
   const [features, setFeatures] = useState({});
   const [loading, setLoading] = useState(true);
+  const fetchingRef = React.useRef(false);
 
   // Use the new feature keys mapped from our features_registry seed
   const featureSlugs = [
@@ -23,6 +24,9 @@ export const FeaturesProvider = ({ children, user }) => {
       setLoading(false);
       return;
     }
+
+    if (fetchingRef.current) return;
+    fetchingRef.current = true;
 
     try {
       setLoading(true);
@@ -68,6 +72,7 @@ export const FeaturesProvider = ({ children, user }) => {
       console.error("[FeaturesProvider] Exception loading features:", error);
     } finally {
       setLoading(false);
+      fetchingRef.current = false;
     }
   };
 
@@ -85,7 +90,7 @@ export const FeaturesProvider = ({ children, user }) => {
     };
   }, [user?.id, user?.school_id]);
 
-  const value = {
+  const value = React.useMemo(() => ({
     features,
     loading,
     useFeature: (slug) => ({
@@ -94,7 +99,7 @@ export const FeaturesProvider = ({ children, user }) => {
       isExpired: features[slug]?.is_expired || false,
       loading
     })
-  };
+  }), [features, loading]);
 
   return (
     <FeaturesContext.Provider value={value}>
