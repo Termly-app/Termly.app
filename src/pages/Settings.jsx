@@ -1148,7 +1148,7 @@ export default function Settings() {
             </div>
             <button 
               className="btn btn-primary" 
-              onClick={handlePreviewPromotion} 
+              onClick={() => handlePreviewPromotion()} 
               disabled={promotionLoading}
             >
               {promotionLoading ? 'Loading Preview...' : 'Preview Promotion'}
