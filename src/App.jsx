@@ -89,7 +89,7 @@ function SbLink({ to, icon: Icon, label, onClick, exact = false, locked = false,
         title: 'Module Locked',
         message: (
           <div style={{ textAlign: 'left' }}>
-            <p style={{ marginBottom: 16, fontSize: '0.9rem' }}>This feature is currently disabled for your school or requires a higher tier plan (Enterprise Edition).</p>
+            <p style={{ marginBottom: 16, fontSize: '0.9rem' }}>This feature is currently disabled for your school or requires a higher tier plan (Professional Edition).</p>
             
             <div style={{ 
               background: 'rgba(255,255,255,0.03)', 
@@ -426,7 +426,7 @@ function Sidebar({ isOpen, onClose, onLogout, onLock, currentUser, subscriptionA
                   fontWeight : 700
                 }}
               >
-                Enterprise Edition
+                School Edition
               </span>
             </div>
           </div>

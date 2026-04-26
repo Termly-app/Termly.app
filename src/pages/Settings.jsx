@@ -20,7 +20,7 @@ export default function Settings() {
   const { enabled: parentPortalEnabled } = useFeature('parent_portal');
   const [profile, setProfile] = useState({
     schoolName:'',motto:'',phone:'',email:'',address:'',
-    logo:'',subscriptionPlan:'Enterprise',
+    logo:'',subscriptionPlan:'Pro',
     activeClasses:[],gradeFees:{},streamsPerClass:{},customSubjects:{},
     mpesa_config: { shortcode: '', consumer_key: '', consumer_secret: '' },
     sms_config: { sender_id: '', api_key: '' },

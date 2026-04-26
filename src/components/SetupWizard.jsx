@@ -176,7 +176,7 @@ export default function SetupWizard({ profile, onComplete, totalStudents }) {
               
               <div className="info-grid">
                 <div className="info-card">
-                  <div className="info-val">Enterprise Edition</div>
+                  <div className="info-val">Institutional Access</div>
                   <div className="info-lbl">System Tier</div>
                 </div>
                 <div className="info-card">
