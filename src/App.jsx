@@ -555,20 +555,21 @@ function App() {
             const allPeriods   = await getPeriods();
             setPeriods(allPeriods);
 
-            setCurrentUser({
-              id         : userRecord.id,
-              name       : userRecord.name,
-              email      : userRecord.email || session.user.email,
-              role       : userRecord.role,
-              schoolName : userRecord.schools?.name,
-              school_id  : (realIsPlatAdmin && isActingAs && overrideSchoolId) ? overrideSchoolId : userRecord.school_id,
-              password_changed: userRecord.password_changed
-            });
             const profileData = await getSchoolProfile();
             setProfile(profileData);
 
             const isSubActive = await checkIsSubscriptionActive(profileData);
             setSubscriptionActive(realIsPlatAdmin || isSubActive);
+
+            setCurrentUser({
+              id         : userRecord.id,
+              name       : userRecord.name,
+              email      : userRecord.email || session.user.email,
+              role       : userRecord.role,
+              schoolName : profileData?.schoolName || 'School',
+              school_id  : (realIsPlatAdmin && isActingAs && overrideSchoolId) ? overrideSchoolId : userRecord.school_id,
+              password_changed: userRecord.password_changed
+            });
           }
         }
       } catch (err) {

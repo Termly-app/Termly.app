@@ -1253,7 +1253,7 @@ export async function deleteUser(id) {
 export async function getUserByAuthId(authUserId) {
   const { data, error } = await supabase
     .from('users')
-    .select('id, name, email, role, school_id, auth_user_id, password_changed, login_username, schools(id, name, plan, school_code)')
+    .select('id, name, email, role, school_id, auth_user_id, password_changed, login_username')
     .eq('auth_user_id', authUserId)
     .single();
   if (error && error.code !== 'PGRST116') throw error;

@@ -83,7 +83,7 @@ export const FeaturesProvider = ({ children, user }) => {
       window.removeEventListener('schoolProfileChanged', handleProfileChange);
       window.removeEventListener('platformSettingsChanged', handleProfileChange);
     };
-  }, [user]);
+  }, [user?.id, user?.school_id]);
 
   const value = {
     features,
