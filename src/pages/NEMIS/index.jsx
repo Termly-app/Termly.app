@@ -78,8 +78,11 @@ export default function NEMISDashboard({ currentUser }) {
 
   if (loading && !audit) return <Loader />;
 
-  // Build unique class list from students with issues
-  const allClasses = [...new Set(audit.studentsWithIssues.map(s => s.class).filter(Boolean))].sort();
+  // Build unique class list from school profile (configured classes) + students with issues
+  const allClasses = [...new Set([
+    ...(profile?.activeClasses || []),
+    ...audit.studentsWithIssues.map(s => s.class).filter(Boolean)
+  ])].sort();
 
   const filteredIssues = audit.studentsWithIssues.filter(s => {
     const matchSearch = s.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
@@ -272,23 +275,31 @@ export default function NEMISDashboard({ currentUser }) {
               <UserIcon size={16} color="var(--primary)" /> Issues by Class
             </h4>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-              {Object.entries(classStats).sort(([a],[b]) => a.localeCompare(b)).map(([cls, count]) => (
-                <div 
-                  key={cls} 
-                  onClick={() => setClassFilter(cls)}
-                  style={{ 
-                    display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                    padding: '6px 10px', borderRadius: 6, cursor: 'pointer', 
-                    transition: 'all 0.15s',
-                    background: classFilter === cls ? 'var(--primary-light)' : 'transparent',
-                    border: classFilter === cls ? '1px solid var(--primary)' : '1px solid transparent'
-                  }}
-                  className="no-print"
-                >
-                  <span style={{ fontSize: '0.8rem', fontWeight: classFilter === cls ? 700 : 500, color: classFilter === cls ? 'var(--primary)' : 'var(--text-main)' }}>{cls}</span>
-                  <span style={{ fontSize: '0.7rem', fontWeight: 700, background: '#fef3c7', color: '#92400e', padding: '2px 8px', borderRadius: 10 }}>{count}</span>
-                </div>
-              ))}
+              {allClasses.map(cls => {
+                const count = classStats[cls] || 0;
+                return (
+                  <div 
+                    key={cls} 
+                    onClick={() => setClassFilter(cls)}
+                    style={{ 
+                      display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                      padding: '6px 10px', borderRadius: 6, cursor: 'pointer', 
+                      transition: 'all 0.15s',
+                      background: classFilter === cls ? 'var(--primary-light)' : 'transparent',
+                      border: classFilter === cls ? '1px solid var(--primary)' : '1px solid transparent'
+                    }}
+                    className="no-print"
+                  >
+                    <span style={{ fontSize: '0.8rem', fontWeight: classFilter === cls ? 700 : 500, color: classFilter === cls ? 'var(--primary)' : 'var(--text-main)' }}>{cls}</span>
+                    {count > 0 && (
+                      <span style={{ fontSize: '0.7rem', fontWeight: 700, background: '#fef3c7', color: '#92400e', padding: '2px 8px', borderRadius: 10 }}>{count}</span>
+                    )}
+                    {count === 0 && (
+                      <CheckIcon size={12} color="#10b981" />
+                    )}
+                  </div>
+                );
+              })}
               {classFilter !== 'All' && (
                 <button 
                   className="btn btn-ghost btn-sm no-print" 
