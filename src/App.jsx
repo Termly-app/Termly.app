@@ -690,7 +690,53 @@ function App() {
     );
   }
 
-  // --- School portal ---
+  // --- Suspended School View ------------------------------------------------
+function SuspendedView({ profile, onLogout }) {
+  const status = profile?.subscriptionStatus || 'Deactivated';
+  const isSuspended = status === 'Suspended';
+  
+  return (
+    <div style={{
+      height: '100vh', width: '100vw', display: 'flex', alignItems: 'center', justifyContent: 'center',
+      background: 'var(--bg-app)', padding: 24, textAlign: 'center'
+    }}>
+      <div className="card animate-in" style={{ maxWidth: 480, padding: 40, borderRadius: 24, boxShadow: '0 25px 50px -12px rgba(0,0,0,0.25)' }}>
+        <div style={{ 
+          width: 80, height: 80, borderRadius: 24, background: isSuspended ? '#FEF3C7' : '#FEE2E2', 
+          display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 24px' 
+        }}>
+          <AlertIcon size={40} color={isSuspended ? '#D97706' : '#DC2626'} />
+        </div>
+        
+        <h1 style={{ fontSize: '1.5rem', fontWeight: 800, marginBottom: 12, color: 'var(--text-main)' }}>
+          Account {status}
+        </h1>
+        
+        <p style={{ color: 'var(--text-light)', lineHeight: 1.6, marginBottom: 32 }}>
+          {isSuspended 
+            ? `The account for "${profile?.schoolName}" has been temporarily suspended by the system administrator.`
+            : `The account for "${profile?.schoolName}" is currently deactivated. Please contact ShuleSoft support to reactivate your workspace.`
+          }
+        </p>
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+          <a href="https://wa.me/254712260057" target="_blank" rel="noopener noreferrer" className="btn btn-primary" style={{ width: '100%' }}>
+            Contact Support
+          </a>
+          <button onClick={onLogout} className="btn" style={{ width: '100%', background: 'transparent', border: '1px solid var(--border)' }}>
+            Sign Out
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// --- School portal ---
+  if (!subscriptionActive && !isPlatformAdmin) {
+    return <SuspendedView profile={profile} onLogout={handleLogout} />;
+  }
+
   return (
     <>
       {isLocked && <LockScreen user={currentUser} onUnlock={() => setIsLocked(false)} />}

@@ -670,9 +670,25 @@ function mapProfileData(data) {
 
 // ============= SUBSCRIPTIONS & PAYMENTS =============
 export async function checkIsSubscriptionActive(profile) {
-  // REPLACED: Traditional term-based subscription model is now bypassable.
-  // We return true here to ensure users aren't locked out of the dashboard globally.
-  // Granular module access is now managed via checkFeatureAccess/hasFeature.
+  if (!profile) return false;
+  
+  // Explicitly check for Deactivated or Suspended status
+  const status = profile.subscriptionStatus || 'Inactive';
+  if (status === 'Deactivated' || status === 'Suspended') {
+    return false;
+  }
+
+  // Also check expiry date if present
+  if (profile.subscriptionExpiry) {
+    const expiry = new Date(profile.subscriptionExpiry);
+    const now = new Date();
+    if (expiry < now && status !== 'Active') {
+      // Allow a small grace period or strictly block?
+      // For now, let's just return false if expired and not explicitly marked active
+      return false;
+    }
+  }
+
   return true;
 }
 
