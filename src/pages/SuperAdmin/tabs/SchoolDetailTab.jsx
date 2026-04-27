@@ -160,7 +160,7 @@ export default function SchoolDetailTab({ school, onBack, setActivateModal, hand
   return (
     <div className="tv">
       <div className="panel" style={{ marginBottom: 20 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap' }}>
           <button className="act-btn" onClick={onBack}>&larr; Back</button>
           <div style={{ width: 48, height: 48, borderRadius: 8, background: '#f1f5f9', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <SchoolIcon size={24} color="#64748b" />
@@ -190,7 +190,7 @@ export default function SchoolDetailTab({ school, onBack, setActivateModal, hand
           {loadingFeatures ? (
             <div style={{ padding: 40, textAlign: 'center' }}>Loading features...</div>
           ) : (
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(360px, 1fr))', gap: 20 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 20 }}>
               {registry.map(reg => {
                 const schoolFeat = features.find(f => f.feature_key === reg.feature_key);
                 const isEnabled = schoolFeat?.is_enabled || false;
