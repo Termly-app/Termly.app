@@ -15,7 +15,7 @@ const getSchoolId = () => {
 
 export async function getLibraryBooks(filters = {}) {
     const { search, category, subject, level } = filters;
-    let query = supabase.from('books').select('*, book_copies(id, status)').eq('school_id', getSchoolId());
+    let query = supabase.from('books').select('*, book_copies(id, status, copy_code)').eq('school_id', getSchoolId());
 
     if (category) query = query.eq('category', category);
     if (subject) query = query.eq('subject', subject);

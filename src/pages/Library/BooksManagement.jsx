@@ -69,7 +69,8 @@ export default function BooksManagement({ currentUser, currentPeriodId }) {
       const matchSearch = !search ||
         b.title.toLowerCase().includes(search.toLowerCase()) ||
         (b.author && b.author.toLowerCase().includes(search.toLowerCase())) ||
-        (b.isbn && b.isbn.includes(search));
+        (b.isbn && b.isbn.includes(search)) ||
+        (b.book_copies && b.book_copies.some(c => c.copy_code && c.copy_code.toLowerCase().includes(search.toLowerCase())));
       const matchCat = !filterCategory || b.category === filterCategory;
       const matchSub = !filterSubject || b.subject === filterSubject;
       const matchLev = !filterLevel || b.level === filterLevel;
