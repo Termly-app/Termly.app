@@ -4717,7 +4717,7 @@ export async function getClassSubjectAssignments(schoolId, periodId, classGrade,
   // [UNIFICATION] Query from teacher_assignments (Domain 16A)
   let query = supabase
     .from('teacher_assignments')
-    .select('*, stream:class_streams(*)')
+    .select('*, stream:class_streams!inner(*)')
     .eq('school_id', schoolId)
     .eq('period_id', periodId)
     .eq('is_active', true)
