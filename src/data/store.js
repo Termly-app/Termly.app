@@ -3728,7 +3728,30 @@ export async function getPlanPrice(planName) {
   
   // Fallback to Starter Plan or some default
   plan = plan || settings.pricing["Starter Plan"] || settings.pricing["Starter"] || Object.values(settings.pricing)[0];
-  return plan?.price || 4999;
+  return plan?.price || 5000;
+}
+
+/**
+ * Robust plan lookup matching other components
+ */
+export async function getPlanLimits(planName) {
+  const settings = await getPlatformSettings();
+  const pricing = settings.pricing || {};
+  
+  // Normalize plan names to match pricing keys
+  let targetKey = planName || 'Sandbox';
+  const lower = targetKey.toLowerCase();
+  if (lower === 'starter') targetKey = 'Starter Plan';
+  if (lower === 'growth')  targetKey = 'Growth Plan';
+  if (lower === 'pro')     targetKey = 'Pro Plan';
+
+  const planKey = Object.keys(pricing).find(k => k.toLowerCase() === targetKey.toLowerCase()) || 
+                  Object.keys(pricing).find(k => targetKey.toLowerCase().includes(k.toLowerCase())) ||
+                  'Sandbox';
+  
+  const info = pricing[planKey] || pricing['Sandbox'] || { limit: 10, admins: 1 };
+  // Ensure 'students' key exists for addStudent compatibility (which uses .students)
+  return { ...info, students: info.limit || info.students || 10 };
 }
 
 /**
