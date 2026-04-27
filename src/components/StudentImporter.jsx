@@ -105,7 +105,18 @@ export default function StudentImporter({ profile, onImport, onClose }) {
     rows.forEach((row, idx) => {
       const rowErrors = {};
       if (!row.name || row.name.length < 2) rowErrors.name = "Name is required (min 2 chars)";
-      if (!profile.activeClasses?.includes(row.class)) rowErrors.class = "Invalid class";
+      
+      const activeClasses = profile.activeClasses || [];
+      if (!activeClasses.includes(row.class)) {
+        rowErrors.class = "Invalid class";
+      } else {
+        // Validate stream against configured streams for this class
+        const validStreams = profile.streamsPerClass?.[row.class] || [];
+        if (row.stream && validStreams.length > 0 && !validStreams.includes(row.stream)) {
+          rowErrors.stream = "Unconfigured stream";
+        }
+      }
+
       if (row.admNo && seenAdm.has(row.admNo.toLowerCase())) rowErrors.admNo = "Duplicate admission number";
       if (row.admNo) seenAdm.add(row.admNo.toLowerCase());
       if (Object.keys(rowErrors).length > 0) {
@@ -270,7 +281,19 @@ export default function StudentImporter({ profile, onImport, onClose }) {
                               {profile.activeClasses?.map(c => <option key={c} value={c}>{c}</option>)}
                             </select>
                           </td>
-                          <td><input value={row.stream || ''} onChange={e => handleUpdate(idx, 'stream', e.target.value)} /></td>
+                          <td>
+                            <select 
+                              value={row.stream || ''} 
+                              onChange={e => handleUpdate(idx, 'stream', e.target.value)}
+                              className={rowError?.errors?.stream ? 'error' : ''}
+                            >
+                              <option value="">General</option>
+                              {(profile.streamsPerClass?.[row.class] || []).map(s => (
+                                <option key={s} value={s}>{s}</option>
+                              ))}
+                            </select>
+                            {rowError?.errors?.stream && <span className="err-hint">{rowError.errors.stream}</span>}
+                          </td>
                           <td>
                             <select value={row.gender} onChange={e => handleUpdate(idx, 'gender', e.target.value)}>
                               <option value="Male">Male</option>

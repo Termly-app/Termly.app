@@ -254,7 +254,7 @@ export default function Students({ currentUser, currentPeriodId }) {
                   { id: 'All', label: 'All Streams' },
                   ...(classFilter !== 'All' 
                     ? (profile.streamsPerClass?.[classFilter] || []) 
-                    : Object.values(profile.streamsPerClass || {}).flat().filter((v, i, a) => a.indexOf(v) === i)
+                    : Array.from(new Set(Object.values(profile.streamsPerClass || {}).flat()))
                   ).map(s => ({ id: s, label: s }))
                 ]}
                 style={{ minWidth: 130 }}
@@ -396,7 +396,17 @@ export default function Students({ currentUser, currentPeriodId }) {
                         </span>
                       )}
                     </td>
-                    <td data-label="Stream">{s.stream||<span className="text-muted">—</span>}</td>
+                    <td data-label="Stream">
+                      {(() => {
+                        const isUnconfigured = s.stream && !(profile.streamsPerClass?.[s.class] || []).includes(s.stream);
+                        return (
+                          <span style={isUnconfigured ? { color: 'var(--warning)', borderBottom: '1px dotted var(--warning)', cursor: 'help' } : {}} title={isUnconfigured ? 'This stream is not in your school settings. Edit student to fix.' : ''}>
+                            {s.stream || <span className="text-muted">—</span>}
+                            {isUnconfigured && <AlertIcon size={10} style={{ marginLeft: 4 }} />}
+                          </span>
+                        );
+                      })()}
+                    </td>
                     <td data-label="Category"><span className={`badge ${s.residenceType === 'boarding' ? 'badge-accent' : 'badge-ghost'}`} style={{textTransform:'capitalize'}}>{s.residenceType === 'boarding' && s.house ? `Boarding (${s.house})` : (s.residenceType || 'day')}</span></td>
                     <td data-label="Parent">{s.parent}</td>
                     <td data-label="Phone" style={{color:'var(--text-light)',fontSize:'0.85rem'}}>{s.parentPhone}</td>
