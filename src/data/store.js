@@ -1477,8 +1477,7 @@ export async function addStudent(student) {
   }
 
   const count = all.length + 1;
-  const currentYear = new Date().getFullYear();
-  const admNo = student.admNo || `SS-${currentYear}-${String(count).padStart(3, '0')}`;
+  const admNo = student.admNo || String(count).padStart(3, '0');
 
   const { data, error } = await supabase
     .from('students')
