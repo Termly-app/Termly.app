@@ -366,6 +366,12 @@ export default function NEMISDashboard({ currentUser }) {
           align-items: start;
         }
 
+        @media (max-width: 1024px) {
+          .nemis-main-grid {
+            grid-template-columns: 1fr;
+          }
+        }
+
         .print-only { display: none !important; }
         .no-print { display: block; }
 
