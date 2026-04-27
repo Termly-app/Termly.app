@@ -18,6 +18,7 @@ export default function SchoolsTab({
   handleOpenStaffModal,
   onNEMISExport,          // ← new: opens NEMIS export modal for a school
   handleLoginAs,          // Added handleLoginAs
+  onSelectSchool,         // New: drill down into school details
 }) {
   return (
     <div className="tv">
@@ -94,7 +95,13 @@ export default function SchoolsTab({
                   return (
                     <tr key={s.id}>
                       <td data-label="School" className="col-school">
-                        <div className="td-b">{s.name}</div>
+                        <div 
+                          className="td-b" 
+                          style={{ cursor: 'pointer', color: '#6366f1', textDecoration: 'underline' }}
+                          onClick={() => onSelectSchool(s)}
+                        >
+                          {s.name}
+                        </div>
                         {s.phone && <div className="td-sub">{s.phone}</div>}
                       </td>
 

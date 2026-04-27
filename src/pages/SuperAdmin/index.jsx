@@ -96,6 +96,7 @@ export default function SuperAdmin({ currentUser, isPlatformAdmin, sidebarOpen, 
   const [staffModal,      setStaffModal]      = useState(null);
   const [loadingStaff,    setLoadingStaff]    = useState(false);
   const [featuresModal,   setFeaturesModal]   = useState(null);
+  const [selectedSchool,  setSelectedSchool]  = useState(null);
 
   // ── Settings form state ──────────────────────────────────────────────────
   const [statusMsg,      setStatusMsg]      = useState('');
@@ -474,7 +475,32 @@ export default function SuperAdmin({ currentUser, isPlatformAdmin, sidebarOpen, 
             {loading ? <SuperAdminLoader /> : (
               <>
                 {activeTab === 'overview' && <OverviewTab {...commonProps} growChartRef={growChartRef} />}
-                {activeTab === 'schools' && <SchoolsTab {...commonProps} handleDeactivate={handleDeactivate} handleRowDeleteSchool={handleRowDeleteSchool} setActivateModal={setActivateModal} setActivationNote={setActivationNote} setActivateSuccess={setActivateSuccess} setFeaturesModal={setFeaturesModal} onNEMISExport={setNemisSchool} handleLoginAs={handleLoginAs} handleBulkActivate={handleBulkActivate} handleBulkDeactivate={handleBulkDeactivate} handleOpenStaffModal={handleOpenStaffModal} />}
+                {activeTab === 'schools' && (
+                  selectedSchool ? (
+                    <SchoolDetailTab 
+                      school={selectedSchool} 
+                      onBack={() => setSelectedSchool(null)} 
+                      setActivateModal={setActivateModal}
+                      handleRowDeleteSchool={handleRowDeleteSchool}
+                    />
+                  ) : (
+                    <SchoolsTab 
+                      {...commonProps} 
+                      handleDeactivate={handleDeactivate} 
+                      handleRowDeleteSchool={handleRowDeleteSchool} 
+                      setActivateModal={setActivateModal} 
+                      setActivationNote={setActivationNote} 
+                      setActivateSuccess={setActivateSuccess} 
+                      setFeaturesModal={setFeaturesModal} 
+                      onNEMISExport={setNemisSchool} 
+                      handleLoginAs={handleLoginAs} 
+                      handleBulkActivate={handleBulkActivate} 
+                      handleBulkDeactivate={handleBulkDeactivate} 
+                      handleOpenStaffModal={handleOpenStaffModal}
+                      onSelectSchool={setSelectedSchool}
+                    />
+                  )
+                )}
                 {activeTab === 'admins' && <AdminsTab />}
                 {activeTab === 'activity' && <ActivityTab filteredActivity={filteredActivity} />}
                 {activeTab === 'config' && <SettingsTab statusMsg={statusMsg} setStatusMsg={setStatusMsg} subEndDate={subEndDate} setSubEndDate={setSubEndDate} smsConfig={smsConfig} setSmsConfig={setSmsConfig} handleUpdateSetting={handleUpdateSetting} updatePlatformSetting={updatePlatformSetting} loadData={loadData} setMessage={setMessage} onWipeSchools={handleWipeSchools} />}

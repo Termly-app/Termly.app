@@ -1471,12 +1471,13 @@ export async function getStudent(id) {
 export async function addStudent(student) {
   mutationGuard('addStudent');
   const all = await getStudents();
+  const activeStudents = all.filter(s => (s.status || 'Active') === 'Active');
   const p = await getSchoolProfile();
   
-  // Enforce student limit set by Super Admin
-  const currentCount = all.length;
+  // Enforce student limit set by Super Admin (Active seats only)
+  const currentCount = activeStudents.length;
   if (currentCount >= p.studentLimit) {
-    throw new Error(`Student limit reached (${p.studentLimit}). Please contact Super Admin to increase your school's capacity.`);
+    throw new Error(`Active student limit reached (${p.studentLimit}). Please contact Super Admin to increase your school's capacity.`);
   }
   const count = all.length + 1;
   const admNo = student.admNo || String(count).padStart(3, '0');
@@ -3844,9 +3845,9 @@ export async function getAllSchools() {
     return [];
   }
 
-  // 2. Fetch counts in parallel
+  // 2. Fetch counts in parallel (Only count 'Active' students for seat usage)
   const [studentsRes, staffRes, featuresRes] = await Promise.all([
-    supabase.from('students').select('school_id'),
+    supabase.from('students').select('school_id').eq('status', 'Active'),
     supabase.from('users').select('school_id').neq('role', 'Super Admin'),
     supabase.from('school_features').select('school_id').eq('is_enabled', true)
   ]);
