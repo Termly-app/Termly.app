@@ -34,7 +34,7 @@ import {
 import { 
   CalendarIcon, PrintIcon, BookIcon, CheckIcon, CrossIcon, 
   AlertIcon, UserIcon, HomeIcon, TeacherIcon, PlusIcon,
-  SettingsIcon, ChevronDownIcon
+  SettingsIcon, ChevronDownIcon, ZapIcon
 } from '../../components/CommonIcons';
 import FeatureGate from '../../components/FeatureGate';
 import { useDialog } from '../../contexts/DialogContext';
