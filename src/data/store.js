@@ -4710,9 +4710,17 @@ const FEATURE_MAPPING = {
  *   3. Fuzzy FEATURE_MAPPING string match (backward compat for plans without modules[])
  */
 /**
- * Check if a feature is enabled for the current school.
  * Consolidates all gating logic into checkFeatureAccess for consistency.
  */
+export async function checkFeatureAccess(featureKey, profile) {
+  if (!profile || !profile.schoolId) return false;
+  
+  // Platform Admin override
+  if (profile.subscriptionPlan === 'Platform Admin') return true;
+  
+  // Authoritative check via features registry mapping
+  return await hasFeature(profile.schoolId, featureKey);
+}
 export async function isFeatureEnabled(featureSlug) {
   if (!_currentSchoolId) return false;
   try {
@@ -4724,7 +4732,7 @@ export async function isFeatureEnabled(featureSlug) {
     }
     
     // 2. Authoritative check via features registry mapping
-    return await hasFeature(_currentSchoolId, featureSlug);
+    return await checkFeatureAccess(featureSlug, profile);
   } catch (e) {
     console.error("Feature gating error:", e);
     return false;
