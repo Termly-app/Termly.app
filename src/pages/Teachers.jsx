@@ -530,7 +530,6 @@ function ReportsTab({ profile, teachers, assignments }) {
       let tableContent = '';
 
       if (type === 'all') {
-        title = 'All Staff List';
         tableContent = `
           <table>
             <thead><tr><th>#</th><th>Name</th><th>Phone</th><th>Status</th><th>Assignments</th></tr></thead>
@@ -549,7 +548,6 @@ function ReportsTab({ profile, teachers, assignments }) {
             </tbody>
           </table>`;
       } else if (type === 'by-class') {
-        title = 'Staff per Class Assignment';
         const classMap = {};
         const activeLevels = profile?.activeClasses || [];
         assignments.filter(a => a.is_active && a.stream && (activeLevels.length === 0 || activeLevels.includes(a.stream.level))).forEach(a => {
