@@ -415,7 +415,7 @@ export default function BooksManagement({ currentUser, currentPeriodId }) {
 
       {/* BULK COPY GENERATION MODAL */}
       {bulkModal.open && (
-        <div className="modal-overlay" style={{ zIndex: 60 }}>
+        <div className="modal-overlay" style={{ zIndex: 1010 }}>
           <div className="modal relative max-w-sm w-full">
             <div className="modal-header">
               <h3>Add Inventory Copies</h3>
@@ -534,7 +534,7 @@ export default function BooksManagement({ currentUser, currentPeriodId }) {
 
       {/* EDIT COPY DETAILS MODAL */}
       {editCopyModal && (
-        <div className="modal-overlay" style={{ zIndex: 100 }}>
+        <div className="modal-overlay" style={{ zIndex: 1020 }}>
           <div className="modal relative max-w-sm w-full mx-4">
             <div className="modal-header">
               <h3>Edit Condition & Notes</h3>
