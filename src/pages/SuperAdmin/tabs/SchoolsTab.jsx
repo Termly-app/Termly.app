@@ -62,10 +62,11 @@ export default function SchoolsTab({
             <table className="data-table">
               <thead>
                 <tr>
-                  <th className="col-school">School</th>
-                  <th className="col-plan">Modules</th>
-                  <th className="col-usage">Staff Usage</th>
-                  <th className="col-loc">Location</th>
+                   <th className="col-school">School</th>
+                   <th className="col-plan">Modules</th>
+                   <th className="col-usage">Students</th>
+                   <th className="col-usage">Staff Seats</th>
+                   <th className="col-loc">Location</th>
                   <th className="col-joined">Joined</th>
                   <th className="col-status">Status</th>
                   <th className="col-sub">Features</th>
@@ -84,13 +85,10 @@ export default function SchoolsTab({
                     return prof.subscription_status === 'Active' || isExp;
                   }) || pList[0] || {};
 
-                  let curPlan   = s.plan || p.subscription_plan || 'Sandbox';
-                  if (['fala', 'starter'].includes(curPlan.toLowerCase())) curPlan = 'Starter Plan';
-                  const pricing   = settings?.pricing || {};
-                  const planKey   = Object.keys(pricing).find(k => k.toLowerCase() === curPlan.toLowerCase());
-                  const planInfo  = planKey ? pricing[planKey] : { price:5999, limit:5 };
-                  const studentLimit = planInfo.limit || 150;
-                  const adminLimit   = planInfo.admins || 5;
+                  const studentLimit = p.custom_subjects?.__limits?.students || 10000;
+                  const staffLimit = p.custom_subjects?.__limits?.staff || 1000;
+
+
 
 
                   return (
@@ -104,10 +102,16 @@ export default function SchoolsTab({
                         <span className="p-pill">{s.features_count || 0} / {s.features_total || 14}</span>
                       </td>
 
+                      <td data-label="Students" className="col-usage">
+                        <div className="td-m" style={{ color: (s._studentCount >= studentLimit) ? '#ef4444' : 'var(--txt)' }}>
+                          {s._studentCount || 0} / {studentLimit}
+                        </div>
+                      </td>
+
                       <td data-label="Staff Usage" className="col-usage">
                         <div style={{ display:'flex', alignItems:'center', gap:6 }}>
-                          <div className="td-m" style={{ color: 'var(--txt)' }}>
-                            {s._staffCount || 0}
+                          <div className="td-m" style={{ color: (s._staffCount >= staffLimit) ? '#ef4444' : 'var(--txt)' }}>
+                            {s._staffCount || 0} / {staffLimit}
                           </div>
                           <button className="mini-btn" onClick={() => handleOpenStaffModal(s.id, s.name)}>Details</button>
                         </div>

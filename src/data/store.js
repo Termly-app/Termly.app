@@ -447,6 +447,8 @@ const DEFAULT_PROFILE = {
       {min: 0, max: 49, grade: 'E', color: '#ef4444'}
     ]
   },
+  studentLimit: 10000,
+  staffLimit: 1000,
   enabledModules: { attendance: true }
 };
 
@@ -502,7 +504,9 @@ function mapSchoolProfile(data) {
     schoolId: data.school_id,
     enabledModules: data.custom_subjects?.__shadow_enabled_modules || DEFAULT_PROFILE.enabledModules,
     setup_completed: data.setup_completed || false,
-    schoolType: data.school_type || 'Day'
+    schoolType: data.school_type || 'Day',
+    studentLimit: data.custom_subjects?.__limits?.students || 10000,
+    staffLimit: data.custom_subjects?.__limits?.staff || 1000
   };
 }
 
@@ -669,6 +673,8 @@ function mapProfileData(data) {
     schoolCode: data.school_code,
     boardingHouses: trimArr(data.boarding_houses || data.custom_subjects?.__shadow_boarding_houses) || DEFAULT_PROFILE.boardingHouses,
     enabledModules: data.custom_subjects?.__shadow_enabled_modules || DEFAULT_PROFILE.enabledModules,
+    studentLimit: data.custom_subjects?.__limits?.students || 10000,
+    staffLimit: data.custom_subjects?.__limits?.staff || 1000
   };
 }
 
@@ -1466,16 +1472,12 @@ export async function addStudent(student) {
   mutationGuard('addStudent');
   const all = await getStudents();
   const p = await getSchoolProfile();
-  const planName = p.subscriptionPlan || 'Sandbox';
   
-  // Robust plan lookup matching other components
-  const planLimits = await getPlanLimits(planName);
-  const maxStudents = planLimits.students || 5;
-  
-  if (all.length >= maxStudents) {
-    throw new Error(`Student limit reached for your ${planName} plan (${maxStudents} students). Please upgrade your plan in Settings.`);
+  // Enforce student limit set by Super Admin
+  const currentCount = all.length;
+  if (currentCount >= p.studentLimit) {
+    throw new Error(`Student limit reached (${p.studentLimit}). Please contact Super Admin to increase your school's capacity.`);
   }
-
   const count = all.length + 1;
   const admNo = student.admNo || String(count).padStart(3, '0');
 
@@ -3173,17 +3175,13 @@ export async function getTeachersBySchool(schoolId) {
 
 
 export async function addTeacher(teacher) {
-  // Check seat limit using the proper getPlanLimits function
-  const profile = await getSchoolProfile();
-  const currentTeachers = await getTeachers();
-  const plan = profile.subscriptionPlan || 'Sandbox';
-  const planLimits = await getPlanLimits(plan);
-  const limit = planLimits.admins || 50; // admins field = staff seat limit
+  const p = await getSchoolProfile();
+  const all = await getTeachers(_currentSchoolId);
 
-  if (currentTeachers.length >= limit) {
-    throw new Error(`Staff seat limit reached for ${plan} plan (${limit} staff max). Please upgrade your subscription.`);
+  // Enforce staff limit set by Super Admin
+  if (all.length >= p.staffLimit) {
+    throw new Error(`Staff limit reached (${p.staffLimit}). Please contact Super Admin to increase your school's capacity.`);
   }
-
   const { data, error } = await supabase
     .from('teachers')
     .insert({ 
@@ -3712,47 +3710,9 @@ export async function getPlatformSettings() {
   return _settingsPromise;
 }
 
-/**
- * Helper to get price for a specific plan from settings
- */
-export async function getPlanPrice(planName) {
-  const settings = await getPlatformSettings();
-  const lowerName = planName?.toLowerCase();
-  
-  // Try exact match or case-insensitive match
-  let plan = settings.pricing[planName];
-  if (!plan) {
-    const key = Object.keys(settings.pricing).find(k => k.toLowerCase() === lowerName);
-    plan = settings.pricing[key];
-  }
-  
-  // Fallback to Starter Plan or some default
-  plan = plan || settings.pricing["Starter Plan"] || settings.pricing["Starter"] || Object.values(settings.pricing)[0];
-  return plan?.price || 5000;
-}
 
-/**
- * Robust plan lookup matching other components
- */
-export async function getPlanLimits(planName) {
-  const settings = await getPlatformSettings();
-  const pricing = settings.pricing || {};
-  
-  // Normalize plan names to match pricing keys
-  let targetKey = planName || 'Sandbox';
-  const lower = targetKey.toLowerCase();
-  if (lower === 'starter') targetKey = 'Starter Plan';
-  if (lower === 'growth')  targetKey = 'Growth Plan';
-  if (lower === 'pro')     targetKey = 'Pro Plan';
 
-  const planKey = Object.keys(pricing).find(k => k.toLowerCase() === targetKey.toLowerCase()) || 
-                  Object.keys(pricing).find(k => targetKey.toLowerCase().includes(k.toLowerCase())) ||
-                  'Sandbox';
-  
-  const info = pricing[planKey] || pricing['Sandbox'] || { limit: 10, admins: 1 };
-  // Ensure 'students' key exists for addStudent compatibility (which uses .students)
-  return { ...info, students: info.limit || info.students || 10 };
-}
+
 
 /**
  * Get the global term expiry date from platform settings
@@ -4000,6 +3960,19 @@ export async function restoreSchool(schoolId, monthsToAdd = 4, notes = null) {
   invalidateFeatureCache(schoolId);
 
   await logPlatformActivity('ACTIVATION', `School ${schoolId} activated by admin (+${monthsToAdd} months). Enabled features extended.`, schoolId);
+}
+
+/**
+ * Super Admin: Update school profile fields directly
+ */
+export async function adminUpdateSchoolProfile(schoolId, updates) {
+  mutationGuard('adminUpdateSchoolProfile');
+  const { error } = await supabase
+    .from('school_profiles')
+    .update(updates)
+    .eq('school_id', schoolId);
+  if (error) throw error;
+  await logPlatformActivity('ADMIN_PROFILE_UPDATE', `Admin updated profile for school ${schoolId}`, schoolId);
 }
 
 /**

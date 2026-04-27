@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { supabase, logAuditEvent, updateSchoolFeature } from '../../../data/store';
+import { supabase, logAuditEvent, updateSchoolFeature, adminUpdateSchoolProfile } from '../../../data/store';
 import { fmtDate } from '../superAdminUtils';
 import { SchoolIcon, ShieldIcon, MenuIcon, CheckIcon, CrossIcon, ClockIcon, CalendarIcon } from '../../../components/CommonIcons';
 import { useDialog } from '../../../contexts/DialogContext';
@@ -12,6 +12,9 @@ export default function SchoolDetailTab({ school, onBack, setActivateModal, hand
   const [savingFeature, setSavingFeature] = useState(null);
   const [logs, setLogs] = useState([]);
   const [loadingLogs, setLoadingLogs] = useState(false);
+  const [profile, setProfile] = useState(null);
+  const [loadingProfile, setLoadingProfile] = useState(false);
+  const [savingLimits, setSavingLimits] = useState(false);
   
   const { alert, confirm } = useDialog();
 
@@ -20,6 +23,8 @@ export default function SchoolDetailTab({ school, onBack, setActivateModal, hand
       loadFeatures();
     } else if (activeTab === 'activity') {
       loadLogs();
+    } else if (activeTab === 'config') {
+      loadProfile();
     }
   }, [activeTab, school.id]);
 
@@ -36,6 +41,19 @@ export default function SchoolDetailTab({ school, onBack, setActivateModal, hand
       console.error('Error loading features:', err);
     } finally {
       setLoadingFeatures(false);
+    }
+  };
+
+  const loadProfile = async () => {
+    setLoadingProfile(true);
+    try {
+      const { data, error } = await supabase.from('school_profiles').select('*').eq('school_id', school.id).single();
+      if (error) throw error;
+      setProfile(data);
+    } catch (err) {
+      console.error('Error loading profile:', err);
+    } finally {
+      setLoadingProfile(false);
     }
   };
 
@@ -114,6 +132,31 @@ export default function SchoolDetailTab({ school, onBack, setActivateModal, hand
     }
   };
 
+  const handleSaveLimits = async (e) => {
+    e.preventDefault();
+    const formData = new FormData(e.target);
+    const students = parseInt(formData.get('studentLimit'));
+    const staff = parseInt(formData.get('staffLimit'));
+
+    setSavingLimits(true);
+    try {
+      const customSubjects = profile.custom_subjects || {};
+      const newCustom = { 
+        ...customSubjects, 
+        __limits: { students, staff } 
+      };
+      
+      await adminUpdateSchoolProfile(school.id, { custom_subjects: newCustom });
+      setProfile(prev => ({ ...prev, custom_subjects: newCustom }));
+      alert({ title: 'Success', message: 'School limits updated successfully.' });
+    } catch (err) {
+      console.error('Limit update error:', err);
+      alert({ title: 'Error', message: err.message });
+    } finally {
+      setSavingLimits(false);
+    }
+  };
+
   return (
     <div className="tv">
       <div className="panel" style={{ marginBottom: 20 }}>
@@ -130,9 +173,9 @@ export default function SchoolDetailTab({ school, onBack, setActivateModal, hand
       </div>
 
       <div className="filter-bar" style={{ marginBottom: 20 }}>
-        {['features', 'users', 'activity', 'settings'].map(tab => (
+        {['features', 'config', 'users', 'activity', 'settings'].map(tab => (
           <button key={tab} className={`fbtn${activeTab === tab ? ' on' : ''}`} onClick={() => setActiveTab(tab)}>
-            {tab.charAt(0).toUpperCase() + tab.slice(1)}
+            {tab === 'config' ? 'Configuration' : tab.charAt(0).toUpperCase() + tab.slice(1)}
           </button>
         ))}
       </div>
@@ -217,6 +260,56 @@ export default function SchoolDetailTab({ school, onBack, setActivateModal, hand
                 );
               })}
             </div>
+          )}
+        </div>
+      )}
+
+      {activeTab === 'config' && (
+        <div className="panel animate-in">
+          <h3 style={{ marginTop: 0 }}>Limits & Capacity</h3>
+          <p style={{ color: '#64748b', fontSize: '0.9rem', marginBottom: 24 }}>
+            Define custom student and staff seat limits for this school. These limits are enforced during registration.
+          </p>
+
+          {loadingProfile ? (
+            <div style={{ padding: 40, textAlign: 'center' }}>Loading profile configuration...</div>
+          ) : (
+            <form onSubmit={handleSaveLimits} style={{ maxWidth: 500 }}>
+              <div style={{ marginBottom: 20 }}>
+                <label style={{ display: 'block', marginBottom: 8, fontSize: '0.85rem', fontWeight: 700, color: '#475569' }}>Student Seat Limit</label>
+                <input 
+                  type="number" 
+                  name="studentLimit"
+                  defaultValue={profile?.custom_subjects?.__limits?.students || 10000}
+                  className="sa-input"
+                  required
+                  min="1"
+                />
+                <p style={{ fontSize: '0.75rem', color: '#94a3b8', marginTop: 4 }}>Maximum number of active students allowed.</p>
+              </div>
+
+              <div style={{ marginBottom: 24 }}>
+                <label style={{ display: 'block', marginBottom: 8, fontSize: '0.85rem', fontWeight: 700, color: '#475569' }}>Staff Seat Limit</label>
+                <input 
+                  type="number" 
+                  name="staffLimit"
+                  defaultValue={profile?.custom_subjects?.__limits?.staff || 1000}
+                  className="sa-input"
+                  required
+                  min="1"
+                />
+                <p style={{ fontSize: '0.75rem', color: '#94a3b8', marginTop: 4 }}>Maximum number of teachers and staff allowed.</p>
+              </div>
+
+              <button 
+                type="submit" 
+                className="act-btn b" 
+                disabled={savingLimits}
+                style={{ width: '100%', padding: '12px', fontSize: '0.9rem' }}
+              >
+                {savingLimits ? 'Saving Changes...' : 'Save Configuration'}
+              </button>
+            </form>
           )}
         </div>
       )}

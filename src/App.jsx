@@ -242,8 +242,7 @@ function Sidebar({ isOpen, onClose, onLogout, onLock, currentUser, subscriptionA
   const isLibrarian = role === 'librarian';
   const isFinance   = role === 'finance';
 
-  // Sandbox plan: show all modules in sidebar but locked with UPGRADE badge
-  const isSandbox   = profile?.subscriptionPlan?.toLowerCase() === 'sandbox';
+
 
   const isPlatformAdmin = (import.meta.env.VITE_PLATFORM_ADMIN_WHITELIST || '').split(',').includes(currentUser?.email);
 
