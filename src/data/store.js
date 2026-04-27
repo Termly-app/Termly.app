@@ -4647,10 +4647,21 @@ export async function checkTimetableConflicts(schoolId, periodId, { day, startTi
       .eq('is_active', true);
     
     if (!aErr && assignments) {
-      // Check if the teacher is assigned to THIS specific class (level) AND stream (if provided)
-      const isAssignedToClass = assignments.some(a => 
-        a.stream?.level === classGrade && (!stream || a.stream?.name === stream)
-      );
+      // Robust comparison (trimmed and case-insensitive)
+      const targetLevel = (classGrade || '').trim().toLowerCase();
+      const targetStream = (stream || '').trim().toLowerCase();
+
+      const isAssignedToClass = assignments.some(a => {
+        const aLevel = (a.stream?.level || '').trim().toLowerCase();
+        const aStream = (a.stream?.name || '').trim().toLowerCase();
+        
+        const levelMatch = aLevel === targetLevel;
+        // If targetStream is empty, we allow any stream in that class (class-wide assignment)
+        // If targetStream is specified, it must match the assignment stream
+        const streamMatch = !targetStream || aStream === targetStream;
+        
+        return levelMatch && streamMatch;
+      });
       
       if (!isAssignedToClass) {
         return { msg: `Teacher is not assigned to teach ${subject} in ${classGrade}${stream ? ' (' + stream + ')' : ''}.` };
