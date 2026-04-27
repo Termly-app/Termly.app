@@ -842,10 +842,10 @@ function SuspendedView({ profile, onLogout }) {
 
                 {showNotifPanel && (
                   <div className="notif-panel animate-in" style={{
-                    position: 'absolute', top: '100%', right: 0, marginTop: 8,
-                    width: 380, maxHeight: 480, background: 'var(--bg-card)',
-                    borderRadius: 16, boxShadow: '0 20px 50px rgba(0,0,0,0.18)',
-                    border: '1px solid var(--border)', zIndex: 9999,
+                    position: 'absolute', top: '100%', right: -60, marginTop: 12,
+                    width: 'min(400px, 85vw)', maxHeight: 520, background: 'var(--bg-card)',
+                    borderRadius: 20, boxShadow: '0 25px 60px rgba(0,0,0,0.22)',
+                    border: '1px solid var(--border)', zIndex: 10001,
                     display: 'flex', flexDirection: 'column', overflow: 'hidden'
                   }}>
                     <div style={{
