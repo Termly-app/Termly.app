@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { getLibraryBooks, createBook, updateBook, bulkGenerateCopies, getBookCopies, createManualCopies } from '../../data/libraryStore';
+import { getLibraryBooks, createBook, updateBook, bulkGenerateCopies, getBookCopies, createManualCopies, updateBookCopy } from '../../data/libraryStore';
 import { getSchoolProfile } from '../../data/store';
 import { CBC_STRUCTURE, getSubjectsForGrade } from '../../data/seedData';
 import Select from '../../components/Common/Select';
@@ -30,6 +30,7 @@ export default function BooksManagement({ currentUser, currentPeriodId }) {
   const [bookModal, setBookModal] = useState({ open: false, data: null });
   const [copiesModal, setCopiesModal] = useState({ open: false, book: null, copies: [] });
   const [bulkModal, setBulkModal] = useState({ open: false, book: null });
+  const [editCopyModal, setEditCopyModal] = useState(null);
   const [barcodeMethod, setBarcodeMethod] = useState('auto'); // auto or manual
 
   const LIB_CATEGORIES = ['textbook', 'setbook', 'revision', 'storybook', 'reference'];
@@ -162,6 +163,26 @@ export default function BooksManagement({ currentUser, currentPeriodId }) {
       setCopiesModal({ open: true, book, copies: c, loading: false });
     } catch (e) {
       setCopiesModal({ open: false, book: null, copies: [] });
+    }
+  };
+
+  const handleSaveCopyDetails = async (e) => {
+    e.preventDefault();
+    const fd = new FormData(e.target);
+    try {
+      await updateBookCopy(editCopyModal.id, {
+        condition: fd.get('condition'),
+        notes: fd.get('notes')
+      });
+      toast('Copy updated successfully', 'success');
+      setEditCopyModal(null);
+      // Refresh copies
+      if (copiesModal.book) {
+        const c = await getBookCopies(copiesModal.book.id);
+        setCopiesModal(prev => ({ ...prev, copies: c }));
+      }
+    } catch (err) {
+      alert({ title: 'Error', message: err.message, variant: 'danger' });
     }
   };
 
@@ -467,34 +488,78 @@ export default function BooksManagement({ currentUser, currentPeriodId }) {
                 <button className="modal-close" onClick={() => setCopiesModal({ open: false, book: null, copies: [] })}>×</button>
               </div>
             </div>
-            <div className="flex-1 overflow-auto p-0 bg-gray-50">
+            <div className="flex-1 overflow-auto p-4 bg-gray-50">
               {copiesModal.loading ? <Loader /> : (
-                <table className="w-full text-left text-sm bg-white">
-                  <thead className="bg-gray-100 border-b border-gray-200 sticky top-0">
-                    <tr>
-                      <th className="p-4">Copy Code (Barcode)</th>
-                      <th className="p-4">Status</th>
-                      <th className="p-4">Physical Condition</th>
-                      <th className="p-4">Action</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-gray-100">
-                    {copiesModal.copies.map(c => (
-                      <tr key={c.id}>
-                        <td className="p-4 font-mono font-bold">{c.copy_code}</td>
-                        <td className="p-4">
-                          <span className={`px-2 py-1 rounded text-xs font-bold uppercase ${c.status === 'available' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'}`}>
-                            {c.status}
-                          </span>
-                        </td>
-                        <td className="p-4 capitalize">{c.condition}</td>
-                        <td className="p-4"><button className="text-blue-500 text-xs font-bold hover:underline">Edit Notes</button></td>
+                <div className="table-wrapper bg-white">
+                  <table className="premium-table">
+                    <thead>
+                      <tr>
+                        <th>Copy Code (Barcode)</th>
+                        <th>Status</th>
+                        <th>Condition & Notes</th>
+                        <th style={{ textAlign: 'right' }}>Action</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody>
+                      {copiesModal.copies.map(c => (
+                        <tr key={c.id}>
+                          <td>
+                            <div style={{ fontFamily: 'monospace', fontWeight: 600 }}>{c.copy_code}</div>
+                          </td>
+                          <td>
+                            <span className={`badge ${c.status === 'available' ? 'badge-success' : c.status === 'borrowed' ? 'badge-warning' : 'badge-danger'}`} style={{ textTransform: 'uppercase' }}>
+                              {c.status}
+                            </span>
+                          </td>
+                          <td>
+                            <div style={{ textTransform: 'capitalize', fontWeight: 500 }}>{c.condition || 'Good'}</div>
+                            {c.notes && <div style={{ fontSize: '0.75rem', color: 'var(--text-light)', marginTop: 2 }}>{c.notes}</div>}
+                          </td>
+                          <td style={{ textAlign: 'right' }}>
+                            <button className="btn btn-ghost btn-sm" onClick={() => setEditCopyModal(c)}>
+                              <EditIcon size={14} /> <span className="hidden sm:inline">Edit Notes</span>
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
               )}
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* EDIT COPY DETAILS MODAL */}
+      {editCopyModal && (
+        <div className="modal-overlay" style={{ zIndex: 100 }}>
+          <div className="modal relative max-w-sm w-full mx-4">
+            <div className="modal-header">
+              <h3>Edit Condition & Notes</h3>
+              <button className="modal-close" onClick={() => setEditCopyModal(null)}>×</button>
+            </div>
+            <form onSubmit={handleSaveCopyDetails}>
+              <div className="modal-body p-6 space-y-4">
+                <div className="form-group">
+                  <label>Physical Condition</label>
+                  <Select name="condition" defaultValue={editCopyModal.condition || 'good'} options={[
+                    {id: 'new', label: 'New'},
+                    {id: 'good', label: 'Good'},
+                    {id: 'fair', label: 'Fair'},
+                    {id: 'poor', label: 'Poor'}
+                  ]} />
+                </div>
+                <div className="form-group">
+                  <label>Notes (Optional)</label>
+                  <textarea className="form-input" name="notes" defaultValue={editCopyModal.notes || ''} rows={3} placeholder="Add any details about damage..." />
+                </div>
+              </div>
+              <div className="modal-footer">
+                <button type="button" className="btn btn-ghost" onClick={() => setEditCopyModal(null)}>Cancel</button>
+                <button type="submit" className="btn btn-primary">Save Updates</button>
+              </div>
+            </form>
           </div>
         </div>
       )}
