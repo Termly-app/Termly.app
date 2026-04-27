@@ -62,12 +62,18 @@ export default function Security({ currentUser }) {
   const planDetails = activePlanKey ? pricing[activePlanKey] : (fallbackPlans[planName] || fallbackPlans["Starter Plan"]);
   
   // Seat limit is for STAFF (Admins + Teachers)
-  // Seat limit logic: prioritize pricing config, then fallbackPlans, then static 5
-  let seatLimit = 5;
-  if (activePlanKey && pricing[activePlanKey]) {
-    seatLimit = pricing[activePlanKey].admins || pricing[activePlanKey].seat_limit || 5;
-  } else if (fallbackPlans[planName]) {
-    seatLimit = fallbackPlans[planName].seats || 5;
+  // Priority: 1. Manual Super Admin Override, 2. Pricing Config, 3. Fallback Plans
+  let seatLimit = profile.staffLimit || 5;
+  
+  // If we haven't set a custom limit (still at fallback 1000 from store.js mapping), 
+  // or if we want to be more specific, we check the pricing.
+  // Note: if profile.staffLimit is exactly 1000 (the store.js fallback), we try to refine it with plan info.
+  if (!profile.staffLimit || profile.staffLimit === 1000) {
+    if (activePlanKey && pricing[activePlanKey]) {
+      seatLimit = pricing[activePlanKey].admins || pricing[activePlanKey].seat_limit || 5;
+    } else if (fallbackPlans[planName]) {
+      seatLimit = fallbackPlans[planName].seats || 5;
+    }
   }
   
   const actualStaffCount = users.length;
