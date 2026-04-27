@@ -13,6 +13,7 @@ export { CBC_STRUCTURE, CBC_CORE_COMPETENCIES, TERM_FEE, getLevelForGrade, getSu
 
 import { encryptData as encrypt, decryptData as decrypt } from '../utils/securityUtils';
 import { withRetry } from '../utils/resilience';
+import { sanitizeString, sanitizeName } from '../utils/sanitize';
 
 
 // ============= SaaS Subscription Tiers =============
