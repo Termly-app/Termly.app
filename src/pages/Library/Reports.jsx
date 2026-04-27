@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { getCurrentSchoolId, getStudents, getSchoolProfile, getPrintHeader } from '../../data/store';
-import { getAllActiveBorrows, getStudentBorrowHistory } from '../../data/libraryStore';
+import { getAllActiveBorrows, getStudentBorrowHistory, getLibraryBooks, getBookBorrowHistory } from '../../data/libraryStore';
 import { CBC_STRUCTURE, getSubjectsForGrade } from '../../data/seedData';
 import Select from '../../components/Common/Select';
 import Loader from '../../components/Common/Loader';
@@ -15,12 +15,14 @@ export default function Reports({ currentPeriodId }) {
   const [loading, setLoading] = useState(false);
   const [profile, setProfile] = useState({});
   const [students, setStudents] = useState([]);
+  const [books, setBooks] = useState([]);
 
   useEffect(() => {
     (async () => {
-      const [pf, st] = await Promise.all([getSchoolProfile(), getStudents()]);
+      const [pf, st, bk] = await Promise.all([getSchoolProfile(), getStudents(), getLibraryBooks()]);
       setProfile(pf);
       setStudents(st);
+      setBooks(bk || []);
     })();
   }, [currentPeriodId]);
 
@@ -36,7 +38,8 @@ export default function Reports({ currentPeriodId }) {
           {[
             { id: 'by-class', label: 'By Class & Stream' },
             { id: 'by-subject', label: 'By Subject' },
-            { id: 'student-history', label: 'By Student' }
+            { id: 'student-history', label: 'By Student' },
+            { id: 'by-book', label: 'By Book' }
           ].map(tab => (
             <button
               key={tab.id}
@@ -58,6 +61,7 @@ export default function Reports({ currentPeriodId }) {
         {activeTab === 'by-class' && <ByClassReport profile={profile} students={students} />}
         {activeTab === 'by-subject' && <BySubjectReport profile={profile} students={students} />}
         {activeTab === 'student-history' && <StudentHistoryReport students={students} />}
+        {activeTab === 'by-book' && <ByBookReport books={books} students={students} />}
       </div>
     </div>
   );
@@ -387,6 +391,109 @@ function StudentHistoryReport({ students }) {
           <UserIcon size={48} style={{ margin: '0 auto 16px auto', opacity: 0.5 }} />
           <p style={{ fontSize: '1.125rem', fontWeight: 500 }}>Search for a student above</p>
           <p style={{ fontSize: '0.875rem', marginTop: '4px' }}>Their full library history will appear here.</p>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ============================================================================
+// BY BOOK REPORT
+// ============================================================================
+function ByBookReport({ books, students }) {
+  const [searchInput, setSearchInput] = useState('');
+  const [selectedBook, setSelectedBook] = useState(null);
+  const [history, setHistory] = useState([]);
+  const [loading, setLoading] = useState(false);
+
+  const matchingBooks = useMemo(() => {
+    if (searchInput.length < 2) return [];
+    const term = searchInput.toLowerCase();
+    return books.filter(b => b.title.toLowerCase().includes(term) || (b.author && b.author.toLowerCase().includes(term)) || (b.isbn && b.isbn.includes(term))).slice(0, 5);
+  }, [searchInput, books]);
+
+  const selectBook = async (b) => {
+    setSelectedBook(b);
+    setSearchInput(b.title);
+    setLoading(true);
+    try {
+      const data = await getBookBorrowHistory(b.id);
+      setHistory(data || []);
+    } catch (e) { console.error('Book history error:', e); } 
+    finally { setLoading(false); }
+  };
+
+  const handlePrint = () => {
+    if (!selectedBook || history.length === 0) return;
+    const title = `Book Circulation History - ${selectedBook.title}`;
+    let html = `<table><thead><tr><th>Student Name</th><th>Class & Stream</th><th>Copy Code</th><th>Borrowed</th><th>Returned</th><th>Status</th></tr></thead><tbody>`;
+    history.forEach(r => {
+      html += `<tr><td>${r.students?.name}</td><td>${r.students?.class} ${r.students?.stream || ''}</td><td>${r.book_copies?.copy_code}</td><td>${r.borrow_date}</td><td>${r.return_date || '--'}</td><td style="text-transform: uppercase;">${r.status}</td></tr>`;
+    });
+    html += `</tbody></table>`;
+    printTable(title, html);
+  };
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+      <div style={{ position: 'relative', maxWidth: '400px' }}>
+        <div className="search-bar" style={{ maxWidth: '100%' }}>
+          <span className="search-icon"><BookIcon size={18} /></span>
+          <input type="text" placeholder="Search book by title, author, or ISBN..." value={searchInput} onChange={e => { setSearchInput(e.target.value); setSelectedBook(null); setHistory([]); }} />
+        </div>
+        {matchingBooks.length > 0 && !selectedBook && (
+          <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, marginTop: '8px', background: '#fff', borderRadius: '12px', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)', border: '1px solid var(--border)', zIndex: 100, overflow: 'hidden' }}>
+            {matchingBooks.map(b => (
+              <button key={b.id} style={{ width: '100%', textAlign: 'left', padding: '12px 16px', background: 'transparent', border: 'none', borderBottom: '1px solid #f1f5f9', cursor: 'pointer' }} onClick={() => selectBook(b)}>
+                <div style={{ fontWeight: 600, color: 'var(--text)' }}>{b.title}</div>
+                <div style={{ fontSize: '0.75rem', color: 'var(--text-light)' }}>By: {b.author || 'Unknown'} | {b.category}</div>
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {selectedBook && (
+        <div>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
+            <div style={{ background: '#f8fafc', border: '1px solid var(--border)', borderRadius: '12px', padding: '16px', flex: 1, marginRight: '16px' }}>
+              <div style={{ fontWeight: 700, color: 'var(--text)', fontSize: '1.125rem' }}>{selectedBook.title}</div>
+              <div style={{ fontSize: '0.875rem', color: 'var(--text-light)' }}>By: {selectedBook.author || 'Unknown'} | ISBN: {selectedBook.isbn || '--'} | Total Records: {history.length}</div>
+            </div>
+            <button className="btn btn-primary" style={{ display: 'inline-flex', alignItems: 'center', gap: '8px' }} onClick={handlePrint} disabled={history.length === 0}>
+              <PrintIcon size={14} /> Print Report
+            </button>
+          </div>
+
+          {loading ? <Loader /> : (
+            <div style={{ overflowX: 'auto' }}>
+              <table className="data-table">
+                <thead>
+                  <tr><th>Student Name</th><th>Class & Stream</th><th>Copy Code</th><th>Borrowed</th><th>Returned</th><th>Status</th></tr>
+                </thead>
+                <tbody>
+                  {history.map(r => (
+                    <tr key={r.id}>
+                      <td style={{ fontWeight: 600 }}>{r.students?.name}</td>
+                      <td>{r.students?.class} {r.students?.stream || ''}</td>
+                      <td><code style={{ fontSize: '0.75rem', background: '#f1f5f9', padding: '2px 4px', borderRadius: '4px' }}>{r.book_copies?.copy_code}</code></td>
+                      <td>{r.borrow_date}</td><td>{r.return_date || '--'}</td>
+                      <td><span className={`badge badge-${r.status === 'returned' ? 'success' : r.status === 'borrowed' ? 'primary' : r.status === 'overdue' ? 'warning' : r.status === 'lost' ? 'danger' : 'ghost'}`} style={{ textTransform: 'uppercase' }}>{r.status}</span></td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+              {history.length === 0 && <div style={{ textAlign: 'center', padding: '40px 0', color: 'var(--text-light)' }}>No circulation history for this book.</div>}
+            </div>
+          )}
+        </div>
+      )}
+
+      {!selectedBook && (
+        <div style={{ textAlign: 'center', padding: '64px 0', color: 'var(--text-light)' }}>
+          <BookIcon size={48} style={{ margin: '0 auto 16px auto', opacity: 0.5 }} />
+          <p style={{ fontSize: '1.125rem', fontWeight: 500 }}>Search for a book above</p>
+          <p style={{ fontSize: '0.875rem', marginTop: '4px' }}>Its full circulation history will appear here.</p>
         </div>
       )}
     </div>

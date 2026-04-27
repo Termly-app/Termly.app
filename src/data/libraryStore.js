@@ -191,6 +191,16 @@ export async function getStudentBorrowHistory(studentId) {
     return data || [];
 }
 
+export async function getBookBorrowHistory(bookId) {
+    const { data, error } = await supabase.from('borrow_records')
+        .select('*, students(name, class, stream, adm_no), book_copies!inner(copy_code, book_id, books(title))')
+        .eq('book_copies.book_id', bookId)
+        .eq('school_id', getSchoolId())
+        .order('created_at', { ascending: false });
+    if (error) throw error;
+    return data || [];
+}
+
 // --- OVERDUE ---
 
 export async function getOverdueBooks(filters = {}) {
