@@ -121,22 +121,47 @@ export async function hasFeature(schoolId, featureKey) {
   }
 
   try {
-    const { data, error } = await supabase
-      .from('school_features')
-      .select('is_enabled, expires_at')
-      .eq('school_id', schoolId)
-      .eq('feature_key', featureKey)
-      .maybeSingle();
+    let finalStatus = false;
+
+    // PORTAL/UNAUTH MODE: Use RPC to bypass RLS
+    if (!_currentAuthUser) {
+      const { data: rpcData, error: rpcError } = await supabase.rpc('portal_has_feature', { 
+        p_school_id: schoolId, 
+        p_feature_key: featureKey 
+      });
+      if (!rpcError && rpcData !== null) {
+        finalStatus = rpcData;
+      } else {
+        // Fallback to direct query if RPC fails or is missing
+        const { data, error } = await supabase
+          .from('school_features')
+          .select('is_enabled, expires_at')
+          .eq('school_id', schoolId)
+          .eq('feature_key', featureKey)
+          .maybeSingle();
+        
+        const isEnabled = data?.is_enabled || false;
+        const isExpired = data?.expires_at && new Date(data.expires_at) < now;
+        finalStatus = isEnabled && !isExpired;
+      }
+    } else {
+      // ADMIN MODE: Direct table query (has auth session)
+      const { data, error } = await supabase
+        .from('school_features')
+        .select('is_enabled, expires_at')
+        .eq('school_id', schoolId)
+        .eq('feature_key', featureKey)
+        .maybeSingle();
+        
+      if (error && error.code !== 'PGRST116') {
+        console.error(`Error checking feature ${featureKey}:`, error);
+        return false; 
+      }
       
-    if (error && error.code !== 'PGRST116') {
-      console.error(`Error checking feature ${featureKey}:`, error);
-      return false; // Fail safe
+      const isEnabled = data?.is_enabled || false;
+      const isExpired = data?.expires_at && new Date(data.expires_at) < now;
+      finalStatus = isEnabled && !isExpired;
     }
-    
-    // Feature is enabled if is_enabled is true AND (no expiry OR expiry is in future)
-    const isEnabled = data?.is_enabled || false;
-    const isExpired = data?.expires_at && new Date(data.expires_at) < now;
-    const finalStatus = isEnabled && !isExpired;
 
     _featureCache.set(cacheKey, { value: finalStatus, timestamp: now });
     return finalStatus;
