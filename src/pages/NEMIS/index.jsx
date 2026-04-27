@@ -207,13 +207,14 @@ export default function NEMISDashboard({ currentUser }) {
             </div>
           </div>
           
-          <table className="data-table">
+          <table className="premium-table">
             <thead>
               <tr>
                 <th className="no-print" style={{ width: 30 }}>#</th>
-                <th>Student</th>
+                <th>Student Name</th>
+                <th className="no-print">Adm No</th>
                 <th>Class</th>
-                <th>Missing Details</th>
+                <th>Compliance Gaps</th>
                 <th style={{ textAlign: 'right' }} className="no-print">Action</th>
               </tr>
             </thead>
