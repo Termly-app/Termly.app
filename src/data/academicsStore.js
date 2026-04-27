@@ -498,7 +498,7 @@ export async function getTeacherAssignments(periodId = _currentPeriodId) {
   if (!_currentSchoolId) return [];
   const { data, error } = await supabase
     .from('teacher_assignments')
-    .select('*, teacher:users(name), stream:class_streams(name, level)')
+    .select('*, teacher:teachers(name), stream:class_streams(name, level)')
     .eq('school_id', _currentSchoolId)
     .eq('period_id', periodId)
     .eq('is_active', true); // Only active assignments
@@ -678,7 +678,7 @@ export async function previewClassPromotion(fromYear, toYear) {
   // 3. Get teacher assignments for those streams
   const { data: assignments, error: assignErr } = await supabase
     .from('teacher_assignments')
-    .select('*, users(name)')
+    .select('*, teachers(name)')
     .eq('school_id', _currentSchoolId)
     .eq('academic_year', fromYear)
     .eq('is_active', true);
