@@ -301,9 +301,8 @@ export default function Students({ currentUser, currentPeriodId }) {
           <table className="data-table responsive-table">
             <thead>
               <tr>
-                <th>Adm No</th><th>Full Name</th><th>Class</th><th>Level</th>
+                <th>Adm No</th><th>Full Name</th><th>Class</th>
                 <th>Enrolment</th>
-                <th title="NEMIS Readiness Status">NEMIS</th>
                 <th>Stream</th>
                 <th>Category</th><th>Parent</th><th>Phone</th>
                 { (isAdmin || isFinance) && <th>Fee Balance</th> }
@@ -329,7 +328,6 @@ export default function Students({ currentUser, currentPeriodId }) {
                     <td data-label="Adm No"><code style={{fontSize:'0.78rem',color:'var(--text-light)'}}>{s.admNo}</code></td>
                     <td data-label="Full Name">
                       <div style={{display:'flex',alignItems:'center',gap:10,justifyContent:'inherit'}}>
-                        <div style={{width:32,height:32,borderRadius:'50%',background:avBg(s.name),color:'#fff',display:'flex',alignItems:'center',justifyContent:'center',fontSize:'0.72rem',fontWeight:700,flexShrink:0}}>{initials(s.name)}</div>
                         <div style={{textAlign:'left'}}>
                           <div style={{fontWeight:600,color:'var(--primary)',cursor:'pointer'}} onClick={()=>setSelectedStudent(s)}>{s.name}</div>
                           <div style={{fontSize:'0.7rem',color:'var(--text-muted)'}}>{s.gender}</div>
@@ -337,8 +335,7 @@ export default function Students({ currentUser, currentPeriodId }) {
                       </div>
                     </td>
                     <td data-label="Class"><span className="badge badge-info">{s.class}</span></td>
-                    <td data-label="Level"><span className={`level-badge ${lb.cls}`}>{lb.ico} {getLevelForGrade(s.class)}</span></td>
-                    <td data-label="Enrolment" style={{position:'relative'}}>
+,StartLine:340,TargetContent:                    <td data-label="Enrolment" style={{position:'relative'}}>
                       <span 
                         onClick={isAdmin ? (e) => { 
                           e.stopPropagation(); 
@@ -389,18 +386,7 @@ export default function Students({ currentUser, currentPeriodId }) {
                         </>
                       )}
                     </td>
-                    <td data-label="NEMIS">
-                      { (s.upi || s.nemis_number) && s.dob && s.gender && (s.parent_phone || s.parentPhone) ? (
-                        <span className="badge badge-success" style={{ display: 'inline-flex', alignItems: 'center', gap: 4, padding: '2px 8px', fontSize: '0.65rem' }}>
-                          <FlagIcon size={10} /> Ready
-                        </span>
-                      ) : (
-                        <span className="badge badge-warning" style={{ display: 'inline-flex', alignItems: 'center', gap: 4, padding: '2px 8px', fontSize: '0.65rem', background: '#fff7ed', color: '#c2410c', border: '1px solid #ffedd5' }}>
-                          Pending
-                        </span>
-                      )}
-                    </td>
-                    <td data-label="Stream">
+,StartLine:392,TargetContent:                    <td data-label="Stream">
                       {(() => {
                         const isUnconfigured = s.stream && !(profile.streamsPerClass?.[s.class] || []).includes(s.stream);
                         return (
