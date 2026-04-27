@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { getLibraryBooks, createBook, updateBook, bulkGenerateCopies, getBookCopies } from '../../data/libraryStore';
+import { getLibraryBooks, createBook, updateBook, bulkGenerateCopies, getBookCopies, createManualCopies } from '../../data/libraryStore';
 import { getSchoolProfile } from '../../data/store';
 import { CBC_STRUCTURE, getSubjectsForGrade } from '../../data/seedData';
 import Select from '../../components/Common/Select';
@@ -30,6 +30,7 @@ export default function BooksManagement({ currentUser, currentPeriodId }) {
   const [bookModal, setBookModal] = useState({ open: false, data: null });
   const [copiesModal, setCopiesModal] = useState({ open: false, book: null, copies: [] });
   const [bulkModal, setBulkModal] = useState({ open: false, book: null });
+  const [barcodeMethod, setBarcodeMethod] = useState('auto'); // auto or manual
 
   const LIB_CATEGORIES = ['textbook', 'setbook', 'revision', 'storybook', 'reference'];
 
@@ -95,10 +96,27 @@ export default function BooksManagement({ currentUser, currentPeriodId }) {
         await updateBook(bookModal.data.id, payload);
         toast('Book updated successfully', 'success');
       } else {
-        await createBook(payload);
+        const newBook = await createBook(payload);
+        
+        // Process Initial Copies
+        const initialCopies = parseInt(fd.get('initialCopies')) || 0;
+        const method = fd.get('barcodeMethod') || 'auto';
+        
+        if (method === 'auto' && initialCopies > 0) {
+          const prefix = fd.get('prefix') || 'BK';
+          await bulkGenerateCopies(newBook.id, prefix, initialCopies);
+        } else if (method === 'manual') {
+          const codesStr = fd.get('manualBarcodes') || '';
+          const codes = codesStr.split(',').map(s => s.trim()).filter(Boolean);
+          if (codes.length > 0) {
+            await createManualCopies(newBook.id, codes);
+          }
+        }
+        
         toast('Book created successfully', 'success');
       }
       setBookModal({ open: false, data: null });
+      setBarcodeMethod('auto');
       loadData();
     } catch (err) {
       alert({ title: 'Error', message: err.message, variant: 'danger' });
@@ -108,10 +126,29 @@ export default function BooksManagement({ currentUser, currentPeriodId }) {
   const handleBulkGenerate = async (e) => {
     e.preventDefault();
     const fd = new FormData(e.target);
+    const method = fd.get('barcodeMethod') || 'auto';
+    
     try {
-      await bulkGenerateCopies(bulkModal.book.id, fd.get('prefix'), parseInt(fd.get('count')));
-      toast('Copies generated successfully!', 'success');
+      if (method === 'auto') {
+        const count = parseInt(fd.get('count'));
+        await bulkGenerateCopies(bulkModal.book.id, fd.get('prefix'), count);
+      } else {
+        const codesStr = fd.get('manualBarcodes') || '';
+        const codes = codesStr.split(',').map(s => s.trim()).filter(Boolean);
+        if (codes.length > 0) {
+          await createManualCopies(bulkModal.book.id, codes);
+        }
+      }
+      toast('Copies added successfully!', 'success');
       setBulkModal({ open: false, book: null });
+      setBarcodeMethod('auto');
+      
+      // If copiesModal is open for this book, refresh it
+      if (copiesModal.open && copiesModal.book?.id === bulkModal.book.id) {
+        const c = await getBookCopies(bulkModal.book.id);
+        setCopiesModal(prev => ({ ...prev, copies: c }));
+      }
+      
       loadData();
     } catch (err) {
       alert({ title: 'Error generating copies', message: err.message, variant: 'danger' });
@@ -189,53 +226,56 @@ export default function BooksManagement({ currentUser, currentPeriodId }) {
         />
       </div>
 
-      <div className="overflow-x-auto">
-        <table className="w-full text-left text-sm">
-          <thead className="bg-white border-b border-gray-200 text-gray-500 font-bold uppercase text-xs tracking-wider">
+      <div className="table-wrapper">
+        <table className="premium-table">
+          <thead>
             <tr>
-              <th className="p-4">Title / Author</th>
-              <th className="p-4">Category</th>
-              <th className="p-4">Level & Subject</th>
-              <th className="p-4">Inventory (<span className="text-green-600">Avail</span>/Total)</th>
-              <th className="p-4 text-right">Actions</th>
+              <th>Title / Author</th>
+              <th>Category</th>
+              <th>Level & Subject</th>
+              <th>Inventory (<span style={{ color: 'var(--success)' }}>Avail</span>/Total)</th>
+              <th style={{ textAlign: 'right' }}>Actions</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-gray-100">
+          <tbody>
             {filteredBooks.map(b => (
-              <tr key={b.id} className="hover:bg-gray-50/50 transition-colors">
-                <td className="p-4">
-                  <div className="font-bold text-gray-800 text-base">{b.title}</div>
-                  <div className="text-gray-500 text-xs mt-1">by {b.author || 'Unknown'} {b.isbn ? `• ISBN: ${b.isbn}` : ''}</div>
+              <tr key={b.id}>
+                <td>
+                  <div style={{ fontWeight: 600, color: 'var(--text-main)', fontSize: '0.9rem' }}>{b.title}</div>
+                  <div style={{ fontSize: '0.75rem', color: 'var(--text-light)', marginTop: 4 }}>
+                    by {b.author || 'Unknown'} {b.isbn ? `• ISBN: ${b.isbn}` : ''}
+                  </div>
                 </td>
-                <td className="p-4 capitalize">
-                  <span className={`px-2.5 py-1 rounded-md text-xs font-bold ${b.category === 'setbook' ? 'bg-purple-100 text-purple-700' :
-                      b.category === 'revision' ? 'bg-amber-100 text-amber-700' :
-                        'bg-blue-100 text-blue-700'
-                    }`}>
+                <td style={{ textTransform: 'capitalize' }}>
+                  <span className={`badge ${
+                    b.category === 'setbook' ? 'badge-danger' : 
+                    b.category === 'revision' ? 'badge-warning' : 
+                    'badge-ghost'
+                  }`}>
                     {b.category}
                   </span>
                 </td>
-                <td className="p-4">
-                  <div className="font-semibold">{b.level || '--'}</div>
-                  <div className="text-xs text-gray-500 mt-1">{b.subject || '--'}</div>
+                <td>
+                  <div style={{ fontWeight: 600, fontSize: '0.85rem' }}>{b.level || '--'}</div>
+                  <div style={{ fontSize: '0.75rem', color: 'var(--text-light)', marginTop: 2 }}>{b.subject || '--'}</div>
                 </td>
-                <td className="p-4">
-                  <div className="flex items-center gap-2">
-                    <span className="font-bold text-lg" style={{ color: b.available_copies > 0 ? 'var(--success)' : 'var(--danger)' }}>
+                <td>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <span style={{ fontWeight: 700, fontSize: '1rem', color: b.available_copies > 0 ? 'var(--success)' : 'var(--danger)' }}>
                       {b.available_copies}
                     </span>
-                    <span className="text-gray-400 font-medium">/</span>
-                    <span className="text-gray-600 font-bold">{b.total_copies}</span>
+                    <span style={{ color: 'var(--text-light)' }}>/</span>
+                    <span style={{ fontWeight: 600, color: 'var(--text-secondary)' }}>{b.total_copies}</span>
                   </div>
                 </td>
-                <td className="p-4 text-right">
+                <td style={{ textAlign: 'right' }}>
                   <div style={{ display: 'flex', gap: 6, justifyContent: 'flex-end' }}>
-                    <button className="btn btn-ghost btn-sm" title="View/Edit Book" onClick={() => setBookModal({ open: true, data: b })}>
-                      {canManage ? <EditIcon size={14} /> : <BookIcon size={14} />}
+                    <button className="btn btn-ghost btn-sm" title="Edit Metadata" onClick={() => setBookModal({ open: true, data: b })}>
+                      <EditIcon size={14} /> <span className="hidden sm:inline">Edit</span>
                     </button>
                     {canManage && (
-                      <button className="btn btn-ghost btn-sm" title="Manage Copies" onClick={() => viewCopies(b)}>
-                        <MenuIcon size={14} />
+                      <button className="btn btn-ghost btn-sm" title="Manage Inventory" onClick={() => viewCopies(b)}>
+                        <BookIcon size={14} /> <span className="hidden sm:inline">Copies</span>
                       </button>
                     )}
                   </div>
@@ -306,6 +346,41 @@ export default function BooksManagement({ currentUser, currentPeriodId }) {
                   <label>Publisher & Edition</label>
                   <input className="form-input" name="publisher" defaultValue={bookModal.data?.publisher} placeholder="e.g. Oxford, 3rd Ed." />
                 </div>
+                
+                {!bookModal.data && (
+                  <div className="col-span-2 border-t border-gray-200 mt-2 pt-6">
+                    <h4 className="text-sm font-bold text-gray-800 mb-4 uppercase tracking-wider">Initial Inventory</h4>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="form-group col-span-2">
+                        <label>Barcode Generation Method</label>
+                        <Select 
+                          name="barcodeMethod" 
+                          value={barcodeMethod} 
+                          onChange={(e) => setBarcodeMethod(e.target.value)}
+                          options={[{ id: 'auto', label: 'Auto-Generate Barcodes' }, { id: 'manual', label: 'Manual Barcode Entry (Existing System)' }]}
+                        />
+                      </div>
+                      {barcodeMethod === 'auto' ? (
+                        <>
+                          <div className="form-group">
+                            <label>Initial Copies</label>
+                            <input className="form-input" type="number" name="initialCopies" min="0" defaultValue="0" />
+                          </div>
+                          <div className="form-group">
+                            <label>Barcode Prefix</label>
+                            <input className="form-input font-mono uppercase" name="prefix" defaultValue="BK" />
+                          </div>
+                        </>
+                      ) : (
+                        <div className="form-group col-span-2">
+                          <label>Paste/Scan Existing Barcodes (Comma Separated)</label>
+                          <textarea className="form-input font-mono text-sm" name="manualBarcodes" rows={3} placeholder="e.g. 987213, LIB-002, 987214" />
+                          <p className="text-xs text-gray-500 mt-1">We will create a physical copy record for each barcode provided.</p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
               </div>
               <div className="modal-footer">
                 <button type="button" className="btn btn-ghost" onClick={() => setBookModal({ open: false })}>Cancel</button>
@@ -332,22 +407,40 @@ export default function BooksManagement({ currentUser, currentPeriodId }) {
                 </div>
 
                 <div className="form-group">
-                  <label>Number of new copies to generate</label>
-                  <input className="form-input" type="number" name="count" min="1" max="500" required defaultValue="10" />
-                  <p className="text-xs text-gray-400 mt-1">We will generate unique barcodes/codes for each.</p>
+                  <label>Barcode Generation Method</label>
+                  <Select 
+                    name="barcodeMethod" 
+                    value={barcodeMethod} 
+                    onChange={(e) => setBarcodeMethod(e.target.value)}
+                    options={[{ id: 'auto', label: 'Auto-Generate Barcodes' }, { id: 'manual', label: 'Manual Barcode Entry' }]}
+                  />
                 </div>
 
-                <div className="form-group">
-                  <label>Code Prefix</label>
-                  <input className="form-input font-mono uppercase" name="prefix" required
-                    defaultValue={
-                      bulkModal.book?.subject ?
-                        bulkModal.book.subject.substring(0, 3).toUpperCase() + '-' + (bulkModal.book.level?.charAt(0) || 'B')
-                        : 'BK'
-                    }
-                  />
-                  <p className="text-xs text-gray-400 mt-1">E.g. MAT-F1 &rarr; MAT-F1-001</p>
-                </div>
+                {barcodeMethod === 'auto' ? (
+                  <>
+                    <div className="form-group">
+                      <label>Number of new copies to generate</label>
+                      <input className="form-input" type="number" name="count" min="1" max="500" required defaultValue="10" />
+                    </div>
+
+                    <div className="form-group">
+                      <label>Code Prefix</label>
+                      <input className="form-input font-mono uppercase" name="prefix" required
+                        defaultValue={
+                          bulkModal.book?.subject ?
+                            bulkModal.book.subject.substring(0, 3).toUpperCase() + '-' + (bulkModal.book.level?.charAt(0) || 'B')
+                            : 'BK'
+                        }
+                      />
+                    </div>
+                  </>
+                ) : (
+                  <div className="form-group">
+                    <label>Paste/Scan Existing Barcodes (Comma Separated)</label>
+                    <textarea className="form-input font-mono text-sm" name="manualBarcodes" rows={4} required placeholder="e.g. 987213, LIB-002, 987214" />
+                    <p className="text-xs text-gray-500 mt-1">We will create a physical copy record for each barcode provided.</p>
+                  </div>
+                )}
               </div>
               <div className="modal-footer">
                 <button type="button" className="btn btn-ghost" onClick={() => setBulkModal({ open: false })}>Cancel</button>
@@ -367,7 +460,12 @@ export default function BooksManagement({ currentUser, currentPeriodId }) {
                 <h3>Inventory Detail</h3>
                 <div className="text-sm font-normal text-gray-500">{copiesModal.book?.title}</div>
               </div>
-              <button className="modal-close" onClick={() => setCopiesModal({ open: false, book: null, copies: [] })}>×</button>
+              <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
+                <button className="btn btn-primary btn-sm" onClick={() => setBulkModal({ open: true, book: copiesModal.book })}>
+                  <PlusIcon size={14} /> Add Copies
+                </button>
+                <button className="modal-close" onClick={() => setCopiesModal({ open: false, book: null, copies: [] })}>×</button>
+              </div>
             </div>
             <div className="flex-1 overflow-auto p-0 bg-gray-50">
               {copiesModal.loading ? <Loader /> : (

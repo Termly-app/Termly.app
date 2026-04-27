@@ -99,6 +99,21 @@ export async function bulkGenerateCopies(bookId, prefix, count) {
     return data;
 }
 
+export async function createManualCopies(bookId, barcodes) {
+    const schoolId = getSchoolId();
+    const records = barcodes.map(code => ({
+        book_id: bookId,
+        school_id: schoolId,
+        copy_code: code,
+        status: 'available',
+        condition: 'new'
+    }));
+
+    const { data, error } = await supabase.from('book_copies').insert(records).select();
+    if (error) throw error;
+    return data;
+}
+
 export async function getBookCopies(bookId) {
     const { data, error } = await supabase.from('book_copies')
         .select('*')
