@@ -34,7 +34,7 @@ CREATE TABLE IF NOT EXISTS public.class_streams (
 CREATE TABLE IF NOT EXISTS public.teacher_assignments (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   school_id UUID NOT NULL REFERENCES public.schools(id) ON DELETE CASCADE,
-  teacher_id UUID NOT NULL REFERENCES public.users(id) ON DELETE CASCADE,
+  teacher_id UUID NOT NULL REFERENCES public.teachers(id) ON DELETE CASCADE,
   stream_id UUID NOT NULL REFERENCES public.class_streams(id) ON DELETE CASCADE,
   subject TEXT NOT NULL,
   period_id UUID REFERENCES public.academic_periods(id) ON DELETE SET NULL,
