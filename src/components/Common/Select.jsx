@@ -16,8 +16,10 @@ export default function Select({
   style = {},
   variant = "premium",
   name,
-  searchable = false
+  searchable = false,
+  defaultValue
 }) {
+  const [internalValue, setInternalValue] = useState(defaultValue);
   const [isOpen, setIsOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const searchInputRef = useRef(null);
@@ -25,8 +27,11 @@ export default function Select({
   const containerRef = useRef(null);
   const menuRef = useRef(null);
 
+  // Determine actual value (controlled vs uncontrolled)
+  const actualValue = value !== undefined ? value : internalValue;
+
   // Find currently selected label
-  const selectedOption = options.find(opt => opt.value === value) || options.find(opt => opt.id === value);
+  const selectedOption = options.find(opt => opt.value === actualValue) || options.find(opt => opt.id === actualValue);
   const displayLabel = selectedOption ? (selectedOption.label || selectedOption.name || selectedOption.year + ' — ' + selectedOption.term) : placeholder;
 
   // Positioning Logic
@@ -92,7 +97,11 @@ export default function Select({
   }, [isOpen]);
 
   const handleSelect = (option) => {
-    onChange({ target: { name, value: option.value || option.id } });
+    const newVal = option.value !== undefined ? option.value : option.id;
+    if (onChange) {
+      onChange({ target: { name, value: newVal } });
+    }
+    setInternalValue(newVal);
     setIsOpen(false);
   };
 
@@ -192,7 +201,8 @@ export default function Select({
         }
 
         return filteredOptions.map((opt, idx) => {
-          const isSelected = (opt.value === value || opt.id === value);
+          const optVal = opt.value !== undefined ? opt.value : opt.id;
+          const isSelected = actualValue !== undefined && actualValue !== null && optVal === actualValue;
           return (
             <div
               key={opt.value || opt.id || idx}
@@ -240,7 +250,7 @@ export default function Select({
       ref={containerRef}
       style={{ position: 'relative', width: 'auto', display: 'inline-block', ...style }}
     >
-      {name && <input type="hidden" name={name} value={value} />}
+      {name && <input type="hidden" name={name} value={actualValue || ''} />}
       
       {/* Trigger Button */}
       <div 
