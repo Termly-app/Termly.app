@@ -541,13 +541,11 @@ export default function Fees({ currentUser, currentPeriodId }) {
           <div className="kpi-icon green"><CardIcon size={20} /></div>
           <div className="kpi-value">{formatKSh(summary.totalCollected)}</div>
           <div className="kpi-label">Total Collected</div>
-          <div className="kpi-trend success">↑ 12% vs last term</div>
         </div>
         <div className="kpi-card red">
           <div className="kpi-icon red"><AlertIcon size={20} /></div>
           <div className="kpi-value">{formatKSh(summary.totalOutstanding)}</div>
           <div className="kpi-label">Outstanding Balance</div>
-          <div className="kpi-trend danger">Action Required</div>
         </div>
         <div className="kpi-card blue">
           <div className="kpi-icon blue"><DashboardIcon size={20} /></div>
@@ -558,7 +556,6 @@ export default function Fees({ currentUser, currentPeriodId }) {
           <div className="kpi-icon purple"><CheckIcon size={20} /></div>
           <div className="kpi-value">{summary.fullyPaid||0}</div>
           <div className="kpi-label">Fully Paid Students</div>
-          <div className="kpi-trend info">{Math.round(((summary.fullyPaid||0)/students.length)*100)}% coverage</div>
         </div>
       </div>
       
