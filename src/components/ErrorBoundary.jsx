@@ -19,7 +19,19 @@ export class ErrorBoundary extends React.Component {
   componentDidCatch(error, errorInfo) {
     // Analytics/Monitoring hook (Sentry / PostHog stub)
     console.error('[ErrorBoundary] Caught a UI crash:', error, errorInfo);
-    // TODO: Sentry.captureException(error);
+    
+    // Domain 9: Auto-recovery for dynamic import failures (Deployment Chunk Mismatch)
+    const errorMsg = error?.message || '';
+    const isChunkError = errorMsg.includes('Failed to fetch dynamically imported module') || 
+                        errorMsg.includes('Loading chunk');
+
+    if (isChunkError) {
+      console.warn('[ErrorBoundary] Chunk load failure detected. Forcing page refresh to sync assets...');
+      // Small delay to prevent infinite reload loops if server is truly down
+      setTimeout(() => {
+        window.location.reload();
+      }, 1000);
+    }
   }
 
   render() {
