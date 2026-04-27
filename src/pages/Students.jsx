@@ -7,7 +7,7 @@ import { CBC_STRUCTURE, CBC_CORE_COMPETENCIES, getLevelForGrade } from '../data/
 import {
   LeafIcon, BookIcon, GraduationIcon, RocketIcon, CalendarIcon,
   PrintIcon, RefreshIcon, SearchIcon, StudentIcon, EditIcon, 
-  DeleteIcon, PlusIcon, FlagIcon, UploadIcon
+  DeleteIcon, PlusIcon, FlagIcon, UploadIcon, AlertIcon
 } from '../components/CommonIcons';
 import { useDialog } from '../contexts/DialogContext';
 import Select from '../components/Common/Select';
