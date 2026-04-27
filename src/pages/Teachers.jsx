@@ -232,7 +232,7 @@ export default function Teachers({ currentUser, currentPeriodId }) {
       )}
 
       {activeTab === 'reports' && (
-        <ReportsTab profile={profile} />
+        <ReportsTab profile={profile} teachers={teachers} assignments={assignments} />
       )}
 
       {showModal && (
@@ -489,16 +489,16 @@ function AssignmentsTab({ assignments, teachers, onAssign, profile, streams, con
 }
 
 // ========== REPORTS TAB ==========
-function ReportsTab({ profile }) {
+function ReportsTab({ profile, teachers, assignments }) {
   const [selectedTeacher, setSelectedTeacher] = useState('all');
-  const [data, setData] = useState({ workload: [], performance: {}, teachers: [] });
+  const [data, setData] = useState({ workload: [], performance: {} });
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchReports = async () => {
       try {
-        const [wData, pData, tData] = await Promise.all([getTeacherWorkload(), getTeacherPerformance(), getTeachers()]);
-        setData({ workload: wData, performance: pData, teachers: tData });
+        const [wData, pData] = await Promise.all([getTeacherWorkload(), getTeacherPerformance()]);
+        setData({ workload: wData, performance: pData });
       } catch (err) {
         console.error(err);
       } finally {
@@ -513,8 +513,6 @@ function ReportsTab({ profile }) {
       const title = type === 'all' ? 'All Staff List' : 'Staff per Class Assignment';
       const header = await getPrintHeader(title);
       const printWin = window.open('', '_blank');
-      const teachers = data.teachers;
-      const assignments = await getTeacherAssignments();
 
       printWin.document.write(`<html><head><title>${title}</title>
         <style>
@@ -553,7 +551,8 @@ function ReportsTab({ profile }) {
       } else if (type === 'by-class') {
         title = 'Staff per Class Assignment';
         const classMap = {};
-        assignments.filter(a => a.is_active && a.stream && profile.activeClasses?.includes(a.stream.level)).forEach(a => {
+        const activeLevels = profile?.activeClasses || [];
+        assignments.filter(a => a.is_active && a.stream && (activeLevels.length === 0 || activeLevels.includes(a.stream.level))).forEach(a => {
           const cls = `${a.stream.level} (${a.stream.name})`;
           if (!classMap[cls]) classMap[cls] = new Set();
           const t = teachers.find(teach => teach.id === a.teacher_id);
@@ -588,10 +587,10 @@ function ReportsTab({ profile }) {
   };
 
   if (loading) {
-    return <div className="text-center p-4 text-muted">Loading reports...</div>;
+    return <div className="text-center p-4 text-muted">Loading performance data...</div>;
   }
 
-  const { workload, performance, teachers } = data;
+  const { workload, performance } = data;
   const activeTeachers = teachers.filter(t => t.status === 'Active');
 
   // Build per-teacher performance rows
