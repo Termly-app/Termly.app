@@ -294,11 +294,11 @@ export default function Students({ currentUser, currentPeriodId }) {
             </div>
           </div>
         </div>
-        <div style={{opacity:loading && students.length > 0 ? 0.6 : 1}}>
+        <div style={{opacity:loading && students.length > 0 ? 0.6 : 1, overflowX: 'auto', width: '100%', WebkitOverflowScrolling: 'touch'}}>
           {loading && students.length === 0 ? (
             <SkeletonTable rows={10} columns={7} />
           ) : (
-          <table className="data-table responsive-table">
+          <table className="data-table responsive-table" style={{ minWidth: 1000 }}>
             <thead>
               <tr>
                 <th>Adm No</th><th>Full Name</th><th>Class</th>
@@ -335,7 +335,7 @@ export default function Students({ currentUser, currentPeriodId }) {
                       </div>
                     </td>
                     <td data-label="Class"><span className="badge badge-info">{s.class}</span></td>
-,StartLine:340,TargetContent:                    <td data-label="Enrolment" style={{position:'relative'}}>
+                    <td data-label="Enrolment" style={{position:'relative'}}>
                       <span 
                         onClick={isAdmin ? (e) => { 
                           e.stopPropagation(); 
@@ -386,7 +386,7 @@ export default function Students({ currentUser, currentPeriodId }) {
                         </>
                       )}
                     </td>
-,StartLine:392,TargetContent:                    <td data-label="Stream">
+                    <td data-label="Stream">
                       {(() => {
                         const isUnconfigured = s.stream && !(profile.streamsPerClass?.[s.class] || []).includes(s.stream);
                         return (
