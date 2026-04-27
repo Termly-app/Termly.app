@@ -521,7 +521,7 @@ export async function getSchoolProfileBySchoolId(schoolId) {
       .from('school_profiles')
       .select('*')
       .eq('school_id', schoolId)
-      .single();
+      .maybeSingle();
     
     if (error || !data) {
       const { data: school } = await supabase.from('schools').select('name, school_code, plan').eq('id', schoolId).single();
@@ -569,7 +569,7 @@ export async function getSchoolProfile() {
       .from('school_profiles')
       .select(SAFE_PROFILE_COLUMNS + ', school_id, custom_exams, grading_systems')
       .eq('school_id', _currentSchoolId)
-      .single();
+      .maybeSingle();
 
     if (error && error.code !== 'PGRST116') {
       // If error is related to missing columns, fallback to safe base columns
