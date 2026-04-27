@@ -735,7 +735,7 @@ select:focus, .form-select:focus {
 }
 
 .premium-table tbody tr:hover td {
-  background: var(--primary-light) !important;
+  background: var(--primary-50) !important;
 }
 
 .premium-table thead th:first-child, .premium-table tbody td:first-child { border-top-left-radius: 0; }
