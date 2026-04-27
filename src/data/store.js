@@ -4633,19 +4633,32 @@ export async function getTeacherWorkloadSummary(schoolId, periodId, teacherId) {
  * Checks if a teacher or class is busy during a specific time range.
  * Overlap Logic: (newStart < existingEnd) && (existingStart < newEnd)
  */
-export async function checkTimetableConflicts(schoolId, periodId, { day, startTime, endTime, teacherId, classGrade, stream, currentSlotIndex }) {
+export async function checkTimetableConflicts(schoolId, periodId, { day, startTime, endTime, teacherId, classGrade, stream, currentSlotIndex, subject }) {
   if (!startTime || !endTime) return null;
 
-  // 1. Fetch ALL slots for that day and school
-  const { data: slots, error } = await supabase
-    .from('timetable_slots')
-    .select('*, teachers(name)')
-    .eq('school_id', schoolId)
-    .eq('period_id', periodId)
-    .eq('day_of_week', day);
-  
-  if (error) throw error;
-  if (!slots || slots.length === 0) return null;
+  // 1. Assignment Verification (New Domain 16A Check)
+  if (teacherId && subject) {
+    const { data: assignments, error: aErr } = await supabase
+      .from('teacher_assignments')
+      .select('id, stream:class_streams(name)')
+      .eq('school_id', schoolId)
+      .eq('teacher_id', teacherId)
+      .eq('subject', subject)
+      .eq('is_active', true);
+    
+    if (!aErr && assignments) {
+      // If the school uses streams, check if the teacher is assigned to THIS specific stream
+      // If stream is null (class-wide), any assignment for that subject in that class counts?
+      // Actually, Domain 16A is stream-specific.
+      const isAssignedToStream = assignments.some(a => !stream || a.stream?.name === stream);
+      
+      if (!isAssignedToStream) {
+        return { msg: `Teacher is not assigned to teach ${subject} in ${classGrade}${stream ? ' (' + stream + ')' : ''}.` };
+      }
+    }
+  }
+
+  // 2. Fetch ALL slots for that day and school to check for clashes
 
   // Function to check if two time strings overlap (ignore seconds)
   const isOverlap = (s1, e1, s2, e2) => (s1.substring(0, 5) < e2.substring(0, 5)) && (s2.substring(0, 5) < e1.substring(0, 5));

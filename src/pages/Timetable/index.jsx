@@ -331,7 +331,8 @@ export default function Timetable({ currentUser, currentPeriodId, periods = [] }
           teacherId: editTeacher || null,
           classGrade: selClass,
           stream: selStream || null,
-          currentSlotIndex: editCell.slotIndex
+          currentSlotIndex: editCell.slotIndex,
+          subject: editSubject
         });
 
         if (clash) {
@@ -342,7 +343,7 @@ export default function Timetable({ currentUser, currentPeriodId, periods = [] }
       } catch (e) { console.error("Conflict check failed", e); }
     };
     checkConflicts();
-  }, [editTeacher, isDouble, editCell, schoolId, periodId, selClass, selStream, config, hasAccess]);
+  }, [editTeacher, editSubject, isDouble, editCell, schoolId, periodId, selClass, selStream, config, hasAccess]);
 
   if (featureLoading) return <div className="p-4"><div className="tt-spin" /></div>;
   if (!hasAccess) return <FeatureGate featureName="Timetable Builder" />;
@@ -397,7 +398,8 @@ export default function Timetable({ currentUser, currentPeriodId, periods = [] }
         teacherId: editTeacher || null,
         classGrade: selClass,
         stream: selStream || null,
-        currentSlotIndex: editCell.slotIndex
+        currentSlotIndex: editCell.slotIndex,
+        subject: editSubject
       });
       if (clash) { 
         setConflictWarning(clash.msg); 
@@ -746,7 +748,23 @@ export default function Timetable({ currentUser, currentPeriodId, periods = [] }
               </div>
               <div className="form-group">
                 <label>Teacher</label>
-                <Select value={editTeacher} onChange={e => setEditTeacher(e.target.value)} options={teachers.map(t => ({ id: t.id, label: t.name }))} />
+                <Select 
+                  value={editTeacher} 
+                  onChange={e => setEditTeacher(e.target.value)} 
+                  options={(() => {
+                    const assignedIds = classAssignments.filter(a => a.subject === editSubject).map(a => a.teacher_id);
+                    return [...teachers].sort((a,b) => {
+                      const aA = assignedIds.includes(a.id);
+                      const bA = assignedIds.includes(b.id);
+                      if (aA && !bA) return -1;
+                      if (!aA && bA) return 1;
+                      return a.name.localeCompare(b.name);
+                    }).map(t => ({ 
+                      id: t.id, 
+                      label: assignedIds.includes(t.id) ? `${t.name} (Assigned)` : t.name 
+                    }));
+                  })()} 
+                />
               </div>
               <div className="form-group">
                 <label style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
