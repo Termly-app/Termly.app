@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { SchoolIcon, UserIcon, PhoneIcon, RocketIcon, FlagIcon, GraduationIcon, CardIcon, ChevronRightIcon } from '../../components/CommonIcons';
 import { validateParentLogin, getSchoolsForPortalSearch } from '../../data/store';
+import Loader from '../../components/Common/Loader';
 
 export default function PortalLogin({ onLogin }) {
   const [searchParams] = useSearchParams();
@@ -60,6 +61,7 @@ export default function PortalLogin({ onLogin }) {
 
   return (
     <div className="login-res-page" style={{ background: 'linear-gradient(135deg, #022C22 0%, #064E3B 100%)' }}>
+      <Loader visible={loading} />
       <div className="card">
         {/* RIGHT PANEL */}
         <div className="right-panel" style={{ background: 'linear-gradient(148deg, #059669 0%, #065F46 30%, #064E3B 68%, #022C22 100%)' }}>

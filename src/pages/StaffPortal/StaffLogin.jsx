@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { TeacherIcon, ShieldIcon, PhoneIcon, EyeIcon, EyeOffIcon, RocketIcon, FlagIcon, BookIcon, GraduationIcon, SchoolIcon } from '../../components/CommonIcons';
 import { validateStaffLogin, getSchoolsForPortalSearch } from '../../data/store';
+import Loader from '../../components/Common/Loader';
 import { Helmet } from 'react-helmet-async';
 
 export default function StaffLogin({ onLogin }) {
@@ -60,6 +61,7 @@ export default function StaffLogin({ onLogin }) {
 
   return (
     <div className="login-res-page" style={{ background: 'linear-gradient(135deg, #1E1B4B 0%, #312E81 100%)' }}>
+      <Loader visible={loading} />
       <Helmet>
         <title>Staff Portal Login | ShuleSoft</title>
         <meta name="description" content="Secure login for school teachers and staff members." />

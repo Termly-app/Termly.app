@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { getTeachers, getSchoolProfile, updateTeacher } from '../../data/store';
 import { StaffIcon, CheckIcon, RefreshIcon, CopyIcon, EyeIcon, EyeOffIcon, ShieldIcon, SearchIcon } from '../../components/CommonIcons';
+import Loader from '../../components/Common/Loader';
 import { useDialog } from '../../contexts/DialogContext';
 
 export default function TeacherPortalAdmin() {
@@ -148,7 +149,7 @@ export default function TeacherPortalAdmin() {
             </thead>
             <tbody>
               {loading ? (
-                <tr><td colSpan="6" style={{ textAlign: 'center', padding: 40 }} className="text-muted">Loading staff...</td></tr>
+                <tr><td colSpan="6" style={{ textAlign: 'center', padding: 40 }}><Loader visible={true} /></td></tr>
               ) : filtered.length === 0 ? (
                 <tr><td colSpan="6" style={{ textAlign: 'center', padding: 40 }} className="text-muted">No teachers found matching your filters.</td></tr>
               ) : (

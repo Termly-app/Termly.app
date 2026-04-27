@@ -12,6 +12,7 @@ import {
   getFees, getGradeForScore, getSchoolProfile, initPortalStore,
   getStudentProfile, getAnnouncements, getSubjectDetails
 } from '../../data/store';
+import Loader from '../../components/Common/Loader';
 import { subscribe, unsubscribeAll } from '../../utils/realtimeManager';
 
 // Premium UI Components
@@ -194,12 +195,7 @@ export default function PortalDashboard({ user, onLogout }) {
            d.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
   };
 
-  if (loading) return (
-    <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', background: '#f8fafc' }}>
-      <div className="animate-pulse" style={{ width: 50, height: 50, borderRadius: 25, background: 'linear-gradient(135deg, #3b82f6, #8b5cf6)' }} />
-    </div>
-  );
-
+,ReplacementContent:
   return (
     <div style={{ width: '100%', background: '#f8fafc', minHeight: '100vh', display: 'flex', flexDirection: 'column', fontFamily: '"Inter", sans-serif' }}>
       <Helmet>

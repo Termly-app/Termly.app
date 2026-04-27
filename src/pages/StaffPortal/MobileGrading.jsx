@@ -10,6 +10,7 @@ import {
   BookIcon, CheckIcon, SaveIcon, UserIcon, 
   GradingIcon, RefreshIcon, ChevronDownIcon, CalendarIcon, DashboardIcon, MenuIcon, LogoutIcon, TeacherIcon 
 } from '../../components/CommonIcons';
+import Loader from '../../components/Common/Loader';
 import { useDialog } from '../../contexts/DialogContext';
 import { Helmet } from 'react-helmet-async';
 
@@ -245,11 +246,7 @@ export default function MobileGrading({ user, onLogout }) {
     }
   };
 
-  if (loading && exams.length === 0) return (
-    <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', background: '#f8fafc' }}>
-      <div className="animate-pulse" style={{ width: 50, height: 50, borderRadius: 25, background: 'linear-gradient(135deg, #10b981, #3b82f6)' }} />
-    </div>
-  );
+  if (loading && exams.length === 0) return <Loader />;
 
   const openPicker = (type) => {
     setPickerType(type);

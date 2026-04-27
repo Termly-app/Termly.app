@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { getSchoolProfile, getStudents } from '../../data/store';
 import { UserIcon, CheckIcon, CopyIcon, SchoolIcon, SearchIcon } from '../../components/CommonIcons';
+import Loader from '../../components/Common/Loader';
 import Select from '../../components/Common/Select';
 
 export default function ParentPortalAdmin() {
@@ -185,7 +186,7 @@ export default function ParentPortalAdmin() {
             </thead>
             <tbody>
               {loading ? (
-                <tr><td colSpan="6" style={{ textAlign: 'center', padding: 40 }} className="text-muted">Loading students...</td></tr>
+                <tr><td colSpan="6" style={{ textAlign: 'center', padding: 40 }}><Loader visible={true} /></td></tr>
               ) : filtered.length === 0 ? (
                 <tr><td colSpan="6" style={{ textAlign: 'center', padding: 40 }} className="text-muted">No students found.</td></tr>
               ) : (
