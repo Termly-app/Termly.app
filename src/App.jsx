@@ -229,6 +229,7 @@ function Sidebar({ isOpen, onClose, onLogout, onLock, currentUser, subscriptionA
   const lmsFeature = useFeature('lms');
   const feesFeature = useFeature('fees');
   const commFeature = useFeature('communications');
+  const parentPortalEnabled = useFeature('parent_portal');
   const teacherFeature = useFeature('teacher_portal');
   const nemisFeature = useFeature('nemis');
 
@@ -384,7 +385,7 @@ function Sidebar({ isOpen, onClose, onLogout, onLock, currentUser, subscriptionA
               <SbLink to="/communications" icon={MessageIcon} label="Comm. Center" onClick={onClose} />
             )}
 
-            {parentPortalEnabled && (
+            {parentPortalEnabled.enabled && (
               <SbLink to="/portal/parent" icon={UserIcon} label="Parents Portal" onClick={onClose} />
             )}
 
