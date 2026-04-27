@@ -775,7 +775,7 @@ export async function getPlatformSchoolProfiles() {
 
 // ============= PORTAL SCHOOL SEARCH =============
 export async function getSchoolsForPortalSearch(searchTerm = '') {
-  let query = supabase.from('schools').select('id, name, school_code, county');
+  let query = supabase.from('schools').select('id, name, school_code, location');
   if (searchTerm) {
     query = query.or(`name.ilike.%${searchTerm}%,school_code.ilike.%${searchTerm}%`);
   }
