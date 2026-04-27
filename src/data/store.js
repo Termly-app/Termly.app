@@ -4659,6 +4659,15 @@ export async function checkTimetableConflicts(schoolId, periodId, { day, startTi
   }
 
   // 2. Fetch ALL slots for that day and school to check for clashes
+  const { data: slots, error } = await supabase
+    .from('timetable_slots')
+    .select('*, teachers(name)')
+    .eq('school_id', schoolId)
+    .eq('period_id', periodId)
+    .eq('day_of_week', day);
+  
+  if (error) throw error;
+  if (!slots || slots.length === 0) return null;
 
   // Function to check if two time strings overlap (ignore seconds)
   const isOverlap = (s1, e1, s2, e2) => (s1.substring(0, 5) < e2.substring(0, 5)) && (s2.substring(0, 5) < e1.substring(0, 5));
