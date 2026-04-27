@@ -698,40 +698,78 @@ function SuspendedView({ profile, onLogout }) {
   return (
     <div style={{
       height: '100vh', width: '100vw', display: 'flex', alignItems: 'center', justifyContent: 'center',
-      background: 'var(--bg-app)', padding: 24, textAlign: 'center'
+      background: 'linear-gradient(135deg, #F8FAFC 0%, #F1F5F9 100%)', padding: 24, textAlign: 'center',
+      fontFamily: 'var(--fh)'
     }}>
-      <div className="card animate-in" style={{ maxWidth: 480, padding: 40, borderRadius: 24, boxShadow: '0 25px 50px -12px rgba(0,0,0,0.25)' }}>
+      <div className="card animate-in" style={{ 
+        maxWidth: 520, padding: 48, borderRadius: 32, 
+        boxShadow: '0 30px 60px -12px rgba(0,0,0,0.15)',
+        background: '#fff', border: '1px solid #E2E8F0'
+      }}>
         <div style={{ 
-          width: 80, height: 80, borderRadius: 24, background: isSuspended ? '#FEF3C7' : '#FEE2E2', 
-          display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 24px' 
+          width: 88, height: 88, borderRadius: 28, background: isSuspended ? '#FEF3C7' : '#FEE2E2', 
+          display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 32px' 
         }}>
-          <AlertIcon size={40} color={isSuspended ? '#D97706' : '#DC2626'} />
+          <AlertIcon size={44} color={isSuspended ? '#D97706' : '#DC2626'} />
         </div>
         
-        <h1 style={{ fontSize: '1.5rem', fontWeight: 800, marginBottom: 12, color: 'var(--text-main)' }}>
+        <h1 style={{ fontSize: '1.75rem', fontWeight: 900, marginBottom: 8, color: '#0F172A', letterSpacing: '-0.02em' }}>
           Account {status}
         </h1>
-        
-        <p style={{ color: 'var(--text-light)', lineHeight: 1.6, marginBottom: 32 }}>
-          {profile?.statusNotes ? (
-             <div style={{ padding: '16px', background: 'var(--bg-card)', borderRadius: 12, border: '1px solid var(--border)', textAlign: 'left', marginBottom: 20 }}>
-               <div style={{ fontSize: '0.7rem', fontWeight: 700, textTransform: 'uppercase', color: 'var(--text-light)', marginBottom: 4 }}>Notice from Administrator:</div>
-               <div style={{ fontSize: '0.85rem', color: 'var(--text-main)', fontWeight: 600 }}>{profile.statusNotes}</div>
-             </div>
-          ) : (
-            isSuspended 
-              ? `The account for "${profile?.schoolName}" has been temporarily suspended by the system administrator.`
-              : `The account for "${profile?.schoolName}" is currently deactivated. Please contact ShuleSoft support to reactivate your workspace.`
+        <div style={{ fontSize: '0.85rem', color: '#64748B', fontWeight: 600, marginBottom: 32, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+          Access Restricted
+        </div>
+
+        <div style={{ 
+          background: '#F8FAFC', borderRadius: 20, padding: 20, marginBottom: 32, 
+          border: '1px solid #E2E8F0', textAlign: 'left' 
+        }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20, marginBottom: profile?.statusNotes ? 20 : 0 }}>
+            <div>
+              <div style={{ fontSize: '0.65rem', fontWeight: 800, color: '#94A3B8', textTransform: 'uppercase', marginBottom: 4 }}>School Workspace</div>
+              <div style={{ fontSize: '0.9rem', fontWeight: 700, color: '#1E293B' }}>{profile?.schoolName || '—'}</div>
+              <div style={{ fontSize: '0.75rem', color: '#64748B' }}>Code: {profile?.schoolCode || profile?.schoolId?.slice(0,8) || '—'}</div>
+            </div>
+            <div style={{ textAlign: 'right' }}>
+              <div style={{ fontSize: '0.65rem', fontWeight: 800, color: '#94A3B8', textTransform: 'uppercase', marginBottom: 4 }}>Effective Date</div>
+              <div style={{ fontSize: '0.9rem', fontWeight: 700, color: '#1E293B' }}>
+                {profile?.subscriptionExpiry ? new Date(profile.subscriptionExpiry).toLocaleDateString('en-GB', { day:'numeric', month:'short', year:'numeric' }) : 'Immediate'}
+              </div>
+              <div style={{ fontSize: '0.75rem', color: '#64748B' }}>System Lock</div>
+            </div>
+          </div>
+
+          {profile?.statusNotes && (
+            <div style={{ paddingTop: 20, borderTop: '1px solid #E2E8F0' }}>
+              <div style={{ fontSize: '0.65rem', fontWeight: 800, color: '#D97706', textTransform: 'uppercase', marginBottom: 6 }}>Notice from Administrator</div>
+              <div style={{ fontSize: '0.9rem', color: '#451a03', lineHeight: 1.5, fontWeight: 500 }}>
+                "{profile.statusNotes}"
+              </div>
+            </div>
           )}
+        </div>
+        
+        <p style={{ color: '#475569', lineHeight: 1.6, marginBottom: 40, fontSize: '0.95rem' }}>
+          To restore access to your school management tools, please contact ShuleSoft billing department or your account manager.
         </p>
 
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-          <a href="https://wa.me/254712260057" target="_blank" rel="noopener noreferrer" className="btn btn-primary" style={{ width: '100%' }}>
-            Contact Support
-          </a>
-          <button onClick={onLogout} className="btn" style={{ width: '100%', background: 'transparent', border: '1px solid var(--border)' }}>
-            Sign Out
-          </button>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+          <div style={{ display: 'flex', gap: 12 }}>
+            <a href="https://wa.me/254712260057" target="_blank" rel="noopener noreferrer" className="btn btn-primary" style={{ flex: 1, padding: '16px', borderRadius: 16 }}>
+              WhatsApp Support
+            </a>
+            <a href="mailto:support@shulesoft.com" className="btn btn-ghost" style={{ flex: 1, padding: '16px', borderRadius: 16, border: '1px solid #E2E8F0' }}>
+              Email Support
+            </a>
+          </div>
+          <div style={{ display: 'flex', justifyContent: 'center', gap: 24, marginTop: 12 }}>
+             <button onClick={onLogout} style={{ background: 'none', border: 'none', color: '#64748B', fontSize: '0.85rem', fontWeight: 600, cursor: 'pointer', textDecoration: 'underline' }}>
+               Sign Out
+             </button>
+             <a href="https://help.shulesoft.com" target="_blank" rel="noopener noreferrer" style={{ color: '#64748B', fontSize: '0.85rem', fontWeight: 600, textDecoration: 'underline' }}>
+               Help Center
+             </a>
+          </div>
         </div>
       </div>
     </div>
