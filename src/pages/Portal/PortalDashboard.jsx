@@ -195,7 +195,8 @@ export default function PortalDashboard({ user, onLogout }) {
            d.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
   };
 
-,ReplacementContent:
+  if (loading) return <Loader fullPage={true} text="Synchronizing your portal data..." />;
+
   return (
     <div style={{ width: '100%', background: '#f8fafc', minHeight: '100vh', display: 'flex', flexDirection: 'column', fontFamily: '"Inter", sans-serif' }}>
       <Helmet>
