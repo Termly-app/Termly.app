@@ -131,14 +131,32 @@ export async function updateBookCopy(id, updates) {
 }
 
 export async function searchAvailableCopies(searchQuery) {
-    const { data, error } = await supabase.from('book_copies')
+    // 1. Search by copy_code directly
+    const { data: codeData, error: e1 } = await supabase.from('book_copies')
         .select('*, books!inner(title, category, subject)')
         .eq('status', 'available')
         .eq('school_id', getSchoolId())
-        .or(`copy_code.ilike.%${searchQuery}%,books.title.ilike.%${searchQuery}%`)
+        .ilike('copy_code', `%${searchQuery}%`)
         .limit(10);
-    if (error) throw error;
-    return data || [];
+        
+    if (e1) throw e1;
+
+    // 2. Search by book title
+    const { data: titleData, error: e2 } = await supabase.from('book_copies')
+        .select('*, books!inner(title, category, subject)')
+        .eq('status', 'available')
+        .eq('school_id', getSchoolId())
+        .ilike('books.title', `%${searchQuery}%`)
+        .limit(10);
+        
+    if (e2) throw e2;
+
+    // Merge and deduplicate
+    const merged = [...(codeData || []), ...(titleData || [])];
+    const unique = Array.from(new Map(merged.map(item => [item.id, item])).values());
+    
+    // Return top 10
+    return unique.slice(0, 10);
 }
 
 // --- BORROW / RETURN ---
