@@ -529,6 +529,61 @@ export default function Timetable({ currentUser, currentPeriodId, periods = [] }
             })}><PrintIcon size={14} /> Print Timetable</button>
           )}
 
+          {view === 'master' && isAdmin && (
+            <div style={{ position: 'relative' }}>
+              <button className="tt-btn tt-btn-danger" onClick={() => setShowBulk(!showBulk)}>
+                Bulk Actions <ChevronDownIcon size={14} />
+              </button>
+              
+              {showBulk && (
+                <div style={{ position: 'absolute', top: '100%', right: 0, marginTop: 8, background: 'white', border: '1px solid var(--border)', borderRadius: 12, boxShadow: '0 10px 25px -5px rgba(0,0,0,0.1)', zIndex: 100, width: 220, padding: 8, display: 'flex', flexDirection: 'column', gap: 4 }}>
+                  <button className="tt-btn tt-btn-ghost" style={{ justifyContent: 'flex-start', color: 'var(--danger)' }} 
+                    onClick={async () => {
+                      const ok = await confirm({ title: 'Clear Timetable?', message: 'This will DELETE ALL assignments for THIS TERM. This cannot be undone.', variant: 'danger' });
+                      if (!ok) return;
+                      setBulkLoading(true);
+                      try {
+                        await clearAllTimetableSlots(schoolId, periodId);
+                        setSlots([]);
+                        setMessage({ type: 'ok', text: 'Timetable cleared successfully.' });
+                      } catch (e) { setMessage({ type: 'err', text: e.message }); }
+                      finally { setBulkLoading(false); setShowBulk(false); }
+                    }}>
+                    <CrossIcon size={14} /> Clear Entire Term
+                  </button>
+                  
+                  <button className="tt-btn tt-btn-ghost" style={{ justifyContent: 'flex-start' }}
+                    onClick={async () => {
+                      const currentIndex = periods.findIndex(p => p.id === periodId);
+                      const prevPeriod = periods[currentIndex + 1]; 
+                      if (!prevPeriod) {
+                        alert({ title: 'No Source', message: 'No previous term found to duplicate from.', variant: 'warning' });
+                        return;
+                      }
+                      const ok = await confirm({ title: 'Duplicate Timetable?', message: `Copy structure from ${prevPeriod.year} ${prevPeriod.term}? This CURRENT term will be overwritten.`, variant: 'primary' });
+                      if (!ok) return;
+                      setBulkLoading(true);
+                      try {
+                        await duplicateTimetable(schoolId, prevPeriod.id, periodId);
+                        if (selClass) setSlots(await getTimetableSlots(schoolId, periodId, selClass, selStream || null));
+                        setMessage({ type: 'ok', text: 'Structure duplicated from ' + prevPeriod.term });
+                      } catch (e) { setMessage({ type: 'err', text: e.message }); }
+                      finally { setBulkLoading(false); setShowBulk(false); }
+                    }}>
+                    <PlusIcon size={14} /> Duplicate from Prev
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
+
+          {view === 'master' && isAdmin && (
+            <button className="tt-btn tt-btn-ghost" onClick={async () => await printAllTeachersTimetables({
+              school: { name: currentUser?.schoolName }, teachers: teachers,
+              period: activePeriod, config, allSlots: slots, activeDays
+            })}><PrintIcon size={14} /> Print All Staff Timetables</button>
+          )}
+
           <Select 
             value={periodId} 
             onChange={e => setPeriodId(e.target.value)}
@@ -551,6 +606,7 @@ export default function Timetable({ currentUser, currentPeriodId, periods = [] }
         <div className="tt-view-toggle">
           <button className={`tt-view-btn ${view === 'class' ? 'active' : ''}`}   onClick={() => setView('class')}><BookIcon size={14} /> Class</button>
           <button className={`tt-view-btn ${view === 'teacher' ? 'active' : ''}`} onClick={() => setView('teacher')}><TeacherIcon size={14} /> Teacher</button>
+          {isAdmin && <button className={`tt-view-btn ${view === 'master' ? 'active' : ''}`} onClick={() => setView('master')}><ZapIcon size={14} /> Master</button>}
         </div>
         <div className="tt-divider" />
         {view === 'class' && (
