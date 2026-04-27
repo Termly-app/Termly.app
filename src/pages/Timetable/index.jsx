@@ -801,28 +801,40 @@ export default function Timetable({ currentUser, currentPeriodId, periods = [] }
             <div className="modal-body">
               {draftConfig.map((c, i) => (
                 <div key={i} className="tt-config-row" style={{ display: 'flex', gap: 12, marginBottom: 12 }}>
-                  <input className="form-input" style={{ flex: 2 }} value={c.label} onChange={e => {
+                  <input className="form-input" style={{ flex: 1.5 }} placeholder="Label (e.g. Period 1, Assembly)" value={c.label} onChange={e => {
                     const next = [...draftConfig];
                     next[i].label = e.target.value;
                     setDraftConfig(next);
                   }} />
-                  <input type="time" className="form-input" value={c.start_time} onChange={e => {
+                  <input type="time" className="form-input" style={{ flex: 1 }} value={c.start_time} onChange={e => {
                     const next = [...draftConfig];
                     next[i].start_time = e.target.value;
                     setDraftConfig(next);
                   }} />
-                  <input type="time" className="form-input" value={c.end_time} onChange={e => {
+                  <input type="time" className="form-input" style={{ flex: 1 }} value={c.end_time} onChange={e => {
                     const next = [...draftConfig];
                     next[i].end_time = e.target.value;
                     setDraftConfig(next);
                   }} />
-                  <label style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: '0.75rem' }}>
+                  <label style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: '0.75rem', whiteSpace: 'nowrap' }}>
                     <input type="checkbox" checked={c.is_break} onChange={e => {
                       const next = [...draftConfig];
                       next[i].is_break = e.target.checked;
+                      if (e.target.checked && !next[i].label) next[i].label = 'Break';
                       setDraftConfig(next);
                     }} /> Break
                   </label>
+                  <button 
+                    className="tt-btn tt-btn-danger tt-btn-ghost" 
+                    style={{ padding: '4px 8px', minWidth: 'auto' }}
+                    onClick={() => {
+                      const next = [...draftConfig];
+                      next.splice(i, 1);
+                      setDraftConfig(next);
+                    }}
+                  >
+                    <CrossIcon size={12} />
+                  </button>
                 </div>
               ))}
               <button className="btn btn-ghost" onClick={() => setDraftConfig([...draftConfig, { label: 'New Period', start_time: '14:40', end_time: '15:20', is_break: false, slot_index: draftConfig.length }])}>
