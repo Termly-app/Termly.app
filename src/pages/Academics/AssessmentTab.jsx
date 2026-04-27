@@ -571,7 +571,7 @@ export default function AssessmentTab({ currentUser, currentPeriodId }) {
               )}
 
               {/* PARENT STATUS — only show if parent_portal feature is enabled */}
-              {/* {hasParentPortal && (
+              {hasParentPortal && (
               <div style={{ display: 'flex', flexDirection: 'column' }}>
                 <span style={{ fontSize: '0.6rem', fontWeight: 900, color: 'var(--text-light)', textTransform: 'uppercase', marginBottom: 2, letterSpacing: '0.05em' }}>
                   Parent Portal
@@ -622,7 +622,7 @@ export default function AssessmentTab({ currentUser, currentPeriodId }) {
                   <RocketIcon size={16} />
                   {robustExams.find(e => e.name === examType)?.released_to_parents ? 'Hide from Parents' : 'Post to Parents'}
                 </button>
-              )} */}
+              )}
             </div>
           )}
         </div>

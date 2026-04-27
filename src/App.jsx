@@ -384,6 +384,10 @@ function Sidebar({ isOpen, onClose, onLogout, onLock, currentUser, subscriptionA
               <SbLink to="/communications" icon={MessageIcon} label="Comm. Center" onClick={onClose} />
             )}
 
+            {parentPortalEnabled && (
+              <SbLink to="/portal/parent" icon={UserIcon} label="Parents Portal" onClick={onClose} />
+            )}
+
             {teacherFeature.enabled && (
               <SbLink to="/portal/teacher" icon={StaffIcon} label="Teacher Portal" onClick={onClose} />
             )}
@@ -966,7 +970,7 @@ function SuspendedView({ profile, onLogout }) {
                       <Route path="/security"     element={<Security currentUser={currentUser} />} />
                       <Route path="/settings"     element={<Settings currentUser={currentUser} />} />
                       <Route path="/portal/teacher" element={<SectionGate featureSlug="teacher_portal" featureName="Teacher Portal" profile={profile}><TeacherPortalAdmin /></SectionGate>} />
-                      {/* <Route path="/portal/parent"  element={<SectionGate featureSlug="parent_portal"  featureName="Parent Portal"  profile={profile}><ParentPortalAdmin /></SectionGate>} /> */}
+                      <Route path="/portal/parent"  element={<SectionGate featureSlug="parent_portal"  featureName="Parent Portal"  profile={profile}><ParentPortalAdmin /></SectionGate>} />
 
                       <Route path="*"         element={<div style={{padding:48, textAlign:'center'}}><h2>403 - Unauthorized</h2><p>You don't have permission to access this module.</p></div>} />
                   </Routes>
