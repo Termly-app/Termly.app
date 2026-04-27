@@ -4640,19 +4640,19 @@ export async function checkTimetableConflicts(schoolId, periodId, { day, startTi
   if (teacherId && subject) {
     const { data: assignments, error: aErr } = await supabase
       .from('teacher_assignments')
-      .select('id, stream:class_streams(name)')
+      .select('id, stream:class_streams(name, level)')
       .eq('school_id', schoolId)
       .eq('teacher_id', teacherId)
       .eq('subject', subject)
       .eq('is_active', true);
     
     if (!aErr && assignments) {
-      // If the school uses streams, check if the teacher is assigned to THIS specific stream
-      // If stream is null (class-wide), any assignment for that subject in that class counts?
-      // Actually, Domain 16A is stream-specific.
-      const isAssignedToStream = assignments.some(a => !stream || a.stream?.name === stream);
+      // Check if the teacher is assigned to THIS specific class (level) AND stream (if provided)
+      const isAssignedToClass = assignments.some(a => 
+        a.stream?.level === classGrade && (!stream || a.stream?.name === stream)
+      );
       
-      if (!isAssignedToStream) {
+      if (!isAssignedToClass) {
         return { msg: `Teacher is not assigned to teach ${subject} in ${classGrade}${stream ? ' (' + stream + ')' : ''}.` };
       }
     }
