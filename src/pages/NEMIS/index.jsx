@@ -373,7 +373,6 @@ export default function NEMISDashboard({ currentUser }) {
         }
 
         .print-only { display: none !important; }
-        .no-print { display: block; }
 
         @media print {
           /* Force TOTAL HIDING of non-essential UI */
