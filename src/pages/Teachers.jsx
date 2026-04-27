@@ -232,7 +232,7 @@ export default function Teachers({ currentUser, currentPeriodId }) {
       )}
 
       {activeTab === 'reports' && (
-        <ReportsTab />
+        <ReportsTab profile={profile} />
       )}
 
       {showModal && (
@@ -489,7 +489,7 @@ function AssignmentsTab({ assignments, teachers, onAssign, profile, streams, con
 }
 
 // ========== REPORTS TAB ==========
-function ReportsTab() {
+function ReportsTab({ profile }) {
   const [selectedTeacher, setSelectedTeacher] = useState('all');
   const [data, setData] = useState({ workload: [], performance: {}, teachers: [] });
   const [loading, setLoading] = useState(true);
@@ -510,27 +510,26 @@ function ReportsTab() {
 
   const handlePrintStaff = async (type) => {
     try {
-      const header = await getPrintHeader();
+      const title = type === 'all' ? 'All Staff List' : 'Staff per Class Assignment';
+      const header = await getPrintHeader(title);
       const printWin = window.open('', '_blank');
       const teachers = data.teachers;
       const assignments = await getTeacherAssignments();
 
-      printWin.document.write(`<html><head><title>Staff Report</title>
+      printWin.document.write(`<html><head><title>${title}</title>
         <style>
           body { font-family: sans-serif; padding: 20px; color: #333; }
-          .header { text-align: center; margin-bottom: 20px; border-bottom: 2px solid #eee; padding-bottom: 15px; }
+          .header { text-align: center; margin-bottom: 20px; padding-bottom: 15px; }
           table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 0.85rem; }
           th, td { border: 1px solid #ddd; padding: 10px; text-align: left; }
           th { background: #f9f9f9; }
           .footer { margin-top: 30px; font-size: 0.8rem; color: #777; border-top: 1px solid #eee; padding-top: 10px; }
-          .badge { padding: 3px 8px; border-radius: 4px; border: 1px solid #ddd; font-size: 0.75rem; margin-right: 4px; }
         </style>
       </head><body>`);
 
       printWin.document.write(header);
       
       let tableContent = '';
-      let title = 'Staff List Report';
 
       if (type === 'all') {
         title = 'All Staff List';
@@ -575,9 +574,8 @@ function ReportsTab() {
       }
 
       printWin.document.write(`
-        <div class="header">
-          <h2>${title}</h2>
-          <p>Generated on ${new Date().toLocaleDateString()}</p>
+        <div style="margin-top: 10px;">
+          <p style="font-size: 0.8rem; color: #666; margin: 0;">Generated on ${new Date().toLocaleDateString()} at ${new Date().toLocaleTimeString()}</p>
         </div>
         ${tableContent}
         <div class="footer">

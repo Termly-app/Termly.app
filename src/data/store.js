@@ -1152,7 +1152,7 @@ export async function getCurrentPeriodDetails() {
 
 
 // Helper: returns HTML snippet for print headers
-export async function getPrintHeader(subtitle) {
+export async function getPrintHeader(subtitle = '') {
   const p = await getSchoolProfile();
   const name = p.schoolName || '';
   
