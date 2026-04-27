@@ -1477,7 +1477,8 @@ export async function addStudent(student) {
   }
 
   const count = all.length + 1;
-  const admNo = student.admNo || `SS-2024-${String(count).padStart(3, '0')}`;
+  const currentYear = new Date().getFullYear();
+  const admNo = student.admNo || `SS-${currentYear}-${String(count).padStart(3, '0')}`;
 
   const { data, error } = await supabase
     .from('students')
@@ -1509,7 +1510,16 @@ export async function addStudent(student) {
   if (error) throw error;
 
   // Create fee record for new student
-  const baseFee = p.gradeFees?.[student.class] || TERM_FEE;
+  const feeConfig = p.gradeFees?.[student.class];
+  let baseFee = TERM_FEE;
+  if (feeConfig) {
+    if (typeof feeConfig === 'object') {
+      const type = (student.residenceType || 'day').toLowerCase();
+      baseFee = Number(feeConfig[type]) || Number(feeConfig.day) || TERM_FEE;
+    } else {
+      baseFee = Number(feeConfig) || TERM_FEE;
+    }
+  }
   await supabase.from('fees').insert({
     school_id: _currentSchoolId,
     student_id: data.id,
