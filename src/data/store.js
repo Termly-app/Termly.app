@@ -3314,18 +3314,31 @@ export async function isStaffCodeAvailable(code, excludeId = null) {
 // ============= SUBJECT ASSIGNMENTS =============
 export async function getSubjectAssignments() {
   if (!_currentSchoolId || !_currentPeriodId) return {};
+
+  // [UNIFICATION] Fetch from the robust teacher_assignments table (Domain 16A)
+  // instead of the legacy subject_assignments table.
   const { data, error } = await supabase
-    .from('subject_assignments')
-    .select('id, class_grade, stream, subject, teacher_id, period_id, school_id')
+    .from('teacher_assignments')
+    .select('teacher_id, subject, stream:class_streams(name, level)')
     .eq('school_id', _currentSchoolId)
-    .eq('period_id', _currentPeriodId);
-  if (error) throw error;
-  // Convert to nested structure: { classGrade: { stream: { subject: teacherId } } }
+    .eq('period_id', _currentPeriodId)
+    .eq('is_active', true);
+
+  if (error) {
+    console.warn('[STORE] getSubjectAssignments fetch error:', error.message);
+    return {};
+  }
+
+  // Convert to legacy nested structure: { classGrade: { stream: { subject: teacherId } } }
   const assignments = {};
   (data || []).forEach(row => {
-    if (!assignments[row.class_grade]) assignments[row.class_grade] = {};
-    if (!assignments[row.class_grade][row.stream]) assignments[row.class_grade][row.stream] = {};
-    assignments[row.class_grade][row.stream][row.subject] = row.teacher_id;
+    const classGrade = row.stream?.level;
+    const streamName = row.stream?.name || 'General';
+    if (!classGrade) return;
+
+    if (!assignments[classGrade]) assignments[classGrade] = {};
+    if (!assignments[classGrade][streamName]) assignments[classGrade][streamName] = {};
+    assignments[classGrade][streamName][row.subject] = row.teacher_id;
   });
   return assignments;
 }
@@ -3469,6 +3482,8 @@ export function initStore() {
 export async function resetAllData() {
   if (!_currentSchoolId) return;
   // Delete all data for this school
+  await supabase.from('teacher_assignments').delete().eq('school_id', _currentSchoolId);
+  await supabase.from('class_streams').delete().eq('school_id', _currentSchoolId);
   await supabase.from('subject_assignments').delete().eq('school_id', _currentSchoolId);
   await supabase.from('core_competencies').delete().eq('school_id', _currentSchoolId);
   await supabase.from('cbc_assessments').delete().eq('school_id', _currentSchoolId);
@@ -3778,6 +3793,8 @@ export async function deleteSchool(schoolId) {
     'timetable_slots',
     'timetable_configs',
     'lesson_requirements',
+    'teacher_assignments',
+    'class_streams',
     'subject_assignments',
     'sms_messages',
     'mpesa_callbacks',
@@ -4664,17 +4681,31 @@ export async function checkTimetableConflicts(schoolId, periodId, { day, startTi
 
 
 export async function getClassSubjectAssignments(schoolId, periodId, classGrade, stream = null) {
+  // [UNIFICATION] Query from teacher_assignments (Domain 16A)
   let query = supabase
-    .from('subject_assignments')
-    .select('*')
+    .from('teacher_assignments')
+    .select('*, stream:class_streams(*)')
     .eq('school_id', schoolId)
     .eq('period_id', periodId)
-    .eq('class_grade', classGrade);
-  if (stream) query = query.eq('stream', stream);
-  // If no stream is provided, fetch assignments for all streams of the class to ensure competency checks still work
+    .eq('is_active', true)
+    .eq('stream.level', classGrade);
+  
+  if (stream) {
+    query = query.eq('stream.name', stream);
+  }
+
   const { data, error } = await query;
   if (error) throw error;
-  return data || [];
+  
+  // Format to match the legacy record structure { class_grade, stream, subject, teacher_id }
+  return (data || []).map(row => ({
+    school_id: row.school_id,
+    period_id: row.period_id,
+    class_grade: row.stream?.level,
+    stream: row.stream?.name,
+    subject: row.subject,
+    teacher_id: row.teacher_id
+  }));
 }
 
 export async function saveClassSubjectAssignment(schoolId, periodId, assignment) {
