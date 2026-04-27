@@ -31,13 +31,15 @@ export default function Teachers({ currentUser, currentPeriodId }) {
   const loadData = async () => {
     setLoading(true);
     try {
+      const period = await getCurrentPeriodDetails();
+      const year = period?.year || 2026;
       const [tData, aData, pData, sData, uData, stData] = await Promise.all([
         getTeachers(),
         getTeacherAssignments(),
         getSchoolProfile(),
         getPlatformSettings(),
         getUsers(),
-        getClassStreams()
+        getClassStreams(null, year)
       ]);
       setTeachers(tData);
       setAssignments(aData || []);
@@ -56,7 +58,9 @@ export default function Teachers({ currentUser, currentPeriodId }) {
 
   const refresh = async () => {
     try {
-      const [tData, aData, stData] = await Promise.all([getTeachers(), getTeacherAssignments(), getClassStreams()]);
+      const period = await getCurrentPeriodDetails();
+      const year = period?.year || 2026;
+      const [tData, aData, stData] = await Promise.all([getTeachers(), getTeacherAssignments(), getClassStreams(null, year)]);
       setTeachers(tData);
       setAssignments(aData || []);
       setStreams(stData || []);

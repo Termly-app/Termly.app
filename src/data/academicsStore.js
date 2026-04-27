@@ -461,7 +461,7 @@ export async function setStudentAllMarks(studentId, subjectMarks, examType = _cu
 /**
  * Domain 16A: Academic Data Model Management
  */
-export async function getClassStreams(level = null) {
+export async function getClassStreams(level = null, year = null) {
   if (!_currentSchoolId) return [];
   let query = supabase
     .from('class_streams')
@@ -469,6 +469,7 @@ export async function getClassStreams(level = null) {
     .eq('school_id', _currentSchoolId);
   
   if (level) query = query.eq('level', level);
+  if (year) query = query.eq('academic_year', year);
   
   const { data, error } = await query;
   if (error) throw error;

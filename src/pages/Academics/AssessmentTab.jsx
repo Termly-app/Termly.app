@@ -529,7 +529,11 @@ export default function AssessmentTab({ currentUser, currentPeriodId }) {
               { id: 'All', label: 'All Streams' },
               ...(selectedClass !== 'All' 
                 ? (profile.streamsPerClass?.[selectedClass] || []) 
-                : Object.values(profile.streamsPerClass || {}).flat().filter((v, i, a) => a.indexOf(v) === i)
+                : Array.from(new Set(
+                    Object.entries(profile.streamsPerClass || {})
+                      .filter(([cls]) => (profile.activeClasses || []).includes(cls))
+                      .flatMap(([, streams]) => streams)
+                  ))
               ).map(stream => ({ id: stream, label: stream }))
             ]}
             style={{ minWidth: 140 }}
