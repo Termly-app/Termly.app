@@ -468,7 +468,7 @@ function loadProfileFromLocal(schoolId) {
   } catch (e) { return null; }
 }
 
-const SAFE_PROFILE_COLUMNS = 'id, school_name, motto, phone, email, address, logo, subscription_plan, streams_per_class, custom_subjects, active_classes, grade_fees, subscription_status, subscription_expiry, last_payment_status, mpesa_config, sms_config, grading_systems, curriculum, timetable_label';
+const SAFE_PROFILE_COLUMNS = 'id, school_name, motto, phone, email, address, logo, subscription_plan, streams_per_class, custom_subjects, active_classes, grade_fees, subscription_status, subscription_expiry, last_payment_status, mpesa_config, sms_config, grading_systems, curriculum, timetable_label, status_notes';
 
 /**
  * Maps raw database profile (snake_case) to application profile (camelCase)
@@ -498,6 +498,7 @@ function mapSchoolProfile(data) {
     sms_config: data.sms_config || DEFAULT_PROFILE.sms_config,
     curriculum: data.curriculum || 'CBC Only',
     timetable_label: data.timetable_label || DEFAULT_PROFILE.timetable_label,
+    statusNotes: data.status_notes || null,
     schoolId: data.school_id,
     enabledModules: data.custom_subjects?.__shadow_enabled_modules || DEFAULT_PROFILE.enabledModules,
   };
@@ -3886,13 +3887,17 @@ export async function getAllSchools() {
 /**
  * Deactivate a school — sets status to 'Deactivated' on both schools and school_profiles
  */
-export async function deactivateSchool(schoolId) {
+export async function deactivateSchool(schoolId, reason = null) {
   const pastDate = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(); // Yesterday
   
   // 1. Update Profile
   const { error: e1 } = await supabase
     .from('school_profiles')
-    .update({ subscription_status: 'Deactivated', subscription_expiry: pastDate })
+    .update({ 
+      subscription_status: 'Deactivated', 
+      subscription_expiry: pastDate,
+      status_notes: reason 
+    })
     .eq('school_id', schoolId);
   if (e1) throw e1;
 
@@ -3907,13 +3912,13 @@ export async function deactivateSchool(schoolId) {
   }
 
   invalidateFeatureCache(schoolId);
-  await logPlatformActivity('DEACTIVATION', `School ${schoolId} deactivated by admin. Features expired.`, schoolId);
+  await logPlatformActivity('DEACTIVATION', `School ${schoolId} deactivated by admin. Reason: ${reason || 'Not specified'}`, schoolId);
 }
 
 /**
  * Restore / Activate a school — sets status to 'Active' and extends expiry
  */
-export async function restoreSchool(schoolId, monthsToAdd = 4) {
+export async function restoreSchool(schoolId, monthsToAdd = 4, notes = null) {
   // 1. Calculate new expiry
   const { data: profileData, error: getProfileError } = await supabase
     .from('school_profiles')
@@ -3938,7 +3943,8 @@ export async function restoreSchool(schoolId, monthsToAdd = 4) {
     .from('school_profiles')
     .update({ 
       subscription_status: 'Active',
-      subscription_expiry: newExpiryStr
+      subscription_expiry: newExpiryStr,
+      status_notes: notes
     })
     .eq('school_id', schoolId);
   if (e2) throw e2;

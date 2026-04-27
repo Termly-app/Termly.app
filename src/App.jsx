@@ -713,10 +713,16 @@ function SuspendedView({ profile, onLogout }) {
         </h1>
         
         <p style={{ color: 'var(--text-light)', lineHeight: 1.6, marginBottom: 32 }}>
-          {isSuspended 
-            ? `The account for "${profile?.schoolName}" has been temporarily suspended by the system administrator.`
-            : `The account for "${profile?.schoolName}" is currently deactivated. Please contact ShuleSoft support to reactivate your workspace.`
-          }
+          {profile?.statusNotes ? (
+             <div style={{ padding: '16px', background: 'var(--bg-card)', borderRadius: 12, border: '1px solid var(--border)', textAlign: 'left', marginBottom: 20 }}>
+               <div style={{ fontSize: '0.7rem', fontWeight: 700, textTransform: 'uppercase', color: 'var(--text-light)', marginBottom: 4 }}>Notice from Administrator:</div>
+               <div style={{ fontSize: '0.85rem', color: 'var(--text-main)', fontWeight: 600 }}>{profile.statusNotes}</div>
+             </div>
+          ) : (
+            isSuspended 
+              ? `The account for "${profile?.schoolName}" has been temporarily suspended by the system administrator.`
+              : `The account for "${profile?.schoolName}" is currently deactivated. Please contact ShuleSoft support to reactivate your workspace.`
+          )}
         </p>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
