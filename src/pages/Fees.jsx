@@ -3,7 +3,7 @@ import { isFeatureEnabled, getStudents, getFees, recordPayment, voidPayment, res
 import Loader from '../components/Common/Loader';
 import { CLASSES, CBC_STRUCTURE } from '../data/seedData';
 import { 
-  CardIcon, RocketIcon, UserIcon, InfoIcon, SearchIcon, CheckIcon, ReceiptIcon, PrintIcon, AlertIcon, DashboardIcon, ClockIcon
+  CardIcon, RocketIcon, UserIcon, InfoIcon, SearchIcon, CheckIcon, ReceiptIcon, PrintIcon, AlertIcon, DashboardIcon, ClockIcon, SendIcon
 } from '../components/CommonIcons';
 import { printReceipt } from '../utils/receiptPrint';
 // import MpesaReconciliation from './MpesaReconciliation'; // WIP: M-Pesa disabled
