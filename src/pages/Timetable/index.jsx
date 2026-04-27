@@ -165,7 +165,6 @@ export default function Timetable({ currentUser, currentPeriodId, periods = [] }
   const [teachers,   setTeachers]  = useState([]);
   const [fullProfile, setFullProfile] = useState(null);
 
-
   // ── Class selector (grid + req panels) ───────────────────────────────
   const [selClass,  setSelClass]  = useState('');
   const [selStream, setSelStream] = useState('');
@@ -178,7 +177,6 @@ export default function Timetable({ currentUser, currentPeriodId, periods = [] }
   const [config,       setConfig]       = useState([]);
   const [activeDays,   setActiveDays]   = useState(['Monday','Tuesday','Wednesday','Thursday','Friday']);
 
-
   // ── Grid slots ────────────────────────────────────────────────────────
   const [slots,        setSlots]        = useState([]);
   const [showConfig,   setShowConfig]   = useState(false);
@@ -187,8 +185,6 @@ export default function Timetable({ currentUser, currentPeriodId, periods = [] }
   const [bulkLoading,  setBulkLoading]  = useState(false);
   const [showBulk,     setShowBulk]     = useState(false);
   const [classAssignments, setClassAssignments] = useState([]);
-
-
 
   const { alert, confirm } = useDialog();
 
@@ -222,12 +218,10 @@ export default function Timetable({ currentUser, currentPeriodId, periods = [] }
     (async () => {
       try {
         setLoading(true);
-        // Ensure store.js knows WHICH school we are working on
         setCurrentSchoolContext(schoolId, currentUser);
         
         const [profile, tList] = await Promise.all([getSchoolProfile(), getTeachers(schoolId)]);
         const cls = profile?.activeClasses || [];
-        // Sort classes naturally: PP1, PP2, Grade 1..12, Form 1..4
         const sortedCls = [...cls].sort((a, b) => {
           const order = ['PP1','PP2','Grade 1','Grade 2','Grade 3','Grade 4','Grade 5','Grade 6','Grade 7','Grade 8','Grade 9','Grade 10','Grade 11','Grade 12','Form 1','Form 2','Form 3','Form 4'];
           const ai = order.indexOf(a), bi = order.indexOf(b);
@@ -252,14 +246,9 @@ export default function Timetable({ currentUser, currentPeriodId, periods = [] }
     })();
   }, [schoolId, hasAccess]);
 
-  if (featureLoading) return <div className="p-4"><div className="tt-spin" /></div>;
-  if (!hasAccess) return <FeatureGate featureName="Timetable Builder" />;
-
-
-
-  // ── Load config when period changes (auto-apply template if empty) ───
+  // ── Load config when period changes ───
   useEffect(() => {
-    if (!schoolId || !periodId) return;
+    if (!schoolId || !periodId || !hasAccess) return;
     (async () => {
       try {
         const cfg = await getTimetableConfig(schoolId, periodId);
@@ -270,13 +259,11 @@ export default function Timetable({ currentUser, currentPeriodId, periods = [] }
         setDraftConfig(resolved.map(c => ({ ...c })));
       } catch (e) { console.error(e); }
     })();
-  }, [schoolId, periodId]);
-
-
+  }, [schoolId, periodId, hasAccess]);
 
   // ── Load slots for selected class ─────────────────────────────────────
   useEffect(() => {
-    if (!schoolId || !periodId || !selClass || view !== 'class') return;
+    if (!schoolId || !periodId || !selClass || view !== 'class' || !hasAccess) return;
     (async () => {
       try { 
         setLoading(true); 
@@ -290,11 +277,11 @@ export default function Timetable({ currentUser, currentPeriodId, periods = [] }
       catch (e) { console.error(e); }
       finally { setLoading(false); }
     })();
-  }, [schoolId, periodId, selClass, selStream, view]);
+  }, [schoolId, periodId, selClass, selStream, view, hasAccess]);
 
   // ── Load teacher slots ────────────────────────────────────────────────
   useEffect(() => {
-    if (!schoolId || !periodId || !selTeacher || view !== 'teacher') return;
+    if (!schoolId || !periodId || !selTeacher || view !== 'teacher' || !hasAccess) return;
     (async () => {
       setLoading(true);
       try { 
@@ -303,32 +290,16 @@ export default function Timetable({ currentUser, currentPeriodId, periods = [] }
       catch (e) { console.error(e); }
       finally { setLoading(false); }
     })();
-  }, [schoolId, periodId, selTeacher, view]);
-
-
-
-
+  }, [schoolId, periodId, selTeacher, view, hasAccess]);
 
   // ── Slot lookup helper ────────────────────────────────────────────────
   const slotLookup = useCallback((day, slotIndex, src) => {
     return (src || slots).find(s => s.day_of_week === day && s.slot_index === slotIndex) || null;
   }, [slots]);
 
-  // ── Cell click (grid view) ────────────────────────────────────────────
-  const openEdit = (day, slotIndex) => {
-    if (!isAdmin || view !== 'class') return;
-    const existing = slotLookup(day, slotIndex);
-    setEditCell({ day, slotIndex, existing });
-    setEditSubject(existing?.subject || '');
-    setEditTeacher(existing?.teacher_id || '');
-    setEditColor(existing?.color || COLORS[0]);
-    setIsDouble(existing?.is_double_first || false);
-    setConflictWarning(null);
-  };
-
   // ── Real-time conflict checking ───────────────────────────────────────
   useEffect(() => {
-    if (!editCell) return;
+    if (!editCell || !hasAccess) return;
     const checkConflicts = async () => {
       try {
         const timeCfg = config.find(c => c.slot_index === editCell.slotIndex);
@@ -371,8 +342,22 @@ export default function Timetable({ currentUser, currentPeriodId, periods = [] }
       } catch (e) { console.error("Conflict check failed", e); }
     };
     checkConflicts();
-  }, [editTeacher, isDouble, editCell, schoolId, periodId, selClass, selStream, config]);
+  }, [editTeacher, isDouble, editCell, schoolId, periodId, selClass, selStream, config, hasAccess]);
 
+  if (featureLoading) return <div className="p-4"><div className="tt-spin" /></div>;
+  if (!hasAccess) return <FeatureGate featureName="Timetable Builder" />;
+
+  // ── Cell click (grid view) ────────────────────────────────────────────
+  const openEdit = (day, slotIndex) => {
+    if (!isAdmin || view !== 'class') return;
+    const existing = slotLookup(day, slotIndex);
+    setEditCell({ day, slotIndex, existing });
+    setEditSubject(existing?.subject || '');
+    setEditTeacher(existing?.teacher_id || '');
+    setEditColor(existing?.color || COLORS[0]);
+    setIsDouble(existing?.is_double_first || false);
+    setConflictWarning(null);
+  };
 
   // ── Save cell ─────────────────────────────────────────────────────────
   const handleSaveCell = async () => {
@@ -404,7 +389,6 @@ export default function Timetable({ currentUser, currentPeriodId, periods = [] }
       }
     }
 
-    // Final Conflict check
     try {
       const clash = await checkTimetableConflicts(schoolId, periodId, {
         day: editCell.day,
@@ -426,7 +410,6 @@ export default function Timetable({ currentUser, currentPeriodId, periods = [] }
 
     setCellSaving(true);
     try {
-      // Save first slot
       await saveTimetableSlot(schoolId, periodId, {
         class_grade : selClass,
         stream      : selStream || null,
@@ -438,10 +421,9 @@ export default function Timetable({ currentUser, currentPeriodId, periods = [] }
         is_double_first  : !!nextSlot,
         is_double_second : false,
         start_time  : timeCfg.start_time,
-        end_time    : !!nextSlot ? nextSlot.end_time : timeCfg.end_time // Double lesson spans both times
+        end_time    : !!nextSlot ? nextSlot.end_time : timeCfg.end_time
       });
 
-      // Save second slot if requested
       if (nextSlot) {
         await saveTimetableSlot(schoolId, periodId, {
           class_grade : selClass,
@@ -457,7 +439,6 @@ export default function Timetable({ currentUser, currentPeriodId, periods = [] }
           end_time    : nextSlot.end_time
         });
       } else if (editCell.existing?.is_double_first && !isDouble) {
-        // If it was previously a double lesson and they unchecked it, we must delete the orphaned second slot!
         const fullSorted = [...config].sort((a,b) => a.slot_index - b.slot_index);
         const fullIdx = fullSorted.findIndex(c => c.slot_index === editCell.slotIndex);
         if (fullIdx !== -1 && fullIdx < fullSorted.length - 1) {
@@ -485,7 +466,6 @@ export default function Timetable({ currentUser, currentPeriodId, periods = [] }
       await clearTimetableSlot(schoolId, periodId, selClass, selStream || '', day, slotIndex);
       
       if (existing?.is_double_first) {
-        // Automatically delete the second half of the double lesson
         const fullSorted = [...config].sort((a,b) => a.slot_index - b.slot_index);
         const fullIdx = fullSorted.findIndex(c => c.slot_index === slotIndex);
         if (fullIdx !== -1 && fullIdx < fullSorted.length - 1) {
@@ -499,21 +479,14 @@ export default function Timetable({ currentUser, currentPeriodId, periods = [] }
     } catch (e) { setMessage({ type:'err', text: e.message }); }
   };
 
-
   // ── Computed ──────────────────────────────────────────────────────────
   const classStreams    = selClass ? (streams[selClass] || []) : [];
   const activePeriod    = periods.find(p => p.id === periodId);
   const suggestedSubs   = getSubjectsForGrade(selClass, fullProfile);
   const teacherName     = (id) => teachers.find(t => t.id === id)?.name || '';
   const levelBadge      = getLevelBadge(selClass);
+  const activeSlots     = view === 'teacher' ? teacherSlots : slots;
 
-
-  // Grid data source: saved slots
-  const activeSlots = view === 'teacher' ? teacherSlots : slots;
-
-  // ─────────────────────────────────────────────────────────────────────
-  // RENDER
-  // ─────────────────────────────────────────────────────────────────────
   return (
     <div className="tt-root">
       <Helmet>
@@ -521,7 +494,6 @@ export default function Timetable({ currentUser, currentPeriodId, periods = [] }
         <meta name="description" content="Generate custom school timetables and manage teacher workloads with flexible time slots." />
       </Helmet>
 
-      {/* ── Header ── */}
       <div className="tt-header">
         <div className="tt-title-group">
           <div className="tt-icon"><CalendarIcon size={24} /></div>
@@ -535,10 +507,7 @@ export default function Timetable({ currentUser, currentPeriodId, periods = [] }
           </div>
         </div>
 
-
-
         <div className="tt-header-actions">
-          {/* Day Structure Config (Admin only) */}
           {isAdmin && (
             <button className="tt-btn tt-btn-primary" onClick={() => { setDraftConfig(config.map(c => ({...c}))); setShowConfig(true); }}>
               <SettingsIcon size={14} /> Set Up Day Structure
@@ -560,66 +529,6 @@ export default function Timetable({ currentUser, currentPeriodId, periods = [] }
             })}><PrintIcon size={14} /> Print Timetable</button>
           )}
 
-
-          {view === 'master' && isAdmin && (
-            <div style={{ position: 'relative' }}>
-              <button className="tt-btn tt-btn-danger" onClick={() => setShowBulk(!showBulk)}>
-                Bulk Actions <ChevronDownIcon size={14} />
-              </button>
-              
-              {showBulk && (
-                <div style={{ position: 'absolute', top: '100%', right: 0, marginTop: 8, background: 'white', border: '1px solid var(--border)', borderRadius: 12, boxShadow: '0 10px 25px -5px rgba(0,0,0,0.1)', zIndex: 100, width: 220, padding: 8, display: 'flex', flexDirection: 'column', gap: 4 }}>
-                  <button className="tt-btn tt-btn-ghost" style={{ justifyContent: 'flex-start', color: 'var(--danger)' }} 
-                    onClick={async () => {
-                      const ok = await confirm({ title: 'Clear Timetable?', message: 'This will DELETE ALL assignments for THIS TERM. This cannot be undone.', variant: 'danger' });
-                      if (!ok) return;
-                      setBulkLoading(true);
-                      try {
-                        await clearAllTimetableSlots(schoolId, periodId);
-                        setSlots([]);
-                        setMessage({ type: 'ok', text: 'Timetable cleared successfully.' });
-                      } catch (e) { setMessage({ type: 'err', text: e.message }); }
-                      finally { setBulkLoading(false); setShowBulk(false); }
-                    }}>
-                    <CrossIcon size={14} /> Clear Entire Term
-                  </button>
-                  
-                  <button className="tt-btn tt-btn-ghost" style={{ justifyContent: 'flex-start' }}
-                    onClick={async () => {
-                      // For simplicity, we just duplicate from the "previous" period in the list if it exists
-                      const currentIndex = periods.findIndex(p => p.id === periodId);
-                      const prevPeriod = periods[currentIndex + 1]; // Sorted desc usually
-                      if (!prevPeriod) {
-                        alert({ title: 'No Source', message: 'No previous term found to duplicate from.', variant: 'warning' });
-                        return;
-                      }
-                      const ok = await confirm({ title: 'Duplicate Timetable?', message: `Copy structure from ${prevPeriod.year} ${prevPeriod.term}? This CURRENT term will be overwritten.`, variant: 'primary' });
-                      if (!ok) return;
-                      setBulkLoading(true);
-                      try {
-                        await duplicateTimetable(schoolId, prevPeriod.id, periodId);
-                        // Reload slots
-                        if (selClass) setSlots(await getTimetableSlots(schoolId, periodId, selClass, selStream || null));
-                        setMessage({ type: 'ok', text: 'Structure duplicated from ' + prevPeriod.term });
-                      } catch (e) { setMessage({ type: 'err', text: e.message }); }
-                      finally { setBulkLoading(false); setShowBulk(false); }
-                    }}>
-                    <PlusIcon size={14} /> Duplicate from Prev
-                  </button>
-                </div>
-              )}
-            </div>
-          )}
-
-          {view === 'master' && isAdmin && (
-            <button className="tt-btn tt-btn-ghost" onClick={async () => await printAllTeachersTimetables({
-              school: { name: currentUser?.schoolName }, teachers: teacherList,
-              period: activePeriod, config, allSlots: slots, activeDays
-            })}><PrintIcon size={14} /> Print All Staff Timetables</button>
-          )}
-
-
-          {/* Period selector always visible */}
           <Select 
             value={periodId} 
             onChange={e => setPeriodId(e.target.value)}
@@ -632,388 +541,236 @@ export default function Timetable({ currentUser, currentPeriodId, periods = [] }
         </div>
       </div>
 
-
-
-      {/* ── Toast ── */}
       {message && (
         <div className={`tt-toast ${message.type === 'ok' ? 'tt-toast-ok' : 'tt-toast-err'}`}>
           {message.type === 'ok' ? <CheckIcon size={14} /> : <CrossIcon size={14} />} {message.text}
         </div>
       )}
 
-      {/* ═══════════════ TIMETABLE GRID ═══════════════ */}
-      <>
-
-          {/* Controls */}
-          <div className="tt-controls">
-            <div className="tt-view-toggle">
-              <button className={`tt-view-btn ${view === 'class' ? 'active' : ''}`}   onClick={() => setView('class')}><BookIcon size={14} /> Class</button>
-              <button className={`tt-view-btn ${view === 'teacher' ? 'active' : ''}`} onClick={() => setView('teacher')}><TeacherIcon size={14} /> Teacher</button>
-            </div>
-            <div className="tt-divider" />
-            {view === 'class' && (
-              <>
-                <Select 
-                  value={selClass} 
-                  onChange={e => { setSelClass(e.target.value); setSelStream(''); }}
-                  options={classes.map(c => ({ id: c, label: c }))}
-                  style={{ minWidth: 120 }}
-                />
-                {classStreams.length > 0 && (
-                  <Select 
-                    value={selStream} 
-                    onChange={e => setSelStream(e.target.value)}
-                    options={[
-                      { id: '', label: 'All Streams' },
-                      ...classStreams.map(s => ({ id: s, label: s }))
-                    ]}
-                    style={{ minWidth: 120 }}
-                  />
-                )}
-              </>
-            )}
-            {view === 'teacher' && (
+      <div className="tt-controls">
+        <div className="tt-view-toggle">
+          <button className={`tt-view-btn ${view === 'class' ? 'active' : ''}`}   onClick={() => setView('class')}><BookIcon size={14} /> Class</button>
+          <button className={`tt-view-btn ${view === 'teacher' ? 'active' : ''}`} onClick={() => setView('teacher')}><TeacherIcon size={14} /> Teacher</button>
+        </div>
+        <div className="tt-divider" />
+        {view === 'class' && (
+          <>
+            <Select 
+              value={selClass} 
+              onChange={e => { setSelClass(e.target.value); setSelStream(''); }}
+              options={classes.map(c => ({ id: c, label: c }))}
+              style={{ minWidth: 120 }}
+            />
+            {classStreams.length > 0 && (
               <Select 
-                value={selTeacher} 
-                onChange={e => setSelTeacher(e.target.value)}
-                options={teachers.map(t => ({ id: t.id, label: t.name }))}
-                placeholder="Select Teacher"
-                style={{ minWidth: 180 }}
+                value={selStream} 
+                onChange={e => setSelStream(e.target.value)}
+                options={[
+                  { id: '', label: 'All Streams' },
+                  ...classStreams.map(s => ({ id: s, label: s }))
+                ]}
+                style={{ minWidth: 120 }}
               />
             )}
-          </div>
+          </>
+        )}
+        {view === 'teacher' && (
+          <Select 
+            value={selTeacher} 
+            onChange={e => setSelTeacher(e.target.value)}
+            options={teachers.map(t => ({ id: t.id, label: t.name }))}
+            placeholder="Select Teacher"
+            style={{ minWidth: 180 }}
+          />
+        )}
+      </div>
 
-          {/* Grid */}
-          {loading ? (
-            <div style={{ padding:48, textAlign:'center' }}>
-              <div className="tt-spin" />
-              <div style={{ fontSize:'.78rem', color:'#5A6B5C' }}>Loading timetable...</div>
-            </div>
-          ) : (
-            <div className="tt-grid-wrap">
-              <table className="tt-grid">
-                <thead>
-                  <tr>
-                    <th style={{ textAlign:'left', paddingLeft:12 }}>Time</th>
-                    {activeDays.map(d => (
-                      <th key={d} className={d === todayName ? 'tt-day-today' : ''}>
-                        {d.slice(0, 3).toUpperCase()}
-                        {d === todayName && <span style={{ display:'block', fontSize:'.5rem', opacity:.7 }}>Today</span>}
-                      </th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {[...config].sort((a, b) => a.slot_index - b.slot_index).map((cfg, ci) => {
-                    if (cfg.is_break) {
-                      return (
-                        <tr key={ci} className="tt-break-row">
-                          <td className="tt-time-cell">
-                            <div className="tt-time-range">{cfg.start_time}–{cfg.end_time}</div>
-                          </td>
-                          {activeDays.map(d => (
-                            <td key={d}><span className="tt-break-label">{cfg.label}</span></td>
-                          ))}
-                        </tr>
-                      );
-                    }
-                    return (
-                      <tr key={ci}>
-                        <td className="tt-time-cell">
-                          <div className="tt-time-label">{cfg.label}</div>
-                          <div className="tt-time-range">{cfg.start_time}–{cfg.end_time}</div>
-                        </td>
-                        {activeDays.map(d => {
-                          const cell    = slotLookup(d, cfg.slot_index, activeSlots);
-                          const hasData = !!(cell?.subject);
-                          const bg      = hasData ? (cell.color || COLORS[0]) : null;
-                          const isDoubleFirst  = cell?.is_double_first;
-                          const isDoubleSecond = cell?.is_double_second;
-                          
-                          if (isDoubleSecond) return null; // Skip rendering td to let rowSpan take over
-
-                          const dblCls  = isDoubleFirst ? ' double-first' : '';
-
-                          return (
-                            <td key={d}
-                              rowSpan={isDoubleFirst ? 2 : 1}
-                              className={`tt-cell${hasData ? '' : ' empty'}${dblCls}`}
-                              onClick={() => openEdit(d, cfg.slot_index)}>
-                              {hasData && isAdmin && view === 'class' && (
-                                <button className="tt-cell-clear"
-                                  onClick={e => handleClearCell(d, cfg.slot_index, e)}><CrossIcon size={12} /></button>
-                              )}
-                              <div className="tt-cell-inner" style={hasData ? {
-                                background: `${bg}22`, border: `1px solid ${bg}55`, minHeight: isDoubleFirst ? '120px' : 'auto'
-                              } : {}}>
-                                {hasData && (
-                                  <>
-                                    <div className="tt-cell-subject" style={{ color: bg }}>
-                                      {MOE_ABBREVIATIONS[cell.subject] || cell.subject}
-                                    </div>
-                                    {view === 'class' && (cell.teachers?.name || teacherName(cell.teacher_id)) && (() => {
-                                      const tName = cell.teachers?.name || teacherName(cell.teacher_id);
-                                      const t = teachers.find(x => x.id === cell.teacher_id);
-                                      const tSubs = (Array.isArray(t?.subjects) ? t.subjects : (t?.subjects || '').split(','))
-                                        .map(s => s.trim().toLowerCase())
-                                        .filter(Boolean);
-                                      const searchSub = (cell.subject || '').trim().toLowerCase();
-                                      const isAssigned = classAssignments.some(a => a.subject?.toLowerCase() === searchSub && a.teacher_id === cell.teacher_id);
-                                      const isMatch = !searchSub || isAssigned || tSubs.some(s => s === searchSub || s.includes(searchSub) || searchSub.includes(s));
-
-                                      return (
-                                        <div style={{display:'flex', flexDirection:'column', gap:2}}>
-                                          <div className="tt-cell-teacher" style={{ color: bg, opacity: 0.8, display:'flex', alignItems:'center', gap:3 }}>
-                                            {tName} {!isMatch && searchSub && <AlertIcon size={10} style={{ color: '#F59E0B' }} />}
-                                          </div>
-
-                                        </div>
-                                      );
-                                    })()}
-                                    {view === 'teacher' && cell.class_grade && (
-                                      <div className="tt-cell-class" style={{ color: bg, opacity: 0.8 }}>
-                                        {cell.class_grade}{cell.stream ? ` · ${cell.stream}` : ''}
-                                      </div>
-                                    )}
-                                  </>
-                                )}
-                                {!hasData && isAdmin && view === 'class' && (
-                                  <div className="tt-add-hint">+ Add</div>
-                                )}
-                              </div>
-                            </td>
-
-                          );
-                        })}
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-          )}
-
-          {/* Legend */}
-          {activeSlots.length > 0 && view === 'class' && (
-            <div className="tt-legend">
-              {[...new Set(activeSlots.filter(s => s.subject && !s.is_double_second).map(s => s.subject))].map(sub => {
-                const s = activeSlots.find(sl => sl.subject === sub);
+      {loading ? (
+        <div style={{ padding:48, textAlign:'center' }}>
+          <div className="tt-spin" />
+          <div style={{ fontSize:'.78rem', color:'#5A6B5C' }}>Loading timetable...</div>
+        </div>
+      ) : (
+        <div className="tt-grid-wrap">
+          <table className="tt-grid">
+            <thead>
+              <tr>
+                <th style={{ textAlign:'left', paddingLeft:12 }}>Time</th>
+                {activeDays.map(d => (
+                  <th key={d} className={d === todayName ? 'tt-day-today' : ''}>
+                    {d.slice(0, 3).toUpperCase()}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {[...config].sort((a, b) => a.slot_index - b.slot_index).map((cfg, ci) => {
+                if (cfg.is_break) {
+                  return (
+                    <tr key={ci} className="tt-break-row">
+                      <td className="tt-time-cell">
+                        <div className="tt-time-range">{cfg.start_time}–{cfg.end_time}</div>
+                      </td>
+                      {activeDays.map(d => (
+                        <td key={d}><span className="tt-break-label">{cfg.label}</span></td>
+                      ))}
+                    </tr>
+                  );
+                }
                 return (
-                  <div key={sub} className="tt-legend-item">
-                    <div className="tt-legend-dot" style={{ background: s?.color || COLORS[0] }} />
-                    {sub}
-                  </div>
+                  <tr key={ci}>
+                    <td className="tt-time-cell">
+                      <div className="tt-time-label">{cfg.label}</div>
+                      <div className="tt-time-range">{cfg.start_time}–{cfg.end_time}</div>
+                    </td>
+                    {activeDays.map(d => {
+                      const cell    = slotLookup(d, cfg.slot_index, activeSlots);
+                      const hasData = !!(cell?.subject);
+                      const bg      = hasData ? (cell.color || COLORS[0]) : null;
+                      const isDoubleFirst  = cell?.is_double_first;
+                      const isDoubleSecond = cell?.is_double_second;
+                      
+                      if (isDoubleSecond) return null;
+
+                      return (
+                        <td key={d}
+                          rowSpan={isDoubleFirst ? 2 : 1}
+                          className={`tt-cell${hasData ? '' : ' empty'}${isDoubleFirst ? ' double-first' : ''}`}
+                          onClick={() => openEdit(d, cfg.slot_index)}>
+                          <div className="tt-cell-inner" style={hasData ? {
+                            background: `${bg}22`, border: `1px solid ${bg}55`, minHeight: isDoubleFirst ? '120px' : 'auto'
+                          } : {}}>
+                            {hasData && (
+                              <>
+                                <div className="tt-cell-subject" style={{ color: bg }}>
+                                  {MOE_ABBREVIATIONS[cell.subject] || cell.subject}
+                                </div>
+                                {view === 'class' && (
+                                  <div className="tt-cell-teacher" style={{ color: bg, opacity: 0.8 }}>
+                                    {teacherName(cell.teacher_id)}
+                                  </div>
+                                )}
+                                {view === 'teacher' && cell.class_grade && (
+                                  <div className="tt-cell-class" style={{ color: bg, opacity: 0.8 }}>
+                                    {cell.class_grade}{cell.stream ? ` · ${cell.stream}` : ''}
+                                  </div>
+                                )}
+                              </>
+                            )}
+                            {!hasData && isAdmin && view === 'class' && (
+                              <div className="tt-add-hint">+ Add</div>
+                            )}
+                          </div>
+                        </td>
+                      );
+                    })}
+                  </tr>
                 );
               })}
-            </div>
-          )}
-        </>
+            </tbody>
+          </table>
+        </div>
+      )}
 
-
-
-
-      {/* ═══════════════════════════════════════════════════════════════
-          CELL EDIT MODAL
-         ═══════════════════════════════════════════════════════════════ */}
+      {/* Edit Modal */}
       {editCell && (
-        <div className="tt-modal-overlay" onClick={e => { if (e.target === e.currentTarget) { setEditCell(null); setConflictWarning(null); }}}>
-          <div className="tt-modal">
-            <button className="tt-modal-close" onClick={() => { setEditCell(null); setConflictWarning(null); }}><CrossIcon size={14} /></button>
-            <div className="tt-modal-title">
-              {editCell.existing?.subject ? 'Edit Slot' : 'Add to Slot'}
+        <div className="modal-overlay" onClick={() => setEditCell(null)}>
+          <div className="modal tt-modal" onClick={e => e.stopPropagation()}>
+            <div className="modal-header">
+              <h3>{editCell.existing ? 'Edit Lesson' : 'Add Lesson'}</h3>
+              <button className="modal-close" onClick={() => setEditCell(null)}>×</button>
             </div>
-            <div className="tt-modal-sub">
-              {editCell.day} · {config.find(c => c.slot_index === editCell.slotIndex)?.label} · {selClass}{selStream ? ` ${selStream}` : ''}
-            </div>
-
-            {/* Subject */}
-            <label className="tt-field-label">Subject *</label>
-            <input className="tt-field" type="text" placeholder="e.g. Mathematics"
-              value={editSubject} onChange={e => setEditSubject(e.target.value)}
-              onBlur={() => setEditSubject(s => s.trim().split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' '))} />
-
-            {suggestedSubs && suggestedSubs.length > 0 && (
-              <div className="tt-suggestion-chips" style={{ marginTop:6 }}>
-                {suggestedSubs.map(s => (
-                  <button key={s} className={`tt-chip ${editSubject === s ? 'active' : ''}`}
-                    onClick={() => setEditSubject(s)}>
-                    {s}
-                  </button>
-                ))}
+            <div className="modal-body">
+              <div className="form-group">
+                <label>Subject</label>
+                <input list="subjects" className="form-input" value={editSubject} onChange={e => setEditSubject(e.target.value)} />
+                <datalist id="subjects">
+                  {suggestedSubs.map(s => <option key={s} value={s} />)}
+                </datalist>
               </div>
-            )}
-
-            {/* Teacher */}
-            <label className="tt-field-label">Teacher</label>
-            <Select 
-              value={editTeacher} 
-              onChange={e => { setEditTeacher(e.target.value); setConflictWarning(null); }}
-              options={[
-                { id: '', label: '— Unassigned —' },
-                ...teachers.map(t => ({ id: t.id, label: `${t.name}${t.on_leave ? ' (On Leave 🏖️)' : ''}` }))
-              ]}
-              style={{ 
-                width: '100%',
-                border: editTeacher && editSubject && (() => {
-                  const t = teachers.find(x => x.id === editTeacher);
-                  const tSubs = (Array.isArray(t?.subjects) ? t.subjects : (t?.subjects || '').split(','))
-                    .map(s => s.trim().toLowerCase())
-                    .filter(Boolean);
-                  const searchSub = editSubject.trim().toLowerCase();
-                  const isAssigned = classAssignments.some(a => a.subject?.toLowerCase() === searchSub && a.teacher_id === editTeacher);
-                  const isMatch = isAssigned || tSubs.some(s => s === searchSub || s.includes(searchSub) || searchSub.includes(s));
-                  return (!isMatch) ? '1.5px solid #d17800' : '1px solid var(--border, rgba(255,255,255,0.1))';
-                })()
-              }}
-            />
-
-            {editTeacher && editSubject && (() => {
-              const t = teachers.find(x => x.id === editTeacher);
-              const tSubs = (Array.isArray(t?.subjects) ? t.subjects : (t?.subjects || '').split(','))
-                .map(s => s.trim().toLowerCase())
-                .filter(Boolean);
-              
-              const searchSub = editSubject.trim().toLowerCase();
-              const isAssigned = classAssignments.some(a => a.subject?.toLowerCase() === searchSub && a.teacher_id === editTeacher);
-              const isMatch = isAssigned || tSubs.some(s => s === searchSub || s.includes(searchSub) || searchSub.includes(s));
-              
-              if (!isMatch) {
-                return <div className="tt-competency-warning">
-                  <AlertIcon size={12} /> This teacher is not registered to teach {editSubject}
-                </div>;
-              }
-              return null;
-            })()}
-
-            {/* Conflict warnings */}
-            {conflictWarning && (
-              <div className="tt-conflict-alert">
-                <AlertIcon size={20} />
-                <div>{conflictWarning}</div>
+              <div className="form-group">
+                <label>Teacher</label>
+                <Select value={editTeacher} onChange={e => setEditTeacher(e.target.value)} options={teachers.map(t => ({ id: t.id, label: t.name }))} />
               </div>
-            )}
-
-
-            {/* Leave Warning in Modal */}
-            {!conflictWarning && editTeacher && teachers.find(t => t.id === editTeacher)?.on_leave && (
-              <div className="tt-conflict-box" style={{borderColor:'var(--warning)', background:'var(--warning-light)'}}>
-                <div className="tt-conflict-title" style={{color:'var(--warning)'}}><AlertIcon size={16} /> Teacher On Leave</div>
-                <div className="tt-conflict-body" style={{color:'var(--text-main)'}}>
-                  <strong style={{ color:'var(--warning)' }}>{teacherName(editTeacher)}</strong> is currently marked as <strong>On Leave</strong>. 
-                  Assigning them will require a cover teacher to be placed manually later.
+              <div className="form-group">
+                <label style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <input type="checkbox" checked={isDouble} onChange={e => setIsDouble(e.target.checked)} />
+                  Double Lesson (2 slots)
+                </label>
+              </div>
+              {conflictWarning && (
+                <div className="tt-warning" style={{ background: '#FFF7ED', color: '#C2410C', padding: 12, borderRadius: 8, fontSize: '0.85rem', marginBottom: 16 }}>
+                  <AlertIcon size={14} /> {conflictWarning}
                 </div>
-              </div>
-            )}
-
-
-
-            {/* Colour */}
-            <label className="tt-field-label">Colour</label>
-            <div className="tt-color-row">
-              {COLORS.map(c => (
-                <div key={c} className={`tt-color-dot ${editColor === c ? 'active' : ''}`}
-                  style={{ background: c }} onClick={() => setEditColor(c)} />
-              ))}
+              )}
             </div>
-
-            {/* Double Lesson Checkbox */}
-            <label className="tt-double-check" style={{ marginTop:16, display:'flex', alignItems:'center', gap:8, cursor:'pointer', fontSize:'.8rem' }}>
-              <input type="checkbox" checked={isDouble} onChange={e => setIsDouble(e.target.checked)} />
-              Double lesson (consecutive slot handling)
-            </label>
-
-            {/* Actions */}
-            <div className="tt-modal-actions">
-              <button className="tt-btn" style={{ flex:1 }}
-                onClick={() => { setEditCell(null); setConflictWarning(null); }}>
-                Cancel
-              </button>
-              <button className="tt-btn tt-btn-primary" style={{ flex:1.4 }}
-                disabled={!editSubject.trim() || cellSaving || !!conflictWarning}
-                onClick={handleSaveCell}>
-                {cellSaving ? 'Saving...' : editCell.existing ? 'Update Slot' : 'Add Slot'}
+            <div className="modal-footer">
+              {editCell.existing && (
+                <button className="btn btn-danger btn-ghost" onClick={e => handleClearCell(editCell.day, editCell.slotIndex, e)}>Clear Slot</button>
+              )}
+              <button className="btn btn-primary" onClick={handleSaveCell} disabled={cellSaving}>
+                {cellSaving ? 'Saving...' : 'Save Lesson'}
               </button>
             </div>
           </div>
         </div>
       )}
 
-      {/* ═══════════════════════════════════════════════════════════════
-          DAY STRUCTURE EDITOR MODAL
-         ═══════════════════════════════════════════════════════════════ */}
+      {/* Config Modal */}
       {showConfig && (
-        <div className="tt-modal-overlay">
-          <div className="tt-modal" style={{ maxWidth: 650 }}>
-            <button className="tt-modal-close" onClick={() => setShowConfig(false)}><CrossIcon size={14} /></button>
-            <div className="tt-modal-title">Configure Day Structure</div>
-            <div className="tt-modal-sub">Define your school start times, lesson durations, and breaks.</div>
-
-            <div className="tt-config-list" style={{ maxHeight: 400, overflowY: 'auto', marginTop: 12, paddingRight: 8 }}>
-              {draftConfig.map((item, idx) => (
-                <div key={idx} className="tt-config-item" style={{ display: 'flex', gap: 10, alignItems: 'flex-end', marginBottom: 12, padding: 10, borderRadius: 8, background: 'rgba(0,0,0,.02)', border: '1px solid rgba(0,0,0,.04)' }}>
-                  <div style={{ flex: 2 }}>
-                    <label style={{ fontSize: '.6rem', display: 'block', marginBottom: 4 }}>Label (e.g. Period 1)</label>
-                    <input className="tt-field" value={item.label} onChange={e => {
-                      const nc = [...draftConfig];
-                      nc[idx].label = e.target.value;
-                      setDraftConfig(nc);
-                    }} />
-                  </div>
-                  <div style={{ flex: 1.5 }}>
-                    <label style={{ fontSize: '.6rem', display: 'block', marginBottom: 4 }}>Start</label>
-                    <input className="tt-field" type="time" value={item.start_time} onChange={e => {
-                      const nc = [...draftConfig];
-                      nc[idx].start_time = e.target.value;
-                      setDraftConfig(nc);
-                    }} />
-                  </div>
-                  <div style={{ flex: 1.5 }}>
-                    <label style={{ fontSize: '.6rem', display: 'block', marginBottom: 4 }}>End</label>
-                    <input className="tt-field" type="time" value={item.end_time} onChange={e => {
-                      const nc = [...draftConfig];
-                      nc[idx].end_time = e.target.value;
-                      setDraftConfig(nc);
-                    }} />
-                  </div>
-                  <div style={{ flex: 1, textAlign: 'center' }}>
-                    <label style={{ fontSize: '.6rem', display: 'block', marginBottom: 4 }}>Break?</label>
-                    <input type="checkbox" checked={item.is_break} onChange={e => {
-                      const nc = [...draftConfig];
-                      nc[idx].is_break = e.target.checked;
-                      setDraftConfig(nc);
-                    }} />
-                  </div>
-                  <button className="tt-btn-icon tt-btn-danger" onClick={() => setDraftConfig(draftConfig.filter((_, i) => i !== idx))}>
-                    <CrossIcon size={12} />
-                  </button>
+        <div className="modal-overlay" onClick={() => setShowConfig(false)}>
+          <div className="modal" style={{ maxWidth: 600 }} onClick={e => e.stopPropagation()}>
+            <div className="modal-header">
+              <h3>Day Structure</h3>
+              <button className="modal-close" onClick={() => setShowConfig(false)}>×</button>
+            </div>
+            <div className="modal-body">
+              {draftConfig.map((c, i) => (
+                <div key={i} className="tt-config-row" style={{ display: 'flex', gap: 12, marginBottom: 12 }}>
+                  <input className="form-input" style={{ flex: 2 }} value={c.label} onChange={e => {
+                    const next = [...draftConfig];
+                    next[i].label = e.target.value;
+                    setDraftConfig(next);
+                  }} />
+                  <input type="time" className="form-input" value={c.start_time} onChange={e => {
+                    const next = [...draftConfig];
+                    next[i].start_time = e.target.value;
+                    setDraftConfig(next);
+                  }} />
+                  <input type="time" className="form-input" value={c.end_time} onChange={e => {
+                    const next = [...draftConfig];
+                    next[i].end_time = e.target.value;
+                    setDraftConfig(next);
+                  }} />
+                  <label style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: '0.75rem' }}>
+                    <input type="checkbox" checked={c.is_break} onChange={e => {
+                      const next = [...draftConfig];
+                      next[i].is_break = e.target.checked;
+                      setDraftConfig(next);
+                    }} /> Break
+                  </label>
                 </div>
               ))}
+              <button className="btn btn-ghost" onClick={() => setDraftConfig([...draftConfig, { label: 'New Period', start_time: '14:40', end_time: '15:20', is_break: false, slot_index: draftConfig.length }])}>
+                + Add Slot
+              </button>
             </div>
-
-            <button className="tt-btn tt-btn-ghost" style={{ width: '100%', marginTop: 8 }} onClick={() => setDraftConfig([...draftConfig, { label: `Period ${draftConfig.length + 1}`, start_time: '08:00', end_time: '08:40', is_break: false }])}>
-              <PlusIcon size={12} /> Add New Time Slot
-            </button>
-
-            <div className="tt-modal-actions" style={{ marginTop: 24 }}>
-              <button className="tt-btn" style={{ flex: 1 }} onClick={() => setShowConfig(false)}>Cancel</button>
-              <button className="tt-btn tt-btn-primary" style={{ flex: 2 }} disabled={configSaving}
-                onClick={async () => {
-                  setConfigSaving(true);
-                  try {
-                    await saveTimetableConfig(schoolId, periodId, draftConfig);
-                    setConfig(draftConfig);
-                    setShowConfig(false);
-                    setMessage({ type: 'ok', text: 'Day structure updated successfully.' });
-                  } catch (e) { setMessage({ type: 'err', text: e.message }); }
-                  finally { setConfigSaving(false); }
-                }}>
+            <div className="modal-footer">
+              <button className="btn btn-primary" onClick={async () => {
+                setConfigSaving(true);
+                try {
+                  await saveTimetableConfig(schoolId, periodId, draftConfig);
+                  setConfig(draftConfig);
+                  setShowConfig(false);
+                } catch (e) { console.error(e); }
+                finally { setConfigSaving(false); }
+              }} disabled={configSaving}>
                 {configSaving ? 'Saving...' : 'Save Structure'}
               </button>
             </div>
           </div>
         </div>
       )}
-
     </div>
   );
 }
