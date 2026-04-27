@@ -254,7 +254,11 @@ export default function Students({ currentUser, currentPeriodId }) {
                   { id: 'All', label: 'All Streams' },
                   ...(classFilter !== 'All' 
                     ? (profile.streamsPerClass?.[classFilter] || []) 
-                    : Array.from(new Set(Object.values(profile.streamsPerClass || {}).flat()))
+                    : Array.from(new Set(
+                        Object.entries(profile.streamsPerClass || {})
+                          .filter(([cls]) => (profile.activeClasses || []).includes(cls))
+                          .flatMap(([, streams]) => streams)
+                      ))
                   ).map(s => ({ id: s, label: s }))
                 ]}
                 style={{ minWidth: 130 }}

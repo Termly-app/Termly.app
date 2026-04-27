@@ -550,7 +550,7 @@ function ReportsTab() {
       } else if (type === 'by-class') {
         title = 'Staff per Class Assignment';
         const classMap = {};
-        assignments.filter(a => a.is_active && a.stream).forEach(a => {
+        assignments.filter(a => a.is_active && a.stream && profile.activeClasses?.includes(a.stream.level)).forEach(a => {
           const cls = `${a.stream.level} (${a.stream.name})`;
           if (!classMap[cls]) classMap[cls] = new Set();
           const t = teachers.find(teach => teach.id === a.teacher_id);

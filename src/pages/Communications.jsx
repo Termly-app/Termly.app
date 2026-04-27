@@ -141,7 +141,7 @@ export default function Communications({ currentUser }) {
   }, [profile?.activeClasses, allGradesOrder]);
 
   const streamsForClass = targetAudience !== 'all' && targetAudience !== 'defaulters' 
-    ? Array.from(new Set(students.filter(s => s.class === targetAudience).map(s => s.stream))).filter(Boolean)
+    ? (profile.streamsPerClass?.[targetAudience] || [])
     : [];
 
   const tabBtn = (isActive) => ({

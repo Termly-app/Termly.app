@@ -332,9 +332,13 @@ export default function Attendance({ currentUser, currentPeriodId }) {
             options={[
               { id: 'All', label: 'All Streams' },
               ...(selectedClass !== 'All' 
-                 ? (profile.streamsPerClass?.[selectedClass] || []).map(stream => ({ id: stream, label: stream }))
-                 : Object.values(profile.streamsPerClass || {}).flat().filter((v,i,a) => a.indexOf(v)===i).map((stream, idx) => ({ id: stream, label: stream }))
-              )
+                 ? (profile.streamsPerClass?.[selectedClass] || [])
+                 : Array.from(new Set(
+                     Object.entries(profile.streamsPerClass || {})
+                       .filter(([cls]) => (profile.activeClasses || []).includes(cls))
+                       .flatMap(([, streams]) => streams)
+                   ))
+              ).map(stream => ({ id: stream, label: stream }))
             ]}
             style={{ minWidth: 140 }}
           />

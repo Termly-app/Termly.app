@@ -60,10 +60,20 @@ export default function SetupWizard({ profile, onComplete, totalStudents }) {
   const handleSave = async () => {
     setSaving(true);
     try {
-      console.log('Wizard Saving Draft...', formData);
+      // Prune streams for disabled classes to maintain data consistency
+      const prunedStreams = {};
+      if (formData.activeClasses && formData.streamsPerClass) {
+        formData.activeClasses.forEach(cls => {
+          if (formData.streamsPerClass[cls]) {
+            prunedStreams[cls] = formData.streamsPerClass[cls];
+          }
+        });
+      }
+
       const result = await saveSchoolProfile({
         ...profile,
         ...formData,
+        streamsPerClass: Object.keys(prunedStreams).length > 0 ? prunedStreams : formData.streamsPerClass,
         setup_completed: step === 6
       });
 

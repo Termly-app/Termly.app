@@ -78,11 +78,8 @@ export default function NEMISDashboard({ currentUser }) {
 
   if (loading && !audit) return <Loader />;
 
-  // Build unique class list from school profile (configured classes) + students with issues
-  const allClasses = [...new Set([
-    ...(profile?.activeClasses || []),
-    ...audit.studentsWithIssues.map(s => s.class).filter(Boolean)
-  ])].sort();
+  // Build unique class list from school profile (only active classes)
+  const allClasses = (profile?.activeClasses || []).sort();
 
   const filteredIssues = audit.studentsWithIssues.filter(s => {
     const matchSearch = s.name.toLowerCase().includes(searchTerm.toLowerCase()) || 

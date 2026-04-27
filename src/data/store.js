@@ -468,7 +468,7 @@ function loadProfileFromLocal(schoolId) {
   } catch (e) { return null; }
 }
 
-const SAFE_PROFILE_COLUMNS = 'id, school_name, motto, phone, email, address, logo, subscription_plan, streams_per_class, custom_subjects, active_classes, grade_fees, subscription_status, subscription_expiry, last_payment_status, mpesa_config, sms_config, grading_systems, curriculum, timetable_label, status_notes';
+const SAFE_PROFILE_COLUMNS = 'id, school_name, motto, phone, email, address, logo, subscription_plan, streams_per_class, custom_subjects, active_classes, grade_fees, subscription_status, subscription_expiry, last_payment_status, mpesa_config, sms_config, grading_systems, curriculum, timetable_label, status_notes, setup_completed, school_type, boarding_houses';
 
 /**
  * Maps raw database profile (snake_case) to application profile (camelCase)
@@ -501,6 +501,8 @@ function mapSchoolProfile(data) {
     statusNotes: data.status_notes || null,
     schoolId: data.school_id,
     enabledModules: data.custom_subjects?.__shadow_enabled_modules || DEFAULT_PROFILE.enabledModules,
+    setup_completed: data.setup_completed || false,
+    schoolType: data.school_type || 'Day'
   };
 }
 
@@ -642,6 +644,7 @@ function mapProfileData(data) {
     activeClasses: trimArr(data.active_classes || data.custom_subjects?.__shadow_active_classes) || DEFAULT_PROFILE.activeClasses,
     gradeFees: data.grade_fees || {},
     setup_completed: data.setup_completed || data.custom_subjects?.__shadow_setup_completed || false,
+    schoolType: data.school_type || data.custom_subjects?.__shadow_school_type || 'Day',
     subscriptionStatus: data.subscription_status || 'Inactive',
     subscriptionExpiry: data.subscription_expiry || null,
     lastPaymentStatus: data.last_payment_status || 'none',
