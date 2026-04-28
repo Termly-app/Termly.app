@@ -638,16 +638,31 @@ export async function retractExamResults(examSessionId) {
 
 export async function getOpenExamsForTeacher() {
   if (!_currentSchoolId) return [];
-  // Uses a join to get exams that have teacher_entry_open = true in exam_publish_settings
-  const { data, error } = await supabase
+
+  // 1. Try: Exams explicitly opened via exam_publish_settings
+  const { data: published, error: pubErr } = await supabase
     .from('exams')
     .select('id, name, term, exam_type, status, exam_publish_settings!inner(teacher_entry_open)')
     .eq('school_id', _currentSchoolId)
     .eq('exam_publish_settings.teacher_entry_open', true)
     .order('created_at', { ascending: false });
 
-  if (error) throw error;
-  return data || [];
+  if (!pubErr && published && published.length > 0) return published;
+
+  // 2. Fallback: Show any exams that are not yet closed/archived
+  // This ensures teachers see exams even when admin hasn't explicitly toggled the publish setting
+  const { data: fallback, error: fbErr } = await supabase
+    .from('exams')
+    .select('id, name, term, exam_type, status')
+    .eq('school_id', _currentSchoolId)
+    .in('status', ['open', 'published', 'setup', 'active'])
+    .order('created_at', { ascending: false });
+
+  if (fbErr) {
+    console.error('[getOpenExamsForTeacher] Fallback query error:', fbErr);
+    return [];
+  }
+  return fallback || [];
 }
 
 export async function previewClassPromotion(fromYear, toYear) {
