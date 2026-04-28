@@ -120,11 +120,11 @@ function ByClassReport({ profile, students }) {
 
   const handlePrint = () => {
     const title = `Borrowed & Lost Books - ${filterClass === 'All' ? 'All Classes' : filterClass} ${filterStream !== 'All' ? '('+filterStream+')' : ''}`;
-    let html = `<table><thead><tr><th>Student</th><th>Adm No</th><th>Class & Stream</th><th>Book Title</th><th>Copy Code</th><th>Status</th><th>Due/Days Overdue</th></tr></thead><tbody>`;
+    let html = `<table><thead><tr><th>Adm No</th><th>Student</th><th>Class & Stream</th><th>Book Title</th><th>Copy Code</th><th>Status</th><th>Due/Days Overdue</th></tr></thead><tbody>`;
     filteredData.forEach(r => {
       const st = students.find(s => s.id === r.students.id);
       html += `<tr>
-        <td>${r.students.name}</td><td>${r.students.adm_no || '--'}</td>
+        <td>${r.students.adm_no || '--'}</td><td>${r.students.name}</td>
         <td>${r.students.class} ${st?.stream ? st.stream : ''}</td>
         <td>${r.book_copies?.books?.title}</td><td>${r.book_copies?.copy_code}</td>
         <td style="text-transform: uppercase; font-weight: bold;">${r.status}</td><td>${r.due_date}</td>
@@ -238,10 +238,10 @@ function BySubjectReport({ profile, students }) {
 
   const handlePrint = () => {
     const title = `Borrowed & Lost Books - ${filterSubject} Subject`;
-    let html = `<table><thead><tr><th>Student</th><th>Adm No</th><th>Class</th><th>Book Title</th><th>Copy Code</th><th>Status</th><th>Due/Days Overdue</th></tr></thead><tbody>`;
+    let html = `<table><thead><tr><th>Adm No</th><th>Student</th><th>Class</th><th>Book Title</th><th>Copy Code</th><th>Status</th><th>Due/Days Overdue</th></tr></thead><tbody>`;
     filteredData.forEach(r => {
       const st = students.find(s => s.id === r.students.id);
-      html += `<tr><td>${r.students.name}</td><td>${r.students.adm_no || '--'}</td><td>${r.students.class} ${st?.stream ? st.stream : ''}</td><td>${r.book_copies?.books?.title}</td><td>${r.book_copies?.copy_code}</td><td style="text-transform: uppercase; font-weight: bold;">${r.status}</td><td>${r.due_date}</td></tr>`;
+      html += `<tr><td>${r.students.adm_no || '--'}</td><td>${r.students.name}</td><td>${r.students.class} ${st?.stream ? st.stream : ''}</td><td>${r.book_copies?.books?.title}</td><td>${r.book_copies?.copy_code}</td><td style="text-transform: uppercase; font-weight: bold;">${r.status}</td><td>${r.due_date}</td></tr>`;
     });
     html += `</tbody></table>`;
     printTable(title, html);
@@ -432,9 +432,9 @@ function ByBookReport({ books, students }) {
   const handlePrint = () => {
     if (!selectedBook || history.length === 0) return;
     const title = `Book Circulation History - ${selectedBook.title}`;
-    let html = `<table><thead><tr><th>Student Name</th><th>Class & Stream</th><th>Copy Code</th><th>Borrowed</th><th>Returned</th><th>Status</th></tr></thead><tbody>`;
+    let html = `<table><thead><tr><th>Adm No</th><th>Student Name</th><th>Class & Stream</th><th>Copy Code</th><th>Borrowed</th><th>Returned</th><th>Status</th></tr></thead><tbody>`;
     history.forEach(r => {
-      html += `<tr><td>${r.students?.name}</td><td>${r.students?.class} ${r.students?.stream || ''}</td><td>${r.book_copies?.copy_code}</td><td>${r.borrow_date}</td><td>${r.return_date || '--'}</td><td style="text-transform: uppercase;">${r.status}</td></tr>`;
+      html += `<tr><td>${r.students?.adm_no || '--'}</td><td>${r.students?.name}</td><td>${r.students?.class} ${r.students?.stream || ''}</td><td>${r.book_copies?.copy_code}</td><td>${r.borrow_date}</td><td>${r.return_date || '--'}</td><td style="text-transform: uppercase;">${r.status}</td></tr>`;
     });
     html += `</tbody></table>`;
     printTable(title, html);
