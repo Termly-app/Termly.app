@@ -78,46 +78,50 @@ export default function Dashboard({ currentPeriodId }) {
         <div className="card-header border-b border-gray-50 flex justify-between items-center bg-white rounded-t-xl">
           <h3 className="font-bold text-lg text-gray-800">Recent Circulation Activity</h3>
         </div>
-        <div className="overflow-x-auto">
+        <div className="table-wrapper bg-white">
           {data.recent_activity.length > 0 ? (
-            <table className="w-full text-left text-sm text-gray-600">
-              <thead className="bg-gray-50/50 text-gray-500 font-semibold border-b border-gray-100 uppercase text-xs tracking-wider">
+            <table className="premium-table">
+              <thead>
                 <tr>
-                  <th className="py-4 px-6">Student</th>
-                  <th className="py-4 px-6">Book Title</th>
-                  <th className="py-4 px-6">Copy Code</th>
-                  <th className="py-4 px-6">Action / Status</th>
-                  <th className="py-4 px-6">Date</th>
+                  <th>Student</th>
+                  <th>Book Title</th>
+                  <th>Copy Code</th>
+                  <th>Action / Status</th>
+                  <th>Date</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-50 bg-white">
+              <tbody>
                 {data.recent_activity.map(row => (
-                  <tr key={row.id} className="hover:bg-gray-50/30 transition-colors">
-                    <td className="py-4 px-6 font-semibold text-gray-800">{row.students?.name || 'Unknown'}</td>
-                    <td className="py-4 px-6">{row.book_copies?.books?.title || 'Unknown Title'}</td>
-                    <td className="py-4 px-6">
-                      <span className="font-mono bg-gray-100 px-2 py-1 rounded text-xs text-gray-700 font-bold border border-gray-200">
-                        {row.book_copies?.copy_code}
-                      </span>
+                  <tr key={row.id}>
+                    <td>
+                      <div style={{ fontWeight: 700, color: 'var(--text)' }}>{row.students?.name || 'Unknown'}</div>
                     </td>
-                    <td className="py-4 px-6">
+                    <td>
+                      <div style={{ fontWeight: 600, color: '#334155' }}>{row.book_copies?.books?.title || 'Unknown Title'}</div>
+                    </td>
+                    <td>
+                      <code style={{ fontSize: '0.75rem', color: '#2563eb', background: '#eff6ff', padding: '2px 4px', borderRadius: '4px', fontWeight: 600 }}>
+                        {row.book_copies?.copy_code}
+                      </code>
+                    </td>
+                    <td>
                       {row.status === 'borrowed' ? (
-                        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-blue-100 text-blue-700">
-                           <PlatformZapIcon size={12} /> Issued
+                        <span className="badge badge-primary" style={{ textTransform: 'uppercase' }}>
+                           Issued
                         </span>
                       ) : row.status === 'returned' ? (
-                        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-green-100 text-green-700">
-                           <BookIcon size={12} /> Returned
+                        <span className="badge badge-success" style={{ textTransform: 'uppercase' }}>
+                           Returned
                         </span>
                       ) : (
-                        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-gray-100 text-gray-700 capitalize">
+                        <span className="badge badge-ghost" style={{ textTransform: 'uppercase' }}>
                            {row.status}
                         </span>
                       )}
                     </td>
-                    <td className="py-4 px-6 text-gray-500 whitespace-nowrap">
-                      <div className="flex items-center gap-1">
-                        <ClockIcon size={14} className="opacity-50" />
+                    <td style={{ color: 'var(--text-light)' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                        <ClockIcon size={14} />
                         {new Date(row.created_at).toLocaleDateString(undefined, {month:'short', day:'numeric', year:'numeric'})}
                       </div>
                     </td>
@@ -126,10 +130,10 @@ export default function Dashboard({ currentPeriodId }) {
               </tbody>
             </table>
           ) : (
-            <div className="py-16 text-center flex flex-col items-center justify-center text-gray-400 bg-white">
-              <ClockIcon size={48} className="mb-4 opacity-50 text-gray-300" />
-              <p className="text-lg font-medium text-gray-500">No circulation activity yet.</p>
-              <p className="text-sm mt-1">Issue a book to see it appear here.</p>
+            <div style={{ padding: '64px 0', textAlign: 'center', color: 'var(--text-light)', background: '#fff' }}>
+              <ClockIcon size={48} style={{ margin: '0 auto 16px auto', opacity: 0.5 }} />
+              <p style={{ fontSize: '1.125rem', fontWeight: 500 }}>No circulation activity yet.</p>
+              <p style={{ fontSize: '0.875rem', marginTop: '4px' }}>Issue a book to see it appear here.</p>
             </div>
           )}
         </div>
