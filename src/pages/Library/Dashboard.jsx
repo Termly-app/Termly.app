@@ -87,7 +87,7 @@ export default function Dashboard({ currentPeriodId }) {
                   <th>Book Title</th>
                   <th>Copy Code</th>
                   <th>Action / Status</th>
-                  <th>Date</th>
+                  <th style={{ textAlign: 'center' }}>Date</th>
                 </tr>
               </thead>
               <tbody>
@@ -119,8 +119,8 @@ export default function Dashboard({ currentPeriodId }) {
                         </span>
                       )}
                     </td>
-                    <td style={{ color: 'var(--text-light)' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '4px' }}>
+                    <td style={{ color: 'var(--text-light)', textAlign: 'center' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}>
                         <ClockIcon size={14} />
                         {new Date(row.created_at).toLocaleDateString(undefined, {month:'short', day:'numeric', year:'numeric'})}
                       </div>
