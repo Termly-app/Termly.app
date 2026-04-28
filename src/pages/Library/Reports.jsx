@@ -409,7 +409,13 @@ function ByBookReport({ books, students }) {
   const matchingBooks = useMemo(() => {
     if (searchInput.length < 2) return [];
     const term = searchInput.toLowerCase();
-    return books.filter(b => b.title.toLowerCase().includes(term) || (b.author && b.author.toLowerCase().includes(term)) || (b.isbn && b.isbn.includes(term))).slice(0, 5);
+    return books.filter(b => {
+      if (b.title.toLowerCase().includes(term)) return true;
+      if (b.author && b.author.toLowerCase().includes(term)) return true;
+      if (b.isbn && b.isbn.includes(term)) return true;
+      if (b.book_copies && b.book_copies.some(c => c.copy_code && c.copy_code.toLowerCase().includes(term))) return true;
+      return false;
+    }).slice(0, 5);
   }, [searchInput, books]);
 
   const selectBook = async (b) => {
