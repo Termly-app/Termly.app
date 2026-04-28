@@ -187,7 +187,7 @@ export async function returnBook(borrowRecordId, returnedTo, condition, notes) {
 
 export async function getActiveLoans(filter = {}) {
     let query = supabase.from('borrow_records')
-      .select('*, students(name, adm_no), book_copies!inner(copy_code, condition, books(title, book_code))')
+      .select('*, students(name, adm_no), book_copies!inner(copy_code, condition, books(title, isbn))')
       .eq('status', 'borrowed')
       .eq('school_id', getSchoolId());
 
