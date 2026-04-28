@@ -249,17 +249,19 @@ function IssueTab({ currentUser, students, alert, toast }) {
              </div>
              
              {availableCopies.length > 0 && (
-               <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, marginTop: '8px', background: '#fff', borderRadius: '12px', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)', border: '1px solid var(--border)', zIndex: 100, overflow: 'hidden' }}>
+               <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, marginTop: '8px', background: '#fff', borderRadius: '12px', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)', border: '1px solid var(--border)', zIndex: 100, overflow: 'hidden', maxHeight: '300px', overflowY: 'auto' }}>
                  {availableCopies.map(c => (
                    <button 
                      key={c.id} 
-                     className="w-full text-left px-4 py-3 hover:bg-gray-50 border-b border-gray-50 last:border-0 flex justify-between items-center"
+                     style={{ width: '100%', textAlign: 'left', padding: '12px 16px', background: 'transparent', border: 'none', borderBottom: '1px solid #f1f5f9', cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center', transition: 'background 0.2s' }}
+                     onMouseEnter={(e) => e.currentTarget.style.background = '#f8fafc'}
+                     onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
                      onClick={() => selectCopy(c)}
                    >
                      <div>
-                       <div className="font-bold text-gray-800">{c.books?.title}</div>
-                       <div className="text-xs text-gray-500 flex gap-2 mt-1">
-                         <span className="font-mono bg-gray-100 px-1.5 py-0.5 rounded">{c.copy_code}</span> 
+                       <div style={{ fontWeight: 600, color: 'var(--text)', fontSize: '0.9375rem' }}>{c.books?.title}</div>
+                       <div style={{ fontSize: '0.75rem', color: 'var(--text-light)', marginTop: '4px', display: 'flex', gap: '8px', alignItems: 'center' }}>
+                         <span style={{ fontFamily: 'monospace', background: '#f1f5f9', padding: '2px 6px', borderRadius: '4px', color: '#0f172a', fontWeight: 600 }}>{c.copy_code}</span> 
                          <span>{c.books?.category}</span>
                          <span>Condition: {c.condition}</span>
                        </div>
@@ -270,15 +272,15 @@ function IssueTab({ currentUser, students, alert, toast }) {
              )}
            </div>
          ) : (
-           <div className="bg-green-50 border border-green-200 rounded-xl p-4 flex justify-between items-center">
+           <div style={{ background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: '12px', padding: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', position: 'relative', overflow: 'hidden' }}>
+             <div style={{ position: 'absolute', top: 0, right: 0, padding: '16px', opacity: 0.05, pointerEvents: 'none' }}><BookIcon size={64} /></div>
              <div>
-               <div className="text-green-900 font-bold text-lg">{selectedCopy.books?.title}</div>
-               <div className="text-sm text-green-700 mt-1 flex items-center gap-2">
-                 <span>Code: <code className="bg-green-100 px-2 py-0.5 rounded font-bold">{selectedCopy.copy_code}</code></span>
-                 <span>| Condition: {selectedCopy.condition}</span>
+               <div style={{ color: '#166534', fontWeight: 700, fontSize: '1.125rem' }}>{selectedCopy.books?.title}</div>
+               <div style={{ fontSize: '0.875rem', color: '#15803d', marginTop: '4px' }}>
+                 Code: <strong style={{ fontFamily: 'monospace', background: '#dcfce7', padding: '2px 6px', borderRadius: '4px', marginLeft: '4px' }}>{selectedCopy.copy_code}</strong> | Condition: <strong>{selectedCopy.condition}</strong>
                </div>
              </div>
-             <button className="text-green-600 hover:text-green-800 text-sm font-semibold underline" onClick={() => setSelectedCopy(null)}>Change Book</button>
+             <button style={{ color: '#16a34a', background: 'transparent', border: 'none', fontSize: '0.875rem', fontWeight: 600, textDecoration: 'underline', cursor: 'pointer', zIndex: 1 }} onClick={() => setSelectedCopy(null)}>Change Book</button>
            </div>
          )}
       </div>
