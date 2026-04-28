@@ -443,33 +443,47 @@ function ReturnTab({ currentUser, students, alert, toast }) {
 
       {/* LOAN RESULTS */}
       {activeLoans.length > 0 && (
-        <div className="space-y-4">
-          <h3 className="font-bold text-gray-700 text-lg border-b border-gray-200 pb-2">Active Loans Found ({activeLoans.length})</h3>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+          <h3 style={{ fontWeight: 700, color: 'var(--text)', fontSize: '1.125rem', borderBottom: '1px solid var(--border)', paddingBottom: '8px' }}>Active Loans Found ({activeLoans.length})</h3>
           
-          <div className="grid gap-4">
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
             {activeLoans.map(loan => {
                const today = new Date();
                const due = new Date(loan.due_date);
                const isOverdue = today > due;
                
                return (
-                 <div key={loan.id} className={`border-l-4 ${isOverdue ? 'border-red-500 bg-red-50' : 'border-blue-500 bg-white'} rounded-xl shadow-sm border-t border-r border-b p-5 flex flex-col md:flex-row gap-6 items-center justify-between`}>
+                 <div key={loan.id} style={{ 
+                   borderLeft: `4px solid ${isOverdue ? '#ef4444' : '#3b82f6'}`, 
+                   background: isOverdue ? '#fef2f2' : '#fff', 
+                   borderRadius: '12px', 
+                   boxShadow: '0 1px 2px rgba(0,0,0,0.05)', 
+                   borderTop: '1px solid var(--border)',
+                   borderRight: '1px solid var(--border)',
+                   borderBottom: '1px solid var(--border)',
+                   padding: '20px', 
+                   display: 'flex', 
+                   flexWrap: 'wrap',
+                   gap: '24px', 
+                   alignItems: 'center', 
+                   justifyContent: 'space-between'
+                 }}>
                    
-                   <div className="flex-1">
-                     <div className="font-bold text-xl text-gray-800 mb-1">{loan.book_copies?.books?.title}</div>
-                     <div className="flex flex-wrap gap-x-4 gap-y-2 text-sm">
-                        <span className="text-gray-500">Copy: <code className="bg-gray-100 px-1 font-bold rounded text-gray-800">{loan.book_copies?.copy_code}</code></span>
-                        <span className="text-gray-500">Borrower: <strong className="text-gray-800">{loan.students?.name}</strong></span>
-                        <span className="text-gray-500">Due: <strong className={isOverdue ? 'text-red-600' : 'text-gray-800'}>{loan.due_date}</strong></span>
+                   <div style={{ flex: '1 1 300px' }}>
+                     <div style={{ fontWeight: 700, fontSize: '1.25rem', color: 'var(--text)', marginBottom: '4px' }}>{loan.book_copies?.books?.title}</div>
+                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: '16px', fontSize: '0.875rem' }}>
+                        <span style={{ color: 'var(--text-light)' }}>Copy: <code style={{ background: '#f1f5f9', padding: '2px 6px', fontWeight: 700, borderRadius: '4px', color: 'var(--text)' }}>{loan.book_copies?.copy_code}</code></span>
+                        <span style={{ color: 'var(--text-light)' }}>Borrower: <strong style={{ color: 'var(--text)' }}>{loan.students?.name}</strong></span>
+                        <span style={{ color: 'var(--text-light)' }}>Due: <strong style={{ color: isOverdue ? '#dc2626' : 'var(--text)' }}>{loan.due_date}</strong></span>
                      </div>
                      {isOverdue && (
-                       <div className="mt-2 text-xs font-bold text-red-600 uppercase flex items-center gap-1"><AlertIcon size={12}/> Overdue - Fine will apply</div>
+                       <div style={{ marginTop: '8px', fontSize: '0.75rem', fontWeight: 700, color: '#dc2626', textTransform: 'uppercase', display: 'flex', alignItems: 'center', gap: '4px' }}><AlertIcon size={12}/> Overdue - Fine will apply</div>
                      )}
                    </div>
 
-                   <div className="w-full md:w-auto bg-gray-50 p-4 rounded-xl border border-gray-100 flex flex-col gap-3 min-w-[280px]">
+                   <div style={{ width: '100%', maxWidth: '320px', background: '#f8fafc', padding: '16px', borderRadius: '12px', border: '1px solid #f1f5f9', display: 'flex', flexDirection: 'column', gap: '12px' }}>
                       <div>
-                        <label className="text-xs font-bold text-gray-500 uppercase mb-1 block">Return Condition</label>
+                        <label style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-light)', textTransform: 'uppercase', marginBottom: '4px', display: 'block' }}>Return Condition</label>
                         <Select 
                           value={condition} 
                           onChange={(e) => setCondition(e.target.value)}
@@ -479,19 +493,19 @@ function ReturnTab({ currentUser, students, alert, toast }) {
                             {id: 'poor', label: 'Poor (Damaged - Needs Replacement)'},
                             {id: 'lost', label: 'Lost Book - Needs Replacement'}
                           ]}
-                          style={{width:'100%', padding: '8px 12px'}}
                         />
                       </div>
                       <button 
-                        className="btn btn-primary w-full py-3"
-                        disabled={isSubmitting}
+                        className={`btn ${isOverdue ? 'btn-danger' : 'btn-primary'}`}
+                        style={{ width: '100%', fontWeight: 600, padding: '10px' }}
                         onClick={() => handleReturnAction(loan)}
+                        disabled={isSubmitting}
                       >
                         {isSubmitting ? 'Processing...' : 'Confirm Return'}
                       </button>
                    </div>
                  </div>
-               )
+               );
             })}
           </div>
         </div>
