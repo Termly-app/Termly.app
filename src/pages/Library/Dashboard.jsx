@@ -120,7 +120,7 @@ export default function Dashboard({ currentPeriodId }) {
                       )}
                     </td>
                     <td style={{ color: 'var(--text-light)' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '4px' }}>
                         <ClockIcon size={14} />
                         {new Date(row.created_at).toLocaleDateString(undefined, {month:'short', day:'numeric', year:'numeric'})}
                       </div>
