@@ -1816,10 +1816,16 @@ export async function getClassList(className, classId = null, subjectName = null
   // 2. Filter by Subject (Strict Enrollment Only)
   if (subjectName) {
     const subLower = subjectName.toLowerCase();
-    students = students.filter(s => {
-      if (!s.subjects || s.subjects.length === 0) return false;
-      return s.subjects.some(sub => sub.toLowerCase().includes(subLower) || subLower.includes(sub.toLowerCase()));
-    });
+    // Check if ANY student in this class has subjects populated
+    const hasEnrollmentData = students.some(s => s.subjects && s.subjects.length > 0);
+    
+    if (hasEnrollmentData) {
+      students = students.filter(s => {
+        if (!s.subjects || s.subjects.length === 0) return false;
+        return s.subjects.some(sub => sub.toLowerCase().includes(subLower) || subLower.includes(sub.toLowerCase()));
+      });
+    }
+    // If no one has enrollment data, we show everyone (fallback)
   }
 
   return students.sort((a, b) => a.name.localeCompare(b.name));
