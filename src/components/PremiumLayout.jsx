@@ -43,7 +43,7 @@ export default function PremiumLayout({ children }) {
                 <rect x="7.5" y="7.5" width="4.5" height="4.5" rx="1" fill="rgba(255,255,255,.2)"/>
               </svg>
             </div>
-            ShuleSoft
+            Termly
           </Link>
           <div className="nsep" style={{ flex: 1 }}></div>
           <Link to="/login" className="nlink">Sign in</Link>
@@ -59,7 +59,7 @@ export default function PremiumLayout({ children }) {
       </main>
 
       <footer className="landing-footer">
-        <div className="ft-ghost">ShuleSoft</div>
+        <div className="ft-ghost">Termly</div>
         <div className="ft-grid-w">
           <div className="ft-col">
             <Link to="/" className="ft-logo">
@@ -71,7 +71,7 @@ export default function PremiumLayout({ children }) {
                   <rect x="7.5" y="7.5" width="4.5" height="4.5" rx="1" fill="rgba(13,13,13,.2)"/>
                 </svg>
               </div>
-              ShuleSoft
+              Termly
             </Link>
             <p className="ft-tag">The School Management System for modern Kenya. Built for the future of Kenyan Edu</p>
           </div>
@@ -96,7 +96,7 @@ export default function PremiumLayout({ children }) {
             </ul>
           </div>
           <div className="ft-col">
-            <h4 className="ft-h">ShuleSoft HQ</h4>
+            <h4 className="ft-h">Termly HQ</h4>
             <ul className="ft-links">
               <li><Link to="/about">About</Link></li>
               <li><Link to="/contact">Contact</Link></li>
@@ -107,7 +107,7 @@ export default function PremiumLayout({ children }) {
 
         </div>
         <div className="ft-btm">
-          <span className="ft-copy">© 2025 ShuleSoft HQ · Made in Nairobi, Kenya</span>
+          <span className="ft-copy">© 2025 Termly HQ · Made in Nairobi, Kenya</span>
           <div className="ft-b-links">
              <span>All rights reserved.</span>
           </div>

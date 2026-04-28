@@ -28,7 +28,7 @@ export default function NEMISDashboard({ currentUser }) {
   // Clean branding from browser print headers
   useEffect(() => {
     const handleBefore = () => { document.title = "NEMIS Data Compliance Report"; };
-    const handleAfter = () => { document.title = "NEMIS Compliance | ShuleSoft"; };
+    const handleAfter = () => { document.title = "NEMIS Compliance | Termly"; };
     window.addEventListener('beforeprint', handleBefore);
     window.addEventListener('afterprint', handleAfter);
     return () => {
@@ -98,7 +98,7 @@ export default function NEMISDashboard({ currentUser }) {
   return (
     <div className="animate-in nemis-report" style={{ padding: '0 0 40px' }}>
       <Helmet>
-        <title>NEMIS Compliance | ShuleSoft</title>
+        <title>NEMIS Compliance | Termly</title>
       </Helmet>
 
       <div className="page-header">

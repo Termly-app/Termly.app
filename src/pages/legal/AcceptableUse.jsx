@@ -5,11 +5,11 @@ export default function AcceptableUse() {
   return (
     <LegalLayout title="Acceptable Use Policy" lastUpdated="March 2026">
       <Helmet>
-        <title>Acceptable Use Policy | ShuleSoft</title>
-        <meta name="description" content="ShuleSoft Acceptable Use Policy. Guidelines for responsible use of the school management platform." />
+        <title>Acceptable Use Policy | Termly</title>
+        <meta name="description" content="Termly Acceptable Use Policy. Guidelines for responsible use of the school management platform." />
       </Helmet>
       <section>
-        <p>This Acceptable Use Policy (AUP) outlines the rules and guidelines for using the ShuleSoft platform. By using our services, you agree to adhere to these standards to ensure a safe and productive environment for all schools.</p>
+        <p>This Acceptable Use Policy (AUP) outlines the rules and guidelines for using the Termly platform. By using our services, you agree to adhere to these standards to ensure a safe and productive environment for all schools.</p>
         
         <h3>1. Prohibited Conduct</h3>
         <p>Users are strictly prohibited from:</p>
@@ -33,12 +33,12 @@ export default function AcceptableUse() {
 
       <section>
         <h3>3. Content Standards</h3>
-        <p>Any content uploaded to the platform must not be defamatory, obscene, offensive, or otherwise inappropriate. ShuleSoft reserves the right to remove any content that violates these standards.</p>
+        <p>Any content uploaded to the platform must not be defamatory, obscene, offensive, or otherwise inappropriate. Termly reserves the right to remove any content that violates these standards.</p>
       </section>
 
       <section>
         <h3>4. Enforcement</h3>
-        <p>Violation of this AUP may result in immediate suspension or termination of access to ShuleSoft. We reserve the right to report illegal activities to the relevant Kenyan authorities.</p>
+        <p>Violation of this AUP may result in immediate suspension or termination of access to Termly. We reserve the right to report illegal activities to the relevant Kenyan authorities.</p>
       </section>
     </LegalLayout>
   );

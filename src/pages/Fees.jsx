@@ -521,7 +521,7 @@ export default function Fees({ currentUser, currentPeriodId }) {
   return (
     <div className="animate-in">
       <Helmet>
-        <title>Fee Collection & Billing | ShuleSoft — Finance Portal</title>
+        <title>Fee Collection & Billing | Termly — Finance Portal</title>
         <meta name="description" content="Manage school fee payments, M-Pesa reconciliation, and student financial records." />
       </Helmet>
       <div className="page-header">

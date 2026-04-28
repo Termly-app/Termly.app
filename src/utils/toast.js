@@ -1,5 +1,5 @@
 /**
- * Toast — Lightweight, centralized notification system for ShuleSoft.
+ * Toast — Lightweight, centralized notification system for Termly.
  * 
  * Usage:
  *   import { toast } from '../utils/toast';
@@ -14,7 +14,7 @@ function getContainer() {
   if (_container && document.body.contains(_container)) return _container;
   
   _container = document.createElement('div');
-  _container.id = 'shulesoft-toast-container';
+  _container.id = 'Termly-toast-container';
   Object.assign(_container.style, {
     position: 'fixed',
     top: '20px',

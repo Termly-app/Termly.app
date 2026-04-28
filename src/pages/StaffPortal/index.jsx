@@ -5,7 +5,7 @@ import MobileGrading from './MobileGrading';
 
 export default function StaffPortalManager() {
   const [staffUser, setStaffUser] = useState(() => {
-    const saved = localStorage.getItem('shulesoft_staff_user');
+    const saved = localStorage.getItem('Termly_staff_user');
     return saved ? JSON.parse(saved) : null;
   });
 
@@ -15,12 +15,12 @@ export default function StaffPortalManager() {
 
   const handleLogin = (data) => {
     setStaffUser(data);
-    localStorage.setItem('shulesoft_staff_user', JSON.stringify(data));
+    localStorage.setItem('Termly_staff_user', JSON.stringify(data));
   };
 
   const handleLogout = () => {
     setStaffUser(null);
-    localStorage.removeItem('shulesoft_staff_user');
+    localStorage.removeItem('Termly_staff_user');
   };
 
   return (

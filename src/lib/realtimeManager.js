@@ -1,7 +1,7 @@
 import { supabase } from './supabase';
 
 /**
- * ShuleSoft Centralised Realtime Manager
+ * Termly Centralised Realtime Manager
  * Manages all active Supabase subscriptions to prevent leaks and duplication.
  */
 

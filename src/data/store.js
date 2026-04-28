@@ -23,10 +23,10 @@ import { sanitizeString, sanitizeName } from '../utils/sanitize';
 // ============= CURRENT SCHOOL CONTEXT =============
 // Stored in-memory during session (set after login)
 // Triggering fresh build on Vercel...
-export var _currentSchoolId = sessionStorage.getItem('shulesoft_portal_school_id') || null;
+export var _currentSchoolId = sessionStorage.getItem('Termly_portal_school_id') || null;
 export var _currentAuthUser = null;
-export var _currentPeriodId = sessionStorage.getItem('shulesoft_portal_period_id') || null;
-export var _currentUserId   = sessionStorage.getItem('shulesoft_portal_user_id') || null;
+export var _currentPeriodId = sessionStorage.getItem('Termly_portal_period_id') || null;
+export var _currentUserId   = sessionStorage.getItem('Termly_portal_user_id') || null;
 
 /**
  * Initializes the store context for Portal users.
@@ -38,9 +38,9 @@ export function initPortalStore(schoolId, userId = null, periodId = null) {
   _currentPeriodId = periodId;
   _currentAuthUser = null; 
   
-  if (schoolId) sessionStorage.setItem('shulesoft_portal_school_id', schoolId);
-  if (userId) sessionStorage.setItem('shulesoft_portal_user_id', userId);
-  if (periodId) sessionStorage.setItem('shulesoft_portal_period_id', periodId);
+  if (schoolId) sessionStorage.setItem('Termly_portal_school_id', schoolId);
+  if (userId) sessionStorage.setItem('Termly_portal_user_id', userId);
+  if (periodId) sessionStorage.setItem('Termly_portal_period_id', periodId);
   
   window.dispatchEvent(new Event('schoolProfileChanged'));
 }
@@ -53,7 +53,7 @@ var _settingsPromise = null;
 
 // SHADOW MODE (VIEW-ONLY) GUARD
 export const isShadowMode = () => {
-  return sessionStorage.getItem('shulesoft_acting_as_admin') === 'true';
+  return sessionStorage.getItem('Termly_acting_as_admin') === 'true';
 };
 
 export const mutationGuard = (fnName) => {
@@ -479,7 +479,7 @@ const DEFAULT_PROFILE = {
 };
 
 // Offline profile persistence helpers
-const PROFILE_CACHE_KEY = 'shulesoft_profile_cache';
+const PROFILE_CACHE_KEY = 'Termly_profile_cache';
 function saveProfileToLocal(schoolId, profile) {
   try {
     const blob = JSON.stringify({ schoolId, profile, ts: Date.now() });
@@ -1189,11 +1189,11 @@ export function getPrintFooter() {
     <style>
       @media print {
         @page { margin: 0; }
-        .shulesoft-system-footer svg rect { fill: #000 !important; print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+        .Termly-system-footer svg rect { fill: #000 !important; print-color-adjust: exact; -webkit-print-color-adjust: exact; }
       }
     </style>
-    <div class="shulesoft-system-footer" style="position:fixed;bottom:5mm;left:15mm;display:flex;align-items:center;opacity:1;z-index:9999;color:#000;">
-      <svg width="22" height="22" viewBox="0 0 13 13" fill="none" aria-label="ShuleSoft">
+    <div class="Termly-system-footer" style="position:fixed;bottom:5mm;left:15mm;display:flex;align-items:center;opacity:1;z-index:9999;color:#000;">
+      <svg width="22" height="22" viewBox="0 0 13 13" fill="none" aria-label="Termly">
         <rect x="1" y="1" width="4.5" height="4.5" rx="1" fill="#000"/>
         <rect x="7.5" y="1" width="4.5" height="4.5" rx="1" fill="#000" fill-opacity="0.4"/>
         <rect x="1" y="7.5" width="4.5" height="4.5" rx="1" fill="#000" fill-opacity="0.4"/>
@@ -1872,7 +1872,7 @@ export async function getExams() {
   if (!_currentSchoolId) return [];
   
   // Portal mode: strictly identify portal users via sessionStorage
-  const isPortalUser = !!sessionStorage.getItem('shulesoft_portal_user_id');
+  const isPortalUser = !!sessionStorage.getItem('Termly_portal_user_id');
   if (isPortalUser && _currentSchoolId) {
     const { data, error } = await supabase.rpc('portal_get_open_exams', { p_school_id: _currentSchoolId });
     if (error) throw error;
@@ -1889,7 +1889,7 @@ export async function getExams() {
     
     // If we are in Staff Portal mode (initialized with teacher id but not parent portal session),
     // we might want to filter by status. Let's check if there is a teacher session.
-    const isTeacherPortal = !!sessionStorage.getItem('shulesoft_teacher_id');
+    const isTeacherPortal = !!sessionStorage.getItem('Termly_teacher_id');
     if (isTeacherPortal) {
       query = query.eq('status', 'published'); // Published here means 'Open for Teachers'
     }
@@ -2555,7 +2555,7 @@ export async function recordPayment(studentId, amount, method, reference) {
   if (student && student.parent_phone) {
     await queueSMS(
       student.parent_phone, 
-      `ShuleSoft: We have received KSh ${amount.toLocaleString()} for ${student.name}. Balance: KSh ${(feeRecord?.balance - amount).toLocaleString()}. Ref: ${reference || 'N/A'}`,
+      `Termly: We have received KSh ${amount.toLocaleString()} for ${student.name}. Balance: KSh ${(feeRecord?.balance - amount).toLocaleString()}. Ref: ${reference || 'N/A'}`,
       'fee_payment'
     );
   }
@@ -2939,7 +2939,7 @@ export async function validateStaffLogin(schoolSearch, phone, pin, schoolId = nu
   // Subscription Gate
   const isSubActive = await checkIsSubscriptionActive(profile);
   if (!isSubActive) {
-    throw new Error('Your institution\'s ShuleSoft subscription has expired. Access to the Staff Portal is restricted.');
+    throw new Error('Your institution\'s Termly subscription has expired. Access to the Staff Portal is restricted.');
   }
 
   // Feature Gate
@@ -3018,11 +3018,11 @@ export async function setTeacherLeaveStatus(teacherId, onLeave) {
 const INITIAL_BLOG_POSTS = [
   {
     id: 'post-feature-guide',
-    title: 'Everything ShuleSoft Offers: The Ultimate Guide to Modern School Management',
-    excerpt: 'Explore the full power of ShuleSoft. From M-Pesa automation to CBC grading and smart timetables, see how we transform schools.',
+    title: 'Everything Termly Offers: The Ultimate Guide to Modern School Management',
+    excerpt: 'Explore the full power of Termly. From M-Pesa automation to CBC grading and smart timetables, see how we transform schools.',
     content: `
-      <h2>Welcome to the ShuleSoft Ecosystem</h2>
-      <p>ShuleSoft is more than just a management tool; it is a comprehensive growth engine for your institution. We have spent years refining our platform to handle the unique challenges of African schools. Below is a detailed breakdown of everything we offer.</p>
+      <h2>Welcome to the Termly Ecosystem</h2>
+      <p>Termly is more than just a management tool; it is a comprehensive growth engine for your institution. We have spent years refining our platform to handle the unique challenges of African schools. Below is a detailed breakdown of everything we offer.</p>
       
       <h3>1. Financial Automation & M-Pesa Integration</h3>
       <p>Stop tracing bank slips and manual receipts. Our system integrates directly with M-Pesa to provide zero-effort reconciliation.</p>
@@ -3033,7 +3033,7 @@ const INITIAL_BLOG_POSTS = [
       </ul>
 
       <h3>2. Advanced Academic & CBC Grading</h3>
-      <p>Whether you follow the CBC or the traditional 8-4-4 curriculum, ShuleSoft handles the complex math of grading and ranking.</p>
+      <p>Whether you follow the CBC or the traditional 8-4-4 curriculum, Termly handles the complex math of grading and ranking.</p>
       <ul>
         <li><strong>CBC Assessment</strong>: Track Core Competencies and Values for Early Years, Primary, and Junior Secondary.</li>
         <li><strong>Automatic Ranking</strong>: Instantly rank students by subject or overall performance across multiple streams.</li>
@@ -3054,10 +3054,10 @@ const INITIAL_BLOG_POSTS = [
         <li><strong>Selective Access</strong>: Role-based permissions ensure that teachers only see marks, while finance only sees fees.</li>
       </ul>
 
-      <p><em>Ready to transform your school? Join 500+ institutions already growing with ShuleSoft.</em></p>
+      <p><em>Ready to transform your school? Join 500+ institutions already growing with Termly.</em></p>
     `,
     category: 'Feature Deep-Dives',
-    author: 'ShuleSoft Team',
+    author: 'Termly Team',
     date: new Date().toISOString(),
     image: 'https://images.unsplash.com/photo-1546410531-bb4caa1b424d?auto=format&fit=crop&w=1200&q=80',
     readTime: '8 min read'
@@ -3099,7 +3099,7 @@ const INITIAL_PARTNERS = [
     name: 'Greenfield Academy',
     location: 'Nairobi, Kenya',
     image: 'https://images.unsplash.com/photo-1541339907198-e08756ebafe3?auto=format&fit=crop&w=800&q=80',
-    description: 'A leading primary school using ShuleSoft to automate CBC assessments for 800+ students.',
+    description: 'A leading primary school using Termly to automate CBC assessments for 800+ students.',
     rating: 5,
     since: '2023'
   },
@@ -3169,7 +3169,7 @@ export async function validateParentLogin(schoolSearch, admNo, phone, schoolId =
   // Subscription Gate
   const isSubActive = await checkIsSubscriptionActive(profile);
   if (!isSubActive) {
-    throw new Error('Your institution\'s ShuleSoft subscription has expired. Access to the Parent Portal is restricted.');
+    throw new Error('Your institution\'s Termly subscription has expired. Access to the Parent Portal is restricted.');
   }
 
   // Feature Gate
@@ -3512,7 +3512,7 @@ export async function exportData() {
   const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(backup, null, 2));
   const link = document.createElement('a');
   link.setAttribute("href", dataStr);
-  link.setAttribute("download", `shulesoft_backup_${new Date().toISOString().split('T')[0]}.json`);
+  link.setAttribute("download", `Termly_backup_${new Date().toISOString().split('T')[0]}.json`);
   document.body.appendChild(link);
   link.click();
   link.remove();
@@ -3539,7 +3539,7 @@ export function getCurrentSchool() {
 export async function checkIsPlatformAdmin(email) {
   if (!email) return false;
   try {
-    const ROOT_ADMINS = ['admin@shulesoft.com', 'shulesoft8@gmail.com'];
+    const ROOT_ADMINS = ['admin@Termly.com', 'Termly8@gmail.com'];
     if (ROOT_ADMINS.includes(email)) return true;
 
     const { data, error } = await supabase
@@ -3704,14 +3704,14 @@ export async function getPlatformSettings() {
       const result = {
         billing: settings.billing || { 
           mpesa_number: "+254712260057", 
-          mpesa_name: "ShuleSoft Pay",
-          instructions: "Send money to +254712260057 (ShuleSoft Pay)", 
+          mpesa_name: "Termly Pay",
+          instructions: "Send money to +254712260057 (Termly Pay)", 
           term_price: 5000, 
           trial_days: 30,
           expiry_date: null
         },
         support: settings.support || { 
-          email: "shulesoft8@gmail.com", 
+          email: "Termly8@gmail.com", 
           phone: "+254712260057" 
         },
         pricing: (settings.pricing && Object.keys(settings.pricing).length > 0) ? settings.pricing : {
@@ -3733,8 +3733,8 @@ export async function getPlatformSettings() {
     } catch (err) {
       console.warn("platform_settings fetch failed, using fallback defaults", err);
       return {
-        billing: { instructions: 'Pay via Business Till 908070 (ShuleSoft LTD)', term_price: 8400, trial_days: 30 },
-        support: { email: "support@shulesoft.com", phone: "+254 700 000000" },
+        billing: { instructions: 'Pay via Business Till 908070 (Termly LTD)', term_price: 8400, trial_days: 30 },
+        support: { email: "support@Termly.com", phone: "+254 700 000000" },
         pricing: { 
           "Sandbox":      { "price": 0,      "active": true, "limit": 10,   "admins": 1,  "features": ["Student Management", "Feature Exploration"], "modules": ["students", "dashboard"] },
           "Starter Plan": { "price": 4000,  "active": true, "limit": 150,  "admins": 5,  "features": ["Student Management", "Attendance Tracking", "CBC Grading (PP1–Grade 6)", "M-PESA Fee Tracking", "Basic Report Cards"], "modules": ["students", "attendance", "grading", "fees"] },
@@ -3834,10 +3834,10 @@ export async function deleteSchool(schoolId) {
 /**
  * CRITICAL: DESTRUCTIVE CLEANUP
  * Deletes all school workspaces and associated data from the system,
- * PROTECTING only the ShuleSoft HQ / Super Admin school.
+ * PROTECTING only the Termly HQ / Super Admin school.
  */
 export async function wipeAllNonAdminSchools() {
-  const PLATFORM_ADMINS = ['admin@shulesoft.com', 'shulesoft8@gmail.com'];
+  const PLATFORM_ADMINS = ['admin@Termly.com', 'Termly8@gmail.com'];
   
   // 1. Fetch all schools
   const { data: schools, error } = await supabase.from('schools').select('id, name, owner_id');
@@ -3848,7 +3848,7 @@ export async function wipeAllNonAdminSchools() {
 
   for (const school of schools) {
     // PROTECT the platform owner/HQ workspace or schools owned by core admins
-    const isSuperAdminSchool = school.name?.toLowerCase().includes('shulesoft hq');
+    const isSuperAdminSchool = school.name?.toLowerCase().includes('Termly hq');
     const isOwnedByAdmin = PLATFORM_ADMINS.includes(school.owner_id);
 
     if (isSuperAdminSchool || isOwnedByAdmin) {
@@ -3866,7 +3866,7 @@ export async function wipeAllNonAdminSchools() {
   }
 
   // 2. Also clear global activity logs that aren't linked to a specific school (optional, but good for reset)
-  // await supabase.from('platform_activity').delete().neq('user_email', 'admin@shulesoft.com');
+  // await supabase.from('platform_activity').delete().neq('user_email', 'admin@Termly.com');
 
   return { success: true, totalDeleted: deletedCount };
 }
@@ -4074,8 +4074,8 @@ export async function getPlatformStats() {
 
     const checkActive = (p) => {
       if (!p) return false;
-      // PLATFORM OVERRIDE: ShuleSoft HQ is always active
-      if (p.schools?.name?.toLowerCase().includes('shulesoft hq')) return true;
+      // PLATFORM OVERRIDE: Termly HQ is always active
+      if (p.schools?.name?.toLowerCase().includes('Termly hq')) return true;
 
       // 1. Explicit deactivation/suspension wins
       if (p.subscription_status === 'Deactivated' || p.subscription_status === 'Suspended') return false;

@@ -3,10 +3,10 @@
 @import url('https://fonts.googleapis.com/css2?family=Iosevka+Charon+Mono:wght@300;400;500;600;700&display=swap');
 
 
-/* ====== SHULESOFT DESIGN SYSTEM (Unified Theme Architecture) ====== */
+/* ====== Termly DESIGN SYSTEM (Unified Theme Architecture) ====== */
 
 :root {
-  /* Default Theme (Light/ShuleSoft Classic) */
+  /* Default Theme (Light/Termly Classic) */
   --primary: #4f46e5;
   --primary-light: #6366f1;
   --primary-dark: #4338ca;
@@ -48,7 +48,7 @@
   --transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* ====== SHULESOFT COMMAND TOWER (High-Contrast Dark) ====== */
+/* ====== Termly COMMAND TOWER (High-Contrast Dark) ====== */
 
 .theme-onyx {
   --bg: #050505;

@@ -190,7 +190,7 @@ export default function SetupWizard({ profile, onComplete, totalStudents }) {
           {step === 1 && (
             <div className="wizard-welcome text-center animate-fade-in">
               <div className="hero-icon-box"><RocketIcon size={48} /></div>
-              <h1>Welcome to ShuleSoft</h1>
+              <h1>Welcome to Termly</h1>
               <p>Let's get your school set up in 5 minutes. We'll configure your branding, classes, and fee structure to get you ready for the term.</p>
               
               <div className="info-grid">
@@ -436,7 +436,7 @@ export default function SetupWizard({ profile, onComplete, totalStudents }) {
             <div className="wizard-success text-center animate-fade-in">
               <div className="success-icon"><CheckIcon size={48} /></div>
               <h1>Configuration Ready!</h1>
-              <p>Your school is set up. To start using modules, contact ShuleSoft support to activate them for your school.</p>
+              <p>Your school is set up. To start using modules, contact Termly support to activate them for your school.</p>
               
               <div className="summary-box">
                 <div className="sum-row"><strong>Institution:</strong> <span>{formData.schoolName}</span></div>
@@ -469,7 +469,7 @@ export default function SetupWizard({ profile, onComplete, totalStudents }) {
                 }}>📞</div>
                 <h2 style={{ fontSize: '1.5rem', color: '#0f172a', marginBottom: 8 }}>Almost There!</h2>
                 <p style={{ color: '#64748b', lineHeight: 1.6, marginBottom: 28 }}>
-                  Your school has been configured successfully. To activate modules like <strong>Students</strong>, <strong>Grading</strong>, <strong>Fees</strong>, and more, please contact the ShuleSoft team.
+                  Your school has been configured successfully. To activate modules like <strong>Students</strong>, <strong>Grading</strong>, <strong>Fees</strong>, and more, please contact the Termly team.
                 </p>
                 
                 <div style={{ background: '#f8fafc', borderRadius: 16, padding: 20, marginBottom: 28, textAlign: 'left' }}>
@@ -477,7 +477,7 @@ export default function SetupWizard({ profile, onComplete, totalStudents }) {
                     <span style={{ fontSize: 20 }}>📧</span>
                     <div>
                       <div style={{ fontSize: '0.7rem', color: '#94a3b8', fontWeight: 700, textTransform: 'uppercase' }}>Email</div>
-                      <a href="mailto:support@shulesoft.com" style={{ color: '#3b82f6', fontWeight: 700, textDecoration: 'none' }}>support@shulesoft.com</a>
+                      <a href="mailto:support@Termly.com" style={{ color: '#3b82f6', fontWeight: 700, textDecoration: 'none' }}>support@Termly.com</a>
                     </div>
                   </div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16 }}>
@@ -491,7 +491,7 @@ export default function SetupWizard({ profile, onComplete, totalStudents }) {
                     <span style={{ fontSize: 20 }}>🌐</span>
                     <div>
                       <div style={{ fontSize: '0.7rem', color: '#94a3b8', fontWeight: 700, textTransform: 'uppercase' }}>Website</div>
-                      <a href="https://shulesoft.com" target="_blank" rel="noopener noreferrer" style={{ color: '#3b82f6', fontWeight: 700, textDecoration: 'none' }}>shulesoft.com</a>
+                      <a href="https://Termly.com" target="_blank" rel="noopener noreferrer" style={{ color: '#3b82f6', fontWeight: 700, textDecoration: 'none' }}>Termly.com</a>
                     </div>
                   </div>
                 </div>

@@ -1,6 +1,6 @@
 import Dexie from 'dexie';
 
-export const db = new Dexie('ShuleSoftOffline');
+export const db = new Dexie('TermlyOffline');
 
 // Schema definition
 db.version(7).stores({

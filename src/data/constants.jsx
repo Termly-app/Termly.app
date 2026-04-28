@@ -6,16 +6,16 @@ import {
 } from '../components/CommonIcons';
 
 /**
- * shulesoft-constants.js
+ * Termly-constants.js
  * Central registry for platform-wide metadata to prevent circular dependencies.
  */
 
 export var SANDBOX_PLAN = 'Sandbox';
 
 // Authority Identities
-export var SUPPORT_EMAIL = 'shulesoft8@gmail.com';
-export var SUPER_ADMIN_EMAIL = 'shulesoft8@gmail.com';
-export var PLATFORM_ADMIN_EMAIL = 'shulesoft8@gmail.com';
+export var SUPPORT_EMAIL = 'Termly8@gmail.com';
+export var SUPER_ADMIN_EMAIL = 'Termly8@gmail.com';
+export var PLATFORM_ADMIN_EMAIL = 'Termly8@gmail.com';
 
 // ── Master Registry of ALL System Modules ────────────────────────────────
 // Migrated from SettingsTab.jsx to break circularity.

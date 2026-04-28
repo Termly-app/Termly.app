@@ -21,9 +21,9 @@ export default function Partners() {
   return (
     <div className="partners-container animate-in">
       <Helmet>
-        <title>Partner Schools | ShuleSoft — Trusted by Schools Across Kenya</title>
-        <meta name="description" content="See the forward-thinking institutions across Kenya that trust ShuleSoft. Join the community of schools transforming education." />
-        <link rel="canonical" href="https://shulesoft.com/partners" />
+        <title>Partner Schools | Termly — Trusted by Schools Across Kenya</title>
+        <meta name="description" content="See the forward-thinking institutions across Kenya that trust Termly. Join the community of schools transforming education." />
+        <link rel="canonical" href="https://Termly.com/partners" />
       </Helmet>
       <nav style={{ 
         position: 'sticky', top: 0, zIndex: 100, 
@@ -40,7 +40,7 @@ export default function Partners() {
       </nav>
       <header className="partners-hero">
         <h1 className="hero-title">Our <span className="text-gradient">Partners</span></h1>
-        <p className="hero-subtitle">Trusted by forward-thinking institutions across Kenya. Join the community of schools transforming education with ShuleSoft.</p>
+        <p className="hero-subtitle">Trusted by forward-thinking institutions across Kenya. Join the community of schools transforming education with Termly.</p>
       </header>
 
       {loading ? (
@@ -85,7 +85,7 @@ export default function Partners() {
         <div className="cta-glass">
           <SchoolIcon size={48} color="var(--primary)" />
           <h2>Want your school featured here?</h2>
-          <p>Join ShuleSoft today and get recognized as a leader in educational technology.</p>
+          <p>Join Termly today and get recognized as a leader in educational technology.</p>
           <a href="/register" className="btn btn-primary">Get Started Now</a>
         </div>
       </section>

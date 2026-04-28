@@ -2,7 +2,7 @@ import { withRetry } from './resilience';
 
 const API_KEY = import.meta.env.VITE_SMS_API_KEY;
 const USERNAME = import.meta.env.VITE_SMS_USERNAME || 'sandbox'; // Use 'sandbox' for testing
-const SENDER_ID = import.meta.env.VITE_SMS_SENDER_ID || 'SHULESOFT';
+const SENDER_ID = import.meta.env.VITE_SMS_SENDER_ID || 'Termly';
 
 export async function dispatchSMS(to, message) {
   // 1. Sanitize numbers
@@ -31,7 +31,7 @@ export async function dispatchSMS(to, message) {
     params.append('username', USERNAME);
     params.append('to', cleanRecipients.join(','));
     params.append('message', message);
-    if (SENDER_ID && SENDER_ID !== 'SHULESOFT') {
+    if (SENDER_ID && SENDER_ID !== 'Termly') {
       params.append('from', SENDER_ID);
     }
 
@@ -67,15 +67,15 @@ export async function dispatchSMS(to, message) {
 export function generateAttendanceMessage(studentName, status, date) {
   const d = new Date(date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
   if (status === 'absent') {
-    return `Dear Parent, ${studentName} was ABSENT from school today, ${d}. Please contact the office for any clarification. - ShuleSoft`;
+    return `Dear Parent, ${studentName} was ABSENT from school today, ${d}. Please contact the office for any clarification. - Termly`;
   }
   if (status === 'late') {
-    return `Dear Parent, ${studentName} arrived LATE to school today, ${d}. Prompt arrival is encouraged. - ShuleSoft`;
+    return `Dear Parent, ${studentName} arrived LATE to school today, ${d}. Prompt arrival is encouraged. - Termly`;
   }
-  return `Dear Parent, ${studentName} was present in school today, ${d}. - ShuleSoft`;
+  return `Dear Parent, ${studentName} was present in school today, ${d}. - Termly`;
 }
 
 export function generateFeeReminder(studentName, balance) {
   const fmt = (n) => `KSh ${Number(n).toLocaleString()}`;
-  return `Dear Parent, this is a reminder that ${studentName} has an outstanding fee balance of ${fmt(balance)}. Kindly settle to avoid disruptions. - ShuleSoft`;
+  return `Dear Parent, this is a reminder that ${studentName} has an outstanding fee balance of ${fmt(balance)}. Kindly settle to avoid disruptions. - Termly`;
 }

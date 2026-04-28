@@ -24,7 +24,7 @@ export default function OverviewTab({
         <div className="ph-left">
           <div className="ph-ico"><SchoolIcon size={24} /></div>
           <div>
-            <div className="ph-title">ShuleSoft Command Center</div>
+            <div className="ph-title">Termly Command Center</div>
             <div className="ph-sub">Unified Management Portal</div>
             <div className="ph-badge"><span className="sa-dot" /> System Secure & Active</div>
           </div>
@@ -170,7 +170,7 @@ export default function OverviewTab({
             </div>
             
             <div style={{ fontSize: '0.58rem', color: 'var(--sub)', marginTop: 10, lineHeight: 1.5 }}>
-              Infrastructure monitoring for ShuleSoft HQ.
+              Infrastructure monitoring for Termly HQ.
             </div>
           </div>
         </div>

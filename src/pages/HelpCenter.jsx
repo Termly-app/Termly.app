@@ -9,7 +9,7 @@ import { Helmet } from 'react-helmet-async';
 
 /**
  * HelpCenter Component
- * A comprehensive knowledge base for ShuleSoft features.
+ * A comprehensive knowledge base for Termly features.
  */
 
 export default function HelpCenter() {
@@ -27,8 +27,8 @@ export default function HelpCenter() {
 
   const ARTICLES = {
     onboarding: [
-      { title: 'Sandbox Plan: Exploration Mode', content: 'The Sandbox plan allows you to test ALL features with a limit of 10 students. No credit card required. Explore how ShuleSoft can transform your school administration before committing to a paid plan.',
-        steps: ['Register your school at shulesoft-app.vercel.app/register.', 'You will receive a Free Sandbox workspace instantly.', 'Add up to 10 test students to explore the system.', 'When ready, upgrade from Settings → Subscription.'],
+      { title: 'Sandbox Plan: Exploration Mode', content: 'The Sandbox plan allows you to test ALL features with a limit of 10 students. No credit card required. Explore how Termly can transform your school administration before committing to a paid plan.',
+        steps: ['Register your school at Termly-app.vercel.app/register.', 'You will receive a Free Sandbox workspace instantly.', 'Add up to 10 test students to explore the system.', 'When ready, upgrade from Settings → Subscription.'],
         tip: 'Your Sandbox data is preserved when you upgrade — no need to re-enter anything.' },
       { title: 'Initial Setup Checklist', content: '1. Update your School Profile. 2. Add your Classes and Streams. 3. Import your student list via CSV. 4. Configure your Academic Term.',
         steps: ['Go to Settings → School Profile and fill in your school name, motto, and contact info.', 'Under Settings → Classes & Streams, activate the grades your school uses (e.g. Grade 1-6, Form 1-4).', 'Navigate to Students → Import CSV to bulk-upload your student list.', 'Check Dashboard to verify your current Academic Period is correct.'],
@@ -104,9 +104,9 @@ export default function HelpCenter() {
   return (
     <div className="animate-in" style={{ paddingBottom: 60 }}>
       <Helmet>
-        <title>Help Center | ShuleSoft — Knowledge Base & Guides</title>
-        <meta name="description" content="Search our knowledge base for guides on student management, CBC grading, fees, timetabling, and NEMIS compliance in ShuleSoft." />
-        <link rel="canonical" href="https://shulesoft.com/help" />
+        <title>Help Center | Termly — Knowledge Base & Guides</title>
+        <meta name="description" content="Search our knowledge base for guides on student management, CBC grading, fees, timetabling, and NEMIS compliance in Termly." />
+        <link rel="canonical" href="https://Termly.com/help" />
       </Helmet>
       {/* Header Section */}
       <div style={{ 

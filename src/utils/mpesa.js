@@ -1,7 +1,7 @@
 import { withRetry } from './resilience';
 
 /**
- * ShuleSoft M-PESA Daraja API Utility
+ * Termly M-PESA Daraja API Utility
  * Implementation for STK Push and Transaction Verification
  */
 

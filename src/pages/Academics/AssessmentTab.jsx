@@ -466,7 +466,7 @@ export default function AssessmentTab({ currentUser, currentPeriodId }) {
   return (
     <div className="animate-in">
       <Helmet>
-        <title>Grading & Academic Performance | ShuleSoft</title>
+        <title>Grading & Academic Performance | Termly</title>
         <meta name="description" content="Manage student marks, CBC assessments, and generate professional report cards instantly." />
       </Helmet>
       <div className="tab-header" style={{ marginBottom: 20 }}>

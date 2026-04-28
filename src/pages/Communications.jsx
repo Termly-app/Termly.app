@@ -155,7 +155,7 @@ export default function Communications({ currentUser }) {
   return (
     <div className="animate-in">
       <Helmet>
-        <title>Communication Center | ShuleSoft</title>
+        <title>Communication Center | Termly</title>
       </Helmet>
 
       <div className="page-header">

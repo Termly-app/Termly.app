@@ -154,7 +154,7 @@ export default function PricingUpgrade({ featureName, requiredPlan = "Profession
               margin: '0 auto 12px'
             }}>
               This module is currently inactive for your school. 
-              Please contact ShuleSoft Support to enable this feature.
+              Please contact Termly Support to enable this feature.
             </p>
 
             <p style={{

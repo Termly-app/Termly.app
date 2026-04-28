@@ -42,7 +42,7 @@ export async function getExams() {
   if (!_currentSchoolId) return [];
   
   // Portal mode: strictly identify portal users via sessionStorage
-  const isPortalUser = !!sessionStorage.getItem('shulesoft_portal_user_id');
+  const isPortalUser = !!sessionStorage.getItem('Termly_portal_user_id');
   if (isPortalUser && _currentSchoolId) {
     const { data, error } = await supabase.rpc('portal_get_open_exams', { p_school_id: _currentSchoolId });
     if (error) throw error;
@@ -59,7 +59,7 @@ export async function getExams() {
     
     // If we are in Staff Portal mode (initialized with teacher id but not parent portal session),
     // we might want to filter by status. Let's check if there is a teacher session.
-    const isTeacherPortal = !!sessionStorage.getItem('shulesoft_teacher_id');
+    const isTeacherPortal = !!sessionStorage.getItem('Termly_teacher_id');
     if (isTeacherPortal) {
       query = query.eq('status', 'published'); // Published here means 'Open for Teachers'
     }

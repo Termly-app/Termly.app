@@ -200,7 +200,7 @@ export default function PortalDashboard({ user, onLogout }) {
   return (
     <div style={{ width: '100%', background: '#f8fafc', minHeight: '100vh', display: 'flex', flexDirection: 'column', fontFamily: '"Inter", sans-serif' }}>
       <Helmet>
-        <title>{localUser?.name || 'Dashboard'} | Parent Portal — ShuleSoft</title>
+        <title>{localUser?.name || 'Dashboard'} | Parent Portal — Termly</title>
         <meta name="description" content="View academic performance, track fees, and communicate with teachers." />
       </Helmet>
       
@@ -221,7 +221,7 @@ export default function PortalDashboard({ user, onLogout }) {
             <div style={{ width: 40, height: 40, borderRadius: 12, background: 'linear-gradient(135deg, #10b981, #3b82f6)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               <SchoolIcon size={22} color="#fff" />
             </div>
-            <div style={{ fontWeight: 900, fontSize: '1.4rem', color: '#0f172a', letterSpacing: '-0.5px' }}>ShuleSoft</div>
+            <div style={{ fontWeight: 900, fontSize: '1.4rem', color: '#0f172a', letterSpacing: '-0.5px' }}>Termly</div>
           </div>
 
           <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 4, padding: '0 16px' }}>
@@ -277,7 +277,7 @@ export default function PortalDashboard({ user, onLogout }) {
               display: 'flex', justifyContent: 'space-between', alignItems: 'center',
               borderBottom: '1px solid #f1f5f9', position: 'sticky', top: 0, zIndex: 100
             }}>
-              <div style={{ fontWeight: 900, fontSize: '1.2rem', color: '#0f172a' }}>ShuleSoft</div>
+              <div style={{ fontWeight: 900, fontSize: '1.2rem', color: '#0f172a' }}>Termly</div>
               <div onClick={onLogout} style={{ color: '#64748b' }}><LogoutIcon size={24} /></div>
             </div>
           )}
@@ -288,7 +288,7 @@ export default function PortalDashboard({ user, onLogout }) {
             <div style={{ marginBottom: 32 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
                 <div style={{ fontSize: '0.85rem', color: '#10b981', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '1px' }}>
-                  {schoolProfile?.name || 'ShuleSoft Academy'}
+                  {schoolProfile?.name || 'Termly Academy'}
                 </div>
                 {lastSync && (
                   <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginLeft: 'auto', fontSize: '0.7rem', color: '#94a3b8', fontWeight: 600 }}>

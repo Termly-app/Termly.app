@@ -110,7 +110,7 @@ export default function Security({ currentUser }) {
   return (
     <div className="animate-in">
       <Helmet>
-        <title>Security & Access Control | ShuleSoft — System Safety</title>
+        <title>Security & Access Control | Termly — System Safety</title>
         <meta name="description" content="Manage staff roles, user permissions, and school security settings. Monitor admin access and platform seats." />
       </Helmet>
       <div className="page-header">

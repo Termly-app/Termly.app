@@ -143,7 +143,7 @@ export default function SuperAdmin({ currentUser, isPlatformAdmin, sidebarOpen, 
         (async () => {
           const rawSchools = await getAllSchools();
           // getAllSchools already returns schools with _studentCount and _staffCount
-          const filtered = rawSchools.filter(s => !s.name?.toLowerCase().includes('shulesoft hq'));
+          const filtered = rawSchools.filter(s => !s.name?.toLowerCase().includes('Termly hq'));
           setSchools(filtered);
 
           try {
@@ -175,7 +175,7 @@ export default function SuperAdmin({ currentUser, isPlatformAdmin, sidebarOpen, 
 
   useEffect(() => {
     // Ensure we are NOT in shadow mode when in Super Admin dashboard
-    sessionStorage.removeItem('shulesoft_acting_as_admin');
+    sessionStorage.removeItem('Termly_acting_as_admin');
     loadData();
   }, []);
 
@@ -193,7 +193,7 @@ export default function SuperAdmin({ currentUser, isPlatformAdmin, sidebarOpen, 
   const sixtyDaysAgo   = new Date(now.getTime() - 60 * 24 * 60 * 60 * 1000);
 
   const isSchoolActive = (s) => {
-    if (s.name?.toLowerCase().includes('shulesoft hq')) return true;
+    if (s.name?.toLowerCase().includes('Termly hq')) return true;
     const profiles = Array.isArray(s.school_profiles) ? s.school_profiles : [];
     if (profiles.length === 0) return false;
     return profiles.some(p => {
@@ -405,9 +405,9 @@ export default function SuperAdmin({ currentUser, isPlatformAdmin, sidebarOpen, 
       const { data: period } = await supabase.from('academic_periods').select('id').eq('school_id', school.id).eq('is_active', true).maybeSingle();
       setCurrentSchoolContext(school.id, currentUser);
       if (period) setCurrentPeriodId(period.id);
-      sessionStorage.setItem('shulesoft_school_id', school.id);
-      if (period) sessionStorage.setItem('shulesoft_period_id', period.id);
-      sessionStorage.setItem('shulesoft_acting_as_admin', 'true');
+      sessionStorage.setItem('Termly_school_id', school.id);
+      if (period) sessionStorage.setItem('Termly_period_id', period.id);
+      sessionStorage.setItem('Termly_acting_as_admin', 'true');
       window.location.href = '/dashboard';
     } catch (err) { setMessage({ type: 'error', text: 'Login As failed: ' + err.message }); }
   };
@@ -438,7 +438,7 @@ export default function SuperAdmin({ currentUser, isPlatformAdmin, sidebarOpen, 
       <aside className={`sa-sidebar${sidebarOpen ? ' open' : ''}`}>
         <div className="sb-brand">
           <div className="sb-logo"><div className="sb-logo-grid"><span></span><span></span><span></span><span></span></div></div>
-          <div className="sb-brand-txt"><div className="sb-name">ShuleSoft</div><div className="sb-tag">COMMAND CENTER</div></div>
+          <div className="sb-brand-txt"><div className="sb-name">Termly</div><div className="sb-tag">COMMAND CENTER</div></div>
           <button className="sa-close-btn" onClick={() => setSidebarOpen(false)}><CrossIcon size={14} /></button>
         </div>
         <nav style={{ flex:1, padding:'8px 0 16px' }}>
@@ -505,7 +505,7 @@ export default function SuperAdmin({ currentUser, isPlatformAdmin, sidebarOpen, 
                 {activeTab === 'activity' && <ActivityTab filteredActivity={filteredActivity} />}
                 {activeTab === 'config' && <SettingsTab statusMsg={statusMsg} setStatusMsg={setStatusMsg} subEndDate={subEndDate} setSubEndDate={setSubEndDate} smsConfig={smsConfig} setSmsConfig={setSmsConfig} handleUpdateSetting={handleUpdateSetting} updatePlatformSetting={updatePlatformSetting} loadData={loadData} setMessage={setMessage} onWipeSchools={handleWipeSchools} />}
                 <div style={{ padding:'24px 0 6px', textAlign:'center', opacity:.2, borderTop:'1px solid var(--edge)', marginTop:20 }}>
-                  <div style={{ fontFamily:'var(--fh)', fontSize:'.65rem', color:'var(--sub)' }}>ShuleSoft Platform Engine · {now.getFullYear()}</div>
+                  <div style={{ fontFamily:'var(--fh)', fontSize:'.65rem', color:'var(--sub)' }}>Termly Platform Engine · {now.getFullYear()}</div>
                 </div>
               </>
             )}

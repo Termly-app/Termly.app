@@ -278,7 +278,7 @@ export default function MobileGrading({ user, onLogout }) {
       fontFamily: '"Inter", -apple-system, sans-serif' 
     }}>
       <Helmet>
-        <title>{user?.name || 'Dashboard'} | Staff Portal — ShuleSoft</title>
+        <title>{user?.name || 'Dashboard'} | Staff Portal — Termly</title>
         <meta name="description" content="Manage grading, attendance, and timetable on the go." />
       </Helmet>
       
@@ -292,7 +292,7 @@ export default function MobileGrading({ user, onLogout }) {
             <div style={{ width: 40, height: 40, borderRadius: 12, background: '#10b981', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               <TeacherIcon size={20} color="#fff" />
             </div>
-            <div style={{ fontWeight: 900, fontSize: '1.2rem', color: '#0f172a' }}>ShuleSoft</div>
+            <div style={{ fontWeight: 900, fontSize: '1.2rem', color: '#0f172a' }}>Termly</div>
           </div>
 
           <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 8, padding: '0 16px' }}>

@@ -1,5 +1,5 @@
 /**
- * Timetable/index.jsx — ShuleSoft Timetable Builder
+ * Timetable/index.jsx — Termly Timetable Builder
  *
  * Features:
  *  - Constraint-guided manual timetable builder
@@ -492,7 +492,7 @@ export default function Timetable({ currentUser, currentPeriodId, periods = [] }
   return (
     <div className="tt-root">
       <Helmet>
-        <title>School Timetable & Scheduling | ShuleSoft — Master Calendar</title>
+        <title>School Timetable & Scheduling | Termly — Master Calendar</title>
         <meta name="description" content="Generate custom school timetables and manage teacher workloads with flexible time slots." />
       </Helmet>
 

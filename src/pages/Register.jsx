@@ -65,8 +65,8 @@ export default function Register() {
 
   // 1. Persistence: Restore state from sessionStorage on mount
   useEffect(() => {
-    const savedData = sessionStorage.getItem('shulesoft_reg_form');
-    const savedStep = sessionStorage.getItem('shulesoft_reg_step');
+    const savedData = sessionStorage.getItem('Termly_reg_form');
+    const savedStep = sessionStorage.getItem('Termly_reg_step');
     if (savedData) setFormData(prev => ({ ...prev, ...JSON.parse(savedData) }));
     if (savedStep) setStep(Number(savedStep));
   }, []);
@@ -74,12 +74,12 @@ export default function Register() {
   // 2. Persistence: Save state to sessionStorage when it changes
   useEffect(() => {
     if (step < 3) {
-      sessionStorage.setItem('shulesoft_reg_form', JSON.stringify(formData));
-      sessionStorage.setItem('shulesoft_reg_step', step.toString());
+      sessionStorage.setItem('Termly_reg_form', JSON.stringify(formData));
+      sessionStorage.setItem('Termly_reg_step', step.toString());
     } else {
       // Clear storage on success or if we reach the end
-      sessionStorage.removeItem('shulesoft_reg_form');
-      sessionStorage.removeItem('shulesoft_reg_step');
+      sessionStorage.removeItem('Termly_reg_form');
+      sessionStorage.removeItem('Termly_reg_step');
     }
   }, [formData, step]);
 
@@ -202,9 +202,9 @@ export default function Register() {
   return (
     <div className="res-page">
       <Helmet>
-        <title>Register Your School | ShuleSoft — Free School Workspace</title>
-        <meta name="description" content="Register your school on ShuleSoft for free. Get an Official workspace to explore CBC grading, fee tracking, and all modules instantly." />
-        <link rel="canonical" href="https://shulesoft.com/register" />
+        <title>Register Your School | Termly — Free School Workspace</title>
+        <meta name="description" content="Register your school on Termly for free. Get an Official workspace to explore CBC grading, fee tracking, and all modules instantly." />
+        <link rel="canonical" href="https://Termly.com/register" />
       </Helmet>
       <div className="card">
         {/* RIGHT PANEL - DECORATIVE */}
@@ -245,7 +245,7 @@ export default function Register() {
 
           <div className="brand-stack">
             <div className="brand-n">
-              ShuleSoft
+              Termly
             </div>
             <div className="brand-sub">The School Management System for modern Kenya <FlagIcon size={10} /></div>
           </div>
@@ -267,7 +267,7 @@ export default function Register() {
                 <rect x="8" y="8" width="5" height="5" rx="1.2" fill="rgba(255,255,255,.25)"/>
               </svg>
             </div>
-            ShuleSoft
+            Termly
           </Link>
 
           {step < 3 && (
@@ -442,7 +442,7 @@ export default function Register() {
               <p className="res-fsub">
                 {error 
                   ? 'You already have an active school workspace. Please proceed to your dashboard.' 
-                  : <>Your school <strong>{formData.schoolName}</strong> has been registered on ShuleSoft.</>
+                  : <>Your school <strong>{formData.schoolName}</strong> has been registered on Termly.</>
                 }
               </p>
               

@@ -182,7 +182,7 @@ export default function Dashboard({ currentUser, onLogout, currentPeriodId }) {
   return (
     <div className="animate-fade-up">
       <Helmet>
-        <title>Dashboard | ShuleSoft - High Performance School Management</title>
+        <title>Dashboard | Termly - High Performance School Management</title>
         <meta name="description" content="View school-wide performance, student count, and attendance at a glance." />
       </Helmet>
       {showWizard && (

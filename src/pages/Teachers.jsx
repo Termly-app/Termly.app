@@ -149,7 +149,7 @@ export default function Teachers({ currentUser, currentPeriodId }) {
   return (
     <div className="animate-in">
       <Helmet>
-        <title>Academic Staff Management | ShuleSoft — Faculty Records</title>
+        <title>Academic Staff Management | Termly — Faculty Records</title>
         <meta name="description" content="Manage teacher profiles, classroom assignments, and performance reports." />
       </Helmet>
       <div className="page-header">

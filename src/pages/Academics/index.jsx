@@ -21,7 +21,7 @@ export default function AcademicCenter({ currentUser, currentPeriodId }) {
   return (
     <div className="academic-center-page animate-in">
       <Helmet>
-        <title>Academic Center | ShuleSoft</title>
+        <title>Academic Center | Termly</title>
         <meta name="description" content="Manage school assessments, class streams, and teacher assignments." />
       </Helmet>
 

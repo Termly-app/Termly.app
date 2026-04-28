@@ -83,7 +83,7 @@ function SbLink({ to, icon: Icon, label, onClick, exact = false, locked = false,
       
       const settings = await getPlatformSettings();
       const phone = settings?.support?.phone || '+254712260057';
-      const email = settings?.support?.email || 'shulesoft8@gmail.com';
+      const email = settings?.support?.email || 'Termly8@gmail.com';
       
       alert({
         title: 'Module Locked',
@@ -165,7 +165,7 @@ function SbSection({ label }) {
 
 // === SIDEBAR ================================================================
 function Sidebar({ isOpen, onClose, onLogout, onLock, currentUser, subscriptionActive }) {
-  const [schoolName,     setSchoolName]     = useState('ShuleSoft');
+  const [schoolName,     setSchoolName]     = useState('Termly');
   const [profile,        setProfile]        = useState(null);
   const [periods,        setPeriods]        = useState([]);
   const [selectedPeriod, setSelectedPeriod] = useState(getCurrentPeriodId());
@@ -175,7 +175,7 @@ function Sidebar({ isOpen, onClose, onLogout, onLock, currentUser, subscriptionA
     try {
       const p = await getSchoolProfile();
       setProfile(p);
-      setSchoolName(p.schoolName || 'ShuleSoft');
+      setSchoolName(p.schoolName || 'Termly');
     } catch { /* ignore */ }
   };
 
@@ -254,7 +254,7 @@ function Sidebar({ isOpen, onClose, onLogout, onLock, currentUser, subscriptionA
         <div className="sb-brand">
           <LogoMarkBW size={32} />
           <div className="sb-brand-txt">
-            <div className="sb-name">ShuleSoft</div>
+            <div className="sb-name">Termly</div>
             <div className="sb-tag">Platform Admin</div>
           </div>
         </div>
@@ -295,7 +295,7 @@ function Sidebar({ isOpen, onClose, onLogout, onLock, currentUser, subscriptionA
               </div>
             </div>
             <div className="sb-status-name">
-              {profile?.schoolName || 'ShuleSoft HQ'}
+              {profile?.schoolName || 'Termly HQ'}
             </div>
           </div>
           <div className="sb-footer-actions">
@@ -320,7 +320,7 @@ function Sidebar({ isOpen, onClose, onLogout, onLock, currentUser, subscriptionA
       <div className="sidebar-logo">
         <LogoMarkBW size={34} />
         <div className="sidebar-logo-txt">
-          <div className="sidebar-logo-name">ShuleSoft</div>
+          <div className="sidebar-logo-name">Termly</div>
           <div className="sidebar-logo-sub">School Portal</div>
         </div>
       </div>
@@ -527,9 +527,9 @@ function App() {
             setIsPlatformAdmin(realIsPlatAdmin);
 
             // Override context if acting-as from Super Admin
-            const overrideSchoolId = sessionStorage.getItem('shulesoft_school_id');
-            const overridePeriodId = sessionStorage.getItem('shulesoft_period_id');
-            const isActingAs = sessionStorage.getItem('shulesoft_acting_as_admin') === 'true';
+            const overrideSchoolId = sessionStorage.getItem('Termly_school_id');
+            const overridePeriodId = sessionStorage.getItem('Termly_period_id');
+            const isActingAs = sessionStorage.getItem('Termly_acting_as_admin') === 'true';
 
             if (realIsPlatAdmin && isActingAs && overrideSchoolId) {
               setCurrentSchoolContext(overrideSchoolId, session.user);
@@ -621,8 +621,8 @@ function App() {
         <Routes>
           <Route path="/"                   element={<Landing />} />
           
-          <Route path="/portal/login"       element={<PortalLogin onLogin={(u) => { localStorage.setItem('shulesoft_portal_user', JSON.stringify(u)); window.location.href='/portal/dashboard'; }} />} />
-          <Route path="/staff/login"        element={<StaffLogin onLogin={(u) => { localStorage.setItem('shulesoft_staff_user', JSON.stringify(u)); window.location.href='/staff/grading'; }} />} />
+          <Route path="/portal/login"       element={<PortalLogin onLogin={(u) => { localStorage.setItem('Termly_portal_user', JSON.stringify(u)); window.location.href='/portal/dashboard'; }} />} />
+          <Route path="/staff/login"        element={<StaffLogin onLogin={(u) => { localStorage.setItem('Termly_staff_user', JSON.stringify(u)); window.location.href='/staff/grading'; }} />} />
 
           <Route path="/portal/*"           element={<PortalManager />} />
           <Route path="/staff/*"            element={<StaffPortalManager />} />
@@ -776,8 +776,8 @@ function SuspendedView({ profile, onLogout }) {
             </div>
             <button 
               onClick={() => {
-                sessionStorage.removeItem('shulesoft_acting_as_admin');
-                sessionStorage.removeItem('shulesoft_school_id');
+                sessionStorage.removeItem('Termly_acting_as_admin');
+                sessionStorage.removeItem('Termly_school_id');
                 window.location.href = '/super-admin';
               }}
               style={{
@@ -821,7 +821,7 @@ function SuspendedView({ profile, onLogout }) {
           <div className="topbar">
             <div className="topbar-left">
               <div className="topbar-title desktop-only">Administration</div>
-              <div className="topbar-title mobile-only">ShuleSoft</div>
+              <div className="topbar-title mobile-only">Termly</div>
             </div>
             <div className="topbar-actions">
               <SyncIndicator />

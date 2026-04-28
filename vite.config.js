@@ -9,8 +9,8 @@ export default defineConfig({
       registerType: 'autoUpdate',
       includeAssets: ['favicon.svg'],
       manifest: {
-        name: 'ShuleSoft',
-        short_name: 'ShuleSoft',
+        name: 'Termly',
+        short_name: 'Termly',
         description: 'The School Management System for modern Kenya.',
         start_url: '/',
         display: 'standalone',

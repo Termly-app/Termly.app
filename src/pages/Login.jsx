@@ -103,7 +103,7 @@ export default function Login({ onLogin }) {
                setLoading(false);
                return;
             }
-            loginEmail = `${loginString}@${targetSchoolRef.school_code}.shulesoft.com`.toLowerCase();
+            loginEmail = `${loginString}@${targetSchoolRef.school_code}.Termly.com`.toLowerCase();
          }
       } else if (!loginString.includes('@')) {
           if (!targetSchoolRef) {
@@ -111,7 +111,7 @@ export default function Login({ onLogin }) {
              setLoading(false);
              return;
           }
-          loginEmail = `${loginString}@${targetSchoolRef.school_code}.shulesoft.com`.toLowerCase();
+          loginEmail = `${loginString}@${targetSchoolRef.school_code}.Termly.com`.toLowerCase();
       }
 
       // 1. Authenticate first
@@ -222,8 +222,8 @@ export default function Login({ onLogin }) {
   return (
     <div className="login-res-page">
       <Helmet>
-        <title>Login | ShuleSoft Academic Portal</title>
-        <meta name="description" content="Secure portal login for ShuleSoft administrators and staff." />
+        <title>Login | Termly Academic Portal</title>
+        <meta name="description" content="Secure portal login for Termly administrators and staff." />
       </Helmet>
       <div className="card">
         {/* ... existing decorative panel ... */}
@@ -255,7 +255,7 @@ export default function Login({ onLogin }) {
 
           <div className="brand-stack">
             <div className="brand-n">
-              ShuleSoft
+              Termly
             </div>
             <div className="brand-sub">The School Management System for modern Kenya <FlagIcon size={10} /></div>
           </div>
@@ -277,7 +277,7 @@ export default function Login({ onLogin }) {
                 <rect x="8" y="8" width="5" height="5" rx="1.2" fill="rgba(255,255,255,.25)"/>
               </svg>
             </div>
-            ShuleSoft
+            Termly
           </Link>
 
           <div className="login-content">

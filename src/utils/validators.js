@@ -1,5 +1,5 @@
 /**
- * validators.js — Centralized input validation for ShuleSoft
+ * validators.js — Centralized input validation for Termly
  * 
  * All validation functions return { valid: boolean, message: string }
  */

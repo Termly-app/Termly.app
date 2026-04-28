@@ -22,7 +22,7 @@ export default function ReferralTool() {
     }, 3000);
   };
 
-  const shareText = "I'm using ShuleSoft to manage my school and it's incredible. You should check it out for your institution: https://shulesoft-app.vercel.app";
+  const shareText = "I'm using Termly to manage my school and it's incredible. You should check it out for your institution: https://Termly-app.vercel.app";
   const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(shareText)}`;
 
   return (

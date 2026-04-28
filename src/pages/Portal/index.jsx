@@ -5,19 +5,19 @@ import PortalDashboard from './PortalDashboard';
 
 export default function PortalManager() {
   const [portalUser, setPortalUser] = useState(() => {
-    const saved = localStorage.getItem('shulesoft_portal_user');
+    const saved = localStorage.getItem('Termly_portal_user');
     return saved ? JSON.parse(saved) : null;
   });
 
   const handleLogin = (data) => {
     setPortalUser(data);
-    localStorage.setItem('shulesoft_portal_user', JSON.stringify(data));
+    localStorage.setItem('Termly_portal_user', JSON.stringify(data));
   };
 
   const handleLogout = () => {
     setPortalUser(null);
-    localStorage.removeItem('shulesoft_portal_user');
-    localStorage.removeItem('shulesoft_portal_school_id');
+    localStorage.removeItem('Termly_portal_user');
+    localStorage.removeItem('Termly_portal_school_id');
   };
 
   return (

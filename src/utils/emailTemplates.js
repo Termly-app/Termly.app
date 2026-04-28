@@ -62,11 +62,11 @@ export function getFeeReceiptTemplate({ studentName, amount, balance, reference,
           </div>
 
           <p style="text-align: center;">
-            <a href="https://portal.shulesoft.app" class="btn">View Full Statement</a>
+            <a href="https://portal.Termly.app" class="btn">View Full Statement</a>
           </p>
         </div>
         <div class="footer">
-          &copy; ${new Date().getFullYear()} ${schoolName} &middot; Powered by ShuleSoft
+          &copy; ${new Date().getFullYear()} ${schoolName} &middot; Powered by Termly
         </div>
       </div>
     </body>
@@ -122,11 +122,11 @@ export function getExamResultsTemplate({ studentName, term, year, performance, s
           </table>
 
           <p style="text-align: center; margin-top: 32px;">
-            <a href="https://portal.shulesoft.app" class="btn">Download Report Card</a>
+            <a href="https://portal.Termly.app" class="btn">Download Report Card</a>
           </p>
         </div>
         <div class="footer">
-          &copy; ${new Date().getFullYear()} ${schoolName} &middot; Powered by ShuleSoft
+          &copy; ${new Date().getFullYear()} ${schoolName} &middot; Powered by Termly
         </div>
       </div>
     </body>

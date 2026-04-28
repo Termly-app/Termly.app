@@ -410,8 +410,8 @@ export default function LMS({ currentUser }) {
   return (
     <div className="section-card animate-in" style={{ display: 'grid', gridTemplateColumns: '380px 1fr', gap: 24, minHeight: 'calc(100vh - 120px)' }}>
       <Helmet>
-        <title>Assignments Hub | ShuleSoft LMS</title>
-        <meta name="description" content="Create, target, and grade assignments in the ShuleSoft digital classroom." />
+        <title>Assignments Hub | Termly LMS</title>
+        <meta name="description" content="Create, target, and grade assignments in the Termly digital classroom." />
       </Helmet>
       
       {/* LEFT PANE: Professional Assignment Setup */}

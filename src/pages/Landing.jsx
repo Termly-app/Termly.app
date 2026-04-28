@@ -190,9 +190,9 @@ export default function Landing() {
   return (
     <>
       <Helmet>
-        <title>ShuleSoft — High Performance CBC School Management System</title>
+        <title>Termly — High Performance CBC School Management System</title>
         <meta name="description" content="Kenya's #1 CBC-compliant school management system. Manage finances, learner portfolios, and generate KNEC-standard reports instantly." />
-        <meta name="keywords" content="ShuleSoft, School Management System Kenya, CBC Grading, School ERP, Student Information System" />
+        <meta name="keywords" content="Termly, School Management System Kenya, CBC Grading, School ERP, Student Information System" />
       </Helmet>
       <div className="nav-wrap">
         <nav className="landing-nav">
@@ -205,7 +205,7 @@ export default function Landing() {
                 <rect x="7.5" y="7.5" width="4.5" height="4.5" rx="1" fill="rgba(255,255,255,.25)" />
               </svg>
             </div>
-            ShuleSoft
+            Termly
           </Link>
           <a href="#features" className="nlink">Features</a>
           <Link to="/contact" className="nlink">Contact</Link>
@@ -256,7 +256,7 @@ export default function Landing() {
       </div>
 
       <section className="hero">
-        <div className="ghost ghost-hero">ShuleSoft</div>
+        <div className="ghost ghost-hero">Termly</div>
 
         <div className="floaters">
           <div className="floater fl-1"><BookIcon size={24} /></div>
@@ -282,7 +282,7 @@ export default function Landing() {
             Built for Kenyan Schools · CBC & 8-4-4 Ready
           </div>
           <h1 className="hero-h1">Complete School Management<br /><span className="h1-dim">— Exams, Finance, Compliance —</span><br />all in one system.</h1>
-          <p className="hero-sub">ShuleSoft is the all-in-one ecosystem for modern Kenyan schools. Automate your M-PESA fee collection, manage formal exam sessions with auto-ranking, and ensure 100% NEMIS compliance.</p>
+          <p className="hero-sub">Termly is the all-in-one ecosystem for modern Kenyan schools. Automate your M-PESA fee collection, manage formal exam sessions with auto-ranking, and ensure 100% NEMIS compliance.</p>
           <div className="hero-btns">
             <Link to="/register" className="btn-p">
               Get access
@@ -295,12 +295,12 @@ export default function Landing() {
           <div className="hs-frame">
             <div className="hs-bar">
               <div className="tls"><div className="tl tl-r"></div><div className="tl tl-y"></div><div className="tl tl-g"></div></div>
-              <div className="hs-url">shulesoft-app.vercel.app / dashboard</div>
+              <div className="hs-url">Termly-app.vercel.app / dashboard</div>
               <div style={{ width: 60 }}></div>
             </div>
             <div className="hs-body">
               <div className="hs-side">
-                <div className="hs-side-logo"><div className="hs-side-sq"><svg viewBox="0 0 13 13" fill="none" width="10" height="10"><rect x="1" y="1" width="4.5" height="4.5" rx="1" fill="white" /><rect x="7.5" y="1" width="4.5" height="4.5" rx="1" fill="white" /><rect x="1" y="7.5" width="4.5" height="4.5" rx="1" fill="white" /><rect x="7.5" y="7.5" width="4.5" height="4.5" rx="1" fill="white" /></svg></div>ShuleSoft</div>
+                <div className="hs-side-logo"><div className="hs-side-sq"><svg viewBox="0 0 13 13" fill="none" width="10" height="10"><rect x="1" y="1" width="4.5" height="4.5" rx="1" fill="white" /><rect x="7.5" y="1" width="4.5" height="4.5" rx="1" fill="white" /><rect x="1" y="7.5" width="4.5" height="4.5" rx="1" fill="white" /><rect x="7.5" y="7.5" width="4.5" height="4.5" rx="1" fill="white" /></svg></div>Termly</div>
                 <div className="sl on"><span className="sl-ico si-v"><DashboardIcon size={12} /></span>Dashboard</div>
                 <div className="sl"><span className="sl-ico si-g"><UserIcon size={12} /></span>Students</div>
                 <div className="sl"><span className="sl-ico si-g"><CardIcon size={12} /></span>Fees</div>
@@ -555,7 +555,7 @@ export default function Landing() {
         <div className="cta-in reveal">
           <div className="eyebrow" style={{ margin: '0 auto 24px' }}>Get started today</div>
           <h2 className="landing-h2">Your school,<br />finally organised.</h2>
-          <p>Join a growing community of Kenyan schools that replaced spreadsheets,<br />paper registers, and group chats with ShuleSoft.</p>
+          <p>Join a growing community of Kenyan schools that replaced spreadsheets,<br />paper registers, and group chats with Termly.</p>
           <div className="cta-btns">
             <Link to="/register" className="btn-p" style={{ padding: '16px 38px', borderRadius: 100, fontSize: '1rem' }}>
               Get access now
@@ -568,7 +568,7 @@ export default function Landing() {
       </section>
 
       <footer className="landing-footer">
-        <div className="ft-ghost">ShuleSoft</div>
+        <div className="ft-ghost">Termly</div>
         <div className="ft-grid-w">
           <div className="ft-col">
             <Link to="/" className="ft-logo">
@@ -580,7 +580,7 @@ export default function Landing() {
                   <rect x="7.5" y="7.5" width="4.5" height="4.5" rx="1" fill="rgba(13,13,13,.2)" />
                 </svg>
               </div>
-              ShuleSoft
+              Termly
             </Link>
             <p className="ft-tag">The School Management System for modern Kenya. Built for the future of Kenyan education.</p>
           </div>
@@ -599,13 +599,13 @@ export default function Landing() {
             <ul className="ft-links">
               <li><Link to="/support">Contact Support</Link></li>
               <li><a href={`tel:${settings?.support?.phone || '+254712260057'}`}>Call: {settings?.support?.phone || '+254712260057'}</a></li>
-              <li><a href="mailto:shulesoft8@gmail.com">Email: shulesoft8@gmail.com</a></li>
+              <li><a href="mailto:Termly8@gmail.com">Email: Termly8@gmail.com</a></li>
               <li><Link to="/faq">FAQ</Link></li>
               <li><Link to="/legal/service-level">Service Level (SLA)</Link></li>
             </ul>
           </div>
           <div className="ft-col">
-            <h4 className="ft-h">ShuleSoft HQ</h4>
+            <h4 className="ft-h">Termly HQ</h4>
             <ul className="ft-links">
               <li><Link to="/about">About Us</Link></li>
               <li><Link to="/contact">Contact</Link></li>
@@ -616,7 +616,7 @@ export default function Landing() {
 
         </div>
         <div className="ft-bottom">
-          <span className="ft-copy">© 2025 ShuleSoft</span>
+          <span className="ft-copy">© 2025 Termly</span>
           <div className="ft-b-links">
             <span>All rights reserved.</span>
           </div>

@@ -1,5 +1,5 @@
 /**
- * Icons.jsx — ShuleSoft SVG Icon Library
+ * Icons.jsx — Termly SVG Icon Library
  *
  * Usage:
  *   import { DashboardIcon, StudentsIcon } from '../../components/Common/Icons';
@@ -504,7 +504,7 @@ export const StatusDotIcon = ({ size = 8, color = '#0DD88A' }) => (
 // ══ Logo mark ═══════════════════════════════════════════════════════════════
 
 export const LogoMark = ({ size = 28 }) => (
-  <svg width={size} height={size} viewBox="0 0 28 28" fill="none" aria-label="ShuleSoft">
+  <svg width={size} height={size} viewBox="0 0 28 28" fill="none" aria-label="Termly">
     <rect width="28" height="28" rx="7" fill="url(#logoGrad)"/>
     <rect x="7" y="7"   width="6" height="6" rx="1.5" fill="rgba(255,255,255,0.95)"/>
     <rect x="15" y="7"  width="6" height="6" rx="1.5" fill="rgba(255,255,255,0.55)"/>
@@ -520,7 +520,7 @@ export const LogoMark = ({ size = 28 }) => (
 );
 
 export const LogoMarkBW = ({ size = 28, color = "#FFFFFF" }) => (
-  <svg width={size} height={size} viewBox="0 0 13 13" fill="none" aria-label="ShuleSoft">
+  <svg width={size} height={size} viewBox="0 0 13 13" fill="none" aria-label="Termly">
     <rect x="1" y="1" width="4.5" height="4.5" rx="1" fill={color}/>
     <rect x="7.5" y="1" width="4.5" height="4.5" rx="1" fill={color} fillOpacity="0.4"/>
     <rect x="1" y="7.5" width="4.5" height="4.5" rx="1" fill={color} fillOpacity="0.4"/>

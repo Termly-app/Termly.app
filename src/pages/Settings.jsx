@@ -389,7 +389,7 @@ export default function Settings() {
   return (
     <div className="animate-in">
       <Helmet>
-        <title>School Settings & Configuration | ShuleSoft — System Admin</title>
+        <title>School Settings & Configuration | Termly — System Admin</title>
         <meta name="description" content="Configure school identity, academic structures, grading systems, and gateway integrations." />
       </Helmet>
       {/* Header */}
@@ -993,7 +993,7 @@ export default function Settings() {
                         <p style={{fontSize:'0.68rem',color:'var(--text-light)',margin:0,fontWeight:600}}>AES-256 Encryption Active</p>
                       </div>
                       <p style={{fontSize:'0.65rem',color:'var(--text-light)',margin:0,lineHeight:1.4}}>
-                        Your Consumer Key and Secret are encrypted at the database level. They are only decrypted temporarily when performing a connection test or during automated reconciliation. <strong>ShuleSoft staff cannot see your raw credentials.</strong>
+                        Your Consumer Key and Secret are encrypted at the database level. They are only decrypted temporarily when performing a connection test or during automated reconciliation. <strong>Termly staff cannot see your raw credentials.</strong>
                       </p>
                     </div>
                   </div>
@@ -1021,7 +1021,7 @@ export default function Settings() {
                   <div style={{display:'flex',flexDirection:'column',gap:12}}>
                     <div className="form-group">
                       <label style={{fontSize:'0.7rem'}}>Sender ID (Optional)</label>
-                      <input className="form-input" placeholder="e.g. SHULESOFT" value={profile.sms_config?.sender_id||''} 
+                      <input className="form-input" placeholder="e.g. Termly" value={profile.sms_config?.sender_id||''} 
                         onChange={e=>setProfile({...profile, sms_config: {...profile.sms_config, sender_id: e.target.value}})}/>
                     </div>
                     <div className="form-group">

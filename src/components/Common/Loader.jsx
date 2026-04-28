@@ -125,7 +125,7 @@ export default function Loader({ visible = true, theme = 'light' }) {
         </div>
       </div>
 
-      <div className="ss-brand">ShuleSoft</div>
+      <div className="ss-brand">Termly</div>
 
       <div className="ss-state">
         Loading

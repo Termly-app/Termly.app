@@ -5,12 +5,12 @@ export default function PrivacyPolicy() {
   return (
     <LegalLayout title="Privacy Policy" lastUpdated="March 2026">
       <Helmet>
-        <title>Privacy Policy | ShuleSoft — Kenya Data Protection</title>
-        <meta name="description" content="How ShuleSoft collects, uses, and protects your school's data. Compliant with the Kenya Data Protection Act 2019." />
-        <link rel="canonical" href="https://shulesoft.com/legal/privacy" />
+        <title>Privacy Policy | Termly — Kenya Data Protection</title>
+        <meta name="description" content="How Termly collects, uses, and protects your school's data. Compliant with the Kenya Data Protection Act 2019." />
+        <link rel="canonical" href="https://Termly.com/legal/privacy" />
       </Helmet>
       <section>
-        <p>ShuleSoft is committed to protecting the privacy and security of the data entrusted to us by schools in Kenya. This policy explains how we collect, use, and safeguard your institution's information.</p>
+        <p>Termly is committed to protecting the privacy and security of the data entrusted to us by schools in Kenya. This policy explains how we collect, use, and safeguard your institution's information.</p>
         
         <h3>1. Information We Collect</h3>
         <ul>
@@ -23,7 +23,7 @@ export default function PrivacyPolicy() {
 
       <section>
         <h3>2. How We Use Data</h3>
-        <p>Information collected via ShuleSoft is used exclusively for:</p>
+        <p>Information collected via Termly is used exclusively for:</p>
         <ul>
           <li>Providing high-quality school management and record-keeping features.</li>
           <li>Processing termly subscriptions and verifying M-PESA payments.</li>
@@ -44,7 +44,7 @@ export default function PrivacyPolicy() {
 
       <section>
         <h3>4. Data Ownership & Sharing</h3>
-        <p>Schools retain 100% ownership of all data uploaded to ShuleSoft. We maintain a strict privacy policy:</p>
+        <p>Schools retain 100% ownership of all data uploaded to Termly. We maintain a strict privacy policy:</p>
         <ul>
           <li>We <strong>never</strong> sell or lease school data to third-party advertisers or brokers.</li>
           <li>Data is only shared with authorized institutional users within your school.</li>
@@ -83,8 +83,8 @@ export default function PrivacyPolicy() {
       <section>
         <h3>8. Contact & DPO</h3>
         <p>For any privacy-related inquiries, please contact our Data Protection Officer:</p>
-        <p><strong>Email:</strong> dpo@shulesoft.app</p>
-        <p><strong>Address:</strong> ShuleSoft HQ, Nairobi, Kenya</p>
+        <p><strong>Email:</strong> dpo@Termly.app</p>
+        <p><strong>Address:</strong> Termly HQ, Nairobi, Kenya</p>
         <p>You also have the right to lodge a complaint with the <strong>Office of the Data Protection Commissioner (ODPC)</strong> at <a href="https://www.odpc.go.ke" target="_blank" rel="noreferrer" style={{ color: 'var(--primary)' }}>www.odpc.go.ke</a>.</p>
       </section>
     </LegalLayout>

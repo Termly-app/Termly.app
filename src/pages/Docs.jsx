@@ -20,15 +20,15 @@ export default function Docs() {
   return (
     <PremiumLayout>
       <Helmet>
-        <title>Documentation | ShuleSoft — How It Works</title>
-        <meta name="description" content="Comprehensive documentation for ShuleSoft school management system. Learn about student management, CBC grading, fees, and security." />
-        <link rel="canonical" href="https://shulesoft.com/docs" />
+        <title>Documentation | Termly — How It Works</title>
+        <meta name="description" content="Comprehensive documentation for Termly school management system. Learn about student management, CBC grading, fees, and security." />
+        <link rel="canonical" href="https://Termly.com/docs" />
       </Helmet>
       <section className="section" style={{ minHeight: '100vh', paddingTop: '120px' }}>
         <div className="sec-head reveal">
           <div className="eyebrow">Documentation</div>
-          <h2 className="landing-h2">How ShuleSoft Works</h2>
-          <p className="sec-p">Everything you need to know about managing your school with ShuleSoft.</p>
+          <h2 className="landing-h2">How Termly Works</h2>
+          <p className="sec-p">Everything you need to know about managing your school with Termly.</p>
         </div>
 
         <div className="docs-container" style={{ 
@@ -91,7 +91,7 @@ export default function Docs() {
               <article>
                 <h1 style={{ fontSize: '2rem', marginBottom: '24px' }}>Getting Started</h1>
                 <p style={{ color: 'var(--text-muted)', lineHeight: 1.7, marginBottom: '20px' }}>
-                  ShuleSoft is a cloud-based school management system designed specifically for the Kenyan context. 
+                  Termly is a cloud-based school management system designed specifically for the Kenyan context. 
                   To get started, register your school on the platform and choose a subscription plan that fits your student population.
                 </p>
                 <h3 style={{ marginTop: '32px' }}>1. Registration</h3>
@@ -129,7 +129,7 @@ export default function Docs() {
               <article>
                 <h1 style={{ fontSize: '2rem', marginBottom: '24px' }}>Academic Records (CBC)</h1>
                 <p style={{ color: 'var(--text-muted)', lineHeight: 1.7, marginBottom: '20px' }}>
-                  ShuleSoft is engineered for the **Competency Based Curriculum**.
+                  Termly is engineered for the **Competency Based Curriculum**.
                 </p>
                 <h3 style={{ marginTop: '32px' }}>Grading & Evaluations</h3>
                 <p style={{ color: 'var(--text-muted)', lineHeight: 1.7 }}>
@@ -153,7 +153,7 @@ export default function Docs() {
                 <h3 style={{ marginTop: '32px' }}>Recording Payments</h3>
                 <p style={{ color: 'var(--text-muted)', lineHeight: 1.7 }}>
                   When a parent pays via M-PESA, simply enter the transaction code in the **Fees** module. 
-                  ShuleSoft generates a digital receipt and updates the student's balance instantly.
+                  Termly generates a digital receipt and updates the student's balance instantly.
                 </p>
                 <h3 style={{ marginTop: '32px' }}>Financial KPIs</h3>
                 <p style={{ color: 'var(--text-muted)', lineHeight: 1.7 }}>
@@ -167,7 +167,7 @@ export default function Docs() {
               <article>
                 <h1 style={{ fontSize: '2rem', marginBottom: '24px' }}>Security & Row Level Security (RLS)</h1>
                 <p style={{ color: 'var(--text-muted)', lineHeight: 1.7, marginBottom: '20px' }}>
-                  ShuleSoft uses an elite security model to ensure your school's data remains private and secure.
+                  Termly uses an elite security model to ensure your school's data remains private and secure.
                 </p>
                 <h3 style={{ marginTop: '32px' }}>Data Isolation</h3>
                 <p style={{ color: 'var(--text-muted)', lineHeight: 1.7 }}>

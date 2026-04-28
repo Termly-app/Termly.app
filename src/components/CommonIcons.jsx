@@ -257,7 +257,7 @@ export const ChevronLeftIcon = ({ size = 18, color = 'currentColor', className =
 );
 
 export const LogoMark = ({ size = 28 }) => (
-  <svg width={size} height={size} viewBox="0 0 28 28" fill="none" aria-label="ShuleSoft">
+  <svg width={size} height={size} viewBox="0 0 28 28" fill="none" aria-label="Termly">
     <rect width="28" height="28" rx="7" fill="url(#logoGrad)"/>
     <rect x="7" y="7"   width="6" height="6" rx="1.5" fill="rgba(255,255,255,0.95)"/>
     <rect x="15" y="7"  width="6" height="6" rx="1.5" fill="rgba(255,255,255,0.55)"/>

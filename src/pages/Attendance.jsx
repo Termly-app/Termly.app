@@ -248,7 +248,7 @@ export default function Attendance({ currentUser, currentPeriodId }) {
   return (
     <div className="animate-in">
       <Helmet>
-        <title>Student Attendance Tracking | ShuleSoft — Daily Records</title>
+        <title>Student Attendance Tracking | Termly — Daily Records</title>
         <meta name="description" content="Mark daily student attendance, track late arrivals, and generate attendance reports." />
       </Helmet>
       <div className="page-header">
@@ -472,7 +472,7 @@ export default function Attendance({ currentUser, currentPeriodId }) {
               <div style={{ padding: 12, borderRadius: 8, background: 'rgba(59,130,246,0.05)', border: '1px solid var(--primary)', marginBottom: 20 }}>
                 <p style={{ margin: 0, fontSize: '0.75rem', color: 'var(--primary)', fontWeight: 600 }}>Message Preview:</p>
                 <p style={{ margin: '6px 0 0', fontSize: '0.8rem', fontStyle: 'italic', color: 'var(--text-main)' }}>
-                  "ShuleSoft Alert: [Student Name] is marked ABSENT today ({selectedDate}). Please contact the school for details."
+                  "Termly Alert: [Student Name] is marked ABSENT today ({selectedDate}). Please contact the school for details."
                 </p>
               </div>
 
@@ -488,7 +488,7 @@ export default function Attendance({ currentUser, currentPeriodId }) {
                         .filter(s => attendance[s.id] === 'absent' && s.parent_phone)
                         .map(s => ({
                           phone: s.parent_phone,
-                          message: `ShuleSoft Alert: ${s.name} is marked ABSENT today (${selectedDate}). Please contact the school for details.`,
+                          message: `Termly Alert: ${s.name} is marked ABSENT today (${selectedDate}). Please contact the school for details.`,
                           type: 'attendance'
                         }));
                       

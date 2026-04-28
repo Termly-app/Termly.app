@@ -46,8 +46,8 @@ const ResetPassword = () => {
     return (
         <div className="login-page">
             <Helmet>
-                <title>Reset Password | ShuleSoft</title>
-                <meta name="description" content="Set a new password for your ShuleSoft school management account." />
+                <title>Reset Password | Termly</title>
+                <meta name="description" content="Set a new password for your Termly school management account." />
             </Helmet>
             <div className="card">
                 {/* RIGHT PANEL - VISUALS */}
@@ -70,7 +70,7 @@ const ResetPassword = () => {
                     </div>
 
                     <div className="brand-stack">
-                        <div className="brand-n">ShuleSoft</div>
+                        <div className="brand-n">Termly</div>
                         <div className="brand-sub">Modern School Management</div>
                     </div>
                 </div>
@@ -87,7 +87,7 @@ const ResetPassword = () => {
                                     <rect x="8" y="8" width="5" height="5" rx="1.2" fill="rgba(255,255,255,.25)"/>
                                 </svg>
                             </div>
-                            ShuleSoft
+                            Termly
                         </div>
 
                         {success ? (

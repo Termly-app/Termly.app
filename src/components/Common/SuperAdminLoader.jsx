@@ -123,7 +123,7 @@ export default function SuperAdminLoader({ visible = true }) {
         </div>
       </div>
 
-      <div className="sa-loader-brand">Shulesoft HQ</div>
+      <div className="sa-loader-brand">Termly HQ</div>
 
       <div className="sa-loader-sub">
         Loading
@@ -136,7 +136,7 @@ export default function SuperAdminLoader({ visible = true }) {
 
       <div className="sa-loader-pill">
         <div className="sa-loader-pdot" />
-        ShuleSoft HQ · Platform Admin
+        Termly HQ · Platform Admin
       </div>
     </div>
   );

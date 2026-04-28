@@ -63,7 +63,7 @@ export default function StaffLogin({ onLogin }) {
     <div className="login-res-page" style={{ background: 'linear-gradient(135deg, #1E1B4B 0%, #312E81 100%)' }}>
       <Loader visible={loading} />
       <Helmet>
-        <title>Staff Portal Login | ShuleSoft</title>
+        <title>Staff Portal Login | Termly</title>
         <meta name="description" content="Secure login for school teachers and staff members." />
       </Helmet>
       <div className="card">
@@ -95,7 +95,7 @@ export default function StaffLogin({ onLogin }) {
           </div>
 
           <div className="brand-stack">
-            <div className="brand-n">ShuleSoft STAFF</div>
+            <div className="brand-n">Termly STAFF</div>
             <div className="brand-sub">The Teacher's Workspace <FlagIcon size={10} /></div>
           </div>
         </div>

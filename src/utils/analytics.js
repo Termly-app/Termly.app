@@ -1,5 +1,5 @@
 /**
- * ShuleSoft Analytics & Error Tracking
+ * Termly Analytics & Error Tracking
  * Integrates with PostHog for product analytics and Sentry for error reporting.
  */
 

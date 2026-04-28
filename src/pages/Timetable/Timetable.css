@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════════════════════════════════════════
-   Timetable.css — ShuleSoft  ·  Professional edition
+   Timetable.css — Termly  ·  Professional edition
    ═══════════════════════════════════════════════════════════════════════════ */
 
 .tt-root { display:flex; flex-direction:column; gap:0; min-height:100%; animation:ttIn .2s ease; }

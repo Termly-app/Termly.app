@@ -91,7 +91,7 @@ export default function PortalLogin({ onLogin }) {
           </div>
 
           <div className="brand-stack">
-            <div className="brand-n">ShuleSoft FAMILY</div>
+            <div className="brand-n">Termly FAMILY</div>
             <div className="brand-sub">Modern Education, Connected Homes <FlagIcon size={10} /></div>
           </div>
         </div>

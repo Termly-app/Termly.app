@@ -1,5 +1,5 @@
 /**
- * Security Utilities for ShuleSoft
+ * Security Utilities for Termly
  * Uses Web Crypto API for AES-256-GCM encryption
  */
 
@@ -15,7 +15,7 @@ async function getEncryptionKey(schoolId) {
   // In a real production app, 'SYSTEM_SECRET' would be an environment variable 
   // or fetched via a secure vault. For this architectural demonstration, 
   // we use a platform-stable seed combined with the unique schoolId.
-  const seed = `shulesoft-v1-${schoolId}`;
+  const seed = `Termly-v1-${schoolId}`;
   const enc = new TextEncoder();
   const keyData = enc.encode(seed.padEnd(32, '0').slice(0, 32)); // 256-bit
 

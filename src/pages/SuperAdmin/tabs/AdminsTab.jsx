@@ -78,7 +78,7 @@ export default function AdminsTab() {
             <input 
               type="email" 
               className="sa-input" 
-              placeholder="admin@shulesoft.com"
+              placeholder="admin@Termly.com"
               value={newEmail}
               onChange={e => setNewEmail(e.target.value)}
               required
@@ -143,7 +143,7 @@ export default function AdminsTab() {
             <div style={{ fontWeight: 800, fontSize: '0.9rem', color: 'var(--vi)' }}>Security Note</div>
             <div style={{ fontSize: '0.75rem', color: 'var(--sub)', marginTop: 4, lineHeight: 1.5 }}>
               Platform admins can bypass all school-level RLS policies and access sensitive configuration data. 
-              Only grant this role to trusted ShuleSoft HQ staff. All platform actions are recorded in the global activity log.
+              Only grant this role to trusted Termly HQ staff. All platform actions are recorded in the global activity log.
             </div>
           </div>
         </div>

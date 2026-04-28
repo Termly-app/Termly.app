@@ -1,7 +1,7 @@
 import { supabase } from '../lib/supabase';
 
 /**
- * ShuleSoft Email Utility
+ * Termly Email Utility
  * Sends emails via Supabase Edge Function 'send-email' which integrates with Resend.
  */
 

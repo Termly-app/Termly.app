@@ -17,9 +17,9 @@ export default function ContactSupport() {
   return (
     <PremiumLayout>
       <Helmet>
-        <title>Contact Support | ShuleSoft</title>
-        <meta name="description" content="Get help from the ShuleSoft team in Nairobi. Contact us for technical support, onboarding, and account questions." />
-        <link rel="canonical" href="https://shulesoft.com/contact" />
+        <title>Contact Support | Termly</title>
+        <meta name="description" content="Get help from the Termly team in Nairobi. Contact us for technical support, onboarding, and account questions." />
+        <link rel="canonical" href="https://Termly.com/contact" />
       </Helmet>
       <section className="section">
         <div className="sec-head reveal">
@@ -41,7 +41,7 @@ export default function ContactSupport() {
             <div className="fc-title">Direct Contact</div>
             <p className="fc-desc">
               <strong>Phone:</strong> <a href={`tel:${settings?.support?.phone || '+254712260057'}`} style={{ color: 'inherit' }}>{settings?.support?.phone || '+254712260057'}</a><br/>
-              <strong>Email:</strong> <a href="mailto:shulesoft8@gmail.com" style={{ color: 'inherit' }}>shulesoft8@gmail.com</a>
+              <strong>Email:</strong> <a href="mailto:Termly8@gmail.com" style={{ color: 'inherit' }}>Termly8@gmail.com</a>
             </p>
           </div>
         </div>

@@ -102,7 +102,7 @@ export default function LibraryModule({ currentUser, currentPeriodId }) {
   return (
     <div className="animate-in">
       <Helmet>
-        <title>Library Management | ShuleSoft</title>
+        <title>Library Management | Termly</title>
         <meta name="description" content="Manage school library books, track loans, generate reports, and handle overdue books." />
       </Helmet>
 

@@ -50,9 +50,9 @@ const PRINT_CSS = `
   }
 `;
 
-const SHULESOFT_FOOTER = `
+const Termly_FOOTER = `
   <div class="system-footer">
-    <svg width="22" height="22" viewBox="0 0 13 13" fill="none" aria-label="ShuleSoft">
+    <svg width="22" height="22" viewBox="0 0 13 13" fill="none" aria-label="Termly">
       <rect x="1" y="1" width="4.5" height="4.5" rx="1" fill="#000"/>
       <rect x="7.5" y="1" width="4.5" height="4.5" rx="1" fill="#000" fill-opacity="0.4"/>
       <rect x="1" y="7.5" width="4.5" height="4.5" rx="1" fill="#000" fill-opacity="0.4"/>
@@ -77,7 +77,7 @@ function getAbsoluteUrl(url) {
  */
 function openPrintWindow(html) {
   const win = window.open('', '_blank', 'width=600,height=800');
-  win.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><style>${PRINT_CSS}</style></head><body>${html}${SHULESOFT_FOOTER}</body></html>`);
+  win.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><style>${PRINT_CSS}</style></head><body>${html}${Termly_FOOTER}</body></html>`);
   win.document.close();
   // Small delay so styles load before print dialog
   setTimeout(() => {

@@ -39,7 +39,7 @@ export default function Blog() {
           
           <footer className="post-footer">
             <div className="cta-box">
-              <h3>Start your journey with ShuleSoft today</h3>
+              <h3>Start your journey with Termly today</h3>
               <p>Join over 500 schools transforming their management experience.</p>
               <div style={{ display: 'flex', gap: 12, marginTop: 16 }}>
                 <a href="/register" className="btn btn-primary">Try for Free</a>
@@ -55,13 +55,13 @@ export default function Blog() {
   return (
     <div className="blog-container animate-in">
       <Helmet>
-        <title>Blog | ShuleSoft Insights — Education Technology in Kenya</title>
+        <title>Blog | Termly Insights — Education Technology in Kenya</title>
         <meta name="description" content="Discover how modern technology is transforming schools across Kenya. Feature deep-dives, product updates, and educational leadership insights." />
-        <meta name="keywords" content="ShuleSoft blog, Kenya education technology, CBC updates, school management" />
-        <link rel="canonical" href="https://shulesoft.com/blog" />
+        <meta name="keywords" content="Termly blog, Kenya education technology, CBC updates, school management" />
+        <link rel="canonical" href="https://Termly.com/blog" />
       </Helmet>
       <header className="blog-hero">
-        <h1 className="hero-title">ShuleSoft <span className="text-gradient">Insights</span></h1>
+        <h1 className="hero-title">Termly <span className="text-gradient">Insights</span></h1>
         <p className="hero-subtitle">Discover how modern technology is transforming schools across the continent.</p>
       </header>
 

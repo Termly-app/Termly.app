@@ -171,7 +171,7 @@ export default function Students({ currentUser, currentPeriodId }) {
   return (
     <div className="animate-in">
       <Helmet>
-        <title>Learner Records | ShuleSoft — Student Management</title>
+        <title>Learner Records | Termly — Student Management</title>
         <meta name="description" content="Manage student profiles, class transfers, and fee balances." />
       </Helmet>
       {/* Header */}
