@@ -639,7 +639,17 @@ export async function retractExamResults(examSessionId) {
 export async function getOpenExamsForTeacher() {
   if (!_currentSchoolId) return [];
 
-  // 1. Try: Exams explicitly opened via exam_publish_settings
+  // Portal mode (no auth user): use RPC to bypass RLS
+  if (!_currentAuthUser) {
+    const { data, error } = await supabase.rpc('portal_get_open_exams', { p_school_id: _currentSchoolId });
+    if (error) {
+      console.error('[getOpenExamsForTeacher] RPC error:', error);
+      return [];
+    }
+    return data || [];
+  }
+
+  // Admin mode: try exam_publish_settings first, then fallback
   const { data: published, error: pubErr } = await supabase
     .from('exams')
     .select('id, name, term, exam_type, status, exam_publish_settings!inner(teacher_entry_open)')
@@ -649,8 +659,7 @@ export async function getOpenExamsForTeacher() {
 
   if (!pubErr && published && published.length > 0) return published;
 
-  // 2. Fallback: Show any exams that are not yet closed/archived
-  // This ensures teachers see exams even when admin hasn't explicitly toggled the publish setting
+  // Fallback: any non-closed exams
   const { data: fallback, error: fbErr } = await supabase
     .from('exams')
     .select('id, name, term, exam_type, status')
@@ -659,7 +668,7 @@ export async function getOpenExamsForTeacher() {
     .order('created_at', { ascending: false });
 
   if (fbErr) {
-    console.error('[getOpenExamsForTeacher] Fallback query error:', fbErr);
+    console.error('[getOpenExamsForTeacher] Fallback error:', fbErr);
     return [];
   }
   return fallback || [];
