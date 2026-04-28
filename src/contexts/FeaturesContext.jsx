@@ -29,7 +29,7 @@ export const FeaturesProvider = ({ children, user }) => {
     fetchingRef.current = true;
 
     try {
-      setLoading(true);
+      if (Object.keys(features).length === 0) setLoading(true);
       console.log(`[FeaturesProvider] Fetching features for school: ${schoolId}`);
       
       const [{ data: registry, error: regErr }, { data: schoolFeatures, error: sfErr }] = await Promise.all([
