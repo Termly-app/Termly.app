@@ -82,9 +82,22 @@ function LibrarySubNav({ currentUser }) {
 
 export default function LibraryModule({ currentUser, currentPeriodId }) {
   const { enabled: hasAccess, loading: featureLoading } = useFeature('library');
+  const role = currentUser?.role?.toLowerCase() || '';
+  const canAccess = role === 'admin' || role === 'librarian';
 
   if (featureLoading) return <Loader />;
   if (!hasAccess) return <FeatureGate featureName="Library Management" />;
+  if (!canAccess) {
+    return (
+      <div className="card animate-in" style={{ padding: '60px 20px', textAlign: 'center', marginTop: '40px', maxWidth: '600px', margin: '40px auto' }}>
+        <AlertIcon size={64} color="var(--danger)" style={{ margin: '0 auto 24px auto', opacity: 0.8 }} />
+        <h2 style={{ fontSize: '1.5rem', fontWeight: 800, marginBottom: '8px' }}>Access Denied</h2>
+        <p style={{ color: 'var(--text-light)', fontSize: '1rem', lineHeight: 1.5 }}>
+          The Library module is restricted to Librarians and Administrators.
+        </p>
+      </div>
+    );
+  }
 
   return (
     <div className="animate-in">

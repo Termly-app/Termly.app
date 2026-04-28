@@ -340,7 +340,7 @@ function Sidebar({ isOpen, onClose, onLogout, onLock, currentUser, subscriptionA
         )}
 
         {/* Dynamic features based on activation */}
-        {(isLibrarian || isTeacher || isAdmin) && libFeature.enabled && (
+        {(isLibrarian || isAdmin) && libFeature.enabled && (
           <SbLink to="/library" icon={BookIcon} label="Library" onClick={onClose} />
         )}
 
