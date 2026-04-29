@@ -232,7 +232,7 @@ export default function MobileGrading({ user, onLogout }) {
     try {
       const payload = Object.entries(marksBuffer).map(([studentId, data]) => ({
         student_id: studentId,
-        raw_score: data.isAbsent ? null : (data.score === '' ? null : Number(data.score)),
+        raw_score: data.isAbsent ? null : ((data.score === '' || data.score === null || data.score === undefined) ? null : Number(data.score)),
         is_absent: data.isAbsent,
         remarks: ''
       }));
@@ -266,7 +266,6 @@ export default function MobileGrading({ user, onLogout }) {
   const navItems = [
     { id: 'dashboard', label: 'Dashboard', icon: DashboardIcon },
     { id: 'grading', label: 'Grading', icon: GradingIcon },
-    { id: 'attendance', label: 'Attendance', icon: CheckIcon },
     { id: 'schedule', label: 'Timetable', icon: CalendarIcon },
     { id: 'profile', label: 'Account', icon: UserIcon }
   ];
@@ -366,12 +365,7 @@ export default function MobileGrading({ user, onLogout }) {
 
         {activeTab === 'dashboard' && (
           <div className="animate-in" style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
-            <div style={{ display: 'grid', gridTemplateColumns: isDesktop ? '1fr 1fr 1fr' : '1fr', gap: 20 }}>
-              <Card style={{ background: 'linear-gradient(135deg, #10b981, #059669)', color: '#fff' }} onClick={() => setActiveTab('attendance')}>
-                <div style={{ fontSize: '0.75rem', opacity: 0.8, fontWeight: 700, textTransform: 'uppercase', marginBottom: 8 }}>Quick Action</div>
-                <div style={{ fontSize: '1.2rem', fontWeight: 800 }}>Mark Attendance</div>
-                <div style={{ fontSize: '0.8rem', marginTop: 12 }}>{schedule.filter(s => s.day_of_week === selectedDay).length} lessons today</div>
-              </Card>
+            <div style={{ display: 'grid', gridTemplateColumns: isDesktop ? '1fr 1fr' : '1fr', gap: 20 }}>
               <Card style={{ background: 'linear-gradient(135deg, #3b82f6, #2563eb)', color: '#fff' }} onClick={() => setActiveTab('grading')}>
                 <div style={{ fontSize: '0.75rem', opacity: 0.8, fontWeight: 700, textTransform: 'uppercase', marginBottom: 8 }}>Quick Action</div>
                 <div style={{ fontSize: '1.2rem', fontWeight: 800 }}>Enter Marks</div>
@@ -401,19 +395,7 @@ export default function MobileGrading({ user, onLogout }) {
           </div>
         )}
 
-        {activeTab === 'attendance' && (
-          <div className="animate-in">
-             <h3 style={{ fontSize: '1.4rem', fontWeight: 900, color: '#0f172a', marginBottom: 20 }}>Quick Attendance</h3>
-             {/* Note: In a real app, this would reuse the Attendance logic from the main page but mobile-optimized */}
-             <div style={{ background: '#fff', borderRadius: 24, padding: 32, textAlign: 'center', border: '1px dashed #cbd5e1' }}>
-                <CheckIcon size={48} color="#cbd5e1" style={{ margin: '0 auto 16px' }} />
-                <p style={{ color: '#64748b', fontWeight: 600 }}>Marking daily attendance is now integrated with the main Attendance module.</p>
-                <button className="btn btn-primary" style={{ marginTop: 16 }} onClick={() => window.location.href = '/attendance'}>
-                   Open Main Attendance Module
-                </button>
-             </div>
-          </div>
-        )}
+
 
         {activeTab === 'grading' && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: isDesktop ? 32 : 20, animation: 'fadeIn 0.4s ease-out' }}>
