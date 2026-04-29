@@ -1793,30 +1793,60 @@ export async function getSubjectRankings(className, examType = _currentExamType)
 
 export async function getClassList(className, classId = null, subjectName = null, streamName = null) {
   let students = [];
-  if (!_currentAuthUser && _currentSchoolId && classId) {
+  const isPortalMode = !_currentAuthUser && _currentSchoolId;
+
+  if (isPortalMode && classId) {
+    // Portal mode: use RPC to bypass RLS
+    // The RPC already matches students by class_id AND by class name/stream text
+    // So we do NOT apply additional stream/subject filters — they would just eliminate everyone
+    console.log('[PORTAL] getClassList via RPC for class_id:', classId);
     const { data, error } = await supabase.rpc('portal_get_class_students', { 
       p_school_id: _currentSchoolId,
       p_class_id: classId
     });
-    if (error) throw error;
-    students = data || [];
-  } else {
-    students = (await getStudents()).filter(s => s.class === className);
+    if (error) {
+      console.warn('[PORTAL] portal_get_class_students error:', error.message);
+      // Fallback: try direct query by class name
+      const { data: fallback, error: fbErr } = await supabase
+        .from('students')
+        .select('id, name, adm_no, class, stream, subjects')
+        .eq('school_id', _currentSchoolId)
+        .eq('class', className)
+        .eq('status', 'Active');
+      if (!fbErr && fallback) {
+        console.log('[PORTAL] Fallback direct query returned', fallback.length, 'students');
+        students = fallback;
+      }
+    } else {
+      students = data || [];
+      console.log('[PORTAL] RPC returned', students.length, 'students');
+    }
+
+    // In portal mode, return all students for this class — no extra filtering
+    // The teacher is already selecting a specific paper (class + subject), 
+    // so we show all students in that class for mark entry.
+    return students.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
   }
 
-  // 1. Filter by Stream (Strict)
+  // Admin mode: use local cache
+  students = (await getStudents()).filter(s => s.class === className);
+
+  // 1. Filter by Stream (Strict) — admin mode only
   if (streamName) {
     const sLower = streamName.toLowerCase();
-    students = students.filter(s => 
-      (s.stream && s.stream.toLowerCase() === sLower) || 
-      (s.class && s.class.toLowerCase().includes(sLower))
-    );
+    const isGeneral = sLower === 'general';
+    students = students.filter(s => {
+      const studentStream = (s.stream || '').toLowerCase();
+      if (studentStream === sLower) return true;
+      if (isGeneral && (studentStream === '' || studentStream === 'all')) return true;
+      if (s.class && s.class.toLowerCase().includes(sLower)) return true;
+      return false;
+    });
   }
 
-  // 2. Filter by Subject (Strict Enrollment Only)
+  // 2. Filter by Subject (Strict Enrollment Only) — admin mode only
   if (subjectName) {
     const subLower = subjectName.toLowerCase();
-    // Check if ANY student in this class has subjects populated
     const hasEnrollmentData = students.some(s => s.subjects && s.subjects.length > 0);
     
     if (hasEnrollmentData) {
@@ -1825,7 +1855,6 @@ export async function getClassList(className, classId = null, subjectName = null
         return s.subjects.some(sub => sub.toLowerCase().includes(subLower) || subLower.includes(sub.toLowerCase()));
       });
     }
-    // If no one has enrollment data, we show everyone (fallback)
   }
 
   return students.sort((a, b) => a.name.localeCompare(b.name));
