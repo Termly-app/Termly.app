@@ -1,4 +1,5 @@
 -- Add RPC for Portal to fetch open exams
+DROP FUNCTION IF EXISTS public.portal_get_open_exams(uuid);
 
 CREATE OR REPLACE FUNCTION public.portal_get_open_exams(p_school_id uuid)
 RETURNS TABLE (
