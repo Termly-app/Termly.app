@@ -1795,37 +1795,60 @@ export async function getClassList(className, classId = null, subjectName = null
   let students = [];
   const isPortalMode = !_currentAuthUser && _currentSchoolId;
 
-  if (isPortalMode && classId) {
+  if (isPortalMode) {
     // Portal mode: use RPC to bypass RLS
-    // The RPC already matches students by class_id AND by class name/stream text
-    // So we do NOT apply additional stream/subject filters — they would just eliminate everyone
-    console.log('[PORTAL] getClassList via RPC for class_id:', classId);
-    const { data, error } = await supabase.rpc('portal_get_class_students', { 
-      p_school_id: _currentSchoolId,
-      p_class_id: classId
-    });
-    if (error) {
-      console.warn('[PORTAL] portal_get_class_students error:', error.message);
-      // Fallback: try direct query by class name
+    // We do NOT apply stream/subject filters — teacher already selected a specific paper
+    console.log('[PORTAL] getClassList for class:', className, 'classId:', classId);
+    
+    // Strategy 1: Use simple text-based RPC (most reliable)
+    try {
+      const { data, error } = await supabase.rpc('portal_get_students_by_class_name', { 
+        p_school_id: _currentSchoolId,
+        p_class_name: className
+      });
+      if (!error && data && data.length > 0) {
+        console.log('[PORTAL] Text-based RPC returned', data.length, 'students');
+        return data.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+      }
+      if (error) console.warn('[PORTAL] portal_get_students_by_class_name error:', error.message);
+    } catch (e) {
+      console.warn('[PORTAL] Text RPC failed:', e.message);
+    }
+
+    // Strategy 2: Use UUID-based RPC (original)
+    if (classId) {
+      try {
+        const { data, error } = await supabase.rpc('portal_get_class_students', { 
+          p_school_id: _currentSchoolId,
+          p_class_id: classId
+        });
+        if (!error && data && data.length > 0) {
+          console.log('[PORTAL] UUID-based RPC returned', data.length, 'students');
+          return data.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+        }
+        if (error) console.warn('[PORTAL] portal_get_class_students error:', error.message);
+      } catch (e) {
+        console.warn('[PORTAL] UUID RPC failed:', e.message);
+      }
+    }
+
+    // Strategy 3: Direct table query (may be blocked by RLS but worth trying)
+    try {
       const { data: fallback, error: fbErr } = await supabase
         .from('students')
         .select('id, name, adm_no, class, stream, subjects')
         .eq('school_id', _currentSchoolId)
-        .eq('class', className)
-        .eq('status', 'Active');
-      if (!fbErr && fallback) {
-        console.log('[PORTAL] Fallback direct query returned', fallback.length, 'students');
-        students = fallback;
+        .eq('class', className);
+      if (!fbErr && fallback && fallback.length > 0) {
+        console.log('[PORTAL] Direct query returned', fallback.length, 'students');
+        return fallback.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
       }
-    } else {
-      students = data || [];
-      console.log('[PORTAL] RPC returned', students.length, 'students');
+    } catch (e) {
+      console.warn('[PORTAL] Direct query failed:', e.message);
     }
 
-    // In portal mode, return all students for this class — no extra filtering
-    // The teacher is already selecting a specific paper (class + subject), 
-    // so we show all students in that class for mark entry.
-    return students.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+    console.error('[PORTAL] All strategies failed to find students for class:', className);
+    return [];
   }
 
   // Admin mode: use local cache
