@@ -238,19 +238,43 @@ export async function getExamPapers(examId) {
   if (!_currentSchoolId || !examId) return [];
   
   if (!_currentAuthUser && _currentSchoolId) {
-    // Portal mode: Fetch papers via RPC (usually for teachers entering marks)
-    // Use teacher_record_id if available (from staff login), otherwise fall back to userId
+    // Portal mode: Use the ensure RPC which auto-creates papers from assignments if needed
     const teacherId = _currentUserId;
-    console.log('[PORTAL] Fetching papers for teacher:', teacherId, 'exam:', examId);
-    const { data, error } = await supabase.rpc('portal_get_teacher_papers', { 
-      p_teacher_id: teacherId, 
-      p_exam_id: examId 
-    });
-    if (error) {
-      console.warn('portal_get_teacher_papers error:', error.message);
-      return [];
+    console.log('[PORTAL] Fetching/ensuring papers for teacher:', teacherId, 'exam:', examId);
+    
+    // Strategy 1: Use the auto-ensure RPC (creates papers from assignments if none exist)
+    try {
+      const { data, error } = await supabase.rpc('portal_ensure_teacher_papers', { 
+        p_teacher_id: teacherId, 
+        p_exam_id: examId,
+        p_school_id: _currentSchoolId
+      });
+      if (!error && data && data.length > 0) {
+        console.log('[PORTAL] Ensure RPC returned', data.length, 'papers');
+        return data;
+      }
+      if (error) console.warn('[PORTAL] portal_ensure_teacher_papers error:', error.message);
+    } catch (e) {
+      console.warn('[PORTAL] Ensure RPC failed:', e.message);
     }
-    return data || [];
+
+    // Strategy 2: Fallback to original RPC
+    try {
+      const { data, error } = await supabase.rpc('portal_get_teacher_papers', { 
+        p_teacher_id: teacherId, 
+        p_exam_id: examId 
+      });
+      if (!error && data && data.length > 0) {
+        console.log('[PORTAL] Original RPC returned', data.length, 'papers');
+        return data;
+      }
+      if (error) console.warn('[PORTAL] portal_get_teacher_papers error:', error.message);
+    } catch (e) {
+      console.warn('[PORTAL] Original RPC failed:', e.message);
+    }
+
+    console.warn('[PORTAL] No papers found for teacher:', teacherId, 'exam:', examId);
+    return [];
   }
 
   const { data, error } = await supabase
