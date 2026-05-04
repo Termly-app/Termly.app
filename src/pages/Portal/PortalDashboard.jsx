@@ -134,9 +134,13 @@ export default function PortalDashboard({ user, onLogout }) {
         setMySubmissions(subMap);
         
         if (examRes.length > 0) {
-          const avg = examRes.reduce((acc, curr) => acc + (curr.total_marks / (curr.total_subjects || 1)), 0) / examRes.length;
+          // Handle both marks-bridge format (mean_score) and legacy format (total_marks/total_subjects)
+          const avg = examRes.reduce((acc, curr) => {
+            if (curr.mean_score !== undefined && curr.mean_score !== null) return acc + Number(curr.mean_score);
+            return acc + (Number(curr.total_marks || 0) / Math.max(Number(curr.total_subjects || 1), 1));
+          }, 0) / examRes.length;
           const { grade, color } = getGradeForScore(avg, user.class, profile);
-          setAcademic({ average: avg.toFixed(1), grade, color, rank: examRes[0].class_position });
+          setAcademic({ average: avg.toFixed(1), grade, color, rank: examRes[0].class_position || '-' });
         }
 
         const myFee = await getFees(user.id).catch(() => null);

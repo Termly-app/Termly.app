@@ -2183,18 +2183,40 @@ export async function getExamResults(examId) {
 export async function getStudentExamResults(studentId) {
   if (!_currentSchoolId || !studentId) return [];
 
-  // Portal mode: try direct query (works for authenticated portal users)
+  // Portal mode: try multiple strategies
   if (!_currentAuthUser && _currentSchoolId) {
+    // Strategy 1: Direct exam_results query
     try {
       const { data, error } = await supabase
         .from('exam_results')
         .select('*, exams(name, term, exam_type)')
         .eq('student_id', studentId);
-      if (!error && data) return (data || []).filter(r => r.exams);
+      if (!error && data && data.filter(r => r.exams).length > 0) {
+        return data.filter(r => r.exams);
+      }
     } catch (e) {
-      console.warn('[Portal] Direct exam results query failed, trying RPC:', e.message);
+      console.warn('[Portal] Direct exam results query failed:', e.message);
     }
-    // Fallback to RPC
+
+    // Strategy 2: Get results from the marks table via RPC (legacy bridge)
+    try {
+      const { data, error } = await supabase.rpc('portal_get_student_results', { p_student_id: studentId });
+      if (!error && data && Array.isArray(data) && data.length > 0) {
+        return data.map(r => ({
+          ...r,
+          id: r.id,
+          exams: { name: r.exam_name || r.exam_type, term: r.exam_term || r.exam_type, exam_type: r.exam_type },
+          mean_score: Number(r.mean_score || 0),
+          total_marks: Number(r.total_marks || 0),
+          total_subjects: Number(r.total_subjects || 0),
+          class_position: r.class_position || '-'
+        }));
+      }
+    } catch (e) {
+      console.warn('[Portal] Marks-bridge RPC also failed:', e.message);
+    }
+
+    // Strategy 3: Legacy RPC
     try {
       const { data, error } = await supabase.rpc('portal_get_student_results_v2', { p_student_id: studentId });
       if (!error && data) return (data || []).map(r => ({
@@ -2202,7 +2224,7 @@ export async function getStudentExamResults(studentId) {
         exams: { name: r.exam_name, term: r.exam_term, exam_type: r.exam_type }
       }));
     } catch (e) {
-      console.warn('[Portal] RPC exam results also failed:', e.message);
+      console.warn('[Portal] Legacy RPC exam results also failed:', e.message);
     }
     return [];
   }
@@ -2255,17 +2277,29 @@ export async function getStudentProfile(studentId) {
 
 export async function getSubjectDetails(studentId) {
   if (!_currentSchoolId || !studentId) return [];
-  // Try direct query first
+
+  // Strategy 1: Get subjects from student record/marks via RPC
+  try {
+    const { data, error } = await supabase.rpc('portal_get_student_subjects', { p_student_id: studentId });
+    if (!error && data && Array.isArray(data) && data.length > 0) {
+      return data.map(s => typeof s === 'string' ? { subject_name: s, name: s } : { ...s, subject_name: s.name || s.subject_name });
+    }
+  } catch (e) {
+    console.warn('[Portal] Subject RPC failed:', e.message);
+  }
+
+  // Strategy 2: Try direct tt_subjects query
   try {
     const { data, error } = await supabase
       .from('tt_subjects')
       .select('id, name, short_code')
       .eq('school_id', _currentSchoolId);
-    if (!error && data) return data.map(s => ({ ...s, code: s.short_code }));
+    if (!error && data && data.length > 0) return data.map(s => ({ ...s, subject_name: s.name, code: s.short_code }));
   } catch (e) {
     console.warn('[Portal] Direct subjects query failed:', e.message);
   }
-  // Fallback to RPC
+
+  // Strategy 3: Fallback to RPC
   try {
     const { data, error } = await supabase.rpc('portal_get_subject_details', { p_student_id: studentId });
     if (!error) return data || [];
@@ -2388,7 +2422,33 @@ export async function getFees(studentId = null) {
     let feeData = null;
     let payData = [];
 
-    // Try direct query first, fallback to RPC
+    // Strategy 1: Use the dedicated portal RPC (bypasses RLS)
+    try {
+      const { data, error } = await supabase.rpc('portal_get_student_fee_summary', { p_student_id: studentId });
+      if (!error && data && (data.total_fee > 0 || data.paid > 0)) {
+        const payments = (Array.isArray(data.payments) ? data.payments : []).map(p => ({
+          id: p.id,
+          amount: Number(p.amount || 0),
+          date: p.date,
+          method: p.method || 'Payment',
+          reference: p.reference || '',
+          status: p.status || 'Confirmed'
+        }));
+        return {
+          totalFee: Number(data.total_fee || 0),
+          billed: Number(data.total_fee || 0),
+          paid: Number(data.paid || 0),
+          balance: Number(data.balance || 0),
+          payments,
+          _feeId: data.fee_id || null,
+          periodId: data.period_id || null,
+        };
+      }
+    } catch (e) {
+      console.warn('[Portal] Fee summary RPC failed, trying direct:', e.message);
+    }
+
+    // Strategy 2: Try direct query, fallback to older RPCs
     try {
       const { data, error } = await supabase
         .from('fees')
