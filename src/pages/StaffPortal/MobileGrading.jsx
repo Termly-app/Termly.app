@@ -484,7 +484,6 @@ export default function MobileGrading({ user, onLogout }) {
                          <tr style={{ background: '#f8fafc', borderBottom: '2px solid #e2e8f0' }}>
                            <th style={{ padding: '12px 20px', fontSize: '0.8rem', color: '#64748b', fontWeight: 800, textTransform: 'uppercase' }}>Student Name</th>
                            <th style={{ padding: '12px 20px', fontSize: '0.8rem', color: '#64748b', fontWeight: 800, textTransform: 'uppercase' }}>ADM NO</th>
-                           <th style={{ padding: '12px 20px', fontSize: '0.8rem', color: '#64748b', fontWeight: 800, textTransform: 'uppercase', textAlign: 'center' }}>ABS (Absent)</th>
                            <th style={{ padding: '12px 20px', fontSize: '0.8rem', color: '#64748b', fontWeight: 800, textTransform: 'uppercase', width: 100, textAlign: 'center' }}>Score</th>
                          </tr>
                        </thead>
@@ -495,22 +494,13 @@ export default function MobileGrading({ user, onLogout }) {
                              <tr key={s.id} style={{ borderBottom: '1px solid #f1f5f9', transition: 'background 0.2s' }}>
                                <td style={{ padding: '14px 20px', fontWeight: 700, color: '#0f172a' }}>{s.name}</td>
                                <td style={{ padding: '14px 20px', color: '#64748b', fontWeight: 600 }}>{s.adm_no}</td>
-                               <td style={{ padding: '14px 20px', textAlign: 'center' }}>
-                                 <input 
-                                   type="checkbox" 
-                                   checked={data.isAbsent}
-                                   onChange={(e) => handleMarkChange(s.id, 'isAbsent', e.target.checked)}
-                                   style={{ width: 20, height: 20, cursor: 'pointer', accentColor: '#ef4444' }} 
-                                 />
-                               </td>
                                <td style={{ padding: '10px 20px' }}>
                                  <input
                                    type="number"
                                    inputMode="numeric"
-                                   disabled={data.isAbsent}
                                    value={data.score ?? ''}
                                    onChange={(e) => handleMarkChange(s.id, 'score', e.target.value)}
-                                   style={{ width: '100%', padding: '10px', textAlign: 'center', border: '1px solid #e2e8f0', borderRadius: '10px', fontSize: '1.1rem', fontWeight: 800, color: data.isAbsent ? '#cbd5e1' : '#0f172a', background: data.isAbsent ? '#f8fafc' : '#fff', outline: 'none' }}
+                                   style={{ width: '100%', padding: '10px', textAlign: 'center', border: '1px solid #e2e8f0', borderRadius: '10px', fontSize: '1.1rem', fontWeight: 800, color: '#0f172a', background: '#fff', outline: 'none' }}
                                    placeholder="—"
                                  />
                                </td>
