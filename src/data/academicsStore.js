@@ -238,11 +238,11 @@ export async function getExamPapers(examId) {
   if (!_currentSchoolId || !examId) return [];
   
   if (!_currentAuthUser && _currentSchoolId) {
-    // Portal mode: Use the ensure RPC which auto-creates papers from assignments if needed
+    // Portal mode
     const teacherId = _currentUserId;
-    console.log('[PORTAL] Fetching/ensuring papers for teacher:', teacherId, 'exam:', examId);
+    console.log('[PORTAL] Fetching papers for teacher:', teacherId, 'exam:', examId);
     
-    // Strategy 1: Use the auto-ensure RPC (creates papers from assignments if none exist)
+    // Strategy 1: Try UUID-based exam_papers first
     try {
       const { data, error } = await supabase.rpc('portal_ensure_teacher_papers', { 
         p_teacher_id: teacherId, 
@@ -273,6 +273,52 @@ export async function getExamPapers(examId) {
       console.warn('[PORTAL] Original RPC failed:', e.message);
     }
 
+    // Strategy 3: Use teacher assignments as virtual papers (bridges to marks table)
+    // This handles schools that don't have classes/tt_subjects UUID records
+    console.log('[PORTAL] Falling back to teacher assignments as virtual papers');
+    try {
+      // Get the exam name (needed for marks table lookup)
+      const { data: examData } = await supabase.rpc('portal_get_open_exams', { p_school_id: _currentSchoolId });
+      const exam = (examData || []).find(e => e.id === examId);
+      const examName = exam?.name || 'Exam';
+
+      // Get teacher's assignments
+      const { data: periods } = await supabase.rpc('portal_get_periods', { p_school_id: _currentSchoolId });
+      const activePeriod = (periods || []).find(p => p.is_active) || (periods || [])[0];
+      
+      if (activePeriod) {
+        const { data: assignments, error: aErr } = await supabase.rpc('portal_get_teacher_assignments', {
+          p_school_id: _currentSchoolId,
+          p_period_id: activePeriod.id,
+          p_teacher_id: teacherId
+        });
+        
+        if (!aErr && assignments && assignments.length > 0) {
+          // Convert assignments to virtual paper format
+          const virtualPapers = assignments.map((a, idx) => ({
+            id: `virtual_${a.id}`,
+            exam_id: examId,
+            class_id: null,
+            subject_id: null,
+            max_score: 100,
+            marks_entered: 0,
+            _virtual: true,
+            _examName: examName,
+            _className: a.class_grade,
+            _streamName: a.stream,
+            _subject: a.subject,
+            _periodId: activePeriod.id,
+            classes: { name: a.class_grade, stream: a.stream || 'General' },
+            tt_subjects: { name: a.subject }
+          }));
+          console.log('[PORTAL] Created', virtualPapers.length, 'virtual papers from assignments');
+          return virtualPapers;
+        }
+      }
+    } catch (e) {
+      console.warn('[PORTAL] Assignment fallback failed:', e.message);
+    }
+
     console.warn('[PORTAL] No papers found for teacher:', teacherId, 'exam:', examId);
     return [];
   }
@@ -285,8 +331,27 @@ export async function getExamPapers(examId) {
   return data;
 }
 
-export async function saveExamMarks(paperId, marks) {
+// Save marks - handles both real exam_papers and virtual papers (marks table)
+export async function saveExamMarks(paperId, marks, virtualPaperInfo = null) {
   mutationGuard('saveExamMarks');
+  
+  // Virtual paper: save to the marks table (same as admin)
+  if (virtualPaperInfo) {
+    console.log('[PORTAL] Saving to marks table:', virtualPaperInfo._subject, virtualPaperInfo._examName);
+    const legacyMarks = marks.map(m => ({
+      school_id: _currentSchoolId,
+      student_id: m.student_id,
+      subject: virtualPaperInfo._subject,
+      mark: m.is_absent ? null : ((m.raw_score === '' || m.raw_score === null || m.raw_score === undefined) ? null : String(m.raw_score)),
+      exam_type: virtualPaperInfo._examName,
+      period_id: virtualPaperInfo._periodId || null
+    }));
+    const { data, error } = await supabase.rpc('portal_save_class_marks', { p_marks: legacyMarks });
+    if (error) throw error;
+    return data;
+  }
+  
+  // Real paper: save to exam_marks table
   if (!_currentAuthUser && _currentSchoolId) {
     const portalMarks = marks.map(m => ({
       ...m,
@@ -309,6 +374,21 @@ export async function saveExamMarks(paperId, marks) {
     .from('exam_marks')
     .upsert(rows, { onConflict: 'exam_paper_id,student_id' });
   if (error) throw error;
+}
+
+// Load marks for a virtual paper from the marks table
+export async function getVirtualPaperMarks(schoolId, className, subject, examName) {
+  const { data, error } = await supabase.rpc('portal_get_class_marks', {
+    p_school_id: schoolId,
+    p_class_name: className,
+    p_subject: subject,
+    p_exam_type: examName
+  });
+  if (error) {
+    console.warn('[PORTAL] portal_get_class_marks error:', error.message);
+    return [];
+  }
+  return data || [];
 }
 
 export async function saveExamPapers(examId, papers) {

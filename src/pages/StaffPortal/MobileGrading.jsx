@@ -5,7 +5,7 @@ import {
   getTeacherWorkloadSummary, getTeacherTimetable, getTimetableConfig, getPeriods,
   initPortalStore, subscribeToTable
 } from '../../data/store';
-import { getExams, getOpenExamsForTeacher, getExamPapers, saveExamMarks } from '../../data/academicsStore';
+import { getExams, getOpenExamsForTeacher, getExamPapers, saveExamMarks, getVirtualPaperMarks } from '../../data/academicsStore';
 import { 
   BookIcon, CheckIcon, SaveIcon, UserIcon, 
   GradingIcon, RefreshIcon, ChevronDownIcon, CalendarIcon, DashboardIcon, MenuIcon, LogoutIcon, TeacherIcon 
@@ -182,22 +182,35 @@ export default function MobileGrading({ user, onLogout }) {
     setSelectedPaper(paper);
     try {
       setLoading(true);
-      // Get stream and subject from the paper's RPC data
-      const className = paper.classes?.name || 'Class';
-      const streamName = paper.classes?.stream || null;
-      const subjectName = paper.tt_subjects?.name || paper.subject || null;
+      const className = paper.classes?.name || paper._className || 'Class';
+      const streamName = paper.classes?.stream || paper._streamName || null;
+      const subjectName = paper.tt_subjects?.name || paper._subject || null;
+      const schoolId = user.school_id || user.schoolId;
 
-      const [classList, existingMarks] = await Promise.all([
-        getClassList(className, paper.class_id, subjectName, streamName),
-        getExamMarksForPaper(paper.id)
-      ]);
+      let classList, existingMarks;
+
+      if (paper._virtual) {
+        // Virtual paper: load students via RPC, marks from marks table
+        const { data: studentsData } = await supabase.rpc('portal_get_students_by_class_name', {
+          p_school_id: schoolId,
+          p_class_name: className
+        });
+        classList = studentsData || [];
+        existingMarks = await getVirtualPaperMarks(schoolId, className, subjectName, paper._examName);
+      } else {
+        // Real paper: use existing flow
+        [classList, existingMarks] = await Promise.all([
+          getClassList(className, paper.class_id, subjectName, streamName),
+          getExamMarksForPaper(paper.id)
+        ]);
+      }
       
       setStudents(classList);
       const buffer = {};
       existingMarks.forEach(m => {
         buffer[m.student_id] = {
           score: m.raw_score,
-          isAbsent: m.is_absent
+          isAbsent: m.is_absent || false
         };
       });
       setMarksBuffer(buffer);
@@ -221,9 +234,10 @@ export default function MobileGrading({ user, onLogout }) {
   const handleSave = async () => {
     if (!selectedPaper) return;
     
+    const subjectName = selectedPaper.tt_subjects?.name || selectedPaper._subject || 'Subject';
     const confirmed = await confirm({
       title: 'Sync Marks?',
-      message: `Save marks for ${students.length} students in ${selectedPaper.tt_subjects?.name || 'Subject'}?`,
+      message: `Save marks for ${students.length} students in ${subjectName}?`,
       variant: 'primary'
     });
     if (!confirmed) return;
@@ -237,10 +251,12 @@ export default function MobileGrading({ user, onLogout }) {
         remarks: ''
       }));
       
-      await saveExamMarks(selectedPaper.id, payload);
+      // Pass virtual paper info if this is a virtual paper
+      await saveExamMarks(selectedPaper.id, payload, selectedPaper._virtual ? selectedPaper : null);
       alert({ title: 'Success', message: 'Marks Synchronized to Cloud!', variant: 'success' });
     } catch (err) {
-      alert({ title: 'Sync Error', message: 'Failed to save marks. Check connectivity.', variant: 'danger' });
+      console.error('[PORTAL] Save error:', err);
+      alert({ title: 'Sync Error', message: 'Failed to save marks: ' + err.message, variant: 'danger' });
     } finally {
       setSaving(false);
     }
