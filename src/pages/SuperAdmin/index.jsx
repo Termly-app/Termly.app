@@ -262,6 +262,9 @@ export default function SuperAdmin({ currentUser, isPlatformAdmin, sidebarOpen, 
   const filteredActivity = activity.filter(a =>
     !q || a.description?.toLowerCase().includes(q) || a.school_name?.toLowerCase().includes(q)
   );
+  const filteredAuditLogs = auditLogs.filter(log => 
+    !q || log.action?.toLowerCase().includes(q) || log.schools?.name?.toLowerCase().includes(q) || log.actor_email?.toLowerCase().includes(q)
+  );
 
   useChart(growChartRef, (ctx) => {
     const g = ctx.createLinearGradient(0, 0, 0, 100);
@@ -502,7 +505,7 @@ export default function SuperAdmin({ currentUser, isPlatformAdmin, sidebarOpen, 
                   )
                 )}
                 {activeTab === 'admins' && <AdminsTab />}
-                {activeTab === 'activity' && <ActivityTab filteredActivity={filteredActivity} />}
+                {activeTab === 'activity' && <ActivityTab filteredActivity={filteredActivity} filteredAuditLogs={filteredAuditLogs} />}
                 {activeTab === 'config' && <SettingsTab statusMsg={statusMsg} setStatusMsg={setStatusMsg} subEndDate={subEndDate} setSubEndDate={setSubEndDate} smsConfig={smsConfig} setSmsConfig={setSmsConfig} handleUpdateSetting={handleUpdateSetting} updatePlatformSetting={updatePlatformSetting} loadData={loadData} setMessage={setMessage} onWipeSchools={handleWipeSchools} />}
                 <div style={{ padding:'24px 0 6px', textAlign:'center', opacity:.2, borderTop:'1px solid var(--edge)', marginTop:20 }}>
                   <div style={{ fontFamily:'var(--fh)', fontSize:'.65rem', color:'var(--sub)' }}>Termly Platform Engine · {now.getFullYear()}</div>
