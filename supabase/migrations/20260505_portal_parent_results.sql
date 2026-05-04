@@ -14,7 +14,7 @@ RETURNS JSONB
 LANGUAGE plpgsql
 SECURITY DEFINER
 SET search_path = public
-AS $$
+AS $func$
 BEGIN
     RETURN (
         SELECT COALESCE(jsonb_agg(exam_row ORDER BY exam_row->>'exam_type'), '[]'::jsonb)
@@ -41,7 +41,7 @@ BEGIN
         ) sub
     );
 END;
-$$;
+$func$;
 
 -- 2. Get student's fee summary (direct, bypasses RLS)
 DROP FUNCTION IF EXISTS public.portal_get_student_fee_summary(uuid);
@@ -51,7 +51,7 @@ RETURNS JSONB
 LANGUAGE plpgsql
 SECURITY DEFINER
 SET search_path = public
-AS $$
+AS $func$
 DECLARE
     v_fee RECORD;
     v_payments JSONB;
@@ -96,7 +96,7 @@ BEGIN
         'payments', v_payments
     );
 END;
-$$;
+$func$;
 
 -- 3. Get student's subjects from their student record
 DROP FUNCTION IF EXISTS public.portal_get_student_subjects(uuid);
@@ -106,7 +106,7 @@ RETURNS JSONB
 LANGUAGE plpgsql
 SECURITY DEFINER
 SET search_path = public
-AS $$
+AS $func$
 DECLARE
     v_student RECORD;
     v_subjects JSONB;
@@ -134,4 +134,4 @@ BEGIN
 
     RETURN v_subjects;
 END;
-$$;
+$func$;
