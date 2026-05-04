@@ -20,11 +20,10 @@ BEGIN
             'term', e.term, 
             'exam_type', e.exam_type, 
             'status', e.status
-        )), '[]'::jsonb)
+        ) ORDER BY e.created_at DESC), '[]'::jsonb)
         FROM public.exams e
         WHERE e.school_id = p_school_id
           AND e.status IN ('open', 'published', 'setup', 'active')
-        ORDER BY e.created_at DESC
     );
 END;
 $$;
