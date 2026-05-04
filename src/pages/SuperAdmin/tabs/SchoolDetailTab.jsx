@@ -331,26 +331,26 @@ export default function SchoolDetailTab({ school, onBack, setActivateModal, hand
           ) : logs.length === 0 ? (
             <div className="empty">No activity logs found for this school.</div>
           ) : (
-            <div className="sa-table-wrap">
-              <table className="sa-table">
+            <div className="tbl-w">
+              <table className="data-table" style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
                 <thead>
                   <tr>
-                    <th>Action</th>
-                    <th>Target</th>
-                    <th>Actor</th>
-                    <th>Time</th>
+                    <th style={{ padding: '12px', borderBottom: '1px solid var(--edge)' }}>Action</th>
+                    <th style={{ padding: '12px', borderBottom: '1px solid var(--edge)' }}>Target</th>
+                    <th style={{ padding: '12px', borderBottom: '1px solid var(--edge)' }}>Actor</th>
+                    <th style={{ padding: '12px', borderBottom: '1px solid var(--edge)' }}>Time</th>
                   </tr>
                 </thead>
                 <tbody>
                   {logs.map(log => (
-                    <tr key={log.id}>
-                      <td style={{ fontWeight: 700, fontSize: '0.75rem' }}>{log.action}</td>
-                      <td style={{ fontSize: '0.8rem' }}>{log.target_table} ({log.target_id?.slice(0,8)})</td>
-                      <td>
-                        <div style={{ fontSize: '0.8rem', fontWeight: 600 }}>{log.actor_email || 'Unknown'}</div>
-                        <div style={{ fontSize: '0.7rem', color: '#64748b' }}>{log.actor_role}</div>
+                    <tr key={log.id} style={{ borderBottom: '1px solid var(--edge)' }}>
+                      <td style={{ padding: '12px', fontWeight: 700, fontSize: '0.75rem', color: '#fff' }}>{log.action || log.description || 'System Action'}</td>
+                      <td style={{ padding: '12px', fontSize: '0.8rem', color: 'var(--sub)' }}>{log.target_table || 'N/A'} {log.target_id ? `(${log.target_id.slice(0,8)})` : ''}</td>
+                      <td style={{ padding: '12px' }}>
+                        <div style={{ fontSize: '0.8rem', fontWeight: 600, color: '#fff' }}>{log.actor_email || 'Unknown'}</div>
+                        <div style={{ fontSize: '0.7rem', color: '#64748b' }}>{log.actor_role || 'Admin'}</div>
                       </td>
-                      <td style={{ fontSize: '0.75rem', color: '#64748b' }}>{fmtDate(log.created_at)}</td>
+                      <td style={{ padding: '12px', fontSize: '0.75rem', color: '#64748b' }}>{fmtDate(log.created_at)}</td>
                     </tr>
                   ))}
                 </tbody>

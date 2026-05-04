@@ -59,31 +59,31 @@ export default function ActivityTab({ filteredActivity, filteredAuditLogs = [] }
             {filteredAuditLogs.length === 0 ? (
               <div className="empty"><div className="empty-ico"><ShieldIcon size={32} /></div>No audit logs found.</div>
             ) : (
-              <div className="sa-table-wrap">
-                <table className="sa-table">
+              <div className="tbl-w">
+                <table className="data-table" style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
                   <thead>
                     <tr>
-                      <th>Action</th>
-                      <th>School</th>
-                      <th>Actor</th>
-                      <th>Time</th>
+                      <th style={{ padding: '12px', borderBottom: '1px solid var(--edge)' }}>Action</th>
+                      <th style={{ padding: '12px', borderBottom: '1px solid var(--edge)' }}>School</th>
+                      <th style={{ padding: '12px', borderBottom: '1px solid var(--edge)' }}>Actor</th>
+                      <th style={{ padding: '12px', borderBottom: '1px solid var(--edge)' }}>Time</th>
                     </tr>
                   </thead>
                   <tbody>
                     {filteredAuditLogs.map(log => (
-                      <tr key={log.id}>
-                        <td>
-                          <div style={{ fontWeight: 700, fontSize: '0.75rem', color: 'var(--vi)' }}>{log.action}</div>
-                          <div style={{ fontSize: '0.65rem', color: 'var(--sub)' }}>{log.target_table}</div>
+                      <tr key={log.id} style={{ borderBottom: '1px solid var(--edge)' }}>
+                        <td style={{ padding: '12px' }}>
+                          <div style={{ fontWeight: 700, fontSize: '0.75rem', color: '#fff' }}>{log.action || log.description || 'System Action'}</div>
+                          <div style={{ fontSize: '0.65rem', color: 'var(--sub)' }}>{log.target_table || 'N/A'}</div>
                         </td>
-                        <td>
-                          <div style={{ fontSize: '0.8rem', fontWeight: 600 }}>{log.schools?.name || 'Global'}</div>
+                        <td style={{ padding: '12px' }}>
+                          <div style={{ fontSize: '0.8rem', fontWeight: 600, color: '#fff' }}>{log.schools?.name || 'Global'}</div>
                         </td>
-                        <td>
-                          <div style={{ fontSize: '0.8rem' }}>{log.actor_email || 'System'}</div>
-                          <div style={{ fontSize: '0.65rem', color: 'var(--sub)' }}>{log.actor_role}</div>
+                        <td style={{ padding: '12px' }}>
+                          <div style={{ fontSize: '0.8rem', color: '#fff' }}>{log.actor_email || 'System'}</div>
+                          <div style={{ fontSize: '0.65rem', color: 'var(--sub)' }}>{log.actor_role || 'Admin'}</div>
                         </td>
-                        <td style={{ fontSize: '0.75rem', color: 'var(--sub)' }}>
+                        <td style={{ padding: '12px', fontSize: '0.75rem', color: 'var(--sub)' }}>
                           {new Date(log.created_at).toLocaleString('en-KE', { day:'numeric', month:'short', hour:'2-digit', minute:'2-digit' })}
                         </td>
                       </tr>
