@@ -104,7 +104,6 @@ BEGIN
         FROM public.students s
         WHERE s.school_id = p_school_id
           AND s.class = p_class_name
-          AND (s.is_active = true OR s.is_active IS NULL)
     );
 END;
 $$;
