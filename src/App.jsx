@@ -452,12 +452,21 @@ function App() {
   const [profile,            setProfile]            = useState(null);
   const location = useLocation();
   const isOnline = useNetworkStatus();
-  const [isLocked, setIsLocked] = useState(false);
+  const [isLocked, setIsLocked] = useState(() => sessionStorage.getItem('shulesoft_locked') === 'true');
   const [unreadCount, setUnreadCount] = useState(0);
   const [showNotifPanel, setShowNotifPanel] = useState(false);
   const [notifications, setNotifications] = useState([]);
   const [notifLoading, setNotifLoading] = useState(false);
   const notifRef = useRef(null);
+
+  // Sync lock state to session storage to persist across reloads
+  useEffect(() => {
+    if (isLocked) {
+      sessionStorage.setItem('shulesoft_locked', 'true');
+    } else {
+      sessionStorage.removeItem('shulesoft_locked');
+    }
+  }, [isLocked]);
 
   // Close notification panel when clicking outside
   useEffect(() => {
