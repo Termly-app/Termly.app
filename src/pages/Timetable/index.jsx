@@ -251,7 +251,8 @@ export default function Timetable({ currentUser, currentPeriodId, periods = [] }
     if (!schoolId || !periodId || !hasAccess) return;
     (async () => {
       try {
-        const cfg = await getTimetableConfig(schoolId, periodId);
+        const level = selClass ? getLevel(selClass) : 'Global';
+        const cfg = await getTimetableConfig(schoolId, periodId, level);
         const resolved = cfg.length > 0
           ? cfg
           : DEFAULT_SLOTS.map((s, i) => ({ ...s, slot_index: i }));
@@ -259,7 +260,7 @@ export default function Timetable({ currentUser, currentPeriodId, periods = [] }
         setDraftConfig(resolved.map(c => ({ ...c })));
       } catch (e) { console.error(e); }
     })();
-  }, [schoolId, periodId, hasAccess]);
+  }, [schoolId, periodId, hasAccess, selClass]);
 
   // ── Load slots for selected class ─────────────────────────────────────
   useEffect(() => {
@@ -842,10 +843,14 @@ export default function Timetable({ currentUser, currentPeriodId, periods = [] }
               </button>
             </div>
             <div className="modal-footer">
+              <div style={{ marginRight: 'auto', fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
+                Configuring: <strong>{selClass ? getLevel(selClass) : 'Global Default'}</strong>
+              </div>
               <button className="btn btn-primary" onClick={async () => {
                 setConfigSaving(true);
                 try {
-                  await saveTimetableConfig(schoolId, periodId, draftConfig);
+                  const level = selClass ? getLevel(selClass) : 'Global';
+                  await saveTimetableConfig(schoolId, periodId, draftConfig, level);
                   setConfig(draftConfig);
                   setShowConfig(false);
                 } catch (e) { console.error(e); }

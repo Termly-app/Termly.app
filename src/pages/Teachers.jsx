@@ -137,8 +137,91 @@ export default function Teachers({ currentUser, currentPeriodId }) {
 
   const filteredTeachers = teachers.filter(t =>
     t.name.toLowerCase().includes(search.toLowerCase()) || t.phone.includes(search)
-  );
+  ).sort((a, b) => {
+    if (a.staff_code && b.staff_code) return a.staff_code.localeCompare(b.staff_code);
+    if (a.staff_code) return -1;
+    if (b.staff_code) return 1;
+    return a.name.localeCompare(b.name);
+  });
   const activeTeachers = teachers.filter(t => t.status === 'Active');
+
+  const handlePrintStaff = async (type) => {
+    try {
+      const title = type === 'all' ? 'All Staff List' : 'Staff per Class Assignment';
+      const header = await getPrintHeader(title);
+      const printWin = window.open('', '_blank');
+
+      printWin.document.write(`<html><head><title>${title}</title>
+        <style>
+          body { font-family: sans-serif; padding: 20px; color: #333; }
+          .header { text-align: center; margin-bottom: 20px; padding-bottom: 15px; }
+          table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 0.85rem; }
+          th, td { border: 1px solid #ddd; padding: 10px; text-align: left; }
+          th { background: #f9f9f9; }
+          .footer { margin-top: 30px; font-size: 0.8rem; color: #777; border-top: 1px solid #eee; padding-top: 10px; }
+        </style>
+      </head><body>`);
+
+      printWin.document.write(header);
+      
+      let tableContent = '';
+
+      if (type === 'all') {
+        tableContent = `
+          <table>
+            <thead><tr><th>#</th><th>Code</th><th>Name</th><th>TSC No.</th><th>Phone</th><th>Status</th><th>Assignments</th></tr></thead>
+            <tbody>
+              ${filteredTeachers.map((t, idx) => {
+                const subs = (assignments || []).filter(a => a.teacher_id === t.id && a.is_active).map(a => a.subject);
+                const uniqueSubs = [...new Set(subs)];
+                return `<tr>
+                  <td>${idx+1}</td>
+                  <td>${t.staff_code || '—'}</td>
+                  <td><strong>${t.name}</strong></td>
+                  <td>${t.tsc_number || '—'}</td>
+                  <td>${t.phone}</td>
+                  <td>${t.status}</td>
+                  <td>${uniqueSubs.join(', ') || '—'}</td>
+                </tr>`;
+              }).join('')}
+            </tbody>
+          </table>`;
+      } else if (type === 'by-class') {
+        const classMap = {};
+        const activeLevels = profile?.activeClasses || [];
+        (assignments || []).filter(a => a.is_active && a.stream && (activeLevels.length === 0 || activeLevels.includes(a.stream.level))).forEach(a => {
+          const cls = `${a.stream.level} (${a.stream.name})`;
+          if (!classMap[cls]) classMap[cls] = new Set();
+          const t = teachers.find(teach => teach.id === a.teacher_id);
+          if (t) classMap[cls].add(`${t.name} <span style="font-size: 0.8em; color: #555;">(${a.subject})</span>`);
+        });
+        tableContent = `
+          <table>
+            <thead><tr><th>Class</th><th>Assigned Teachers (Subjects)</th></tr></thead>
+            <tbody>
+              ${Object.entries(classMap).map(([cls, names]) => `
+                <tr>
+                  <td><strong>${cls}</strong></td>
+                  <td>${[...names].join(', ') || 'None'}</td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>`;
+      }
+
+      printWin.document.write(`
+        <div style="margin-top: 10px;">
+          <p style="font-size: 0.8rem; color: #666; margin: 0;">Generated on ${new Date().toLocaleDateString()} at ${new Date().toLocaleTimeString()}</p>
+        </div>
+        ${tableContent}
+        <div class="footer">
+          Academic Management System — ${new Date().getFullYear()}
+        </div>
+      </body></html>`);
+      printWin.document.close();
+      printWin.print();
+    } catch(err) { alert({ title: 'Print Error', message: "Print failed: " + err.message, variant: 'danger' }); }
+  };
 
   const tabs = [
     { id: 'records', label: 'Teachers', icon: <TeacherIcon /> },
@@ -212,6 +295,7 @@ export default function Teachers({ currentUser, currentPeriodId }) {
           onEdit={(t) => { setEditingTeacher(t); setShowModal(true); }}
           onDelete={handleDelete}
           onLeaveToggle={handleLeaveToggle}
+          onPrint={() => handlePrintStaff('all')}
           isAdmin={isAdmin}
         />
       )}
@@ -232,7 +316,7 @@ export default function Teachers({ currentUser, currentPeriodId }) {
       )}
 
       {activeTab === 'reports' && (
-        <ReportsTab profile={profile} teachers={teachers} assignments={assignments} />
+        <ReportsTab profile={profile} teachers={teachers} assignments={assignments} onPrintStaff={handlePrintStaff} />
       )}
 
       {showModal && (
@@ -244,7 +328,7 @@ export default function Teachers({ currentUser, currentPeriodId }) {
 }
 
 // ========== RECORDS TAB ==========
-function RecordsTab({ teachers, search, setSearch, total, getTeacherSubjects, getTeacherClasses, onEdit, onDelete, onLeaveToggle, isAdmin }) {
+function RecordsTab({ teachers, search, setSearch, total, getTeacherSubjects, getTeacherClasses, onEdit, onDelete, onLeaveToggle, onPrint, isAdmin }) {
   return (
     <>
       <div className="filter-bar">
@@ -252,6 +336,9 @@ function RecordsTab({ teachers, search, setSearch, total, getTeacherSubjects, ge
           <span className="search-icon"><SearchIcon size={16} /></span>
           <input type="text" placeholder="Search teachers..." value={search} onChange={e => setSearch(e.target.value)} />
         </div>
+        <button className="btn btn-ghost btn-sm" onClick={onPrint} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+          <PrintIcon size={16} /> Print List
+        </button>
         <span className="text-muted" style={{ fontSize: '0.85rem' }}>
           {teachers.length} of {total}
         </span>
@@ -489,7 +576,7 @@ function AssignmentsTab({ assignments, teachers, onAssign, profile, streams, con
 }
 
 // ========== REPORTS TAB ==========
-function ReportsTab({ profile, teachers, assignments }) {
+function ReportsTab({ profile, teachers, assignments, onPrintStaff }) {
   const [selectedTeacher, setSelectedTeacher] = useState('all');
   const [data, setData] = useState({ workload: [], performance: {} });
   const [loading, setLoading] = useState(true);
@@ -508,81 +595,7 @@ function ReportsTab({ profile, teachers, assignments }) {
     fetchReports();
   }, []);
 
-  const handlePrintStaff = async (type) => {
-    try {
-      const title = type === 'all' ? 'All Staff List' : 'Staff per Class Assignment';
-      const header = await getPrintHeader(title);
-      const printWin = window.open('', '_blank');
-
-      printWin.document.write(`<html><head><title>${title}</title>
-        <style>
-          body { font-family: sans-serif; padding: 20px; color: #333; }
-          .header { text-align: center; margin-bottom: 20px; padding-bottom: 15px; }
-          table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 0.85rem; }
-          th, td { border: 1px solid #ddd; padding: 10px; text-align: left; }
-          th { background: #f9f9f9; }
-          .footer { margin-top: 30px; font-size: 0.8rem; color: #777; border-top: 1px solid #eee; padding-top: 10px; }
-        </style>
-      </head><body>`);
-
-      printWin.document.write(header);
-      
-      let tableContent = '';
-
-      if (type === 'all') {
-        tableContent = `
-          <table>
-            <thead><tr><th>#</th><th>Name</th><th>Phone</th><th>Status</th><th>Assignments</th></tr></thead>
-            <tbody>
-              ${teachers.map((t, idx) => {
-                const subs = assignments.filter(a => a.teacher_id === t.id && a.is_active).map(a => a.subject);
-                const uniqueSubs = [...new Set(subs)];
-                return `<tr>
-                  <td>${idx+1}</td>
-                  <td><strong>${t.name}</strong></td>
-                  <td>${t.phone}</td>
-                  <td>${t.status}</td>
-                  <td>${uniqueSubs.join(', ') || '—'}</td>
-                </tr>`;
-              }).join('')}
-            </tbody>
-          </table>`;
-      } else if (type === 'by-class') {
-        const classMap = {};
-        const activeLevels = profile?.activeClasses || [];
-        assignments.filter(a => a.is_active && a.stream && (activeLevels.length === 0 || activeLevels.includes(a.stream.level))).forEach(a => {
-          const cls = `${a.stream.level} (${a.stream.name})`;
-          if (!classMap[cls]) classMap[cls] = new Set();
-          const t = teachers.find(teach => teach.id === a.teacher_id);
-          if (t) classMap[cls].add(`${t.name} <span style="font-size: 0.8em; color: #555;">(${a.subject})</span>`);
-        });
-        tableContent = `
-          <table>
-            <thead><tr><th>Class</th><th>Assigned Teachers (Subjects)</th></tr></thead>
-            <tbody>
-              ${Object.entries(classMap).map(([cls, names]) => `
-                <tr>
-                  <td><strong>${cls}</strong></td>
-                  <td>${[...names].join(', ') || 'None'}</td>
-                </tr>
-              `).join('')}
-            </tbody>
-          </table>`;
-      }
-
-      printWin.document.write(`
-        <div style="margin-top: 10px;">
-          <p style="font-size: 0.8rem; color: #666; margin: 0;">Generated on ${new Date().toLocaleDateString()} at ${new Date().toLocaleTimeString()}</p>
-        </div>
-        ${tableContent}
-        <div class="footer">
-          Academic Management System — ${new Date().getFullYear()}
-        </div>
-      </body></html>`);
-      printWin.document.close();
-      printWin.print();
-    } catch(err) { alert({ title: 'Print Error', message: "Print failed: " + err.message, variant: 'danger' }); }
-  };
+  const handlePrintStaff = onPrintStaff;
 
   if (loading) {
     return <div className="text-center p-4 text-muted">Loading performance data...</div>;

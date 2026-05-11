@@ -3091,7 +3091,9 @@ export async function getTeachers() {
       const { data, error } = await supabase
         .from('teachers')
         .select('id, name, email, phone, subjects, school_id, on_leave, staff_code, status, tsc_number')
-        .eq('school_id', _currentSchoolId);
+        .eq('school_id', _currentSchoolId)
+        .order('staff_code', { ascending: true, nullsFirst: false })
+        .order('name', { ascending: true });
       if (error) throw error;
       if (data) {
         await db.teachers.bulkPut(data.map(t => ({ ...t, school_id: _currentSchoolId })));
@@ -3104,12 +3106,21 @@ export async function getTeachers() {
 
   fetchCloud();
 
-  if (cached.length > 0) return cached.map(t => ({ ...t, status: t.status || 'Active' }));
+  if (cached.length > 0) {
+    return cached.map(t => ({ ...t, status: t.status || 'Active' })).sort((a, b) => {
+      if (a.staff_code && b.staff_code) return a.staff_code.localeCompare(b.staff_code);
+      if (a.staff_code) return -1;
+      if (b.staff_code) return 1;
+      return a.name.localeCompare(b.name);
+    });
+  }
 
   const { data, error } = await supabase
     .from('teachers')
     .select('id, name, email, phone, subjects, school_id, on_leave, staff_code, status, tsc_number')
-    .eq('school_id', _currentSchoolId);
+    .eq('school_id', _currentSchoolId)
+    .order('staff_code', { ascending: true, nullsFirst: false })
+    .order('name', { ascending: true });
   if (error) throw error;
   if (data) await db.teachers.bulkPut(data.map(t => ({ ...t, school_id: _currentSchoolId })));
   return data || [];
@@ -3312,8 +3323,10 @@ export async function validateParentLogin(schoolSearch, admNo, phone, schoolId =
 export async function getTeachersBySchool(schoolId) {
   const { data, error } = await supabase
     .from('teachers')
-    .select('id, name, email, phone, subjects, school_id')
-    .eq('school_id', schoolId);
+    .select('id, name, email, phone, subjects, school_id, staff_code, tsc_number')
+    .eq('school_id', schoolId)
+    .order('staff_code', { ascending: true, nullsFirst: false })
+    .order('name', { ascending: true });
   if (error) throw error;
   return data || [];
 }
@@ -4456,33 +4469,63 @@ export function subscribeToSchoolChanges(onSettingsChange, onProfileChange) {
 
 // ============= TIMETABLE =============
 
-export async function getTimetableConfig(schoolId, periodId) {
+export async function getTimetableConfig(schoolId, periodId, classLevel = 'Global') {
   if (!_currentAuthUser && _currentSchoolId) {
     const { data, error } = await supabase.rpc('portal_get_timetable_config', { 
       p_school_id: schoolId, 
-      p_period_id: periodId 
+      p_period_id: periodId,
+      p_class_level: classLevel
     });
     if (error) throw error;
     return data || [];
   }
 
-  const { data, error } = await supabase
+  let query = supabase
     .from('timetable_configs')
     .select('*')
     .eq('school_id', schoolId)
-    .eq('period_id', periodId)
-    .order('slot_index', { ascending: true });
+    .eq('period_id', periodId);
+    
+  if (classLevel && classLevel !== 'Global') {
+    query = query.eq('class_level', classLevel);
+  } else {
+    query = query.is('class_level', null);
+  }
+
+  const { data, error } = await query.order('slot_index', { ascending: true });
   if (error) throw error;
+  
+  // If no level-specific config found, fallback to global (NULL class_level)
+  if (data.length === 0 && classLevel && classLevel !== 'Global') {
+    const { data: globalData, error: globalError } = await supabase
+      .from('timetable_configs')
+      .select('*')
+      .eq('school_id', schoolId)
+      .eq('period_id', periodId)
+      .is('class_level', null)
+      .order('slot_index', { ascending: true });
+    if (globalError) throw globalError;
+    return globalData || [];
+  }
+
   return data || [];
 }
 
 
-export async function saveTimetableConfig(schoolId, periodId, slots) {
-  const { error: delErr } = await supabase
+export async function saveTimetableConfig(schoolId, periodId, slots, classLevel = 'Global') {
+  let delQuery = supabase
     .from('timetable_configs')
     .delete()
     .eq('school_id', schoolId)
     .eq('period_id', periodId);
+    
+  if (classLevel && classLevel !== 'Global') {
+    delQuery = delQuery.eq('class_level', classLevel);
+  } else {
+    delQuery = delQuery.is('class_level', null);
+  }
+
+  const { error: delErr } = await delQuery;
   if (delErr) throw delErr;
 
   if (!slots || slots.length === 0) return;
@@ -4494,7 +4537,8 @@ export async function saveTimetableConfig(schoolId, periodId, slots) {
     label: s.label,
     start_time: s.start_time,
     end_time: s.end_time,
-    is_break: s.is_break || false
+    is_break: s.is_break || false,
+    class_level: (classLevel === 'Global') ? null : classLevel
   }));
 
   const { error } = await supabase.from('timetable_configs').insert(rows);

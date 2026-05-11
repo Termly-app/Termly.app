@@ -298,7 +298,8 @@ export async function getTeachers(schoolId) {
     .from('teachers')
     .select('id, name')
     .eq('school_id', schoolId)
-    .order('name');
+    .order('staff_code', { ascending: true, nullsFirst: false })
+    .order('name', { ascending: true });
   if (error) throw error;
   return data || [];
 }
