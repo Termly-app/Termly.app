@@ -809,7 +809,12 @@ html body input[type="number"] {
   }
 
   @page {
-    margin: 0; /* Ensures browser headers are hidden globally if needed */
+    margin: 15mm 15mm 20mm 15mm; /* Reserves space on EVERY page */
+  }
+
+  /* Reset body padding since @page margin now handles it safely */
+  body {
+    padding: 0 !important;
   }
 }
 

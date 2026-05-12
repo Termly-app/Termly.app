@@ -446,14 +446,7 @@ export default function NEMISDashboard({ currentUser }) {
             display: inline-block !important;
           }
 
-          @page {
-            size: A4 portrait;
-            margin: 0; /* Hides browser headers/footers (URL, Title, etc) */
-          }
-
-          body {
-            padding: 15mm !important; /* Restores the actual margin for content */
-          }
+          /* Removed local @page and body padding to inherit safe global margins */
         }
       `}</style>
     </div>
