@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabase';
 import { 
-  getSchoolProfile, getExamMarksForPaper, getClassList,
+  getSchoolProfile, getExamMarksForPaper, getClassList, getLevelForGrade,
   getTeacherWorkloadSummary, getTeacherTimetable, getTimetableConfig, getPeriods,
   initPortalStore, subscribeToTable
 } from '../../data/store';
@@ -495,14 +495,27 @@ export default function MobileGrading({ user, onLogout }) {
                                <td style={{ padding: '14px 20px', fontWeight: 700, color: '#0f172a' }}>{s.name}</td>
                                <td style={{ padding: '14px 20px', color: '#64748b', fontWeight: 600 }}>{s.adm_no}</td>
                                <td style={{ padding: '10px 20px' }}>
-                                 <input
-                                   type="number"
-                                   inputMode="numeric"
-                                   value={data.score ?? ''}
-                                   onChange={(e) => handleMarkChange(s.id, 'score', e.target.value)}
-                                   style={{ width: '100%', padding: '10px', textAlign: 'center', border: '1px solid #e2e8f0', borderRadius: '10px', fontSize: '1.1rem', fontWeight: 800, color: '#0f172a', background: '#fff', outline: 'none' }}
-                                   placeholder="—"
-                                 />
+                                 {schoolProfile?.gradingMode === 'rubric' ? (
+                                   <select
+                                     value={data.score ?? ''}
+                                     onChange={(e) => handleMarkChange(s.id, 'score', e.target.value)}
+                                     style={{ width: '100%', padding: '10px', border: '1px solid #e2e8f0', borderRadius: '10px', fontSize: '1rem', fontWeight: 700, color: '#0f172a', background: '#fff', outline: 'none' }}
+                                   >
+                                     <option value="">— Select —</option>
+                                     {(schoolProfile.gradingSystems?.[getLevelForGrade(selectedPaper.classes?.name || selectedPaper._className)] || []).map(g => (
+                                       <option key={g.symbol} value={g.symbol}>{g.symbol}: {g.name}</option>
+                                     ))}
+                                   </select>
+                                 ) : (
+                                   <input
+                                     type="number"
+                                     inputMode="numeric"
+                                     value={data.score ?? ''}
+                                     onChange={(e) => handleMarkChange(s.id, 'score', e.target.value)}
+                                     style={{ width: '100%', padding: '10px', textAlign: 'center', border: '1px solid #e2e8f0', borderRadius: '10px', fontSize: '1.1rem', fontWeight: 800, color: '#0f172a', background: '#fff', outline: 'none' }}
+                                     placeholder="—"
+                                   />
+                                 )}
                                </td>
                              </tr>
                            );

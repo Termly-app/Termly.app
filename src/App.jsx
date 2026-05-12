@@ -833,8 +833,6 @@ function SuspendedView({ profile, onLogout }) {
               <div className="topbar-title mobile-only">Termly</div>
             </div>
             <div className="topbar-actions">
-              <SyncIndicator />
-              
               <div className="topbar-notif" ref={notifRef} style={{ position: 'relative' }}>
                 <button className="notif-btn" title="Notifications" onClick={async () => {
                   const next = !showNotifPanel;
@@ -915,21 +913,23 @@ function SuspendedView({ profile, onLogout }) {
                   </div>
                 )}
               </div>
+              
+              <SyncIndicator />
 
-                <div className="topbar-period">
-                  <span className="topbar-period-label">Period:</span>
-                  <Select
-                    value={currentPeriodId || ''}
-                    options={periods}
-                    onChange={async (e) => { await setActivePeriod(e.target.value); }}
-                    className="topbar-period-select"
-                    style={{ minWidth: 220, whiteSpace: 'nowrap' }}
-                  />
-                </div>
+              <div className="topbar-period">
+                <span className="topbar-period-label">Period:</span>
+                <Select
+                  value={currentPeriodId || ''}
+                  options={periods}
+                  onChange={async (e) => { await setActivePeriod(e.target.value); }}
+                  className="topbar-period-select"
+                  style={{ minWidth: 220, whiteSpace: 'nowrap' }}
+                />
+              </div>
+
               <div
                 className="topbar-avatar"
                 title={currentUser?.name}
-                style={{ border: '2px solid var(--primary-light)' }}
               >
                 {currentUser?.name?.charAt(0)?.toUpperCase() || 'U'}
               </div>

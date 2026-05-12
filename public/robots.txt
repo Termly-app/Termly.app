@@ -1,4 +1,4 @@
-Sitemap: https://shulesoft-app.vercel.app/sitemap.xml
+Sitemap: https://termly-app.vercel.app/sitemap.xml
 
 User-agent: *
 Allow: /

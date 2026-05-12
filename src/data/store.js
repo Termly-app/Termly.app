@@ -473,6 +473,8 @@ const DEFAULT_PROFILE = {
       {min: 0, max: 49, grade: 'E', color: '#ef4444'}
     ]
   },
+  gradingMode: 'percentage',
+  rubricDescriptions: { 1: 'Below Expectation', 2: 'Approaching Expectation', 3: 'Meeting Expectation', 4: 'Exceeding Expectation' },
   studentLimit: 10000,
   staffLimit: 1000,
   enabledModules: { attendance: true }
@@ -496,7 +498,7 @@ function loadProfileFromLocal(schoolId) {
   } catch (e) { return null; }
 }
 
-const SAFE_PROFILE_COLUMNS = 'id, school_name, motto, phone, email, address, logo, subscription_plan, streams_per_class, custom_subjects, active_classes, grade_fees, subscription_status, subscription_expiry, last_payment_status, mpesa_config, sms_config, grading_systems, curriculum, timetable_label, status_notes, setup_completed, school_type, boarding_houses';
+const SAFE_PROFILE_COLUMNS = 'id, school_name, motto, phone, email, address, logo, subscription_plan, streams_per_class, custom_subjects, active_classes, grade_fees, subscription_status, subscription_expiry, last_payment_status, mpesa_config, sms_config, grading_systems, grading_mode, rubric_descriptions, curriculum, timetable_label, status_notes, setup_completed, school_type, boarding_houses';
 
 /**
  * Maps raw database profile (snake_case) to application profile (camelCase)
@@ -522,6 +524,8 @@ function mapSchoolProfile(data) {
     subscriptionExpiry: data.subscription_expiry || null,
     lastPaymentStatus: data.last_payment_status || 'none',
     gradingSystems: data.grading_systems || DEFAULT_PROFILE.gradingSystems,
+    gradingMode: data.grading_mode || DEFAULT_PROFILE.gradingMode,
+    rubricDescriptions: data.rubric_descriptions || DEFAULT_PROFILE.rubricDescriptions,
     mpesa_config: data.mpesa_config || DEFAULT_PROFILE.mpesa_config,
     sms_config: data.sms_config || DEFAULT_PROFILE.sms_config,
     curriculum: data.curriculum || 'CBC Only',
@@ -950,7 +954,9 @@ export async function saveSchoolProfile(profile) {
     custom_subjects: profile.customSubjects || {},
     custom_exams: profile.custom_exams || DEFAULT_PROFILE.custom_exams,
     timetable_label: profile.timetable_label || DEFAULT_PROFILE.timetable_label,
-    grading_systems: profile.grading_systems || DEFAULT_PROFILE.grading_systems,
+    grading_systems: profile.gradingSystems || DEFAULT_PROFILE.gradingSystems,
+    grading_mode: profile.gradingMode || DEFAULT_PROFILE.gradingMode,
+    rubric_descriptions: profile.rubricDescriptions || DEFAULT_PROFILE.rubricDescriptions,
     curriculum: profile.curriculum || 'CBC Only',
     updated_at: new Date().toISOString(),
   };
@@ -4977,8 +4983,8 @@ export async function isFeatureEnabled(featureSlug) {
   try {
     const profile = await getSchoolProfile();
     
-    // 1. School-level module toggle override (legacy manual switches)
-    if (featureSlug === 'attendance' && profile.enabledModules?.attendance === false) {
+    // 1. School-level module toggle override (User-controlled toggles in Settings)
+    if (profile.enabledModules?.[featureSlug] === false) {
       return false;
     }
     

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { getTeachers, addTeacher, updateTeacher, deleteTeacher, getTeacherWorkload, getTeacherPerformance, getPrintHeader, getSchoolProfile, getPlatformSettings, getUsers, setTeacherLeaveStatus, isStaffCodeAvailable, getCurrentPeriodDetails } from '../data/store';
+import { getTeachers, addTeacher, updateTeacher, deleteTeacher, getTeacherWorkload, getTeacherPerformance, getPrintHeader, getPrintFooter, getSchoolProfile, getPlatformSettings, getUsers, setTeacherLeaveStatus, isStaffCodeAvailable, getCurrentPeriodDetails } from '../data/store';
 import { getTeacherAssignments, assignTeacher, removeTeacherAssignment, getClassStreams, initializeStreams } from '../data/academicsStore';
 import { sanitizeName, sanitizeString } from '../utils/sanitize';
 import Loader from '../components/Common/Loader';
@@ -169,19 +169,15 @@ export default function Teachers({ currentUser, currentPeriodId }) {
       if (type === 'all') {
         tableContent = `
           <table>
-            <thead><tr><th>#</th><th>Code</th><th>Name</th><th>TSC No.</th><th>Phone</th><th>Status</th><th>Assignments</th></tr></thead>
+            <thead><tr><th>Code</th><th>Name</th><th>TSC No.</th><th>Phone</th><th>Status</th></tr></thead>
             <tbody>
-              ${filteredTeachers.map((t, idx) => {
-                const subs = (assignments || []).filter(a => a.teacher_id === t.id && a.is_active).map(a => a.subject);
-                const uniqueSubs = [...new Set(subs)];
+              ${filteredTeachers.map((t) => {
                 return `<tr>
-                  <td>${idx+1}</td>
                   <td>${t.staff_code || '—'}</td>
                   <td><strong>${t.name}</strong></td>
                   <td>${t.tsc_number || '—'}</td>
                   <td>${t.phone}</td>
                   <td>${t.status}</td>
-                  <td>${uniqueSubs.join(', ') || '—'}</td>
                 </tr>`;
               }).join('')}
             </tbody>
@@ -209,6 +205,7 @@ export default function Teachers({ currentUser, currentPeriodId }) {
           </table>`;
       }
 
+      const footer = getPrintFooter();
       printWin.document.write(`
         <div style="margin-top: 10px;">
           <p style="font-size: 0.8rem; color: #666; margin: 0;">Generated on ${new Date().toLocaleDateString()} at ${new Date().toLocaleTimeString()}</p>
@@ -217,8 +214,10 @@ export default function Teachers({ currentUser, currentPeriodId }) {
         <div class="footer">
           Academic Management System — ${new Date().getFullYear()}
         </div>
+        ${footer}
       </body></html>`);
       printWin.document.close();
+      printWin.document.title = title;
       printWin.print();
     } catch(err) { alert({ title: 'Print Error', message: "Print failed: " + err.message, variant: 'danger' }); }
   };
@@ -667,7 +666,9 @@ function ReportsTab({ profile, teachers, assignments, onPrintStaff }) {
     <div class="sigs"><div><div class="ln"></div>Principal</div><div><div class="ln"></div>Teacher</div></div>
     <div class="footer">${profileStr.schoolName || ''} | Teacher Performance Report | Printed ${new Date().toLocaleDateString()}</div>
     </body></html>`);
-    w.document.close(); w.print();
+    w.document.close(); 
+    w.document.title = `Performance_Report_${selectedInfo.name.replace(/\s+/g, '_')}`;
+    w.print();
     } catch(err) { 
       await alert({ 
         title: 'Print Failed', 
@@ -706,7 +707,9 @@ function ReportsTab({ profile, teachers, assignments, onPrintStaff }) {
       )
     ).join('')}</tbody></table>
     <div class="footer">Printed on ${new Date().toLocaleDateString()} | ${profileStr.schoolName || ''}</div></body></html>`);
-    w.document.close(); w.print();
+    w.document.close(); 
+    w.document.title = 'Teacher_Performance_and_Workload_Report';
+    w.print();
     } catch(err) { 
       await alert({ 
         title: 'Print Failed', 

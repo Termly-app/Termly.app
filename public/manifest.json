@@ -1,7 +1,7 @@
 {
-  "name": "ShuleSoft",
-  "short_name": "ShuleSoft",
-  "description": "The School Management System for modern Kenya.",
+  "name": "Termly",
+  "short_name": "Termly",
+  "description": "The High-Performance CBC School Management System for modern Kenya.",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#0C0E0D",

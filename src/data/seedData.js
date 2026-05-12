@@ -118,12 +118,32 @@ function getSubjectsForGrade(grade, profile = null, pathway = null) {
 var ALL_GRADES = Object.values(CBC_STRUCTURE).flatMap(l => l.grades);
 var CLASSES = ALL_GRADES; // alias used by Students, Fees, Attendance pages
 
-// CBC Competency levels
+// CBC Competency levels (4-point Primary scale)
 var CBC_LEVELS = [
   'Exceeding Expectation',
   'Meeting Expectation',
   'Approaching Expectation',
   'Below Expectation',
+];
+
+// JSS 8-point Achievement Scale (KNEC Standard)
+var JSS_RUBRIC_8 = [
+  { symbol: '8', name: 'EE1 (Exceptional)', color: '#16a34a', min: 90, max: 100 },
+  { symbol: '7', name: 'EE2 (Very Good)', color: '#22c55e', min: 75, max: 89 },
+  { symbol: '6', name: 'ME1 (Good)', color: '#2563eb', min: 58, max: 74 },
+  { symbol: '5', name: 'ME2 (Fair)', color: '#3b82f6', min: 41, max: 57 },
+  { symbol: '4', name: 'AE1 (Needs Improvement)', color: '#eab308', min: 31, max: 40 },
+  { symbol: '3', name: 'AE2 (Below Average)', color: '#ca8a04', min: 21, max: 30 },
+  { symbol: '2', name: 'BE1 (Well Below Average)', color: '#dc2626', min: 11, max: 20 },
+  { symbol: '1', name: 'BE2 (Minimal)', color: '#991b1b', min: 1, max: 10 },
+];
+
+// Primary 4-point Rubric (Standard)
+var PRIMARY_RUBRIC_4 = [
+  { symbol: '4', name: 'Exceeding Expectations', color: '#16a34a', min: 80, max: 100 },
+  { symbol: '3', name: 'Meeting Expectations', color: '#2563eb', min: 50, max: 79 },
+  { symbol: '2', name: 'Approaching Expectations', color: '#eab308', min: 25, max: 49 },
+  { symbol: '1', name: 'Below Expectations', color: '#dc2626', min: 1, max: 24 },
 ];
 
 var CBC_CORE_COMPETENCIES = [
@@ -301,7 +321,7 @@ function generateSubjectAssignments() {
 }
 
 export {
-  students, seedUsers, seedTeachers, CBC_STRUCTURE, ALL_GRADES, CLASSES, CBC_LEVELS, CBC_CORE_COMPETENCIES, TERM_FEE, STREAMS,
+  students, seedUsers, seedTeachers, CBC_STRUCTURE, ALL_GRADES, CLASSES, CBC_LEVELS, JSS_RUBRIC_8, PRIMARY_RUBRIC_4, CBC_CORE_COMPETENCIES, TERM_FEE, STREAMS,
   getLevelForGrade, getSubjectsForGrade,
   generateMarks, generateFees, generateAttendance, generateCBC, generateCoreCompetencies,
   generateSubjectAssignments,

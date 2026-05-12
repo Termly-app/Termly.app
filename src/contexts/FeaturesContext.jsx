@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
-import { hasFeature, getCurrentSchoolId } from '../data/store';
+import { hasFeature, getCurrentSchoolId, getSchoolProfile } from '../data/store';
 
 const FeaturesContext = createContext();
 
@@ -30,11 +30,16 @@ export const FeaturesProvider = ({ children, user }) => {
 
     try {
       if (Object.keys(features).length === 0) setLoading(true);
-      console.log(`[FeaturesProvider] Fetching features for school: ${schoolId}`);
+      console.log(`[FeaturesProvider] Fetching features and profile for school: ${schoolId}`);
       
-      const [{ data: registry, error: regErr }, { data: schoolFeatures, error: sfErr }] = await Promise.all([
+      const [
+        { data: registry, error: regErr }, 
+        { data: schoolFeatures, error: sfErr },
+        profile
+      ] = await Promise.all([
         supabase.from('features_registry').select('feature_key'),
-        supabase.from('school_features').select('feature_key, is_enabled, expires_at').eq('school_id', schoolId)
+        supabase.from('school_features').select('feature_key, is_enabled, expires_at').eq('school_id', schoolId),
+        getSchoolProfile()
       ]);
 
       if (regErr) console.warn("[FeaturesProvider] Registry fetch error:", regErr);
@@ -50,9 +55,8 @@ export const FeaturesProvider = ({ children, user }) => {
         });
       }
 
-      // 2. Layer school-specific settings (Authoritative)
+      // 2. Layer school-specific settings (Paid Status)
       if (schoolFeatures && schoolFeatures.length > 0) {
-        console.log(`[FeaturesProvider] Found ${schoolFeatures.length} feature toggles in DB`);
         schoolFeatures.forEach(sf => {
           const isExpired = sf.expires_at && new Date(sf.expires_at) < now;
           featuresMap[sf.feature_key] = {
@@ -62,9 +66,18 @@ export const FeaturesProvider = ({ children, user }) => {
             is_expired: isExpired
           };
         });
-      } else {
-        console.warn("[FeaturesProvider] No features found in school_features table for this school.");
       }
+
+      // 3. Layer User-level Module Toggles (User preference)
+      // If a user has manually disabled a module in Settings, respect that
+      const userToggles = profile?.enabledModules || {};
+      Object.keys(userToggles).forEach(slug => {
+        if (userToggles[slug] === false && featuresMap[slug]) {
+          console.log(`[FeaturesProvider] Respecting user-level toggle: ${slug} is DISABLED`);
+          featuresMap[slug].enabled = false;
+          featuresMap[slug].userDisabled = true;
+        }
+      });
 
       console.log("[FeaturesProvider] Final Map:", featuresMap);
       setFeatures(featuresMap);

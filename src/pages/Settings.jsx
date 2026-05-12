@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { getSchoolProfile, saveSchoolProfile, importData, exportData, TERM_FEE, applyFeeStructure, getPeriods, createPeriod, setActivePeriod, testMpesaConnection, testSmsConnection, getCurrentAuthUser, supabase, getCurrentPeriodId, subscribeToTable, getPortalAccessSettings, updatePortalAccessSettings } from '../data/store';
 import { getUserRole } from '../data/authStore';
 import { getExams, createExam, deleteExam, deleteAllExams, previewClassPromotion, promoteClasses, updateExam, releaseExamToParents } from '../data/academicsStore';
-import { CBC_STRUCTURE } from '../data/seedData';
+import { CBC_STRUCTURE, JSS_RUBRIC_8, PRIMARY_RUBRIC_4 } from '../data/seedData';
 import Select from '../components/Common/Select';
 import { Helmet } from 'react-helmet-async';
 import { useDialog } from '../contexts/DialogContext';
@@ -18,13 +18,20 @@ export default function Settings() {
   const { alert, confirm } = useDialog();
   const { enabled: teacherPortalEnabled } = useFeature('teacher_portal');
   const { enabled: parentPortalEnabled } = useFeature('parent_portal');
+  const { enabled: attendanceEnabled } = useFeature('attendance');
+  const { enabled: feesEnabled } = useFeature('fees');
+  const { enabled: gradingEnabled } = useFeature('grading');
+  const { enabled: mpesaEnabled } = useFeature('mpesa');
+  const { enabled: smsEnabled } = useFeature('communications');
   const [profile, setProfile] = useState({
     schoolName:'',motto:'',phone:'',email:'',address:'',
     logo:'',subscriptionPlan:'Pro',
     activeClasses:[],gradeFees:{},streamsPerClass:{},customSubjects:{},
     mpesa_config: { shortcode: '', consumer_key: '', consumer_secret: '' },
     sms_config: { sender_id: '', api_key: '' },
-    custom_exams:[], timetable_label:''
+    custom_exams:[], timetable_label:'',
+    gradingMode: 'percentage', // 'percentage' or 'rubric'
+    rubricDescriptions: { 1: 'Below Expectation', 2: 'Approaching Expectation', 3: 'Meeting Expectation', 4: 'Exceeding Expectation' }
   });
   const [saved,setSaved]       = useState(false);
   const [loading,setLoading]   = useState(false);
@@ -48,6 +55,9 @@ export default function Settings() {
   const [showPromotionModal, setShowPromotionModal] = useState(false);
   const [portalSettings, setPortalSettings] = useState(null);
   const [portalSaving, setPortalSaving] = useState(false);
+  const [showMpesaKey, setShowMpesaKey] = useState(false);
+  const [showMpesaSec, setShowMpesaSec] = useState(false);
+  const [showSmsKey, setShowSmsKey] = useState(false);
   const fileRef   = useRef(null);
   const backupRef = useRef(null);
 
@@ -287,9 +297,35 @@ export default function Settings() {
     setSaved(false);
   };
   const resetGrading=async()=>{
-    if(!await confirm({ title: 'Reset Grading', message: 'Reset grading to default?', variant: 'warning' }))return;
-    const {[activeLevel]:_, ...rest} = profile.gradingSystems;
-    setProfile({...profile, gradingSystems: rest}); setSaved(false);
+    if(!await confirm({ title: 'Reset Grading', message: `Reset ${activeLevel} grading to standard defaults?`, variant: 'warning' }))return;
+    let standard = [];
+    if (activeLevel === 'Junior Secondary') {
+      standard = JSS_RUBRIC_8;
+    } else if (activeLevel.includes('Primary') || activeLevel === 'Early Years') {
+      standard = PRIMARY_RUBRIC_4;
+    } else {
+      // Default A-E Scale
+      standard = [
+        { symbol: 'A', min: 80, max: 100, color: '#16a34a' },
+        { symbol: 'B', min: 65, max: 79, color: '#3b82f6' },
+        { symbol: 'C', min: 50, max: 64, color: '#eab308' },
+        { symbol: 'D', min: 35, max: 49, color: '#f97316' },
+        { symbol: 'E', min: 0, max: 34, color: '#dc2626' },
+      ];
+    }
+    setProfile({
+      ...profile, 
+      gradingSystems: { ...profile.gradingSystems, [activeLevel]: standard },
+      gradingMode: (activeLevel.includes('Secondary') && activeLevel !== 'Junior Secondary') ? 'percentage' : 'rubric'
+    }); 
+    setSaved(false);
+  };
+  const updateRubric = (point, val) => {
+    setProfile({
+      ...profile,
+      rubricDescriptions: { ...profile.rubricDescriptions, [point]: val }
+    });
+    setSaved(false);
   };
   const handleAddPeriod = async () => {
     setLoading(true);
@@ -479,7 +515,8 @@ export default function Settings() {
           </div>
         </div>
 <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(320px,1fr))',gap:24}}>
-          {/* Module Management */}
+        {/* Module Management — only if attendance feature is enabled */}
+        {attendanceEnabled && (
           <div className="card">
             <div className="card-header">
               <div style={{display:'flex',alignItems:'center',gap:10}}>
@@ -537,9 +574,11 @@ export default function Settings() {
               </div>
             </div>
           </div>
+        )}
         </div>
 
-          {/* Portal Access Settings */}
+          {/* Portal Access Settings — only if at least one portal is enabled */}
+          {(teacherPortalEnabled || parentPortalEnabled) && (
           <div className="card">
             <div className="card-header">
               <div style={{display:'flex',alignItems:'center',gap:10}}>
@@ -556,13 +595,13 @@ export default function Settings() {
               {portalSettings ? (
                 <div style={{display:'flex',flexDirection:'column',gap:14}}>
                   {[
-                    { key: 'parent_portal_enabled', label: 'Parent Portal', desc: 'Allow parents to login and view student data' },
-                    { key: 'teacher_portal_enabled', label: 'Teacher Portal', desc: 'Allow teachers to login to their staff portal' },
-                    { key: 'parent_can_view_fees', label: 'Fee Balances Visible', desc: 'Parents can view outstanding fee balances' },
-                    { key: 'parent_can_view_results', label: 'Results Visible', desc: 'Parents can view released exam results' },
-                    { key: 'parent_can_view_attendance', label: 'Attendance Visible', desc: 'Parents can view attendance records' },
-                    { key: 'allow_parent_self_register', label: 'Self-Registration', desc: 'Allow parents to create their own portal accounts' },
-                  ].map(item => (
+                    { key: 'parent_portal_enabled', label: 'Parent Portal', desc: 'Allow parents to login and view student data', show: parentPortalEnabled },
+                    { key: 'teacher_portal_enabled', label: 'Teacher Portal', desc: 'Allow teachers to login to their staff portal', show: teacherPortalEnabled },
+                    { key: 'parent_can_view_fees', label: 'Fee Balances Visible', desc: 'Parents can view outstanding fee balances', show: parentPortalEnabled && feesEnabled },
+                    { key: 'parent_can_view_results', label: 'Results Visible', desc: 'Parents can view released exam results', show: parentPortalEnabled && gradingEnabled },
+                    { key: 'parent_can_view_attendance', label: 'Attendance Visible', desc: 'Parents can view attendance records', show: parentPortalEnabled && attendanceEnabled },
+                    { key: 'allow_parent_self_register', label: 'Self-Registration', desc: 'Allow parents to create their own portal accounts', show: parentPortalEnabled },
+                  ].filter(i => i.show).map(item => (
                     <div key={item.key} style={{display:'flex',justifyContent:'space-between',alignItems:'center',padding:14,background:'var(--bg-card)',borderRadius:12,border:'1px solid var(--border)'}}>
                       <div>
                         <div style={{fontWeight:700,fontSize:'0.9rem'}}>{item.label}</div>
@@ -603,6 +642,7 @@ export default function Settings() {
               )}
             </div>
           </div>
+          )}
 
         {/* Academic Configuration */}
         <div className="card">
@@ -720,7 +760,8 @@ export default function Settings() {
                   </div>
                 </div>
 
-                {/* Grading & Exams */}
+                {/* Grading & Exams — only if grading feature is enabled */}
+                {gradingEnabled && (
                 <div style={sectionBox}>
                   <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:15}}>
                     <div style={{fontWeight:700,fontSize:'0.9rem',color:'var(--text-main)'}}><BookIcon size={20} /> Grading & Exam Types</div>
@@ -817,63 +858,98 @@ export default function Settings() {
                         <p style={{fontSize:'0.65rem',color:'var(--text-muted)',marginTop:4}}>This label appears on the main scheduling button.</p>
                       </div>
                       */}
-                    </div>
-
-                    {/* Grading Scale */}
+                         {/* Grading Scale */}
                     <div>
-                      <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:8}}>
-                        <div style={{fontSize:'0.72rem',fontWeight:700,color:'var(--text-light)',textTransform:'uppercase'}}>Grading Scale ({activeLevel})</div>
-                        <button onClick={resetGrading} style={{fontSize:'0.65rem',background:'none',border:'none',color:'var(--primary)',cursor:'pointer',fontWeight:700,display:'flex',alignItems:'center',gap:4}}><RefreshIcon size={12} /> Reset</button>
+                      <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:12}}>
+                        <div>
+                          <div style={{fontSize:'0.72rem',fontWeight:700,color:'var(--text-light)',textTransform:'uppercase'}}>Achievement Standard ({activeLevel})</div>
+                          <div style={{display:'flex', gap:8, marginTop:4}}>
+                            {['percentage', 'rubric'].map(mode => (
+                              <button 
+                                key={mode}
+                                type="button"
+                                onClick={() => setProfile({ ...profile, gradingMode: mode })}
+                                style={{
+                                  padding: '4px 10px', fontSize: '0.65rem', borderRadius: 20, border: '1px solid',
+                                  fontWeight: 800, cursor: 'pointer', transition: 'all 0.15s',
+                                  textTransform: 'uppercase',
+                                  borderColor: profile.gradingMode === mode ? 'var(--primary)' : 'var(--border)',
+                                  background: profile.gradingMode === mode ? 'var(--primary-light)' : 'transparent',
+                                  color: profile.gradingMode === mode ? 'var(--primary)' : 'var(--text-light)'
+                                }}
+                              >
+                                {mode}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                        <button onClick={resetGrading} style={{fontSize:'0.65rem',background:'none',border:'none',color:'var(--primary)',cursor:'pointer',fontWeight:700,display:'flex',alignItems:'center',gap:4}}><RefreshIcon size={12} /> Standard Rubric</button>
                       </div>
-                      <div style={{display:'flex',flexDirection:'column',gap:4,marginBottom:10,maxHeight:150,overflowY:'auto',paddingRight:5}}>
-                        {(profile.gradingSystems?.[activeLevel] || profile.gradingSystems?.default || []).map((g,i)=>(
-                          <div key={i} style={{display:'flex',justifyContent:'space-between',alignItems:'center',padding:'6px 10px',background:'var(--bg-card)',borderRadius:8,border:`1px solid ${g.color}30`,borderLeft:`4px solid ${g.color}`}}>
-                            <span style={{fontWeight:800,fontSize:'0.9rem',color:g.color}}>{g.symbol}</span>
-                            <span style={{fontSize:'0.75rem',color:'var(--text-light)'}}>{g.min} - {g.max}%</span>
-                            <button onClick={()=>removeGradeItem(i)} style={{background:'none',border:'none',color:'var(--danger)',fontSize:'0.8rem',cursor:'pointer'}}>×</button>
+
+                      <div style={{display:'flex',flexDirection:'column',gap:4,marginBottom:10,maxHeight:250,overflowY:'auto',paddingRight:5}}>
+                        {(profile.gradingSystems?.[activeLevel] || []).map((g,i)=>(
+                          <div key={i} style={{display:'flex',justifyContent:'space-between',alignItems:'center',padding:'8px 12px',background:'var(--bg-card)',borderRadius:10,border:`1px solid ${g.color}30`,borderLeft:`4px solid ${g.color}`}}>
+                            <div style={{display:'flex', alignItems:'center', gap:10}}>
+                              <span style={{fontWeight:900,fontSize:'1rem',color:g.color, minWidth:24}}>{g.symbol}</span>
+                              <div style={{display:'flex', flexDirection:'column'}}>
+                                <span style={{fontSize:'0.82rem',fontWeight:700, color:'var(--text-main)'}}>{g.name || (g.symbol.length > 2 ? g.symbol : 'Unlabeled Level')}</span>
+                                {profile.gradingMode === 'percentage' && (
+                                  <span style={{fontSize:'0.65rem',color:'var(--text-light)'}}>{g.min} - {g.max}%</span>
+                                )}
+                              </div>
+                            </div>
+                            <button onClick={()=>removeGradeItem(i)} style={{background:'none',border:'none',color:'var(--danger)',fontSize:'1rem',cursor:'pointer'}}>×</button>
                           </div>
                         ))}
+                        {(profile.gradingSystems?.[activeLevel] || []).length === 0 && (
+                          <p style={{fontSize:'0.75rem', color:'var(--text-muted)', textAlign:'center', padding:20, background:'rgba(0,0,0,0.02)', borderRadius:12}}>Click "Standard Rubric" to load level-specific defaults.</p>
+                        )}
                       </div>
-                      <div style={{display:'grid',gridTemplateColumns:'65px 1fr 1fr 40px',gap:8,alignItems:'end'}}>
-                        <div style={{display:'flex',flexDirection:'column',gap:4}}>
-                          <label style={{fontSize:'0.65rem',fontWeight:700,color:'var(--text-muted)'}}>GRADE</label>
-                          <input className="form-input" style={{padding:'6px',fontSize:'0.82rem',textAlign:'center',height:32}} value={newGradeItem.symbol} onChange={e=>setNewGradeItem({...newGradeItem,symbol:e.target.value.toUpperCase()})} placeholder="A-"/>
+
+                      {profile.gradingMode === 'percentage' && (
+                        <div style={{display:'grid',gridTemplateColumns:'65px 1fr 1fr 40px',gap:8,alignItems:'end'}}>
+                          <div style={{display:'flex',flexDirection:'column',gap:4}}>
+                            <label style={{fontSize:'0.65rem',fontWeight:700,color:'var(--text-muted)'}}>GRADE</label>
+                            <input className="form-input" style={{padding:'6px',fontSize:'0.82rem',textAlign:'center',height:32}} value={newGradeItem.symbol} onChange={e=>setNewGradeItem({...newGradeItem,symbol:e.target.value.toUpperCase()})} placeholder="A-"/>
+                          </div>
+                          <div style={{display:'flex',flexDirection:'column',gap:4}}>
+                            <label style={{fontSize:'0.65rem',fontWeight:700,color:'var(--text-muted)'}}>MIN %</label>
+                            <input type="number" className="form-input" style={{padding:'6px',fontSize:'0.82rem',textAlign:'center',height:32}}
+                              value={newGradeItem.min} 
+                              onChange={e=>setNewGradeItem({...newGradeItem,min:Number(e.target.value)})}
+                              min="0" max="100"
+                            />
+                          </div>
+                          <div style={{display:'flex',flexDirection:'column',gap:4}}>
+                            <label style={{fontSize:'0.65rem',fontWeight:700,color:'var(--text-muted)'}}>MAX %</label>
+                            <input type="number" className="form-input" style={{padding:'6px',fontSize:'0.82rem',textAlign:'center',height:32}}
+                              value={newGradeItem.max} 
+                              onChange={e=>setNewGradeItem({...newGradeItem,max:Number(e.target.value)})}
+                              min="0" max="100"
+                            />
+                          </div>
+                          <div style={{display:'flex',flexDirection:'column',gap:4}}>
+                            <label style={{fontSize:'0.65rem',fontWeight:700,color:'var(--text-muted)'}}>COLOR</label>
+                            <input type="color" style={{width:'100%',height:32,border:'1.5px solid var(--border)',borderRadius:8,background:'none',cursor:'pointer',padding:0}} value={newGradeItem.color} onChange={e=>setNewGradeItem({...newGradeItem,color:e.target.value})}/>
+                          </div>
+                          <div style={{gridColumn:'1 / span 4', display:'flex', justifyContent:'space-between', alignItems:'center', marginTop:10}}>
+                            <label style={{display:'flex', alignItems:'center', gap:8, fontSize:'0.75rem', cursor:'pointer', fontWeight:600, color:'var(--text-main)'}}>
+                              <input type="checkbox" checked={applyGradingToAll} onChange={e => setApplyGradingToAll(e.target.checked)} style={{accentColor:'var(--primary)', width:16, height:16, cursor:'pointer'}} />
+                              Apply to all categories
+                            </label>
+                            <button onClick={addGradeItem} className="btn btn-primary btn-sm" style={{height:36,fontWeight:700}}>
+                              <PlusIcon size={16} /> Add Grade
+                            </button>
+                          </div>
                         </div>
-                        <div style={{display:'flex',flexDirection:'column',gap:4}}>
-                          <label style={{fontSize:'0.65rem',fontWeight:700,color:'var(--text-muted)'}}>MIN %</label>
-                          <input type="number" className="form-input" style={{padding:'6px',fontSize:'0.82rem',textAlign:'center',height:32}}
-                            value={newGradeItem.min} 
-                            onChange={e=>setNewGradeItem({...newGradeItem,min:Number(e.target.value)})}
-                            min="0" max="100"
-                          />
-                        </div>
-                        <div style={{display:'flex',flexDirection:'column',gap:4}}>
-                          <label style={{fontSize:'0.65rem',fontWeight:700,color:'var(--text-muted)'}}>MAX %</label>
-                          <input type="number" className="form-input" style={{padding:'6px',fontSize:'0.82rem',textAlign:'center',height:32}}
-                            value={newGradeItem.max} 
-                            onChange={e=>setNewGradeItem({...newGradeItem,max:Number(e.target.value)})}
-                            min="0" max="100"
-                          />
-                        </div>
-                        <div style={{display:'flex',flexDirection:'column',gap:4}}>
-                          <label style={{fontSize:'0.65rem',fontWeight:700,color:'var(--text-muted)'}}>COLOR</label>
-                          <input type="color" style={{width:'100%',height:32,border:'1.5px solid var(--border)',borderRadius:8,background:'none',cursor:'pointer',padding:0}} value={newGradeItem.color} onChange={e=>setNewGradeItem({...newGradeItem,color:e.target.value})}/>
-                        </div>
-                        <div style={{gridColumn:'1 / span 4', display:'flex', justifyContent:'space-between', alignItems:'center', marginTop:10}}>
-                          <label style={{display:'flex', alignItems:'center', gap:8, fontSize:'0.75rem', cursor:'pointer', fontWeight:600, color:'var(--text-main)'}}>
-                            <input type="checkbox" checked={applyGradingToAll} onChange={e => setApplyGradingToAll(e.target.checked)} style={{accentColor:'var(--primary)', width:16, height:16, cursor:'pointer'}} />
-                            Apply boundary to all school categories
-                          </label>
-                          <button onClick={addGradeItem} className="btn btn-primary btn-sm" style={{height:36,fontWeight:700}}>
-                            <PlusIcon size={16} /> Add Selected
-                          </button>
-                        </div>
-                      </div>
+                      )}
                     </div>
                   </div>
                 </div>
+                )}
 
-                {/* Fees */}
+                {/* Fee Structure — only if fees feature is enabled */}
+                {feesEnabled && (
                 <div style={sectionBox}>
                   <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:12}}>
                     <div>
@@ -913,14 +989,15 @@ export default function Settings() {
                     </div>
                   )}
                 </div>
+                )}
 
               </div>
             </div>
           </div>
         </div>
 
-        {/* Integrations (M-Pesa & SMS) - WIP, ENTIRE CARD DISABLED
-        {isAdmin && (
+        {/* Integrations (M-Pesa & SMS) — only if features are enabled */}
+        {(mpesaEnabled || smsEnabled) && isAdmin && (
           <div className="card">
             <div className="card-header">
               <div>
@@ -931,7 +1008,8 @@ export default function Settings() {
             <div className="card-body">
               <div className="responsive-grid-stack">
                 
-                M-Pesa Daraja WIP 
+                {/* M-Pesa Daraja */}
+                {mpesaEnabled && (
                 <div style={sectionBox}>
                   <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',marginBottom:15}}>
                     <div>
@@ -987,6 +1065,12 @@ export default function Settings() {
                       </div>
                     </div>
                     
+                    <div style={{display:'flex',gap:10,marginTop:10}}>
+                      <button className="btn btn-ghost btn-sm" onClick={handleTestMpesa} disabled={testingMpesa || !profile.mpesa_config?.shortcode}>
+                        {testingMpesa ? 'Testing...' : 'Test Connection'}
+                      </button>
+                    </div>
+
                     <div style={{marginTop:12,padding:12,background:'var(--bg)',borderRadius:8,border:'1px dashed var(--border)',display:'flex',flexDirection:'column',gap:8}}>
                       <div style={{display:'flex',alignItems:'center',gap:10}}>
                         <ShieldIcon size={18} color="var(--primary)" />
@@ -998,8 +1082,10 @@ export default function Settings() {
                     </div>
                   </div>
                 </div>
+                )}
 
-                Africa's Talking SMS WIP
+                {/* Africa's Talking SMS */}
+                {smsEnabled && (
                 <div style={sectionBox}>
                   <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',marginBottom:15}}>
                     <div>
@@ -1040,6 +1126,12 @@ export default function Settings() {
                       </div>
                     </div>
                     
+                    <div style={{display:'flex',gap:10,marginTop:10}}>
+                      <button className="btn btn-ghost btn-sm" onClick={handleTestSms} disabled={testingSms || !profile.sms_config?.api_key}>
+                        {testingSms ? 'Testing...' : 'Test Connection'}
+                      </button>
+                    </div>
+
                     <div style={{marginTop:8,padding:12,background:'var(--bg)',borderRadius:8,border:'1px dashed var(--border)',display:'flex',flexDirection:'column',gap:8}}>
                       <div style={{display:'flex',alignItems:'center',gap:10}}>
                         <ShieldIcon size={18} color="var(--primary)" />
@@ -1051,11 +1143,12 @@ export default function Settings() {
                     </div>
                   </div>
                 </div>
+                )}
 
               </div>
             </div>
           </div>
-        )} */}
+        )}
 
         {/* Academic Eras & Terms */}
           <div className="card">

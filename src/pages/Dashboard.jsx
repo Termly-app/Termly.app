@@ -16,6 +16,7 @@ import SetupWizard from '../components/SetupWizard';
 import SyncIndicator from '../components/Common/SyncIndicator';
 import { Helmet } from 'react-helmet-async';
 import Select from '../components/Common/Select';
+import { useFeatures } from '../contexts/FeaturesContext';
 
 export default function Dashboard({ currentUser, onLogout, currentPeriodId }) {
   const navigate = useNavigate();
@@ -24,6 +25,8 @@ export default function Dashboard({ currentUser, onLogout, currentPeriodId }) {
   const [periods, setPeriods] = useState([]);
   const [isAccountActive, setIsAccountActive] = useState(true);
   const [showWizard, setShowWizard] = useState(false);
+  const { features } = useFeatures();
+  const feat = (slug) => features[slug]?.enabled === true;
 
   useEffect(() => {
     const loadData = async () => {
@@ -156,28 +159,19 @@ export default function Dashboard({ currentUser, onLogout, currentPeriodId }) {
   const kpis = [
     { icon:<StudentIcon size={20} />, label:'Total Students',    value: data.totalStudents,       color:'#0EA5E9', bg:'#E0F2FE',  show: true          },
     { icon:<TeacherIcon size={20} />, label:'Teaching Staff',    value: data.totalTeachers,       color:'#8B5CF6', bg:'#F5F3FF',  show: !isFinance && !isLibrarian },
-    { icon:<CardIcon size={20} />,    label:'Fee Collection',      value: `${data.collectionRate}%`, color:'#10B981', bg:'#ECFDF5',  show: !isTeacher && !isLibrarian },
-    { icon:<BookIcon size={20} />,    label:"Today's Attendance", value: `${data.attendance.percentage}%`, color:'#F59E0B', bg:'#FFFBEB', show: !isFinance && !isLibrarian && data.profile?.enabledModules?.attendance !== false },
+    { icon:<CardIcon size={20} />,    label:'Fee Collection',      value: `${data.collectionRate}%`, color:'#10B981', bg:'#ECFDF5',  show: !isTeacher && !isLibrarian && feat('fees') },
+    { icon:<BookIcon size={20} />,    label:"Today's Attendance", value: `${data.attendance.percentage}%`, color:'#F59E0B', bg:'#FFFBEB', show: !isFinance && !isLibrarian && feat('attendance') },
     { icon:<UserIcon size={20} />,    label:'Seat Usage',        value: `${totalStaff}/${seatLimit}`, color:'#64748b', bg:'#f1f5f9', show: !isTeacher && !isFinance && !isLibrarian },
   ].filter(k => k.show);
 
   const quickActions = [
-    { icon:<StudentIcon size={18} />, label:'Students',      sub:'Manage all students',   to:'/students',   bg:'#E0F2FE',  color:'#0EA5E9', feature: 'Student Management' },
-    { icon:<TeacherIcon size={18} />, label:'Teachers',      sub:'Manage staff',          to:'/teachers',   bg:'#F5F3FF',  color:'#8B5CF6', feature: 'Staff Management' },
-    { icon:<BookIcon size={18} />,    label:'Attendance',     sub:'Record daily attendance', to:'/attendance', bg:'#ECFDF5',  color:'#10B981', feature: 'Attendance Tracking', show: data.profile?.enabledModules?.attendance !== false },
-    { icon:<CardIcon size={18} />,    label:'Fees',           sub:'Fee collection & tracking', to:'/fees',    bg:'#FFFBEB',  color:'#F59E0B', feature: 'Student Fee Statements' },
-    { icon:<BookIcon size={18} />,    label:'Timetable',      sub:'Automated scheduler',    to:'/timetable',  bg:'#F5F3FF',  color:'#6D28D9', feature: 'Timetable Builder' },
-
+    { icon:<StudentIcon size={18} />, label:'Students',      sub:'Manage all students',   to:'/students',   bg:'#E0F2FE',  color:'#0EA5E9' },
+    { icon:<TeacherIcon size={18} />, label:'Teachers',      sub:'Manage staff',          to:'/teachers',   bg:'#F5F3FF',  color:'#8B5CF6' },
+    { icon:<BookIcon size={18} />,    label:'Attendance',     sub:'Record daily attendance', to:'/attendance', bg:'#ECFDF5',  color:'#10B981', show: feat('attendance') },
+    { icon:<CardIcon size={18} />,    label:'Fees',           sub:'Fee collection & tracking', to:'/fees',    bg:'#FFFBEB',  color:'#F59E0B', show: feat('fees') },
+    { icon:<BookIcon size={18} />,    label:'Timetable',      sub:'Automated scheduler',    to:'/timetable',  bg:'#F5F3FF',  color:'#6D28D9', show: feat('timetable') },
   ].filter(a => a.show !== false);
 
-  // Helper to check if a feature is included in the current plan
-  const hasAccess = (featureName) => {
-    if (!featureName) return true;
-    const planName = data.profile?.subscriptionPlan || 'Starter Plan';
-    const plan = data.platformSettings?.pricing?.[planName];
-    if (!plan?.features) return false;
-    return plan.features.some(f => f.toLowerCase().includes(featureName.toLowerCase()));
-  };
 
   return (
     <div className="animate-fade-up">
@@ -204,22 +198,8 @@ export default function Dashboard({ currentUser, onLogout, currentPeriodId }) {
                 <h2 style={{ fontSize: '1.5rem', fontWeight: 800, margin: 0, color: 'var(--text)' }}>
                   {data.profile?.schoolName || 'Dashboard'}
                 </h2>
-                {/* Removed Sandbox Mode Banner */}
-                <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '4px 12px', background: 'rgba(0,0,0,0.03)', borderRadius: 10, border: '1px solid var(--border)' }}>
-                  <span style={{ fontSize: '0.65rem', fontWeight: 700, textTransform: 'uppercase', color: 'var(--text-muted)', letterSpacing: '0.05em' }}>Period:</span>
-                  <Select 
-                    value={currentPeriodId || ''}
-                    onChange={(e) => setActivePeriod(e.target.value)}
-                    options={periods.map(p => ({
-                      id: p.id,
-                      label: `${p.year} - ${p.term} ${p.is_active ? '(Active)' : ''}`
-                    }))}
-                    style={{ minWidth: 180 }}
-                  />
-                </div>
               </div>
               <div className="inline-flex" style={{ gap: 10, alignItems: 'center' }}>
-                <SyncIndicator />
                 {!isAccountActive && (
                   <div style={{ background: 'rgba(239,68,68,0.1)', color: 'var(--danger)', padding: '6px 14px', borderRadius: 8, fontSize: '0.75rem', fontWeight: 700, border: '1px solid var(--danger)', display:'flex', alignItems:'center', gap:5 }}>
                     <AlertIcon size={14} /> Subscription Expired
@@ -256,7 +236,8 @@ export default function Dashboard({ currentUser, onLogout, currentPeriodId }) {
       {/* Main Grid - Recent Activity + Quick Actions */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: 18, marginBottom: 24 }}>
 
-        {/* Recent Activity / Payments */}
+        {/* Recent Activity / Payments — only if fees module is enabled */}
+        {feat('fees') && (
         <div className="card">
           <div className="card-header">
             <h3><ClockIcon size={18} /> Recent Activity</h3>
@@ -286,7 +267,9 @@ export default function Dashboard({ currentUser, onLogout, currentPeriodId }) {
             )}
           </div>
         </div>
-        {/* Portal Activity Feed */}
+        )}
+        {/* Portal Activity Feed — only if teacher or parent portal is enabled */}
+        {(feat('teacher_portal') || feat('parent_portal')) && (
         <div className="card">
           <div className="card-header">
             <h3><RocketIcon size={18} /> Portal Activity</h3>
@@ -314,6 +297,7 @@ export default function Dashboard({ currentUser, onLogout, currentPeriodId }) {
             )}
           </div>
         </div>
+        )}
 
       </div>
 
@@ -385,8 +369,8 @@ export default function Dashboard({ currentUser, onLogout, currentPeriodId }) {
       {/* Bottom row - Attendance + Fee summary */}
       <div className="dashboard-grid-2">
 
-        {/* Attendance */}
-        {!isFinance && data.profile?.enabledModules?.attendance !== false && (
+        {/* Attendance — only if attendance feature is enabled */}
+        {!isFinance && feat('attendance') && (
           <div className="card">
             <div className="card-header">
               <div className="flex-center gap-3">
@@ -418,8 +402,8 @@ export default function Dashboard({ currentUser, onLogout, currentPeriodId }) {
           </div>
         )}
 
-        {/* Fee Overview */}
-        {!isTeacher && (
+        {/* Fee Overview — only if fees feature is enabled */}
+        {!isTeacher && feat('fees') && (
           <div className="card">
             <div className="card-header">
               <div className="flex-center gap-3">

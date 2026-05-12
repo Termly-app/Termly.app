@@ -1,4 +1,4 @@
-const CACHE_NAME = 'shulesoft-v1';
+const CACHE_NAME = 'termly-v1';
 const ASSETS_TO_CACHE = [
   '/',
   '/index.html',
