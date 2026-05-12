@@ -63,7 +63,7 @@ import {
   BillingIcon, SignOutIcon, MenuIcon, CloseIcon, ChevronDownIcon,
   OverviewIcon, SchoolsIcon, PaymentsIcon, HistoryIcon, RevenueIcon,
   ActivityIcon, RecoveryIcon, StatusDotIcon, ZapIcon, SubscriptionsIcon, MessageIcon,
-  DownloadIcon, UploadIcon, RefreshIcon, LogoMarkBW, BookIcon, FlagIcon, LockIcon, BellIcon,
+  DownloadIcon, UploadIcon, RefreshIcon, LogoMark, LogoMarkBW, BookIcon, FlagIcon, LockIcon, BellIcon,
   ShieldIcon, AlertIcon
 } from './components/Common/Icons';
 
