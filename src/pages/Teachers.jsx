@@ -212,7 +212,7 @@ export default function Teachers({ currentUser, currentPeriodId }) {
         </div>
         ${tableContent}
         <div class="footer">
-          Academic Management System — ${new Date().getFullYear()}
+          Termly — Academic Management System — ${new Date().getFullYear()}
         </div>
         ${footer}
       </body></html>`);
