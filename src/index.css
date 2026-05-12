@@ -832,26 +832,37 @@ html body input[type="number"] {
   align-items: center;
   gap: 16px;
 }
-.topbar-title {
-  font-size: 1.1rem;
-  font-weight: 800;
-  color: var(--text);
-  letter-spacing: -0.02em;
-}
 .topbar-actions {
   display: flex;
   align-items: center;
   gap: 16px;
-  margin-left: auto; /* Push to right */
+  margin-left: auto;
+}
+.topbar-divider {
+  width: 1px;
+  height: 24px;
+  background: var(--border);
+  margin: 0 4px;
 }
 .topbar-period {
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 4px 12px;
-  background: var(--bg);
+  padding: 2px 10px;
+  background: var(--bg-hover);
   border: 1px solid var(--border);
   border-radius: 12px;
+  transition: var(--transition);
+}
+.topbar-period:hover {
+  border-color: var(--primary-light);
+}
+.topbar-title {
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: var(--text-main);
+  letter-spacing: -0.03em;
+  line-height: 1.1;
 }
 .topbar-period-label {
   font-size: 0.65rem;

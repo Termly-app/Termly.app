@@ -829,10 +829,29 @@ function SuspendedView({ profile, onLogout }) {
           {/* Top bar */}
           <div className="topbar">
             <div className="topbar-left">
-              <div className="topbar-title desktop-only">Administration</div>
-              <div className="topbar-title mobile-only">Termly</div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                <LogoMark size={22} />
+                <div>
+                  <div className="topbar-title desktop-only">Administration</div>
+                  <div className="topbar-title mobile-only">Termly</div>
+                </div>
+              </div>
             </div>
             <div className="topbar-actions">
+              <div className="topbar-period">
+                <span className="topbar-period-label">Academic Period:</span>
+                <Select
+                  value={currentPeriodId || ''}
+                  options={periods}
+                  onChange={async (e) => { await setActivePeriod(e.target.value); }}
+                  className="topbar-period-select"
+                  style={{ minWidth: 200, whiteSpace: 'nowrap' }}
+                />
+              </div>
+
+              <SyncIndicator />
+
+              <div className="topbar-divider" />
               <div className="topbar-notif" ref={notifRef} style={{ position: 'relative' }}>
                 <button className="notif-btn" title="Notifications" onClick={async () => {
                   const next = !showNotifPanel;
@@ -914,19 +933,6 @@ function SuspendedView({ profile, onLogout }) {
                 )}
               </div>
               
-              <SyncIndicator />
-
-              <div className="topbar-period">
-                <span className="topbar-period-label">Period:</span>
-                <Select
-                  value={currentPeriodId || ''}
-                  options={periods}
-                  onChange={async (e) => { await setActivePeriod(e.target.value); }}
-                  className="topbar-period-select"
-                  style={{ minWidth: 220, whiteSpace: 'nowrap' }}
-                />
-              </div>
-
               <div
                 className="topbar-avatar"
                 title={currentUser?.name}
