@@ -843,6 +843,7 @@ export default function Settings() {
                           <input className="form-input" style={{flex:1,fontSize:'0.82rem'}} value={newExam} onChange={e=>setNewExam(e.target.value)} onKeyDown={e=>e.key==='Enter'&&addExam()} placeholder="e.g. End Term 1 2026"/>
                           <button onClick={addExam} className="btn btn-ghost btn-sm" style={{display:'flex',alignItems:'center',gap:4}}><PlusIcon size={14} /> Create Exam</button>
                         </div>
+                      </div>
 
                       {/* Timetable label - WIP (module disabled)
                       <div style={{marginTop: 16}}>
