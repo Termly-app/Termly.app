@@ -20,6 +20,18 @@ export default defineConfig({
         categories: ['education', 'productivity'],
         icons: [
           {
+            src: '/assets/pwa-192x192.png',
+            sizes: '192x192',
+            type: 'image/png',
+            purpose: 'any maskable'
+          },
+          {
+            src: '/assets/pwa-512x512.png',
+            sizes: '512x512',
+            type: 'image/png',
+            purpose: 'any maskable'
+          },
+          {
             src: '/assets/icon.svg',
             sizes: '512x512',
             type: 'image/svg+xml',
