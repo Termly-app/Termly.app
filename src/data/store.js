@@ -695,13 +695,10 @@ function mapProfileData(data) {
       _encrypted: data.sms_config
     },
     curriculum: data.curriculum || 'CBC Only',
-    custom_exams: trimArr(data.custom_exams) || DEFAULT_PROFILE.custom_exams,
     timetable_label: data.timetable_label || DEFAULT_PROFILE.timetable_label,
     _dbId: data.id,
     schoolId: data.school_id,
-    schoolType: data.school_type || data.custom_subjects?.__shadow_school_type || 'Day',
     schoolCode: data.school_code,
-    boardingHouses: trimArr(data.boarding_houses || data.custom_subjects?.__shadow_boarding_houses) || DEFAULT_PROFILE.boardingHouses,
     enabledModules: data.custom_subjects?.__shadow_enabled_modules || DEFAULT_PROFILE.enabledModules,
     studentLimit: data.custom_subjects?.__limits?.students || 10000,
     staffLimit: data.custom_subjects?.__limits?.staff || 1000
@@ -2064,7 +2061,7 @@ export async function updateExamStatus(examId, newStatus) {
     .eq('id', examId);
   if (error) throw error;
   
-  invalidateCache(`exams_${_currentSchoolId}`);
+  invalidateCache(`exams_${_currentSchoolId}_${_currentPeriodId}`);
   return true;
 }
 
@@ -2075,7 +2072,7 @@ export async function releaseExamToParents(examId, isReleased = true) {
     .eq('id', examId);
   if (error) throw error;
   
-  invalidateCache(`exams_${_currentSchoolId}`);
+  invalidateCache(`exams_${_currentSchoolId}_${_currentPeriodId}`);
   return true;
 }
 
@@ -2224,7 +2221,7 @@ export async function getStudentExamResults(studentId) {
 
     // Strategy 3: Legacy RPC
     try {
-      const { data, error } = await supabase.rpc('portal_get_student_results_v2', { p_student_id: studentId });
+      const { data, error } = await supabase.rpc('portal_get_student_results_v2', { p_student_id: studentId, p_school_id: _currentSchoolId });
       if (!error && data) return (data || []).map(r => ({
         ...r,
         exams: { name: r.exam_name, term: r.exam_term, exam_type: r.exam_type }
@@ -2263,7 +2260,7 @@ export async function getStudentProfile(studentId) {
     }
     // Fallback to RPC
     try {
-      const { data, error } = await supabase.rpc('portal_get_student_profile', { p_student_id: studentId });
+      const { data, error } = await supabase.rpc('portal_get_student_profile', { p_student_id: studentId, p_school_id: _currentSchoolId });
       if (!error) return data || null;
     } catch (e) {
       console.warn('[Portal] RPC student profile also failed:', e.message);
@@ -2286,7 +2283,7 @@ export async function getSubjectDetails(studentId) {
 
   // Strategy 1: Get subjects from student record/marks via RPC
   try {
-    const { data, error } = await supabase.rpc('portal_get_student_subjects', { p_student_id: studentId });
+    const { data, error } = await supabase.rpc('portal_get_student_subjects', { p_student_id: studentId, p_school_id: _currentSchoolId });
     if (!error && data && Array.isArray(data) && data.length > 0) {
       return data.map(s => typeof s === 'string' ? { subject_name: s, name: s } : { ...s, subject_name: s.name || s.subject_name });
     }
@@ -2307,7 +2304,7 @@ export async function getSubjectDetails(studentId) {
 
   // Strategy 3: Fallback to RPC
   try {
-    const { data, error } = await supabase.rpc('portal_get_subject_details', { p_student_id: studentId });
+    const { data, error } = await supabase.rpc('portal_get_subject_details', { p_student_id: studentId, p_school_id: _currentSchoolId });
     if (!error) return data || [];
   } catch (e) {
     console.warn('[Portal] RPC subject details also failed:', e.message);
@@ -2335,7 +2332,7 @@ export async function calculateExamResults(examId) {
         student_id: m.student_id, 
         total: 0, 
         count: 0, 
-        class_id: m.exam_papers.class_id 
+        class_id: m.exam_papers?.class_id || null 
       };
     }
     if (!m.is_absent && m.raw_score !== null) {
@@ -2430,7 +2427,7 @@ export async function getFees(studentId = null) {
 
     // Strategy 1: Use the dedicated portal RPC (bypasses RLS)
     try {
-      const { data, error } = await supabase.rpc('portal_get_student_fee_summary', { p_student_id: studentId });
+      const { data, error } = await supabase.rpc('portal_get_student_fee_summary', { p_student_id: studentId, p_school_id: _currentSchoolId });
       if (!error && data && (data.total_fee > 0 || data.paid > 0)) {
         const payments = (Array.isArray(data.payments) ? data.payments : []).map(p => ({
           id: p.id,
@@ -2468,7 +2465,7 @@ export async function getFees(studentId = null) {
     }
     if (!feeData) {
       try {
-        const feeRes = await supabase.rpc('portal_get_student_fees_v2', { p_student_id: studentId });
+        const feeRes = await supabase.rpc('portal_get_student_fees_v2', { p_student_id: studentId, p_school_id: _currentSchoolId });
         if (!feeRes.error) feeData = feeRes.data;
       } catch (e) { /* silently ignore RPC fallback failure */ }
     }
@@ -2486,7 +2483,7 @@ export async function getFees(studentId = null) {
     }
     if ((!payData || payData.length === 0) && feeData?.id) {
       try {
-        const payRes = await supabase.rpc('portal_get_student_payments_v2', { p_student_id: studentId });
+        const payRes = await supabase.rpc('portal_get_student_payments_v2', { p_student_id: studentId, p_school_id: _currentSchoolId });
         if (!payRes.error) payData = payRes.data;
       } catch (e) { /* silently ignore RPC fallback failure */ }
     }
@@ -3977,7 +3974,7 @@ export async function wipeAllNonAdminSchools() {
   const PLATFORM_ADMINS = ['admin@Termly.com', 'Termly8@gmail.com'];
   
   // 1. Fetch all schools
-  const { data: schools, error } = await supabase.from('schools').select('id, name, owner_id');
+  const { data: schools, error } = await supabase.from('schools').select('id, name, owner_id, is_platform_account');
   if (error) throw error;
 
   console.log(`Starting cleanup of ${schools.length} schools...`);
@@ -3985,8 +3982,8 @@ export async function wipeAllNonAdminSchools() {
 
   for (const school of schools) {
     // PROTECT the platform owner/HQ workspace or schools owned by core admins
-    const isSuperAdminSchool = school.name?.toLowerCase().includes('Termly hq');
-    const isOwnedByAdmin = PLATFORM_ADMINS.includes(school.owner_id);
+    const isSuperAdminSchool = school.name?.toLowerCase().includes('termly hq');
+    const isOwnedByAdmin = school.is_platform_account === true;
 
     if (isSuperAdminSchool || isOwnedByAdmin) {
       console.log(`>>> PROTECTING: ${school.name} (${school.id})`);

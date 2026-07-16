@@ -183,7 +183,7 @@ export async function updateExamStatus(examId, newStatus) {
     .eq('id', examId);
   if (error) throw error;
   
-  invalidateCache(`exams_${_currentSchoolId}`);
+  invalidateCache(`exams_${_currentSchoolId}_${_currentPeriodId}`);
   return true;
 }
 
@@ -422,7 +422,7 @@ export async function getStudentExamResults(studentId) {
 
   // If in portal mode (no auth user but school id set), use RPC
   if (!_currentAuthUser && _currentSchoolId) {
-    const { data, error } = await supabase.rpc('portal_get_student_results_v2', { p_student_id: studentId });
+    const { data, error } = await supabase.rpc('portal_get_student_results_v2', { p_student_id: studentId, p_school_id: _currentSchoolId });
     if (error) throw error;
     // Map flat TABLE results to nested structure expected by UI
     return (data || []).map(r => ({
@@ -451,7 +451,7 @@ export async function getStudentProfile(studentId) {
 
   // If in portal mode (no auth user but school id set), use RPC
   if (!_currentAuthUser && _currentSchoolId) {
-    const { data, error } = await supabase.rpc('portal_get_student_profile', { p_student_id: studentId });
+    const { data, error } = await supabase.rpc('portal_get_student_profile', { p_student_id: studentId, p_school_id: _currentSchoolId });
     if (error) {
       console.warn('Portal student profile fetch error:', error.message);
       return null;
@@ -471,7 +471,7 @@ export async function getStudentProfile(studentId) {
 
 export async function getSubjectDetails(studentId) {
   if (!_currentSchoolId || !studentId) return [];
-  const { data, error } = await supabase.rpc('portal_get_subject_details', { p_student_id: studentId });
+  const { data, error } = await supabase.rpc('portal_get_subject_details', { p_student_id: studentId, p_school_id: _currentSchoolId });
   if (error) {
     console.warn('Subject details fetch error:', error.message);
     return [];
@@ -498,7 +498,7 @@ export async function calculateExamResults(examId) {
         student_id: m.student_id, 
         total: 0, 
         count: 0, 
-        class_id: m.exam_papers.class_id 
+        class_id: m.exam_papers?.class_id || null 
       };
     }
     if (!m.is_absent && m.raw_score !== null) {
