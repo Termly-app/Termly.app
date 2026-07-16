@@ -2186,60 +2186,35 @@ export async function getExamResults(examId) {
 export async function getStudentExamResults(studentId) {
   if (!_currentSchoolId || !studentId) return [];
 
-  // Portal mode: try multiple strategies
+  // Portal mode: portal_get_student_results_v2 already does
+  // exam_results-first, marks-table-fallback internally, gated on
+  // released_to_parents. Trust it directly — the old layered
+  // fallbacks (a direct un-scoped exam_results query, then the
+  // long-dead portal_get_student_results v1) were the actual bug:
+  // the direct query could "succeed" with one old released exam and
+  // return before ever reaching the logic that also checks marks.
   if (!_currentAuthUser && _currentSchoolId) {
-    // Strategy 1: Direct exam_results query
-    try {
-      const { data, error } = await supabase
-        .from('exam_results')
-        .select('*, exams(name, term, exam_type)')
-        .eq('student_id', studentId);
-      if (!error && data && data.filter(r => r.exams).length > 0) {
-        return data.filter(r => r.exams);
-      }
-    } catch (e) {
-      console.warn('[Portal] Direct exam results query failed:', e.message);
+    const { data, error } = await supabase.rpc('portal_get_student_results_v2', {
+      p_student_id: studentId,
+      p_school_id: _currentSchoolId,
+    });
+    if (error) {
+      console.error('[Portal] Student results RPC failed:', error.message);
+      throw error;
     }
-
-    // Strategy 2: Get results from the marks table via RPC (legacy bridge)
-    try {
-      const { data, error } = await supabase.rpc('portal_get_student_results', { p_student_id: studentId });
-      if (!error && data && Array.isArray(data) && data.length > 0) {
-        return data.map(r => ({
-          ...r,
-          id: r.id,
-          exams: { name: r.exam_name || r.exam_type, term: r.exam_term || r.exam_type, exam_type: r.exam_type },
-          mean_score: Number(r.mean_score || 0),
-          total_marks: Number(r.total_marks || 0),
-          total_subjects: Number(r.total_subjects || 0),
-          class_position: r.class_position || '-'
-        }));
-      }
-    } catch (e) {
-      console.warn('[Portal] Marks-bridge RPC also failed:', e.message);
-    }
-
-    // Strategy 3: Legacy RPC
-    try {
-      const { data, error } = await supabase.rpc('portal_get_student_results_v2', { p_student_id: studentId, p_school_id: _currentSchoolId });
-      if (!error && data) return (data || []).map(r => ({
-        ...r,
-        exams: { name: r.exam_name, term: r.exam_term, exam_type: r.exam_type }
-      }));
-    } catch (e) {
-      console.warn('[Portal] Legacy RPC exam results also failed:', e.message);
-    }
-    return [];
+    return (data || []).map(r => ({
+      ...r,
+      exams: { name: r.exam_name, term: r.exam_term, exam_type: r.exam_type },
+    }));
   }
 
+  // Admin/staff mode: unchanged.
   const { data, error } = await supabase
     .from('exam_results')
     .select('*, exams(name, term, exam_type)')
     .eq('student_id', studentId);
-  
+
   if (error) throw error;
-  // Supabase join filtering might return null for exams if status != published
-  // Filter out those where join returned null
   return (data || []).filter(r => r.exams);
 }
 
@@ -2420,95 +2395,44 @@ export async function reconcileStudentFee(studentId, existingRecord = null) {
 export async function getFees(studentId = null) {
   if (!_currentSchoolId) return studentId ? null : {};
 
-  // If in portal mode or searching for specific student, use RPC if possible
+  // Portal mode: the RPC is the single source of truth now (SECURITY
+  // DEFINER, scoped by school_id + the school's active academic
+  // period — see 20260717_unify_portal_fee_and_results_visibility.sql).
+  // No more silent fallback to an un-scoped direct query.
   if (!_currentAuthUser && studentId) {
-    let feeData = null;
-    let payData = [];
+    const { data, error } = await supabase.rpc('portal_get_student_fee_summary', {
+      p_student_id: studentId,
+      p_school_id: _currentSchoolId,
+    });
 
-    // Strategy 1: Use the dedicated portal RPC (bypasses RLS)
-    try {
-      const { data, error } = await supabase.rpc('portal_get_student_fee_summary', { p_student_id: studentId, p_school_id: _currentSchoolId });
-      if (!error && data && (data.total_fee > 0 || data.paid > 0)) {
-        const payments = (Array.isArray(data.payments) ? data.payments : []).map(p => ({
-          id: p.id,
-          amount: Number(p.amount || 0),
-          date: p.date,
-          method: p.method || 'Payment',
-          reference: p.reference || '',
-          status: p.status || 'Confirmed'
-        }));
-        return {
-          totalFee: Number(data.total_fee || 0),
-          billed: Number(data.total_fee || 0),
-          paid: Number(data.paid || 0),
-          balance: Number(data.balance || 0),
-          payments,
-          _feeId: data.fee_id || null,
-          periodId: data.period_id || null,
-        };
-      }
-    } catch (e) {
-      console.warn('[Portal] Fee summary RPC failed, trying direct:', e.message);
+    if (error) {
+      console.error('[Portal] Fee summary RPC failed:', error.message);
+      throw error;
     }
 
-    // Strategy 2: Try direct query, fallback to older RPCs
-    try {
-      const { data, error } = await supabase
-        .from('fees')
-        .select('id, total_fee, paid, balance')
-        .eq('student_id', studentId)
-        .limit(1)
-        .maybeSingle();
-      if (!error && data) feeData = data;
-    } catch (e) {
-      console.warn('[Portal] Direct fees query failed:', e.message);
-    }
-    if (!feeData) {
-      try {
-        const feeRes = await supabase.rpc('portal_get_student_fees_v2', { p_student_id: studentId, p_school_id: _currentSchoolId });
-        if (!feeRes.error) feeData = feeRes.data;
-      } catch (e) { /* silently ignore RPC fallback failure */ }
-    }
-
-    try {
-      const { data, error } = await supabase
-        .from('fee_payments')
-        .select('id, amount, date, method, reference')
-        .in('fee_id', [
-          ...(feeData?.id ? [feeData.id] : [])
-        ]);
-      if (!error && data) payData = data;
-    } catch (e) {
-      console.warn('[Portal] Direct payments query failed:', e.message);
-    }
-    if ((!payData || payData.length === 0) && feeData?.id) {
-      try {
-        const payRes = await supabase.rpc('portal_get_student_payments_v2', { p_student_id: studentId, p_school_id: _currentSchoolId });
-        if (!payRes.error) payData = payRes.data;
-      } catch (e) { /* silently ignore RPC fallback failure */ }
-    }
-
-    const payments = (Array.isArray(payData) ? payData : []).map(p => ({
+    const payments = (Array.isArray(data?.payments) ? data.payments : []).map(p => ({
       id: p.id,
       amount: Number(p.amount || 0),
       date: p.date,
       method: p.method || 'Payment',
       reference: p.reference || '',
+      status: p.status || 'Confirmed',
     }));
 
-    const actualFeeData = Array.isArray(feeData) ? feeData[0] : feeData;
-
     return {
-      totalFee: Number(actualFeeData?.total_fee || 0),
-      billed: Number(actualFeeData?.total_fee || 0),
-      paid: Number(actualFeeData?.paid || 0),
-      balance: Number(actualFeeData?.balance || 0),
+      totalFee: Number(data?.total_fee || 0),
+      billed: Number(data?.total_fee || 0),
+      paid: Number(data?.paid || 0),
+      balance: Number(data?.balance || 0),
       payments,
-      _feeId: actualFeeData?.id || null,
-      periodId: actualFeeData?.period_id || null,
+      _feeId: data?.fee_id || null,
+      periodId: data?.period_id || null,
+      noRecordForCurrentPeriod: !!data?.no_record_for_current_period,
     };
   }
 
+  // Admin/staff mode: unchanged — already scoped to school_id + the
+  // currently selected academic period.
   const cacheKey = `fees_${_currentSchoolId}_${_currentPeriodId}`;
   return cachedQuery(cacheKey, async () => {
     const { data, error } = await withRetry(() => supabase
@@ -2517,7 +2441,7 @@ export async function getFees(studentId = null) {
       .eq('school_id', _currentSchoolId)
       .eq('period_id', _currentPeriodId));
     if (error) throw error;
-    
+
     const fees = {};
     (data || []).forEach(row => {
       fees[row.student_id] = {
@@ -2536,7 +2460,6 @@ export async function getFees(studentId = null) {
       };
     });
 
-    // Background Repair: Detect records with 0 total_fee and trigger reconciliation
     Object.keys(fees).forEach(sid => {
       if (fees[sid].totalFee === 0) {
         reconcileStudentFee(sid, fees[sid]).catch(console.error);
