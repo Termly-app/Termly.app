@@ -4,7 +4,7 @@ import {
   MessageIcon, ActivityIcon, 
   CardIcon, UserIcon, HistoryIcon,
   TeacherIcon, ChevronRightIcon,
-  ClockIcon, SchoolIcon
+  ClockIcon, SchoolIcon, BellIcon
 } from '../../components/CommonIcons';
 import { Helmet } from 'react-helmet-async';
 import { 
@@ -13,6 +13,10 @@ import {
   getStudentProfile, getAnnouncements, getSubjectDetails
 } from '../../data/store';
 import Loader from '../../components/Common/Loader';
+import NotificationCenter from '../../components/Common/NotificationCenter';
+import { CardSkeleton, TableSkeleton } from '../../components/Common/Skeletons';
+import { t } from '../../utils/i18n';
+import { useIdleTimeout } from '../../hooks/useIdleTimeout';
 import { subscribe, unsubscribeAll } from '../../utils/realtimeManager';
 
 // Premium UI Components
@@ -44,6 +48,17 @@ export default function PortalDashboard({ user, onLogout }) {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('home');
   const [lastSync, setLastSync] = useState(null);
+  const [lang, setLang] = useState('en');
+  const [notifications, setNotifications] = useState([
+    { id: 1, title: 'Term 2 Fee Statement Released', message: 'Your fee balance for Term 2 has been updated. Tap to view details.', created_at: new Date().toISOString(), read_at: null },
+    { id: 2, title: 'Opener Exam Results Available', message: 'Opener assessment marks have been published by the academic department.', created_at: new Date(Date.now() - 86400000).toISOString(), read_at: new Date().toISOString() }
+  ]);
+
+  // Session idle timeout (20 mins inactivity)
+  useIdleTimeout(() => {
+    alert(t('idleWarning', lang));
+    if (onLogout) onLogout();
+  }, 20 * 60 * 1000);
 
   // Data states
   const [assignments, setAssignments] = useState([]);
@@ -277,17 +292,49 @@ export default function PortalDashboard({ user, onLogout }) {
           {/* Header (Mobile & Tablet) */}
           {!isDesktop && (
             <div style={{ 
-              background: '#fff', padding: '16px 20px', 
+              background: '#fff', padding: '12px 20px', 
               display: 'flex', justifyContent: 'space-between', alignItems: 'center',
               borderBottom: '1px solid #f1f5f9', position: 'sticky', top: 0, zIndex: 100
             }}>
               <div style={{ fontWeight: 900, fontSize: '1.2rem', color: '#0f172a' }}>Termly</div>
-              <div onClick={onLogout} style={{ color: '#64748b' }}><LogoutIcon size={24} /></div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                <button
+                  onClick={() => setLang(lang === 'en' ? 'sw' : 'en')}
+                  style={{ background: '#f1f5f9', border: 'none', borderRadius: '10px', padding: '6px 10px', fontSize: '0.75rem', fontWeight: 800, color: '#334155', cursor: 'pointer' }}
+                >
+                  🌐 {lang === 'en' ? 'SW' : 'EN'}
+                </button>
+                <NotificationCenter 
+                  notifications={notifications} 
+                  lang={lang}
+                  onMarkRead={(id) => setNotifications(n => n.map(x => x.id === id ? { ...x, read_at: new Date().toISOString() } : x))}
+                  onMarkAllRead={() => setNotifications(n => n.map(x => ({ ...x, read_at: new Date().toISOString() })))}
+                />
+                <div onClick={onLogout} style={{ color: '#64748b', cursor: 'pointer' }}><LogoutIcon size={22} /></div>
+              </div>
             </div>
           )}
 
           <main style={{ flex: 1, padding: isDesktop ? '48px 60px' : '24px 20px 100px' }}>
             
+            {/* Top Toolbar (Desktop) */}
+            {isDesktop && (
+              <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: 16, marginBottom: 24 }}>
+                <button
+                  onClick={() => setLang(lang === 'en' ? 'sw' : 'en')}
+                  style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '8px 14px', fontSize: '0.8rem', fontWeight: 700, color: '#334155', cursor: 'pointer' }}
+                >
+                  🌐 {lang === 'en' ? 'Kiswahili' : 'English'}
+                </button>
+                <NotificationCenter 
+                  notifications={notifications} 
+                  lang={lang}
+                  onMarkRead={(id) => setNotifications(n => n.map(x => x.id === id ? { ...x, read_at: new Date().toISOString() } : x))}
+                  onMarkAllRead={() => setNotifications(n => n.map(x => ({ ...x, read_at: new Date().toISOString() })))}
+                />
+              </div>
+            )}
+
             {/* Greeting */}
             <div style={{ marginBottom: 32 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
@@ -297,14 +344,25 @@ export default function PortalDashboard({ user, onLogout }) {
                 {lastSync && (
                   <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginLeft: 'auto', fontSize: '0.7rem', color: '#94a3b8', fontWeight: 600 }}>
                     <div style={{ width: 6, height: 6, borderRadius: 3, background: '#10b981', animation: 'pulse 2s infinite' }} />
-                    Live
+                    {t('live', lang)}
                   </div>
                 )}
               </div>
               <h1 style={{ margin: 0, fontSize: isDesktop ? '2.4rem' : '1.8rem', fontWeight: 900, color: '#0f172a', letterSpacing: '-1px' }}>
-                Welcome, {localUser.name.split(' ')[0]}
+                {t('dashboard', lang)}, {localUser.name.split(' ')[0]}
               </h1>
             </div>
+
+            {loading ? (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 20 }}>
+                  <CardSkeleton height={140} />
+                  <CardSkeleton height={140} />
+                  <CardSkeleton height={140} />
+                </div>
+                <TableSkeleton rows={4} />
+              </div>
+            ) : null}
 
             {/* HOME TAB */}
             {activeTab === 'home' && (
@@ -710,6 +768,56 @@ export default function PortalDashboard({ user, onLogout }) {
               </div>
             </div>
           </div>
+        </div>
+      )}
+
+      {/* Persistent Mobile Bottom Navigation Bar */}
+      {!isDesktop && (
+        <div className="mobile-bottom-nav" style={{
+          position: 'fixed',
+          bottom: 0,
+          left: 0,
+          right: 0,
+          background: '#ffffff',
+          borderTop: '1px solid #e2e8f0',
+          display: 'flex',
+          justify: 'space-around',
+          alignItems: 'center',
+          padding: '8px 0 12px',
+          boxShadow: '0 -4px 20px rgba(0,0,0,0.06)',
+          zIndex: 999
+        }}>
+          {[
+            { id: 'home', label: t('dashboard', lang), icon: ActivityIcon },
+            { id: 'academics', label: t('results', lang), icon: BookIcon },
+            { id: 'fees', label: t('fees', lang), icon: CardIcon },
+            { id: 'announcements', label: t('announcements', lang), icon: MessageIcon },
+            { id: 'profile', label: t('profile', lang), icon: UserIcon }
+          ].map(tab => {
+            const isActive = activeTab === tab.id;
+            return (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  gap: 4,
+                  color: isActive ? '#10b981' : '#94a3b8',
+                  fontSize: '0.7rem',
+                  fontWeight: isActive ? 800 : 600,
+                  cursor: 'pointer',
+                  padding: '4px 8px'
+                }}
+              >
+                <tab.icon size={20} strokeWidth={isActive ? 2.5 : 1.8} />
+                <span>{tab.label}</span>
+              </button>
+            );
+          })}
         </div>
       )}
 

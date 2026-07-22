@@ -16,6 +16,17 @@ export default function PortalLogin({ onLogin }) {
   const [phone, setPhone] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [failedAttempts, setFailedAttempts] = useState(0);
+  const [lockoutSeconds, setLockoutSeconds] = useState(0);
+
+  useEffect(() => {
+    if (lockoutSeconds > 0) {
+      const timer = setInterval(() => {
+        setLockoutSeconds(prev => (prev <= 1 ? 0 : prev - 1));
+      }, 1000);
+      return () => clearInterval(timer);
+    }
+  }, [lockoutSeconds]);
 
   useEffect(() => {
     const fetchSuggestions = async () => {
@@ -41,6 +52,11 @@ export default function PortalLogin({ onLogin }) {
     e.preventDefault();
     setError('');
     
+    if (lockoutSeconds > 0) {
+      setError(`Too many failed attempts. Please wait ${lockoutSeconds} seconds before trying again.`);
+      return;
+    }
+
     if (!schoolSearch.trim()) {
       setError('Please select or search for your institution first.');
       return;
@@ -50,10 +66,18 @@ export default function PortalLogin({ onLogin }) {
     try {
       const result = await validateParentLogin(schoolSearch, admNo, phone, selectedSchoolId);
       if (result) {
+        setFailedAttempts(0);
         onLogin(result);
       }
     } catch (err) {
-      setError(err.message || 'Authentication failed. Please check your details or contact the school office.');
+      const attempts = failedAttempts + 1;
+      setFailedAttempts(attempts);
+      if (attempts >= 5) {
+        setLockoutSeconds(60);
+        setError('Security Lockout: 5 consecutive failed attempts. Account temporarily locked for 60 seconds.');
+      } else {
+        setError(`${err.message || 'Authentication failed.'} (${5 - attempts} attempts remaining before lockout)`);
+      }
     } finally {
       setLoading(false);
     }
