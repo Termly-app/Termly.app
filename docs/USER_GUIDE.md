@@ -1,6 +1,6 @@
-# ShuleSoft User Guide (School Admin)
+# Termly User Guide (School Admin)
 
-Welcome to ShuleSoft! This guide will help you manage your school efficiently, from onboarding students to generating report cards.
+Welcome to Termly! This guide will help you manage your school efficiently, from onboarding students to generating report cards.
 
 ## 1. Getting Started
 

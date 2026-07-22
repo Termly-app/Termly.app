@@ -1,6 +1,6 @@
-# ShuleSoft Security Model & RLS
+# Termly Security Model & RLS
 
-ShuleSoft is built with a "Security First" philosophy, ensuring that school data is strictly isolated and platform-level operations are highly guarded.
+Termly is built with a "Security First" philosophy, ensuring that school data is strictly isolated and platform-level operations are highly guarded.
 
 ## 1. Authentication
 

@@ -1,8 +1,8 @@
-# ShuleSoft SaaS Privacy Policy
+# Termly SaaS Privacy Policy
 
 Last Updated: March 20, 2024
 
-ShuleSoft is committed to protecting the privacy and security of your school's data. This policy explains how we collect, use, and protect your information.
+Termly is committed to protecting the privacy and security of your school's data, particularly the sensitive academic and personal data of minors. This policy explains how we collect, use, and protect your information in compliance with the Kenya Data Protection Act, 2019.
 
 ## 1. Information We Collect
 - **School Identity**: Name, location, and contact information.
@@ -22,7 +22,7 @@ ShuleSoft is committed to protecting the privacy and security of your school's d
 - **Access Control**: Only authorized administrators can access your school's workspace.
 
 ## 4. Data Ownership
-- You retain full ownership of all school data uploaded to ShuleSoft.
+- You retain full ownership of all school data uploaded to Termly.
 - You have the right to export your data at any time.
 
 ## 5. Third-Party Sharing
@@ -34,4 +34,4 @@ ShuleSoft is committed to protecting the privacy and security of your school's d
 - Upon termination, you may request the permanent deletion of all school records.
 
 ## 7. Contact Us
-For questions regarding your data or this policy, contact us at [shulesoft@gmail.com](mailto:shulesoft@gmail.com).
+For questions regarding your data or this policy, contact us at [Termly8@gmail.com](mailto:Termly8@gmail.com).

@@ -1,6 +1,6 @@
-# ShuleSoft SuperAdmin Guide (Platform Owner)
+# Termly SuperAdmin Guide (Platform Owner)
 
-As a platform owner, you have the central "Command Tower" access to monitor and manage the entire ShuleSoft ecosystem.
+As a platform owner, you have the central "Command Tower" access to monitor and manage the entire Termly ecosystem.
 
 ## 1. Accessing the Command Tower
 

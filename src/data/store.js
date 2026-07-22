@@ -2224,17 +2224,6 @@ export async function getStudentProfile(studentId) {
   // Portal mode: try direct query first
   if (!_currentAuthUser && _currentSchoolId) {
     try {
-      const { data, error } = await supabase
-        .from('students')
-        .select('id, name, adm_no, class, stream, gender, parent, parent_phone')
-        .eq('id', studentId)
-        .single();
-      if (!error && data) return { ...data, parent_name: data.parent };
-    } catch (e) {
-      console.warn('[Portal] Direct student profile query failed:', e.message);
-    }
-    // Fallback to RPC
-    try {
       const { data, error } = await supabase.rpc('portal_get_student_profile', { p_student_id: studentId, p_school_id: _currentSchoolId });
       if (!error) return data || null;
     } catch (e) {
@@ -5775,20 +5764,6 @@ export async function getAssignments(filters = {}) {
   if (!_currentSchoolId) return [];
 
   if (!_currentAuthUser && _currentSchoolId) {
-    // Try direct query first
-    try {
-      let q = supabase
-        .from('el_assignments')
-        .select('id, title, description, due_date, subject_id, class_id, created_at')
-        .eq('school_id', _currentSchoolId)
-        .order('created_at', { ascending: false });
-      if (filters.classId) q = q.eq('class_id', filters.classId);
-      const { data, error } = await q;
-      if (!error && data) return data;
-    } catch (e) {
-      console.warn('[Portal] Direct assignments query failed:', e.message);
-    }
-    // Fallback to RPC
     try {
       const { data, error } = await supabase.rpc('portal_get_assignments_v2', { 
         p_school_id: _currentSchoolId,
@@ -5890,19 +5865,6 @@ export async function getAnnouncements(filters = {}) {
   if (!_currentSchoolId) return [];
 
   if (!_currentAuthUser && _currentSchoolId) {
-    // Try direct query first
-    try {
-      const { data, error } = await supabase
-        .from('announcements')
-        .select('id, title, body, created_at, status')
-        .eq('school_id', _currentSchoolId)
-        .eq('status', 'published')
-        .order('created_at', { ascending: false });
-      if (!error && data) return data;
-    } catch (e) {
-      console.warn('[Portal] Direct announcements query failed:', e.message);
-    }
-    // Fallback to RPC
     try {
       const { data, error } = await supabase.rpc('portal_get_announcements_v2', { p_school_id: _currentSchoolId });
       if (!error) return data || [];

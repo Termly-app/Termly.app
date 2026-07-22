@@ -37,9 +37,12 @@ jobs:
           VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL || 'https://placeholder.supabase.co' }}
           VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY || 'placeholder-key' }}
 
+      - name: Run lint
+        run: npm run lint
+        continue-on-error: true
+
       - name: Run tests
         run: npm test -- --run --reporter=verbose
-        continue-on-error: true
 
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4

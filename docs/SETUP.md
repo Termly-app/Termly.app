@@ -1,6 +1,6 @@
-# ShuleSoft Setup & Deployment Guide
+# Termly Setup & Deployment Guide
 
-This document provides step-by-step instructions for setting up ShuleSoft for local development and production deployment.
+This document provides step-by-step instructions for setting up Termly for local development and production deployment.
 
 ## 1. Prerequisites
 
@@ -13,7 +13,7 @@ This document provides step-by-step instructions for setting up ShuleSoft for lo
 1. **Clone the project**:
    ```bash
    git clone <your-repository-url>
-   cd shulesoft.app
+   cd termly.app
    ```
 
 2. **Install Dependencies**:
@@ -47,7 +47,7 @@ To get the backend fully functional, you need to execute the SQL scripts located
 ## 4. Production Deployment
 
 ### Frontend (Static Hosting)
-ShuleSoft is a Vite-based SPA. You can deploy the `dist/` folder to any static host:
+Termly is a Vite-based SPA. You can deploy the `dist/` folder to any static host:
 
 - **Vercel/Netlify**: Just connect your repository; the build command is `npm run build` and output directory is `dist`.
 - **Environment Variables**: Make sure to add `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` to your hosting provider's dashboard.

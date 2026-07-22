@@ -1,10 +1,10 @@
-# ShuleSoft Technical Architecture
+# Termly Technical Architecture
 
-This document describes the internal workings, design patterns, and data flow of the ShuleSoft platform.
+This document describes the internal workings, design patterns, and data flow of the Termly platform.
 
 ## 1. System Design
 
-ShuleSoft follows a **Monolithic Frontend / Serverless Backend** architecture.
+Termly follows a **Monolithic Frontend / Serverless Backend** architecture.
 
 - **Frontend**: A single-page application (SPA) built with React and Vite. It handles all UI logic, data presentation, and local state management.
 - **Backend-as-a-Service (BaaS)**: Supabase provides PostgreSQL for data storage, Auth for user management, and RLS for secure data access. No separate Node/Express server is required.

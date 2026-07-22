@@ -1,0 +1,379 @@
+import { supabase } from '../lib/supabase';
+import { db, queueChange } from './offlineStore';
+import { 
+  _currentSchoolId, mutationGuard, cachedQuery, invalidateCache, getCurrentSchoolId 
+} from './coreStore';
+import { logAuditEvent, getPrintHeader, getFeeSummary, getPayments, checkIsPlatformAdmin } from './store';
+import { jsPDF } from 'jspdf'; 
+
+// ==========================================
+// STUDENTS (Extracted from store.js)
+// ==========================================
+
+export async function getStudents() {
+  if (!_currentSchoolId) return [];
+  
+  // Try to load from offline cache first (SWR)
+  const cached = await db.students.where('school_id').equals(_currentSchoolId).toArray();
+  
+  // Background fetch from cloud
+  const fetchCloud = async () => {
+    if (!shouldFetchCloud(`students_${_currentSchoolId}`)) return;
+    try {
+      const { data, error } = await withRetry(() => supabase
+        .from('students')
+        .select('*')
+        .eq('school_id', _currentSchoolId)
+        .order('name'));
+      if (error) throw error;
+      if (data) {
+        // Update offline cache
+        await db.students.bulkPut(data.map(s => ({ ...s, school_id: _currentSchoolId })));
+        window.dispatchEvent(new Event('studentsSynced'));
+      }
+    } catch (e) {
+      console.warn("Offline fetch: showing cached students.", e.message);
+    }
+  };
+  
+  fetchCloud(); // Fire and forget for internal sync
+  
+  if (cached.length > 0) {
+    return cached.map(s => ({
+      ...s,
+      admNo: s.adm_no,
+      residenceType: s.residence_type || 'day',
+      parentPhone: s.parent_phone,
+      joinDate: s.join_date,
+      birthCertNo: s.birth_cert_no,
+      fatherName: s.father_name,
+      fatherPhone: s.father_phone,
+      motherName: s.mother_name,
+      motherPhone: s.mother_phone,
+      nemisVerified: s.nemis_verified,
+      status: s.status || 'Active'
+    }));
+  }
+  
+  // If no cache, wait for cloud
+  const { data, error } = await supabase.from('students').select('*').eq('school_id', _currentSchoolId).order('name');
+  if (error) throw error;
+  if (data) await db.students.bulkPut(data.map(s => ({ ...s, school_id: _currentSchoolId })));
+  return (data || []).map(s => ({
+    ...s,
+    admNo: s.adm_no,
+    residenceType: s.residence_type || 'day',
+    house: s.house || null,
+    parentPhone: s.parent_phone,
+    joinDate: s.join_date,
+    birthCertNo: s.birth_cert_no,
+    fatherName: s.father_name,
+    fatherPhone: s.father_phone,
+    motherName: s.mother_name,
+    motherPhone: s.mother_phone,
+    nemisVerified: s.nemis_verified,
+    status: s.status || 'Active'
+  }));
+}
+
+export async function getNEMISComplianceReport() {
+  const students = await getStudents();
+  const report = {
+    total: students.length,
+    ready: 0,
+    nonReady: 0,
+    readinessRate: 0,
+    missingStats: {
+      upi: 0,
+      dob: 0,
+      gender: 0,
+      birth_cert: 0,
+      parent_contact: 0,
+      class_stream: 0
+    },
+    studentsWithIssues: []
+  };
+
+  students.forEach(s => {
+    const issues = [];
+    if (!s.nemis_number && !s.upi) {
+      issues.push('Missing UPI/NEMIS Number');
+      report.missingStats.upi++;
+    }
+    if (!s.date_of_birth && !s.dob) {
+      issues.push('Missing Date of Birth');
+      report.missingStats.dob++;
+    }
+    if (!s.gender) {
+      issues.push('Missing Gender');
+      report.missingStats.gender++;
+    }
+    if (!s.parent_phone && !s.parentPhone) {
+      issues.push('Missing Parent Contact');
+      report.missingStats.parent_contact++;
+    }
+    if (!s.birth_cert_no && !s.birthCertNo) {
+      issues.push('Missing Birth Certificate No');
+      report.missingStats.birth_cert++;
+    }
+    if (!s.class) {
+      issues.push('Missing Class Assignment');
+      report.missingStats.class_stream++;
+    }
+
+    if (issues.length === 0) {
+      report.ready++;
+    } else {
+      report.nonReady++;
+      report.studentsWithIssues.push({
+        id: s.id,
+        name: s.name,
+        admNo: s.admNo,
+        class: s.class,
+        issues
+      });
+    }
+  });
+
+  report.readinessRate = ((report.ready / (report.total || 1)) * 100).toFixed(1);
+  return report;
+}
+
+export async function getStudent(id) {
+  const { data, error } = await supabase
+    .from('students')
+    .select('id, name, adm_no, class, stream, parent, parent_phone, gender, dob, join_date, notes, school_id, birth_cert_no, county, father_name, father_phone, mother_name, mother_phone, residence_type, house, subjects')
+    .eq('id', id)
+    .single();
+  if (error) throw error;
+  return data ? { ...data, admNo: data.adm_no, parentPhone: data.parent_phone, joinDate: data.join_date, residenceType: data.residence_type || 'day', house: data.house || null } : null;
+}
+
+export async function addStudent(student) {
+  mutationGuard('addStudent');
+  const all = await getStudents();
+  const activeStudents = all.filter(s => (s.status || 'Active') === 'Active');
+  const p = await getSchoolProfile();
+  
+  // Enforce student limit set by Super Admin (Active seats only)
+  const currentCount = activeStudents.length;
+  if (currentCount >= p.studentLimit) {
+    throw new Error(`Active student limit reached (${p.studentLimit}). Please contact Super Admin to increase your school's capacity.`);
+  }
+  const count = all.length + 1;
+  const admNo = student.admNo || String(count).padStart(3, '0');
+
+  const { data, error } = await supabase
+    .from('students')
+    .insert({
+      school_id: _currentSchoolId,
+      adm_no: admNo,
+      name: student.name,
+      class: student.class,
+      stream: student.stream || 'General',
+      parent: student.parent || '',
+      residence_type: student.residenceType || 'day',
+      house: student.house || null,
+      parent_phone: student.parentPhone || '',
+      gender: student.gender || '',
+      dob: student.dob || '',
+      join_date: student.joinDate || new Date().toISOString().split('T')[0],
+      notes: sanitizeString(student.notes || ''),
+      birth_cert_no: student.birthCertNo || null,
+      county: student.county || null,
+      father_name: sanitizeName(student.fatherName || null),
+      father_phone: student.fatherPhone || null,
+      mother_name: sanitizeName(student.motherName || null),
+      mother_phone: student.motherPhone || null,
+      status: student.status || 'Active',
+      subjects: getSubjectsForGrade(student.class, p)
+    })
+    .select()
+    .single();
+  if (error) throw error;
+
+  // Create fee record for new student
+  const feeConfig = p.gradeFees?.[student.class];
+  let baseFee = TERM_FEE;
+  if (feeConfig) {
+    if (typeof feeConfig === 'object') {
+      const type = (student.residenceType || 'day').toLowerCase();
+      baseFee = Number(feeConfig[type]) || Number(feeConfig.day) || TERM_FEE;
+    } else {
+      baseFee = Number(feeConfig) || TERM_FEE;
+    }
+  }
+  await supabase.from('fees').insert({
+    school_id: _currentSchoolId,
+    student_id: data.id,
+    period_id: _currentPeriodId,
+    total_fee: baseFee,
+    paid: 0,
+    balance: baseFee,
+  });
+
+  await logPlatformActivity('STUDENT_ADD', `Added new student: ${student.name}`);
+  const newStudent = { 
+    ...data, 
+    admNo: data.adm_no, 
+    residenceType: data.residence_type || 'day',
+    house: data.house || null,
+    parentPhone: data.parent_phone, 
+    joinDate: data.join_date,
+    birthCertNo: data.birth_cert_no,
+    fatherName: data.father_name,
+    fatherPhone: data.father_phone,
+    motherName: data.mother_name,
+    motherPhone: data.mother_phone,
+    subjects: data.subjects || [],
+    status: data.status || 'Active',
+    nemisVerified: false
+  };
+
+  // Sync to local DB immediately for UI responsiveness
+  try { await db.students.put(data); } catch(e) {}
+
+  await logAuditEvent('student_created', 'students', data.id, { name: student.name, class: student.class });
+  return newStudent;
+}
+
+export async function updateStudent(id, updates) {
+  mutationGuard('updateStudent');
+  const row = {};
+  if (updates.name !== undefined) row.name = updates.name;
+  if (updates.class !== undefined) row.class = updates.class;
+  if (updates.stream !== undefined) row.stream = updates.stream;
+  if (updates.parent !== undefined) row.parent = updates.parent;
+  if (updates.residenceType !== undefined) row.residence_type = updates.residenceType;
+  if (updates.house !== undefined) row.house = updates.house;
+  if (updates.parentPhone !== undefined) row.parent_phone = updates.parentPhone;
+  if (updates.gender !== undefined) row.gender = updates.gender;
+  if (updates.dob !== undefined) row.dob = updates.dob;
+  if (updates.joinDate !== undefined) row.join_date = updates.joinDate;
+  if (updates.notes !== undefined) row.notes = updates.notes;
+  if (updates.admNo !== undefined) row.adm_no = updates.admNo;
+  if (updates.birthCertNo !== undefined) row.birth_cert_no = updates.birthCertNo;
+  if (updates.county !== undefined) row.county = updates.county;
+  if (updates.fatherName !== undefined) row.father_name = updates.fatherName;
+  if (updates.fatherPhone !== undefined) row.father_phone = updates.fatherPhone;
+  if (updates.motherName !== undefined) row.mother_name = updates.motherName;
+  if (updates.motherPhone !== undefined) row.mother_phone = updates.motherPhone;
+  if (updates.subjects !== undefined) row.subjects = updates.subjects;
+  if (updates.status !== undefined) row.status = updates.status;
+
+  const { data, error } = await supabase
+    .from('students')
+    .update(row)
+    .eq('id', id)
+    .select()
+    .single();
+  if (error) throw error;
+  
+  // Sync to local DB immediately
+  try { await db.students.put(data); } catch(e) {}
+  
+  await logAuditEvent('student_updated', 'students', id, { updates: row });
+  return data ? { ...data, admNo: data.adm_no, parentPhone: data.parent_phone, joinDate: data.join_date, residenceType: data.residence_type || 'day', house: data.house || null, subjects: data.subjects || [], status: data.status || 'Active' } : null;
+}
+
+export async function migrateExistingStudentsSubjects() {
+  const students = await getStudents();
+  const profile = await getSchoolProfile();
+  let migrated = 0;
+
+  for (const s of students) {
+    if (!s.subjects || s.subjects.length === 0) {
+      const defaultSubs = getSubjectsForGrade(s.class, profile);
+      await updateStudent(s.id, { subjects: defaultSubs });
+      migrated++;
+    }
+  }
+  return migrated;
+}
+
+export async function deleteStudent(id) {
+  mutationGuard('deleteStudent');
+  const { error } = await supabase.from('students').delete().eq('id', id);
+  if (error) throw error;
+  // Sync to local DB immediately
+  try { await db.students.delete(id); } catch(e) {}
+}
+
+export async function archiveStudent(id, targetStatus = 'Transferred', reason = '') {
+  mutationGuard('archiveStudent');
+  const { data, error } = await supabase
+    .from('students')
+    .update({ 
+      status: targetStatus,
+      notes: reason ? `[ARCHIVED: ${new Date().toLocaleDateString()}] ${reason}` : undefined
+    })
+    .eq('id', id)
+    .select()
+    .single();
+    
+  if (error) throw error;
+  
+  // Update local cache
+  try { await db.students.update(id, { status: targetStatus }); } catch(e) {}
+  
+  await logAuditEvent('student_archived', 'students', id, { targetStatus, reason });
+  await logPlatformActivity('STUDENT_ARCHIVE', `Archived student (Status: ${targetStatus}): ${data.name}`);
+  return data;
+}
+
+export async function transferStudents(selectedIds, direction = 'promote') {
+  mutationGuard('transferStudents');
+  const allGrades = Object.values(CBC_STRUCTURE).flatMap(l => l.grades);
+  const students = (await getStudents()).filter(s => s.status === 'Active');
+  const targetStudents = students.filter(s => selectedIds.includes(s.id));
+  const updates = [];
+
+  targetStudents.forEach(s => {
+    const idx = allGrades.indexOf(s.class);
+    if (direction === 'promote') {
+      if (idx >= 0 && idx < allGrades.length - 1) {
+        updates.push({ id: s.id, newClass: allGrades[idx + 1] });
+      }
+    } else if (direction === 'demote') {
+      if (idx > 0) {
+        updates.push({ id: s.id, newClass: allGrades[idx - 1] });
+      }
+    }
+  });
+
+  for (const u of updates) {
+    const { error } = await supabase.from('students').update({ class: u.newClass }).eq('id', u.id);
+    if (error) throw error;
+  }
+  return await getStudents();
+}
+
+export async function bulkImportStudents(studentsData, onProgress) {
+  mutationGuard('bulkImportStudents');
+  if (!_currentSchoolId) throw new Error('No school context');
+
+  const BATCH_SIZE = 50;
+  let successCount = 0;
+
+  for (let i = 0; i < studentsData.length; i += BATCH_SIZE) {
+    const batch = studentsData.slice(i, i + BATCH_SIZE).map(s => ({
+      ...s,
+      school_id: _currentSchoolId,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
+    }));
+
+    const { error } = await supabase.from('students').insert(batch);
+    if (error) {
+      console.error('Batch import error:', error);
+      throw error;
+    }
+
+    successCount += batch.length;
+    if (onProgress) onProgress(successCount, studentsData.length);
+  }
+
+  await logPlatformActivity('STUDENTS_IMPORT', `Imported ${successCount} students in bulk`, _currentSchoolId);
+  return { success: true, count: successCount };
+}
+

@@ -1,6 +1,6 @@
-# ShuleSoft — Secrets Management (Domain 3)
+# Termly — Secrets Management (Domain 3)
 
-This document outlines the required environment variables for ShuleSoft Production. **NEVER** commit actual values to version control.
+This document outlines the required environment variables for Termly Production. **NEVER** commit actual values to version control.
 
 ## Required Environment Variables
 
@@ -10,7 +10,7 @@ This document outlines the required environment variables for ShuleSoft Producti
 
 ### 2. Africa's Talking (SMS)
 - `VITE_SMS_API_KEY`: API Key from AT dashboard.
-- `VITE_SMS_USERNAME`: Your AT username (e.g., `sandbox` or `shulesoft_prod`).
+- `VITE_SMS_USERNAME`: Your AT username (e.g., `sandbox` or `termly_prod`).
 - `VITE_SMS_SENDER_ID`: Optional alphanumeric sender ID (must be registered with AT).
 
 ### 3. Safaricom Daraja (M-Pesa)

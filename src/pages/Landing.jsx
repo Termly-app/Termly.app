@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { getPlatformSettings } from '../data/store';
-import { getPlanDisplayFeatures } from './SuperAdmin/superAdminUtils';
+
 import './Landing.css';
 import {
   BookIcon, UserIcon, CheckIcon, CardIcon, SchoolIcon,

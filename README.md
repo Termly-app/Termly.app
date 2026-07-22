@@ -1,6 +1,6 @@
-# ShuleSoft - Modern School Management System 🇰🇪
+# Termly - Modern School Management System 🇰🇪
 
-ShuleSoft is a comprehensive SaaS platform designed to streamline school operations in Kenya. It provides tools for student management, fee tracking with M-PESA integration, CBC-compliant report cards, and professional administrative overview.
+Termly is a comprehensive SaaS platform designed to streamline school operations in Kenya. It provides tools for student management, fee tracking with M-PESA integration, CBC-compliant report cards, and professional administrative overview.
 
 ## 🚀 Key Features
 
@@ -16,7 +16,7 @@ ShuleSoft is a comprehensive SaaS platform designed to streamline school operati
 
 ## 📚 Documentation
 
-For detailed information on how to deploy, use, and maintain ShuleSoft, please refer to the following guides:
+For detailed information on how to deploy, use, and maintain Termly, please refer to the following guides:
 
 - **[Quick Start & Setup](./docs/SETUP.md)**: How to get the project running locally and in production.
 - **[User Guide](./docs/USER_GUIDE.md)**: Comprehensive manual for school administrators and teachers.
@@ -34,7 +34,7 @@ For detailed information on how to deploy, use, and maintain ShuleSoft, please r
 
 ## 🤝 Support
 
-For technical support or feature requests, contact the development team at [shulesoft@gmail.com](mailto:shulesoft@gmail.com).
+For technical support or feature requests, contact the development team at [Termly8@gmail.com](mailto:Termly8@gmail.com).
 
 ---
 *Built with ❤️ for Kenyan Schools.*
