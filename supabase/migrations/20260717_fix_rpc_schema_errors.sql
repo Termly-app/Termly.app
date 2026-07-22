@@ -1,6 +1,7 @@
 -- 1. FIX EXAM RESULTS RPC
 -- The live exam_results table lacks aggregate columns and exam_id. We must use the marks table
 -- and join with exams to get the released_to_parents flag and exam metadata.
+DROP FUNCTION IF EXISTS public.portal_get_student_results_v2(uuid, uuid);
 CREATE OR REPLACE FUNCTION public.portal_get_student_results_v2(p_student_id uuid, p_school_id uuid)
 RETURNS JSONB
 LANGUAGE plpgsql
@@ -44,6 +45,7 @@ $$;
 
 -- 2. FIX FEES SUMMARY RPC
 -- The fees table does not have created_at.
+DROP FUNCTION IF EXISTS public.portal_get_student_fee_summary(uuid, uuid);
 CREATE OR REPLACE FUNCTION public.portal_get_student_fee_summary(p_student_id uuid, p_school_id uuid)
 RETURNS JSONB
 LANGUAGE plpgsql
@@ -77,6 +79,7 @@ $$;
 
 -- 3. FIX ANNOUNCEMENTS RPC
 -- The announcements table has content, not body.
+DROP FUNCTION IF EXISTS public.portal_get_announcements_v2(uuid);
 CREATE OR REPLACE FUNCTION public.portal_get_announcements_v2(p_school_id uuid)
 RETURNS JSONB
 LANGUAGE plpgsql
@@ -101,6 +104,7 @@ $$;
 
 -- 4. FIX ASSIGNMENTS RPC
 -- The el_assignments table has created_at, but we need to ensure due_date works correctly.
+DROP FUNCTION IF EXISTS public.portal_get_assignments_v2(uuid, uuid);
 CREATE OR REPLACE FUNCTION public.portal_get_assignments_v2(p_student_id uuid, p_school_id uuid)
 RETURNS JSONB
 LANGUAGE plpgsql
