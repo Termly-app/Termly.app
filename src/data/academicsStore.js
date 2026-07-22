@@ -1276,3 +1276,57 @@ export async function saveTTTeacherSubject({ teacherId, subjectId, classId }) {
   return data;
 }
 
+// ================================
+// STUB EXPORTS — Referenced by UI components but not yet implemented.
+// These prevent build failures and return safe defaults.
+// ================================
+
+export async function initializeStreams() {
+  console.warn('[academicsStore] initializeStreams is not yet implemented');
+  return [];
+}
+
+export async function deleteAllExams() {
+  console.warn('[academicsStore] deleteAllExams is not yet implemented');
+  return [];
+}
+
+export async function previewClassPromotion() {
+  console.warn('[academicsStore] previewClassPromotion is not yet implemented');
+  return { promoted: [], retained: [] };
+}
+
+export async function promoteClasses() {
+  console.warn('[academicsStore] promoteClasses is not yet implemented');
+  return { promoted: 0, retained: 0 };
+}
+
+export async function getOpenExamsForTeacher() {
+  console.warn('[academicsStore] getOpenExamsForTeacher is not yet implemented');
+  return [];
+}
+
+export async function getVirtualPaperMarks() {
+  console.warn('[academicsStore] getVirtualPaperMarks is not yet implemented');
+  return [];
+}
+
+export async function getTeacherAssignments() {
+  console.warn('[academicsStore] getTeacherAssignments is not yet implemented');
+  return [];
+}
+
+export async function assignTeacher() {
+  console.warn('[academicsStore] assignTeacher is not yet implemented');
+  return null;
+}
+
+export async function removeTeacherAssignment() {
+  console.warn('[academicsStore] removeTeacherAssignment is not yet implemented');
+  return null;
+}
+
+export async function getClassStreams() {
+  console.warn('[academicsStore] getClassStreams is not yet implemented');
+  return [];
+}
