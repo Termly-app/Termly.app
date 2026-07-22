@@ -43,6 +43,35 @@ const Badge = ({ children, color = '#1a73e8', bg = '#eff6ff' }) => (
   </span>
 );
 
+// Helper to clean and format class & stream without duplication
+function formatClassStreamDisplay(rawClass = '', rawStream = '') {
+  let cls = (rawClass || '').trim();
+  let stm = (rawStream || '').trim();
+
+  if (!cls) return { displayClass: 'N/A', displayStream: stm || 'General', full: 'N/A' };
+
+  if (stm && cls.toLowerCase().endsWith(stm.toLowerCase())) {
+    cls = cls.substring(0, cls.length - stm.length).trim();
+  } else if (cls.includes(' ')) {
+    const parts = cls.split(/\s+/);
+    const lastPart = parts[parts.length - 1];
+    if (parts.length > 1 && !/^(1|2|3|4|5|6|7|8|[A-D])$/i.test(lastPart)) {
+      if (stm && lastPart.toLowerCase() !== stm.toLowerCase()) {
+        cls = parts.slice(0, -1).join(' ');
+      } else if (!stm) {
+        cls = parts.slice(0, -1).join(' ');
+        stm = lastPart;
+      }
+    }
+  }
+
+  const cleanClass = cls || rawClass;
+  const cleanStream = stm || 'General';
+  const full = (cleanStream && cleanStream !== 'General') ? `${cleanClass} ${cleanStream}` : cleanClass;
+
+  return { displayClass: cleanClass, displayStream: cleanStream, full };
+}
+
 export default function PortalDashboard({ user, onLogout }) {
   const [localUser, setLocalUser] = useState(user);
   const [loading, setLoading] = useState(true);
@@ -53,6 +82,8 @@ export default function PortalDashboard({ user, onLogout }) {
     { id: 1, title: 'Term 2 Fee Statement Released', message: 'Your fee balance for Term 2 has been updated. Tap to view details.', created_at: new Date().toISOString(), read_at: null },
     { id: 2, title: 'Opener Exam Results Available', message: 'Opener assessment marks have been published by the academic department.', created_at: new Date(Date.now() - 86400000).toISOString(), read_at: new Date().toISOString() }
   ]);
+
+  const classInfo = formatClassStreamDisplay(localUser?.class, localUser?.stream);
 
   // Session idle timeout (20 mins inactivity)
   useIdleTimeout(() => {
@@ -317,40 +348,42 @@ export default function PortalDashboard({ user, onLogout }) {
 
           <main style={{ flex: 1, padding: isDesktop ? '48px 60px' : '24px 20px 100px' }}>
             
-            {/* Top Toolbar (Desktop) */}
-            {isDesktop && (
-              <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: 16, marginBottom: 24 }}>
-                <button
-                  onClick={() => setLang(lang === 'en' ? 'sw' : 'en')}
-                  style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '8px 14px', fontSize: '0.8rem', fontWeight: 700, color: '#334155', cursor: 'pointer' }}
-                >
-                  🌐 {lang === 'en' ? 'Kiswahili' : 'English'}
-                </button>
-                <NotificationCenter 
-                  notifications={notifications} 
-                  lang={lang}
-                  onMarkRead={(id) => setNotifications(n => n.map(x => x.id === id ? { ...x, read_at: new Date().toISOString() } : x))}
-                  onMarkAllRead={() => setNotifications(n => n.map(x => ({ ...x, read_at: new Date().toISOString() })))}
-                />
-              </div>
-            )}
-
-            {/* Greeting */}
-            <div style={{ marginBottom: 32 }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
-                <div style={{ fontSize: '0.85rem', color: '#10b981', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '1px' }}>
-                  {schoolProfile?.name || 'Termly Academy'}
-                </div>
-                {lastSync && (
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginLeft: 'auto', fontSize: '0.7rem', color: '#94a3b8', fontWeight: 600 }}>
-                    <div style={{ width: 6, height: 6, borderRadius: 3, background: '#10b981', animation: 'pulse 2s infinite' }} />
-                    {t('live', lang)}
+            {/* Greeting Header & Top Toolbar */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 32, flexWrap: 'wrap', gap: 16 }}>
+              <div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+                  <div style={{ fontSize: '0.85rem', color: '#10b981', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '1px' }}>
+                    {schoolProfile?.name || 'Termly Academy'}
                   </div>
-                )}
+                  {lastSync && (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: '0.7rem', color: '#94a3b8', fontWeight: 600 }}>
+                      <div style={{ width: 6, height: 6, borderRadius: 3, background: '#10b981', animation: 'pulse 2s infinite' }} />
+                      {t('live', lang)}
+                    </div>
+                  )}
+                </div>
+                <h1 style={{ margin: 0, fontSize: isDesktop ? '2.4rem' : '1.8rem', fontWeight: 900, color: '#0f172a', letterSpacing: '-1px' }}>
+                  {t('dashboard', lang)}, {localUser.name.split(' ')[0]}
+                </h1>
               </div>
-              <h1 style={{ margin: 0, fontSize: isDesktop ? '2.4rem' : '1.8rem', fontWeight: 900, color: '#0f172a', letterSpacing: '-1px' }}>
-                {t('dashboard', lang)}, {localUser.name.split(' ')[0]}
-              </h1>
+
+              {/* Controls Toolbar (Desktop) */}
+              {isDesktop && (
+                <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+                  <button
+                    onClick={() => setLang(lang === 'en' ? 'sw' : 'en')}
+                    style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '10px 16px', fontSize: '0.85rem', fontWeight: 700, color: '#334155', cursor: 'pointer', boxShadow: '0 2px 4px rgba(0,0,0,0.03)' }}
+                  >
+                    🌐 {lang === 'en' ? 'Kiswahili' : 'English'}
+                  </button>
+                  <NotificationCenter 
+                    notifications={notifications} 
+                    lang={lang}
+                    onMarkRead={(id) => setNotifications(n => n.map(x => x.id === id ? { ...x, read_at: new Date().toISOString() } : x))}
+                    onMarkAllRead={() => setNotifications(n => n.map(x => ({ ...x, read_at: new Date().toISOString() })))}
+                  />
+                </div>
+              )}
             </div>
 
             {loading ? (
@@ -372,7 +405,7 @@ export default function PortalDashboard({ user, onLogout }) {
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 20 }}>
                   <Card style={{ borderLeft: '4px solid #3b82f6' }}>
                     <div style={{ color: '#64748b', fontSize: '0.9rem', fontWeight: 600, marginBottom: 8 }}>Current Class</div>
-                    <div style={{ fontSize: '1.8rem', fontWeight: 900, color: '#0f172a' }}>{localUser.class} {localUser.stream}</div>
+                    <div style={{ fontSize: '1.8rem', fontWeight: 900, color: '#0f172a' }}>{classInfo.full}</div>
                     <div style={{ fontSize: '0.8rem', color: '#94a3b8', marginTop: 4 }}>Term {schoolProfile?.academic_year || '2026'}</div>
                   </Card>
                   
@@ -621,11 +654,11 @@ export default function PortalDashboard({ user, onLogout }) {
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.9rem' }}>
                         <span style={{ color: '#64748b' }}>Class</span>
-                        <span style={{ fontWeight: 700 }}>{localUser.class}</span>
+                        <span style={{ fontWeight: 700 }}>{classInfo.displayClass}</span>
                       </div>
                       <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.9rem' }}>
                         <span style={{ color: '#64748b' }}>Stream</span>
-                        <span style={{ fontWeight: 700 }}>{localUser.stream || 'General'}</span>
+                        <span style={{ fontWeight: 700 }}>{classInfo.displayStream}</span>
                       </div>
                       <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.9rem' }}>
                         <span style={{ color: '#64748b' }}>Curriculum</span>

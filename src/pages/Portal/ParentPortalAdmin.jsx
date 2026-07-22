@@ -197,7 +197,7 @@ export default function ParentPortalAdmin() {
                       <td className="text-muted">{i + 1}</td>
                       <td><strong>{s.name}</strong></td>
                       <td><code style={{ fontSize: '0.8rem' }}>{s.admNo || s.adm_no}</code></td>
-                      <td><span className="badge badge-info">{s.class}</span></td>
+                      <td><span className="badge badge-info">{s.class} {s.stream ? s.stream : ''}</span></td>
                       <td>
                         {hasPhone ? (
                           <code style={{ fontSize: '0.8rem' }}>{s.parentPhone || s.parent_phone}</code>
