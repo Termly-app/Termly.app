@@ -44,8 +44,11 @@ END;
 $$;
 
 -- 2. FIX FEES SUMMARY RPC
--- The fees table does not have created_at.
+-- Must return keys expected by store.js: total_fee, paid, balance, fee_id, period_id, payments, no_record_for_current_period
+-- The fees table does not have created_at, so we order by id DESC.
 DROP FUNCTION IF EXISTS public.portal_get_student_fee_summary(uuid, uuid);
+DROP FUNCTION IF EXISTS public.portal_get_student_fee_summary(uuid);
+
 CREATE OR REPLACE FUNCTION public.portal_get_student_fee_summary(p_student_id uuid, p_school_id uuid)
 RETURNS JSONB
 LANGUAGE plpgsql
@@ -53,26 +56,68 @@ SECURITY DEFINER
 SET search_path = public
 AS $$
 DECLARE
-    v_fees JSONB;
+    v_active_period_id UUID;
+    v_fee RECORD;
+    v_payments JSONB;
 BEGIN
-    SELECT COALESCE(jsonb_agg(jsonb_build_object(
-        'id', f.id,
-        'period_id', f.period_id,
-        'total_fee', f.total_fee,
-        'paid', f.paid,
-        'balance', f.balance,
-        'status', CASE WHEN f.balance <= 0 THEN 'paid' WHEN f.paid > 0 THEN 'partial' ELSE 'unpaid' END
-    ) ORDER BY f.id DESC), '[]'::jsonb)
-    INTO v_fees
-    FROM public.fees f
-    WHERE f.student_id = p_student_id 
-      AND f.school_id = p_school_id;
+    SELECT id INTO v_active_period_id
+    FROM public.academic_periods
+    WHERE school_id = p_school_id AND is_active = true
+    LIMIT 1;
+
+    SELECT id, total_fee, paid, balance, period_id
+    INTO v_fee
+    FROM public.fees
+    WHERE student_id = p_student_id
+      AND school_id = p_school_id
+      AND (v_active_period_id IS NULL OR period_id = v_active_period_id)
+    ORDER BY id DESC
+    LIMIT 1;
+
+    IF v_fee IS NULL THEN
+        SELECT id, total_fee, paid, balance, period_id
+        INTO v_fee
+        FROM public.fees
+        WHERE student_id = p_student_id
+          AND school_id = p_school_id
+        ORDER BY id DESC
+        LIMIT 1;
+    END IF;
+
+    IF v_fee IS NULL THEN
+        RETURN jsonb_build_object(
+            'total_fee', 0,
+            'paid', 0,
+            'balance', 0,
+            'fee_id', null,
+            'period_id', v_active_period_id,
+            'payments', '[]'::jsonb,
+            'no_record_for_current_period', true
+        );
+    END IF;
+
+    SELECT COALESCE(jsonb_agg(
+        jsonb_build_object(
+            'id', fp.id,
+            'amount', fp.amount,
+            'date', fp.date,
+            'method', COALESCE(fp.method, 'Payment'),
+            'reference', COALESCE(fp.reference, ''),
+            'status', COALESCE(fp.status, 'Confirmed')
+        ) ORDER BY fp.id DESC
+    ), '[]'::jsonb)
+    INTO v_payments
+    FROM public.fee_payments fp
+    WHERE fp.fee_id = v_fee.id AND COALESCE(fp.status, 'Confirmed') != 'Voided';
 
     RETURN jsonb_build_object(
-        'total_billed', COALESCE((SELECT SUM(total_fee) FROM public.fees WHERE student_id = p_student_id AND school_id = p_school_id), 0),
-        'total_paid', COALESCE((SELECT SUM(paid) FROM public.fees WHERE student_id = p_student_id AND school_id = p_school_id), 0),
-        'total_balance', COALESCE((SELECT SUM(balance) FROM public.fees WHERE student_id = p_student_id AND school_id = p_school_id), 0),
-        'history', v_fees
+        'total_fee', COALESCE(v_fee.total_fee, 0),
+        'paid', COALESCE(v_fee.paid, 0),
+        'balance', COALESCE(v_fee.balance, 0),
+        'fee_id', v_fee.id,
+        'period_id', v_fee.period_id,
+        'payments', v_payments,
+        'no_record_for_current_period', false
     );
 END;
 $$;
