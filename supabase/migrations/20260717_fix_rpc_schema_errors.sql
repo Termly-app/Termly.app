@@ -103,9 +103,12 @@ END;
 $$;
 
 -- 4. FIX ASSIGNMENTS RPC
--- store.js calls this with (p_school_id, p_class_id). When p_class_id is null, return all.
+-- Live table columns: id, title, description, due_date, subject, class, stream, status, created_at, school_id
 DROP FUNCTION IF EXISTS public.portal_get_assignments_v2(uuid, uuid);
-CREATE OR REPLACE FUNCTION public.portal_get_assignments_v2(p_school_id uuid, p_class_id uuid DEFAULT NULL)
+DROP FUNCTION IF EXISTS public.portal_get_assignments_v2(uuid, text);
+DROP FUNCTION IF EXISTS public.portal_get_assignments_v2(uuid);
+
+CREATE OR REPLACE FUNCTION public.portal_get_assignments_v2(p_school_id uuid, p_class_id text DEFAULT NULL)
 RETURNS JSONB
 LANGUAGE plpgsql
 SECURITY DEFINER
@@ -117,15 +120,18 @@ BEGIN
             'id', a.id,
             'title', a.title,
             'description', a.description,
-            'subject_id', a.subject_id,
+            'subject', a.subject,
+            'subject_id', a.subject,
+            'class', a.class,
+            'class_id', a.class,
             'due_date', a.due_date,
-            'status', a.status,
+            'status', COALESCE(a.status, 'published'),
             'created_at', a.created_at
         ) ORDER BY a.due_date DESC), '[]'::jsonb)
         FROM public.el_assignments a
         WHERE a.school_id = p_school_id
-          AND a.status ILIKE 'published'
-          AND (p_class_id IS NULL OR a.class_id = p_class_id)
+          AND (a.status IS NULL OR a.status ILIKE 'published' OR a.status ILIKE 'active')
+          AND (p_class_id IS NULL OR p_class_id = '' OR a.class = p_class_id)
     );
 END;
 $$;
