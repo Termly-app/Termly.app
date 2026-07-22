@@ -103,9 +103,9 @@ END;
 $$;
 
 -- 4. FIX ASSIGNMENTS RPC
--- The el_assignments table has created_at, but we need to ensure due_date works correctly.
+-- store.js calls this with (p_school_id, p_class_id). When p_class_id is null, return all.
 DROP FUNCTION IF EXISTS public.portal_get_assignments_v2(uuid, uuid);
-CREATE OR REPLACE FUNCTION public.portal_get_assignments_v2(p_student_id uuid, p_school_id uuid)
+CREATE OR REPLACE FUNCTION public.portal_get_assignments_v2(p_school_id uuid, p_class_id uuid DEFAULT NULL)
 RETURNS JSONB
 LANGUAGE plpgsql
 SECURITY DEFINER
@@ -123,10 +123,9 @@ BEGIN
             'created_at', a.created_at
         ) ORDER BY a.due_date DESC), '[]'::jsonb)
         FROM public.el_assignments a
-        JOIN public.students s ON s.class = a.class_id
-        WHERE s.id = p_student_id
-          AND a.school_id = p_school_id
+        WHERE a.school_id = p_school_id
           AND a.status ILIKE 'published'
+          AND (p_class_id IS NULL OR a.class_id = p_class_id)
     );
 END;
 $$;
