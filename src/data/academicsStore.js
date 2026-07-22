@@ -1,5 +1,5 @@
 import { supabase } from '../lib/supabase';
-import { logPlatformActivity, logAuditEventEvent, maskSecret } from './store';
+import { logPlatformActivity, logAuditEvent } from './store';
 import {
   _currentSchoolId,
   _currentAuthUser,

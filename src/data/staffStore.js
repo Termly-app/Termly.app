@@ -8,3 +8,5 @@ import {
 } from './coreStore';
 import { withRetry } from '../utils/resilience';
 
+// Re-export getTeachers from the main store so academicsStore can import it here
+export { getTeachers } from './store';
