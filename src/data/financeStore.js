@@ -1,9 +1,8 @@
 import { supabase } from '../lib/supabase';
 import { db, queueChange } from './offlineStore';
 import { 
-  _currentSchoolId, _currentPeriodId, mutationGuard, cachedQuery, invalidateCache, getCurrentSchoolId, getCurrentPeriodId 
+  _currentSchoolId, _currentPeriodId, mutationGuard, cachedQuery, invalidateCache, getCurrentSchoolId, getCurrentPeriodId, logAuditEvent 
 } from './coreStore';
-import { logAuditEvent } from './store'; // for now, assuming logAudit is still in store
 
 // ==========================================
 // FINANCE & FEES (Extracted from store.js)
@@ -503,3 +502,240 @@ export async function reconcileMpesaPayment(callbackId, studentId) {
   return { success: true };
 }
 
+
+
+export async function submitPayment(amount, transactionCode, notes = '') {
+  mutationGuard('submitPayment');
+  if (!_currentSchoolId) throw new Error('No school context');
+  const { error } = await supabase
+    .from('payments')
+    .insert([{
+      school_id: _currentSchoolId,
+      amount,
+      transaction_code: transactionCode,
+      notes,
+      status: 'Pending'
+    }]);
+  if (error) throw error;
+
+  // Update last payment status in school profile
+  await supabase
+    .from('school_profiles')
+    .update({ last_payment_status: 'pending' })
+    .eq('school_id', _currentSchoolId);
+
+  await logPlatformActivity('PAYMENT_SUBMIT', `New payment of KSh ${amount.toLocaleString()} submitted via code: ${transactionCode}`, _currentSchoolId);
+}
+
+export async function getAllPendingPayments() {
+  const { data, error } = await supabase
+    .from('payments')
+    .select('id, amount, transaction_code, notes, status, created_at, school_id, school_profiles(school_name)')
+    .eq('status', 'Pending')
+    .order('created_at', { ascending: false });
+  if (error) throw error;
+  return data || [];
+}
+
+export async function getAllPayments() {
+  const { data, error } = await supabase
+    .from('payments')
+    .select('id, amount, transaction_code, notes, status, created_at, school_id, school_profiles(school_name, subscription_plan)')
+    .order('created_at', { ascending: false });
+  if (error) throw error;
+  return data || [];
+}
+
+export async function approvePayment(paymentId, schoolId, monthsToAdd = 4) {
+  mutationGuard('approvePayment');
+  // 1. Update payment status
+  const { error: pError } = await supabase
+    .from('payments')
+    .update({ status: 'Approved' })
+    .eq('id', paymentId);
+  if (pError) throw pError;
+
+  // 1.5 Calculate new expiry
+  const { data: profileData } = await supabase
+    .from('school_profiles')
+    .select('subscription_expiry')
+    .eq('school_id', schoolId)
+    .single();
+
+  let expiry = new Date();
+  if (profileData && profileData.subscription_expiry) {
+    const currentExpiry = new Date(profileData.subscription_expiry);
+    if (currentExpiry > expiry) {
+      expiry = currentExpiry;
+    }
+  }
+  expiry.setMonth(expiry.getMonth() + monthsToAdd);
+
+  // 2. Update school profile
+  const { error: sError } = await supabase
+    .from('school_profiles')
+    .update({ 
+      subscription_status: 'Active',
+      subscription_expiry: expiry.toISOString(),
+      last_payment_status: 'approved'
+    })
+    .eq('school_id', schoolId);
+  if (sError) throw sError;
+
+  // 3. Sync status to schools table
+  await supabase
+    .from('schools')
+    .update({ status: 'Active' })
+    .eq('id', schoolId);
+
+  await logPlatformActivity('PAYMENT_APPROVE', `Approved payment for ${schoolId}`, schoolId);
+}
+
+export async function rejectPayment(paymentId, schoolId, reason = 'Verification failed') {
+  const { error } = await supabase
+    .from('payments')
+    .update({ status: 'Rejected', notes: reason })
+    .eq('id', paymentId);
+  if (error) throw error;
+
+  await supabase
+    .from('school_profiles')
+    .update({ last_payment_status: 'rejected' })
+    .eq('school_id', schoolId);
+
+  await logPlatformActivity('PAYMENT_REJECT', `Rejected payment for ${schoolId}: ${reason}`, schoolId);
+}
+
+export async function cancelSubscription() {
+  if (!_currentSchoolId) return;
+  const { error } = await supabase
+    .from('school_profiles')
+    .update({ subscription_status: 'Deactivated' })
+    .eq('school_id', _currentSchoolId);
+  if (error) throw error;
+  await logPlatformActivity('SUBSCRIPTION_CANCEL', `School canceled subscription: ${_currentSchoolId}`, _currentSchoolId);
+}
+
+export async function updateSchoolPlan(schoolId, plan) {
+  // 1. Update Profile (Detailed data - used by School Portal)
+  const { error: pError } = await supabase
+    .from('school_profiles')
+    .update({ subscription_plan: plan })
+    .eq('school_id', schoolId);
+  if (pError) throw pError;
+
+  // 2. Update Schools Master (Summarized data - used by Super Admin list)
+  const { error: sError } = await supabase
+    .from('schools')
+    .update({ plan: plan })
+    .eq('id', schoolId);
+  // We log warning but don't strictly fail if the master sync fails, though it should succeed
+  if (sError) console.warn('Sync to schools table failed:', sError);
+
+  await logPlatformActivity('PLAN_CHANGE', `Admin updated school plan to ${plan}`, schoolId);
+}
+
+export async function manualExtendSubscription(schoolId, daysToAdd) {
+  const { data: profile, error: getErr } = await supabase
+    .from('school_profiles')
+    .select('subscription_expiry')
+    .eq('school_id', schoolId)
+    .single();
+  
+  if (getErr) throw getErr;
+
+  let baseDate = new Date();
+  const currentExpiry = new Date(profile.subscription_expiry);
+  if (currentExpiry > baseDate) {
+    baseDate = currentExpiry; // If still active, add to the end
+  }
+
+  const newExpiry = new Date(baseDate);
+  newExpiry.setDate(newExpiry.getDate() + daysToAdd);
+
+  const { error } = await supabase
+    .from('school_profiles')
+    .update({ 
+      subscription_status: 'Active',
+      subscription_expiry: newExpiry.toISOString(),
+      last_payment_status: 'manual_extension'
+    })
+    .eq('school_id', schoolId);
+  
+  if (error) throw error;
+  
+  await logPlatformActivity('SUBSCRIPTION_EXTEND', `Extended school access by ${daysToAdd} days`, schoolId);
+}
+
+export async function simulateMpesaSTKPush(student, amount, phone) {
+  // 1. Simulate Network Delay (STK Push pop-up on user's phone)
+  await new Promise(resolve => setTimeout(resolve, 2500));
+
+  // 2. Generate generic M-pesa reference
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+  const mpesaRef = Array.from({length: 10}, () => chars[Math.floor(Math.random() * chars.length)]).join('');
+
+  // 3. Process the actual payment in the ledger
+  const payment = await recordPayment(student.id, amount, 'M-Pesa', mpesaRef);
+
+  // 4. Inject into mpesa_logs to simulate Daraja API webhook firing
+  await supabase.from('mpesa_callbacks').insert({
+    school_id: _currentSchoolId,
+    phone_number: phone,
+    amount: amount,
+    mpesa_receipt_number: mpesaRef,
+    bill_ref_number: student.adm_no || student.admNo || 'DEF',
+    status: 'processed',
+    student_id: student.id,
+    raw_payload: { mocked: true }
+  });
+
+  // 5. Synthesize an automated SMS receipt into the offline communications store
+  const { db } = await import('./offlineStore');
+  await db.communications.add({
+    type: 'SMS',
+    target: 'single',
+    message: `Dear Parent, we confirm receipt of Ksh ${amount} via M-Pesa (${mpesaRef}) for ${student.name}. Thank you.`,
+    timestamp: new Date().toISOString(),
+    user: 'M-Pesa Auto-Bot',
+    recipientCount: 1
+  });
+
+  return payment;
+}
+
+export async function getTermFinancialSummary() {
+  if (!_currentSchoolId || !_currentPeriodId) return null;
+  
+  const [students, fees] = await Promise.all([
+    getStudents(),
+    getFees()
+  ]);
+
+  let totalExpected = 0;
+  let totalCollected = 0;
+  let fullyPaidCount = 0;
+  let partialPaidCount = 0;
+  let unpaidCount = 0;
+
+  students.forEach(s => {
+    const f = fees[s.id] || { total_fee: 0, paid: 0, balance: 0 };
+    totalExpected += Number(f.total_fee || 0);
+    totalCollected += Number(f.paid || 0);
+    
+    const balance = Number(f.balance || 0);
+    if (balance <= 0 && f.total_fee > 0) fullyPaidCount++;
+    else if (f.paid > 0) partialPaidCount++;
+    else unpaidCount++;
+  });
+
+  return {
+    totalExpected,
+    totalCollected,
+    totalOutstanding: totalExpected - totalCollected,
+    fullyPaidCount,
+    partialPaidCount,
+    unpaidCount,
+    collectionRate: totalExpected > 0 ? ((totalCollected / totalExpected) * 100).toFixed(1) : 0,
+  };
+}

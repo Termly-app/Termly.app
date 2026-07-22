@@ -1,12 +1,13 @@
 import { supabase } from '../lib/supabase';
-import { logPlatformActivity, logAuditEvent } from './store';
 import {
   _currentSchoolId,
   _currentAuthUser,
   _currentExamType,
   _currentPeriodId,
   mutationGuard,
-  updateSchoolFeature
+  updateSchoolFeature,
+  logPlatformActivity,
+  logAuditEvent
 } from './coreStore';
 import { getTeachers } from './staffStore';
 import { withRetry } from '../utils/resilience';
@@ -49,6 +50,46 @@ export async function createPeriod(year, term, setAsActive = false) {
     setCurrentPeriodId(data.id);
   }
   return data;
+}
+
+// ==========================================
+// GRADING UTILS
+// ==========================================
+
+export function getGradeForScore(score, className, profile) {
+  if (score === null || score === undefined || score === '') return { grade: '-', remarks: '-', color: 'text-gray-500' };
+  
+  const numScore = Number(score);
+  if (isNaN(numScore)) return { grade: '-', remarks: '-', color: 'text-gray-500' };
+
+  let level = 'default';
+  if (className) {
+    if (className.toLowerCase().includes('form')) level = 'secondary';
+    if (className.toLowerCase().includes('grade') || className.toLowerCase().includes('class')) level = 'primary';
+    if (className.toLowerCase().includes('pp') || className.toLowerCase().includes('play')) level = 'preprimary';
+  }
+
+  let systems = profile?.grading_systems;
+  if (!systems) {
+    // Default fallback
+    systems = {
+      default: [
+        { min: 80, max: 100, grade: 'A', remarks: 'Excellent', color: 'text-green-600' },
+        { min: 65, max: 79, grade: 'B', remarks: 'Good', color: 'text-blue-600' },
+        { min: 50, max: 64, grade: 'C', remarks: 'Average', color: 'text-yellow-600' },
+        { min: 0, max: 49, grade: 'D', remarks: 'Needs Effort', color: 'text-red-600' }
+      ]
+    };
+  }
+
+  const activeSystem = systems[level] || systems.default || [];
+  for (const g of activeSystem) {
+    if (numScore >= g.min && numScore <= g.max) {
+      return g;
+    }
+  }
+
+  return { grade: '?', remarks: 'Unknown', color: 'text-gray-500' };
 }
 
 export async function setActivePeriod(periodId) {
@@ -1329,4 +1370,730 @@ export async function removeTeacherAssignment() {
 export async function getClassStreams() {
   console.warn('[academicsStore] getClassStreams is not yet implemented');
   return [];
+}
+
+
+export async function setAssignment(classGrade, stream, subject, teacherId) {
+  // First remove any existing assignment
+  const { error: delError } = await supabase
+    .from('subject_assignments')
+    .delete()
+    .eq('school_id', _currentSchoolId)
+    .eq('period_id', _currentPeriodId)
+    .eq('class_grade', classGrade)
+    .eq('stream', stream)
+    .eq('subject', subject);
+  
+  if (delError) throw delError;
+
+  if (teacherId) {
+    const { error: insError } = await supabase
+      .from('subject_assignments')
+      .insert({
+        school_id: _currentSchoolId,
+        class_grade: classGrade,
+        stream,
+        subject,
+        teacher_id: teacherId,
+        period_id: _currentPeriodId
+      });
+    if (insError) throw insError;
+  }
+}
+
+export async function getTimetableConfig(schoolId, periodId, classLevel = 'Global') {
+  if (!_currentAuthUser && _currentSchoolId) {
+    const { data, error } = await supabase.rpc('portal_get_timetable_config', { 
+      p_school_id: schoolId, 
+      p_period_id: periodId,
+      p_class_level: classLevel
+    });
+    if (error) throw error;
+    return data || [];
+  }
+
+  let query = supabase
+    .from('timetable_configs')
+    .select('*')
+    .eq('school_id', schoolId)
+    .eq('period_id', periodId);
+    
+  if (classLevel && classLevel !== 'Global') {
+    query = query.eq('class_level', classLevel);
+  } else {
+    query = query.is('class_level', null);
+  }
+
+  const { data, error } = await query.order('slot_index', { ascending: true });
+  if (error) throw error;
+  
+  // If no level-specific config found, fallback to global (NULL class_level)
+  if (data.length === 0 && classLevel && classLevel !== 'Global') {
+    const { data: globalData, error: globalError } = await supabase
+      .from('timetable_configs')
+      .select('*')
+      .eq('school_id', schoolId)
+      .eq('period_id', periodId)
+      .is('class_level', null)
+      .order('slot_index', { ascending: true });
+    if (globalError) throw globalError;
+    return globalData || [];
+  }
+
+  return data || [];
+}
+
+export async function saveTimetableConfig(schoolId, periodId, slots, classLevel = 'Global') {
+  let delQuery = supabase
+    .from('timetable_configs')
+    .delete()
+    .eq('school_id', schoolId)
+    .eq('period_id', periodId);
+    
+  if (classLevel && classLevel !== 'Global') {
+    delQuery = delQuery.eq('class_level', classLevel);
+  } else {
+    delQuery = delQuery.is('class_level', null);
+  }
+
+  const { error: delErr } = await delQuery;
+  if (delErr) throw delErr;
+
+  if (!slots || slots.length === 0) return;
+
+  const rows = slots.map((s, i) => ({
+    school_id: schoolId,
+    period_id: periodId,
+    slot_index: i,
+    label: s.label,
+    start_time: s.start_time,
+    end_time: s.end_time,
+    is_break: s.is_break || false,
+    class_level: (classLevel === 'Global') ? null : classLevel
+  }));
+
+  const { error } = await supabase.from('timetable_configs').insert(rows);
+  if (error) throw error;
+}
+
+export async function getTimetableSlots(schoolId, periodId, classGrade, stream = null) {
+  let query = supabase
+    .from('timetable_slots')
+    .select('*, teachers(id, name, staff_code)')
+    .eq('school_id', schoolId)
+    .eq('period_id', periodId)
+    .eq('class_grade', classGrade);
+  
+  if (stream) query = query.eq('stream', stream);
+  else query = query.eq('stream', '');
+
+
+  const { data, error } = await query.order('slot_index', { ascending: true });
+  if (error) throw error;
+  return data || [];
+}
+
+export async function getAllTimetableSlots(schoolId, periodId) {
+  const { data, error } = await supabase
+    .from('timetable_slots')
+    .select('*, teachers(id, name, staff_code)')
+    .eq('school_id', schoolId)
+    .eq('period_id', periodId);
+  if (error) throw error;
+  return data || [];
+}
+
+export async function getTeacherTimetable(schoolId, periodId, teacherId) {
+  // Use robust RPC for both Admin and Portal to ensure data sync
+  const { data, error } = await supabase.rpc('portal_get_teacher_timetable', { 
+    p_school_id: schoolId, 
+    p_period_id: periodId,
+    p_teacher_id: teacherId
+  });
+  if (error) throw error;
+  return data || [];
+}
+
+export async function saveTimetableSlot(schoolId, periodId, slot) {
+  const { error } = await supabase
+    .from('timetable_slots')
+    .upsert({
+      school_id: schoolId,
+      period_id: periodId,
+      class_grade: slot.class_grade,
+      stream: slot.stream || '',
+      day_of_week: slot.day_of_week,
+      slot_index: slot.slot_index,
+      subject: slot.subject,
+      teacher_id: slot.teacher_id || null,
+      room: slot.room || null,
+      color: slot.color || null,
+      is_double_first: slot.is_double_first || false,
+      is_double_second: slot.is_double_second || false,
+      start_time: slot.start_time || null,
+      end_time: slot.end_time || null
+    }, { onConflict: 'school_id,period_id,class_grade,stream,day_of_week,slot_index' });
+  if (error) throw error;
+  return true;
+}
+
+export async function clearTimetableSlot(schoolId, periodId, classGrade, stream, day, slotIndex) {
+  let query = supabase
+    .from('timetable_slots')
+    .delete()
+    .eq('school_id', schoolId)
+    .eq('period_id', periodId)
+    .eq('class_grade', classGrade)
+    .eq('day_of_week', day)
+    .eq('slot_index', slotIndex);
+  
+  if (stream) query = query.eq('stream', stream);
+  else query = query.eq('stream', '');
+
+  const { error } = await query;
+  if (error) throw error;
+  return true;
+}
+
+export async function getTimetableRooms(schoolId) {
+  const { data, error } = await supabase
+    .from('timetable_rooms')
+    .select('*')
+    .eq('school_id', schoolId)
+    .order('name', { ascending: true });
+  if (error) {
+    // Graceful fallback if table doesn't exist yet - some environments might use local storage for rooms
+    console.warn("timetable_rooms table fetch error:", error);
+    return [];
+  }
+  return data || [];
+}
+
+export async function saveTimetableRoom(schoolId, room) {
+  const payload = {
+    school_id: schoolId,
+    name: room.name,
+    building: room.building || null,
+    updated_at: new Date().toISOString()
+  };
+
+  if (room.id) {
+    const { data, error } = await supabase
+      .from('timetable_rooms')
+      .update(payload)
+      .eq('id', room.id)
+      .select()
+      .single();
+    if (error) throw error;
+    return data;
+  } else {
+    const { data, error } = await supabase
+      .from('timetable_rooms')
+      .insert(payload)
+      .select()
+      .single();
+    if (error) throw error;
+    return data;
+  }
+}
+
+export async function deleteTimetableRoom(id) {
+  const { error } = await supabase
+    .from('timetable_rooms')
+    .delete()
+    .eq('id', id);
+  if (error) throw error;
+  return true;
+}
+
+export async function clearAndSaveTimetable(schoolId, periodId, slots, classGrades) {
+  const { error: delErr } = await supabase
+    .from('timetable_slots')
+    .delete()
+    .eq('school_id', schoolId)
+    .eq('period_id', periodId)
+    .in('class_grade', classGrades);
+  if (delErr) throw delErr;
+
+  if (!slots || slots.length === 0) return;
+  const rows = slots.map(s => ({
+    school_id: schoolId,
+    period_id: periodId,
+    class_grade: s.class_grade,
+    stream: s.stream || null,
+    day_of_week: s.day_of_week,
+    slot_index: s.slot_index,
+    subject: s.subject,
+    teacher_id: s.teacher_id || null,
+    room: s.room || null,
+    color: s.color || null,
+    is_double_first: s.is_double_first || false,
+    is_double_second: s.is_double_second || false,
+    date: s.date || null,
+    start_time: s.start_time || null,
+    end_time: s.end_time || null
+  }));
+
+  const CHUNK_SIZE = 100;
+  for (let i = 0; i < rows.length; i += CHUNK_SIZE) {
+    const chunk = rows.slice(i, i + CHUNK_SIZE);
+    const { error } = await supabase.from('timetable_slots').insert(chunk);
+    if (error) throw error;
+  }
+}
+
+export async function clearAllTimetableSlots(schoolId, periodId) {
+  mutationGuard('clearAllTimetableSlots');
+  const { error } = await supabase
+    .from('timetable_slots')
+    .delete()
+    .eq('school_id', schoolId)
+    .eq('period_id', periodId);
+  if (error) throw error;
+  return true;
+}
+
+export async function duplicateTimetable(schoolId, fromPeriodId, toPeriodId) {
+  mutationGuard('duplicateTimetable');
+  if (fromPeriodId === toPeriodId) throw new Error("Source and target periods cannot be the same.");
+
+  const { data: sourceSlots, error: fetchErr } = await supabase
+    .from('timetable_slots')
+    .select('*')
+    .eq('school_id', schoolId)
+    .eq('period_id', fromPeriodId);
+  
+  if (fetchErr) throw fetchErr;
+  if (!sourceSlots || sourceSlots.length === 0) throw new Error("No timetable slots found in the source period.");
+
+  // Clear target before duplication to avoid conflicts
+  await clearAllTimetableSlots(schoolId, toPeriodId);
+
+  const newSlots = sourceSlots.map(s => {
+    const { id, created_at, ...rest } = s; // Strip unique fields
+    return { ...rest, period_id: toPeriodId };
+  });
+
+  const CHUNK_SIZE = 100;
+  for (let i = 0; i < newSlots.length; i += CHUNK_SIZE) {
+    const chunk = newSlots.slice(i, i + CHUNK_SIZE);
+    const { error } = await supabase.from('timetable_slots').insert(chunk);
+    if (error) throw error;
+  }
+  return true;
+}
+
+export async function getTeacherWorkloadSummary(schoolId, periodId, teacherId) {
+  if (!_currentAuthUser && _currentSchoolId) {
+    const { data, error } = await supabase.rpc('portal_get_teacher_workload', { 
+      p_school_id: schoolId, 
+      p_period_id: periodId,
+      p_teacher_id: teacherId
+    });
+    if (error) throw error;
+    return data || 0;
+  }
+
+  const { data, error, count } = await supabase
+    .from('timetable_slots')
+    .select('id', { count: 'exact' })
+    .eq('school_id', schoolId)
+    .eq('period_id', periodId)
+    .eq('teacher_id', teacherId);
+  
+  if (error) throw error;
+  return count || 0;
+}
+
+export async function checkTimetableConflicts(schoolId, periodId, { day, startTime, endTime, teacherId, classGrade, stream, currentSlotIndex, subject }) {
+  // Simple conflict check placeholder
+  return { hasConflict: false };
+}
+
+export async function fetchLmsContent(url) {
+  if (!url) return null;
+  const res = await fetch(url);
+  if (!res.ok) return null;
+  const text = await res.text();
+  try { return JSON.parse(text); } catch (e) { return text; }
+}
+
+export async function getAssignmentStats(assignmentId, className, stream) {
+  const { count: submitted } = await supabase.from('lms_submissions')
+    .select('*', { count: 'exact', head: true })
+    .eq('assignment_id', assignmentId);
+    
+  let query = supabase.from('students').select('*', { count: 'exact', head: true }).eq('class', className);
+  if (stream && stream !== 'General' && stream !== '') query = query.eq('stream', stream);
+  
+  const { count: total } = await query;
+  return { submitted: submitted || 0, total: total || Math.max(submitted || 0, 1) };
+}
+
+export async function getQuizAnalytics(assignmentId) {
+  const { data: ast, error: e1 } = await supabase.from('lms_assignments').select('quiz_config, max_score, title').eq('id', assignmentId).single();
+  if (e1) throw e1;
+  const { data: subs, error: e2 } = await supabase.from('lms_submissions').select('quiz_results, grade_numeric').eq('assignment_id', assignmentId);
+  if (e2) throw e2;
+
+  const totalSubmissions = subs.length;
+  if (totalSubmissions === 0) return { totalSubmissions: 0, questionStats: [] };
+
+  const questions = ast.quiz_config || [];
+  const questionStats = questions.map((q, idx) => {
+    let correctCount = 0;
+    subs.forEach(s => { if (s.quiz_results?.answers?.[idx]?.correct) correctCount++; });
+    return { id: q.id, text: q.text, successRate: (correctCount / totalSubmissions) * 100 };
+  });
+
+  const scores = subs.map(s => s.grade_numeric || 0);
+  return {
+    title: ast.title,
+    maxScore: ast.max_score,
+    totalSubmissions,
+    avgScore: (scores.reduce((a, b) => a + b, 0) / totalSubmissions).toFixed(1),
+    highestScore: Math.max(...scores),
+    lowestScore: Math.min(...scores),
+    questionStats
+  };
+}
+
+export async function updateSubmission(submissionId, updates) {
+  const { data, error } = await supabase.from('lms_submissions').update(updates).eq('id', submissionId).select().single();
+  if (error) throw error;
+  return data;
+}
+
+export async function getClasses() {
+  if (!_currentSchoolId) return [];
+  const { data, error } = await supabase
+    .from('classes')
+    .select('*')
+    .eq('school_id', _currentSchoolId)
+    .order('name');
+  if (error) throw error;
+  return data || [];
+}
+
+export async function addClass({ name, level, stream = 'General', curriculum_type = 'both' }) {
+  mutationGuard('addClass');
+  const { data, error } = await supabase
+    .from('classes')
+    .insert({ school_id: _currentSchoolId, name, level, stream, curriculum_type })
+    .select()
+    .single();
+  if (error) throw error;
+  return data;
+}
+
+export async function updateClass(id, updates) {
+  mutationGuard('updateClass');
+  const { data, error } = await supabase
+    .from('classes')
+    .update(updates)
+    .eq('id', id)
+    .select()
+    .single();
+  if (error) throw error;
+  return data;
+}
+
+export async function deleteClass(id) {
+  mutationGuard('deleteClass');
+  const { error } = await supabase.from('classes').delete().eq('id', id);
+  if (error) throw error;
+}
+
+export async function getTTAvailability(teacherId) {
+  const { data, error } = await supabase
+    .from('tt_teacher_availability')
+    .select('*')
+    .eq('teacher_id', teacherId);
+  if (error) throw error;
+  return data || [];
+}
+
+export async function saveTTAvailability(entries) {
+  mutationGuard('saveTTAvailability');
+  if (!_currentSchoolId) throw new Error('No school context');
+  const payload = entries.map(e => ({ ...e, school_id: _currentSchoolId }));
+  const { error } = await supabase.from('tt_teacher_availability').upsert(payload, { onConflict: 'teacher_id,day_of_week,period_id' });
+  if (error) throw error;
+}
+
+export async function getTTSlots(classId = null, dayOfWeek = null) {
+  if (!_currentSchoolId) return [];
+  let q = supabase
+    .from('tt_slots')
+    .select('*, tt_subjects(name, short_code, color_hex), users!tt_slots_teacher_id_fkey(name), classes(name, stream), tt_periods(name, start_time, end_time, order_index)')
+    .eq('school_id', _currentSchoolId);
+  if (classId) q = q.eq('class_id', classId);
+  if (dayOfWeek) q = q.eq('day_of_week', dayOfWeek);
+  const { data, error } = await q;
+  if (error) throw error;
+  return data || [];
+}
+
+export async function saveTTSlot(slot) {
+  mutationGuard('saveTTSlot');
+  if (!_currentSchoolId) throw new Error('No school context');
+  const creatorId = (await getUserByAuthId(_currentAuthUser?.id))?.id;
+  const payload = { ...slot, school_id: _currentSchoolId, created_by: creatorId, updated_at: new Date().toISOString() };
+  if (slot.id) {
+    const { data, error } = await supabase.from('tt_slots').update(payload).eq('id', slot.id).select().single();
+    if (error) throw error;
+    return data;
+  }
+  const { data, error } = await supabase.from('tt_slots').insert(payload).select().single();
+  if (error) throw error;
+  return data;
+}
+
+export async function deleteTTSlot(id) {
+  mutationGuard('deleteTTSlot');
+  const { error } = await supabase.from('tt_slots').delete().eq('id', id);
+  if (error) throw error;
+}
+
+export async function getTTWeeklyTargets(classId) {
+  const { data, error } = await supabase
+    .from('tt_weekly_targets')
+    .select('*, tt_subjects(name)')
+    .eq('class_id', classId);
+  if (error) throw error;
+  return data || [];
+}
+
+export async function saveTTWeeklyTarget({ classId, subjectId, minLessons, maxLessons }) {
+  mutationGuard('saveTTWeeklyTarget');
+  const { data, error } = await supabase
+    .from('tt_weekly_targets')
+    .upsert({ school_id: _currentSchoolId, class_id: classId, subject_id: subjectId, min_lessons: minLessons, max_lessons: maxLessons });
+  if (error) throw error;
+  return data;
+}
+
+export async function createAssignment(assignment) {
+  mutationGuard('createAssignment');
+  if (!_currentSchoolId) throw new Error('No school context');
+  
+  const payload = {
+    school_id: _currentSchoolId,
+    title: assignment.title,
+    class: assignment.class,
+    stream: assignment.stream,
+    subject: assignment.subject,
+    description: assignment.description,
+    links: assignment.links,
+    allow_from: assignment.allowFrom,
+    due_date: assignment.dueDate,
+    cutoff_date: assignment.cutoffDate,
+    max_score: assignment.maxScore,
+    submission_type: assignment.submissionType,
+    questions: assignment.questions,
+    teacher: assignment.teacher
+  };
+
+  const { data, error } = await supabase
+    .from('el_assignments')
+    .insert(payload)
+    .select()
+    .single();
+  if (error) throw error;
+  return data;
+}
+
+export async function updateAssignment(id, updates) {
+  mutationGuard('updateAssignment');
+  const { data, error } = await supabase
+    .from('el_assignments')
+    .update({ ...updates, updated_at: new Date().toISOString() })
+    .eq('id', id)
+    .select()
+    .single();
+  if (error) throw error;
+  return data;
+}
+
+export async function publishAssignment(id) {
+  return updateAssignment(id, { status: 'published', published_at: new Date().toISOString() });
+}
+
+export async function closeAssignment(id) {
+  return updateAssignment(id, { status: 'closed', closed_at: new Date().toISOString() });
+}
+
+export async function deleteAssignment(id) {
+  mutationGuard('deleteAssignment');
+  const { error } = await supabase.from('el_assignments').delete().eq('id', id);
+  if (error) throw error;
+}
+
+export async function getAnnouncements(filters = {}) {
+  if (!_currentSchoolId) return [];
+  const { data, error } = await supabase
+    .from('announcements')
+    .select('*')
+    .eq('school_id', _currentSchoolId)
+    .order('created_at', { ascending: false });
+  if (error) throw error;
+  return data || [];
+}
+
+export async function createAnnouncement(ann) {
+  mutationGuard('createAnnouncement');
+  if (!_currentSchoolId) throw new Error('No school context');
+  const creatorId = (await getUserByAuthId(_currentAuthUser?.id))?.id;
+  const { data, error } = await supabase
+    .from('announcements')
+    .insert({ ...ann, school_id: _currentSchoolId, created_by: creatorId })
+    .select()
+    .single();
+  if (error) throw error;
+  return data;
+}
+
+export async function markAnnouncementRead(announcementId) {
+  const userId = (await getUserByAuthId(_currentAuthUser?.id))?.id;
+  if (!userId) return;
+  await supabase
+    .from('announcement_reads')
+    .upsert({ announcement_id: announcementId, user_id: userId },
+      { onConflict: 'announcement_id,user_id' });
+}
+
+export async function getMessages(otherUserId = null) {
+  const userId = (await getUserByAuthId(_currentAuthUser?.id))?.id;
+  if (!userId) return [];
+  let q = supabase
+    .from('messages')
+    .select('*, sender:users!messages_sender_id_fkey(name, role), recipient:users!messages_recipient_id_fkey(name, role)')
+    .or(`sender_id.eq.${userId},recipient_id.eq.${userId}`)
+    .order('created_at', { ascending: false });
+  if (otherUserId) {
+    q = supabase
+      .from('messages')
+      .select('*, sender:users!messages_sender_id_fkey(name, role), recipient:users!messages_recipient_id_fkey(name, role)')
+      .or(`and(sender_id.eq.${userId},recipient_id.eq.${otherUserId}),and(sender_id.eq.${otherUserId},recipient_id.eq.${userId})`)
+      .order('created_at', { ascending: true });
+  }
+  const { data, error } = await q;
+  if (error) throw error;
+  return data || [];
+}
+
+export async function sendMessage({ recipientId, body }) {
+  const senderId = (await getUserByAuthId(_currentAuthUser?.id))?.id;
+  const { data, error } = await supabase
+    .from('messages')
+    .insert({ school_id: _currentSchoolId, sender_id: senderId, recipient_id: recipientId, body })
+    .select()
+    .single();
+  if (error) throw error;
+  return data;
+}
+
+export async function markMessageRead(messageId) {
+  const { error } = await supabase
+    .from('messages')
+    .update({ is_read: true, read_at: new Date().toISOString() })
+    .eq('id', messageId);
+  if (error) throw error;
+}
+
+export async function getNotifications(unreadOnly = false) {
+  const userId = (await getUserByAuthId(_currentAuthUser?.id))?.id;
+  if (!userId) return [];
+  let q = supabase
+    .from('notifications')
+    .select('*')
+    .eq('user_id', userId)
+    .order('created_at', { ascending: false })
+    .limit(50);
+  if (unreadOnly) q = q.eq('is_read', false);
+  const { data, error } = await q;
+  if (error) throw error;
+  return data || [];
+}
+
+export async function getUnreadNotificationCount() {
+  const userId = (await getUserByAuthId(_currentAuthUser?.id))?.id;
+  if (!userId) return 0;
+  const { count, error } = await supabase
+    .from('notifications')
+    .select('id', { count: 'exact', head: true })
+    .eq('user_id', userId)
+    .eq('is_read', false);
+  if (error) return 0;
+  return count || 0;
+}
+
+export async function markNotificationRead(notifId) {
+  const { error } = await supabase
+    .from('notifications')
+    .update({ is_read: true })
+    .eq('id', notifId);
+  if (error) throw error;
+}
+
+export async function markAllNotificationsRead() {
+  const userId = (await getUserByAuthId(_currentAuthUser?.id))?.id;
+  if (!userId) return;
+  const { error } = await supabase
+    .from('notifications')
+    .update({ is_read: true })
+    .eq('user_id', userId)
+    .eq('is_read', false);
+  if (error) throw error;
+}
+
+export async function createNotification({ userId, type, title, body, referenceType, referenceId }) {
+  const { data, error } = await supabase
+    .from('notifications')
+    .insert({ user_id: userId, type, title, body, reference_type: referenceType, reference_id: referenceId })
+    .select()
+    .single();
+  if (error) throw error;
+  return data;
+}
+
+export async function getNotificationPreferences() {
+  const userId = (await getUserByAuthId(_currentAuthUser?.id))?.id;
+  if (!userId) return [];
+  const { data, error } = await supabase
+    .from('notification_preferences')
+    .select('*')
+    .eq('user_id', userId);
+  if (error) throw error;
+  return data || [];
+}
+
+export async function updateNotificationPreference(prefId, updates) {
+  const { error } = await supabase
+    .from('notification_preferences')
+    .update(updates)
+    .eq('id', prefId);
+  if (error) throw error;
+}
+
+export function subscribeToNotifications(userId, callback) {
+  const channel = supabase
+    .channel(`notifications:${userId}`)
+    .on('postgres_changes',
+      { event: 'INSERT', schema: 'public', table: 'notifications', filter: `user_id=eq.${userId}` },
+      (payload) => callback(payload.new)
+    )
+    .subscribe();
+  return () => { supabase.removeChannel(channel); };
+}
+
+export function subscribeToMessages(userId, callback) {
+  const channel = supabase
+    .channel(`messages:${userId}`)
+    .on('postgres_changes',
+      { event: 'INSERT', schema: 'public', table: 'messages', filter: `recipient_id=eq.${userId}` },
+      (payload) => callback(payload.new)
+    )
+    .subscribe();
+  return () => { supabase.removeChannel(channel); };
 }

@@ -263,13 +263,26 @@ export const LogoMark = ({ size = 28 }) => (
     <rect x="15" y="7"  width="6" height="6" rx="1.5" fill="rgba(255,255,255,0.55)"/>
     <rect x="7" y="15"  width="6" height="6" rx="1.5" fill="rgba(255,255,255,0.55)"/>
     <rect x="15" y="15" width="6" height="6" rx="1.5" fill="rgba(255,255,255,0.25)"/>
+
     <defs>
       <linearGradient id="logoGrad" x1="0" y1="0" x2="28" y2="28" gradientUnits="userSpaceOnUse">
-        <stop stopColor="#f4f4f5"/><stop offset="1" stopColor="#71717a"/>
+        <stop stopColor="#6366F1"/>
+        <stop offset="1" stopColor="#4F46E5"/>
       </linearGradient>
     </defs>
   </svg>
 );
+
+export const LogoMarkBW = ({ size = 28, color = "#000" }) => (
+  <svg width={size} height={size} viewBox="0 0 28 28" fill="none" aria-label="Termly (BW)">
+    <rect width="28" height="28" rx="7" fill={color}/>
+    <rect x="7" y="7"   width="6" height="6" rx="1.5" fill="rgba(255,255,255,0.95)"/>
+    <rect x="15" y="7"  width="6" height="6" rx="1.5" fill="rgba(255,255,255,0.55)"/>
+    <rect x="7" y="15"  width="6" height="6" rx="1.5" fill="rgba(255,255,255,0.55)"/>
+    <rect x="15" y="15" width="6" height="6" rx="1.5" fill="rgba(255,255,255,0.25)"/>
+  </svg>
+);
+
 
 export const SignOutIcon = ({ size = 18, color = 'currentColor', className = '' }) => (
   <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={iconStyle} className={className}>

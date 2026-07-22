@@ -1,4 +1,5 @@
 import { supabase } from '../lib/supabase';
+import { _currentSchoolId, mutationGuard, getSchoolProfileBySchoolId, checkIsSubscriptionActive, checkFeatureAccess } from './coreStore';
 
 // ============================================================================
 // AUTH MODULE: API LAYER for Login & Register
@@ -69,4 +70,241 @@ export async function getUserRole(authUserId) {
     const { data, error } = await supabase.from('users').select('role').eq('auth_user_id', authUserId).single();
     if (error) throw error;
     return data;
+}
+
+
+export async function getUsers() {
+  if (!_currentSchoolId) return [];
+  const { data, error } = await supabase
+    .from('users')
+    .select('id, name, email, role, school_id, auth_user_id')
+    .eq('school_id', _currentSchoolId);
+  if (error) throw error;
+  return data || [];
+}
+
+export async function saveUsers(users) {
+  mutationGuard('saveUsers');
+  // Bulk update
+  const admins = users.filter(u => u.role === 'Admin');
+  if (admins.length > 1) {
+    throw new Error("Only one Administrator per school is allowed.");
+  }
+  for (const user of users) {
+    await supabase.from('users')
+      .update({ name: user.name, email: user.email, role: user.role })
+      .eq('id', user.id);
+  }
+}
+
+export async function addUser(user) {
+  mutationGuard('addUser');
+  if (user.role === 'Admin') {
+    const existing = await getUsers();
+    if (existing.some(u => u.role === 'Admin')) {
+      throw new Error("Only one Administrator is allowed per school.");
+    }
+  }
+  // Use the RPC to securely create an Auth identity and a public.user record
+  const { data, error } = await supabase.rpc('invite_sub_admin', {
+    new_email: user.email,
+    new_name: user.name,
+    new_role: user.role,
+    new_password: user.password || 'password123',
+    target_school_id: getCurrentSchoolId()
+  });
+
+  if (error) {
+    throw new Error(error.message || 'Failed to add user. Ensure they do not already exist.');
+  }
+  
+  return data;
+}
+
+export async function deleteUser(id) {
+  mutationGuard('deleteUser');
+  // Prevent deleting oneself
+  const { data: { session } } = await supabase.auth.getSession();
+  const all = await getUsers();
+  const targetUser = all.find(u => u.id === id);
+
+  if (targetUser && session?.user?.id === targetUser.auth_user_id) {
+    throw new Error("You cannot delete your own account.");
+  }
+
+  // Also prevent deleting the owner of the school
+  const { data: school } = await supabase
+    .from('schools')
+    .select('owner_id')
+    .eq('id', _currentSchoolId)
+    .single();
+
+  if (school && targetUser && school.owner_id === targetUser.auth_user_id) {
+    throw new Error("Cannot delete the primary school owner.");
+  }
+
+  const { error } = await supabase.from('users').delete().eq('id', id);
+  if (error) throw error;
+}
+
+export async function getUserByAuthId(authUserId) {
+  // Ultra-simplified query to isolate 406 error
+  const { data, error } = await supabase
+    .from('users')
+    .select('id, name, role, school_id')
+    .eq('auth_user_id', authUserId)
+    .single();
+  if (error && error.code !== 'PGRST116') throw error;
+  return data || null;
+}
+
+export async function setSelfPassword(newPassword, oldPassword = null) {
+  mutationGuard('setSelfPassword');
+  
+  const user = (await supabase.auth.getUser()).data.user;
+  if (!user) throw new Error('Not authenticated');
+
+  // 1. If project requires old password, verify credentials
+  if (oldPassword && user.email) {
+    // Attempt re-authentication (Standard Supabase v2)
+    if (typeof supabase.auth.reauthenticateWithPassword === 'function') {
+      const { error: reauthErr } = await supabase.auth.reauthenticateWithPassword({ password: oldPassword });
+      if (reauthErr) throw new Error(`Verification failed: ${reauthErr.message}`);
+    } 
+    // Fallback to fresh sign-in if reauthenticate is missing from library version
+    else {
+      const { error: verifyErr } = await supabase.auth.signInWithPassword({
+        email: user.email,
+        password: oldPassword
+      });
+      if (verifyErr) throw new Error(`Verification failed: ${verifyErr.message}`);
+    }
+  }
+  
+  // 2. Update Auth Identity
+  const { data: authData, error: authError } = await supabase.auth.updateUser({
+    password: newPassword
+  });
+  if (authError) throw authError;
+
+  // 3. Update users table password_changed flag
+  const { error: dbError } = await supabase
+    .from('users')
+    .update({ password_changed: true })
+    .eq('auth_user_id', user.id);
+  if (dbError) throw dbError;
+}
+
+export async function validateStaffLogin(schoolSearch, phone, pin, schoolId = null) {
+  const queryParam = schoolId || schoolSearch;
+
+  const { data, error } = await supabase.rpc('validate_staff_portal_login', {
+    p_school_search: queryParam,
+    p_phone: phone,
+    p_pin: pin
+  });
+
+  if (error) {
+    throw new Error('Database connection error. Please try again.');
+  }
+
+  if (data?.error) {
+    throw new Error(data.error);
+  }
+
+  if (!data || !data.id) {
+    throw new Error('Invalid credentials.');
+  }
+
+  const selectedSchoolId = data.schoolId || data.school_id;
+
+  // 2. Resolve profile and check subscription/feature
+  const profile = await getSchoolProfileBySchoolId(selectedSchoolId);
+  
+  // Subscription Gate
+  const isSubActive = await checkIsSubscriptionActive(profile);
+  if (!isSubActive) {
+    throw new Error('Your institution\'s Termly subscription has expired. Access to the Staff Portal is restricted.');
+  }
+
+  // Feature Gate
+  const hasFeature = await checkFeatureAccess('teacher_portal', profile);
+  if (!hasFeature) {
+    throw new Error('The Staff Portal feature is not active for your institution\'s current plan.');
+  }
+
+  // Pass through both user_id and teacher_record_id for dual-ID matching
+  return {
+    id: data.id,
+    name: data.name,
+    role: 'teacher',
+    school_id: selectedSchoolId,
+    schoolId: selectedSchoolId,  // backward compat
+    teacher_record_id: data.teacher_record_id || data.id,  // teachers table ID
+    user_id: data.user_id || data.id  // users table ID
+  };
+}
+
+export async function validateParentLogin(schoolSearch, admNo, phone, schoolId = null) {
+  const queryParam = schoolId || schoolSearch;
+
+  const { data, error } = await supabase.rpc('validate_parent_portal_login', {
+    p_school_search: queryParam,
+    p_adm_no: admNo,
+    p_phone: phone
+  });
+
+  if (error) {
+    throw new Error('Database connection error. Please try again.');
+  }
+
+  if (data?.error) {
+    throw new Error(data.error);
+  }
+
+  if (!data || !data.id) {
+    throw new Error('Invalid credentials.');
+  }
+
+  const selectedSchoolId = data.school_id;
+
+  const profile = await getSchoolProfileBySchoolId(selectedSchoolId);
+
+  // Subscription Gate
+  const isSubActive = await checkIsSubscriptionActive(profile);
+  if (!isSubActive) {
+    throw new Error('Your institution\'s Termly subscription has expired. Access to the Parent Portal is restricted.');
+  }
+
+  // Feature Gate
+  const hasFeature = await checkFeatureAccess('parent_portal', profile);
+  if (!hasFeature) {
+    throw new Error('The Parent Portal feature is not active for your institution\'s current plan.');
+  }
+
+  return {
+    id: data.id,
+    name: data.name,
+    class: data.class,
+    stream: data.stream || '',
+    subjects: data.subjects || [],
+    adm_no: data.adm_no,
+    school_id: data.school_id,
+    residence_type: data.residence_type,
+    parent_phone: data.parent_phone || ''
+  };
+}
+
+export async function resetUserPassword(authUserId, newPassword = 'password123') {
+  // In a real app, you'd use a server-side route or a SECURITY DEFINER RPC.
+  // For this demo/MVP, we'll try to use the RPC if it exists, or just log it.
+  const { error } = await supabase.rpc('platform_reset_password', { 
+    target_user_id: authUserId, 
+    new_password: newPassword 
+  });
+  if (error) {
+    console.error("Password reset RPC failed. Ensure platform_reset_password RPC exists.", error);
+    throw new Error("Password reset failed. Administrative privileges required.");
+  }
+  await logPlatformActivity('PASSWORD_RESET', `Reset password for user: ${authUserId}`);
 }

@@ -1,6 +1,4 @@
 import { getPrintHeader } from '../data/store';
-import { jsPDF } from 'jspdf';
-import 'jspdf-autotable';
 
 /**
  * CBC Competency Scale Helper
@@ -151,6 +149,9 @@ export async function generateReportCard(student, marks = {}, summary = {}, prof
  * Generate report card as a downloadable PDF file via jsPDF
  */
 export async function downloadReportCardPDF(student, marks = {}, summary = {}, profile = {}, options = {}) {
+  const { jsPDF } = await import('jspdf');
+  await import('jspdf-autotable');
+
   const doc = new jsPDF();
   const subjects = Object.keys(marks);
   const total = subjects.reduce((acc, s) => acc + (Number(marks[s]) || 0), 0);
@@ -159,7 +160,7 @@ export async function downloadReportCardPDF(student, marks = {}, summary = {}, p
 
   // Title Header
   doc.setFontSize(18);
-  doc.setTextColor(15, 23, 42); // #0f172a
+  doc.setTextColor(15, 23, 42);
   doc.text(profile.schoolName || 'Termly Academy', 105, 20, { align: 'center' });
 
   doc.setFontSize(12);
@@ -193,13 +194,11 @@ export async function downloadReportCardPDF(student, marks = {}, summary = {}, p
     });
   }
 
-  // Summary Line
   const finalY = doc.lastAutoTable ? doc.lastAutoTable.finalY + 12 : 140;
   doc.setFontSize(10);
   doc.setFont(undefined, 'bold');
   doc.text(`Total Marks: ${total} | Average: ${average}% | Grade: ${getGrade(average)} | CBC Competency: ${cbcOverall.code}`, 14, finalY);
 
-  // Comments
   doc.setFont(undefined, 'normal');
   doc.text(`Class Teacher Remarks: ${summary.teacherComments || 'Good effort across learning areas.'}`, 14, finalY + 12);
   doc.text(`Head Teacher Remarks: ${summary.headComments || 'Approved.'}`, 14, finalY + 20);

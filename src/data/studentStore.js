@@ -1,9 +1,10 @@
 import { supabase } from '../lib/supabase';
 import { db, queueChange } from './offlineStore';
 import { 
-  _currentSchoolId, mutationGuard, cachedQuery, invalidateCache, getCurrentSchoolId 
+  _currentSchoolId, mutationGuard, cachedQuery, invalidateCache, getCurrentSchoolId,
+  logAuditEvent, getPrintHeader, checkIsPlatformAdmin 
 } from './coreStore';
-import { logAuditEvent, getPrintHeader, getFeeSummary, getPayments, checkIsPlatformAdmin } from './store';
+import { getFeeSummary, getPayments } from './financeStore';
 import { jsPDF } from 'jspdf'; 
 
 // ==========================================
@@ -377,3 +378,13 @@ export async function bulkImportStudents(studentsData, onProgress) {
   return { success: true, count: successCount };
 }
 
+
+
+export async function getStudentsBySchool(schoolId) {
+  const { data, error } = await supabase
+    .from('students')
+    .select('id, name, adm_no, class_grade, stream, parent_phone, gender, join_date, school_id')
+    .eq('school_id', schoolId);
+  if (error) throw error;
+  return data || [];
+}
