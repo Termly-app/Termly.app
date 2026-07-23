@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { getSchoolProfile, getTeachers, saveSchoolProfile, getSubjectAssignments } from '../../data/store';
+import { getSchoolProfile, saveSchoolProfile } from '../../data/coreStore';
+import { getTeachers } from '../../data/staffStore';
+import { getSubjectAssignments } from '../../data/academicsStore';;
 import { getSubjectsForGrade } from '../../data/seedData';
 import { TeacherIcon, BookIcon, CheckIcon, CrossIcon } from '../../components/CommonIcons';
 import Select from '../../components/Common/Select';

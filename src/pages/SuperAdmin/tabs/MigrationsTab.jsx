@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { getSchemaStatus, runSchemaMigration } from '../../../data/store';
+import { getSchemaStatus, runSchemaMigration } from '../../../data/coreStore';;;
 import { RefreshIcon, ActivityIcon } from '../../../components/Common/Icons';
 import { RocketIcon } from '../../../components/CommonIcons';
 

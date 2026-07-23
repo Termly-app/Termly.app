@@ -19,6 +19,11 @@ export class ErrorBoundary extends React.Component {
   componentDidCatch(error, errorInfo) {
     // Analytics/Monitoring hook (Sentry / PostHog stub)
     console.error('[ErrorBoundary] Caught a UI crash:', error, errorInfo);
+    try {
+      import('@sentry/react').then(Sentry => {
+        Sentry.captureException(error, { extra: errorInfo });
+      });
+    } catch (e) { /* ignore */ }
     
     // Domain 9: Auto-recovery for dynamic import failures (Deployment Chunk Mismatch)
     const errorMsg = error?.message || '';

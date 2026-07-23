@@ -84,7 +84,12 @@ export function handleError(err, context = 'unknown') {
     return 'This record already exists.';
   }
 
-  // 7. Sentry integration removed to fix build error
+  // 7. Sentry integration
+  try {
+    import('@sentry/react').then(Sentry => {
+      Sentry.captureException(err, { tags: { context } });
+    });
+  } catch (_) { /* ignore */ }
 
   // 8. In development, log to console
   if (import.meta.env.DEV) {

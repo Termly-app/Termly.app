@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
-import { registerSchool, getPlatformSettings } from '../data/store';
+import { registerSchool, getPlatformSettings } from '../data/coreStore';;
 import { checkSchoolExists } from '../data/authStore';
 import { 
   BookIcon, CardIcon, SchoolIcon, FlagIcon, ClockIcon, RocketIcon, CheckIcon, HomeIcon,

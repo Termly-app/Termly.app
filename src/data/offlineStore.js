@@ -51,6 +51,13 @@ export async function getPendingSyncCount() {
 }
 
 /**
+ * Get count of failed sync items
+ */
+export async function getFailedSyncCount() {
+  return await db.syncQueue.where('status').equals('failed').count();
+}
+
+/**
  * Mark item as synced or failed
  */
 export async function updateSyncStatus(id, status, error = null) {

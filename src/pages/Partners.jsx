@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { getFeaturedPartners } from '../data/store';
+import { getFeaturedPartners } from '../data/coreStore';;
 import { SchoolIcon, FlagIcon, StarIcon, HomeIcon } from '../components/CommonIcons';
 import { Helmet } from 'react-helmet-async';
 import './Partners.css';

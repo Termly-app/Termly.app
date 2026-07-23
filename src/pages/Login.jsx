@@ -1,12 +1,8 @@
 import { useState, useEffect } from 'react';
 import { Link, useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
-import {
-  setCurrentSchoolContext,
-  initActivePeriod,
-  getSchoolByCode,
-  searchPublicSchools,
-} from '../data/store';
+import { setCurrentSchoolContext, getSchoolByCode, searchPublicSchools } from '../data/coreStore';
+import { initActivePeriod } from '../data/academicsStore';;
 import { 
   getAuthUserDetails, getHqSchool, getUserByEmail, upsertAuthUser, 
   getMatchedUser, updateUserAuthId, getOwnedSchools, getUserRecords 

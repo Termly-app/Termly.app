@@ -1,5 +1,5 @@
 import { supabase } from '../lib/supabase';
-import { getCurrentSchoolId } from './store';
+import { getCurrentSchoolId } from './coreStore';;
 
 // ============================================================================
 // LIBRARY MODULE: API LAYER

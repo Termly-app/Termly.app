@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { getPlatformAdmins, addPlatformAdmin, removePlatformAdmin } from '../../../data/store';
+import { getPlatformAdmins, addPlatformAdmin, removePlatformAdmin } from '../../../data/coreStore';;
 import { ShieldIcon, UserIcon, CrossIcon, CheckIcon } from '../../../components/CommonIcons';
 import { fmtDate } from '../superAdminUtils';
 import { useDialog } from '../../../contexts/DialogContext';

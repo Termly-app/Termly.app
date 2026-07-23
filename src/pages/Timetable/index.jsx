@@ -23,14 +23,10 @@ import {
 } from '../../utils/timetablePrint';
 import Select from '../../components/Common/Select';
 import { Helmet } from 'react-helmet-async';
-import {
-  getTeachers, getSchoolProfile,
-  getTimetableConfig, saveTimetableConfig,
-  getTimetableSlots, saveTimetableSlot, clearTimetableSlot,
-  getTeacherTimetable, clearAllTimetableSlots, duplicateTimetable,
-  checkTimetableConflicts, setCurrentSchoolContext, getSubjectsForGrade,
-  getClassSubjectAssignments
-} from '../../data/store';
+import { getTeachers } from '../../data/staffStore';
+import { getSchoolProfile, setCurrentSchoolContext } from '../../data/coreStore';
+import { getTimetableConfig, saveTimetableConfig, getTimetableSlots, saveTimetableSlot, clearTimetableSlot, getTeacherTimetable, clearAllTimetableSlots, duplicateTimetable, checkTimetableConflicts, getClassSubjectAssignments } from '../../data/academicsStore';
+import { getSubjectsForGrade } from '../../data/seedData';;;
 import { 
   CalendarIcon, PrintIcon, BookIcon, CheckIcon, CrossIcon, 
   AlertIcon, UserIcon, HomeIcon, TeacherIcon, PlusIcon,

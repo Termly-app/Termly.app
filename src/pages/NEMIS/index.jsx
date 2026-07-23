@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  getNEMISComplianceReport, getSchoolProfile, getStudents 
-} from '../../data/store';
+import { getNEMISComplianceReport, getStudents } from '../../data/studentStore';
+import { getSchoolProfile } from '../../data/coreStore';;
 import { 
   exportNEMIS, downloadCSV, nemisFilename 
 } from '../../utils/nemisExport';

@@ -2,7 +2,7 @@ import { Suspense, lazy, useState, useEffect } from 'react';
 import { Helmet } from 'react-helmet-async';
 import Loader from '../../components/Common/Loader';
 import FeatureGate from '../../components/FeatureGate';
-import { isFeatureEnabled } from '../../data/store';
+import { isFeatureEnabled } from '../../data/coreStore';;
 import { BookIcon, UsersIcon, TeacherIcon, DashboardIcon, RocketIcon } from '../../components/CommonIcons';
 
 const AssessmentTab = lazy(() => import('./AssessmentTab'));

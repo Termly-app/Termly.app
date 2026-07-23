@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
-import { getUsers, addUser, deleteUser, getSchoolProfile, getPlatformSettings } from '../data/store';
+import { getUsers, addUser, deleteUser } from '../data/authStore';
+import { getSchoolProfile, getPlatformSettings } from '../data/coreStore';;
 import { DiamondIcon, UsersIcon, EyeIcon, EyeOffIcon } from '../components/CommonIcons';
 import Select from '../components/Common/Select';
 import { Helmet } from 'react-helmet-async';

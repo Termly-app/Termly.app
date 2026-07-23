@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { supabase, logAuditEvent, updateSchoolFeature, adminUpdateSchoolProfile } from '../../../data/store';
+import { supabase } from '../../../lib/supabase';
+import { logAuditEvent, updateSchoolFeature, adminUpdateSchoolProfile } from '../../../data/coreStore';;
 import { fmtDate } from '../superAdminUtils';
 import { SchoolIcon, ShieldIcon, MenuIcon, CheckIcon, CrossIcon, ClockIcon, CalendarIcon } from '../../../components/CommonIcons';
 import { useDialog } from '../../../contexts/DialogContext';

@@ -7,11 +7,10 @@ import {
   ClockIcon, SchoolIcon, BellIcon
 } from '../../components/CommonIcons';
 import { Helmet } from 'react-helmet-async';
-import { 
-  getAssignments, getStudentSubmissions, getStudentExamResults, 
-  getFees, getGradeForScore, getSchoolProfile, initPortalStore,
-  getStudentProfile, getAnnouncements, getSubjectDetails
-} from '../../data/store';
+import { getAssignments, getStudentSubmissions } from '../../data/offlineStore';
+import { getStudentExamResults, getGradeForScore, getStudentProfile, getAnnouncements, getSubjectDetails } from '../../data/academicsStore';
+import { getFees } from '../../data/financeStore';
+import { getSchoolProfile, initPortalStore } from '../../data/coreStore';;
 import Loader from '../../components/Common/Loader';
 import NotificationCenter from '../../components/Common/NotificationCenter';
 import { CardSkeleton, TableSkeleton } from '../../components/Common/Skeletons';

@@ -1,7 +1,9 @@
 import { useState, useEffect, useRef, Component, lazy, Suspense } from 'react';
 import { Routes, Route, NavLink, useLocation, Navigate } from 'react-router-dom';
 import { supabase } from './lib/supabase';
-import { getSchoolProfile, setCurrentSchoolContext, getUserByAuthId, getPeriods, setActivePeriod, initActivePeriod, getCurrentPeriodId, checkIsPlatformAdmin, isFeatureEnabled, checkIsSubscriptionActive, subscribeToSchoolChanges, isShadowMode, getUnreadNotificationCount, subscribeToNotifications, getNotifications, markNotificationRead, markAllNotificationsRead, getPlatformSettings } from './data/store';
+import { getSchoolProfile, setCurrentSchoolContext, getCurrentPeriodId, checkIsPlatformAdmin, isFeatureEnabled, checkIsSubscriptionActive, subscribeToSchoolChanges, isShadowMode, getPlatformSettings } from './data/coreStore';
+import { getUserByAuthId } from './data/authStore';
+import { getPeriods, setActivePeriod, initActivePeriod, getUnreadNotificationCount, subscribeToNotifications, getNotifications, markNotificationRead, markAllNotificationsRead } from './data/academicsStore';;
 
 // Pages (Lazy Loaded)
 const Dashboard    = lazy(() => import('./pages/Dashboard'));

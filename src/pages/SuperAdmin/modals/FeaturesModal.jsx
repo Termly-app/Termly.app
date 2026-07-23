@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { CrossIcon, CheckIcon, RocketIcon } from '../../../components/CommonIcons';
-import { getAllFeaturesRegistry, getSchoolFeatures, updateSchoolFeature } from '../../../data/store';
+import { getAllFeaturesRegistry, getSchoolFeatures, updateSchoolFeature } from '../../../data/coreStore';;
 
 export default function FeaturesModal({ school, onClose, setMessage }) {
   const [registry, setRegistry] = useState([]);

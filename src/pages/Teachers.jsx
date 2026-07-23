@@ -1,5 +1,8 @@
 import { useState, useEffect } from 'react';
-import { getTeachers, addTeacher, updateTeacher, deleteTeacher, getTeacherWorkload, getTeacherPerformance, getPrintHeader, getPrintFooter, getSchoolProfile, getPlatformSettings, getUsers, setTeacherLeaveStatus, isStaffCodeAvailable, getCurrentPeriodDetails } from '../data/store';
+import { getTeachers, addTeacher, updateTeacher, deleteTeacher, getTeacherWorkload, getTeacherPerformance, setTeacherLeaveStatus, isStaffCodeAvailable } from '../data/staffStore';
+import { getPrintHeader, getPrintFooter, getSchoolProfile, getPlatformSettings } from '../data/coreStore';
+import { getUsers } from '../data/authStore';
+import { getCurrentPeriodDetails } from '../data/academicsStore';;
 import { getTeacherAssignments, assignTeacher, removeTeacherAssignment, getClassStreams, initializeStreams } from '../data/academicsStore';
 import { sanitizeName, sanitizeString } from '../utils/sanitize';
 import Loader from '../components/Common/Loader';

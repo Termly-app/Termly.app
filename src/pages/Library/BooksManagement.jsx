@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { getLibraryBooks, createBook, updateBook, bulkGenerateCopies, getBookCopies, createManualCopies, updateBookCopy } from '../../data/libraryStore';
-import { getSchoolProfile } from '../../data/store';
+import { getSchoolProfile } from '../../data/coreStore';;
 import { CBC_STRUCTURE, getSubjectsForGrade } from '../../data/seedData';
 import Select from '../../components/Common/Select';
 import { useDialog } from '../../contexts/DialogContext';

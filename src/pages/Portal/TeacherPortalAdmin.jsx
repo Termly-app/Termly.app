@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { getTeachers, getSchoolProfile, updateTeacher } from '../../data/store';
+import { getTeachers, updateTeacher } from '../../data/staffStore';
+import { getSchoolProfile } from '../../data/coreStore';;
 import { StaffIcon, CheckIcon, RefreshIcon, CopyIcon, EyeIcon, EyeOffIcon, ShieldIcon, SearchIcon } from '../../components/CommonIcons';
 import Loader from '../../components/Common/Loader';
 import { useDialog } from '../../contexts/DialogContext';

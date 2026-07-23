@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { getSchoolProfile, getStudents } from '../../data/store';
+import { getSchoolProfile } from '../../data/coreStore';
+import { getStudents } from '../../data/studentStore';;
 import { UserIcon, CheckIcon, CopyIcon, SchoolIcon, SearchIcon } from '../../components/CommonIcons';
 import Loader from '../../components/Common/Loader';
 import Select from '../../components/Common/Select';

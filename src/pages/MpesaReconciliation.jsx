@@ -1,11 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  getOrphanedMpesaCallbacks, 
-  getStudents, 
-  reconcileMpesaPayment,
-  autoProcessMpesaCallbacks,
-  simulateMpesaCallback
-} from '../data/store';
+import { getOrphanedMpesaCallbacks, reconcileMpesaPayment, autoProcessMpesaCallbacks, simulateMpesaCallback } from '../data/financeStore';
+import { getStudents } from '../data/studentStore';;
 import { 
   PaymentsIcon, 
   SearchIcon, 

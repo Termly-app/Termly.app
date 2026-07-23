@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import { Helmet } from 'react-helmet-async';
-import { getClassResults, setStudentAllMarks, getSubjectRankings, getClassList, getCBC, setCBC, getTeacherPerformance, getCoreCompetencies, getPrintHeader, getPrintFooter, getSchoolProfile, subscribeToTable, getGradeForScore, getSubjectAssignments, getExams, releaseExamToParents } from '../../data/store';
+import { getClassResults, setStudentAllMarks, getSubjectRankings, getClassList, getCBC, setCBC, getCoreCompetencies, subscribeToTable, getGradeForScore, getSubjectAssignments, getExams, releaseExamToParents } from '../../data/academicsStore';
+import { getTeacherPerformance } from '../../data/staffStore';
+import { getPrintHeader, getPrintFooter, getSchoolProfile } from '../../data/coreStore';;
 import { CBC_STRUCTURE, CBC_LEVELS, CBC_CORE_COMPETENCIES, STREAMS, getSubjectsForGrade, getLevelForGrade } from '../../data/seedData';
 import { 
   LeafIcon, BookIcon, PrintIcon, DashboardIcon, EditIcon, 
@@ -33,7 +35,7 @@ export default function AssessmentTab({ currentUser, currentPeriodId }) {
   
   // Trigger migration on load if needed
   useEffect(() => {
-    import('../../data/store').then(m => m.migrateExistingStudentsSubjects());
+    import('../../data/studentStore').then(m => m.migrateExistingStudentsSubjects());
   }, []);
 
   const [profile, setProfile] = useState({ streams: [], activeClasses: [] });
@@ -166,7 +168,7 @@ export default function AssessmentTab({ currentUser, currentPeriodId }) {
     if (!showSubjectPicker) return;
     setLoading(true);
     try {
-      const { updateStudent } = await import('../../data/store');
+      const { updateStudent } = await import('../../data/studentStore');
       await updateStudent(showSubjectPicker.id, { subjects });
       setShowSubjectPicker(null);
       await loadResults();
@@ -899,8 +901,8 @@ export default function AssessmentTab({ currentUser, currentPeriodId }) {
                               value={lv} 
                               onChange={async (e) => {
                                 try {
-                                  await import('../../data/store').then(m => m.setCoreCompetency(s.id, comp, e.target.value));
-                                  const newData = await import('../../data/store').then(m => m.getCoreCompetencies());
+                                  await import('../../data/academicsStore').then(m => m.setCoreCompetency(s.id, comp, e.target.value));
+                                  const newData = await import('../../data/academicsStore').then(m => m.getCoreCompetencies());
                                   setCoreCompData(newData);
                                 } catch(err) { alert({ title: 'Update Error', message: err.message, variant: 'danger' }); }
                               }}

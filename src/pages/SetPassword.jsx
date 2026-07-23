@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { setSelfPassword } from '../data/store';
+import { setSelfPassword } from '../data/authStore';;
 import { EyeIcon, EyeOffIcon, ShieldIcon, CheckIcon } from '../components/CommonIcons';
 import { useNavigate } from 'react-router-dom';
 

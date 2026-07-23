@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
-import { getPlatformSettings } from '../data/store';
+import { getPlatformSettings } from '../data/coreStore';;
 
 import './Landing.css';
 import {

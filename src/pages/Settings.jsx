@@ -1,5 +1,10 @@
 import { useState, useEffect, useRef } from 'react';
-import { getSchoolProfile, saveSchoolProfile, importData, exportData, TERM_FEE, applyFeeStructure, getPeriods, createPeriod, setActivePeriod, testMpesaConnection, testSmsConnection, getCurrentAuthUser, supabase, getCurrentPeriodId, subscribeToTable, getPortalAccessSettings, updatePortalAccessSettings } from '../data/store';
+import { getSchoolProfile, saveSchoolProfile, importData, exportData, getCurrentAuthUser, getCurrentPeriodId, getPortalAccessSettings, updatePortalAccessSettings } from '../data/coreStore';
+import { applyFeeStructure, getPeriods, createPeriod, setActivePeriod, subscribeToTable } from '../data/academicsStore';
+import { testMpesaConnection } from '../data/financeStore';
+import { testSmsConnection } from '../data/smsStore';
+import { supabase } from '../lib/supabase';
+import { TERM_FEE } from '../data/seedData';;;
 import { getUserRole } from '../data/authStore';
 import { getExams, createExam, deleteExam, deleteAllExams, previewClassPromotion, promoteClasses, updateExam, releaseExamToParents } from '../data/academicsStore';
 import { CBC_STRUCTURE, JSS_RUBRIC_8, PRIMARY_RUBRIC_4 } from '../data/seedData';

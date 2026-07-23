@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { TeacherIcon, ShieldIcon, PhoneIcon, EyeIcon, EyeOffIcon, RocketIcon, FlagIcon, BookIcon, GraduationIcon, SchoolIcon } from '../../components/CommonIcons';
-import { validateStaffLogin, getSchoolsForPortalSearch } from '../../data/store';
+import { validateStaffLogin } from '../../data/authStore';
+import { getSchoolsForPortalSearch } from '../../data/coreStore';;
 import Loader from '../../components/Common/Loader';
 import { Helmet } from 'react-helmet-async';
 

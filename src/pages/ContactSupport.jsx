@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import PremiumLayout from '../components/PremiumLayout';
 import { Helmet } from 'react-helmet-async';
-import { getPlatformSettings } from '../data/store';
+import { getPlatformSettings } from '../data/coreStore';;
 
 export default function ContactSupport() {
   const [settings, setSettings] = useState(null);

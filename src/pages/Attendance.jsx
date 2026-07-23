@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
-import { 
-  getStudents, getAttendance, markAttendance, getAttendanceSummary, 
-  getTodayStr, getSchoolProfile, getSubjectAssignments, queueSmsBatch, isFeatureEnabled 
-} from '../data/store';
+import { getStudents } from '../data/studentStore';
+import { getAttendance, markAttendance, getAttendanceSummary, getTodayStr, getSubjectAssignments } from '../data/academicsStore';
+import { getSchoolProfile, isFeatureEnabled } from '../data/coreStore';
+import { queueSmsBatch } from '../data/smsStore';;
 import { CBC_STRUCTURE } from '../data/seedData';
 import { 
   CheckIcon, ClockIcon, CrossIcon, PrintIcon, DashboardIcon, FlagIcon, PlatformZapIcon, SendIcon 

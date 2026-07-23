@@ -1,10 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabase';
-import { 
-  getSchoolProfile, getExamMarksForPaper, getClassList, getLevelForGrade,
-  getTeacherWorkloadSummary, getTeacherTimetable, getTimetableConfig, getPeriods,
-  initPortalStore, subscribeToTable
-} from '../../data/store';
+import { getSchoolProfile, initPortalStore } from '../../data/coreStore';
+import { getExamMarksForPaper, getClassList, getTeacherWorkloadSummary, getTeacherTimetable, getTimetableConfig, getPeriods, subscribeToTable } from '../../data/academicsStore';
+import { getLevelForGrade } from '../../data/seedData';;;
 import { getExams, getOpenExamsForTeacher, getExamPapers, saveExamMarks, getVirtualPaperMarks } from '../../data/academicsStore';
 import { 
   BookIcon, CheckIcon, SaveIcon, UserIcon, 

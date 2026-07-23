@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { getSaasBlogPosts } from '../data/store';
+import { getSaasBlogPosts } from '../data/coreStore';;
 import { BookIcon, SparklesIcon, RocketIcon, TeacherIcon, ChartBarIcon, PrintIcon } from '../components/CommonIcons';
 import { Helmet } from 'react-helmet-async';
 import './Blog.css';

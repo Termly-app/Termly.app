@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { sendSchoolInvite } from '../data/store';
+import { sendSchoolInvite } from '../data/coreStore';;;
 import { RocketIcon, CheckIcon, ShareIcon } from '../components/CommonIcons';
 import './ReferralTool.css';
 

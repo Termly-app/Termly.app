@@ -1,10 +1,9 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { Helmet } from 'react-helmet-async';
-import { 
-  isFeatureEnabled, getSchoolProfile, getAssignments, createAssignment, 
-  getSubmissions, updateSubmission, fetchLmsContent, getQuizAnalytics,
-  CBC_STRUCTURE, getSubjectsForGrade, updateAssignment, deleteAssignment
-} from '../data/store';
+import { isFeatureEnabled, getSchoolProfile } from '../data/coreStore';
+import { getAssignments, getSubmissions } from '../data/offlineStore';
+import { createAssignment, updateSubmission, fetchLmsContent, getQuizAnalytics, updateAssignment, deleteAssignment } from '../data/academicsStore';
+import { CBC_STRUCTURE, getSubjectsForGrade } from '../data/seedData';;;
 import { 
   BookIcon, CheckIcon, UsersIcon, DownloadIcon, ClockIcon, MessageIcon, GraduationIcon, 
   DashboardIcon, TrendingUpIcon, AlertIcon, ArrowRightIcon
@@ -26,7 +25,7 @@ function SubmissionProgress({ ast }) {
 
   useEffect(() => {
     async function getStats() {
-      const { getAssignmentStats } = await import('../data/store');
+      const { getAssignmentStats } = await import('../data/academicsStore');
       try {
         const res = await getAssignmentStats(ast.id, ast.class, ast.stream);
         setStats(res);
@@ -909,7 +908,7 @@ function LmsContentFetcher({ url }) {
   useEffect(() => {
     async function getIt() {
       if (!url) { setContent('No submission content found.'); return; }
-      const { fetchLmsContent } = await import('../data/store');
+      const { fetchLmsContent } = await import('../data/academicsStore');
       try {
         const res = await fetchLmsContent(url);
         setContent(typeof res === 'object' ? JSON.stringify(res, null, 2) : res || 'No content found.');

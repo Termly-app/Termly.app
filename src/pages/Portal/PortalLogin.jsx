@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { SchoolIcon, UserIcon, PhoneIcon, RocketIcon, FlagIcon, GraduationIcon, CardIcon, ChevronRightIcon } from '../../components/CommonIcons';
-import { validateParentLogin, getSchoolsForPortalSearch } from '../../data/store';
+import { validateParentLogin } from '../../data/authStore';
+import { getSchoolsForPortalSearch } from '../../data/coreStore';;
 import Loader from '../../components/Common/Loader';
 
 export default function PortalLogin({ onLogin }) {

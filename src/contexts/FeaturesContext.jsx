@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
-import { hasFeature, getCurrentSchoolId, getSchoolProfile } from '../data/store';
+import { hasFeature, getCurrentSchoolId, getSchoolProfile } from '../data/coreStore';;
 
 const FeaturesContext = createContext();
 

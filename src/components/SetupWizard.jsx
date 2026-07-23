@@ -4,7 +4,9 @@ import {
   CheckIcon, RocketIcon, ChevronRightIcon, ChevronLeftIcon,
   PlusIcon, CrossIcon, ShieldIcon
 } from './CommonIcons';
-import { saveSchoolProfile, CBC_STRUCTURE, getCurrentPeriodDetails } from '../data/store';
+import { saveSchoolProfile } from '../data/coreStore';
+import { getCurrentPeriodDetails } from '../data/academicsStore';
+import { CBC_STRUCTURE } from '../data/seedData';;;
 import { initializeStreams } from '../data/academicsStore';
 import { useDialog } from '../contexts/DialogContext';
 

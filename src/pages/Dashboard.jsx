@@ -1,11 +1,11 @@
 import { useState, useEffect } from 'react';
 import { Link, Navigate, useNavigate } from 'react-router-dom';
-import {
-  getStudents, getFeeSummary, getAttendanceSummary, getTodayStr,
-  getFees, getSchoolStructure, getTeachers, getSchoolProfile,
-  getMarks, getAttendance, subscribeToChanges, getUsers, getPlatformSettings,
-  getPeriods, setActivePeriod, checkIsSubscriptionActive, getPortalActivity
-} from '../data/store';
+import { getStudents } from '../data/studentStore';
+import { getFeeSummary, getFees } from '../data/financeStore';
+import { getAttendanceSummary, getTodayStr, getSchoolStructure, getMarks, getAttendance, getPeriods, setActivePeriod } from '../data/academicsStore';
+import { getTeachers } from '../data/staffStore';
+import { getSchoolProfile, subscribeToChanges, getPlatformSettings, checkIsSubscriptionActive, getPortalActivity } from '../data/coreStore';
+import { getUsers } from '../data/authStore';;
 import Loader from '../components/Common/Loader';
 import {
   StudentIcon, TeacherIcon, CardIcon, BookIcon, UserIcon, SchoolIcon,

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { getOverdueBooks, markBookLost, markBookReplaced, returnBook, getLostBooks } from '../../data/libraryStore';
-import { getSchoolProfile } from '../../data/store';
+import { getSchoolProfile } from '../../data/coreStore';;
 import { useDialog } from '../../contexts/DialogContext';
 import Select from '../../components/Common/Select';
 import { CBC_STRUCTURE } from '../../data/seedData';

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { getSchoolProfile, saveSchoolProfile, getStudents, updateStudent } from '../../data/store';
+import { getSchoolProfile, saveSchoolProfile } from '../../data/coreStore';
+import { getStudents, updateStudent } from '../../data/studentStore';;
 import { CBC_STRUCTURE } from '../../data/seedData';
 import { SchoolIcon, UsersIcon, EditIcon, CheckIcon, CrossIcon } from '../../components/CommonIcons';
 import Select from '../../components/Common/Select';

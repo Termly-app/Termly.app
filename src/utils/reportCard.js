@@ -1,4 +1,4 @@
-import { getPrintHeader } from '../data/store';
+import { getPrintHeader } from '../data/coreStore';;
 
 /**
  * CBC Competency Scale Helper

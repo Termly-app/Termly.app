@@ -1,6 +1,10 @@
 import { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
-import { getStudents, addStudent, updateStudent, archiveStudent, getFees, transferStudents, getClassList, getCBC, getCoreCompetencies, getPrintHeader, getSchoolProfile, TERM_FEE } from '../data/store';
+import { getStudents, addStudent, updateStudent, archiveStudent, transferStudents } from '../data/studentStore';
+import { getFees } from '../data/financeStore';
+import { getClassList, getCBC, getCoreCompetencies } from '../data/academicsStore';
+import { getPrintHeader, getSchoolProfile } from '../data/coreStore';
+import { TERM_FEE } from '../data/seedData';;;
 import { sanitizeName, sanitizeString } from '../utils/sanitize';
 import Loader from '../components/Common/Loader';
 import { CBC_STRUCTURE, CBC_CORE_COMPETENCIES, getLevelForGrade } from '../data/seedData';

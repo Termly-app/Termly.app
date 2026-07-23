@@ -1,7 +1,7 @@
 import { useState, useRef } from 'react';
 import Papa from 'papaparse';
 import { useDialog } from '../contexts/DialogContext';
-import { bulkImportStudents } from '../data/store';
+import { bulkImportStudents } from '../data/studentStore';;
 import {
   UploadIcon, CheckIcon, AlertIcon, DeleteIcon,
   XIcon, FileIcon

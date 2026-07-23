@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
-import { getStudents, getSchoolProfile } from '../../data/store';
+import { getStudents } from '../../data/studentStore';
+import { getSchoolProfile } from '../../data/coreStore';;
 import { issueBook, returnBook, getOverdueBooks, searchAvailableCopies, getActiveLoans } from '../../data/libraryStore';
 import { 
   SearchIcon, CheckIcon, UserIcon, BookIcon, AlertIcon, 

@@ -8,17 +8,8 @@
 import { useState, useEffect, useRef } from 'react';
 import { useSearchParams } from 'react-router-dom';
 
-import {
-  getAllSchools, getPlatformActivities, getPlatformSettings,
-  getPlatformStats, updatePlatformSetting,
-  suspendSchool, restoreSchool, subscribeToPlatformChanges,
-  deleteSchool, deactivateSchool,
-  getTeachersBySchool, deleteTeacher,
-  wipeAllNonAdminSchools,
-  setCurrentSchoolContext, setCurrentPeriodId,
-  getPlatformUsageStats, getPlatformSchoolProfiles,
-  getGlobalAuditLogs
-} from '../../data/store';
+import { getAllSchools, getPlatformActivities, getPlatformSettings, getPlatformStats, updatePlatformSetting, suspendSchool, restoreSchool, subscribeToPlatformChanges, deleteSchool, deactivateSchool, wipeAllNonAdminSchools, setCurrentSchoolContext, setCurrentPeriodId, getPlatformUsageStats, getPlatformSchoolProfiles, getGlobalAuditLogs } from '../../data/coreStore';
+import { getTeachersBySchool, deleteTeacher } from '../../data/staffStore';;
 
 // Components
 import Loader          from '../../components/Common/Loader';
@@ -55,13 +46,13 @@ import {
 } from '../../components/CommonIcons';
 
 // Store additions (NEMIS student fetch)
-import { getStudentsBySchool } from '../../data/store';
+import { getStudentsBySchool } from '../../data/studentStore';;
 
 // Styles — imported once
 import './SuperAdmin.css';
 
 // ── Supabase client ─────────────────────
-import { supabase } from '../../data/store';
+import { supabase } from '../../lib/supabase';;
 
 // ══════════════════════════════════════════════════════════════════════════════
 export default function SuperAdmin({ currentUser, isPlatformAdmin, sidebarOpen, setSidebarOpen, onSignOut }) {

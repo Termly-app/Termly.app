@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { getStudents, getSchoolProfile, transferStudents } from '../../data/store';
+import { getStudents, transferStudents } from '../../data/studentStore';
+import { getSchoolProfile } from '../../data/coreStore';;
 import { CBC_STRUCTURE } from '../../data/seedData';
 import { PlatformZapIcon, CheckIcon, AlertIcon, UsersIcon, ArrowRightIcon } from '../../components/CommonIcons';
 import { useDialog } from '../../contexts/DialogContext';

@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { getCurrentSchoolId, getStudents, getSchoolProfile, getPrintHeader } from '../../data/store';
+import { getCurrentSchoolId, getSchoolProfile, getPrintHeader } from '../../data/coreStore';
+import { getStudents } from '../../data/studentStore';;
 import { getAllActiveBorrows, getStudentBorrowHistory, getLibraryBooks, getBookBorrowHistory } from '../../data/libraryStore';
 import { CBC_STRUCTURE, getSubjectsForGrade } from '../../data/seedData';
 import Select from '../../components/Common/Select';

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import PremiumLayout from '../components/PremiumLayout';
-import { getPlatformSettings } from '../data/store';
+import { getPlatformSettings } from '../data/coreStore';;
 import { 
   RocketIcon, GraduationIcon, EditIcon, CardIcon, ShieldIcon, SettingsIcon 
 } from '../components/CommonIcons';

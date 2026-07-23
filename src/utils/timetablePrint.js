@@ -1,4 +1,4 @@
-import { getPrintHeader, getPrintFooter } from '../data/store';
+import { getPrintHeader, getPrintFooter } from '../data/coreStore';;
 
 const PRINT_CSS = `
   @page { size: landscape; margin: 10mm; }
