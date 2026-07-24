@@ -4,7 +4,7 @@ import { getStudents, addStudent, updateStudent, archiveStudent, transferStudent
 import { getFees } from '../data/financeStore';
 import { getClassList, getCBC, getCoreCompetencies } from '../data/academicsStore';
 import { getPrintHeader, getSchoolProfile } from '../data/coreStore';
-import { TERM_FEE } from '../data/seedData';;;
+import { TERM_FEE } from '../data/seedData';
 import { sanitizeName, sanitizeString } from '../utils/sanitize';
 import Loader from '../components/Common/Loader';
 import { CBC_STRUCTURE, CBC_CORE_COMPETENCIES, getLevelForGrade } from '../data/seedData';
@@ -54,7 +54,7 @@ export default function Students({ currentUser, currentPeriodId }) {
     setLoading(true);
     try {
       const [sData, fData, pData] = await Promise.all([getStudents(), getFees(), getSchoolProfile()]);
-      setStudents(sData); setFees(fData); setProfile(pData);
+      setStudents(sData || []); setFees(fData || {}); setProfile(pData || {});
     } catch (err) { console.error(err); } finally { setLoading(false); }
   };
   const location = useLocation();
@@ -74,7 +74,7 @@ export default function Students({ currentUser, currentPeriodId }) {
     }
   }, [location.state, students]);
   const refresh = async () => {
-    try { const [s, f] = await Promise.all([getStudents(), getFees()]); setStudents(s); setFees(f); }
+    try { const [s, f] = await Promise.all([getStudents(), getFees()]); setStudents(s || []); setFees(f || {}); }
     catch (err) { console.error(err); }
   };
 

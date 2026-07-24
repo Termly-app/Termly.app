@@ -4,7 +4,7 @@ import { applyFeeStructure, getPeriods, createPeriod, setActivePeriod, subscribe
 import { testMpesaConnection } from '../data/financeStore';
 import { testSmsConnection } from '../data/smsStore';
 import { supabase } from '../lib/supabase';
-import { TERM_FEE } from '../data/seedData';;;
+import { TERM_FEE } from '../data/seedData';
 import { getUserRole } from '../data/authStore';
 import { getExams, createExam, deleteExam, deleteAllExams, previewClassPromotion, promoteClasses, updateExam, releaseExamToParents } from '../data/academicsStore';
 import { CBC_STRUCTURE, JSS_RUBRIC_8, PRIMARY_RUBRIC_4 } from '../data/seedData';

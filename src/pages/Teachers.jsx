@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { getTeachers, addTeacher, updateTeacher, deleteTeacher, getTeacherWorkload, getTeacherPerformance, setTeacherLeaveStatus, isStaffCodeAvailable } from '../data/staffStore';
 import { getPrintHeader, getPrintFooter, getSchoolProfile, getPlatformSettings } from '../data/coreStore';
 import { getUsers } from '../data/authStore';
-import { getCurrentPeriodDetails } from '../data/academicsStore';;
+import { getCurrentPeriodDetails } from '../data/academicsStore';
 import { getTeacherAssignments, assignTeacher, removeTeacherAssignment, getClassStreams, initializeStreams } from '../data/academicsStore';
 import { sanitizeName, sanitizeString } from '../utils/sanitize';
 import Loader from '../components/Common/Loader';
@@ -44,7 +44,7 @@ export default function Teachers({ currentUser, currentPeriodId }) {
         getUsers(),
         getClassStreams(null, year)
       ]);
-      setTeachers(tData);
+      setTeachers(tData || []);
       setAssignments(aData || []);
       setProfile(pData);
       setSettings(sData || {});
@@ -64,7 +64,7 @@ export default function Teachers({ currentUser, currentPeriodId }) {
       const period = await getCurrentPeriodDetails();
       const year = period?.year || 2026;
       const [tData, aData, stData] = await Promise.all([getTeachers(), getTeacherAssignments(), getClassStreams(null, year)]);
-      setTeachers(tData);
+      setTeachers(tData || []);
       setAssignments(aData || []);
       setStreams(stData || []);
     } catch (err) { }

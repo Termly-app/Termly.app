@@ -135,7 +135,7 @@ export default function SuperAdmin({ currentUser, isPlatformAdmin, sidebarOpen, 
           const rawSchools = await getAllSchools();
           // getAllSchools already returns schools with _studentCount and _staffCount
           const filtered = rawSchools.filter(s => !s.name?.toLowerCase().includes('Termly hq'));
-          setSchools(filtered);
+          setSchools(filtered || []);
 
           try {
             const profiles = await getPlatformSchoolProfiles();

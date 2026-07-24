@@ -6,7 +6,7 @@ import {
 } from './CommonIcons';
 import { saveSchoolProfile } from '../data/coreStore';
 import { getCurrentPeriodDetails } from '../data/academicsStore';
-import { CBC_STRUCTURE } from '../data/seedData';;;
+import { CBC_STRUCTURE } from '../data/seedData';
 import { initializeStreams } from '../data/academicsStore';
 import { useDialog } from '../contexts/DialogContext';
 

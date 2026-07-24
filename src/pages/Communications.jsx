@@ -3,7 +3,7 @@ import { isFeatureEnabled, getSchoolProfile } from '../data/coreStore';
 import { getStudents } from '../data/studentStore';
 import { logCommunication, sendSMSMessage, sendWhatsAppMessage } from '../data/smsStore';
 import { getAnnouncements } from '../data/academicsStore';
-import { CBC_STRUCTURE } from '../data/seedData';;;
+import { CBC_STRUCTURE } from '../data/seedData';
 import { 
   HistoryIcon, PlatformZapIcon, CheckIcon, SearchIcon, MessageIcon, RocketIcon, 
   UserIcon 

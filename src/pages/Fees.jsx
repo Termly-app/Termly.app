@@ -3,7 +3,7 @@ import { isFeatureEnabled, getPrintHeader, getPrintFooter, getSchoolProfile, sub
 import { getStudents } from '../data/studentStore';
 import { getFees, recordPayment, getFeeSummary, getMpesaLogs } from '../data/financeStore';
 import { voidPayment, restorePayment, getStudentPayments } from '../data/academicsStore';
-import { TERM_FEE } from '../data/seedData';;;
+import { TERM_FEE } from '../data/seedData';
 import Loader from '../components/Common/Loader';
 import { CLASSES, CBC_STRUCTURE } from '../data/seedData';
 import { 

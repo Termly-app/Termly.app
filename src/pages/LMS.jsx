@@ -3,7 +3,7 @@ import { Helmet } from 'react-helmet-async';
 import { isFeatureEnabled, getSchoolProfile } from '../data/coreStore';
 import { getAssignments, getSubmissions } from '../data/offlineStore';
 import { createAssignment, updateSubmission, fetchLmsContent, getQuizAnalytics, updateAssignment, deleteAssignment } from '../data/academicsStore';
-import { CBC_STRUCTURE, getSubjectsForGrade } from '../data/seedData';;;
+import { CBC_STRUCTURE, getSubjectsForGrade } from '../data/seedData';
 import { 
   BookIcon, CheckIcon, UsersIcon, DownloadIcon, ClockIcon, MessageIcon, GraduationIcon, 
   DashboardIcon, TrendingUpIcon, AlertIcon, ArrowRightIcon
