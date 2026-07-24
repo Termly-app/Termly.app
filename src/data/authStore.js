@@ -283,6 +283,28 @@ export async function validateParentLogin(schoolSearch, admNo, phone, schoolId =
     throw new Error('The Parent Portal feature is not active for your institution\'s current plan.');
   }
 
+  // Query linked siblings matching the parent phone
+  let linkedChildren = [];
+  try {
+    const pPhone = (data.parent_phone || phone || '').trim();
+    if (pPhone && selectedSchoolId) {
+      const { data: siblings } = await supabase
+        .from('students')
+        .select('id, name, class, stream, adm_no, school_id, residence_type, parent_phone')
+        .eq('school_id', selectedSchoolId)
+        .eq('parent_phone', pPhone);
+      if (siblings && siblings.length > 0) {
+        linkedChildren = siblings;
+      }
+    }
+  } catch (e) {
+    console.warn('Child linkage search exception:', e);
+  }
+
+  if (linkedChildren.length === 0) {
+    linkedChildren = [data];
+  }
+
   return {
     id: data.id,
     name: data.name,
@@ -292,7 +314,8 @@ export async function validateParentLogin(schoolSearch, admNo, phone, schoolId =
     adm_no: data.adm_no,
     school_id: data.school_id,
     residence_type: data.residence_type,
-    parent_phone: data.parent_phone || ''
+    parent_phone: data.parent_phone || '',
+    linkedChildren: linkedChildren
   };
 }
 

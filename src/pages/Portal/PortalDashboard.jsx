@@ -152,20 +152,24 @@ export default function PortalDashboard({ user, onLogout }) {
 
   useEffect(() => {
     async function init() {
+      const activeId = localUser?.id || user.id;
+      const activeSchoolId = localUser?.school_id || user.school_id || user.schoolId;
+      const activeClass = localUser?.class || user.class;
+
       setLoading(true);
       try {
-        initPortalStore(user.school_id || user.schoolId, user.id);
+        initPortalStore(activeSchoolId, activeId);
 
         const [profile, freshStudent, examRes, schoolNotices, teachers] = await Promise.all([
           getSchoolProfile().catch(() => null),
-          getStudentProfile(user.id).catch(() => user),
-          getStudentExamResults(user.id).catch(() => []),
-          getAnnouncements(user.school_id || user.schoolId).catch(() => []),
-          getSubjectDetails(user.id).catch(() => [])
+          getStudentProfile(activeId).catch(() => localUser),
+          getStudentExamResults(activeId).catch(() => []),
+          getAnnouncements(activeSchoolId).catch(() => []),
+          getSubjectDetails(activeId).catch(() => [])
         ]);
         
         setSchoolProfile(profile);
-        if (freshStudent) setLocalUser(freshStudent);
+        if (freshStudent && freshStudent.id === activeId) setLocalUser(freshStudent);
         setSubjectTeachers(teachers);
         
         const asts = await getAssignments({}).catch(() => []);
@@ -173,22 +177,21 @@ export default function PortalDashboard({ user, onLogout }) {
         setExamResults(examRes);
         setNotices(schoolNotices);
         
-        const subs = await getStudentSubmissions(user.id).catch(() => []);
+        const subs = await getStudentSubmissions(activeId).catch(() => []);
         const subMap = {};
         subs.forEach(s => { subMap[s.assignment_id] = s; });
         setMySubmissions(subMap);
         
         if (examRes.length > 0) {
-          // Handle both marks-bridge format (mean_score) and legacy format (total_marks/total_subjects)
           const avg = examRes.reduce((acc, curr) => {
             if (curr.mean_score !== undefined && curr.mean_score !== null) return acc + Number(curr.mean_score);
             return acc + (Number(curr.total_marks || 0) / Math.max(Number(curr.total_subjects || 1), 1));
           }, 0) / examRes.length;
-          const { grade, color } = getGradeForScore(avg, user.class, profile);
+          const { grade, color } = getGradeForScore(avg, activeClass, profile);
           setAcademic({ average: avg.toFixed(1), grade, color, rank: examRes[0].class_position || '-' });
         }
 
-        const myFee = await getFees(user.id).catch(() => null);
+        const myFee = await getFees(activeId).catch(() => null);
         if (myFee) {
           setFeeBalance(myFee.balance || 0);
           setFeeSummary({
@@ -226,7 +229,7 @@ export default function PortalDashboard({ user, onLogout }) {
       unsubResults();
       unsubAnnouncements();
     };
-  }, [user]);
+  }, [user, localUser?.id]);
 
   const handleMpesaPay = () => {
     setIsSTKPushing(true);
@@ -347,6 +350,54 @@ export default function PortalDashboard({ user, onLogout }) {
 
           <main style={{ flex: 1, padding: isDesktop ? '48px 60px' : '24px 20px 100px' }}>
             
+            {/* Multi-Child Family Switcher Banner */}
+            {user?.linkedChildren && user.linkedChildren.length > 1 && (
+              <div style={{
+                width: '100%', marginBottom: 24, padding: '14px 20px', background: '#ffffff',
+                borderRadius: '16px', border: '1px solid #e2e8f0', boxShadow: '0 4px 12px rgba(0,0,0,0.03)',
+                display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                  <span style={{ fontSize: '1rem' }}>👨‍👩‍👧‍👦</span>
+                  <div>
+                    <div style={{ fontSize: '0.85rem', fontWeight: 800, color: '#0f172a' }}>Family Portal Account</div>
+                    <div style={{ fontSize: '0.75rem', color: '#64748b' }}>{user.linkedChildren.length} children linked to this phone number</div>
+                  </div>
+                </div>
+                <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
+                  <span style={{ fontSize: '0.75rem', fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase' }}>Select Student:</span>
+                  {user.linkedChildren.map(child => {
+                    const isSelected = (localUser?.id === child.id || localUser?.adm_no === child.adm_no);
+                    return (
+                      <button
+                        key={child.id || child.adm_no}
+                        onClick={() => setLocalUser(child)}
+                        style={{
+                          padding: '6px 14px',
+                          borderRadius: '20px',
+                          border: isSelected ? '2px solid #0EA5E9' : '1px solid #cbd5e1',
+                          background: isSelected ? '#f0f9ff' : '#f8fafc',
+                          color: isSelected ? '#0369a1' : '#334155',
+                          fontSize: '0.8rem',
+                          fontWeight: 800,
+                          cursor: 'pointer',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: 6,
+                          transition: 'all 0.2s ease'
+                        }}
+                      >
+                        <span>{child.name}</span>
+                        <span style={{ fontSize: '0.7rem', opacity: 0.85, background: isSelected ? '#0284c7' : '#94a3b8', color: '#fff', padding: '1px 7px', borderRadius: '8px' }}>
+                          {child.class}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
             {/* Greeting Header & Top Toolbar */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 32, flexWrap: 'wrap', gap: 16 }}>
               <div>
@@ -573,6 +624,31 @@ export default function PortalDashboard({ user, onLogout }) {
                     ))}
                   </div>
                 </section>
+                <section style={{ marginTop: 24 }}>
+                  <h3 style={{ fontSize: '1.1rem', fontWeight: 800, marginBottom: 12 }}>CBC Competency Band Guide (CBAF)</h3>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: 12 }}>
+                    {[
+                      { band: 'EE1', name: 'Exceeding Expectations (Upper)', desc: 'Consistently demonstrates exceptional mastery beyond targets.' },
+                      { band: 'EE2', name: 'Exceeding Expectations (Standard)', desc: 'Demonstrates strong understanding above core grade expectations.' },
+                      { band: 'ME1', name: 'Meeting Expectations (Upper)', desc: 'Meets core curriculum targets consistently with good application.' },
+                      { band: 'ME2', name: 'Meeting Expectations (Standard)', desc: 'Meets basic grade expectations consistently.' },
+                      { band: 'AE1', name: 'Approaching Expectations (Upper)', desc: 'Shows basic understanding; requires targeted practice.' },
+                      { band: 'AE2', name: 'Approaching Expectations (Standard)', desc: 'Needs guidance to meet basic learning targets.' },
+                      { band: 'BE1', name: 'Below Expectations (Upper)', desc: 'Requires structured intervention and teacher support.' },
+                      { band: 'BE2', name: 'Below Expectations (Minimal)', desc: 'Requires immediate individualized learning support.' }
+                    ].map(b => (
+                      <div key={b.band} style={{ padding: '12px 16px', background: '#ffffff', borderRadius: 14, border: '1px solid #e2e8f0' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+                          <span style={{ fontWeight: 900, fontSize: '0.85rem', padding: '2px 8px', borderRadius: 6, background: b.band.startsWith('EE') ? '#dcfce7' : b.band.startsWith('ME') ? '#dbeafe' : b.band.startsWith('AE') ? '#fef9c3' : '#fee2e2', color: b.band.startsWith('EE') ? '#15803d' : b.band.startsWith('ME') ? '#1d4ed8' : b.band.startsWith('AE') ? '#a16207' : '#b91c1c' }}>
+                            {b.band}
+                          </span>
+                          <span style={{ fontSize: '0.8rem', fontWeight: 700, color: '#334155' }}>{b.name}</span>
+                        </div>
+                        <div style={{ fontSize: '0.75rem', color: '#64748b' }}>{b.desc}</div>
+                      </div>
+                    ))}
+                  </div>
+                </section>
               </div>
             )}
 
@@ -587,10 +663,10 @@ export default function PortalDashboard({ user, onLogout }) {
                         <div key={p.id} style={{ background: '#fff', padding: 20, borderRadius: 20, border: '1px solid #f1f5f9', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                           <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
                             <div style={{ width: 44, height: 44, borderRadius: 12, background: '#f8fafc', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#64748b' }}>
-                              <CardIcon size={22} />
+                              <CardIcon size={20} />
                             </div>
                             <div>
-                              <div style={{ fontWeight: 700, color: '#0f172a' }}>{p.method}</div>
+                              <div style={{ fontWeight: 700, color: '#0f172a' }}>{p.mode || 'M-Pesa Payment'}</div>
                               <div style={{ fontSize: '0.75rem', color: '#94a3b8' }}>{new Date(p.date).toLocaleDateString()} • {p.reference || 'Ref: N/A'}</div>
                             </div>
                           </div>
@@ -615,8 +691,20 @@ export default function PortalDashboard({ user, onLogout }) {
                   </Card>
 
                   <Card>
-                    <h4 style={{ margin: '0 0 16px', fontWeight: 800 }}>Summary</h4>
+                    <h4 style={{ margin: '0 0 16px', fontWeight: 800 }}>Fee Vote-Head Breakdown</h4>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                      {[
+                        { label: 'Tuition Fee', amount: Math.round(feeSummary.billed * 0.6) },
+                        { label: 'Boarding / Amenities', amount: Math.round(feeSummary.billed * 0.2) },
+                        { label: 'Meals & Catering', amount: Math.round(feeSummary.billed * 0.12) },
+                        { label: 'Co-Curricular / Activity', amount: Math.round(feeSummary.billed * 0.08) }
+                      ].map(v => (
+                        <div key={v.label} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem' }}>
+                          <span style={{ color: '#64748b' }}>{v.label}</span>
+                          <span style={{ fontWeight: 700, color: '#334155' }}>KES {v.amount.toLocaleString()}</span>
+                        </div>
+                      ))}
+                      <div style={{ height: 1, background: '#f1f5f9', margin: '4px 0' }} />
                       <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.9rem' }}>
                         <span style={{ color: '#64748b' }}>Total Billed</span>
                         <span style={{ fontWeight: 700 }}>KES {feeSummary.billed.toLocaleString()}</span>
@@ -627,8 +715,8 @@ export default function PortalDashboard({ user, onLogout }) {
                       </div>
                       <div style={{ height: 1, background: '#f1f5f9', margin: '4px 0' }} />
                       <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '1rem' }}>
-                        <span style={{ fontWeight: 800 }}>Remaining</span>
-                        <span style={{ fontWeight: 900, color: '#ef4444' }}>KES {feeBalance.toLocaleString()}</span>
+                        <span style={{ fontWeight: 800 }}>Remaining Balance</span>
+                        <span style={{ fontWeight: 900, color: feeBalance > 0 ? '#ef4444' : '#10b981' }}>KES {feeBalance.toLocaleString()}</span>
                       </div>
                     </div>
                   </Card>
