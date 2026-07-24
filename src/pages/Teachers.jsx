@@ -594,7 +594,28 @@ function ReportsTab({ profile, teachers, assignments, onPrintStaff }) {
     const fetchReports = async () => {
       try {
         const [wData, pData] = await Promise.all([getTeacherWorkload(), getTeacherPerformance()]);
-        setData({ workload: wData, performance: pData });
+        
+        // If wData is an object (due to the store returning a single stub), compute the aggregate workload here
+        let actualWorkload = wData;
+        if (!Array.isArray(wData)) {
+          const active = Array.isArray(teachers) ? teachers.filter(t => t.status === 'Active') : [];
+          actualWorkload = active.map(t => {
+            const tAss = (assignments || []).filter(a => a.teacher_id === t.id && a.is_active);
+            const subs = new Set(tAss.map(a => a.subject));
+            const cls = new Set(tAss.map(a => a.stream_id).filter(Boolean));
+            return {
+              id: t.id,
+              name: t.name,
+              phone: t.phone,
+              status: t.status,
+              subjectCount: subs.size,
+              classCount: cls.size,
+              subjectsList: [...subs]
+            };
+          });
+        }
+        
+        setData({ workload: actualWorkload, performance: pData || {} });
       } catch (err) {
         console.error(err);
       } finally {
@@ -602,7 +623,7 @@ function ReportsTab({ profile, teachers, assignments, onPrintStaff }) {
       }
     };
     fetchReports();
-  }, []);
+  }, [teachers, assignments]);
 
   const handlePrintStaff = onPrintStaff;
 
