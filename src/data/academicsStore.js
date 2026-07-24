@@ -13,6 +13,7 @@ import {
   getSchoolProfile
 } from './coreStore';
 import { getTeachers } from './staffStore';
+import { getStudents } from './studentStore';
 import { withRetry } from '../utils/resilience';
 import { getUserByAuthId } from './authStore';
 
