@@ -7,7 +7,8 @@ import {
   mutationGuard,
   updateSchoolFeature,
   logPlatformActivity,
-  logAuditEvent
+  logAuditEvent,
+  setCurrentPeriodId
 } from './coreStore';
 import { getTeachers } from './staffStore';
 import { withRetry } from '../utils/resilience';
