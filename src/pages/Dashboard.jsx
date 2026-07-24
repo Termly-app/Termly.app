@@ -5,7 +5,7 @@ import { getFeeSummary, getFees } from '../data/financeStore';
 import { getAttendanceSummary, getTodayStr, getSchoolStructure, getMarks, getAttendance, getPeriods, setActivePeriod } from '../data/academicsStore';
 import { getTeachers } from '../data/staffStore';
 import { getSchoolProfile, subscribeToChanges, getPlatformSettings, checkIsSubscriptionActive, getPortalActivity } from '../data/coreStore';
-import { getUsers } from '../data/authStore';;
+import { getUsers } from '../data/authStore';
 import Loader from '../components/Common/Loader';
 import {
   StudentIcon, TeacherIcon, CardIcon, BookIcon, UserIcon, SchoolIcon,
@@ -17,6 +17,8 @@ import SyncIndicator from '../components/Common/SyncIndicator';
 import { Helmet } from 'react-helmet-async';
 import Select from '../components/Common/Select';
 import { useFeatures } from '../contexts/FeaturesContext';
+import EarlyWarningWidget from '../components/widgets/EarlyWarningWidget';
+import TPDTrackerWidget from '../components/widgets/TPDTrackerWidget';
 
 export default function Dashboard({ currentUser, onLogout, currentPeriodId }) {
   const navigate = useNavigate();
@@ -63,6 +65,10 @@ export default function Dashboard({ currentUser, onLogout, currentPeriodId }) {
           attendance: todayAtt, recentPayments: allPayments.slice(0, 5),
           portalActivity: portalActivity || [],
           schoolStructure, profile: prof, adminUsers: adminUsers || [], platformSettings: platformSettings || {},
+          studentsList: students || [],
+          teachersList: teachers || [],
+          attendanceRaw: attendance || {},
+          marksRaw: marks || {},
         };
         setData(newData);
         setShowWizard(!prof?.setup_completed);
@@ -73,7 +79,8 @@ export default function Dashboard({ currentUser, onLogout, currentPeriodId }) {
           feeSummary: { totalExpected:0, totalCollected:0, totalOutstanding:0, fullyPaid:0, partialPaid:0, unpaid:0 },
           attendance: { present:0, late:0, absent:0, total:0, percentage:0 },
           recentPayments: [], schoolStructure: {}, profile: {},
-          adminUsers: [], platformSettings: {}
+          adminUsers: [], platformSettings: {},
+          studentsList: [], teachersList: [], attendanceRaw: {}, marksRaw: {},
         });
       } finally { setLoading(false); }
     };
@@ -91,8 +98,6 @@ export default function Dashboard({ currentUser, onLogout, currentPeriodId }) {
       debouncedLoadData();
     };
     const handleProfileChange = () => {
-      // Fetch data in background without showing full-page loader
-      // This prevents the SetupWizard from unmounting and resetting its local step state.
       debouncedLoadData();
     };
     window.addEventListener('periodChanged', handlePeriodChange);
@@ -109,9 +114,6 @@ export default function Dashboard({ currentUser, onLogout, currentPeriodId }) {
       unsubs.forEach(u => u());
     };
   }, [currentPeriodId, currentUser]);
-
-  // Platform admins are handled at the router level in App.jsx.
-  // This component is only rendered for school users.
 
   if (loading || !data) {
     return <Loader />;
@@ -136,20 +138,6 @@ export default function Dashboard({ currentUser, onLogout, currentPeriodId }) {
     'Senior Secondary': <RocketIcon size={14} /> 
   };
 
-  const getGrade = (avg, level = 'Upper Primary') => {
-    const scale = data?.profile?.gradingSystems?.[level] || 
-                  data?.profile?.gradingSystems?.default || [
-                    {min: 80, max: 100, grade: 'A', color: '#10B981'},
-                    {min: 70, max: 79, grade: 'B', color: '#3B82F6'},
-                    {min: 60, max: 69, grade: 'C', color: '#F59E0B'},
-                    {min: 50, max: 59, grade: 'D', color: '#F97316'},
-                    {min: 0, max: 49, grade: 'E', color: '#EF4444'}
-                  ];
-    const matched = scale.find(s => avg >= s.min && avg <= s.max);
-    if (matched) return { grade: matched.grade || matched.symbol, color: matched.color };
-    return { grade: '?', color: '#64748b' };
-  };
-
   const plan = data.profile?.subscription_plan || data.profile?.subscriptionPlan || 'Starter Plan';
   const pricing = data.platformSettings?.pricing || {};
   const planKey = Object.keys(pricing).find(k => k.toLowerCase() === plan.toLowerCase());
@@ -163,15 +151,6 @@ export default function Dashboard({ currentUser, onLogout, currentPeriodId }) {
     { icon:<BookIcon size={20} />,    label:"Today's Attendance", value: `${data.attendance.percentage}%`, color:'#F59E0B', bg:'#FFFBEB', show: !isFinance && !isLibrarian && feat('attendance') },
     { icon:<UserIcon size={20} />,    label:'Seat Usage',        value: `${totalStaff}/${seatLimit}`, color:'#64748b', bg:'#f1f5f9', show: !isTeacher && !isFinance && !isLibrarian },
   ].filter(k => k.show);
-
-  const quickActions = [
-    { icon:<StudentIcon size={18} />, label:'Students',      sub:'Manage all students',   to:'/students',   bg:'#E0F2FE',  color:'#0EA5E9' },
-    { icon:<TeacherIcon size={18} />, label:'Teachers',      sub:'Manage staff',          to:'/teachers',   bg:'#F5F3FF',  color:'#8B5CF6' },
-    { icon:<BookIcon size={18} />,    label:'Attendance',     sub:'Record daily attendance', to:'/attendance', bg:'#ECFDF5',  color:'#10B981', show: feat('attendance') },
-    { icon:<CardIcon size={18} />,    label:'Fees',           sub:'Fee collection & tracking', to:'/fees',    bg:'#FFFBEB',  color:'#F59E0B', show: feat('fees') },
-    { icon:<BookIcon size={18} />,    label:'Timetable',      sub:'Automated scheduler',    to:'/timetable',  bg:'#F5F3FF',  color:'#6D28D9', show: feat('timetable') },
-  ].filter(a => a.show !== false);
-
 
   return (
     <div className="animate-fade-up">
@@ -232,8 +211,20 @@ export default function Dashboard({ currentUser, onLogout, currentPeriodId }) {
         ))}
       </div>
 
+      {/* Phase 1 Widgets Grid */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: 18, marginBottom: 24 }}>
+        <EarlyWarningWidget 
+          students={data.studentsList}
+          attendance={data.attendanceRaw}
+          marks={data.marksRaw}
+          profile={data.profile}
+        />
+        <TPDTrackerWidget 
+          teachers={data.teachersList}
+        />
+      </div>
 
-      {/* Main Grid - Recent Activity + Quick Actions */}
+      {/* Main Grid - Recent Activity + Portal Activity */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: 18, marginBottom: 24 }}>
 
         {/* Recent Activity / Payments — only if fees module is enabled */}
@@ -268,6 +259,7 @@ export default function Dashboard({ currentUser, onLogout, currentPeriodId }) {
           </div>
         </div>
         )}
+
         {/* Portal Activity Feed — only if teacher or parent portal is enabled */}
         {(feat('teacher_portal') || feat('parent_portal')) && (
         <div className="card">
@@ -440,10 +432,7 @@ export default function Dashboard({ currentUser, onLogout, currentPeriodId }) {
           </div>
         )}
 
-        {/* Academic Performance removed */}
-
       </div>
-
 
       <style>{`
         @media (max-width: 768px) {
@@ -465,4 +454,3 @@ export default function Dashboard({ currentUser, onLogout, currentPeriodId }) {
     </div>
   );
 }
-

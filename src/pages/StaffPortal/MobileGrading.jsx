@@ -11,6 +11,9 @@ import {
 import Loader from '../../components/Common/Loader';
 import { useDialog } from '../../contexts/DialogContext';
 import { Helmet } from 'react-helmet-async';
+import { useOfflineSync, OfflineSyncBadge } from '../../hooks/useOfflineSync';
+import TPDTrackerWidget from '../../components/widgets/TPDTrackerWidget';
+import { saveGradingDraft } from '../../data/offlineStore';
 
 // Premium UI Components
 const Card = ({ children, style, onClick }) => (
@@ -220,13 +223,17 @@ export default function MobileGrading({ user, onLogout }) {
   };
 
   const handleMarkChange = (studentId, field, value) => {
+    const updatedStudentObj = {
+      ...(marksBuffer[studentId] || { score: '', isAbsent: false }),
+      [field]: value
+    };
     setMarksBuffer({
       ...marksBuffer,
-      [studentId]: {
-        ...(marksBuffer[studentId] || { score: '', isAbsent: false }),
-        [field]: value
-      }
+      [studentId]: updatedStudentObj
     });
+    if (selectedPaper) {
+      saveGradingDraft(selectedPaper.id, studentId, user.id || user.teacher_record_id, updatedStudentObj).catch(console.warn);
+    }
   };
 
   const handleSave = async () => {
@@ -249,12 +256,23 @@ export default function MobileGrading({ user, onLogout }) {
         remarks: ''
       }));
       
-      // Pass virtual paper info if this is a virtual paper
-      await saveExamMarks(selectedPaper.id, payload, selectedPaper._virtual ? selectedPaper : null);
-      alert({ title: 'Success', message: 'Marks Synchronized to Cloud!', variant: 'success' });
+      if (isOnline) {
+        await saveExamMarks(selectedPaper.id, payload, selectedPaper._virtual ? selectedPaper : null);
+        alert({ title: 'Success', message: 'Marks Synchronized to Cloud!', variant: 'success' });
+      } else {
+        // Save locally to IndexedDB
+        for (const [studentId, data] of Object.entries(marksBuffer)) {
+          await saveGradingDraft(selectedPaper.id, studentId, user.id, data);
+        }
+        alert({ title: 'Saved Offline', message: 'Offline mode active. Marks saved locally and will auto-sync when online.', variant: 'warning' });
+      }
     } catch (err) {
-      console.error('[PORTAL] Save error:', err);
-      alert({ title: 'Sync Error', message: 'Failed to save marks: ' + err.message, variant: 'danger' });
+      console.error('[PORTAL] Save error, backing up locally:', err);
+      // Local fallback
+      for (const [studentId, data] of Object.entries(marksBuffer)) {
+        await saveGradingDraft(selectedPaper.id, studentId, user.id, data);
+      }
+      alert({ title: 'Saved Locally', message: 'Could not reach cloud. Marks saved offline and queued for background sync.', variant: 'warning' });
     } finally {
       setSaving(false);
     }
@@ -266,6 +284,8 @@ export default function MobileGrading({ user, onLogout }) {
     setPickerType(type);
     setPickerOpen(true);
   };
+
+  const { isOnline, pendingCount, isSyncing, syncNow } = useOfflineSync();
 
   const selectOption = (val) => {
     if (pickerType === 'exam') {
@@ -357,8 +377,11 @@ export default function MobileGrading({ user, onLogout }) {
               <div style={{ fontSize: '0.8rem', color: '#64748b', fontWeight: 500 }}>Staff Portal</div>
             </div>
           </div>
-          <div onClick={onLogout} style={{ background: '#f1f5f9', padding: '10px', borderRadius: '12px', color: '#64748b', cursor: 'pointer' }}>
-            <LogoutIcon size={20} />
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <OfflineSyncBadge isOnline={isOnline} pendingCount={pendingCount} isSyncing={isSyncing} onSync={syncNow} />
+            <div onClick={onLogout} style={{ background: '#f1f5f9', padding: '10px', borderRadius: '12px', color: '#64748b', cursor: 'pointer' }}>
+              <LogoutIcon size={20} />
+            </div>
           </div>
         </div>
       )}
@@ -371,9 +394,12 @@ export default function MobileGrading({ user, onLogout }) {
         
         {/* Desktop Greeting */}
         {isDesktop && (
-          <div style={{ marginBottom: 40 }}>
-            <h1 style={{ margin: 0, fontSize: '2.4rem', fontWeight: 900, color: '#0f172a', letterSpacing: '-1px' }}>Welcome back, {user.name}</h1>
-            <p style={{ margin: '8px 0 0', color: '#64748b', fontSize: '1.1rem' }}>Here is what's happening in your classes today.</p>
+          <div style={{ marginBottom: 40, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div>
+              <h1 style={{ margin: 0, fontSize: '2.4rem', fontWeight: 900, color: '#0f172a', letterSpacing: '-1px' }}>Welcome back, {user.name}</h1>
+              <p style={{ margin: '8px 0 0', color: '#64748b', fontSize: '1.1rem' }}>Here is what's happening in your classes today.</p>
+            </div>
+            <OfflineSyncBadge isOnline={isOnline} pendingCount={pendingCount} isSyncing={isSyncing} onSync={syncNow} />
           </div>
         )}
 
@@ -391,6 +417,9 @@ export default function MobileGrading({ user, onLogout }) {
                 <div style={{ fontSize: '0.8rem', marginTop: 12 }}>Next: {schedule[0]?.subject || 'None'}</div>
               </Card>
             </div>
+
+            {/* TPD Teacher Tracker Widget */}
+            <TPDTrackerWidget currentTeacher={user} />
 
             {assignments_list.length > 0 && (
               <div>

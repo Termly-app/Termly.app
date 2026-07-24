@@ -71,6 +71,35 @@ export async function triggerSync() {
             const { error: err4 } = await supabase.from('attendance').upsert(item.payload);
             if (!err4) success = true; break;
           }
+          case syncTypes.SYNC_GRADES: {
+            // Phase 1: Sync offline grading drafts to supabase
+            const { getGradingDrafts, markDraftsSynced } = await import('./offlineStore.js');
+            try {
+              const drafts = await getGradingDrafts(item.payload.exam_paper_id);
+              const unsyncedDrafts = drafts.filter(d => !d.synced);
+              if (unsyncedDrafts.length > 0) {
+                const marks = unsyncedDrafts.map(d => ({
+                  exam_paper_id: d.exam_paper_id,
+                  student_id: d.student_id,
+                  raw_score: d.is_absent ? null : d.raw_score,
+                  is_absent: d.is_absent,
+                  remarks: d.remarks || '',
+                }));
+                const { error: err5 } = await supabase.from('exam_marks').upsert(marks, {
+                  onConflict: 'exam_paper_id,student_id',
+                });
+                if (!err5) {
+                  await markDraftsSynced(unsyncedDrafts.map(d => d.id));
+                  success = true;
+                }
+              } else {
+                success = true; // Nothing to sync
+              }
+            } catch (err) {
+              console.error("Offline grade sync failed:", err);
+            }
+            break;
+          }
           default: 
             console.warn(`Unknown sync type: ${item.type}, marking as synced to clear queue.`);
             success = true; 

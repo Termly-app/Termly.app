@@ -691,20 +691,8 @@ export default function PortalDashboard({ user, onLogout }) {
                   </Card>
 
                   <Card>
-                    <h4 style={{ margin: '0 0 16px', fontWeight: 800 }}>Fee Vote-Head Breakdown</h4>
+                    <h4 style={{ margin: '0 0 16px', fontWeight: 800 }}>Fee Summary</h4>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-                      {[
-                        { label: 'Tuition Fee', amount: Math.round(feeSummary.billed * 0.6) },
-                        { label: 'Boarding / Amenities', amount: Math.round(feeSummary.billed * 0.2) },
-                        { label: 'Meals & Catering', amount: Math.round(feeSummary.billed * 0.12) },
-                        { label: 'Co-Curricular / Activity', amount: Math.round(feeSummary.billed * 0.08) }
-                      ].map(v => (
-                        <div key={v.label} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem' }}>
-                          <span style={{ color: '#64748b' }}>{v.label}</span>
-                          <span style={{ fontWeight: 700, color: '#334155' }}>KES {v.amount.toLocaleString()}</span>
-                        </div>
-                      ))}
-                      <div style={{ height: 1, background: '#f1f5f9', margin: '4px 0' }} />
                       <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.9rem' }}>
                         <span style={{ color: '#64748b' }}>Total Billed</span>
                         <span style={{ fontWeight: 700 }}>KES {feeSummary.billed.toLocaleString()}</span>

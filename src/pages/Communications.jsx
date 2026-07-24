@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { isFeatureEnabled, getSchoolProfile } from '../data/coreStore';
 import { getStudents } from '../data/studentStore';
 import { logCommunication, sendSMSMessage, sendWhatsAppMessage } from '../data/smsStore';
+import { sendBroadcast, BROADCAST_TEMPLATES } from '../data/broadcastStore';
 import { getAnnouncements } from '../data/academicsStore';
 import { CBC_STRUCTURE } from '../data/seedData';
 import { 
@@ -33,7 +34,6 @@ export default function Communications({ currentUser }) {
   const [isSending, setIsSending] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
   const [channel, setChannel] = useState('sms');
-  const [smsLogs, setSmsLogs] = useState([]);
   
   const { enabled: hasAccess, loading: featureLoading } = useFeature('communications');
 
@@ -96,19 +96,20 @@ export default function Communications({ currentUser }) {
 
     setIsSending(true);
     try {
-      const phones = filteredRecipients.map(r => r.parentPhone).filter(Boolean);
-      
-      if (channel === 'whatsapp') {
-        await sendWhatsAppMessage(phones, message.trim());
-      } else {
-        await sendSMSMessage(phones, message.trim());
-      }
+      const recipients = filteredRecipients.map(r => ({
+        phone: r.parentPhone || r.parent_phone,
+        parentName: r.parentName || r.parent_name || 'Parent',
+        childName: r.name,
+        admNo: r.admNo || r.adm_no,
+        balance: r.balance || 0,
+      }));
 
-      await logCommunication({
-        target: activeTab === 'individual' ? selectedStudent.name : `${targetAudience} ${targetStream}`,
-        message: message.trim(),
-        type: channel,
-        count: phones.length
+      await sendBroadcast({
+        channel,
+        templateKey: 'general_notice',
+        recipients,
+        data: { message: message.trim() },
+        schoolName: profile?.schoolName || 'School',
       });
 
       setShowSuccess(true);
@@ -142,7 +143,7 @@ export default function Communications({ currentUser }) {
   }, [profile?.activeClasses, allGradesOrder]);
 
   const streamsForClass = targetAudience !== 'all' && targetAudience !== 'defaulters' 
-    ? (profile.streamsPerClass?.[targetAudience] || [])
+    ? (profile?.streamsPerClass?.[targetAudience] || [])
     : [];
 
   const tabBtn = (isActive) => ({
@@ -231,7 +232,6 @@ export default function Communications({ currentUser }) {
                     <input 
                       type="text" 
                       style={{ border: 'none', background: 'transparent', padding: '12px', outline: 'none', width: '100%', fontSize: '0.9rem', color: 'var(--text-main)' }}
-
                       placeholder="Type student name or Admission No..." 
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
@@ -260,12 +260,51 @@ export default function Communications({ currentUser }) {
                 </div>
               )}
 
-              <div className="form-group" style={{ marginTop: 20 }}>
+              {/* Phase 1: Broadcast Templates */}
+              <div className="form-group" style={{ marginTop: 16 }}>
+                <label style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+                  <span>Quick Templates</span>
+                  <span style={{ fontSize: '0.72rem', color: 'var(--text-light)', fontWeight: 500 }}>WhatsApp & SMS Flow Templates</span>
+                </label>
+                <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 12 }}>
+                  {Object.entries(BROADCAST_TEMPLATES).map(([key, tpl]) => (
+                    <button
+                      key={key}
+                      type="button"
+                      onClick={() => {
+                        const sampleData = {
+                          schoolName: profile?.schoolName || 'School',
+                          message: message || 'Important announcement from administration.',
+                          phone: profile?.phone || '0700000000',
+                          parentName: 'Parent',
+                          childName: 'Student Name',
+                          balance: 15000,
+                          paybill: profile?.paybill || '247247',
+                          admNo: 'ADM-101',
+                          examName: 'Opener Exam',
+                          average: 78.5,
+                        };
+                        setMessage(tpl.smsTemplate(sampleData));
+                      }}
+                      style={{
+                        padding: '6px 12px', borderRadius: 8, border: '1px solid var(--border)',
+                        background: tpl.bg, color: tpl.color, fontSize: '0.75rem', fontWeight: 700,
+                        cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 6,
+                        transition: 'transform 0.15s ease',
+                      }}
+                    >
+                      <span>{tpl.icon}</span> {tpl.name}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="form-group" style={{ marginTop: 12 }}>
                 <label>Message Content</label>
                 <textarea
                   className="form-input"
                   style={{ minHeight: 120, resize: 'vertical' }}
-                  placeholder="Type your message here..."
+                  placeholder="Type your message here or select a template above..."
                   value={message}
                   onChange={(e) => setMessage(e.target.value)}
                 />
@@ -280,6 +319,7 @@ export default function Communications({ currentUser }) {
                   <div style={{ display: 'flex', gap: 8 }}>
                     <button type="button" className={channel === 'sms' ? 'btn btn-primary btn-sm' : 'btn btn-ghost btn-sm'} onClick={() => setChannel('sms')} style={{ border: channel !== 'sms' ? '1px solid var(--border)' : 'none' }}>SMS</button>
                     <button type="button" className={channel === 'whatsapp' ? 'btn btn-primary btn-sm' : 'btn btn-ghost btn-sm'} onClick={() => setChannel('whatsapp')} style={{ border: channel !== 'whatsapp' ? '1px solid var(--border)' : 'none', background: channel === 'whatsapp' ? '#25d366' : undefined }}>WhatsApp</button>
+                    <button type="button" className={channel === 'both' ? 'btn btn-primary btn-sm' : 'btn btn-ghost btn-sm'} onClick={() => setChannel('both')} style={{ border: channel !== 'both' ? '1px solid var(--border)' : 'none', background: channel === 'both' ? 'linear-gradient(135deg, #10b981, #2563eb)' : undefined }}>Both (SMS + WA)</button>
                   </div>
                 </div>
                 <button className="btn btn-primary" type="submit" style={{ flexShrink: 0, height: 44, padding: '0 24px', borderRadius: 10 }} disabled={isSending || !message || (activeTab === 'individual' && !selectedStudent)}>
@@ -308,49 +348,8 @@ export default function Communications({ currentUser }) {
               </div>
             </div>
           </div>
-
-          <div className="card">
-            <div className="card-header">
-              <h3>Recent Activity</h3>
-            </div>
-            <div className="card-body" style={{ padding: '0 16px' }}>
-              <div style={{ display: 'flex', flexDirection: 'column' }}>
-                {history.length === 0 ? (
-                  <div style={{ textAlign: 'center', padding: '30px 20px', color: 'var(--text-muted)', fontSize: '0.85rem' }}>No recent broadcasts found.</div>
-                ) : history.slice(0, 10).map((log, i) => (
-                  <div key={log.id || i} style={{ padding: '16px 0', borderBottom: i === Math.min(history.length, 10) - 1 ? 'none' : '1px solid var(--border)', display: 'flex', gap: 12 }}>
-                    <div style={{ width: 8, height: 8, borderRadius: '50%', background: log.metadata?.channel === 'whatsapp' ? '#25d366' : 'var(--primary)', marginTop: 6, flexShrink: 0 }}></div>
-                    <div>
-                      <div style={{ fontSize: '0.875rem', fontWeight: 800, color: 'var(--text-main)' }}>{log.target_audience}</div>
-                      <div style={{ fontSize: '0.8rem', color: 'var(--text-light)', marginTop: 4 }}>{log.content?.substring(0, 80)}...</div>
-                      <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginTop: 6, fontWeight: 600 }}>
-                        {new Date(log.created_at).toLocaleString()} • {log.metadata?.recipient_count || 0} recp.
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
         </div>
       </div>
-
-      <style>{`
-        .search-results { position: absolute; top: 100%; left: 0; right: 0; background: var(--bg-card); border: 1px solid var(--border); border-radius: 10px; margin-top: 8px; z-index: 100; box-shadow: 0 10px 20px rgba(0,0,0,0.05); max-height: 240px; overflow-y: auto; }
-        .search-item { padding: 10px 16px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; cursor: pointer; }
-        .search-item:hover { background: var(--bg); }
-        .selected-badge { display: inline-flex; align-items: center; gap: 10px; background: rgba(34, 197, 94, 0.1); color: var(--success); padding: 8px 14px; border-radius: 8px; font-size: 0.85rem; font-weight: 700; margin-top: 12px; }
-        .selected-badge button { background: transparent; border: none; color: var(--success); font-size: 1.2rem; cursor: pointer; display: flex; align-items: center; }
-
-        @media (max-width: 768px) {
-          .comm-responsive-grid {
-            grid-template-columns: 1fr !important;
-          }
-          .comm-responsive-grid .card {
-            grid-column: 1 !important;
-          }
-        }
-      `}</style>
     </div>
   );
 }
