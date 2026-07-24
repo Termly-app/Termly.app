@@ -458,7 +458,7 @@ export default function Fees({ currentUser, currentPeriodId }) {
       const footerStr = await getPrintFooter();
       const w = window.open('', '_blank');
       w.document.write(`<html><head><title>Fee List - ${classFilter}</title>
-      <style>body{font-family:Arial,sans-serif;padding:20px}
+      <style>@page{margin:10mm}body{font-family:Arial,sans-serif;padding:0}
       table{width:100%;border-collapse:collapse;margin-top:16px}th,td{border:1px solid #e2e8f0;padding:8px 12px;text-align:left;font-size:13px}
       th{background:#1e3a5f;color:white}.footer{margin-top:30px;font-size:12px;color:#64748b}
       .text-success{color:#10b981}.text-danger{color:#ef4444}.font-bold{font-weight:700}</style></head><body>
