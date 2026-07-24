@@ -384,21 +384,24 @@ export default function Communications({ currentUser }) {
                         type="button" 
                         onClick={() => setSelectedStudent(null)}
                         style={{
-                          width: 28,
-                          height: 28,
+                          width: 24,
+                          height: 24,
                           borderRadius: '50%',
                           border: 'none',
-                          background: 'rgba(79, 70, 229, 0.12)',
-                          display: 'flex',
+                          background: 'rgba(79, 70, 229, 0.15)',
+                          padding: 0,
+                          margin: 0,
+                          lineHeight: 0,
+                          display: 'inline-flex',
                           alignItems: 'center',
-                          justify: 'center',
+                          justifyContent: 'center',
                           cursor: 'pointer',
                           transition: 'all 0.15s ease',
                           flexShrink: 0,
                         }}
                         title="Clear recipient"
                       >
-                        <CrossIcon size={14} color="#3730A3" />
+                        <CrossIcon size={12} color="#3730A3" style={{ verticalAlign: 'middle', display: 'block', margin: '0 auto' }} />
                       </button>
                     </div>
                   )}
