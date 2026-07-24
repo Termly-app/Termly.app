@@ -31,6 +31,23 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Guard against root-level clutter
+        run: |
+          ALLOWED="vite.config.js vitest.config.js"
+          STRAY_JS=$(find . -maxdepth 1 \( -name "*.js" -o -name "*.cjs" -o -name "*.mjs" \) -type f -printf "%f\n")
+          for f in $STRAY_JS; do
+            if ! echo "$ALLOWED" | grep -qw "$f"; then
+              echo "::error::$f is a stray root-level script. Move it into scripts/ before merging."
+              exit 1
+            fi
+          done
+
+          STRAY_SQL=$(find . -maxdepth 1 -name "*.sql" -type f)
+          if [ -n "$STRAY_SQL" ]; then
+            echo "::error::SQL doesn't belong in repo root, it belongs in supabase/: $STRAY_SQL"
+            exit 1
+          fi
+
       - name: Build production bundle
         run: npm run build
         env:
