@@ -109,14 +109,14 @@ export default function AdminsTab() {
                 </thead>
                 <tbody>
                   {admins.map(a => (
-                    <tr key={a.id}>
+                    <tr key={a.email}>
                       <td>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                           <UserIcon size={14} color="var(--vi)" />
                           <span style={{ fontWeight: 600, fontSize: '0.85rem' }}>{a.email}</span>
                         </div>
                       </td>
-                      <td><span className="s-pill is-ok">{a.role || 'Super Admin'}</span></td>
+                      <td><span className="s-pill is-ok">Platform Admin</span></td>
                       <td style={{ fontSize: '0.75rem', color: 'var(--sub)' }}>{fmtDate(a.created_at)}</td>
                       <td>
                         <button 

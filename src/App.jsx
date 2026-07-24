@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, Component, lazy, Suspense } from 'react';
 import { Routes, Route, NavLink, useLocation, Navigate } from 'react-router-dom';
 import { supabase } from './lib/supabase';
-import { getSchoolProfile, setCurrentSchoolContext, getCurrentPeriodId, checkIsPlatformAdmin, isFeatureEnabled, checkIsSubscriptionActive, subscribeToSchoolChanges, isShadowMode, getPlatformSettings } from './data/coreStore';
+import { getSchoolProfile, setCurrentSchoolContext, setCurrentPeriodId, getCurrentPeriodId, checkIsPlatformAdmin, isFeatureEnabled, checkIsSubscriptionActive, subscribeToSchoolChanges, isShadowMode, getPlatformSettings } from './data/coreStore';
 import { getUserByAuthId } from './data/authStore';
 import { getPeriods, setActivePeriod, initActivePeriod, getUnreadNotificationCount, subscribeToNotifications, getNotifications, markNotificationRead, markAllNotificationsRead } from './data/academicsStore';;
 

@@ -407,7 +407,7 @@ export async function checkIsPlatformAdmin() {
     if (!user) return false;
     const { data } = await supabase
       .from('platform_admins')
-      .select('id')
+      .select('email')
       .eq('email', user.email)
       .maybeSingle();
     return !!data;
@@ -701,7 +701,7 @@ export async function getPlatformAdmins() {
 
 export async function addPlatformAdmin(email, role = 'admin') {
   mutationGuard('addPlatformAdmin');
-  const { error } = await supabase.from('platform_admins').insert({ email, role });
+  const { error } = await supabase.from('platform_admins').insert({ email, added_by: 'system' });
   if (error) throw error;
   await logPlatformActivity('PLATFORM_ADMIN_ADDED', `Added: ${email}`);
 }
