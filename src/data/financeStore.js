@@ -3,6 +3,7 @@ import { db, queueChange } from './offlineStore';
 import { 
   _currentSchoolId, _currentPeriodId, _currentAuthUser, mutationGuard, cachedQuery, invalidateCache, getCurrentSchoolId, getCurrentPeriodId, logAuditEvent 
 } from './coreStore';
+import { withRetry } from '../utils/resilience';
 
 // ==========================================
 // FINANCE & FEES (Extracted from store.js)
