@@ -1,7 +1,7 @@
 import { supabase } from '../lib/supabase';
 import { db, queueChange } from './offlineStore';
 import { 
-  _currentSchoolId, _currentPeriodId, _currentAuthUser, mutationGuard, cachedQuery, invalidateCache, getCurrentSchoolId, getCurrentPeriodId, logAuditEvent 
+  _currentSchoolId, _currentPeriodId, _currentAuthUser, mutationGuard, cachedQuery, invalidateCache, getCurrentSchoolId, getCurrentPeriodId, logAuditEvent, getSchoolProfile
 } from './coreStore';
 import { withRetry } from '../utils/resilience';
 import { getStudents } from './studentStore';

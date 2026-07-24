@@ -9,7 +9,8 @@ import {
   updateSchoolFeature,
   logPlatformActivity,
   logAuditEvent,
-  setCurrentPeriodId
+  setCurrentPeriodId,
+  getSchoolProfile
 } from './coreStore';
 import { getTeachers } from './staffStore';
 import { withRetry } from '../utils/resilience';
