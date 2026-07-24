@@ -4,6 +4,7 @@ import {
   _currentSchoolId, _currentPeriodId, _currentAuthUser, mutationGuard, cachedQuery, invalidateCache, getCurrentSchoolId, getCurrentPeriodId, logAuditEvent 
 } from './coreStore';
 import { withRetry } from '../utils/resilience';
+import { getStudents } from './studentStore';
 
 // ==========================================
 // FINANCE & FEES (Extracted from store.js)
