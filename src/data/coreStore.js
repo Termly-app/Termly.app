@@ -353,6 +353,7 @@ export async function getSchoolProfileBySchoolId(schoolId) {
     .maybeSingle();
   if (error || !data) return null;
   return {
+    id: data.id,
     schoolId: data.school_id,
     schoolName: data.school_name,
     subscriptionPlan: data.subscription_plan || 'Free',
@@ -370,7 +371,8 @@ export async function getSchoolProfileBySchoolId(schoolId) {
     grade_fees: data.grade_fees,
     portal_access: data.portal_access,
     mpesa_config: data.mpesa_config,
-    sms_config: data.sms_config
+    sms_config: data.sms_config,
+    setup_completed: data.setup_completed
   };
 }
 
