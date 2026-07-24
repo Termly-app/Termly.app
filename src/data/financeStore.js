@@ -7,7 +7,7 @@ import { withRetry } from '../utils/resilience';
 import { getStudents } from './studentStore';
 import { TERM_FEE } from './seedData';
 import { queueSMS } from './smsStore';
-import { reconcileStudentFee } from './academicsStore';
+
 
 // ==========================================
 // FINANCE & FEES (Extracted from store.js)
@@ -83,7 +83,7 @@ export async function getFees(studentId = null) {
 
     Object.keys(fees).forEach(sid => {
       if (fees[sid].totalFee === 0) {
-        reconcileStudentFee(sid, fees[sid]).catch(console.error);
+        import('./academicsStore.js').then(m => m.reconcileStudentFee(sid, fees[sid])).catch(console.error);
       }
     });
 
@@ -137,6 +137,7 @@ export async function recordPayment(studentId, amount, method, reference) {
   if (fetchErr) throw fetchErr;
 
   // 1.5 Reconcile the total_fee and balance before processing payment
+  const { reconcileStudentFee } = await import('./academicsStore.js');
   const reconciled = await reconcileStudentFee(studentId, {
     totalFee: Number(currentFee.total_fee),
     paid: Number(currentFee.paid),

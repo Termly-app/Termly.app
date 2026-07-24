@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { getStudents } from '../data/studentStore';
 import { getAttendance, markAttendance, getAttendanceSummary, getTodayStr, getSubjectAssignments } from '../data/academicsStore';
-import { getSchoolProfile, isFeatureEnabled } from '../data/coreStore';
+import { getSchoolProfile, isFeatureEnabled, getPrintHeader } from '../data/coreStore';
 import { queueSmsBatch } from '../data/smsStore';;
 import { CBC_STRUCTURE } from '../data/seedData';
 import { 

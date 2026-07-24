@@ -1,6 +1,6 @@
 import { supabase } from '../lib/supabase';
 import { getPendingSync, updateSyncStatus, syncTypes } from './offlineStore';
-import { recordPayment, autoProcessMpesaCallbacks } from './financeStore';
+
 export { supabase };
 
 export let _currentSchoolId = sessionStorage.getItem('Termly_portal_school_id') || null;
@@ -838,7 +838,7 @@ export async function triggerSync() {
     _syncing = false;
     window.dispatchEvent(new Event('syncCompleted'));
   }
-  try { await autoProcessMpesaCallbacks(); } catch (e) { /* silent */ }
+  try { const { autoProcessMpesaCallbacks } = await import('./financeStore.js'); await autoProcessMpesaCallbacks(); } catch (e) { /* silent */ }
 }
 
 // ============= MIGRATIONS & INVITATIONS =============
