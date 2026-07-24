@@ -4,6 +4,8 @@ import {
   _currentAuthUser,
   _currentExamType,
   _currentPeriodId,
+  _currentUserId,
+  invalidateCache,
   mutationGuard,
   cachedQuery,
   updateSchoolFeature,
@@ -14,8 +16,10 @@ import {
 } from './coreStore';
 import { getTeachers } from './staffStore';
 import { getStudents } from './studentStore';
+import { getFees } from './financeStore';
 import { withRetry } from '../utils/resilience';
 import { getUserByAuthId } from './authStore';
+import { CBC_STRUCTURE, getLevelForGrade, getSubjectsForGrade } from './seedData';
 
 export async function getPeriods() {
   if (!_currentSchoolId) return [];

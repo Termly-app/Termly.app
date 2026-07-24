@@ -1,12 +1,12 @@
 import { supabase } from '../lib/supabase';
 import { db, queueChange } from './offlineStore';
 import { 
-  _currentSchoolId, mutationGuard, cachedQuery, invalidateCache, getCurrentSchoolId,
-  logAuditEvent, getPrintHeader, checkIsPlatformAdmin, shouldFetchCloud, getSchoolProfile
+  _currentSchoolId, _currentPeriodId, mutationGuard, cachedQuery, invalidateCache, getCurrentSchoolId,
+  logAuditEvent, logPlatformActivity, getPrintHeader, checkIsPlatformAdmin, shouldFetchCloud, getSchoolProfile
 } from './coreStore';
 import { withRetry } from '../utils/resilience';
 import { getFeeSummary, getPayments } from './financeStore';
-import { TERM_FEE } from './seedData';
+import { TERM_FEE, CBC_STRUCTURE, getSubjectsForGrade } from './seedData';
 import { jsPDF } from 'jspdf'; 
 
 // ==========================================

@@ -1,5 +1,6 @@
 import { supabase } from '../lib/supabase';
 import { getPendingSync, updateSyncStatus, syncTypes } from './offlineStore';
+import { recordPayment, autoProcessMpesaCallbacks } from './financeStore';
 export { supabase };
 
 export let _currentSchoolId = sessionStorage.getItem('Termly_portal_school_id') || null;

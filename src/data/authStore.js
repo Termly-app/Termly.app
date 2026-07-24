@@ -1,5 +1,5 @@
 import { supabase } from '../lib/supabase';
-import { _currentSchoolId, mutationGuard, getSchoolProfileBySchoolId, checkIsSubscriptionActive, checkFeatureAccess } from './coreStore';
+import { _currentSchoolId, mutationGuard, getSchoolProfileBySchoolId, checkIsSubscriptionActive, checkFeatureAccess, logPlatformActivity, hasFeature, getCurrentSchoolId } from './coreStore';
 
 // ============================================================================
 // AUTH MODULE: API LAYER for Login & Register

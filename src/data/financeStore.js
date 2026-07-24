@@ -1,11 +1,13 @@
 import { supabase } from '../lib/supabase';
 import { db, queueChange } from './offlineStore';
 import { 
-  _currentSchoolId, _currentPeriodId, _currentAuthUser, mutationGuard, cachedQuery, invalidateCache, getCurrentSchoolId, getCurrentPeriodId, logAuditEvent, getSchoolProfile
+  _currentSchoolId, _currentPeriodId, _currentAuthUser, mutationGuard, cachedQuery, invalidateCache, getCurrentSchoolId, getCurrentPeriodId, logAuditEvent, logPlatformActivity, getSchoolProfile
 } from './coreStore';
 import { withRetry } from '../utils/resilience';
 import { getStudents } from './studentStore';
 import { TERM_FEE } from './seedData';
+import { queueSMS } from './smsStore';
+import { reconcileStudentFee } from './academicsStore';
 
 // ==========================================
 // FINANCE & FEES (Extracted from store.js)
