@@ -7,7 +7,7 @@ import { getAnnouncements } from '../data/academicsStore';
 import { CBC_STRUCTURE } from '../data/seedData';
 import { 
   HistoryIcon, PlatformZapIcon, CheckIcon, SearchIcon, MessageIcon, RocketIcon, 
-  UserIcon 
+  UserIcon, AlertIcon, CardIcon, BookIcon
 } from '../components/CommonIcons';
 import Select from '../components/Common/Select';
 import { Helmet } from 'react-helmet-async';
@@ -293,7 +293,11 @@ export default function Communications({ currentUser }) {
                         transition: 'transform 0.15s ease',
                       }}
                     >
-                      <span>{tpl.icon}</span> {tpl.name}
+                      {key === 'emergency_alert' && <AlertIcon size={14} color={tpl.color} />}
+                      {key === 'fee_invoice' && <CardIcon size={14} color={tpl.color} />}
+                      {key === 'exam_results' && <BookIcon size={14} color={tpl.color} />}
+                      {key === 'general_notice' && <MessageIcon size={14} color={tpl.color} />}
+                      {tpl.name}
                     </button>
                   ))}
                 </div>

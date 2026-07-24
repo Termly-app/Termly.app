@@ -15,53 +15,53 @@ export const BROADCAST_TEMPLATES = {
   emergency_alert: {
     key: 'emergency_alert',
     name: 'Emergency Alert',
-    icon: '🚨',
+    icon: 'Alert',
     color: '#EF4444',
     bg: '#FEF2F2',
     description: 'Urgent safety or emergency notification',
     smsTemplate: (data) =>
-      `🚨 EMERGENCY — ${data.schoolName}: ${data.message}. Contact school: ${data.phone || 'office'}`,
+      `EMERGENCY — ${data.schoolName}: ${data.message}. Contact school: ${data.phone || 'office'}`,
     whatsappTemplate: (data) =>
-      `🚨 *EMERGENCY ALERT*\n\n*${data.schoolName}*\n\n${data.message}\n\n📞 Contact: ${data.phone || 'School Office'}\n⏰ ${new Date().toLocaleString('en-KE', { dateStyle: 'medium', timeStyle: 'short' })}`,
+      `*EMERGENCY ALERT*\n\n*${data.schoolName}*\n\n${data.message}\n\nContact: ${data.phone || 'School Office'}\nTime: ${new Date().toLocaleString('en-KE', { dateStyle: 'medium', timeStyle: 'short' })}`,
   },
 
   fee_invoice: {
     key: 'fee_invoice',
     name: 'Fee Invoice / Reminder',
-    icon: '💳',
+    icon: 'Card',
     color: '#F59E0B',
     bg: '#FFFBEB',
     description: 'Fee balance reminder with M-Pesa payment details',
     smsTemplate: (data) =>
       `Dear ${data.parentName || 'Parent'}, ${data.childName}'s fee balance is KSh ${Number(data.balance || 0).toLocaleString()}. Pay via M-Pesa Paybill ${data.paybill || '---'}. Ref: ${data.admNo || 'N/A'}. ${data.schoolName}`,
     whatsappTemplate: (data) =>
-      `💳 *Fee Reminder*\n\n*${data.schoolName}*\n\nDear ${data.parentName || 'Parent'},\n\n📋 Student: *${data.childName}*\n🏷 Adm No: ${data.admNo || 'N/A'}\n💰 Balance: *KSh ${Number(data.balance || 0).toLocaleString()}*\n\n*Payment via M-Pesa:*\nPaybill: ${data.paybill || '---'}\nAccount: ${data.admNo || 'Adm No'}\n\nThank you.`,
+      `*Fee Reminder*\n\n*${data.schoolName}*\n\nDear ${data.parentName || 'Parent'},\n\nStudent: *${data.childName}*\nAdm No: ${data.admNo || 'N/A'}\nBalance: *KSh ${Number(data.balance || 0).toLocaleString()}*\n\n*Payment via M-Pesa:*\nPaybill: ${data.paybill || '---'}\nAccount: ${data.admNo || 'Adm No'}\n\nThank you.`,
   },
 
   exam_results: {
     key: 'exam_results',
     name: 'Exam Results Notification',
-    icon: '📊',
+    icon: 'Book',
     color: '#3B82F6',
     bg: '#EFF6FF',
     description: 'Notify parents that exam results are available',
     smsTemplate: (data) =>
       `${data.schoolName}: ${data.childName || "Your child"}'s ${data.examName || 'exam'} results are ready. Average: ${data.average || '--'}%. Log in to the parent portal for details.`,
     whatsappTemplate: (data) =>
-      `📊 *Exam Results Available*\n\n*${data.schoolName}*\n\n📝 Exam: *${data.examName || 'Term Exam'}*\n👤 Student: *${data.childName || 'Your child'}*\n📈 Average: *${data.average || '--'}%*\n\n🔗 Log in to the Parent Portal to view the full report card.\n\nRegards,\n${data.schoolName} Academic Office`,
+      `*Exam Results Available*\n\n*${data.schoolName}*\n\nExam: *${data.examName || 'Term Exam'}*\nStudent: *${data.childName || 'Your child'}*\nAverage: *${data.average || '--'}%*\n\nLog in to the Parent Portal to view the full report card.\n\nRegards,\n${data.schoolName} Academic Office`,
   },
 
   general_notice: {
     key: 'general_notice',
     name: 'General Notice',
-    icon: '📢',
+    icon: 'Notice',
     color: '#8B5CF6',
     bg: '#F5F3FF',
     description: 'General school announcement or circular',
     smsTemplate: (data) =>
       `${data.schoolName} Notice: ${data.message}`,
     whatsappTemplate: (data) =>
-      `📢 *School Notice*\n\n*${data.schoolName}*\n\n${data.message}\n\n— ${data.schoolName} Administration`,
+      `*School Notice*\n\n*${data.schoolName}*\n\n${data.message}\n\n— ${data.schoolName} Administration`,
   },
 };
 
@@ -73,13 +73,13 @@ const CHANNELS = {
   sms: {
     key: 'sms',
     name: 'SMS',
-    icon: '💬',
+    icon: 'SMS',
     send: async (phones, message) => sendSMSMessage(phones, message),
   },
   whatsapp: {
     key: 'whatsapp',
     name: 'WhatsApp',
-    icon: '📱',
+    icon: 'WhatsApp',
     send: async (phones, message) => sendWhatsAppMessage(phones, message),
   },
 };

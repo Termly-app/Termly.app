@@ -44,7 +44,7 @@ describe('Phase 1 Features Test Suite', () => {
       const wa = tpl.whatsappTemplate({ schoolName: 'Greenwood High', message: 'Parent Meeting on Friday' });
 
       expect(sms).toContain('Greenwood High Notice: Parent Meeting on Friday');
-      expect(wa).toContain('📢 *School Notice*');
+      expect(wa).toContain('*School Notice*');
       expect(wa).toContain('Greenwood High');
     });
   });
