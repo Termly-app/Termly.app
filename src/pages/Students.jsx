@@ -149,7 +149,7 @@ export default function Students({ currentUser, currentPeriodId }) {
       const cls = classFilter === 'All' ? 'All Classes' : classFilter;
       const h = await getPrintHeader(`${cls} — Student List (${filtered.length})`);
       const w = window.open('', '_blank');
-      w.document.write(`<html><head><title>Class List</title><style>body{font-family:Arial;padding:20px}table{width:100%;border-collapse:collapse;margin-top:16px}th,td{border:1px solid #e2e8f0;padding:8px 12px;font-size:13px;text-align:left}th{background:#0EA5E9;color:#fff}</style></head><body>${h}<table><thead><tr><th>#</th><th>Adm No</th><th>Name</th><th>Class</th><th>Gender</th><th>Parent</th><th>Phone</th></tr></thead><tbody>${filtered.map((s,i)=>`<tr><td>${i+1}</td><td>${s.admNo}</td><td>${s.name}</td><td>${s.class}</td><td>${s.gender}</td><td>${s.parent}</td><td>${s.parentPhone}</td></tr>`).join('')}</tbody></table></body></html>`);
+      w.document.write(`<html><head><title>Class List</title><style>@page{margin:10mm}body{font-family:Arial;padding:0}table{width:100%;border-collapse:collapse;margin-top:16px}th,td{border:1px solid #e2e8f0;padding:8px 12px;font-size:13px;text-align:left}th{background:#0EA5E9;color:#fff}</style></head><body>${h}<table><thead><tr><th>#</th><th>Adm No</th><th>Name</th><th>Class</th><th>Gender</th><th>Parent</th><th>Phone</th></tr></thead><tbody>${filtered.map((s,i)=>`<tr><td>${i+1}</td><td>${s.admNo}</td><td>${s.name}</td><td>${s.class}</td><td>${s.gender}</td><td>${s.parent}</td><td>${s.parentPhone}</td></tr>`).join('')}</tbody></table></body></html>`);
       w.document.close(); w.print();
     } catch (err) { 
       await alert({ 

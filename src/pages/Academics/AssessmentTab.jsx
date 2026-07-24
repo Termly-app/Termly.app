@@ -448,7 +448,7 @@ export default function AssessmentTab({ currentUser, currentPeriodId }) {
 
       const footerStr = await getPrintFooter();
       w.document.write(`<html><head><title>All Report Cards - ${selectedClass}</title>
-    <style>body{font-family:Arial,sans-serif;padding:0;color:#1e293b;margin:0}
+    <style>@page{margin:10mm}body{font-family:Arial,sans-serif;padding:0;color:#1e293b;margin:0}
     .report-page{max-width:700px;margin:0 auto;padding:20px;page-break-after:always}
     .report-page:last-child{page-break-after:auto}
     .level{display:inline-block;background:#e2e8f0;padding:3px 12px;border-radius:10px;font-size:11px;margin-top:6px;color:#475569}
@@ -1053,7 +1053,7 @@ function ReportCardModal({ student, cbcData, coreCompData, onClose, getGrade, cb
       const headerStr = await getPrintHeader(`Term 1 ${examType} Report Card — 2026`);
       const w = window.open('', '_blank');
       w.document.write(`<html><head><title>Report Card - ${student.name}</title>
-      <style>body{font-family:Arial,sans-serif;padding:20px;color:#1e293b;max-width:700px;margin:0 auto}
+      <style>@page{margin:10mm}body{font-family:Arial,sans-serif;padding:0;color:#1e293b;max-width:700px;margin:0 auto}
       .level{display:inline-block;background:#e2e8f0;padding:3px 12px;border-radius:10px;font-size:11px;margin-top:6px;color:#475569}
       .info{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:18px;font-size:12px}.info strong{color:#64748b}
       table{width:100%;border-collapse:collapse;margin-bottom:18px}th,td{border:1px solid #e2e8f0;padding:7px 10px;text-align:left;font-size:11px}

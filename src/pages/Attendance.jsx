@@ -150,7 +150,8 @@ export default function Attendance({ currentUser, currentPeriodId }) {
       const printWin = window.open('', '_blank');
       printWin.document.write(`<html><head><title>Attendance Report</title>
         <style>
-          body { font-family: sans-serif; padding: 20px; color: #333; }
+          @page { margin: 10mm; }
+          body { font-family: sans-serif; padding: 0; color: #333; }
           .header { text-align: center; margin-bottom: 20px; border-bottom: 2px solid #eee; padding-bottom: 15px; }
           table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 0.85rem; }
           th, td { border: 1px solid #ddd; padding: 8px; text-align: center; }
