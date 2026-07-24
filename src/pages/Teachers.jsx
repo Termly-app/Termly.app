@@ -156,8 +156,8 @@ export default function Teachers({ currentUser, currentPeriodId }) {
 
       printWin.document.write(`<html><head><title>${title}</title>
         <style>
-          @page { margin: 10mm; }
-          body { font-family: sans-serif; padding: 0; color: #333; }
+          @page { margin: 0; }
+          body { font-family: sans-serif; padding: 15mm; color: #333; }
           .header { text-align: center; margin-bottom: 20px; padding-bottom: 15px; }
           table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 0.85rem; }
           th, td { border: 1px solid #ddd; padding: 10px; text-align: left; }
@@ -662,7 +662,7 @@ function ReportsTab({ profile, teachers, assignments, onPrintStaff }) {
       const profileStr = await getSchoolProfile();
       const w = window.open('', '_blank');
       w.document.write(`<html><head><title>Performance Report - ${selectedInfo.name}</title>
-    <style>@page{margin:10mm}body{font-family:Arial,sans-serif;padding:0;color:#1e293b;max-width:700px;margin:0 auto}
+    <style>@page{margin:0}body{font-family:Arial,sans-serif;padding:15mm;color:#1e293b;max-width:700px;margin:0 auto}
     h1{color:#1e3a5f;font-size:20px;margin:0 0 4px}h2{color:#64748b;font-weight:400;margin:0 0 6px;font-size:13px}
     h3{color:#1e3a5f;font-size:15px;margin:20px 0 8px;border-bottom:2px solid #e2e8f0;padding-bottom:4px}
     .info{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin:12px 0 20px;font-size:12px;padding:12px;background:#f8fafc;border-radius:8px}
@@ -717,7 +717,7 @@ function ReportsTab({ profile, teachers, assignments, onPrintStaff }) {
       const profileStr = await getSchoolProfile();
       const w = window.open('', '_blank');
       w.document.write(`<html><head><title>All Teachers Report</title>
-    <style>@page{margin:10mm}body{font-family:Arial,sans-serif;padding:0;color:#1e293b;max-width:900px;margin:0 auto}
+    <style>@page{margin:0}body{font-family:Arial,sans-serif;padding:15mm;color:#1e293b;max-width:900px;margin:0 auto}
     h1{color:#1e3a5f;font-size:20px;margin:0 0 4px}h2{color:#64748b;font-weight:400;margin:0 0 16px;font-size:13px}
     h3{color:#1e3a5f;font-size:15px;margin:24px 0 8px;border-bottom:2px solid #e2e8f0;padding-bottom:4px}
     table{width:100%;border-collapse:collapse;margin-bottom:20px}th,td{border:1px solid #e2e8f0;padding:7px 10px;text-align:left;font-size:11px}

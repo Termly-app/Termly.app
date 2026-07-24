@@ -76,8 +76,8 @@ async function printTable(title, tableHTML) {
     const h = await getPrintHeader(title);
     const w = window.open('', '_blank');
     w.document.write(`<html><head><title>${title}</title><style>
-      @page{margin:10mm}
-      body{font-family:Arial,sans-serif;padding:0}
+      @page{margin:0}
+      body{font-family:Arial,sans-serif;padding:15mm}
       table{width:100%;border-collapse:collapse;margin-top:16px}
       th,td{border:1px solid #e2e8f0;padding:8px 12px;font-size:13px;text-align:left}
       th{background:#0EA5E9;color:#fff}

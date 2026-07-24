@@ -809,12 +809,11 @@ html body input[type="number"] {
   }
 
   @page {
-    margin: 15mm 15mm 20mm 15mm; /* Reserves space on EVERY page */
+    margin: 0;
   }
 
-  /* Reset body padding since @page margin now handles it safely */
   body {
-    padding: 0 !important;
+    padding: 15mm !important;
   }
 }
 

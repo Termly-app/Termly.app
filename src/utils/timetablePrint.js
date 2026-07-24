@@ -1,7 +1,7 @@
 import { getPrintHeader, getPrintFooter } from '../data/coreStore';;
 
 const PRINT_CSS = `
-  @page { size: landscape; margin: 10mm; }
+  @page { size: landscape; margin: 0; }
   * { box-sizing:border-box; margin:0; padding:0; }
   body { font-family:Arial,sans-serif; font-size:10pt; background:#fff; color:#000; -webkit-print-color-adjust:exact; print-color-adjust:exact; margin: 0; }
   .wrap { padding:10mm; width: 100%; }

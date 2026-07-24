@@ -65,8 +65,8 @@ export async function generateReportCard(student, marks = {}, summary = {}, prof
 
   w.document.write(`<html><head><title>Report Card - ${student.name}</title>
     <style>
-      @page { margin: 10mm; }
-      body { font-family: 'Inter', system-ui, sans-serif; padding: 10px; color: #1e293b; line-height: 1.6; position: relative; }
+      @page { margin: 0; }
+      body { font-family: 'Inter', system-ui, sans-serif; padding: 15mm; color: #1e293b; line-height: 1.6; position: relative; }
       .student-info { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 28px; padding: 20px; border: 1px solid #e2e8f0; border-radius: 12px; background: #f8fafc; }
       .info-item { display: flex; justify-content: space-between; font-size: 0.9rem; }
       .info-label { font-weight: 700; color: #64748b; }
