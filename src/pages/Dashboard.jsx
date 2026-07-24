@@ -244,7 +244,7 @@ export default function Dashboard({ currentUser, onLogout, currentPeriodId }) {
             {!isTeacher && <Link to="/fees" className="btn btn-ghost btn-sm">View All</Link>}
           </div>
           <div className="card-body" style={{ padding: 0 }}>
-            {data.recentPayments.length === 0 ? (
+            {(data.recentPayments?.length || 0) === 0 ? (
               <div className="empty-state" style={{ padding: '40px 20px' }}>
                 <div className="empty-state-icon" style={{ marginBottom: 12, opacity: 0.5 }}><CardIcon size={40} /></div>
                 <p style={{ margin: '0 0 16px 0', fontSize: '0.85rem' }}>No fee payments recorded this term.</p>
@@ -253,7 +253,7 @@ export default function Dashboard({ currentUser, onLogout, currentPeriodId }) {
                 </Link>
               </div>
             ) : (
-              data.recentPayments.map((p, i) => (
+              (data.recentPayments || []).map((p, i) => (
                 <div className="activity-item" key={i} style={{ padding: '11px 18px' }}>
                   <div className="activity-icon"><CardIcon size={18} /></div>
                   <div className="activity-body">
@@ -275,13 +275,13 @@ export default function Dashboard({ currentUser, onLogout, currentPeriodId }) {
             <h3><RocketIcon size={18} /> Portal Activity</h3>
           </div>
           <div className="card-body" style={{ padding: 0 }}>
-            {data.portalActivity.length === 0 ? (
+            {(data.portalActivity?.length || 0) === 0 ? (
               <div className="empty-state" style={{ padding: '40px 20px' }}>
                 <div className="empty-state-icon" style={{ marginBottom: 12, opacity: 0.5 }}><RocketIcon size={40} /></div>
                 <p style={{ margin: '0 0 16px 0', fontSize: '0.85rem' }}>No portal activity yet.</p>
               </div>
             ) : (
-              data.portalActivity.map((a, i) => (
+              (data.portalActivity || []).map((a, i) => (
                 <div className="activity-item" key={i} style={{ padding: '11px 18px' }}>
                   <div className="activity-icon" style={{ background: 'var(--primary-light)', color: 'var(--primary)' }}>
                     {a.actor_type === 'parent' ? <UserIcon size={14} /> : <TeacherIcon size={14} />}
