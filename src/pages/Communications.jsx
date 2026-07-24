@@ -280,7 +280,8 @@ export default function Communications({ currentUser }) {
                               padding: '12px 16px',
                               display: 'flex',
                               alignItems: 'center',
-                              justify: 'space-between',
+                              justifyContent: 'space-between',
+                              gap: 16,
                               borderBottom: '1px solid var(--border)',
                               cursor: 'pointer',
                               transition: 'background 0.15s ease',
@@ -288,41 +289,37 @@ export default function Communications({ currentUser }) {
                             onMouseEnter={(e) => e.currentTarget.style.background = 'var(--bg, #f9fafb)'}
                             onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
                           >
-                            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                              <div style={{
-                                width: 36,
-                                height: 36,
-                                borderRadius: '50%',
-                                background: '#EEF2FF',
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                flexShrink: 0,
-                              }}>
-                                <UserIcon size={16} color="#4F46E5" />
+                            <div style={{ minWidth: 0, flex: 1 }}>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                                <strong style={{ fontSize: '0.92rem', color: 'var(--text-main)' }}>{s.name}</strong>
+                                {s.admNo && (
+                                  <span style={{
+                                    fontSize: '0.68rem',
+                                    fontWeight: 700,
+                                    padding: '2px 8px',
+                                    borderRadius: 100,
+                                    background: '#EEF2FF',
+                                    color: '#4F46E5',
+                                  }}>
+                                    {s.admNo}
+                                  </span>
+                                )}
                               </div>
-                              <div>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                                  <strong style={{ fontSize: '0.92rem', color: 'var(--text-main)' }}>{s.name}</strong>
-                                  {s.admNo && (
-                                    <span style={{
-                                      fontSize: '0.68rem',
-                                      fontWeight: 700,
-                                      padding: '2px 7px',
-                                      borderRadius: 100,
-                                      background: '#EEF2FF',
-                                      color: '#4F46E5',
-                                    }}>
-                                      {s.admNo}
-                                    </span>
-                                  )}
-                                </div>
-                                <div style={{ fontSize: '0.78rem', color: 'var(--text-muted, #6b7280)', marginTop: 2 }}>
-                                  {s.class} {s.stream || ''} • Parent: <strong style={{ color: 'var(--text-main)' }}>{pName}</strong> {pPhone ? `(${pPhone})` : ''}
-                                </div>
+                              <div style={{ fontSize: '0.78rem', color: 'var(--text-muted, #6b7280)', marginTop: 3 }}>
+                                {s.class} {s.stream || ''} &bull; Parent: <strong style={{ color: 'var(--text-main)' }}>{pName}</strong> {pPhone ? `(${pPhone})` : ''}
                               </div>
                             </div>
-                            <span style={{ fontSize: '0.75rem', fontWeight: 700, color: '#4F46E5' }}>Select &rarr;</span>
+                            <span style={{ 
+                              fontSize: '0.75rem', 
+                              fontWeight: 700, 
+                              color: '#ffffff',
+                              background: '#4F46E5',
+                              padding: '5px 14px',
+                              borderRadius: 8,
+                              flexShrink: 0 
+                            }}>
+                              Select
+                            </span>
                           </div>
                         );
                       })}
@@ -333,7 +330,7 @@ export default function Communications({ currentUser }) {
                     <div style={{
                       marginTop: 12,
                       padding: '12px 16px',
-                      borderRadius: 14,
+                      borderRadius: 12,
                       border: '1px solid #C7D2FE',
                       background: '#F5F3FF',
                       display: 'flex',
@@ -341,34 +338,20 @@ export default function Communications({ currentUser }) {
                       justify: 'space-between',
                       gap: 12,
                     }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                        <div style={{
-                          width: 36,
-                          height: 36,
-                          borderRadius: '50%',
-                          background: '#4F46E5',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justify: 'center',
-                          flexShrink: 0,
-                        }}>
-                          <UserIcon size={18} color="#ffffff" />
-                        </div>
-                        <div>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
-                            <span style={{ fontSize: '0.72rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.04em', color: '#4F46E5' }}>
-                              Target Parent:
+                      <div style={{ minWidth: 0, flex: 1 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                          <span style={{ fontSize: '0.72rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.04em', color: '#4F46E5' }}>
+                            Recipient:
+                          </span>
+                          <strong style={{ fontSize: '0.95rem', color: '#1E1B4B' }}>{selectedStudent.name}</strong>
+                          {selectedStudent.admNo && (
+                            <span style={{ fontSize: '0.7rem', fontWeight: 700, padding: '2px 8px', borderRadius: 100, background: '#E0E7FF', color: '#3730A3' }}>
+                              {selectedStudent.admNo}
                             </span>
-                            <strong style={{ fontSize: '0.92rem', color: '#1E1B4B' }}>{selectedStudent.name}</strong>
-                            {selectedStudent.admNo && (
-                              <span style={{ fontSize: '0.7rem', fontWeight: 700, padding: '2px 8px', borderRadius: 100, background: '#E0E7FF', color: '#3730A3' }}>
-                                {selectedStudent.admNo}
-                              </span>
-                            )}
-                          </div>
-                          <div style={{ fontSize: '0.78rem', color: '#4338CA', marginTop: 2 }}>
-                            {selectedStudent.class} {selectedStudent.stream || ''} • Parent: <strong>{getParentName(selectedStudent)}</strong> {getParentPhone(selectedStudent) ? `(${getParentPhone(selectedStudent)})` : ''}
-                          </div>
+                          )}
+                        </div>
+                        <div style={{ fontSize: '0.78rem', color: '#4338CA', marginTop: 3 }}>
+                          Parent: <strong>{getParentName(selectedStudent)}</strong> {getParentPhone(selectedStudent) ? `(${getParentPhone(selectedStudent)})` : ''} &bull; {selectedStudent.class} {selectedStudent.stream || ''}
                         </div>
                       </div>
                       <button 
@@ -379,7 +362,7 @@ export default function Communications({ currentUser }) {
                           height: 28,
                           borderRadius: '50%',
                           border: 'none',
-                          background: '#E0E7FF',
+                          background: 'rgba(79, 70, 229, 0.12)',
                           display: 'flex',
                           alignItems: 'center',
                           justify: 'center',
@@ -387,7 +370,7 @@ export default function Communications({ currentUser }) {
                           transition: 'all 0.15s ease',
                           flexShrink: 0,
                         }}
-                        title="Clear target"
+                        title="Clear recipient"
                       >
                         <CrossIcon size={14} color="#3730A3" />
                       </button>
