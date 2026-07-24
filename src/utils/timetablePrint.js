@@ -85,7 +85,7 @@ const getDisplayName = (subject, className) => {
  * Print a class timetable
  */
 export async function printClassTimetable({ school, classGrade, stream, period, config, slots, activeDays }) {
-  const footer = getPrintFooter();
+  const footer = await getPrintFooter();
 
 
   const days = activeDays || DAYS.slice(0, 5);
@@ -159,7 +159,7 @@ export async function printClassTimetable({ school, classGrade, stream, period, 
  * Print a teacher's personal timetable
  */
 export async function printTeacherTimetable({ school, teacher, period, config, slots, activeDays }) {
-  const footer = getPrintFooter();
+  const footer = await getPrintFooter();
 
 
   const days = activeDays || DAYS.slice(0, 5);
@@ -227,7 +227,7 @@ export async function printTeacherTimetable({ school, teacher, period, config, s
  * Print all teachers (one per page)
  */
 export async function printAllTeachersTimetables({ school, teachers, period, config, allSlots, activeDays }) {
-  const footer = getPrintFooter();
+  const footer = await getPrintFooter();
   const sorted = [...teachers].sort((a, b) => (a.staff_code || '').localeCompare(b.staff_code || ''));
   const days = activeDays || DAYS.slice(0, 5);
   const dayHeaders = days.map(d => `<th>${d}</th>`).join('');

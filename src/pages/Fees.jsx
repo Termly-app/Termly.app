@@ -455,7 +455,7 @@ export default function Fees({ currentUser, currentPeriodId }) {
     try {
       const list = filtered;
       const headerStr = await getPrintHeader(`Fee Report — ${classFilter} | ${streamFilter} | ${statusFilter}`);
-      const footerStr = getPrintFooter();
+      const footerStr = await getPrintFooter();
       const w = window.open('', '_blank');
       w.document.write(`<html><head><title>Fee List - ${classFilter}</title>
       <style>body{font-family:Arial,sans-serif;padding:20px}

@@ -208,7 +208,7 @@ export default function Teachers({ currentUser, currentPeriodId }) {
           </table>`;
       }
 
-      const footer = getPrintFooter();
+      const footer = await getPrintFooter();
       printWin.document.write(`
         <div style="margin-top: 10px;">
           <p style="font-size: 0.8rem; color: #666; margin: 0;">Generated on ${new Date().toLocaleDateString()} at ${new Date().toLocaleTimeString()}</p>

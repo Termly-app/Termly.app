@@ -291,7 +291,7 @@ export default function AssessmentTab({ currentUser, currentPeriodId }) {
       const sl = streamFilter === 'All' ? '' : ` - ${streamFilter}`;
       
       const headerStr = await getPrintHeader(`${selectedClass}${sl} CLASS LIST | ${examType} | Students: ${list.length}`);
-      const footerStr = getPrintFooter();
+      const footerStr = await getPrintFooter();
       
       const w = window.open('', '_blank');
       w.document.write(`<html><head><title>Class List - ${selectedClass}</title>
@@ -318,7 +318,7 @@ export default function AssessmentTab({ currentUser, currentPeriodId }) {
       const sl = streamFilter === 'All' ? ' (All Streams)' : ` - ${streamFilter}`;
       
       const headerStr = await getPrintHeader(`${selectedClass}${sl} ${examType} RESULTS | Students: ${results.length}`);
-      const footerStr = getPrintFooter();
+      const footerStr = await getPrintFooter();
       
       const w = window.open('', '_blank');
       w.document.write(`<html><head><title>Results - ${selectedClass}</title>
@@ -358,7 +358,7 @@ export default function AssessmentTab({ currentUser, currentPeriodId }) {
       all.forEach((s, i) => { s.rank = i + 1; });
       
       const headerStr = await getPrintHeader(`${selectedClass} OVERALL ${examType} RESULTS | All Streams Combined | Students: ${all.length}`);
-      const footerStr = getPrintFooter();
+      const footerStr = await getPrintFooter();
       
       const w = window.open('', '_blank');
       w.document.write(`<html><head><title>Grade Results - ${selectedClass}</title>
@@ -446,7 +446,7 @@ export default function AssessmentTab({ currentUser, currentPeriodId }) {
       </div>`;
     }).join('');
 
-      const footerStr = getPrintFooter();
+      const footerStr = await getPrintFooter();
       w.document.write(`<html><head><title>All Report Cards - ${selectedClass}</title>
     <style>body{font-family:Arial,sans-serif;padding:0;color:#1e293b;margin:0}
     .report-page{max-width:700px;margin:0 auto;padding:20px;page-break-after:always}
