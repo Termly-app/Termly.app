@@ -31,7 +31,7 @@ export default function Dashboard({ currentUser, onLogout, currentPeriodId }) {
   useEffect(() => {
     const loadData = async () => {
       try {
-        const wrap = (p, fb = []) => p.catch(e => { console.error(e); return fb; });
+        const wrap = async (p, fb = []) => { try { return await p; } catch(e) { console.error(e); return fb; } };
         const [students, fees, marks, teachers, profile, attendance, adminUsers, platformSettings, allPeriods, portalActivity] = await Promise.all([
           wrap(getStudents()), wrap(getFees(), {}), wrap(getMarks(), {}), wrap(getTeachers()), 
           wrap(getSchoolProfile(), {}), wrap(getAttendance(), {}), wrap(getUsers()), 
