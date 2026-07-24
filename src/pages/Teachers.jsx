@@ -426,11 +426,17 @@ function AssignmentsTab({ assignments, teachers, onAssign, profile, streams, con
   const subjects = getSubjectsForGrade(selectedClass, profile);
   const level = getLevelForGrade(selectedClass);
   const activeTeachers = teachers.filter(t => t.status === 'Active');
-  const classStreams = profile.streamsPerClass?.[selectedClass] || ['General'];
+  const rawStreams = profile.streamsPerClass?.[selectedClass];
+  const classStreams = Array.isArray(rawStreams)
+    ? rawStreams
+    : (typeof rawStreams === 'number' ? Array.from({ length: rawStreams }, (_, i) => `Stream ${i + 1}`) : ['General']);
   const [selectedStream, setSelectedStream] = useState(classStreams[0] || 'General');
 
   useEffect(() => {
-    const currentStreams = profile.streamsPerClass?.[selectedClass] || ['General'];
+    const raw = profile.streamsPerClass?.[selectedClass];
+    const currentStreams = Array.isArray(raw)
+      ? raw
+      : (typeof raw === 'number' ? Array.from({ length: raw }, (_, i) => `Stream ${i + 1}`) : ['General']);
     if (!currentStreams.includes(selectedStream)) {
       setSelectedStream(currentStreams[0] || 'General');
     }
