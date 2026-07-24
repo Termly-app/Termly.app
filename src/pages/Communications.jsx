@@ -7,13 +7,28 @@ import { getAnnouncements } from '../data/academicsStore';
 import { CBC_STRUCTURE } from '../data/seedData';
 import { 
   HistoryIcon, PlatformZapIcon, CheckIcon, SearchIcon, MessageIcon, RocketIcon, 
-  UserIcon, AlertIcon, CardIcon, BookIcon
+  UserIcon, AlertIcon, CardIcon, BookIcon, CrossIcon
 } from '../components/CommonIcons';
 import Select from '../components/Common/Select';
 import { Helmet } from 'react-helmet-async';
 import FeatureGate from '../components/FeatureGate';
 import { useDialog } from '../contexts/DialogContext';
 import { useFeature } from '../contexts/FeaturesContext';
+
+const getParentName = (s) => {
+  if (!s) return 'Parent';
+  if (typeof s.parent === 'string' && s.parent.trim()) return s.parent.trim();
+  if (typeof s.parentName === 'string' && s.parentName.trim()) return s.parentName.trim();
+  if (typeof s.parent_name === 'string' && s.parent_name.trim()) return s.parent_name.trim();
+  if (typeof s.father_name === 'string' && s.father_name.trim()) return s.father_name.trim();
+  if (typeof s.mother_name === 'string' && s.mother_name.trim()) return s.mother_name.trim();
+  return 'Parent/Guardian';
+};
+
+const getParentPhone = (s) => {
+  if (!s) return '';
+  return s.parentPhone || s.parent_phone || s.phone || '';
+};
 
 export default function Communications({ currentUser }) {
   const { alert, confirm } = useDialog();
@@ -225,36 +240,157 @@ export default function Communications({ currentUser }) {
                   )}
                 </div>
               ) : (
-                <div className="form-group" style={{ marginBottom: 24 }}>
+                <div className="form-group" style={{ marginBottom: 24, position: 'relative' }}>
                   <label>Search Student/Parent</label>
-                  <div className="search-field" style={{ position: 'relative', display: 'flex', alignItems: 'center', background: 'var(--bg)', border: '1px solid var(--border)', borderRadius: 10, padding: '0 12px' }}>
-                    <SearchIcon size={18} />
+                  <div className="search-field" style={{ position: 'relative', display: 'flex', alignItems: 'center', background: 'var(--bg)', border: '1px solid var(--border)', borderRadius: 12, padding: '0 14px' }}>
+                    <SearchIcon size={18} color="var(--text-light)" />
                     <input 
                       type="text" 
-                      style={{ border: 'none', background: 'transparent', padding: '12px', outline: 'none', width: '100%', fontSize: '0.9rem', color: 'var(--text-main)' }}
+                      style={{ border: 'none', background: 'transparent', padding: '12px', outline: 'none', width: '100%', fontSize: '0.9rem', color: 'var(--text-main)', fontFamily: 'inherit' }}
                       placeholder="Type student name or Admission No..." 
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
                     />
                   </div>
+
                   {searchedStudents.length > 0 && !selectedStudent && (
-                    <div className="search-results">
-                      {searchedStudents.map(s => (
-                        <div key={s.id} className="search-item" onClick={() => { setSelectedStudent(s); setSearchQuery(''); }}>
-                          <div>
-                            <div style={{ fontSize: '0.65rem', fontWeight: 800, color: 'var(--primary)', marginBottom: 2 }}>{s.admNo}</div>
-                            <strong style={{ fontSize: '0.95rem' }}>{s.name}</strong>
-                            <div style={{ fontSize: '0.75rem', opacity: 0.7 }}>{s.class} {s.stream} - Parent: {s.parentName}</div>
+                    <div style={{
+                      position: 'absolute',
+                      top: '100%',
+                      left: 0,
+                      right: 0,
+                      marginTop: 6,
+                      background: 'var(--bg-card, #ffffff)',
+                      border: '1px solid var(--border)',
+                      borderRadius: 14,
+                      boxShadow: '0 12px 32px rgba(0,0,0,0.12)',
+                      zIndex: 100,
+                      overflow: 'hidden',
+                      maxHeight: 320,
+                      overflowY: 'auto',
+                    }}>
+                      {searchedStudents.map(s => {
+                        const pName = getParentName(s);
+                        const pPhone = getParentPhone(s);
+                        return (
+                          <div 
+                            key={s.id} 
+                            onClick={() => { setSelectedStudent(s); setSearchQuery(''); }}
+                            style={{
+                              padding: '12px 16px',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justify: 'space-between',
+                              borderBottom: '1px solid var(--border)',
+                              cursor: 'pointer',
+                              transition: 'background 0.15s ease',
+                            }}
+                            onMouseEnter={(e) => e.currentTarget.style.background = 'var(--bg, #f9fafb)'}
+                            onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+                          >
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                              <div style={{
+                                width: 36,
+                                height: 36,
+                                borderRadius: '50%',
+                                background: '#EEF2FF',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                flexShrink: 0,
+                              }}>
+                                <UserIcon size={16} color="#4F46E5" />
+                              </div>
+                              <div>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                                  <strong style={{ fontSize: '0.92rem', color: 'var(--text-main)' }}>{s.name}</strong>
+                                  {s.admNo && (
+                                    <span style={{
+                                      fontSize: '0.68rem',
+                                      fontWeight: 700,
+                                      padding: '2px 7px',
+                                      borderRadius: 100,
+                                      background: '#EEF2FF',
+                                      color: '#4F46E5',
+                                    }}>
+                                      {s.admNo}
+                                    </span>
+                                  )}
+                                </div>
+                                <div style={{ fontSize: '0.78rem', color: 'var(--text-muted, #6b7280)', marginTop: 2 }}>
+                                  {s.class} {s.stream || ''} • Parent: <strong style={{ color: 'var(--text-main)' }}>{pName}</strong> {pPhone ? `(${pPhone})` : ''}
+                                </div>
+                              </div>
+                            </div>
+                            <span style={{ fontSize: '0.75rem', fontWeight: 700, color: '#4F46E5' }}>Select &rarr;</span>
                           </div>
-                          <UserIcon size={14} />
-                        </div>
-                      ))}
+                        );
+                      })}
                     </div>
                   )}
+
                   {selectedStudent && (
-                    <div className="selected-badge">
-                      <span>Target: {selectedStudent.name} ({selectedStudent.parentName})</span>
-                      <button type="button" onClick={() => setSelectedStudent(null)}>&times;</button>
+                    <div style={{
+                      marginTop: 12,
+                      padding: '12px 16px',
+                      borderRadius: 14,
+                      border: '1px solid #C7D2FE',
+                      background: '#F5F3FF',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justify: 'space-between',
+                      gap: 12,
+                    }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                        <div style={{
+                          width: 36,
+                          height: 36,
+                          borderRadius: '50%',
+                          background: '#4F46E5',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justify: 'center',
+                          flexShrink: 0,
+                        }}>
+                          <UserIcon size={18} color="#ffffff" />
+                        </div>
+                        <div>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                            <span style={{ fontSize: '0.72rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.04em', color: '#4F46E5' }}>
+                              Target Parent:
+                            </span>
+                            <strong style={{ fontSize: '0.92rem', color: '#1E1B4B' }}>{selectedStudent.name}</strong>
+                            {selectedStudent.admNo && (
+                              <span style={{ fontSize: '0.7rem', fontWeight: 700, padding: '2px 8px', borderRadius: 100, background: '#E0E7FF', color: '#3730A3' }}>
+                                {selectedStudent.admNo}
+                              </span>
+                            )}
+                          </div>
+                          <div style={{ fontSize: '0.78rem', color: '#4338CA', marginTop: 2 }}>
+                            {selectedStudent.class} {selectedStudent.stream || ''} • Parent: <strong>{getParentName(selectedStudent)}</strong> {getParentPhone(selectedStudent) ? `(${getParentPhone(selectedStudent)})` : ''}
+                          </div>
+                        </div>
+                      </div>
+                      <button 
+                        type="button" 
+                        onClick={() => setSelectedStudent(null)}
+                        style={{
+                          width: 28,
+                          height: 28,
+                          borderRadius: '50%',
+                          border: 'none',
+                          background: '#E0E7FF',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justify: 'center',
+                          cursor: 'pointer',
+                          transition: 'all 0.15s ease',
+                          flexShrink: 0,
+                        }}
+                        title="Clear target"
+                      >
+                        <CrossIcon size={14} color="#3730A3" />
+                      </button>
                     </div>
                   )}
                 </div>
