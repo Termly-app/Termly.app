@@ -352,23 +352,43 @@ export async function getSchoolProfileBySchoolId(schoolId) {
     .eq('school_id', schoolId)
     .maybeSingle();
   if (error || !data) return null;
+
+  const activeClasses = data.active_classes || data.activeClasses || [];
+  const streamsPerClass = data.streams_per_class || data.streamsPerClass || {};
+  const customSubjects = data.custom_subjects || data.customSubjects || {};
+  const gradeFees = data.grade_fees || data.gradeFees || {};
+  const gradingSystems = data.grading_systems || data.gradingSystems || null;
+
   return {
     id: data.id,
     schoolId: data.school_id,
-    schoolName: data.school_name,
+    school_id: data.school_id,
+    schoolName: data.school_name || data.schoolName || '',
+    school_name: data.school_name || data.schoolName || '',
     subscriptionPlan: data.subscription_plan || 'Free',
     subscriptionStatus: data.subscription_status || 'Active',
     subscriptionExpiry: data.subscription_expiry,
-    logoUrl: data.logo_url,
-    motto: data.motto,
-    phone: data.phone,
-    address: data.address,
-    email: data.email,
-    schoolType: data.school_type || 'Day',
+    logoUrl: data.logo_url || data.logo || '',
+    logo: data.logo || data.logo_url || '',
+    motto: data.motto || '',
+    phone: data.phone || '',
+    address: data.address || '',
+    email: data.email || '',
+    schoolType: data.school_type || data.schoolType || 'Day',
+    school_type: data.school_type || data.schoolType || 'Day',
     curriculum: data.curriculum || 'CBC Only',
     enabledModules: data.enabled_modules || {},
-    grading_systems: data.grading_systems,
-    grade_fees: data.grade_fees,
+    enabled_modules: data.enabled_modules || {},
+    grading_systems: gradingSystems,
+    gradingSystems: gradingSystems,
+    grade_fees: gradeFees,
+    gradeFees: gradeFees,
+    active_classes: activeClasses,
+    activeClasses: activeClasses,
+    streams_per_class: streamsPerClass,
+    streamsPerClass: streamsPerClass,
+    custom_subjects: customSubjects,
+    customSubjects: customSubjects,
     portal_access: data.portal_access,
     mpesa_config: data.mpesa_config,
     sms_config: data.sms_config,
@@ -422,11 +442,11 @@ export async function checkIsPlatformAdmin() {
 let _profileCache = null;
 
 export async function getSchoolProfile() {
+  if (!_currentSchoolId) return null;
   if (_profileCache) return _profileCache;
-  if (!_currentSchoolId) return {};
   const profile = await getSchoolProfileBySchoolId(_currentSchoolId);
-  _profileCache = profile || {};
-  return _profileCache;
+  _profileCache = profile;
+  return profile;
 }
 
 export const DEFAULT_PROFILE = {
@@ -441,6 +461,17 @@ export async function saveSchoolProfile(profile) {
 
   const { mpesa = {}, sms = {}, ...rest } = profile;
   const row = { ...rest, school_id: _currentSchoolId };
+
+  // Map camelCase UI properties to snake_case DB columns
+  if (profile.activeClasses !== undefined) row.active_classes = profile.activeClasses;
+  if (profile.streamsPerClass !== undefined) row.streams_per_class = profile.streamsPerClass;
+  if (profile.customSubjects !== undefined) row.custom_subjects = profile.customSubjects;
+  if (profile.gradeFees !== undefined) row.grade_fees = profile.gradeFees;
+  if (profile.gradingSystems !== undefined) row.grading_systems = profile.gradingSystems;
+  if (profile.schoolName !== undefined) row.school_name = profile.schoolName;
+  if (profile.schoolType !== undefined) row.school_type = profile.schoolType;
+  if (profile.logoUrl !== undefined) row.logo_url = profile.logoUrl;
+  if (profile.logo !== undefined) row.logo = profile.logo;
 
   const encryptIfNew = async (val, oldEncrypted) => {
     if (!val) return null;
@@ -461,11 +492,13 @@ export async function saveSchoolProfile(profile) {
 
   if (row.grading_systems) {
     Object.keys(row.grading_systems).forEach(lv => {
-      row.grading_systems[lv] = row.grading_systems[lv].map(g => ({
-        ...g,
-        min: Math.max(0, Math.min(100, Number(g.min) || 0)),
-        max: Math.max(0, Math.min(100, Number(g.max) || 0))
-      }));
+      if (Array.isArray(row.grading_systems[lv])) {
+        row.grading_systems[lv] = row.grading_systems[lv].map(g => ({
+          ...g,
+          min: Math.max(0, Math.min(100, Number(g.min) || 0)),
+          max: Math.max(0, Math.min(100, Number(g.max) || 0))
+        }));
+      }
     });
   }
   if (row.grade_fees) {
