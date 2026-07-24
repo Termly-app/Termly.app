@@ -423,9 +423,10 @@ function AssignmentsTab({ assignments, teachers, onAssign, profile, streams, con
       setSelectedClass(activeClasses[0]);
     }
   }, [activeClasses, selectedClass]);
-  const subjects = getSubjectsForGrade(selectedClass, profile);
+  const rawSubjects = getSubjectsForGrade(selectedClass, profile);
+  const subjects = Array.isArray(rawSubjects) ? rawSubjects : [];
   const level = getLevelForGrade(selectedClass);
-  const activeTeachers = teachers.filter(t => t.status === 'Active');
+  const activeTeachers = Array.isArray(teachers) ? teachers.filter(t => t.status === 'Active') : [];
   const rawStreams = profile.streamsPerClass?.[selectedClass];
   const classStreams = Array.isArray(rawStreams)
     ? rawStreams
@@ -610,7 +611,7 @@ function ReportsTab({ profile, teachers, assignments, onPrintStaff }) {
   }
 
   const { workload, performance } = data;
-  const activeTeachers = teachers.filter(t => t.status === 'Active');
+  const activeTeachers = Array.isArray(teachers) ? teachers.filter(t => t.status === 'Active') : [];
 
   // Build per-teacher performance rows
   const getTeacherRows = (teacherId) => {

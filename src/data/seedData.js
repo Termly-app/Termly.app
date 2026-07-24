@@ -91,24 +91,33 @@ function getLevelForGrade(grade) {
 function getSubjectsForGrade(grade, profile = null, pathway = null) {
   if (!grade) return [];
   const level = getLevelForGrade(grade);
+  if (!level) return [];
   const levelData = CBC_STRUCTURE[level];
+  if (!levelData) return [];
   
   // Use custom subjects from profile if they exist for this level
   // Normalizing the level key access
   const cleanLevel = level.trim();
   if (profile?.customSubjects?.[cleanLevel]) {
-    return profile.customSubjects[cleanLevel];
+    const custom = profile.customSubjects[cleanLevel];
+    // Ensure we always return an array
+    if (Array.isArray(custom)) return custom;
+    if (typeof custom === 'object' && custom !== null) {
+      return [...new Set(Object.values(custom).flat().filter(Boolean))];
+    }
+    return [];
   }
   
   // Fallback to default subjects from seedData
   const defaultSubs = levelData.subjects;
+  if (!defaultSubs) return [];
   if (!Array.isArray(defaultSubs)) {
     // It's a pathway object (Senior Secondary)
     if (pathway && defaultSubs[pathway]) {
-      return defaultSubs[pathway];
+      return Array.isArray(defaultSubs[pathway]) ? defaultSubs[pathway] : [];
     }
     // Union of ALL subjects across all pathways
-    return [...new Set(Object.values(defaultSubs).flat())];
+    return [...new Set(Object.values(defaultSubs).flat().filter(Boolean))];
   }
   
   return defaultSubs;
