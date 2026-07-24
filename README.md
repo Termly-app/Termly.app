@@ -34,7 +34,7 @@ For detailed information on how to deploy, use, and maintain Termly, please refe
 
 ## 🤝 Support
 
-For technical support or feature requests, contact the development team at [Termly8@gmail.com](mailto:Termly8@gmail.com).
+For technical support or feature requests, contact the development team at [shulesoft8@gmail.com](mailto:shulesoft8@gmail.com).
 
 ---
 *Built with ❤️ for Kenyan Schools.*

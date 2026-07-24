@@ -26,7 +26,7 @@ export default function RefundPolicy() {
 
       <section>
         <h3>3. Request Process</h3>
-        <p>To request a review of your subscription, please submit a written request to <a href="mailto:Termly8@gmail.com" style={{ color: 'inherit', fontWeight: 600 }}>Termly8@gmail.com</a> within 14 days of the payment date. Please include your school name and proof of payment.</p>
+        <p>To request a review of your subscription, please submit a written request to <a href="mailto:shulesoft8@gmail.com" style={{ color: 'inherit', fontWeight: 600 }}>shulesoft8@gmail.com</a> within 14 days of the payment date. Please include your school name and proof of payment.</p>
       </section>
     </LegalLayout>
   );

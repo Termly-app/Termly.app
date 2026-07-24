@@ -34,4 +34,4 @@ Termly is committed to protecting the privacy and security of your school's data
 - Upon termination, you may request the permanent deletion of all school records.
 
 ## 7. Contact Us
-For questions regarding your data or this policy, contact us at [Termly8@gmail.com](mailto:Termly8@gmail.com).
+For questions regarding your data or this policy, contact us at [shulesoft8@gmail.com](mailto:shulesoft8@gmail.com).

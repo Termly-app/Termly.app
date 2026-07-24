@@ -78,7 +78,7 @@ export default function AdminsTab() {
             <input 
               type="email" 
               className="sa-input" 
-              placeholder="admin@Termly.com"
+              placeholder="shulesoft8@gmail.com"
               value={newEmail}
               onChange={e => setNewEmail(e.target.value)}
               required

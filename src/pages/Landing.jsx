@@ -599,7 +599,7 @@ export default function Landing() {
             <ul className="ft-links">
               <li><Link to="/support">Contact Support</Link></li>
               <li><a href={`tel:${settings?.support?.phone || '+254712260057'}`}>Call: {settings?.support?.phone || '+254712260057'}</a></li>
-              <li><a href="mailto:Termly8@gmail.com">Email: Termly8@gmail.com</a></li>
+              <li><a href="mailto:shulesoft8@gmail.com">Email: shulesoft8@gmail.com</a></li>
               <li><Link to="/faq">FAQ</Link></li>
               <li><Link to="/legal/service-level">Service Level (SLA)</Link></li>
             </ul>

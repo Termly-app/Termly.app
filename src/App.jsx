@@ -85,7 +85,7 @@ function SbLink({ to, icon: Icon, label, onClick, exact = false, locked = false,
       
       const settings = await getPlatformSettings();
       const phone = settings?.support?.phone || '+254712260057';
-      const email = settings?.support?.email || 'Termly8@gmail.com';
+      const email = settings?.support?.email || 'shulesoft8@gmail.com';
       
       alert({
         title: 'Module Locked',

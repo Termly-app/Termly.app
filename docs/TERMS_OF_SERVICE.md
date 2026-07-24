@@ -36,4 +36,4 @@ You may not:
 Termly is provided "as is". We are not liable for any loss of data or business interruption resulting from the use of our services.
 
 ---
-Contact: [Termly8@gmail.com](mailto:Termly8@gmail.com)
+Contact: [shulesoft8@gmail.com](mailto:shulesoft8@gmail.com)

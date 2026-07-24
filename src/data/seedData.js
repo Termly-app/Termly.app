@@ -161,8 +161,8 @@ var STREAMS = ['East', 'West', 'North', 'South'];
 
 // ============= SEED USERS =============
 var seedUsers = [
-  { id: 'U001', name: 'System Admin', email: 'admin@Termly.com', role: 'Admin' },
-  { id: 'U004', name: 'Platform Owner', email: 'Termly8@gmail.com', role: 'Admin' },
+  { id: 'U001', name: 'System Admin', email: 'shulesoft8@gmail.com', role: 'Admin' },
+  { id: 'U004', name: 'Platform Owner', email: 'shulesoft8@gmail.com', role: 'Admin' },
   { id: 'U002', name: 'Finance User', email: 'finance@Termly.com', role: 'Finance' },
   { id: 'U003', name: 'Teacher User', email: 'teacher@Termly.com', role: 'Teacher' },
 ];
