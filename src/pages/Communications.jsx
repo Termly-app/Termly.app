@@ -15,19 +15,45 @@ import FeatureGate from '../components/FeatureGate';
 import { useDialog } from '../contexts/DialogContext';
 import { useFeature } from '../contexts/FeaturesContext';
 
+const safeStr = (val, fallback = '') => {
+  if (val === null || val === undefined) return fallback;
+  if (typeof val === 'string') return val;
+  if (typeof val === 'number') return String(val);
+  if (typeof val === 'object') {
+    return val.name || val.label || val.title || val.full_name || val.id || fallback;
+  }
+  return String(val);
+};
+
 const getParentName = (s) => {
   if (!s) return 'Parent';
-  if (typeof s.parent === 'string' && s.parent.trim()) return s.parent.trim();
-  if (typeof s.parentName === 'string' && s.parentName.trim()) return s.parentName.trim();
-  if (typeof s.parent_name === 'string' && s.parent_name.trim()) return s.parent_name.trim();
-  if (typeof s.father_name === 'string' && s.father_name.trim()) return s.father_name.trim();
-  if (typeof s.mother_name === 'string' && s.mother_name.trim()) return s.mother_name.trim();
+  if (s.parent) {
+    const p = safeStr(s.parent);
+    if (p) return p;
+  }
+  if (s.parentName) {
+    const p = safeStr(s.parentName);
+    if (p) return p;
+  }
+  if (s.parent_name) {
+    const p = safeStr(s.parent_name);
+    if (p) return p;
+  }
+  if (s.father_name) {
+    const p = safeStr(s.father_name);
+    if (p) return p;
+  }
+  if (s.mother_name) {
+    const p = safeStr(s.mother_name);
+    if (p) return p;
+  }
   return 'Parent/Guardian';
 };
 
 const getParentPhone = (s) => {
   if (!s) return '';
-  return s.parentPhone || s.parent_phone || s.phone || '';
+  const p = s.parentPhone || s.parent_phone || s.phone || (typeof s.parent === 'object' ? s.parent?.phone : '');
+  return safeStr(p, '');
 };
 
 export default function Communications({ currentUser }) {
@@ -291,7 +317,7 @@ export default function Communications({ currentUser }) {
                           >
                             <div style={{ minWidth: 0, flex: 1 }}>
                               <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
-                                <strong style={{ fontSize: '0.92rem', color: 'var(--text-main)' }}>{s.name}</strong>
+                                <strong style={{ fontSize: '0.92rem', color: 'var(--text-main)' }}>{safeStr(s.name)}</strong>
                                 {s.admNo && (
                                   <span style={{
                                     fontSize: '0.68rem',
@@ -301,12 +327,12 @@ export default function Communications({ currentUser }) {
                                     background: '#EEF2FF',
                                     color: '#4F46E5',
                                   }}>
-                                    {s.admNo}
+                                    {safeStr(s.admNo)}
                                   </span>
                                 )}
                               </div>
                               <div style={{ fontSize: '0.78rem', color: 'var(--text-muted, #6b7280)', marginTop: 3 }}>
-                                {s.class} {s.stream || ''} &bull; Parent: <strong style={{ color: 'var(--text-main)' }}>{pName}</strong> {pPhone ? `(${pPhone})` : ''}
+                                {safeStr(s.class)} {safeStr(s.stream)} • Parent: <strong style={{ color: 'var(--text-main)' }}>{pName}</strong> {pPhone ? `(${pPhone})` : ''}
                               </div>
                             </div>
                             <span style={{ 
@@ -343,15 +369,15 @@ export default function Communications({ currentUser }) {
                           <span style={{ fontSize: '0.72rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.04em', color: '#4F46E5' }}>
                             Recipient:
                           </span>
-                          <strong style={{ fontSize: '0.95rem', color: '#1E1B4B' }}>{selectedStudent.name}</strong>
+                          <strong style={{ fontSize: '0.95rem', color: '#1E1B4B' }}>{safeStr(selectedStudent.name)}</strong>
                           {selectedStudent.admNo && (
                             <span style={{ fontSize: '0.7rem', fontWeight: 700, padding: '2px 8px', borderRadius: 100, background: '#E0E7FF', color: '#3730A3' }}>
-                              {selectedStudent.admNo}
+                              {safeStr(selectedStudent.admNo)}
                             </span>
                           )}
                         </div>
                         <div style={{ fontSize: '0.78rem', color: '#4338CA', marginTop: 3 }}>
-                          Parent: <strong>{getParentName(selectedStudent)}</strong> {getParentPhone(selectedStudent) ? `(${getParentPhone(selectedStudent)})` : ''} &bull; {selectedStudent.class} {selectedStudent.stream || ''}
+                          Parent: <strong>{getParentName(selectedStudent)}</strong> {getParentPhone(selectedStudent) ? `(${getParentPhone(selectedStudent)})` : ''} • {safeStr(selectedStudent.class)} {safeStr(selectedStudent.stream)}
                         </div>
                       </div>
                       <button 
