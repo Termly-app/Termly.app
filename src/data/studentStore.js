@@ -46,6 +46,7 @@ export async function getStudents() {
       ...s,
       admNo: s.adm_no,
       residenceType: s.residence_type || 'day',
+      house: s.house || null,
       parentPhone: s.parent_phone,
       joinDate: s.join_date,
       birthCertNo: s.birth_cert_no,
