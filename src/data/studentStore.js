@@ -2,8 +2,9 @@ import { supabase } from '../lib/supabase';
 import { db, queueChange } from './offlineStore';
 import { 
   _currentSchoolId, mutationGuard, cachedQuery, invalidateCache, getCurrentSchoolId,
-  logAuditEvent, getPrintHeader, checkIsPlatformAdmin 
+  logAuditEvent, getPrintHeader, checkIsPlatformAdmin, shouldFetchCloud
 } from './coreStore';
+import { withRetry } from '../utils/resilience';
 import { getFeeSummary, getPayments } from './financeStore';
 import { jsPDF } from 'jspdf'; 
 

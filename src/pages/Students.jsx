@@ -85,8 +85,8 @@ export default function Students({ currentUser, currentPeriodId }) {
 
   const filtered = students.filter(s => {
     const q = search.toLowerCase();
-    const currentStatus = s.status || 'Active';
-    const matchStatus = statusFilter === 'All' || currentStatus === statusFilter;
+    const currentStatus = (s.status || 'Active').toLowerCase();
+    const matchStatus = statusFilter === 'All' || currentStatus === statusFilter.toLowerCase();
     const matchSearch = (!q || (s.name||'').toLowerCase().includes(q) || (s.admNo||'').toLowerCase().includes(q) || (s.parentPhone||'').includes(q));
     const matchClass = (classFilter === 'All' || s.class === classFilter);
     const matchStream = (streamFilter === 'All' || s.stream === streamFilter);
