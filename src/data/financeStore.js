@@ -5,6 +5,7 @@ import {
 } from './coreStore';
 import { withRetry } from '../utils/resilience';
 import { getStudents } from './studentStore';
+import { TERM_FEE } from './seedData';
 
 // ==========================================
 // FINANCE & FEES (Extracted from store.js)

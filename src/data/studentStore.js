@@ -6,6 +6,7 @@ import {
 } from './coreStore';
 import { withRetry } from '../utils/resilience';
 import { getFeeSummary, getPayments } from './financeStore';
+import { TERM_FEE } from './seedData';
 import { jsPDF } from 'jspdf'; 
 
 // ==========================================
