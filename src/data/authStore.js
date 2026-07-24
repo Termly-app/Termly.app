@@ -67,9 +67,10 @@ export async function checkSchoolExists(ownerId) {
 }
 
 export async function getUserRole(authUserId) {
-    const { data, error } = await supabase.from('users').select('role').eq('auth_user_id', authUserId).single();
-    if (error) throw error;
-    return data;
+    if (!authUserId) return null;
+    const { data, error } = await supabase.from('users').select('role').eq('auth_user_id', authUserId).maybeSingle();
+    if (error) { console.warn("getUserRole error:", error); return null; }
+    return data?.role || null;
 }
 
 

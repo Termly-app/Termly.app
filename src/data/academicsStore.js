@@ -1324,66 +1324,6 @@ export async function saveTTTeacherSubject({ teacherId, subjectId, classId }) {
     .single();
   if (error) throw error;
   return data;
-}
-
-// ================================
-// STUB EXPORTS — Referenced by UI components but not yet implemented.
-// These prevent build failures and return safe defaults.
-// ================================
-
-export async function initializeStreams() {
-  console.warn('[academicsStore] initializeStreams is not yet implemented');
-  return [];
-}
-
-export async function deleteAllExams() {
-  console.warn('[academicsStore] deleteAllExams is not yet implemented');
-  return [];
-}
-
-export async function previewClassPromotion() {
-  console.warn('[academicsStore] previewClassPromotion is not yet implemented');
-  return { promoted: [], retained: [] };
-}
-
-export async function promoteClasses() {
-  console.warn('[academicsStore] promoteClasses is not yet implemented');
-  return { promoted: 0, retained: 0 };
-}
-
-export async function getOpenExamsForTeacher() {
-  console.warn('[academicsStore] getOpenExamsForTeacher is not yet implemented');
-  return [];
-}
-
-export async function getVirtualPaperMarks() {
-  console.warn('[academicsStore] getVirtualPaperMarks is not yet implemented');
-  return [];
-}
-
-export async function getTeacherAssignments() {
-  console.warn('[academicsStore] getTeacherAssignments is not yet implemented');
-  return [];
-}
-
-export async function assignTeacher() {
-  console.warn('[academicsStore] assignTeacher is not yet implemented');
-  return null;
-}
-
-export async function removeTeacherAssignment() {
-  console.warn('[academicsStore] removeTeacherAssignment is not yet implemented');
-  return null;
-}
-
-export async function getClassStreams() {
-  console.warn('[academicsStore] getClassStreams is not yet implemented');
-  return [];
-}
-
-
-export async function setAssignment(classGrade, stream, subject, teacherId) {
-  // First remove any existing assignment
   const { error: delError } = await supabase
     .from('subject_assignments')
     .delete()
@@ -2077,6 +2017,7 @@ export async function getNotificationPreferences() {
   return data || [];
 }
 
+
 export async function updateNotificationPreference(prefId, updates) {
   const { error } = await supabase
     .from('notification_preferences')
@@ -2105,4 +2046,108 @@ export function subscribeToMessages(userId, callback) {
     )
     .subscribe();
   return () => { supabase.removeChannel(channel); };
+}
+
+// ==========================================
+// TEACHER ASSIGNMENTS & STREAMS
+// ==========================================
+
+export async function initializeStreams() {
+  if (!_currentSchoolId) return [];
+  const year = new Date().getFullYear();
+  const { data: existing } = await supabase.from('class_streams').select('id').eq('school_id', _currentSchoolId).eq('academic_year', year);
+  if (existing && existing.length > 0) return existing;
+
+  const toInsert = [];
+  Object.keys(CBC_STRUCTURE || {}).forEach(level => {
+    toInsert.push({ school_id: _currentSchoolId, name: 'North', level, academic_year: year });
+    toInsert.push({ school_id: _currentSchoolId, name: 'South', level, academic_year: year });
+  });
+
+  if (toInsert.length > 0) {
+    const { data, error } = await supabase.from('class_streams').insert(toInsert).select();
+    if (error) { console.error("initializeStreams error:", error); return []; }
+    return data || [];
+  }
+  return [];
+}
+
+export async function deleteAllExams() {
+  console.warn('[academicsStore] deleteAllExams is not yet implemented');
+  return [];
+}
+
+export async function previewClassPromotion() {
+  console.warn('[academicsStore] previewClassPromotion is not yet implemented');
+  return { promoted: [], retained: [] };
+}
+
+export async function promoteClasses() {
+  console.warn('[academicsStore] promoteClasses is not yet implemented');
+  return { promoted: 0, retained: 0 };
+}
+
+export async function getOpenExamsForTeacher() {
+  console.warn('[academicsStore] getOpenExamsForTeacher is not yet implemented');
+  return [];
+}
+
+export async function getVirtualPaperMarks() {
+  console.warn('[academicsStore] getVirtualPaperMarks is not yet implemented');
+  return [];
+}
+
+export async function getTeacherAssignments() {
+  if (!_currentSchoolId) return [];
+  try {
+    const { data, error } = await supabase
+      .from('teacher_assignments')
+      .select('*, teacher:teachers(id, name), stream:class_streams(id, name, level)')
+      .eq('school_id', _currentSchoolId);
+    if (error) {
+      console.warn("getTeacherAssignments error:", error);
+      return [];
+    }
+    return data || [];
+  } catch (e) {
+    return [];
+  }
+}
+
+export async function assignTeacher(payload) {
+  if (!_currentSchoolId) return null;
+  const { data, error } = await supabase
+    .from('teacher_assignments')
+    .insert([{ ...payload, school_id: _currentSchoolId }])
+    .select()
+    .single();
+  if (error) throw error;
+  return data;
+}
+
+export async function removeTeacherAssignment(id) {
+  if (!_currentSchoolId) return null;
+  const { error } = await supabase
+    .from('teacher_assignments')
+    .delete()
+    .eq('id', id)
+    .eq('school_id', _currentSchoolId);
+  if (error) throw error;
+  return true;
+}
+
+export async function getClassStreams(level = null, year = new Date().getFullYear()) {
+  if (!_currentSchoolId) return [];
+  try {
+    let query = supabase.from('class_streams').select('*').eq('school_id', _currentSchoolId).eq('academic_year', Number(year) || new Date().getFullYear());
+    if (level) query = query.eq('level', level);
+    const { data, error } = await query.order('level');
+    if (error) {
+      console.warn("getClassStreams error:", error);
+      return [];
+    }
+    return data || [];
+  } catch (e) {
+    return [];
+  }
 }
