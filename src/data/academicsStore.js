@@ -5,6 +5,7 @@ import {
   _currentExamType,
   _currentPeriodId,
   mutationGuard,
+  cachedQuery,
   updateSchoolFeature,
   logPlatformActivity,
   logAuditEvent,
@@ -12,6 +13,7 @@ import {
 } from './coreStore';
 import { getTeachers } from './staffStore';
 import { withRetry } from '../utils/resilience';
+import { getUserByAuthId } from './authStore';
 
 export async function getPeriods() {
   if (!_currentSchoolId) return [];

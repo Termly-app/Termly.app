@@ -1,4 +1,6 @@
-import { supabase } from '../lib/supabase';;
+import { supabase } from '../lib/supabase';
+import { _currentSchoolId, _currentAuthUser, mutationGuard } from './coreStore';
+import { getUserByAuthId } from './authStore';
 
 /**
  * SMS & Communication History Store
