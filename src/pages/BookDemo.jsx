@@ -1,17 +1,9 @@
-// src/pages/BookDemo.jsx
-//
-// Replaces self-serve /register as the landing page's primary CTA.
-// Captures a lead into demo_requests (public INSERT, no login
-// needed — see 20260725_demo_requests_and_school_registration.sql)
-// instead of creating an account directly. You register the school
-// yourself afterward from SuperAdmin, once you've actually talked
-// to them.
-
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import PremiumLayout from '../components/PremiumLayout';
 import { supabase } from '../lib/supabase';
+import { PhoneIcon, MessageIcon, CheckIcon, SchoolIcon, RocketIcon } from '../components/CommonIcons';
 
 export default function BookDemo() {
   const [form, setForm] = useState({
@@ -57,66 +49,326 @@ export default function BookDemo() {
         <link rel="canonical" href="https://Termly.com/book-demo" />
       </Helmet>
 
-      <section className="section" style={{ maxWidth: 640, margin: '0 auto' }}>
-        {done ? (
-          <div className="sec-head reveal" style={{ textAlign: 'center', padding: '40px 0' }}>
-            <div className="eyebrow">Request received</div>
-            <h2 className="landing-h2">We'll be in touch shortly.</h2>
-            <p className="sec-p">
-              We reach out to every school personally — expect a call or WhatsApp message
-              from us within a couple of days to set up your demo.
-            </p>
-            <Link to="/" className="btn-p" style={{ marginTop: 24, display: 'inline-flex' }}>Back to home</Link>
+      <style>{`
+        .demo-section {
+          padding: 60px 24px 100px;
+          max-width: 1140px;
+          margin: 0 auto;
+        }
+        .demo-grid {
+          display: grid;
+          grid-template-columns: 1.2fr 0.8fr;
+          gap: 40px;
+          margin-top: 40px;
+          align-items: start;
+        }
+        @media (max-width: 868px) {
+          .demo-grid {
+            grid-template-columns: 1fr;
+            gap: 32px;
+          }
+        }
+        .demo-card {
+          background: #ffffff;
+          border: 1px solid #e5e7eb;
+          border-radius: 24px;
+          padding: 36px;
+          box-shadow: 0 10px 30px -10px rgba(0,0,0,0.06);
+        }
+        .demo-card-dark {
+          background: #0f172a;
+          color: #ffffff;
+          border: 1px solid #1e293b;
+          border-radius: 24px;
+          padding: 36px;
+          box-shadow: 0 20px 40px -15px rgba(0,0,0,0.25);
+        }
+        .bd-group {
+          display: flex;
+          flex-direction: column;
+          gap: 8px;
+          margin-bottom: 20px;
+        }
+        .bd-row {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 16px;
+        }
+        @media (max-width: 600px) {
+          .bd-row {
+            grid-template-columns: 1fr;
+          }
+        }
+        .bd-label {
+          font-size: 0.82rem;
+          font-weight: 700;
+          color: #374151;
+          letter-spacing: 0.01em;
+        }
+        .bd-input, .bd-textarea {
+          width: 100%;
+          padding: 14px 16px;
+          border: 1.5px solid #d1d5db;
+          border-radius: 12px;
+          font-size: 0.92rem;
+          color: #111827;
+          background: #f9fafb;
+          outline: none;
+          transition: all 0.2s ease;
+          box-sizing: border-box;
+          font-family: inherit;
+        }
+        .bd-input:focus, .bd-textarea:focus {
+          border-color: #6366f1;
+          background: #ffffff;
+          box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.12);
+        }
+        .bd-input::placeholder, .bd-textarea::placeholder {
+          color: #9ca3af;
+        }
+        .contact-item {
+          display: flex;
+          align-items: center;
+          gap: 14px;
+          padding: 16px 20px;
+          background: rgba(255, 255, 255, 0.05);
+          border: 1px solid rgba(255, 255, 255, 0.1);
+          border-radius: 16px;
+          text-decoration: none;
+          color: #ffffff;
+          transition: all 0.25s ease;
+          margin-bottom: 12px;
+        }
+        .contact-item:hover {
+          background: rgba(255, 255, 255, 0.12);
+          transform: translateY(-2px);
+          border-color: rgba(255, 255, 255, 0.25);
+        }
+        .contact-icon {
+          width: 42px;
+          height: 42px;
+          border-radius: 12px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          flex-shrink: 0;
+        }
+        .contact-text-label {
+          font-size: 0.72rem;
+          color: #94a3b8;
+          font-weight: 600;
+          text-transform: uppercase;
+          letter-spacing: 0.05em;
+        }
+        .contact-text-val {
+          font-size: 1rem;
+          font-weight: 800;
+          color: #ffffff;
+          margin-top: 2px;
+        }
+        .benefit-pill {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          font-size: 0.85rem;
+          color: #cbd5e1;
+          margin-bottom: 10px;
+        }
+      `}</style>
+
+      <section className="demo-section">
+        <div className="sec-head reveal" style={{ textAlign: 'center' }}>
+          <div className="eyebrow" style={{ margin: '0 auto 12px' }}>Book a Demo</div>
+          <h2 className="landing-h2">Tell us about your school.</h2>
+          <p className="sec-p" style={{ maxWidth: 640, margin: '12px auto 0' }}>
+            No self-signup — we set every school up personally. Request a demo below or get in touch with our onboarding team in Nairobi directly.
+          </p>
+        </div>
+
+        <div className="demo-grid">
+          {/* Left Side: Form */}
+          <div className="demo-card reveal">
+            {done ? (
+              <div style={{ textAlign: 'center', padding: '36px 12px' }}>
+                <div style={{
+                  width: 64, height: 64, borderRadius: '50%', background: '#dcfce7',
+                  color: '#16a34a', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  margin: '0 auto 20px'
+                }}>
+                  <CheckIcon size={32} />
+                </div>
+                <h3 style={{ fontSize: '1.5rem', fontWeight: 800, color: '#111827', marginBottom: 10 }}>Request Received!</h3>
+                <p style={{ color: '#4b5563', fontSize: '0.95rem', lineHeight: 1.6, maxWidth: 440, margin: '0 auto 24px' }}>
+                  Thank you! We reach out to every school personally. Expect a call or WhatsApp message from our team within 24 hours.
+                </p>
+                <Link to="/" className="btn-p" style={{ display: 'inline-flex', padding: '14px 28px' }}>
+                  Return to Home
+                </Link>
+              </div>
+            ) : (
+              <form onSubmit={handleSubmit}>
+                <h3 style={{ fontSize: '1.25rem', fontWeight: 800, color: '#111827', marginBottom: 24 }}>
+                  Schedule Your Personalized Demo
+                </h3>
+
+                <div className="bd-group">
+                  <label className="bd-label">School Name *</label>
+                  <input
+                    type="text"
+                    className="bd-input"
+                    value={form.schoolName}
+                    onChange={update('schoolName')}
+                    placeholder="e.g. Kaulani Academy"
+                    required
+                  />
+                </div>
+
+                <div className="bd-row">
+                  <div className="bd-group">
+                    <label className="bd-label">Your Name *</label>
+                    <input
+                      type="text"
+                      className="bd-input"
+                      value={form.contactName}
+                      onChange={update('contactName')}
+                      placeholder="Head Teacher / Bursar / Admin"
+                      required
+                    />
+                  </div>
+                  <div className="bd-group">
+                    <label className="bd-label">Approx. Student Count</label>
+                    <input
+                      type="text"
+                      className="bd-input"
+                      value={form.studentCount}
+                      onChange={update('studentCount')}
+                      placeholder="e.g. 350"
+                    />
+                  </div>
+                </div>
+
+                <div className="bd-row">
+                  <div className="bd-group">
+                    <label className="bd-label">Email Address *</label>
+                    <input
+                      type="email"
+                      className="bd-input"
+                      value={form.email}
+                      onChange={update('email')}
+                      placeholder="you@school.ac.ke"
+                      required
+                    />
+                  </div>
+                  <div className="bd-group">
+                    <label className="bd-label">Phone Number *</label>
+                    <input
+                      type="tel"
+                      className="bd-input"
+                      value={form.phone}
+                      onChange={update('phone')}
+                      placeholder="07XX XXX XXX"
+                      required
+                    />
+                  </div>
+                </div>
+
+                <div className="bd-group">
+                  <label className="bd-label">Anything specific you want to see? (Optional)</label>
+                  <textarea
+                    rows={3}
+                    className="bd-textarea"
+                    value={form.message}
+                    onChange={update('message')}
+                    placeholder="e.g. We mainly want to see M-Pesa fee tracking, CBC report cards, and NEMIS sync."
+                  />
+                </div>
+
+                {error && (
+                  <div style={{
+                    padding: '12px 16px', background: '#fef2f2', border: '1px solid #fecaca',
+                    borderRadius: 10, color: '#dc2626', fontSize: '0.85rem', marginBottom: 20
+                  }}>
+                    {error}
+                  </div>
+                )}
+
+                <button
+                  type="submit"
+                  className="btn-p"
+                  disabled={submitting}
+                  style={{
+                    width: '100%', justifyContent: 'center', padding: '16px',
+                    fontSize: '1rem', marginTop: 10
+                  }}
+                >
+                  {submitting ? 'Submitting Request…' : 'Request a Demo →'}
+                </button>
+              </form>
+            )}
           </div>
-        ) : (
-          <>
-            <div className="sec-head reveal">
-              <div className="eyebrow">Book a demo</div>
-              <h2 className="landing-h2">Tell us about your school.</h2>
-              <p className="sec-p">
-                No self-signup — we set every school up personally, so tell us a bit about
-                yours and we'll reach out to arrange a short demo.
-              </p>
+
+          {/* Right Side: Direct Contacts & Information */}
+          <div className="demo-card-dark reveal reveal-delay-1">
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
+              <div style={{ width: 36, height: 36, borderRadius: 10, background: 'rgba(99, 102, 241, 0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <SchoolIcon size={20} color="#a5b4fc" />
+              </div>
+              <h3 style={{ fontSize: '1.2rem', fontWeight: 800, margin: 0, color: '#ffffff' }}>
+                Reach Us Directly
+              </h3>
             </div>
 
-            <form onSubmit={handleSubmit} className="reveal" style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
-              <div>
-                <label className="sb-lbl">School name *</label>
-                <input type="text" value={form.schoolName} onChange={update('schoolName')} placeholder="e.g. Kaulani Academy" required />
-              </div>
-              <div style={{ display: 'flex', gap: 14 }}>
-                <div style={{ flex: 1 }}>
-                  <label className="sb-lbl">Your name *</label>
-                  <input type="text" value={form.contactName} onChange={update('contactName')} placeholder="Head teacher / bursar / admin" required />
-                </div>
-                <div style={{ flex: 1 }}>
-                  <label className="sb-lbl">Approx. student count</label>
-                  <input type="text" value={form.studentCount} onChange={update('studentCount')} placeholder="e.g. 350" />
-                </div>
-              </div>
-              <div style={{ display: 'flex', gap: 14 }}>
-                <div style={{ flex: 1 }}>
-                  <label className="sb-lbl">Email *</label>
-                  <input type="email" value={form.email} onChange={update('email')} placeholder="you@school.ac.ke" required />
-                </div>
-                <div style={{ flex: 1 }}>
-                  <label className="sb-lbl">Phone *</label>
-                  <input type="tel" value={form.phone} onChange={update('phone')} placeholder="07XX XXX XXX" required />
-                </div>
+            <p style={{ fontSize: '0.88rem', color: '#94a3b8', lineHeight: 1.5, marginBottom: 24 }}>
+              Want an immediate answer or prefer a quick phone call? Reach out to our Nairobi team anytime.
+            </p>
+
+            <a href="tel:+254712260057" className="contact-item">
+              <div className="contact-icon" style={{ background: '#2563eb' }}>
+                <PhoneIcon size={20} color="#ffffff" />
               </div>
               <div>
-                <label className="sb-lbl">Anything specific you want to see? (optional)</label>
-                <textarea rows={3} value={form.message} onChange={update('message')} placeholder="e.g. we mainly want to see fee tracking and M-Pesa reconciliation" />
+                <div className="contact-text-label">Direct Line / Call</div>
+                <div className="contact-text-val">+254 712 260 057</div>
               </div>
+            </a>
 
-              {error && <div style={{ color: 'var(--danger, #ef4444)', fontSize: '.85rem' }}>{error}</div>}
+            <a href="https://wa.me/254712260057" target="_blank" rel="noopener noreferrer" className="contact-item">
+              <div className="contact-icon" style={{ background: '#25d366' }}>
+                <MessageIcon size={20} color="#ffffff" />
+              </div>
+              <div>
+                <div className="contact-text-label">WhatsApp Chat</div>
+                <div className="contact-text-val">+254 712 260 057</div>
+              </div>
+            </a>
 
-              <button type="submit" className="btn-p" disabled={submitting} style={{ justifyContent: 'center' }}>
-                {submitting ? 'Sending…' : 'Request a demo'}
-              </button>
-            </form>
-          </>
-        )}
+            <a href="mailto:shulesoft8@gmail.com" className="contact-item">
+              <div className="contact-icon" style={{ background: '#6366f1' }}>
+                <RocketIcon size={20} color="#ffffff" />
+              </div>
+              <div>
+                <div className="contact-text-label">Official Support Email</div>
+                <div className="contact-text-val" style={{ fontSize: '0.9rem' }}>shulesoft8@gmail.com</div>
+              </div>
+            </a>
+
+            <div style={{ marginTop: 28, paddingTop: 20, borderTop: '1px solid rgba(255, 255, 255, 0.1)' }}>
+              <div className="contact-text-label" style={{ marginBottom: 12 }}>Why Schools Choose Termly</div>
+              <div className="benefit-pill">
+                <CheckIcon size={16} color="#4ade80" /> 100% CBC & 8-4-4 Compliant Reports
+              </div>
+              <div className="benefit-pill">
+                <CheckIcon size={16} color="#4ade80" /> Automated M-Pesa Fee Reconciliation
+              </div>
+              <div className="benefit-pill">
+                <CheckIcon size={16} color="#4ade80" /> Zero Upfront Setup Fees
+              </div>
+              <div className="benefit-pill">
+                <CheckIcon size={16} color="#4ade80" /> Local Nairobi Support & Onsite Assistance
+              </div>
+            </div>
+          </div>
+        </div>
       </section>
     </PremiumLayout>
   );

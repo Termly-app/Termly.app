@@ -47,8 +47,8 @@ export default function PremiumLayout({ children }) {
           </Link>
           <div className="nsep" style={{ flex: 1 }}></div>
           <Link to="/login" className="nlink">Sign in</Link>
-          <Link to="/register" className="ncta">
-            Get access
+          <Link to="/book-demo" className="ncta">
+            Book a demo
             <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2.5 7h9M8 3.5l3.5 3.5L8 10.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
           </Link>
         </nav>
