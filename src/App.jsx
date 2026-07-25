@@ -3,7 +3,7 @@ import { Routes, Route, NavLink, useLocation, Navigate } from 'react-router-dom'
 import { supabase } from './lib/supabase';
 import { getSchoolProfile, setCurrentSchoolContext, setCurrentPeriodId, getCurrentPeriodId, checkIsPlatformAdmin, isFeatureEnabled, checkIsSubscriptionActive, subscribeToSchoolChanges, isShadowMode, getPlatformSettings } from './data/coreStore';
 import { getUserByAuthId } from './data/authStore';
-import { getPeriods, setActivePeriod, initActivePeriod, getUnreadNotificationCount, subscribeToNotifications, getNotifications, markNotificationRead, markAllNotificationsRead } from './data/academicsStore';;
+import { getPeriods, setActivePeriod, initActivePeriod, getUnreadNotificationCount, subscribeToNotifications, getNotifications, markNotificationRead, markAllNotificationsRead } from './data/academicsStore';
 
 // Pages (Lazy Loaded)
 const Dashboard    = lazy(() => import('./pages/Dashboard'));
@@ -22,6 +22,7 @@ const Communications = lazy(() => import('./pages/Communications'));
 const SuperAdmin   = lazy(() => import('./pages/SuperAdmin'));
 const Landing      = lazy(() => import('./pages/Landing'));
 const Register     = lazy(() => import('./pages/Register'));
+const BookDemo      = lazy(() => import('./pages/BookDemo'));
 const MpesaReconciliation = lazy(() => import('./pages/MpesaReconciliation'));
 const PortalManager = lazy(() => import('./pages/Portal'));
 const StaffPortalManager = lazy(() => import('./pages/StaffPortal'));
@@ -640,6 +641,7 @@ function App() {
           <Route path="/login"              element={<Login onLogin={setCurrentUser} />} />
           <Route path="/:schoolCode/login"  element={<Login onLogin={setCurrentUser} />} />
           <Route path="/register"           element={<Register />} />
+          <Route path="/book-demo"          element={<BookDemo />} />
           <Route path="/legal/terms"        element={<TermsOfService />} />
           <Route path="/legal/privacy"      element={<PrivacyPolicy />} />
           <Route path="/legal/acceptable-use" element={<AcceptableUse />} />
@@ -1027,4 +1029,3 @@ function SectionGate({ featureSlug, featureName, children, profile }) {
 }
 
 export default App;
-

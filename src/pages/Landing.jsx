@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
-import { getPlatformSettings } from '../data/coreStore';;
+import { getPlatformSettings } from '../data/coreStore';
 
 import './Landing.css';
 import {
@@ -248,8 +248,8 @@ export default function Landing() {
             )}
           </div>
 
-          <Link to="/register" className="ncta">
-            Get access
+          <Link to="/book-demo" className="ncta">
+            Book a demo
             <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2.5 7h9M8 3.5l3.5 3.5L8 10.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" /></svg>
           </Link>
         </nav>
@@ -284,8 +284,8 @@ export default function Landing() {
           <h1 className="hero-h1">Complete School Management<br /><span className="h1-dim">— Exams, Finance, Compliance —</span><br />all in one system.</h1>
           <p className="hero-sub">Termly is the all-in-one ecosystem for modern Kenyan schools. Automate your M-PESA fee collection, manage formal exam sessions with auto-ranking, and ensure 100% NEMIS compliance.</p>
           <div className="hero-btns">
-            <Link to="/register" className="btn-p">
-              Get access
+            <Link to="/book-demo" className="btn-p">
+              Book a demo
               <svg width="15" height="15" viewBox="0 0 15 15" fill="none"><path d="M2.5 7.5h10M9 3.5l4 4-4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" /></svg>
             </Link>
           </div>
@@ -361,7 +361,7 @@ export default function Landing() {
           <span className="ti"><span className="tic tg-"><CardIcon size={14} /></span>M-PESA Fees</span><span className="tick-dot">·</span>
           <span className="ti on"><span className="tic ty-"><DashboardIcon size={14} /></span>KNEC Report Cards</span><span className="tick-dot">·</span>
           <span className="ti"><span className="tic tv-"><CalendarIcon size={14} /></span>Student Analytics</span><span className="tick-dot">·</span>
-          <span className="ti on"><span className="tic tg-"><UserIcon size={14} /></span>Staff Records</span><span className="tick-dot">·</span>
+          <span className="ti on"><span className="tic ty-"><UserIcon size={14} /></span>Staff Records</span><span className="tick-dot">·</span>
           <span className="ti"><span className="tic ty-"><RocketIcon size={14} /></span>Exam Analytics</span><span className="tick-dot">·</span>
           <span className="ti on"><span className="tic tv-"><SchoolIcon size={14} /></span>Multi-Campus</span><span className="tick-dot">·</span>
           <span className="ti"><span className="tic tg-"><FlagIcon size={14} /></span>Built in Nairobi</span>
@@ -488,7 +488,7 @@ export default function Landing() {
           <h2 className="landing-h2">Everything your school needs.</h2>
           <p className="sec-p">Everything your school needs to operate efficiently, from grading to finance.</p>
         </div>
-        <div className="reveal modules-grid">
+        <div className="reveal" style={{ maxWidth: 1100, margin: '0 auto', display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 32, padding: '0 24px' }}>
           
           <div className="fc" style={{ background: '#fff', display: 'flex', flexDirection: 'column' }}>
             <div className="fc-role" style={{ color: '#4F46E5', background: '#E0E7FF' }}>Academic</div>
@@ -557,8 +557,8 @@ export default function Landing() {
           <h2 className="landing-h2">Your school,<br />finally organised.</h2>
           <p>Join a growing community of Kenyan schools that replaced spreadsheets,<br />paper registers, and group chats with Termly.</p>
           <div className="cta-btns">
-            <Link to="/register" className="btn-p" style={{ padding: '16px 38px', borderRadius: 100, fontSize: '1rem' }}>
-              Get access now
+            <Link to="/book-demo" className="btn-p" style={{ padding: '16px 38px', borderRadius: 100, fontSize: '1rem' }}>
+              Book a demo
               <svg width="15" height="15" viewBox="0 0 15 15" fill="none"><path d="M2.5 7.5h10M9 3.5l4 4-4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" /></svg>
             </Link>
             <Link to="/support" className="btn-s" style={{ padding: '16px 38px', borderRadius: 100, fontSize: '1rem' }}>Contact support</Link>

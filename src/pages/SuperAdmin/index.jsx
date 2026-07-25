@@ -9,7 +9,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useSearchParams } from 'react-router-dom';
 
 import { getAllSchools, getPlatformActivities, getPlatformSettings, getPlatformStats, updatePlatformSetting, suspendSchool, restoreSchool, subscribeToPlatformChanges, deleteSchool, deactivateSchool, wipeAllNonAdminSchools, setCurrentSchoolContext, setCurrentPeriodId, getPlatformUsageStats, getPlatformSchoolProfiles, getGlobalAuditLogs } from '../../data/coreStore';
-import { getTeachersBySchool, deleteTeacher } from '../../data/staffStore';;
+import { getTeachersBySchool, deleteTeacher } from '../../data/staffStore';
 
 // Components
 import Loader          from '../../components/Common/Loader';
@@ -27,6 +27,7 @@ import { CrossIcon } from '../../components/CommonIcons';
 
 // Modals
 import ActivateModal    from './modals/ActivateModal';
+import RegisterSchoolModal from './modals/RegisterSchoolModal';
 import DeleteModal      from './modals/DeleteModal';
 import StaffModal       from './modals/StaffModal';
 import NEMISExportModal from './modals/NEMISExportModal';
@@ -46,13 +47,13 @@ import {
 } from '../../components/CommonIcons';
 
 // Store additions (NEMIS student fetch)
-import { getStudentsBySchool } from '../../data/studentStore';;
+import { getStudentsBySchool } from '../../data/studentStore';
 
 // Styles — imported once
 import './SuperAdmin.css';
 
 // ── Supabase client ─────────────────────
-import { supabase } from '../../lib/supabase';;
+import { supabase } from '../../lib/supabase';
 
 // ══════════════════════════════════════════════════════════════════════════════
 export default function SuperAdmin({ currentUser, isPlatformAdmin, sidebarOpen, setSidebarOpen, onSignOut }) {
@@ -77,6 +78,7 @@ export default function SuperAdmin({ currentUser, isPlatformAdmin, sidebarOpen, 
 
   // ── Modal state ──────────────────────────────────────────────────────────
   const [activateModal,   setActivateModal]   = useState(null);
+  const [showRegisterSchool, setShowRegisterSchool] = useState(false);
   const [activationNote,  setActivationNote]  = useState('');
   const [activating,      setActivating]      = useState(false);
   const [activateSuccess, setActivateSuccess] = useState(false);
@@ -135,7 +137,7 @@ export default function SuperAdmin({ currentUser, isPlatformAdmin, sidebarOpen, 
           const rawSchools = await getAllSchools();
           // getAllSchools already returns schools with _studentCount and _staffCount
           const filtered = rawSchools.filter(s => !s.name?.toLowerCase().includes('Termly hq'));
-          setSchools(filtered || []);
+          setSchools(filtered);
 
           try {
             const profiles = await getPlatformSchoolProfiles();
@@ -492,6 +494,7 @@ export default function SuperAdmin({ currentUser, isPlatformAdmin, sidebarOpen, 
                       handleBulkDeactivate={handleBulkDeactivate} 
                       handleOpenStaffModal={handleOpenStaffModal}
                       onSelectSchool={setSelectedSchool}
+                      onOpenRegisterSchool={() => setShowRegisterSchool(true)}
                     />
                   )
                 )}
@@ -505,6 +508,7 @@ export default function SuperAdmin({ currentUser, isPlatformAdmin, sidebarOpen, 
             )}
 
             <ActivateModal activateModal={activateModal} setActivateModal={setActivateModal} activationNote={activationNote} setActivationNote={setActivationNote} activating={activating} activateSuccess={activateSuccess} handleConfirmActivate={handleConfirmActivate} />
+            <RegisterSchoolModal open={showRegisterSchool} onClose={() => setShowRegisterSchool(false)} onRegistered={loadData} />
             <FeaturesModal school={featuresModal} onClose={() => setFeaturesModal(null)} setMessage={setMessage} />
             <DeleteModal deleteModal={deleteModal} setDeleteModal={setDeleteModal} deleting={deleting} handleDeleteSchool={handleRowDeleteSchool} />
             <StaffModal 

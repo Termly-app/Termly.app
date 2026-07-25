@@ -19,6 +19,7 @@ export default function SchoolsTab({
   onNEMISExport,          // ← new: opens NEMIS export modal for a school
   handleLoginAs,          // Added handleLoginAs
   onSelectSchool,         // New: drill down into school details
+  onOpenRegisterSchool,   // New: opens the Register School modal
 }) {
   return (
     <div className="tv">
@@ -28,6 +29,7 @@ export default function SchoolsTab({
             ALL SCHOOLS ({filteredSchools.length}/{totalSchools})
           </div>
           <div style={{ display:'flex', gap:10 }}>
+            <button className="act-btn g" onClick={onOpenRegisterSchool}>+ Register School</button>
             <button className="act-btn g" onClick={handleBulkActivate}>Activate All</button>
             <button className="act-btn r" onClick={handleBulkDeactivate}>Deactivate All</button>
             <button className={`act-btn${showFilter ? ' active' : ''}`} onClick={() => setShowFilter(f => !f)}>
