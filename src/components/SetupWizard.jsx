@@ -387,44 +387,68 @@ export default function SetupWizard({ profile, onComplete, totalStudents }) {
               
               <div className="fees-layout">
                 {formData.activeClasses.map(g => (
-                  <div key={g} className="fee-card-v2">
-                    <div className="fee-card-header">{g}</div>
-                    <div className="fee-inputs-row">
-                      <div className="fee-input-wrap">
-                        <label>Tuition Fee</label>
-                        <div className="input-with-cur">
-                          <span>KSh</span>
-                          <input 
-                            type="number" 
-                            value={typeof formData.gradeFees[g] === 'object' ? formData.gradeFees[g]?.day : formData.gradeFees[g] || ''} 
-                            onChange={e => {
-                                const val = Number(e.target.value);
-                                const current = typeof formData.gradeFees[g] === 'object' ? formData.gradeFees[g] : { day: formData.gradeFees[g] || 0, boarding: 0 };
-                                updateField('gradeFees', { ...formData.gradeFees, [g]: { ...current, day: val } });
-                            }}
-                            placeholder="0.00"
-                          />
-                        </div>
-                      </div>
-                      {isBoardingEnabled && (
-                        <div className="fee-input-wrap">
-                          <label>Boarding Fee</label>
-                          <div className="input-with-cur">
-                            <span>KSh</span>
-                            <input 
-                              type="number" 
-                              value={formData.gradeFees[g]?.boarding || ''} 
-                              onChange={e => {
-                                  const val = Number(e.target.value);
-                                  const current = typeof formData.gradeFees[g] === 'object' ? formData.gradeFees[g] : { day: formData.gradeFees[g] || 0, boarding: 0 };
-                                  updateField('gradeFees', { ...formData.gradeFees, [g]: { ...current, boarding: val } });
-                              }}
-                              placeholder="0.00"
-                            />
+                  <div key={g} className="fee-card-v2" style={{ display: 'flex', flexDirection: 'column', gap: 10, padding: 14 }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <div className="fee-card-header" style={{ margin: 0 }}>{g}</div>
+                      <span style={{ fontSize: '0.7rem', color: 'var(--text-light)', fontWeight: 600 }}>KSh / Term</span>
+                    </div>
+                    {['Term 1', 'Term 2', 'Term 3'].map(tKey => {
+                      const current = formData.gradeFees[g];
+                      const termObj = typeof current === 'object' && current?.[tKey] ? current[tKey] : {};
+                      const dayVal = termObj.day !== undefined 
+                        ? termObj.day 
+                        : (typeof current === 'object' ? current.day || '' : current || '');
+                      const boardingVal = termObj.boarding !== undefined 
+                        ? termObj.boarding 
+                        : (typeof current === 'object' ? current.boarding || '' : '');
+
+                      const handleSetupTermChange = (type, rawVal) => {
+                        const val = Number(rawVal) || 0;
+                        const curGrade = typeof current === 'object' ? current : { day: Number(current) || 0, boarding: 0 };
+                        const curTerm = curGrade[tKey] || {};
+                        const updatedTerm = { ...curTerm, [type]: val };
+                        const updatedGrade = {
+                          ...curGrade,
+                          [type]: tKey === 'Term 1' ? val : (curGrade[type] ?? 0),
+                          [tKey]: updatedTerm
+                        };
+                        updateField('gradeFees', { ...formData.gradeFees, [g]: updatedGrade });
+                      };
+
+                      return (
+                        <div key={tKey} style={{ background: 'var(--bg)', borderRadius: 8, padding: '8px 10px', border: '1px solid var(--border)' }}>
+                          <div style={{ fontSize: '0.72rem', fontWeight: 800, color: 'var(--text-main)', marginBottom: 4 }}>{tKey}</div>
+                          <div className="fee-inputs-row" style={{ gap: 8 }}>
+                            <div className="fee-input-wrap">
+                              <label style={{ fontSize: '0.64rem' }}>Tuition (Day)</label>
+                              <div className="input-with-cur">
+                                <span>KSh</span>
+                                <input 
+                                  type="number" 
+                                  value={dayVal} 
+                                  onChange={e => handleSetupTermChange('day', e.target.value)}
+                                  placeholder="0.00"
+                                />
+                              </div>
+                            </div>
+                            {isBoardingEnabled && (
+                              <div className="fee-input-wrap">
+                                <label style={{ fontSize: '0.64rem' }}>Boarding Fee</label>
+                                <div className="input-with-cur">
+                                  <span>KSh</span>
+                                  <input 
+                                    type="number" 
+                                    value={boardingVal} 
+                                    onChange={e => handleSetupTermChange('boarding', e.target.value)}
+                                    placeholder="0.00"
+                                  />
+                                </div>
+                              </div>
+                            )}
                           </div>
                         </div>
-                      )}
-                    </div>
+                      );
+                    })}
                   </div>
                 ))}
                 {formData.activeClasses.length === 0 && (

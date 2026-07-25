@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { isFeatureEnabled, getPrintHeader, getPrintFooter, getSchoolProfile, subscribeToChanges } from '../data/coreStore';
 import { getStudents } from '../data/studentStore';
 import { getFees, recordPayment, getFeeSummary, getMpesaLogs } from '../data/financeStore';
-import { voidPayment, restorePayment, getStudentPayments } from '../data/academicsStore';
+import { voidPayment, restorePayment, getStudentPayments, getCurrentPeriodDetails } from '../data/academicsStore';
 import { TERM_FEE } from '../data/seedData';
 import Loader from '../components/Common/Loader';
 import { CLASSES, CBC_STRUCTURE } from '../data/seedData';
@@ -370,6 +370,7 @@ export default function Fees({ currentUser, currentPeriodId }) {
   const [showReceipt, setShowReceipt] = useState(null);
   const [showHistory, setShowHistory] = useState(null);
   const [profile, setProfile] = useState({});
+  const [activePeriod, setActivePeriodState] = useState(null);
   const [streamFilter, setStreamFilter] = useState('All');
   const [loading, setLoading] = useState(true);
   // const [activeTab, setActiveTab] = useState('list'); // WIP: Only one tab now
@@ -412,8 +413,16 @@ export default function Fees({ currentUser, currentPeriodId }) {
 
   const refresh = async () => {
     try {
-      const [sData, fData, sumData] = await Promise.all([getStudents(), getFees(), getFeeSummary()]);
-      setStudents(sData); setFees(fData); setSummary(sumData);
+      const [sData, fData, sumData, pData] = await Promise.all([
+        getStudents(), 
+        getFees(), 
+        getFeeSummary(),
+        getCurrentPeriodDetails()
+      ]);
+      setStudents(sData); 
+      setFees(fData); 
+      setSummary(sumData);
+      setActivePeriodState(pData);
     } catch (err) { console.error(err); }
   };
   const formatKSh = (n) => `KSh ${Number(n||0).toLocaleString()}`;
@@ -432,7 +441,13 @@ export default function Fees({ currentUser, currentPeriodId }) {
     if (classFees) {
       if (typeof classFees === 'object') {
         const resType = (s.residence_type || s.residenceType || 'day').toLowerCase();
-        totalBilled = Number(classFees[resType]) || Number(classFees.day) || null;
+        const termName = activePeriod?.term || null;
+        if (termName && classFees[termName] && typeof classFees[termName] === 'object') {
+          totalBilled = Number(classFees[termName][resType]) || Number(classFees[termName].day) || null;
+        }
+        if (!totalBilled) {
+          totalBilled = Number(classFees[resType]) || Number(classFees.day) || null;
+        }
       } else {
         totalBilled = Number(classFees) || null;
       }

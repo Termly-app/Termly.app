@@ -231,16 +231,28 @@ export async function getFeeSummary(preFetchedFees = null, preFetchedStudents = 
   const profile = preFetchedProfile || await getSchoolProfile();
   const gradeFees = profile.gradeFees || {};
   
+  let termName = null;
+  try {
+    const { getCurrentPeriodDetails } = await import('./academicsStore');
+    const period = await getCurrentPeriodDetails();
+    termName = period?.term || null;
+  } catch (e) { /* ignore */ }
+  
   let totalExpected = 0, totalCollected = 0, totalOutstanding = 0;
   let fullyPaid = 0, partialPaid = 0, unpaid = 0;
   students.forEach(s => {
     let defaultFee = TERM_FEE;
-    if (gradeFees[s.class]) {
-      if (typeof gradeFees[s.class] === 'object') {
-        const resType = (s.residenceType || 'day').toLowerCase();
-        defaultFee = Number(gradeFees[s.class][resType]) || Number(gradeFees[s.class].day) || TERM_FEE;
+    const cf = gradeFees[s.class];
+    if (cf) {
+      if (typeof cf === 'object') {
+        const resType = (s.residenceType || s.residence_type || 'day').toLowerCase();
+        if (termName && cf[termName] && typeof cf[termName] === 'object') {
+          defaultFee = Number(cf[termName][resType]) || Number(cf[termName].day) || TERM_FEE;
+        } else {
+          defaultFee = Number(cf[resType]) || Number(cf.day) || TERM_FEE;
+        }
       } else {
-        defaultFee = Number(gradeFees[s.class]) || TERM_FEE;
+        defaultFee = Number(cf) || TERM_FEE;
       }
     }
     const f = fees[s.id] || { totalFee: defaultFee, paid: 0, balance: defaultFee };

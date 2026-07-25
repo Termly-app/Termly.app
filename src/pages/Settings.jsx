@@ -191,6 +191,43 @@ export default function Settings() {
     const updated = typeof current === 'object' ? { ...current, [type]: Number(val) } : { day: Number(current), [type]: Number(val) };
     setProfile({...profile,gradeFees:{...profile.gradeFees,[grade]:updated}});setSaved(false);
   };
+  const handleTermFeeChange = (grade, termKey, type, val) => {
+    const current = profile.gradeFees?.[grade] || {};
+    const numVal = Math.max(0, Number(val) || 0);
+    const currentTermObj = (typeof current === 'object' && current[termKey]) ? current[termKey] : {};
+    const updatedTermObj = { ...currentTermObj, [type]: numVal };
+
+    const updatedGrade = typeof current === 'object'
+      ? {
+          ...current,
+          [type]: termKey === 'Term 1' ? numVal : (current[type] ?? 0),
+          [termKey]: updatedTermObj
+        }
+      : {
+          day: termKey === 'Term 1' && type === 'day' ? numVal : (Number(current) || 0),
+          boarding: termKey === 'Term 1' && type === 'boarding' ? numVal : 0,
+          [termKey]: updatedTermObj
+        };
+
+    setProfile({ ...profile, gradeFees: { ...profile.gradeFees, [grade]: updatedGrade } });
+    setSaved(false);
+  };
+  const copyTerm1ToAll = (grade) => {
+    const current = profile.gradeFees?.[grade] || {};
+    const term1Obj = (typeof current === 'object' && current['Term 1']) 
+      ? current['Term 1'] 
+      : { day: typeof current === 'object' ? (current.day || 0) : Number(current) || 0, boarding: typeof current === 'object' ? (current.boarding || 0) : 0 };
+
+    const updatedGrade = {
+      ...(typeof current === 'object' ? current : { day: Number(current) || 0, boarding: 0 }),
+      'Term 1': { ...term1Obj },
+      'Term 2': { ...term1Obj },
+      'Term 3': { ...term1Obj }
+    };
+
+    setProfile({ ...profile, gradeFees: { ...profile.gradeFees, [grade]: updatedGrade } });
+    setSaved(false);
+  };
   const runFeeApplication=async()=>{
     setLoading(true);
     try{await saveSchoolProfile(profile);await applyFeeStructure();alert({ title: 'Success', message: 'Fee structure applied to students.', variant: 'success' });}
@@ -967,29 +1004,58 @@ export default function Settings() {
                   {profile.activeClasses?.filter(g=>CBC_STRUCTURE[activeLevel].grades.includes(g)).length===0?(
                     <p style={{fontSize:'0.875rem',color:'var(--text-muted)',fontStyle:'italic',textAlign:'center',padding:'14px 0'}}>Select active grades to configure fees.</p>
                   ):(
-                    <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(280px,1fr))',gap:12}}>
+                    <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(300px,1fr))',gap:14}}>
                       {CBC_STRUCTURE[activeLevel].grades.filter(g=>profile.activeClasses?.includes(g)).map(grade=>(
-                        <div key={grade} style={{display:'flex',flexDirection:'column',gap:8,padding:'12px 14px',background:'var(--bg-card)',borderRadius:10,border:'1px solid var(--border)'}}>
+                        <div key={grade} style={{display:'flex',flexDirection:'column',gap:10,padding:'14px',background:'var(--bg-card)',borderRadius:12,border:'1px solid var(--border)'}}>
                           <div style={{display:'flex',justifyContent:'space-between',alignItems:'center'}}>
-                            <span style={{fontSize:'0.875rem',fontWeight:700,color:'var(--primary)'}}>{grade}</span>
-                            <span style={{fontSize:'0.65rem',color:'var(--text-light)',fontWeight:600,textTransform:'uppercase'}}>KSh / Term</span>
+                            <span style={{fontSize:'0.9rem',fontWeight:800,color:'var(--primary)'}}>{grade}</span>
+                            <button 
+                              type="button"
+                              onClick={() => copyTerm1ToAll(grade)}
+                              style={{ fontSize: '0.68rem', padding: '3px 10px', borderRadius: 6, border: '1px solid var(--border)', background: 'var(--bg)', color: 'var(--text-light)', cursor: 'pointer', fontWeight: 600 }}
+                              title="Copy Term 1 rates to Term 2 & 3"
+                            >
+                              Copy T1 to all
+                            </button>
                           </div>
-                          <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:8}}>
-                            <div className="form-group" style={{margin:0}}>
-                              <label style={{fontSize:'0.65rem',marginBottom:2}}>Day</label>
-                              <input type="number" 
-                                value={typeof profile.gradeFees?.[grade] === 'object' ? profile.gradeFees[grade].day : profile.gradeFees?.[grade] || TERM_FEE} 
-                                onChange={e=>handleFeeChange(grade,'day',e.target.value)}
-                                style={{width:'100%',textAlign:'right',fontWeight:700,padding:'5px 7px',border:'1.5px solid var(--border)',borderRadius:7,fontSize:'0.875rem',outline:'none',background:'var(--bg)',color:'var(--text-main)',fontFamily:'inherit'}}/>
-                            </div>
-                            <div className="form-group" style={{margin:0}}>
-                              <label style={{fontSize:'0.65rem',marginBottom:2}}>Boarding</label>
-                              <input type="number" 
-                                value={typeof profile.gradeFees?.[grade] === 'object' ? (profile.gradeFees[grade].boarding || 0) : 0} 
-                                onChange={e=>handleFeeChange(grade,'boarding',e.target.value)}
-                                style={{width:'100%',textAlign:'right',fontWeight:700,padding:'5px 7px',border:'1.5px solid var(--border)',borderRadius:7,fontSize:'0.875rem',outline:'none',background:'var(--bg)',color:'var(--text-main)',fontFamily:'inherit'}}/>
-                            </div>
-                          </div>
+
+                          {['Term 1', 'Term 2', 'Term 3'].map(tKey => {
+                            const termObj = typeof profile.gradeFees?.[grade] === 'object' && profile.gradeFees[grade][tKey]
+                              ? profile.gradeFees[grade][tKey]
+                              : {};
+                            const dayVal = termObj.day !== undefined 
+                              ? termObj.day 
+                              : (typeof profile.gradeFees?.[grade] === 'object' ? profile.gradeFees[grade].day : profile.gradeFees?.[grade] || 0);
+                            const boardingVal = termObj.boarding !== undefined 
+                              ? termObj.boarding 
+                              : (typeof profile.gradeFees?.[grade] === 'object' ? (profile.gradeFees[grade].boarding || 0) : 0);
+
+                            return (
+                              <div key={tKey} style={{ background: 'var(--bg)', borderRadius: 8, padding: '8px 10px', border: '1px solid var(--border)' }}>
+                                <div style={{ fontSize: '0.72rem', fontWeight: 800, color: 'var(--text-main)', marginBottom: 4 }}>{tKey}</div>
+                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+                                  <div className="form-group" style={{ margin: 0 }}>
+                                    <label style={{ fontSize: '0.64rem', marginBottom: 2, color: 'var(--text-light)' }}>Day (KSh)</label>
+                                    <input 
+                                      type="number" 
+                                      value={dayVal} 
+                                      onChange={e => handleTermFeeChange(grade, tKey, 'day', e.target.value)}
+                                      style={{ width: '100%', textAlign: 'right', fontWeight: 700, padding: '4px 6px', border: '1px solid var(--border)', borderRadius: 6, fontSize: '0.85rem', outline: 'none', background: 'var(--bg-card)', color: 'var(--text-main)', fontFamily: 'inherit' }}
+                                    />
+                                  </div>
+                                  <div className="form-group" style={{ margin: 0 }}>
+                                    <label style={{ fontSize: '0.64rem', marginBottom: 2, color: 'var(--text-light)' }}>Boarding (KSh)</label>
+                                    <input 
+                                      type="number" 
+                                      value={boardingVal} 
+                                      onChange={e => handleTermFeeChange(grade, tKey, 'boarding', e.target.value)}
+                                      style={{ width: '100%', textAlign: 'right', fontWeight: 700, padding: '4px 6px', border: '1px solid var(--border)', borderRadius: 6, fontSize: '0.85rem', outline: 'none', background: 'var(--bg-card)', color: 'var(--text-main)', fontFamily: 'inherit' }}
+                                    />
+                                  </div>
+                                </div>
+                              </div>
+                            );
+                          })}
                         </div>
                       ))}
                     </div>

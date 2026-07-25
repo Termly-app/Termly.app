@@ -6,6 +6,7 @@ import {
 } from './coreStore';
 import { withRetry } from '../utils/resilience';
 import { getFeeSummary, getPayments } from './financeStore';
+import { getCurrentPeriodDetails } from './academicsStore';
 import { TERM_FEE, CBC_STRUCTURE, getSubjectsForGrade } from './seedData';
 import { jsPDF } from 'jspdf'; 
 
@@ -196,13 +197,20 @@ export async function addStudent(student) {
     .single();
   if (error) throw error;
 
-  // Create fee record for new student
+  // Create fee record for new student (term-aware)
   const feeConfig = p.gradeFees?.[student.class];
   let baseFee = TERM_FEE;
   if (feeConfig) {
     if (typeof feeConfig === 'object') {
       const type = (student.residenceType || 'day').toLowerCase();
-      baseFee = Number(feeConfig[type]) || Number(feeConfig.day) || TERM_FEE;
+      // Check per-term rates first
+      let termName = null;
+      try { const period = await getCurrentPeriodDetails(); termName = period?.term || null; } catch(e) { /* ignore */ }
+      if (termName && feeConfig[termName] && typeof feeConfig[termName] === 'object') {
+        baseFee = Number(feeConfig[termName][type]) || Number(feeConfig[termName].day) || TERM_FEE;
+      } else {
+        baseFee = Number(feeConfig[type]) || Number(feeConfig.day) || TERM_FEE;
+      }
     } else {
       baseFee = Number(feeConfig) || TERM_FEE;
     }

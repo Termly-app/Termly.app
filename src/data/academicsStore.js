@@ -781,10 +781,12 @@ export async function reconcileStudentFee(studentId, existingRecord = null) {
   mutationGuard('reconcileStudentFee');
   if (!studentId || !_currentSchoolId || !_currentPeriodId) return null;
 
+  const period = await getCurrentPeriodDetails();
+  const termName = period?.term || null;
   const students = await getStudents();
   const student = students.find(s => s.id === studentId);
   const profile = await getSchoolProfile();
-  const configTotal = getCalculatedTotalFee(student, profile);
+  const configTotal = getCalculatedTotalFee(student, profile, termName);
 
   if (configTotal === null) return existingRecord; // No config, can't reconcile
 
@@ -825,10 +827,10 @@ export async function reconcileStudentFee(studentId, existingRecord = null) {
 
 
 /**
- * Internal helper to calculate a student's total fee based on their class and residence type.
+ * Internal helper to calculate a student's total fee based on their class, residence type, and current active term.
  * Returns null if the fee is not configured in the school profile.
  */
-function getCalculatedTotalFee(student, profile) {
+export function getCalculatedTotalFee(student, profile, termName = null) {
   if (!student || !profile) return null;
   const grade = student.class;
   const gradeFees = profile.gradeFees || {};
@@ -836,9 +838,16 @@ function getCalculatedTotalFee(student, profile) {
   
   if (!customFee) return null;
 
+  const resType = (student.residence_type || student.residenceType || 'day').toLowerCase();
+
   if (typeof customFee === 'object') {
-    // Standardize on residence_type (database convention)
-    const resType = (student.residence_type || student.residenceType || 'day').toLowerCase();
+    // 1. Check term-specific fee if configured (e.g. termName = "Term 1")
+    if (termName && customFee[termName] && typeof customFee[termName] === 'object') {
+      const termFee = Number(customFee[termName][resType]) || Number(customFee[termName].day);
+      if (termFee) return termFee;
+    }
+
+    // 2. Fallback to general day/boarding rate
     const fee = Number(customFee[resType]) || Number(customFee.day);
     return fee || null;
   }
@@ -991,11 +1000,13 @@ export async function reconcileStudentFeesWithPayments(studentId) {
 export async function applyFeeStructure() {
   if (!_currentSchoolId || !_currentPeriodId) return;
   const profile = await getSchoolProfile();
+  const period = await getCurrentPeriodDetails();
+  const termName = period?.term || null;
   const gradeFees = profile.gradeFees || {};
   const students = await getStudents();
   
   for (const student of students) {
-    const finalFee = getCalculatedTotalFee(student, profile);
+    const finalFee = getCalculatedTotalFee(student, profile, termName);
     
     // Skip students without configured fees to avoid corrupting records
     if (finalFee === null) continue;
