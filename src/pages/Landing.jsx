@@ -155,7 +155,7 @@ export default function Landing() {
     }, { threshold: 0.5 });
     document.querySelectorAll('.ring-svg').forEach(el => ringObs.observe(el));
 
-    // ── CARD TILT ON HOVER (init for dynamic cards) ──
+    // ── CARD TILT ON HOVER ──
     const onMouseMoveTilt = (e, card) => {
       const r = card.getBoundingClientRect();
       const x = e.clientX - r.left;
@@ -168,12 +168,11 @@ export default function Landing() {
       card.style.transform = '';
     };
 
-    document.querySelectorAll('.fc, .pc').forEach(card => {
+    document.querySelectorAll('.fc, .pc, .pain-card').forEach(card => {
       card.onmousemove = (e) => onMouseMoveTilt(e, card);
       card.onmouseleave = () => onMouseLeaveTilt(card);
     });
 
-    // Fallback: manually reveal pricing after a delay
     const fallbackTimer = setTimeout(() => {
       revealElements.forEach(el => el.classList.add('visible'));
     }, 4000);
@@ -190,10 +189,12 @@ export default function Landing() {
   return (
     <>
       <Helmet>
-        <title>Termly — High Performance CBC School Management System</title>
-        <meta name="description" content="Kenya's #1 CBC-compliant school management system. Manage finances, learner portfolios, and generate KNEC-standard reports instantly." />
+        <title>Termly — Kenyan School Management System</title>
+        <meta name="description" content="Run your school, not your spreadsheets. Fees, attendance, report cards and parent SMS in one login." />
         <meta name="keywords" content="Termly, School Management System Kenya, CBC Grading, School ERP, Student Information System" />
       </Helmet>
+
+      {/* NAVBAR */}
       <div className="nav-wrap">
         <nav className="landing-nav">
           <Link to="/" className="nav-logo">
@@ -208,6 +209,8 @@ export default function Landing() {
             Termly
           </Link>
           <a href="#features" className="nlink">Features</a>
+          <a href="#pricing" className="nlink">Pricing</a>
+          <Link to="/faq" className="nlink">FAQ</Link>
           <Link to="/contact" className="nlink">Contact</Link>
           <div className="nsep"></div>
           
@@ -255,6 +258,7 @@ export default function Landing() {
         </nav>
       </div>
 
+      {/* HERO SECTION */}
       <section className="hero">
         <div className="ghost ghost-hero">Termly</div>
 
@@ -279,18 +283,23 @@ export default function Landing() {
         <div className="hero-content">
           <div className="hero-badge">
             <span className="bdot"></span>
-            Built for Kenyan Schools · CBC & 8-4-4 Ready
+            Built for Kenyan Schools
           </div>
-          <h1 className="hero-h1">Complete School Management<br /><span className="h1-dim">— Exams, Finance, Compliance —</span><br />all in one system.</h1>
-          <p className="hero-sub">Termly is the all-in-one ecosystem for modern Kenyan schools. Automate your M-PESA fee collection, manage formal exam sessions with auto-ranking, and ensure 100% NEMIS compliance.</p>
-          <div className="hero-btns">
+          <h1 className="hero-h1">Run your school,<br /><span className="h1-dim">not your spreadsheets.</span></h1>
+          <p className="hero-sub">Fees, attendance, report cards and parent SMS in one login. Pay only for the modules your school actually uses.</p>
+          <div className="hero-btns" style={{ marginBottom: 18 }}>
             <Link to="/book-demo" className="btn-p">
               Book a demo
               <svg width="15" height="15" viewBox="0 0 15 15" fill="none"><path d="M2.5 7.5h10M9 3.5l4 4-4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" /></svg>
             </Link>
+            <a href="#pricing" className="btn-s">See pricing</a>
           </div>
+          <p style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.7)', margin: 0, fontWeight: 500 }}>
+            CBC-ready · M-Pesa reconciliation · Bulk SMS built in
+          </p>
         </div>
 
+        {/* HERO SCREEN DEMO PREVIEW */}
         <div className="hero-screen">
           <div className="hs-frame">
             <div className="hs-bar">
@@ -347,6 +356,7 @@ export default function Landing() {
         </div>
       </section>
 
+      {/* TICKER */}
       <div className="ticker-wrap">
         <div className="ticker-track">
           <span className="ti on"><span className="tic tv-"><BookIcon size={14} /></span>CBC Portfolios</span><span className="tick-dot">·</span>
@@ -356,25 +366,52 @@ export default function Landing() {
           <span className="ti on"><span className="tic tg-"><BookIcon size={14} /></span>Smart Library</span><span className="tick-dot">·</span>
           <span className="ti"><span className="tic ty-"><RocketIcon size={14} /></span>E-Learning LMS</span><span className="tick-dot">·</span>
           <span className="ti on"><span className="tic tv-"><SchoolIcon size={14} /></span>Multi-Campus</span><span className="tick-dot">·</span>
-          <span className="ti"><span className="tic tg-"><FlagIcon size={14} /></span>Built in Nairobi</span><span className="tick-dot">·</span>
-          <span className="ti on"><span className="tic tv-"><BookIcon size={14} /></span>CBC Portfolios</span><span className="tick-dot">·</span>
-          <span className="ti"><span className="tic tg-"><CardIcon size={14} /></span>M-PESA Fees</span><span className="tick-dot">·</span>
-          <span className="ti on"><span className="tic ty-"><DashboardIcon size={14} /></span>KNEC Report Cards</span><span className="tick-dot">·</span>
-          <span className="ti"><span className="tic tv-"><CalendarIcon size={14} /></span>Student Analytics</span><span className="tick-dot">·</span>
-          <span className="ti on"><span className="tic ty-"><UserIcon size={14} /></span>Staff Records</span><span className="tick-dot">·</span>
-          <span className="ti"><span className="tic ty-"><RocketIcon size={14} /></span>Exam Analytics</span><span className="tick-dot">·</span>
-          <span className="ti on"><span className="tic tv-"><SchoolIcon size={14} /></span>Multi-Campus</span><span className="tick-dot">·</span>
           <span className="ti"><span className="tic tg-"><FlagIcon size={14} /></span>Built in Nairobi</span>
         </div>
       </div>
 
-      <div className="stats-row">
-        <div className="sc reveal"><div className="sn"><span className="sn-num" data-count="5">0</span><sup>+</sup></div><div className="sl-">Schools onboarded and growing</div></div>
-        <div className="sc reveal reveal-delay-1"><div className="sn"><span className="sn-num" data-count="12">0</span></div><div className="sl-">Modules built for Kenyan schools</div></div>
-        <div className="sc reveal reveal-delay-2"><div className="sn"><span className="sn-num" data-count="99">0</span><sup>%</sup></div><div className="sl-">Uptime SLA guaranteed</div></div>
-        <div className="sc reveal reveal-delay-3"><div className="sn"><span className="sn-num" data-count="2">0</span></div><div className="sl-">Curricula supported (CBC & 8-4-4)</div></div>
-      </div>
+      {/* PAIN POINT CARDS SECTION */}
+      <section className="section" style={{ background: '#fafafa', padding: '60px 24px' }}>
+        <div className="sec-head reveal" style={{ textAlign: 'center' }}>
+          <div className="eyebrow">Operational Efficiency</div>
+          <h2 className="landing-h2">Solve your daily school friction.</h2>
+          <p className="sec-p">Designed specifically for the administrative bottlenecks Kenyan school managers face every term.</p>
+        </div>
 
+        <div className="reveal" style={{ maxWidth: 1100, margin: '36px auto 0', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 24 }}>
+          <div className="fc" style={{ background: '#ffffff', borderRadius: 20, padding: 28, border: '1px solid #e2e8f0' }}>
+            <div style={{ width: 44, height: 44, borderRadius: 12, background: '#dcfce7', color: '#16a34a', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 16 }}>
+              <CardIcon size={24} />
+            </div>
+            <h3 style={{ fontSize: '1.15rem', fontWeight: 800, color: '#0f172a', marginBottom: 8 }}>Fee Chaos</h3>
+            <p style={{ fontSize: '0.88rem', color: '#64748b', lineHeight: 1.5, margin: 0 }}>
+              M-Pesa payments and bank deposits reconciled automatically. Instant receipts sent to parents without ledger errors.
+            </p>
+          </div>
+
+          <div className="fc" style={{ background: '#ffffff', borderRadius: 20, padding: 28, border: '1px solid #e2e8f0' }}>
+            <div style={{ width: 44, height: 44, borderRadius: 12, background: '#e0e7ff', color: '#4f46e5', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 16 }}>
+              <CalendarIcon size={24} />
+            </div>
+            <h3 style={{ fontSize: '1.15rem', fontWeight: 800, color: '#0f172a', marginBottom: 8 }}>Paper Registers</h3>
+            <p style={{ fontSize: '0.88rem', color: '#64748b', lineHeight: 1.5, margin: 0 }}>
+              Replace physical roll calls with cloud attendance. Student profiles, records, and history available in one login.
+            </p>
+          </div>
+
+          <div className="fc" style={{ background: '#ffffff', borderRadius: 20, padding: 28, border: '1px solid #e2e8f0' }}>
+            <div style={{ width: 44, height: 44, borderRadius: 12, background: '#fef3c7', color: '#d97706', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 16 }}>
+              <PhoneIcon size={24} />
+            </div>
+            <h3 style={{ fontSize: '1.15rem', fontWeight: 800, color: '#0f172a', marginBottom: 8 }}>Parent Updates</h3>
+            <p style={{ fontSize: '0.88rem', color: '#64748b', lineHeight: 1.5, margin: 0 }}>
+              Direct SMS reaches parents instantly on any phone. No smartphone or mobile app download required.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      {/* PLATFORM CAPABILITIES */}
       <section className="section" id="features">
         <div className="sec-head reveal">
           <div className="eyebrow">Platform capabilities</div>
@@ -435,138 +472,99 @@ export default function Landing() {
             <p className="fc-desc">Record CATs, Mid-Term, and End-Term marks. Generate CBC learner portfolios and KNEC-standard report cards with a single click. Compliant with all Kenyan curricula.</p>
           </div>
         </div>
+      </section>
 
-        <div className="feat-grid-2" style={{ marginTop: 18 }}>
-          <div className="fc reveal">
-            <div className="fc-role">For Administrators</div>
-            <div className="fc-vis">
-              <div className="ring-w" style={{ width: '100%', padding: 8 }}>
-                <div className="ring-svg">
-                  <svg width="54" height="54" viewBox="0 0 54 54">
-                    <circle className="rbg" cx="27" cy="27" r="21" />
-                    <circle className="rfill" cx="27" cy="27" r="21" />
-                  </svg>
-                  <div className="ring-lbl">94%</div>
+      {/* MODULAR PRICING BLOCK */}
+      <section className="section" id="pricing" style={{ background: '#ffffff', padding: '70px 24px' }}>
+        <div className="sec-head reveal" style={{ textAlign: 'center' }}>
+          <div className="eyebrow">Modular Pricing</div>
+          <h2 className="landing-h2">Pay only for what your school uses.</h2>
+          <p className="sec-p">Simple per-student per-term pricing with zero setup fees. Activate additional modules whenever your school requires them.</p>
+        </div>
+
+        <div className="reveal" style={{ maxWidth: 1000, margin: '40px auto 0', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 32 }}>
+          {/* Core Bundle Card */}
+          <div style={{ background: '#f8fafc', border: '1.5px solid #e2e8f0', borderRadius: 24, padding: 32, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+            <div>
+              <div style={{ fontSize: '0.75rem', fontWeight: 800, color: '#4f46e5', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 8 }}>Primary Plan</div>
+              <h3 style={{ fontSize: '1.5rem', fontWeight: 800, color: '#0f172a', margin: '0 0 12px' }}>Core Bundle</h3>
+              <p style={{ fontSize: '0.9rem', color: '#64748b', lineHeight: 1.5, marginBottom: 20 }}>
+                Essential tools to digitize student records, fee collections, and attendance tracking.
+              </p>
+              <div style={{ display: 'flex', alignItems: 'baseline', gap: 6, marginBottom: 24 }}>
+                <span style={{ fontSize: '1.1rem', fontWeight: 800, color: '#0f172a' }}>Standard Rate</span>
+                <span style={{ fontSize: '0.85rem', color: '#64748b' }}>/ student / term</span>
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: '0.9rem', color: '#334155', fontWeight: 600 }}>
+                  <CheckIcon size={18} color="#16a34a" /> Student Information System & Profiles
                 </div>
-                <div className="ring-info">
-                  <strong>Daily Attendance</strong>
-                  792 of 842 present<br />
-                  <span style={{ color: '#16A34A', fontWeight: 500, fontSize: '.65rem' }}>94% attendance rate</span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: '0.9rem', color: '#334155', fontWeight: 600 }}>
+                  <CheckIcon size={18} color="#16a34a" /> Fee Tracking & M-Pesa Reconciliation
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: '0.9rem', color: '#334155', fontWeight: 600 }}>
+                  <CheckIcon size={18} color="#16a34a" /> Daily Digital Roll Call & Attendance
                 </div>
               </div>
             </div>
-            <div className="fc-title">Staff & NEMIS Export</div>
-            <p className="fc-desc">Replace paper registers with cloud-based attendance. Export your school data to NEMIS format seamlessly, saving hours of manual data entry.</p>
+            <Link to="/book-demo" className="btn-p" style={{ width: '100%', justifyContent: 'center', marginTop: 32, padding: '14px' }}>
+              Book a demo
+            </Link>
           </div>
 
-          <div className="fc fc-dark reveal reveal-delay-2">
-            <div className="fc-vis" style={{ background: 'rgba(255,255,255,.04)', borderColor: 'rgba(255,255,255,.08)' }}>
-              <div className="mini" style={{ width: '100%', color: 'rgba(255,255,255,.85)' }}>
-                <div className="mh" style={{ borderColor: 'rgba(255,255,255,.08)' }}>
-                  <span style={{ fontWeight: 700, fontSize: '.7rem', color: '#fff' }}>Exam Analytics</span>
-                  <span className="mb-" style={{ background: '#6B4EFF', color: '#fff' }}>CBC</span>
+          {/* Add-on Modules Card */}
+          <div style={{ background: '#ffffff', border: '1.5px solid #e2e8f0', borderRadius: 24, padding: 32, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+            <div>
+              <div style={{ fontSize: '0.75rem', fontWeight: 800, color: '#d97706', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 8 }}>Flexible Expansion</div>
+              <h3 style={{ fontSize: '1.5rem', fontWeight: 800, color: '#0f172a', margin: '0 0 12px' }}>Modular Add-ons</h3>
+              <p style={{ fontSize: '0.9rem', color: '#64748b', lineHeight: 1.5, marginBottom: 20 }}>
+                Add advanced modules anytime directly from SuperAdmin or Settings.
+              </p>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                <div style={{ padding: '12px 16px', background: '#f8fafc', borderRadius: 12, border: '1px solid #e2e8f0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span style={{ fontSize: '0.9rem', fontWeight: 700, color: '#0f172a' }}>+ Timetabling</span>
+                  <span style={{ fontSize: '0.8rem', color: '#64748b', fontWeight: 600 }}>Optional Add-on</span>
                 </div>
-                <div className="mr" style={{ borderColor: 'rgba(255,255,255,.07)' }}><span style={{ color: 'rgba(255,255,255,.45)' }}>Mathematics</span><span style={{ color: '#A3E635', fontWeight: 500 }}>72.4 ↑</span></div>
-                <div className="mr" style={{ borderColor: 'rgba(255,255,255,.07)' }}><span style={{ color: 'rgba(255,255,255,.45)' }}>English</span><span style={{ color: '#A3E635', fontWeight: 500 }}>68.1 ↑</span></div>
-                <div className="mr" style={{ border: 'none' }}><span style={{ color: 'rgba(255,255,255,.45)' }}>Science</span><span style={{ color: '#FCA5A5', fontWeight: 500 }}>61.2 ↓</span></div>
+                <div style={{ padding: '12px 16px', background: '#f8fafc', borderRadius: 12, border: '1px solid #e2e8f0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span style={{ fontSize: '0.9rem', fontWeight: 700, color: '#0f172a' }}>+ Exam Reports & CBC Portfolios</span>
+                  <span style={{ fontSize: '0.8rem', color: '#64748b', fontWeight: 600 }}>Optional Add-on</span>
+                </div>
+                <div style={{ padding: '12px 16px', background: '#f8fafc', borderRadius: 12, border: '1px solid #e2e8f0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span style={{ fontSize: '0.9rem', fontWeight: 700, color: '#0f172a' }}>+ Parent & Teacher Portals</span>
+                  <span style={{ fontSize: '0.8rem', color: '#64748b', fontWeight: 600 }}>Optional Add-on</span>
+                </div>
+                <div style={{ padding: '12px 16px', background: '#f8fafc', borderRadius: 12, border: '1px solid #e2e8f0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span style={{ fontSize: '0.9rem', fontWeight: 700, color: '#0f172a' }}>+ Bulk SMS Credits</span>
+                  <span style={{ fontSize: '0.8rem', color: '#16a34a', fontWeight: 700 }}>Pay-as-you-go</span>
+                </div>
               </div>
             </div>
-            <div className="fc-title">Exam Analytics</div>
-            <p className="fc-desc">Per-subject averages, class rankings, improvement trends — all auto-calculated and visualised live.</p>
-            <div style={{ marginTop: 16, display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-              <span style={{ padding: '3px 11px', borderRadius: 100, background: 'rgba(107,78,255,.2)', border: '1px solid rgba(107,78,255,.3)', fontSize: '.65rem', color: '#C4B5FF', fontWeight: 500 }}>Per Subject</span>
-              <span style={{ padding: '3px 11px', borderRadius: 100, background: 'rgba(255,255,255,.06)', border: '1px solid rgba(255,255,255,.1)', fontSize: '.65rem', color: 'rgba(255,255,255,.45)', fontWeight: 500 }}>Class Rank</span>
-              <span style={{ padding: '3px 11px', borderRadius: 100, background: 'rgba(255,255,255,.06)', border: '1px solid rgba(255,255,255,.1)', fontSize: '.65rem', color: 'rgba(255,255,255,.45)', fontWeight: 500 }}>Trends</span>
-            </div>
+            <Link to="/contact" className="btn-s" style={{ width: '100%', justifyContent: 'center', marginTop: 32, padding: '14px', textAlign: 'center' }}>
+              Custom Plan Inquiry
+            </Link>
           </div>
         </div>
       </section>
 
-      <section className="section" id="modules" style={{ background: '#fafafa' }}>
-        <div className="sec-head reveal">
-          <div className="eyebrow">Modules & Features</div>
-          <h2 className="landing-h2">Everything your school needs.</h2>
-          <p className="sec-p">Everything your school needs to operate efficiently, from grading to finance.</p>
-        </div>
-        <div className="reveal" style={{ maxWidth: 1100, margin: '0 auto', display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 32, padding: '0 24px' }}>
-          
-          <div className="fc" style={{ background: '#fff', display: 'flex', flexDirection: 'column' }}>
-            <div className="fc-role" style={{ color: '#4F46E5', background: '#E0E7FF' }}>Academic</div>
-            <ul style={{ listStyle: 'none', padding: 0, margin: '20px 0 0 0', flex: 1 }}>
-              <li style={{ padding: '16px 0', borderBottom: '1px solid #f1f5f9', display: 'flex', alignItems: 'center', gap: 12 }}><GraduationIcon size={18} color="#64748b"/> <div><strong>Exam Results:</strong><br /><span style={{fontSize:'0.75rem', color:'var(--muted)'}}>8-4-4 & automated ranking</span></div></li>
-              <li style={{ padding: '16px 0', borderBottom: '1px solid #f1f5f9', display: 'flex', alignItems: 'center', gap: 12 }}><BookIcon size={18} color="#64748b"/> <div><strong>CBC Tracking:</strong><br /><span style={{fontSize:'0.75rem', color:'var(--muted)'}}>Core competencies & rubrics</span></div></li>
-              <li style={{ padding: '16px 0', display: 'flex', alignItems: 'center', gap: 12 }}><CheckIcon size={18} color="#64748b"/> <div><strong>Report Cards:</strong><br /><span style={{fontSize:'0.75rem', color:'var(--muted)'}}>Instant KNEC-standard generation</span></div></li>
-            </ul>
-          </div>
-
-          <div className="fc" style={{ background: '#fff', display: 'flex', flexDirection: 'column' }}>
-            <div className="fc-role" style={{ color: '#16A34A', background: '#DCFCE7' }}>Finance</div>
-            <ul style={{ listStyle: 'none', padding: 0, margin: '20px 0 0 0', flex: 1 }}>
-              <li style={{ padding: '16px 0', borderBottom: '1px solid #f1f5f9', display: 'flex', alignItems: 'center', gap: 12 }}><CardIcon size={18} color="#64748b"/> <div><strong>Fee Collection:</strong><br /><span style={{fontSize:'0.75rem', color:'var(--muted)'}}>Fully automated M-PESA sync</span></div></li>
-              <li style={{ padding: '16px 0', borderBottom: '1px solid #f1f5f9', display: 'flex', alignItems: 'center', gap: 12 }}><CalendarIcon size={18} color="#64748b"/> <div><strong>Balance Tracking:</strong><br /><span style={{fontSize:'0.75rem', color:'var(--muted)'}}>Real-time arrears & statements</span></div></li>
-              <li style={{ padding: '16px 0', display: 'flex', alignItems: 'center', gap: 12 }}><UserIcon size={18} color="#64748b"/> <div><strong>Digital Receipts:</strong><br /><span style={{fontSize:'0.75rem', color:'var(--muted)'}}>Instant SMS/Email confirmations</span></div></li>
-            </ul>
-          </div>
-
-          <div className="fc" style={{ background: '#fff', display: 'flex', flexDirection: 'column' }}>
-            <div className="fc-role" style={{ color: '#9333EA', background: '#F3E8FF' }}>Administration</div>
-            <ul style={{ listStyle: 'none', padding: 0, margin: '20px 0 0 0', flex: 1 }}>
-              <li style={{ padding: '16px 0', borderBottom: '1px solid #f1f5f9', display: 'flex', alignItems: 'center', gap: 12 }}><CheckIcon size={18} color="#64748b"/> <div><strong>NEMIS Compliance:</strong><br /><span style={{fontSize:'0.75rem', color:'var(--muted)'}}>Standardized Kenyan reporting</span></div></li>
-              <li style={{ padding: '16px 0', borderBottom: '1px solid #f1f5f9', display: 'flex', alignItems: 'center', gap: 12 }}><RocketIcon size={18} color="#64748b"/> <div><strong>Role Security:</strong><br /><span style={{fontSize:'0.75rem', color:'var(--muted)'}}>Granular access permissions</span></div></li>
-              <li style={{ padding: '16px 0', display: 'flex', alignItems: 'center', gap: 12 }}><SchoolIcon size={18} color="#64748b"/> <div><strong>Staff Management:</strong><br /><span style={{fontSize:'0.75rem', color:'var(--muted)'}}>Teacher attendance & profiles</span></div></li>
-            </ul>
-          </div>
-        </div>
-      </section>
-
-      <section className="section portals-gateway" id="portals">
-        <div className="sec-head reveal">
-          <div className="eyebrow">Portal Gateway</div>
-          <h2 className="landing-h2">One platform,<br />tailored experiences.</h2>
-          <p className="sec-p">Whether you're managing a whole campus, recording class grades, or checking a student's fees, we have a portal built for you.</p>
-        </div>
-
-        <div className="portal-cards">
-          <div className="pcard reveal">
-            <div className="pcard-icon si-v"><SchoolIcon size={24} /></div>
-            <h3>School Management</h3>
-            <p>Complete institution oversight, finance management, and platform configuration for administrators.</p>
-            <Link to="/login" className="pcard-link">Open Admin Portal <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2.5 7h9M8 3.5l3.5 3.5L8 10.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" /></svg></Link>
-          </div>
-
-          <div className="pcard reveal reveal-delay-1">
-            <div className="pcard-icon si-g"><UserIcon size={24} /></div>
-            <h3>Staff Portal</h3>
-            <p>Optimized for mobile use. Teachers can record marks, take attendance, and manage class lessons on the go.</p>
-            <Link to="/staff/login" className="pcard-link">Open Staff Portal <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2.5 7h9M8 3.5l3.5 3.5L8 10.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" /></svg></Link>
-          </div>
-
-          <div className="pcard reveal reveal-delay-2">
-            <div className="pcard-icon si-y"><GraduationIcon size={24} /></div>
-            <h3>Parent Portal</h3>
-            <p>Access learner results, check outstanding balances, and view school announcements in real-time.</p>
-            <Link to="/portal/login" className="pcard-link">Open Parent Portal <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2.5 7h9M8 3.5l3.5 3.5L8 10.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" /></svg></Link>
-          </div>
-        </div>
-      </section>
-
+      {/* CLOSING CALL TO ACTION */}
       <section className="cta">
         <div className="cta-ghost">Kenya</div>
         <div className="cta-in reveal">
           <div className="eyebrow" style={{ margin: '0 auto 24px' }}>Get started today</div>
-          <h2 className="landing-h2">Your school,<br />finally organised.</h2>
+          <h2 className="landing-h2">See it running on your school's own data.</h2>
           <p>Join a growing community of Kenyan schools that replaced spreadsheets,<br />paper registers, and group chats with Termly.</p>
           <div className="cta-btns">
             <Link to="/book-demo" className="btn-p" style={{ padding: '16px 38px', borderRadius: 100, fontSize: '1rem' }}>
-              Book a demo
+              Book a free demo
               <svg width="15" height="15" viewBox="0 0 15 15" fill="none"><path d="M2.5 7.5h10M9 3.5l4 4-4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" /></svg>
             </Link>
             <Link to="/support" className="btn-s" style={{ padding: '16px 38px', borderRadius: 100, fontSize: '1rem' }}>Contact support</Link>
           </div>
-          <div className="cta-note">No setup fees · No contracts · Cancel anytime</div>
+          <div className="cta-note">No setup fees · No binding contracts · Personalized onboarding</div>
         </div>
       </section>
 
+      {/* FOOTER */}
       <footer className="landing-footer">
         <div className="ft-ghost">Termly</div>
         <div className="ft-grid-w">
@@ -587,7 +585,6 @@ export default function Landing() {
           <div className="ft-col">
             <h4 className="ft-h">System</h4>
             <ul className="ft-links">
-              {/* <li><Link to="/docs">Documentation</Link></li> */}
               <li><Link to="/legal/terms">Terms of Service</Link></li>
               <li><Link to="/legal/privacy">Privacy Policy</Link></li>
               <li><Link to="/legal/acceptable-use">Acceptable Use</Link></li>
@@ -613,10 +610,9 @@ export default function Landing() {
               <li><Link to="/legal/terms">Terms of Service</Link></li>
             </ul>
           </div>
-
         </div>
         <div className="ft-bottom">
-          <span className="ft-copy">© 2025 Termly</span>
+          <span className="ft-copy">© 2025 Termly HQ · Nairobi, Kenya</span>
           <div className="ft-b-links">
             <span>All rights reserved.</span>
           </div>
