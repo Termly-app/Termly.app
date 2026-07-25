@@ -51,37 +51,36 @@ export default function BookDemo() {
 
       <style>{`
         .demo-section {
-          padding: 60px 24px 100px;
+          padding: 50px 24px 100px;
           max-width: 1140px;
           margin: 0 auto;
         }
         .demo-grid {
           display: grid;
           grid-template-columns: 1.2fr 0.8fr;
-          gap: 40px;
-          margin-top: 40px;
+          gap: 32px;
+          margin-top: 36px;
           align-items: start;
         }
         @media (max-width: 868px) {
           .demo-grid {
             grid-template-columns: 1fr;
-            gap: 32px;
+            gap: 28px;
           }
         }
         .demo-card {
           background: #ffffff;
-          border: 1px solid #e5e7eb;
+          border: 1px solid #e2e8f0;
           border-radius: 24px;
           padding: 36px;
-          box-shadow: 0 10px 30px -10px rgba(0,0,0,0.06);
+          box-shadow: 0 10px 30px -10px rgba(0,0,0,0.05);
         }
-        .demo-card-dark {
-          background: #0f172a;
-          color: #ffffff;
-          border: 1px solid #1e293b;
+        .demo-card-light {
+          background: #f8fafc;
+          border: 1px solid #e2e8f0;
           border-radius: 24px;
           padding: 36px;
-          box-shadow: 0 20px 40px -15px rgba(0,0,0,0.25);
+          box-shadow: 0 10px 30px -10px rgba(0,0,0,0.03);
         }
         .bd-group {
           display: flex;
@@ -102,17 +101,17 @@ export default function BookDemo() {
         .bd-label {
           font-size: 0.82rem;
           font-weight: 700;
-          color: #374151;
+          color: #334155;
           letter-spacing: 0.01em;
         }
         .bd-input, .bd-textarea {
           width: 100%;
           padding: 14px 16px;
-          border: 1.5px solid #d1d5db;
+          border: 1.5px solid #cbd5e1;
           border-radius: 12px;
           font-size: 0.92rem;
-          color: #111827;
-          background: #f9fafb;
+          color: #0f172a;
+          background: #ffffff;
           outline: none;
           transition: all 0.2s ease;
           box-sizing: border-box;
@@ -120,29 +119,29 @@ export default function BookDemo() {
         }
         .bd-input:focus, .bd-textarea:focus {
           border-color: #6366f1;
-          background: #ffffff;
           box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.12);
         }
         .bd-input::placeholder, .bd-textarea::placeholder {
-          color: #9ca3af;
+          color: #94a3b8;
         }
-        .contact-item {
+        .contact-item-light {
           display: flex;
           align-items: center;
           gap: 14px;
           padding: 16px 20px;
-          background: rgba(255, 255, 255, 0.05);
-          border: 1px solid rgba(255, 255, 255, 0.1);
+          background: #ffffff;
+          border: 1px solid #e2e8f0;
           border-radius: 16px;
           text-decoration: none;
-          color: #ffffff;
-          transition: all 0.25s ease;
-          margin-bottom: 12px;
+          color: #0f172a;
+          transition: all 0.2s ease;
+          margin-bottom: 14px;
+          box-shadow: 0 2px 8px rgba(0,0,0,0.02);
         }
-        .contact-item:hover {
-          background: rgba(255, 255, 255, 0.12);
+        .contact-item-light:hover {
+          border-color: #cbd5e1;
           transform: translateY(-2px);
-          border-color: rgba(255, 255, 255, 0.25);
+          box-shadow: 0 6px 16px rgba(0,0,0,0.06);
         }
         .contact-icon {
           width: 42px;
@@ -153,26 +152,27 @@ export default function BookDemo() {
           justify-content: center;
           flex-shrink: 0;
         }
-        .contact-text-label {
+        .contact-text-label-light {
           font-size: 0.72rem;
-          color: #94a3b8;
-          font-weight: 600;
+          color: #64748b;
+          font-weight: 700;
           text-transform: uppercase;
           letter-spacing: 0.05em;
         }
-        .contact-text-val {
+        .contact-text-val-light {
           font-size: 1rem;
           font-weight: 800;
-          color: #ffffff;
+          color: #0f172a;
           margin-top: 2px;
         }
-        .benefit-pill {
+        .benefit-pill-light {
           display: flex;
           align-items: center;
           gap: 10px;
           font-size: 0.85rem;
-          color: #cbd5e1;
+          color: #475569;
           margin-bottom: 10px;
+          font-weight: 500;
         }
       `}</style>
 
@@ -207,7 +207,7 @@ export default function BookDemo() {
               </div>
             ) : (
               <form onSubmit={handleSubmit}>
-                <h3 style={{ fontSize: '1.25rem', fontWeight: 800, color: '#111827', marginBottom: 24 }}>
+                <h3 style={{ fontSize: '1.25rem', fontWeight: 800, color: '#0f172a', marginBottom: 24 }}>
                   Schedule Your Personalized Demo
                 </h3>
 
@@ -307,64 +307,64 @@ export default function BookDemo() {
             )}
           </div>
 
-          {/* Right Side: Direct Contacts & Information */}
-          <div className="demo-card-dark reveal reveal-delay-1">
+          {/* Right Side: Light Direct Contacts & Information */}
+          <div className="demo-card-light reveal reveal-delay-1">
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
-              <div style={{ width: 36, height: 36, borderRadius: 10, background: 'rgba(99, 102, 241, 0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <SchoolIcon size={20} color="#a5b4fc" />
+              <div style={{ width: 36, height: 36, borderRadius: 10, background: '#e0e7ff', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <SchoolIcon size={20} color="#4f46e5" />
               </div>
-              <h3 style={{ fontSize: '1.2rem', fontWeight: 800, margin: 0, color: '#ffffff' }}>
+              <h3 style={{ fontSize: '1.2rem', fontWeight: 800, margin: 0, color: '#0f172a' }}>
                 Reach Us Directly
               </h3>
             </div>
 
-            <p style={{ fontSize: '0.88rem', color: '#94a3b8', lineHeight: 1.5, marginBottom: 24 }}>
+            <p style={{ fontSize: '0.88rem', color: '#64748b', lineHeight: 1.5, marginBottom: 24 }}>
               Want an immediate answer or prefer a quick phone call? Reach out to our Nairobi team anytime.
             </p>
 
-            <a href="tel:+254712260057" className="contact-item">
+            <a href="tel:+254712260057" className="contact-item-light">
               <div className="contact-icon" style={{ background: '#2563eb' }}>
                 <PhoneIcon size={20} color="#ffffff" />
               </div>
               <div>
-                <div className="contact-text-label">Direct Line / Call</div>
-                <div className="contact-text-val">+254 712 260 057</div>
+                <div className="contact-text-label-light">Direct Line / Call</div>
+                <div className="contact-text-val-light">+254 712 260 057</div>
               </div>
             </a>
 
-            <a href="https://wa.me/254712260057" target="_blank" rel="noopener noreferrer" className="contact-item">
-              <div className="contact-icon" style={{ background: '#25d366' }}>
+            <a href="https://wa.me/254712260057" target="_blank" rel="noopener noreferrer" className="contact-item-light">
+              <div className="contact-icon" style={{ background: '#16a34a' }}>
                 <MessageIcon size={20} color="#ffffff" />
               </div>
               <div>
-                <div className="contact-text-label">WhatsApp Chat</div>
-                <div className="contact-text-val">+254 712 260 057</div>
+                <div className="contact-text-label-light">WhatsApp Chat</div>
+                <div className="contact-text-val-light">+254 712 260 057</div>
               </div>
             </a>
 
-            <a href="mailto:shulesoft8@gmail.com" className="contact-item">
-              <div className="contact-icon" style={{ background: '#6366f1' }}>
+            <a href="mailto:shulesoft8@gmail.com" className="contact-item-light">
+              <div className="contact-icon" style={{ background: '#4f46e5' }}>
                 <RocketIcon size={20} color="#ffffff" />
               </div>
               <div>
-                <div className="contact-text-label">Official Support Email</div>
-                <div className="contact-text-val" style={{ fontSize: '0.9rem' }}>shulesoft8@gmail.com</div>
+                <div className="contact-text-label-light">Official Support Email</div>
+                <div className="contact-text-val-light" style={{ fontSize: '0.9rem' }}>shulesoft8@gmail.com</div>
               </div>
             </a>
 
-            <div style={{ marginTop: 28, paddingTop: 20, borderTop: '1px solid rgba(255, 255, 255, 0.1)' }}>
-              <div className="contact-text-label" style={{ marginBottom: 12 }}>Why Schools Choose Termly</div>
-              <div className="benefit-pill">
-                <CheckIcon size={16} color="#4ade80" /> 100% CBC & 8-4-4 Compliant Reports
+            <div style={{ marginTop: 28, paddingTop: 20, borderTop: '1px solid #e2e8f0' }}>
+              <div className="contact-text-label-light" style={{ marginBottom: 12 }}>Why Schools Choose Termly</div>
+              <div className="benefit-pill-light">
+                <CheckIcon size={16} color="#16a34a" /> 100% CBC & 8-4-4 Compliant Reports
               </div>
-              <div className="benefit-pill">
-                <CheckIcon size={16} color="#4ade80" /> Automated M-Pesa Fee Reconciliation
+              <div className="benefit-pill-light">
+                <CheckIcon size={16} color="#16a34a" /> Automated M-Pesa Fee Reconciliation
               </div>
-              <div className="benefit-pill">
-                <CheckIcon size={16} color="#4ade80" /> Zero Upfront Setup Fees
+              <div className="benefit-pill-light">
+                <CheckIcon size={16} color="#16a34a" /> Zero Upfront Setup Fees
               </div>
-              <div className="benefit-pill">
-                <CheckIcon size={16} color="#4ade80" /> Local Nairobi Support & Onsite Assistance
+              <div className="benefit-pill-light">
+                <CheckIcon size={16} color="#16a34a" /> Local Nairobi Support & Onsite Assistance
               </div>
             </div>
           </div>
