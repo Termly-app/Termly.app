@@ -42,7 +42,7 @@ export default function Blog() {
               <h3>Start your journey with Termly today</h3>
               <p>Join over 500 schools transforming their management experience.</p>
               <div style={{ display: 'flex', gap: 12, marginTop: 16 }}>
-                <a href="/register" className="btn btn-primary">Try for Free</a>
+                <a href="/book-demo" className="btn btn-primary">Book a Demo</a>
                 <button className="btn btn-ghost">Contact Sales</button>
               </div>
             </div>

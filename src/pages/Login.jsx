@@ -368,7 +368,7 @@ export default function Login({ onLogin }) {
 
 
             <div className="res-bottom">
-              <span>Don't have a workspace? <Link to="/register">Register your school</Link></span>
+              <span>Want Termly for your school? <Link to="/book-demo">Book a demo</Link></span>
             </div>
           </div>
         </div>

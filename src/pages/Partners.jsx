@@ -36,7 +36,7 @@ export default function Partners() {
         <Link to="/" style={{ display: 'flex', alignItems: 'center', gap: 8, textDecoration: 'none', color: '#5B3EF5', fontWeight: 700, fontSize: '0.9rem' }}>
           <HomeIcon size={16} /> ← Back to Home
         </Link>
-        <Link to="/register" className="btn btn-primary" style={{ padding: '8px 20px', fontSize: '0.8rem', borderRadius: 100 }}>Get Started</Link>
+        <Link to="/book-demo" className="btn btn-primary" style={{ padding: '8px 20px', fontSize: '0.8rem', borderRadius: 100 }}>Book a Demo</Link>
       </nav>
       <header className="partners-hero">
         <h1 className="hero-title">Our <span className="text-gradient">Partners</span></h1>
@@ -86,7 +86,7 @@ export default function Partners() {
           <SchoolIcon size={48} color="var(--primary)" />
           <h2>Want your school featured here?</h2>
           <p>Join Termly today and get recognized as a leader in educational technology.</p>
-          <a href="/register" className="btn btn-primary">Get Started Now</a>
+          <a href="/book-demo" className="btn btn-primary">Book a Demo</a>
         </div>
       </section>
     </div>
