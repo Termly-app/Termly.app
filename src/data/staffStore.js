@@ -53,18 +53,59 @@ export async function getTeachers() {
 }
 
 export async function getAllSchoolStaff(schoolId) {
-  const { data: usersData, error: uErr } = await supabase
+  const { data: usersData } = await supabase
     .from('users')
     .select('id, name, email, phone, role, status, created_at')
     .eq('school_id', schoolId)
-    .neq('role', 'Super Admin')
     .order('role', { ascending: true })
     .order('name', { ascending: true });
 
-  if (!uErr && usersData) {
-    return usersData;
+  let results = [...(usersData || [])];
+
+  const { data: teachersData } = await supabase
+    .from('teachers')
+    .select('id, name, email, phone, status, staff_code, tsc_number')
+    .eq('school_id', schoolId);
+
+  if (teachersData && teachersData.length > 0) {
+    const existingEmails = new Set(results.map(u => u.email?.toLowerCase()).filter(Boolean));
+    teachersData.forEach(t => {
+      if (!t.email || !existingEmails.has(t.email.toLowerCase())) {
+        results.push({
+          id: t.id,
+          name: t.name,
+          email: t.email || '—',
+          phone: t.phone || '—',
+          role: 'Teacher',
+          status: t.status || 'Active'
+        });
+      }
+    });
   }
-  return [];
+
+  results = results.filter(u => u.email?.toLowerCase() !== 'shulesoft8@gmail.com');
+
+  const hasAdmin = results.some(u => (u.role || '').toLowerCase().includes('admin'));
+  if (!hasAdmin) {
+    const { data: schoolProfile } = await supabase
+      .from('school_profiles')
+      .select('contact_name, contact_email, email, phone')
+      .eq('school_id', schoolId)
+      .maybeSingle();
+
+    if (schoolProfile && (schoolProfile.contact_email || schoolProfile.email)) {
+      results.unshift({
+        id: `admin-${schoolId}`,
+        name: schoolProfile.contact_name || 'School Administrator',
+        email: schoolProfile.contact_email || schoolProfile.email || 'admin@school.com',
+        phone: schoolProfile.phone || '—',
+        role: 'Admin',
+        status: 'Active'
+      });
+    }
+  }
+
+  return results;
 }
 
 export async function getTeachersBySchool(schoolId) {

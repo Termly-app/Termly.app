@@ -123,21 +123,17 @@ export default function SchoolsTab({
                       </td>
 
                       <td data-label="Students" className="col-students">
-                        <div style={{ display:'flex', alignItems:'center', gap:6, justifyContent: 'center' }}>
-                          <div className="td-m" style={{ color: (s._studentCount >= studentLimit) ? '#ef4444' : 'var(--txt)' }}>
-                            {s._studentCount || 0} / {studentLimit}
-                          </div>
-                          <button className="mini-btn" onClick={() => onOpenLimitsModal?.(s)} title="Set capacity limit">Limits</button>
+                        <div className="td-m" style={{ color: (s._studentCount >= studentLimit) ? '#ef4444' : 'var(--txt)', textAlign: 'center' }}>
+                          {s._studentCount || 0} / {studentLimit}
                         </div>
                       </td>
 
                       <td data-label="Staff Seats" className="col-staff">
-                        <div style={{ display:'flex', alignItems:'center', gap:6, justifyContent: 'center', flexWrap:'wrap' }}>
+                        <div style={{ display:'flex', alignItems:'center', gap:6, justifyContent: 'center' }}>
                           <div className="td-m" style={{ color: (s._staffCount >= staffLimit) ? '#ef4444' : 'var(--txt)' }}>
                             {s._staffCount || 0} / {staffLimit}
                           </div>
                           <button className="mini-btn" onClick={() => handleOpenStaffModal(s.id, s.name)}>Details</button>
-                          <button className="mini-btn" onClick={() => onOpenLimitsModal?.(s)} title="Set capacity limit">Limits</button>
                         </div>
                       </td>
 
@@ -166,6 +162,7 @@ export default function SchoolsTab({
 
                       <td data-label="Action" className="col-act" style={{ textAlign: 'right' }}>
                         <div className="act-group" style={{ justifyContent: 'flex-end' }}>
+                          <button className="act-btn" onClick={() => onOpenLimitsModal?.(s)} title="Set student & staff capacity limits">Limits</button>
                           {isActive ? (
                             <button className="act-btn" onClick={() => handleDeactivate(s.id, s.name)}>Deactivate</button>
                           ) : (
