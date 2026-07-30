@@ -1,4 +1,5 @@
 import { supabase } from '../lib/supabase';
+import { getWelcomeTemplate, getPasswordResetTemplate } from './emailTemplates';
 
 /**
  * Termly Email Utility
@@ -7,8 +8,18 @@ import { supabase } from '../lib/supabase';
 
 export async function sendEmail({ to, subject, template, data }) {
   try {
+    let htmlContent = '';
+
+    if (template === emailTemplates.WELCOME) {
+      htmlContent = getWelcomeTemplate(data);
+    } else if (template === emailTemplates.PASSWORD_RESET) {
+      htmlContent = getPasswordResetTemplate(data);
+    } else {
+      throw new Error(`Template ${template} not supported in frontend generator.`);
+    }
+
     const { data: res, error } = await supabase.functions.invoke('send-email', {
-      body: { to, subject, template, data }
+      body: { to, subject, html: htmlContent }
     });
     if (error) throw error;
     return res;
@@ -21,12 +32,7 @@ export async function sendEmail({ to, subject, template, data }) {
 /**
  * Branded Email Templates
  */
-
 export const emailTemplates = {
   WELCOME: 'welcome',
-  PASSWORD_RESET: 'password_reset',
-  SUBSCRIPTION_EXPIRY: 'subscription_expiry',
-  RESULTS_PUBLISHED: 'results_published',
-  MARK_ENTRY_OPENED: 'mark_entry_opened',
-  NEW_TERM_STARTED: 'new_term_started'
+  PASSWORD_RESET: 'password_reset'
 };

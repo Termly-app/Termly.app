@@ -1910,6 +1910,32 @@ export async function createAnnouncement(ann) {
     .select()
     .single();
   if (error) throw error;
+
+  try {
+    if (ann.target_role === 'teachers' || ann.target_role === 'all') {
+      const { data: staff } = await supabase
+        .from('users')
+        .select('id')
+        .eq('school_id', _currentSchoolId)
+        .in('role', ['teacher', 'admin', 'finance', 'librarian']);
+        
+      if (staff && staff.length > 0) {
+        const notifs = staff.map(s => ({
+          school_id: _currentSchoolId,
+          user_id: s.id,
+          type: 'info',
+          title: 'New Announcement',
+          body: ann.title || 'A new announcement has been posted.',
+          reference_type: 'announcement',
+          reference_id: data.id,
+        }));
+        await supabase.from('notifications').insert(notifs);
+      }
+    }
+  } catch (e) {
+    console.error('Failed to dispatch notifications for announcement:', e);
+  }
+
   return data;
 }
 

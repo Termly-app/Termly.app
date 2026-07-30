@@ -43,19 +43,64 @@ serve(async (req) => {
 
     if (fetchError) throw fetchError
 
-    // Mock sending email/SMS (Integrate Resend/AT here in production)
-    const notifications = expiringProfiles.map(p => ({
-      school_id: p.school_id,
-      message: `Reminder: Subscription for ${p.school_name} expires on ${p.subscription_expiry.split('T')[0]}.`,
-      type: 'Billing'
-    }))
+    const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY')
+    const BRAND_COLORS = { primary: '#5B3EF5', bg: '#F8FAFC' }
 
-    if (notifications.length > 0) {
-      // Log to database or send actual emails
-      console.log(`Sending ${notifications.length} expiry reminders.`)
+    if (expiringProfiles.length > 0 && RESEND_API_KEY) {
+      for (const p of expiringProfiles) {
+        const email = p.schools?.email
+        if (!email) continue
+
+        const htmlContent = `
+          <!DOCTYPE html>
+          <html>
+          <head>
+            <meta charset="utf-8">
+            <style>
+              .container { max-width: 600px; margin: 40px auto; font-family: sans-serif; background: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.05); }
+              .header { background: ${BRAND_COLORS.primary}; padding: 40px 20px; text-align: center; color: #ffffff; }
+              .body { padding: 40px; line-height: 1.6; color: #1E293B; }
+              .btn { display: inline-block; padding: 14px 28px; background: ${BRAND_COLORS.primary}; color: #ffffff; text-decoration: none; border-radius: 8px; font-weight: bold; }
+            </style>
+          </head>
+          <body style="background-color: ${BRAND_COLORS.bg}; margin: 0; padding: 20px;">
+            <div class="container">
+              <div class="header">
+                <h1 style="margin: 0; font-size: 24px;">Action Required: Subscription Expiring Soon</h1>
+              </div>
+              <div class="body">
+                <p>Dear Admin,</p>
+                <p>This is a gentle reminder that the Termly subscription for <strong>${p.school_name}</strong> is scheduled to expire in 7 days on <strong>${p.subscription_expiry.split('T')[0]}</strong>.</p>
+                <p>To ensure uninterrupted access to your data, portals, and management tools, please renew your subscription before the expiry date.</p>
+                <p style="text-align: center; margin-top: 32px; margin-bottom: 32px;">
+                  <a href="https://termly-app.vercel.app/login" class="btn">Renew Subscription</a>
+                </p>
+                <p>If you have already made a payment that hasn't reflected, please contact our support team.</p>
+                <p>Best regards,<br>The Termly Billing Team</p>
+              </div>
+            </div>
+          </body>
+          </html>
+        `
+
+        await fetch('https://api.resend.com/emails', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${RESEND_API_KEY}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            from: 'Termly Billing <billing@termly-app.vercel.app>',
+            to: [email],
+            subject: `Action Required: Your Termly Subscription is Expiring Soon`,
+            html: htmlContent,
+          }),
+        }).catch(err => console.error("Resend error:", err))
+      }
+      console.log(`Sent ${expiringProfiles.length} expiry reminders.`)
     }
 
-    return new Response(JSON.stringify({ success: true, count: notifications.length }), {
+    return new Response(JSON.stringify({ success: true, count: expiringProfiles.length }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       status: 200,
     })

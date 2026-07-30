@@ -166,6 +166,36 @@ export default function Communications({ currentUser }) {
     }
   };
 
+  const [inAppTitle, setInAppTitle] = useState('');
+  const [inAppAudience, setInAppAudience] = useState('all'); // all, parents, teachers
+
+  const handleSendInApp = async (e) => {
+    e.preventDefault();
+    if (!message.trim() || !inAppTitle.trim()) return;
+
+    setIsSending(true);
+    try {
+      // We will create the announcement
+      const { createAnnouncement } = await import('../data/academicsStore');
+      await createAnnouncement({
+        title: inAppTitle.trim(),
+        body: message.trim(),
+        target_role: inAppAudience,
+      });
+
+      setShowSuccess(true);
+      setMessage('');
+      setInAppTitle('');
+      loadData();
+      
+      setTimeout(() => setShowSuccess(false), 3000);
+      setIsSending(false);
+    } catch (err) {
+      alert({ title: 'Dispatch Failed', message: `Failed to post announcement: ${err.message}`, variant: 'danger' });
+      setIsSending(false);
+    }
+  };
+
   const allGradesOrder = useMemo(() => {
     if (!CBC_STRUCTURE) return [];
     return Object.values(CBC_STRUCTURE).flatMap(l => l.grades);
@@ -230,11 +260,16 @@ export default function Communications({ currentUser }) {
                 style={tabBtn(activeTab === 'individual')}>
                 Individual Parent
               </button>
+              <button 
+                onClick={() => setActiveTab('in_app')} 
+                style={tabBtn(activeTab === 'in_app')}>
+                In-App Announcement
+              </button>
             </div>
           </div>
 
           <div className="card-body">
-            <form onSubmit={handleSend}>
+            <form onSubmit={activeTab === 'in_app' ? handleSendInApp : handleSend}>
               {activeTab === 'broadcasts' ? (
                 <div style={{ display: 'grid', gridTemplateColumns: 'minmax(200px, 1fr) minmax(200px, 1fr)', gap: 20 }}>
                   <div className="form-group">
@@ -264,6 +299,33 @@ export default function Communications({ currentUser }) {
                       />
                     </div>
                   )}
+                </div>
+              ) : activeTab === 'in_app' ? (
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: 20, marginBottom: 24 }}>
+                  <div className="form-group">
+                    <label>Target Audience (In-App Only)</label>
+                    <Select
+                      value={inAppAudience}
+                      onChange={(e) => setInAppAudience(e.target.value)}
+                      options={[
+                        { id: 'all', label: 'Everyone (Parents & Teachers)' },
+                        { id: 'parents', label: 'Parents Only' },
+                        { id: 'teachers', label: 'Teachers Only' }
+                      ]}
+                      style={{ width: '100%' }}
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label>Announcement Title</label>
+                    <input 
+                      type="text" 
+                      className="form-input" 
+                      placeholder="e.g. End of Term Arrangements" 
+                      value={inAppTitle}
+                      onChange={(e) => setInAppTitle(e.target.value)}
+                      required
+                    />
+                  </div>
                 </div>
               ) : (
                 <div className="form-group" style={{ marginBottom: 24, position: 'relative' }}>
@@ -408,7 +470,8 @@ export default function Communications({ currentUser }) {
                 </div>
               )}
 
-              {/* Phase 1: Broadcast Templates */}
+              {/* Phase 1: Broadcast Templates (Only for SMS/WhatsApp) */}
+              {activeTab !== 'in_app' && (
               <div className="form-group" style={{ marginTop: 16 }}>
                 <label style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
                   <span>Quick Templates</span>
@@ -450,34 +513,45 @@ export default function Communications({ currentUser }) {
                   ))}
                 </div>
               </div>
+              )}
 
               <div className="form-group" style={{ marginTop: 12 }}>
                 <label>Message Content</label>
                 <textarea
                   className="form-input"
                   style={{ minHeight: 120, resize: 'vertical' }}
-                  placeholder="Type your message here or select a template above..."
+                  placeholder="Type your message here..."
                   value={message}
                   onChange={(e) => setMessage(e.target.value)}
                 />
+                {activeTab !== 'in_app' && (
                 <div style={{ textAlign: 'right', fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 700, marginTop: 4 }}>
                   {message.length} characters | {Math.ceil(message.length / 160)} SMS segment(s)
                 </div>
+                )}
               </div>
 
-              <div style={{ marginTop: 24, padding: 16, background: 'var(--bg)', borderRadius: 12, border: '1px solid var(--border)', display: 'flex', flexWrap: 'wrap', gap: 20, alignItems: 'center', justifyContent: 'space-between' }}>
-                <div>
-                  <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 800, textTransform: 'uppercase', color: 'var(--text-light)', marginBottom: 8 }}>Dispatch Channel</label>
-                  <div style={{ display: 'flex', gap: 8 }}>
-                    <button type="button" className={channel === 'sms' ? 'btn btn-primary btn-sm' : 'btn btn-ghost btn-sm'} onClick={() => setChannel('sms')} style={{ border: channel !== 'sms' ? '1px solid var(--border)' : 'none' }}>SMS</button>
-                    <button type="button" className={channel === 'whatsapp' ? 'btn btn-primary btn-sm' : 'btn btn-ghost btn-sm'} onClick={() => setChannel('whatsapp')} style={{ border: channel !== 'whatsapp' ? '1px solid var(--border)' : 'none', background: channel === 'whatsapp' ? '#25d366' : undefined }}>WhatsApp</button>
-                    <button type="button" className={channel === 'both' ? 'btn btn-primary btn-sm' : 'btn btn-ghost btn-sm'} onClick={() => setChannel('both')} style={{ border: channel !== 'both' ? '1px solid var(--border)' : 'none', background: channel === 'both' ? 'linear-gradient(135deg, #10b981, #2563eb)' : undefined }}>Both (SMS + WA)</button>
-                  </div>
+              {activeTab === 'in_app' ? (
+                <div style={{ marginTop: 24, padding: 16, background: 'var(--bg)', borderRadius: 12, border: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'flex-end' }}>
+                  <button className="btn btn-primary" type="submit" style={{ flexShrink: 0, height: 44, padding: '0 24px', borderRadius: 10 }} disabled={isSending || !message || !inAppTitle}>
+                    {isSending ? 'Posting...' : 'Post Announcement'} <RocketIcon size={18} />
+                  </button>
                 </div>
-                <button className="btn btn-primary" type="submit" style={{ flexShrink: 0, height: 44, padding: '0 24px', borderRadius: 10 }} disabled={isSending || !message || (activeTab === 'individual' && !selectedStudent)}>
-                  {isSending ? 'Sending...' : 'Launch Broadcast'} <RocketIcon size={18} />
-                </button>
-              </div>
+              ) : (
+                <div style={{ marginTop: 24, padding: 16, background: 'var(--bg)', borderRadius: 12, border: '1px solid var(--border)', display: 'flex', flexWrap: 'wrap', gap: 20, alignItems: 'center', justifyContent: 'space-between' }}>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 800, textTransform: 'uppercase', color: 'var(--text-light)', marginBottom: 8 }}>Dispatch Channel</label>
+                    <div style={{ display: 'flex', gap: 8 }}>
+                      <button type="button" className={channel === 'sms' ? 'btn btn-primary btn-sm' : 'btn btn-ghost btn-sm'} onClick={() => setChannel('sms')} style={{ border: channel !== 'sms' ? '1px solid var(--border)' : 'none' }}>SMS</button>
+                      <button type="button" className={channel === 'whatsapp' ? 'btn btn-primary btn-sm' : 'btn btn-ghost btn-sm'} onClick={() => setChannel('whatsapp')} style={{ border: channel !== 'whatsapp' ? '1px solid var(--border)' : 'none', background: channel === 'whatsapp' ? '#25d366' : undefined }}>WhatsApp</button>
+                      <button type="button" className={channel === 'both' ? 'btn btn-primary btn-sm' : 'btn btn-ghost btn-sm'} onClick={() => setChannel('both')} style={{ border: channel !== 'both' ? '1px solid var(--border)' : 'none', background: channel === 'both' ? 'linear-gradient(135deg, #10b981, #2563eb)' : undefined }}>Both (SMS + WA)</button>
+                    </div>
+                  </div>
+                  <button className="btn btn-primary" type="submit" style={{ flexShrink: 0, height: 44, padding: '0 24px', borderRadius: 10 }} disabled={isSending || !message || (activeTab === 'individual' && !selectedStudent)}>
+                    {isSending ? 'Sending...' : 'Launch Broadcast'} <RocketIcon size={18} />
+                  </button>
+                </div>
+              )}
             </form>
           </div>
         </div>

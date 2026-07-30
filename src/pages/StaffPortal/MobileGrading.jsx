@@ -3,10 +3,10 @@ import { supabase } from '../../lib/supabase';
 import { getSchoolProfile, initPortalStore } from '../../data/coreStore';
 import { getExamMarksForPaper, getClassList, getTeacherWorkloadSummary, getTeacherTimetable, getTimetableConfig, getPeriods, subscribeToTable } from '../../data/academicsStore';
 import { getLevelForGrade } from '../../data/seedData';
-import { getExams, getOpenExamsForTeacher, getExamPapers, saveExamMarks, getVirtualPaperMarks } from '../../data/academicsStore';
+import { getExams, getOpenExamsForTeacher, getExamPapers, saveExamMarks, getVirtualPaperMarks, getNotifications, markNotificationRead, markAllNotificationsRead } from '../../data/academicsStore';
 import { 
   BookIcon, CheckIcon, SaveIcon, UserIcon, 
-  GradingIcon, RefreshIcon, ChevronDownIcon, CalendarIcon, DashboardIcon, MenuIcon, LogoutIcon, TeacherIcon 
+  GradingIcon, RefreshIcon, ChevronDownIcon, CalendarIcon, DashboardIcon, MenuIcon, LogoutIcon, TeacherIcon, MessageIcon
 } from '../../components/CommonIcons';
 import Loader from '../../components/Common/Loader';
 import { useDialog } from '../../contexts/DialogContext';
@@ -64,6 +64,10 @@ export default function MobileGrading({ user, onLogout }) {
   const [selectedDay, setSelectedDay] = useState(new Intl.DateTimeFormat('en-US', {weekday: 'long'}).format(new Date()));
   
   const [isDesktop, setIsDesktop] = useState(window.innerWidth > 1024);
+
+  // Notifications State
+  const [notifications, setNotifications] = useState([]);
+  const [notifsLoading, setNotifsLoading] = useState(false);
 
   // Picker State
   const [pickerOpen, setPickerOpen] = useState(false);
@@ -164,6 +168,26 @@ export default function MobileGrading({ user, onLogout }) {
       loadTeacherPapers();
     }
   }, [selectedExamId]);
+
+  useEffect(() => {
+    if (activeTab === 'announcements') {
+      loadNotifs();
+    }
+  }, [activeTab]);
+
+  const loadNotifs = async () => {
+    try {
+      setNotifsLoading(true);
+      const data = await getNotifications();
+      // Filter for announcements / info if we only want school-wide news
+      // For now, let's just show all notifications
+      setNotifications(data || []);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setNotifsLoading(false);
+    }
+  };
 
   const loadTeacherPapers = async () => {
     try {
@@ -301,6 +325,7 @@ export default function MobileGrading({ user, onLogout }) {
     { id: 'dashboard', label: 'Dashboard', icon: DashboardIcon },
     { id: 'grading', label: 'Grading', icon: GradingIcon },
     { id: 'schedule', label: 'Timetable', icon: CalendarIcon },
+    { id: 'announcements', label: 'News', icon: MessageIcon },
     { id: 'profile', label: 'Account', icon: UserIcon }
   ];
 
@@ -648,6 +673,67 @@ export default function MobileGrading({ user, onLogout }) {
                   </div>
                 );
               })}
+            </div>
+          </div>
+        )}
+
+        {activeTab === 'announcements' && (
+          <div style={{ animation: 'fadeIn 0.4s ease-out', maxWidth: 600, margin: '0 auto' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
+              <h2 style={{ margin: 0, fontSize: '1.4rem', fontWeight: 900, color: '#0f172a' }}>News & Announcements</h2>
+              <button 
+                onClick={loadNotifs}
+                disabled={notifsLoading}
+                style={{ background: 'transparent', border: 'none', color: '#10b981', display: 'flex', alignItems: 'center', gap: 6, fontWeight: 700, cursor: 'pointer', opacity: notifsLoading ? 0.5 : 1 }}
+              >
+                <RefreshIcon size={16} /> Refresh
+              </button>
+            </div>
+            
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+              {notifsLoading && notifications.length === 0 ? (
+                <div style={{ textAlign: 'center', padding: '40px', color: '#94a3b8' }}>Loading announcements...</div>
+              ) : notifications.length === 0 ? (
+                <Card style={{ textAlign: 'center', padding: '40px 20px', borderStyle: 'dashed' }}>
+                  <MessageIcon size={32} style={{ opacity: 0.3, marginBottom: 12, color: '#94a3b8' }} />
+                  <div style={{ fontSize: '1rem', fontWeight: 700, color: '#64748b' }}>No Announcements</div>
+                  <p style={{ margin: '8px 0 0', fontSize: '0.85rem', color: '#94a3b8' }}>You're all caught up!</p>
+                </Card>
+              ) : (
+                notifications.map(n => (
+                  <Card 
+                    key={n.id} 
+                    style={{ 
+                      padding: '20px', 
+                      borderLeft: n.read_status === 'unread' ? '4px solid #3b82f6' : '4px solid transparent',
+                      background: n.read_status === 'unread' ? '#f0f9ff' : '#fff'
+                    }}
+                  >
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 8 }}>
+                      <div style={{ fontWeight: 800, fontSize: '1.1rem', color: n.read_status === 'unread' ? '#0f172a' : '#334155' }}>
+                        {n.title}
+                      </div>
+                      {n.read_status === 'unread' && (
+                        <button 
+                          onClick={async () => {
+                            await markNotificationRead(n.id);
+                            loadNotifs();
+                          }}
+                          style={{ background: 'rgba(59, 130, 246, 0.1)', color: '#3b82f6', border: 'none', padding: '4px 10px', borderRadius: '8px', fontSize: '0.7rem', fontWeight: 700, cursor: 'pointer' }}
+                        >
+                          Mark Read
+                        </button>
+                      )}
+                    </div>
+                    <div style={{ fontSize: '0.9rem', color: '#475569', lineHeight: 1.5, whiteSpace: 'pre-wrap' }}>
+                      {n.body}
+                    </div>
+                    <div style={{ marginTop: 12, fontSize: '0.75rem', color: '#94a3b8', fontWeight: 600 }}>
+                      {new Date(n.created_at).toLocaleString()}
+                    </div>
+                  </Card>
+                ))
+              )}
             </div>
           </div>
         )}

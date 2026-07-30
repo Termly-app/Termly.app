@@ -20,9 +20,9 @@ export const BROADCAST_TEMPLATES = {
     bg: '#FEF2F2',
     description: 'Urgent safety or emergency notification',
     smsTemplate: (data) =>
-      `EMERGENCY — ${data.schoolName}: ${data.message}. Contact school: ${data.phone || 'office'}`,
+      `URGENT UPDATE from ${data.schoolName}: ${data.message}. Please rest assured that the situation is being managed. Contact ${data.phone || 'the office'} for official updates.`,
     whatsappTemplate: (data) =>
-      `*EMERGENCY ALERT*\n\n*${data.schoolName}*\n\n${data.message}\n\nContact: ${data.phone || 'School Office'}\nTime: ${new Date().toLocaleString('en-KE', { dateStyle: 'medium', timeStyle: 'short' })}`,
+      `*URGENT NOTIFICATION | ${data.schoolName}*\n\nDear Parents,\n\nPlease be advised of the following urgent update:\n${data.message}\n\nYour children's safety and well-being remain our highest priority, and we are managing the situation closely. We kindly request that you monitor official school channels for further updates.\n\nFor immediate assistance or inquiries, please contact the school office at: ${data.phone || 'the office'}.\n\nTimestamp: ${new Date().toLocaleString('en-KE', { dateStyle: 'medium', timeStyle: 'short' })}`,
   },
 
   fee_invoice: {
@@ -33,9 +33,9 @@ export const BROADCAST_TEMPLATES = {
     bg: '#FFFBEB',
     description: 'Fee balance reminder with M-Pesa payment details',
     smsTemplate: (data) =>
-      `Dear ${data.parentName || 'Parent'}, ${data.childName}'s fee balance is KSh ${Number(data.balance || 0).toLocaleString()}. Pay via M-Pesa Paybill ${data.paybill || '---'}. Ref: ${data.admNo || 'N/A'}. ${data.schoolName}`,
+      `Dear ${data.parentName || 'Parent'}, this is a polite reminder from ${data.schoolName} that ${data.childName}'s fee balance of KSh ${Number(data.balance || 0).toLocaleString()} is due. Please submit payment via M-Pesa Paybill ${data.paybill || '---'}, A/C ${data.admNo || 'N/A'}. Thank you for your continued support.`,
     whatsappTemplate: (data) =>
-      `*Fee Reminder*\n\n*${data.schoolName}*\n\nDear ${data.parentName || 'Parent'},\n\nStudent: *${data.childName}*\nAdm No: ${data.admNo || 'N/A'}\nBalance: *KSh ${Number(data.balance || 0).toLocaleString()}*\n\n*Payment via M-Pesa:*\nPaybill: ${data.paybill || '---'}\nAccount: ${data.admNo || 'Adm No'}\n\nThank you.`,
+      `Dear ${data.parentName || 'Parent'},\n\nWarm greetings from ${data.schoolName}.\nThis is a gentle reminder regarding the outstanding fee balance for your child, *${data.childName}*.\n\n*Account Details:*\n• Admission Number: ${data.admNo || 'N/A'}\n• Current Balance: *KSh ${Number(data.balance || 0).toLocaleString()}*\n\n*Payment Instructions:*\nPlease remit payment via M-Pesa Paybill: *${data.paybill || '---'}*\nAccount Number: *${data.admNo || 'N/A'}*\n\nIf you have already settled this amount, please disregard this message. Thank you for being a valued part of our community.`,
   },
 
   exam_results: {
@@ -46,9 +46,9 @@ export const BROADCAST_TEMPLATES = {
     bg: '#EFF6FF',
     description: 'Notify parents that exam results are available',
     smsTemplate: (data) =>
-      `${data.schoolName}: ${data.childName || "Your child"}'s ${data.examName || 'exam'} results are ready. Average: ${data.average || '--'}%. Log in to the parent portal for details.`,
+      `Dear ${data.parentName || 'Parent'}, ${data.childName || "your child"}'s ${data.examName || 'exam'} results have been officially released by ${data.schoolName}. Please log in to your Parent Portal to view the comprehensive report card.`,
     whatsappTemplate: (data) =>
-      `*Exam Results Available*\n\n*${data.schoolName}*\n\nExam: *${data.examName || 'Term Exam'}*\nStudent: *${data.childName || 'Your child'}*\nAverage: *${data.average || '--'}%*\n\nLog in to the Parent Portal to view the full report card.\n\nRegards,\n${data.schoolName} Academic Office`,
+      `Dear ${data.parentName || 'Parent'},\n\nWe are pleased to inform you that the *${data.examName || 'Term Exam'}* results for *${data.childName || 'your child'}* have been officially published by ${data.schoolName}.\n\nWe encourage you to review your child's academic progress by logging into the Termly Parent Portal, where the comprehensive report card is now available for download.\n\nShould you have any questions or wish to discuss the results, please feel free to contact the academic office.\n\nWarm regards,\n${data.schoolName} Administration`,
   },
 
   general_notice: {
@@ -59,9 +59,9 @@ export const BROADCAST_TEMPLATES = {
     bg: '#F5F3FF',
     description: 'General school announcement or circular',
     smsTemplate: (data) =>
-      `${data.schoolName} Notice: ${data.message}`,
+      `Official Notice from ${data.schoolName}: ${data.message}. Thank you for your attention.`,
     whatsappTemplate: (data) =>
-      `*School Notice*\n\n*${data.schoolName}*\n\n${data.message}\n\n— ${data.schoolName} Administration`,
+      `*OFFICIAL ANNOUNCEMENT*\n*${data.schoolName}*\n\nDear Parents,\n\n${data.message}\n\nThank you for your continued cooperation and support.\n\nSincerely,\n${data.schoolName} Administration`,
   },
 };
 

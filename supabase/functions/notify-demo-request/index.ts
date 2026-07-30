@@ -19,13 +19,13 @@ serve(async (req) => {
     // 1. Send Telegram Notification
     if (TELEGRAM_BOT_TOKEN && TELEGRAM_CHAT_ID) {
       const telegramText = `
-🔔 *New Demo Request!*
-🏫 *School:* ${school_name}
-👤 *Contact:* ${contact_name}
-📞 *Phone:* ${phone}
-📧 *Email:* ${email}
-👩‍🎓 *Students:* ${student_count || 'Not provided'}
-💬 *Message:* ${message || 'None'}
+*New Demo Request!*
+*School:* ${school_name}
+*Contact:* ${contact_name}
+*Phone:* ${phone}
+*Email:* ${email}
+*Students:* ${student_count || 'Not provided'}
+*Message:* ${message || 'None'}
       `;
 
       await fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
@@ -43,16 +43,44 @@ serve(async (req) => {
 
     // 2. Send Email Notification via Resend
     if (RESEND_API_KEY && SUPERADMIN_EMAIL) {
+      const BRAND_COLORS = { primary: '#5B3EF5', bg: '#F8FAFC' };
       const htmlContent = `
-        <h2>New Demo Request for Termly!</h2>
-        <p><strong>School Name:</strong> ${school_name}</p>
-        <p><strong>Contact Name:</strong> ${contact_name}</p>
-        <p><strong>Phone:</strong> <a href="tel:${phone}">${phone}</a></p>
-        <p><strong>Email:</strong> <a href="mailto:${email}">${email}</a></p>
-        <p><strong>Approx. Students:</strong> ${student_count || 'Not provided'}</p>
-        <p><strong>Message:</strong> ${message || 'None'}</p>
-        <br/>
-        <p>Log in to your SuperAdmin dashboard to review this request and contact the school.</p>
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <meta charset="utf-8">
+          <style>
+            .container { max-width: 600px; margin: 40px auto; font-family: sans-serif; background: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.05); }
+            .header { background: ${BRAND_COLORS.primary}; padding: 40px 20px; text-align: center; color: #ffffff; }
+            .body { padding: 40px; line-height: 1.6; color: #1E293B; }
+            .btn { display: inline-block; padding: 14px 28px; background: ${BRAND_COLORS.primary}; color: #ffffff; text-decoration: none; border-radius: 8px; font-weight: bold; }
+          </style>
+        </head>
+        <body style="background-color: ${BRAND_COLORS.bg}; margin: 0; padding: 20px;">
+          <div class="container">
+            <div class="header">
+              <h1 style="margin: 0; font-size: 24px;">New Demo Request</h1>
+              <p style="margin: 8px 0 0; opacity: 0.8;">${school_name}</p>
+            </div>
+            <div class="body">
+              <p>A new school has requested a demo via the landing page. Here are the details:</p>
+              <ul>
+                <li><strong>Contact Name:</strong> ${contact_name}</li>
+                <li><strong>Phone:</strong> <a href="tel:${phone}">${phone}</a></li>
+                <li><strong>Email:</strong> <a href="mailto:${email}">${email}</a></li>
+                <li><strong>Approx. Students:</strong> ${student_count || 'Not provided'}</li>
+              </ul>
+              <p><strong>Message:</strong></p>
+              <blockquote style="background: #f1f5f9; padding: 16px; border-left: 4px solid ${BRAND_COLORS.primary}; margin: 0;">
+                ${message || 'None'}
+              </blockquote>
+              <p style="text-align: center; margin-top: 32px;">
+                <a href="https://termly-app.vercel.app/super-admin" class="btn">Log in to SuperAdmin Dashboard</a>
+              </p>
+            </div>
+          </div>
+        </body>
+        </html>
       `;
 
       await fetch('https://api.resend.com/emails', {
@@ -64,7 +92,7 @@ serve(async (req) => {
         body: JSON.stringify({
           from: 'Termly Notifications <onboarding@resend.dev>',
           to: [SUPERADMIN_EMAIL],
-          subject: `🔔 New Demo Request: ${school_name}`,
+          subject: `New Demo Request: ${school_name}`,
           html: htmlContent,
         }),
       }).catch(err => console.error("Resend error:", err));
