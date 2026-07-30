@@ -9,7 +9,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useSearchParams } from 'react-router-dom';
 
 import { getAllSchools, getPlatformActivities, getPlatformSettings, getPlatformStats, updatePlatformSetting, restoreSchool, subscribeToPlatformChanges, deleteSchool, deactivateSchool, wipeAllNonAdminSchools, setCurrentSchoolContext, setCurrentPeriodId, getPlatformUsageStats, getGlobalAuditLogs, updateSchoolPlan } from '../../data/coreStore';
-import { getTeachersBySchool, deleteTeacher } from '../../data/staffStore';
+import { getTeachersBySchool, getAllSchoolStaff, deleteTeacher } from '../../data/staffStore';
 
 // Components
 import Loader          from '../../components/Common/Loader';
@@ -347,7 +347,7 @@ export default function SuperAdmin({ currentUser, isPlatformAdmin, sidebarOpen, 
     setStaffModal({ id: schoolId, name, staff: [] });
     setLoadingStaff(true);
     try {
-      const staff = await getTeachersBySchool(schoolId);
+      const staff = await getAllSchoolStaff(schoolId);
       setStaffModal({ id: schoolId, name, staff: staff || [] });
     } catch (e) {
       console.error('Failed to load staff:', e);

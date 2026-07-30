@@ -52,6 +52,28 @@ export async function getTeachers() {
   return data || [];
 }
 
+export async function getAllSchoolStaff(schoolId) {
+  const { data: usersData, error: uErr } = await supabase
+    .from('users')
+    .select('id, name, email, phone, role, status, created_at')
+    .eq('school_id', schoolId)
+    .neq('role', 'Super Admin')
+    .order('role', { ascending: true })
+    .order('name', { ascending: true });
+
+  if (!uErr && usersData && usersData.length > 0) {
+    return usersData;
+  }
+
+  const { data: teachersData } = await supabase
+    .from('teachers')
+    .select('id, name, email, phone, status, staff_code, tsc_number')
+    .eq('school_id', schoolId)
+    .order('name', { ascending: true });
+
+  return (teachersData || []).map(t => ({ ...t, role: 'Teacher' }));
+}
+
 export async function getTeachersBySchool(schoolId) {
   const { data, error } = await supabase
     .from('teachers')
