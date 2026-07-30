@@ -39,30 +39,33 @@ export default function StaffModal({
           ) : (
             <table>
               <thead>
-                <tr><th>Name</th><th>Role</th><th>Contact</th><th>Status</th><th style={{ textAlign: 'right' }}>Action</th></tr>
+                <tr>
+                  <th>Name</th>
+                  <th>Email</th>
+                  <th>Role</th>
+                  <th style={{ textAlign: 'right' }}>Action</th>
+                </tr>
               </thead>
               <tbody>
                 {staffModal.staff.map(t => (
                   <tr key={t.id}>
                     <td>
-                      <div style={{ fontSize:'.75rem', fontWeight:600, color: '#fff' }}>{t.name}</div>
-                      {t.email && <div style={{ fontSize:'.6rem', color:'var(--sub)' }}>{t.email}</div>}
+                      <div style={{ fontSize: '.75rem', fontWeight: 600, color: '#fff' }}>{t.name}</div>
+                    </td>
+                    <td>
+                      <div style={{ fontSize: '.7rem', color: 'var(--sub)' }}>{t.email || '—'}</div>
                     </td>
                     <td>
                       <span className="tag tv" style={{ fontSize: '0.65rem', padding: '2px 6px', borderRadius: 4, background: 'rgba(99, 102, 241, 0.15)', color: '#c7d2fe', border: '1px solid rgba(99, 102, 241, 0.3)' }}>
-                        {t.role || 'Staff'}
+                        {t.role || 'User'}
                       </span>
                     </td>
-                    <td>
-                      <div style={{ fontSize:'.7rem', color: 'var(--sub)' }}>{t.phone || '—'}</div>
-                    </td>
-                    <td>
-                      <span className={sPill(t.status || 'Active')} style={{ fontSize:'9px' }}>{t.status || 'Active'}</span>
-                    </td>
-                    <td style={{ textAlign:'right' }}>
-                      <button className="act-btn"
-                        style={{ color:'var(--ro)', borderColor:'rgba(212,80,106,.2)', padding:'3px 8px', fontSize:'10px' }}
-                        onClick={() => handleDeleteStaff(t.id, t.name)}>
+                    <td style={{ textAlign: 'right' }}>
+                      <button 
+                        className="act-btn"
+                        style={{ color: 'var(--ro)', borderColor: 'rgba(212,80,106,.2)', padding: '3px 8px', fontSize: '10px' }}
+                        onClick={() => handleDeleteStaff(t.id, t.name)}
+                      >
                         Delete
                       </button>
                     </td>
