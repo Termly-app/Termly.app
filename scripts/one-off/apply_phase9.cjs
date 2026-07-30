@@ -10,7 +10,7 @@ store = store.replace(
 
 // 2. getSchoolsForPortalSearch & createPortalUser
 const portalFuncs = `/**
- * Portal Search: Excludes ShuleSoft HQ and Sandbox schools
+ * Portal Search: Excludes Termly HQ and Sandbox schools
  * Relies on DB-level RLS to enforce the \`is_platform_account = false\` rule.
  */
 export async function getSchoolsForPortalSearch(query) {
