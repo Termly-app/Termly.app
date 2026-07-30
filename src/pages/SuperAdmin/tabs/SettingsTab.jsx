@@ -18,12 +18,33 @@ export default function SettingsTab({
     card   : { padding: 20, borderRadius: 12, background: 'rgba(255,255,255,0.02)', border: '1px solid var(--edge)', marginBottom: 20 }
   };
 
+  const [saving, setSaving] = useState(false);
   const expiryInfo = calcExpiry(subEndDate);
 
-  const handleSaveGlobal = () => {
-    handleUpdateSetting('platform', { status_message: statusMsg });
-    handleUpdateSetting('sms',      smsConfig);
-    setMessage({ type: 'success', text: 'Platform configuration updated.' });
+  const handleSaveGlobal = async () => {
+    setSaving(true);
+    try {
+      if (typeof handleUpdateSetting === 'function') {
+        await handleUpdateSetting('platform', { status_message: statusMsg, global_expiry: subEndDate });
+        await handleUpdateSetting('billing', { expiry_date: subEndDate, term_expiry: subEndDate });
+        await handleUpdateSetting('sms', smsConfig);
+        await handleUpdateSetting('global_expiry', subEndDate);
+      }
+      if (typeof updatePlatformSetting === 'function') {
+        await updatePlatformSetting('global_expiry', subEndDate);
+        await updatePlatformSetting('billing', { expiry_date: subEndDate });
+        await updatePlatformSetting('platform', { status_message: statusMsg, global_expiry: subEndDate });
+      }
+      if (typeof loadData === 'function') {
+        await loadData();
+      }
+      setMessage({ type: 'success', text: 'Platform configuration and Expiry Lock saved successfully.' });
+    } catch (err) {
+      console.error('Failed to save settings:', err);
+      setMessage({ type: 'error', text: err?.message || 'Failed to save configuration.' });
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
@@ -66,8 +87,13 @@ export default function SettingsTab({
               )}
             </div>
 
-            <button className="act-btn" onClick={handleSaveGlobal} style={{ width:'100%', padding: '12px' }}>
-              Save Configuration
+            <button 
+              className="act-btn" 
+              onClick={handleSaveGlobal} 
+              disabled={saving}
+              style={{ width:'100%', padding: '12px', opacity: saving ? 0.7 : 1, cursor: saving ? 'wait' : 'pointer' }}
+            >
+              {saving ? 'Saving Configuration...' : 'Save Configuration'}
             </button>
           </div>
 
