@@ -1,9 +1,44 @@
 import { supabase } from '../lib/supabase';
-import { getCurrentSchoolId } from './coreStore';;
+import { getCurrentSchoolId, _currentAuthUser } from './coreStore';;
 
 // ============================================================================
 // LIBRARY MODULE: API LAYER
 // ============================================================================
+export async function getStudentBooks(studentId) {
+  const schoolId = getSchoolId();
+  if (!schoolId || !studentId) return [];
+
+  // Portal mode: anonymous sessions need a SECURITY DEFINER RPC because
+  // RLS cannot rely on auth.uid() for parent portal access.
+  if (!_currentAuthUser) {
+    const { data, error } = await supabase.rpc('portal_get_student_books', {
+      p_student_id: studentId,
+      p_school_id: schoolId,
+    });
+    if (error) {
+      console.error('[Portal] Student books RPC failed:', error.message);
+      throw error;
+    }
+    return data || [];
+  }
+
+  const { data, error } = await supabase
+    .from('borrow_records')
+    .select('id, due_date, book_copies(copy_code, books(title, isbn))')
+    .eq('student_id', studentId)
+    .eq('school_id', schoolId)
+    .eq('status', 'borrowed');
+  if (error) throw error;
+
+  return (data || []).map(record => ({
+    id: record.id,
+    title: record.book_copies?.books?.title,
+    isbn: record.book_copies?.books?.isbn,
+    copy_code: record.book_copies?.copy_code,
+    due_date: record.due_date,
+    is_overdue: record.due_date < new Date().toISOString().split('T')[0],
+  }));
+}
 
 const getSchoolId = () => {
     const id = getCurrentSchoolId();

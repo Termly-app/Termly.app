@@ -9,6 +9,7 @@ import {
 import { Helmet } from 'react-helmet-async';
 import { getAssignments, getStudentSubmissions } from '../../data/offlineStore';
 import { getStudentExamResults, getGradeForScore, getStudentProfile, getAnnouncements, getSubjectDetails } from '../../data/academicsStore';
+import { getStudentBooks } from '../../data/libraryStore';
 import { getFees } from '../../data/financeStore';
 import { getSchoolProfile, initPortalStore } from '../../data/coreStore';;
 import Loader from '../../components/Common/Loader';
@@ -94,6 +95,7 @@ export default function PortalDashboard({ user, onLogout }) {
   const [assignments, setAssignments] = useState([]);
   const [mySubmissions, setMySubmissions] = useState({});
   const [examResults, setExamResults] = useState([]);
+  const [myBooks, setMyBooks] = useState([]);
   const [academic, setAcademic] = useState({ average: 0, grade: 'N/A', rank: '-', color: '#667781' });
   const [feeBalance, setFeeBalance] = useState(0);
   const [feeSummary, setFeeSummary] = useState({ billed: 0, paid: 0 });
@@ -181,6 +183,9 @@ export default function PortalDashboard({ user, onLogout }) {
         const subMap = {};
         subs.forEach(s => { subMap[s.assignment_id] = s; });
         setMySubmissions(subMap);
+
+        const books = await getStudentBooks(activeId).catch(() => []);
+        setMyBooks(books);
         
         if (examRes.length > 0) {
           const avg = examRes.reduce((acc, curr) => {
@@ -523,6 +528,29 @@ export default function PortalDashboard({ user, onLogout }) {
                         ))
                       )}
                     </div>
+                  </section>
+
+                  <section style={{ marginTop: 24 }}>
+                    <h4 style={{ fontSize: '1.05rem', fontWeight: 800, marginBottom: 14, color: '#0f172a' }}>Library Books</h4>
+                    {myBooks.length === 0 ? (
+                      <Card style={{ padding: '32px', textAlign: 'center', color: '#94a3b8' }}>
+                        <div style={{ fontSize: '0.9rem' }}>No books currently borrowed.</div>
+                      </Card>
+                    ) : (
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                        {myBooks.map(book => (
+                          <Card key={book.id} style={{ padding: 18, display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 16 }}>
+                            <div>
+                              <div style={{ fontWeight: 700, color: '#0f172a', fontSize: '0.95rem' }}>{book.title || 'Untitled book'}</div>
+                              <div style={{ fontSize: '0.78rem', color: '#94a3b8', marginTop: 2 }}>Copy {book.copy_code || 'N/A'}</div>
+                            </div>
+                            <Badge bg={book.is_overdue ? '#fef2f2' : '#f0fdf4'} color={book.is_overdue ? '#ef4444' : '#10b981'}>
+                              {book.is_overdue ? 'Overdue' : 'Due'} {book.due_date ? new Date(book.due_date).toLocaleDateString() : 'N/A'}
+                            </Badge>
+                          </Card>
+                        ))}
+                      </div>
+                    )}
                   </section>
                 </div>
               </div>
