@@ -388,6 +388,10 @@ export async function getSchoolProfileBySchoolId(schoolId) {
     streamsPerClass: streamsPerClass,
     custom_subjects: customSubjects,
     customSubjects: customSubjects,
+    studentLimit: data.student_limit || customSubjects?.__limits?.students || 10000,
+    student_limit: data.student_limit || customSubjects?.__limits?.students || 10000,
+    staffLimit: data.staff_limit || customSubjects?.__limits?.staff || 1000,
+    staff_limit: data.staff_limit || customSubjects?.__limits?.staff || 1000,
     portal_access: data.portal_access,
     mpesa_config: data.mpesa_config,
     sms_config: data.sms_config,
@@ -625,24 +629,27 @@ export async function updateSchoolPlan(schoolId, planName) {
 }
 
 export async function updateSchoolLimits(schoolId, { students, staff }) {
+  const numStudents = Number(students) || 10000;
+  const numStaff = Number(staff) || 1000;
+
   const { data: profile } = await supabase
     .from('school_profiles')
     .select('id, custom_subjects')
     .eq('school_id', schoolId)
-    .single();
+    .maybeSingle();
 
   const custom_subjects = profile?.custom_subjects || {};
   custom_subjects.__limits = {
-    students: Number(students) || 10000,
-    staff: Number(staff) || 1000,
+    students: numStudents,
+    staff: numStaff,
   };
 
   const { error } = await supabase
     .from('school_profiles')
     .update({ 
       custom_subjects,
-      staff_limit: Number(staff) || 1000,
-      student_limit: Number(students) || 10000
+      staff_limit: numStaff,
+      student_limit: numStudents
     })
     .eq('school_id', schoolId);
 
@@ -654,7 +661,13 @@ export async function updateSchoolLimits(schoolId, { students, staff }) {
     if (e2) throw e2;
   }
 
-  await logPlatformActivity('LIMITS_UPDATE', `School ${schoolId} limits updated to ${students} students, ${staff} staff seats.`, schoolId);
+  try {
+    invalidateCache(`profile_${schoolId}`);
+    invalidateCache(`school_profile_${schoolId}`);
+    window.dispatchEvent(new Event('schoolProfileChanged'));
+  } catch (e) {}
+
+  await logPlatformActivity('LIMITS_UPDATE', `School ${schoolId} limits updated to ${numStudents} students, ${numStaff} staff seats.`, schoolId);
 }
 
 export async function deactivateSchool(schoolId, reason = null) {

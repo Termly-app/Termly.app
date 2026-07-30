@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { getUsers, addUser, deleteUser } from '../data/authStore';
-import { getSchoolProfile, getPlatformSettings } from '../data/coreStore';;
+import { getSchoolProfile, getPlatformSettings } from '../data/coreStore';
 import { DiamondIcon, UsersIcon, EyeIcon, EyeOffIcon } from '../components/CommonIcons';
 import Select from '../components/Common/Select';
 import { Helmet } from 'react-helmet-async';
@@ -25,8 +25,8 @@ export default function Security({ currentUser }) {
           getSchoolProfile(),
           getPlatformSettings()
         ]);
-        setUsers(uData);
-        setProfile(pData);
+        setUsers(uData || []);
+        setProfile(pData || {});
         setSettings(sData || {});
       } catch (err) {
         console.error(err);
@@ -47,36 +47,29 @@ export default function Security({ currentUser }) {
     try { setUsers(await getUsers()); } catch (err) { console.error(err); }
   };
 
-  const planName = profile.subscriptionPlan || 'Starter Plan';
-  
-  // Try to find the plan case-insensitively in settings
+  const planName = profile?.subscriptionPlan || 'Starter Plan';
   const pricing = settings?.pricing || {};
   const activePlanKey = Object.keys(pricing).find(k => k.toLowerCase() === planName.toLowerCase());
-  
-  // Fallbacks in case settings fail or plan isn't found
+
   const fallbackPlans = {
     "Sandbox": { price: 0, limit: 150, seats: 10 },
     "Starter Plan": { price: 5999, limit: 150, seats: 5 },
     "Champe": { price: 50000, limit: 5000, seats: 20 }
   };
+
+  const customStaffLimit = profile?.staffLimit || profile?.staff_limit || profile?.custom_subjects?.__limits?.staff || profile?.customSubjects?.__limits?.staff;
   
-  const planDetails = activePlanKey ? pricing[activePlanKey] : (fallbackPlans[planName] || fallbackPlans["Starter Plan"]);
-  
-  // Seat limit is for STAFF (Admins + Teachers)
-  // Priority: 1. Manual Super Admin Override, 2. Pricing Config, 3. Fallback Plans
-  let seatLimit = profile.staffLimit || 5;
-  
-  // If we haven't set a custom limit (still at fallback 1000 from store.js mapping), 
-  // or if we want to be more specific, we check the pricing.
-  // Note: if profile.staffLimit is exactly 1000 (the store.js fallback), we try to refine it with plan info.
-  if (!profile.staffLimit || profile.staffLimit === 1000) {
+  let seatLimit = customStaffLimit;
+  if (!seatLimit || seatLimit === 1000) {
     if (activePlanKey && pricing[activePlanKey]) {
-      seatLimit = pricing[activePlanKey].admins || pricing[activePlanKey].seat_limit || 5;
+      seatLimit = pricing[activePlanKey].seats || pricing[activePlanKey].admins || pricing[activePlanKey].seat_limit || 10;
     } else if (fallbackPlans[planName]) {
-      seatLimit = fallbackPlans[planName].seats || 5;
+      seatLimit = fallbackPlans[planName].seats || 10;
+    } else {
+      seatLimit = 10;
     }
   }
-  
+
   const actualStaffCount = users.length;
   const isAtLimit = actualStaffCount >= seatLimit;
 
@@ -160,18 +153,22 @@ export default function Security({ currentUser }) {
                   const isSelf = currentUser && currentUser.id === u.id;
                   return (
                     <tr key={u.id}>
-                      <td style={{ fontWeight: 600 }}>{u.name} {isSelf && <span style={{ color: 'var(--primary)', fontSize: '0.75rem', marginLeft: 4 }}>(You)</span>}</td>
+                      <td>
+                        <strong>{u.name}</strong>
+                        {isSelf && <span className="text-muted" style={{ marginLeft: 6, fontSize: '0.75rem' }}>(You)</span>}
+                      </td>
                       <td>{u.email}</td>
                       <td>
-                        <span className={`badge ${u.role === 'Admin' || u.role === 'admin' ? 'badge-primary' : u.role === 'Finance' ? 'badge-success' : 'badge-info'}`}>
-                          {(u.role || 'Teacher').toUpperCase()}
-                        </span>
+                        <span className="badge badge-secondary">{u.role}</span>
                       </td>
                       <td>
                         {isSelf ? (
-                          <span className="text-muted" style={{ fontSize: '0.85rem' }}>Current User</span>
+                          <span className="text-muted" style={{ fontSize: '0.8rem' }}>Current User</span>
                         ) : (
-                          <button className="btn btn-ghost btn-sm text-danger" onClick={() => handleDelete(u.id)}>
+                          <button 
+                            className="btn btn-sm btn-outline-danger"
+                            onClick={() => handleDelete(u.id)}
+                          >
                             Remove
                           </button>
                         )}
@@ -179,6 +176,13 @@ export default function Security({ currentUser }) {
                     </tr>
                   );
                 })}
+                {users.length === 0 && !loading && (
+                  <tr>
+                    <td colSpan="4" className="text-center text-muted" style={{ padding: 24 }}>
+                      No staff members added yet. Click "+ Add Staff Member" to grant access.
+                    </td>
+                  </tr>
+                )}
               </tbody>
             </table>
           </div>
@@ -187,97 +191,122 @@ export default function Security({ currentUser }) {
       </div>
 
       {showModal && (
-        <UserModal 
+        <AddUserModal 
           onClose={() => { setShowModal(false); setError(''); }}
           onSave={handleAdd}
           error={error}
-          adminExists={users.some(u => u.role === 'Admin' || u.role === 'admin')}
+          isAtLimit={isAtLimit}
         />
       )}
     </div>
   );
 }
 
-function UserModal({ onClose, onSave, error, adminExists }) {
-  const [form, setForm] = useState({ name: '', email: '', role: 'Teacher', password: '' });
+function AddUserModal({ onClose, onSave, error, isAtLimit }) {
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
+  const [role, setRole] = useState('Teacher');
+  const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    onSave(form);
+    if (!name || !email) return;
+    setSubmitting(true);
+    await onSave({ name, email, role, password });
+    setSubmitting(false);
   };
 
   return (
     <div className="modal-overlay" onClick={onClose}>
-      <div className="modal" style={{ maxWidth: 400 }} onClick={e => e.stopPropagation()}>
+      <div className="modal-content" onClick={e => e.stopPropagation()} style={{ maxWidth: 450 }}>
         <div className="modal-header">
           <h3>Add New User</h3>
-          <button className="modal-close" onClick={onClose}>×</button>
+          <button className="modal-close" onClick={onClose}>&times;</button>
         </div>
+        
+        {error && (
+          <div className="alert alert-danger" style={{ margin: '16px 20px 0 20px' }}>
+            {error}
+          </div>
+        )}
+
         <form onSubmit={handleSubmit}>
-          <div className="modal-body">
-            {error && <div style={{ color: 'var(--danger)', marginBottom: 16, fontSize: '0.9rem' }}>{error}</div>}
-            
+          <div className="modal-body" style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
             <div className="form-group">
-              <label>Full Name</label>
+              <label>FULL NAME</label>
               <input 
-                className="form-input" 
-                value={form.name} 
-                onChange={(e) => setForm({ ...form, name: e.target.value })} 
+                type="text" 
+                className="form-control" 
+                placeholder="e.g. Jane Doe"
+                value={name} 
+                onChange={e => setName(e.target.value)} 
                 required 
               />
             </div>
+
             <div className="form-group">
-              <label>Email Address</label>
+              <label>EMAIL ADDRESS</label>
               <input 
                 type="email" 
-                className="form-input" 
-                value={form.email} 
-                onChange={(e) => setForm({ ...form, email: e.target.value })} 
+                className="form-control" 
+                placeholder="jane@school.com"
+                value={email} 
+                onChange={e => setEmail(e.target.value)} 
                 required 
               />
             </div>
+
             <div className="form-group">
-              <label>Role</label>
-              <Select 
-                value={form.role} 
-                onChange={(e) => setForm({ ...form, role: e.target.value })}
+              <label>ROLE</label>
+              <Select
+                value={role}
+                onChange={e => setRole(e.target.value)}
                 options={[
-                  { id: 'Teacher', label: 'Teacher (Grading, Attendance, Students)' },
-                  { id: 'Finance', label: 'Finance (Fees, Students List)' },
-                  { id: 'Librarian', label: 'Librarian (Library, Students List)' },
-                  { id: 'Admin', label: `Admin (Full Access) ${adminExists ? '— (Limit: 1)' : ''}`, disabled: adminExists }
+                  { value: 'Teacher', label: 'Teacher (Grading, Attendance, Students)' },
+                  { value: 'Bursar', label: 'Bursar (Fees, Payments, Financial Reports)' },
+                  { value: 'Librarian', label: 'Librarian (Book Inventory & Issuance)' },
+                  { value: 'Admin', label: 'Administrator (Full Access)' }
                 ]}
-                style={{ width: '100%' }}
               />
             </div>
+
             <div className="form-group">
-              <label>Temporary Password</label>
+              <label>TEMPORARY PASSWORD</label>
               <div style={{ position: 'relative' }}>
                 <input 
                   type={showPassword ? "text" : "password"}
-                  className="form-input" 
-                  value={form.password || ''} 
-                  onChange={(e) => setForm({ ...form, password: e.target.value })} 
+                  className="form-control" 
                   placeholder="password123"
-                  minLength={6}
-                  style={{ width: '100%', paddingRight: '40px' }}
+                  value={password} 
+                  onChange={e => setPassword(e.target.value)} 
+                  style={{ paddingRight: 40 }}
                 />
-                <button 
+                <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  style={{ position: 'absolute', right: 12, top: 12, background: 'none', border: 'none', cursor: 'pointer', padding: 0, color: 'var(--text-light)' }}
-                  tabIndex="-1"
+                  style={{
+                    position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)',
+                    background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)'
+                  }}
                 >
-                  {showPassword ? <EyeOffIcon size={18} /> : <EyeIcon size={18} />}
+                  {showPassword ? <EyeOffIcon size={16} /> : <EyeIcon size={16} />}
                 </button>
               </div>
-              <span style={{ fontSize: '0.75rem', color: 'var(--text-light)', marginTop: 4, display: 'block' }}>Must be at least 6 characters. If left blank, defaults to "password123".</span>
+              <small className="text-muted" style={{ display: 'block', marginTop: 4, fontSize: '0.75rem' }}>
+                Must be at least 6 characters. If left blank, defaults to "password123".
+              </small>
             </div>
           </div>
+
           <div className="modal-footer">
-            <button type="button" className="btn btn-ghost" onClick={onClose}>Cancel</button>
-            <button type="submit" className="btn btn-primary">Create User</button>
+            <button type="button" className="btn btn-outline" onClick={onClose} disabled={submitting}>
+              Cancel
+            </button>
+            <button type="submit" className="btn btn-primary" disabled={submitting || isAtLimit}>
+              {submitting ? 'Creating...' : 'Create User'}
+            </button>
           </div>
         </form>
       </div>
