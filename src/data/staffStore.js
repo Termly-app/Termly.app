@@ -58,7 +58,6 @@ export async function getAllSchoolStaff(schoolId) {
     .select('id, name, email, phone, role, status, created_at')
     .eq('school_id', schoolId)
     .neq('role', 'Super Admin')
-    .neq('role', 'Teacher')
     .order('role', { ascending: true })
     .order('name', { ascending: true });
 
