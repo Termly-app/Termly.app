@@ -1,5 +1,5 @@
 import { ShieldIcon, CheckIcon, AlertIcon, ClockIcon, LockIcon } from '../../../components/CommonIcons';
-import { fmtDate, sPill } from '../superAdminUtils';
+import { fmtDate, sPill, formatAuditDescription } from '../superAdminUtils';
 
 export default function SecurityTab({ schools, activities }) {
   // Aggregate security stats
@@ -160,7 +160,7 @@ export default function SecurityTab({ schools, activities }) {
                         <span style={{ fontWeight: 700, fontSize: '0.75rem' }}>{a.type}</span>
                       </div>
                     </td>
-                    <td style={{ fontSize: '0.8rem', maxWidth: 300 }}>{a.description}</td>
+                    <td style={{ fontSize: '0.8rem', maxWidth: 300 }}>{formatAuditDescription(a)}</td>
                     <td>
                       <div className="li-name">{a.schools?.name || 'Platform'}</div>
                       <div className="li-sub">{a.actor_email}</div>

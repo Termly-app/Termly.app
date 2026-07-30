@@ -77,37 +77,65 @@ export const getFeatureCount = (school) => {
 // ── Audit Log Human-Readable Formatter ────────────────────────────────────
 export const formatAuditDescription = (log) => {
   if (!log) return 'System activity recorded';
-  const desc = log.description || log.action || '';
-  const schoolName = log.schools?.name || 'School';
-  const actor = log.actor_email || 'Super Admin';
+  
+  let rawStr = '';
+  if (typeof log === 'string') {
+    rawStr = log;
+  } else {
+    rawStr = log.description || log.action || '';
+  }
 
-  if (desc.includes('PLAN_CHANGE') || log.action === 'PLAN_CHANGE') {
-    return `${actor} changed ${schoolName}'s plan tier.`;
+  const schoolName = log?.schools?.name || log?.school_name || 'School';
+  const actor = log?.actor_email || 'Super Admin';
+  const actionKey = ((log?.action || '') + ' ' + rawStr).toUpperCase();
+
+  if (actionKey.includes('PLAN_CHANGE')) {
+    return `${actor} updated ${schoolName}'s subscription plan.`;
   }
-  if (desc.includes('LIMITS_UPDATE') || log.action === 'LIMITS_UPDATE') {
-    return `${actor} updated student & staff seat capacity limits for ${schoolName}.`;
+  if (actionKey.includes('LIMITS_UPDATE') || actionKey.includes('LIMIT')) {
+    return `${actor} updated capacity limits for ${schoolName}.`;
   }
-  if (desc.includes('DEACTIVATION') || log.action === 'DEACTIVATION') {
+  if (actionKey.includes('DEACTIVAT')) {
     return `${actor} deactivated ${schoolName}'s account access.`;
   }
-  if (desc.includes('ACTIVATION') || log.action === 'ACTIVATION') {
+  if (actionKey.includes('ACTIVAT') || actionKey.includes('RESTORATION')) {
     return `${actor} activated ${schoolName}'s account access.`;
   }
-  if (desc.includes('REGISTER') || log.action === 'REGISTER') {
+  if (actionKey.includes('REGISTER')) {
     return `New school "${schoolName}" was registered on the platform.`;
   }
-  if (desc.includes('FEATURE') || log.action === 'FEATURE') {
-    return `${actor} updated feature module permissions for ${schoolName}.`;
+  if (actionKey.includes('FEATURE')) {
+    return `${actor} updated feature permissions for ${schoolName}.`;
+  }
+  if (actionKey.includes('PAYMENT_SUBMIT') || actionKey.includes('PAYMENT_APPROVE') || actionKey.includes('PAYMENT_REJECT') || actionKey.includes('PAYMENT_VOID')) {
+    return `Fee payment event processed for ${schoolName}.`;
+  }
+  if (actionKey.includes('STUDENT_ADD') || actionKey.includes('STUDENTS_IMPORT')) {
+    return `Student records updated for ${schoolName}.`;
   }
 
-  // If description has raw text, strip any technical IDs or UUIDs
-  let cleanDesc = desc
+  // Fallback: If rawStr is JSON string, extract readable text
+  let cleanDesc = rawStr;
+  if (typeof cleanDesc === 'string' && (cleanDesc.trim().startsWith('{') || cleanDesc.trim().startsWith('['))) {
+    try {
+      const parsed = JSON.parse(cleanDesc);
+      cleanDesc = parsed.message || parsed.description || parsed.action || 'System settings updated';
+    } catch {
+      cleanDesc = 'System settings updated';
+    }
+  }
+
+  // Strip any UUIDs, raw IDs, technical prefixes, and JSON snippets
+  cleanDesc = String(cleanDesc)
+    .replace(/\{[^}]+\}/g, '')
     .replace(/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/gi, '')
     .replace(/School\s+[0-9a-f-]+/gi, schoolName)
+    .replace(/(?:admin|student|user|school|payment|id)[:_]-?[0-9a-f-]{8,}/gi, '')
     .replace(/Platform activity/gi, 'System activity')
+    .replace(/\s+/g, ' ')
     .trim();
 
-  return cleanDesc || `Activity recorded for ${schoolName}`;
+  return cleanDesc || `System activity logged for ${schoolName}`;
 };
 
 export const getRelativeTime = (dateStr) => {

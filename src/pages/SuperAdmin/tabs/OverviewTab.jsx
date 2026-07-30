@@ -1,5 +1,5 @@
 import { useRef } from 'react';
-import { useChart, GC, TC, TIP, fmtDate, statusLabel, sPill, getStatusRefined } from '../superAdminUtils';
+import { useChart, GC, TC, TIP, fmtDate, statusLabel, sPill, getStatusRefined, formatAuditDescription } from '../superAdminUtils';
 import { CheckIcon, AlertIcon, ClockIcon, SchoolIcon, GraduationIcon, RocketIcon } from '../../../components/CommonIcons';
 import Select from '../../../components/Common/Select';
 
@@ -137,7 +137,7 @@ export default function OverviewTab({
                   <div className="ai" key={a.id}>
                     <div className="li-ico ni-t"><CheckIcon size={12} /></div>
                     <div className="ai-body">
-                      <div className="ai-t">{a.description}</div>
+                      <div className="ai-t">{formatAuditDescription(a)}</div>
                       <div className="ai-s">{a.school_name || 'System'}</div>
                     </div>
                     <div className="ai-time">{fmtDate(a.created_at)}</div>

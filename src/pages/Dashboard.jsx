@@ -279,9 +279,19 @@ export default function Dashboard({ currentUser, onLogout, currentPeriodId }) {
                     {a.actor_type === 'parent' ? <UserIcon size={14} /> : <TeacherIcon size={14} />}
                   </div>
                   <div className="activity-body">
-                    <div style={{ fontSize: '0.7rem', fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase' }}>{a.actor_name}</div>
-                    <div className="activity-title" style={{ fontSize: '0.85rem' }}>{a.action.replace(/_/g, ' ')}</div>
-                    <div className="activity-sub">{a.target_type}</div>
+                    <div style={{ fontSize: '0.7rem', fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase' }}>
+                      {a.actor_name || 'System User'}
+                    </div>
+                    <div className="activity-title" style={{ fontSize: '0.85rem' }}>
+                      {typeof a.action === 'string' 
+                        ? a.action.replace(/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/gi, '').replace(/_/g, ' ').trim() || 'System Action'
+                        : 'System Action'}
+                    </div>
+                    <div className="activity-sub">
+                      {typeof a.target_type === 'string'
+                        ? a.target_type.replace(/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/gi, '').replace(/_/g, ' ').trim() || 'General Event'
+                        : 'General Event'}
+                    </div>
                   </div>
                   <div className="activity-time">{a.date}</div>
                 </div>

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../../../lib/supabase';
 import { logAuditEvent, updateSchoolFeature, adminUpdateSchoolProfile } from '../../../data/coreStore';;
-import { fmtDate } from '../superAdminUtils';
+import { fmtDate, formatAuditDescription } from '../superAdminUtils';
 import { SchoolIcon, ShieldIcon, MenuIcon, CheckIcon, CrossIcon, ClockIcon, CalendarIcon } from '../../../components/CommonIcons';
 import { useDialog } from '../../../contexts/DialogContext';
 
@@ -345,8 +345,8 @@ export default function SchoolDetailTab({ school, onBack, setActivateModal, hand
                 <tbody>
                   {logs.map(log => (
                     <tr key={log.id} style={{ borderBottom: '1px solid var(--edge)' }}>
-                      <td style={{ padding: '12px', fontWeight: 700, fontSize: '0.75rem', color: '#fff' }}>{log.action || log.description || 'System Action'}</td>
-                      <td style={{ padding: '12px', fontSize: '0.8rem', color: 'var(--sub)' }}>{log.target_table || 'N/A'} {log.target_id ? `(${log.target_id.slice(0,8)})` : ''}</td>
+                      <td style={{ padding: '12px', fontWeight: 700, fontSize: '0.75rem', color: '#fff' }}>{formatAuditDescription(log)}</td>
+                      <td style={{ padding: '12px', fontSize: '0.8rem', color: 'var(--sub)' }}>{log.target_table || 'System Module'}</td>
                       <td style={{ padding: '12px' }}>
                         <div style={{ fontSize: '0.8rem', fontWeight: 600, color: '#fff' }}>{log.actor_email || 'Unknown'}</div>
                         <div style={{ fontSize: '0.7rem', color: '#64748b' }}>{log.actor_role || 'Admin'}</div>
