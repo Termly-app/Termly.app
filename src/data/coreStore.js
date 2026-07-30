@@ -650,13 +650,6 @@ export async function restoreSchool(schoolId, monthsToAdd = 4, notes = null) {
   await logPlatformActivity('RESTORATION', `School ${schoolId} restored for ${monthsToAdd} months`, schoolId);
 }
 
-export async function suspendSchool(schoolId, reason = null) {
-  const { error } = await supabase.from('school_profiles')
-    .update({ subscription_status: 'Suspended', status_notes: reason })
-    .eq('school_id', schoolId);
-  if (error) throw error;
-  await logPlatformActivity('SUSPENSION', `School ${schoolId} suspended. Reason: ${reason || 'Not specified'}`, schoolId);
-}
 
 export async function deleteSchool(schoolId) {
   mutationGuard('deleteSchool');
