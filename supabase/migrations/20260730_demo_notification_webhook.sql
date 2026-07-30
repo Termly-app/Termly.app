@@ -18,7 +18,7 @@ CREATE TRIGGER notify_demo_request_trigger
 AFTER INSERT ON public.demo_requests
 FOR EACH ROW
 EXECUTE FUNCTION supabase_functions.http_request(
-    'http://supabase_kong_shulesoft:8000/functions/v1/notify-demo-request',
+    'http://supabase_kong_Termly:8000/functions/v1/notify-demo-request',
     'POST',
     '{"Content-Type":"application/json"}',
     '{}',
@@ -26,7 +26,7 @@ EXECUTE FUNCTION supabase_functions.http_request(
 );
 
 -- Note about the URL above: 
--- Locally: http://supabase_kong_shulesoft:8000/functions/v1/notify-demo-request (or http://kong:8000 depending on your docker setup)
+-- Locally: http://supabase_kong_Termly:8000/functions/v1/notify-demo-request (or http://kong:8000 depending on your docker setup)
 -- In production, the CLI's `supabase migrations up` doesn't automatically inject the project URL. 
 -- The recommended Supabase approach for webhooks is to set them up via the Supabase Dashboard UI 
 -- (Database -> Webhooks). However, if defining via SQL, ensure the correct URL is mapped.

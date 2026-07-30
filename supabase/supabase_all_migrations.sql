@@ -2035,7 +2035,7 @@ BEGIN
 END; $$;
 -- ============================================================
 -- 012_PRODUCTION_READY_SCHEMA.SQL
--- Consolidated Master Schema Repair for ShuleSoft.
+-- Consolidated Master Schema Repair for Termly.
 -- Ensures all tables, columns, and constraints are production-ready.
 -- ============================================================
 
@@ -4070,7 +4070,7 @@ CREATE TRIGGER update_school_features_modtime
 -- 1. Portal School Search Exclusions
 ALTER TABLE public.schools ADD COLUMN IF NOT EXISTS is_platform_account BOOLEAN DEFAULT false;
 -- Set existing platform admin schools to true
-UPDATE public.schools SET is_platform_account = true WHERE email IN ('admin@shulesoft.com', 'shulesoft8@gmail.com');
+UPDATE public.schools SET is_platform_account = true WHERE email IN ('admin@Termly.com', 'shulesoft8@gmail.com');
 
 -- 2. Custom Claims Hook
 -- Adds school_id and role to the JWT so policies don't need a JOIN
@@ -4350,7 +4350,7 @@ ALTER TABLE public.attendance ADD CONSTRAINT attendance_unique_entry UNIQUE(scho
 
 -- 4. Enable RLS (already enabled probably, but ensure)
 ALTER TABLE public.attendance ENABLE ROW LEVEL SECURITY;
--- ShuleSoft E-Learning (LMS) Schema
+-- Termly E-Learning (LMS) Schema
 -- Run this in your Supabase SQL Editor to create the missing LMS tables.
 
 -- 1. Create Assignments Table
@@ -4405,7 +4405,7 @@ ON public.el_submissions FOR ALL USING (auth.role() = 'authenticated');
 -- 4. Notify PostgREST to reload schema
 NOTIFY pgrst, 'reload schema';
 -- ============================================================
--- ShuleSoft Consolidated Database Update (2026-04-26)
+-- Termly Consolidated Database Update (2026-04-26)
 -- Handles deactivation, features management, and system health.
 -- ============================================================
 
@@ -4523,7 +4523,7 @@ ORDER BY n1.nspname, t1.relname;
 -- ============================================================
 -- FIX: Bulletproof Audit Logger Trigger (V2)
 -- Corrected for the 'action_type' and 'table_name' column names
--- found in the ShuleSoft production schema.
+-- found in the Termly production schema.
 -- ============================================================
 
 CREATE OR REPLACE FUNCTION public.log_activity()
@@ -4795,7 +4795,7 @@ END $$;
 -- 1. Identify Platform Admins globally
 CREATE OR REPLACE FUNCTION public.is_platform_admin()
 RETURNS BOOLEAN AS $$
-  SELECT auth.jwt() ->> 'email' IN ('admin@shulesoft.com', 'shulesoft8@gmail.com');
+  SELECT auth.jwt() ->> 'email' IN ('admin@Termly.com', 'shulesoft8@gmail.com');
 $$ LANGUAGE sql SECURITY DEFINER;
 
 -- 2. Update Schools RLS
@@ -5642,7 +5642,7 @@ CREATE TABLE IF NOT EXISTS platform_admins (
 
 -- 2. Seed Initial Admins
 INSERT INTO platform_admins (email, added_by)
-VALUES ('admin@shulesoft.com', 'system'), ('shulesoft8@gmail.com', 'system')
+VALUES ('admin@Termly.com', 'system'), ('shulesoft8@gmail.com', 'system')
 ON CONFLICT (email) DO NOTHING;
 
 -- 3. Update the global is_platform_admin helper
@@ -6379,7 +6379,7 @@ END $$;
 -- ============================================================
 NOTIFY pgrst, 'reload schema';
 -- ============================================================
--- ShuleSoft Database Schema for Supabase
+-- Termly Database Schema for Supabase
 -- Run this in Supabase Dashboard → SQL Editor
 -- ============================================================
 
@@ -6404,7 +6404,7 @@ CREATE TABLE IF NOT EXISTS schools (
 CREATE TABLE IF NOT EXISTS school_profiles (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   school_id UUID NOT NULL REFERENCES schools(id) ON DELETE CASCADE UNIQUE,
-  school_name TEXT NOT NULL DEFAULT 'ShuleSoft Academy',
+  school_name TEXT NOT NULL DEFAULT 'Termly Academy',
   motto TEXT DEFAULT '',
   phone TEXT DEFAULT '',
   email TEXT DEFAULT '',
@@ -7361,7 +7361,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 -- ============================================================
--- ShuleSoft Platform Level Schema (Super Admin)
+-- Termly Platform Level Schema (Super Admin)
 -- Execute this script in the Supabase SQL Editor
 -- ============================================================
 
@@ -7382,7 +7382,7 @@ ALTER TABLE platform_activity ENABLE ROW LEVEL SECURITY;
 -- Only Super Admins can see global activity
 CREATE POLICY "Super Admins can view all activity" ON platform_activity
     FOR SELECT USING (
-        auth.jwt() ->> 'email' IN ('admin@shulesoft.com', 'shulesoft8@gmail.com')
+        auth.jwt() ->> 'email' IN ('admin@Termly.com', 'shulesoft8@gmail.com')
     );
 
 -- 2. PLATFORM SETTINGS
@@ -7404,7 +7404,7 @@ CREATE POLICY "Public can view platform settings" ON platform_settings
 -- Only Super Admins can modify settings
 CREATE POLICY "Super Admins can modify platform settings" ON platform_settings
     FOR ALL USING (
-        auth.jwt() ->> 'email' IN ('admin@shulesoft.com', 'shulesoft8@gmail.com')
+        auth.jwt() ->> 'email' IN ('admin@Termly.com', 'shulesoft8@gmail.com')
     );
 
 -- Initial Seed Settings
@@ -7413,7 +7413,7 @@ INSERT INTO platform_settings (key, value, description) VALUES
 ON CONFLICT (key) DO NOTHING;
 
 INSERT INTO platform_settings (key, value, description) VALUES
-('support', '{"email": "support@shulesoft.com", "phone": "+254 700 000000"}', 'Platform support contact details')
+('support', '{"email": "support@Termly.com", "phone": "+254 700 000000"}', 'Platform support contact details')
 ON CONFLICT (key) DO NOTHING;
 -- PLG Scaling Phase Schema Updates
 
@@ -7424,7 +7424,7 @@ ALTER TABLE teachers ADD COLUMN IF NOT EXISTS staff_code TEXT;
 -- 2. Add curriculum to school_profiles table
 ALTER TABLE school_profiles ADD COLUMN IF NOT EXISTS curriculum TEXT DEFAULT 'CBC Only';
 -- ============================================================
--- SHULESOFT PORTAL DEPLOYMENT SCRIPT (V4 FIXED)
+-- Termly PORTAL DEPLOYMENT SCRIPT (V4 FIXED)
 -- Corrected SQL syntax for search paths and visibility logic.
 -- ============================================================
 
@@ -7961,7 +7961,7 @@ END; $$;
 -- 7. RELOAD SCHEMA CACHE
 NOTIFY pgrst, 'reload schema';
 -- ============================================================
--- SHULESOFT PRODUCTION MASTER MIGRATION (CONSOLIDATED)
+-- Termly PRODUCTION MASTER MIGRATION (CONSOLIDATED)
 -- Covers All Domains 1-17: RBAC, Multi-tenancy, Fees, SMS, Audit, Exams
 -- Run in Supabase SQL Editor. Safe to run multiple times.
 -- ============================================================
@@ -8148,7 +8148,7 @@ BEGIN
         DELETE FROM public.platform_settings;
         INSERT INTO public.platform_settings (key, value, description) VALUES
         ('billing', '{"term_price": 3000, "mpesa_number": "07XXXXXXXX", "trial_days": 30}', 'Global billing and trial configuration'),
-        ('support', '{"email": "support@shulesoft.com", "phone": "+254 700 000000"}', 'Platform support contact details')
+        ('support', '{"email": "support@Termly.com", "phone": "+254 700 000000"}', 'Platform support contact details')
         ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value;
     END IF;
 END $$;
@@ -8177,7 +8177,7 @@ CREATE POLICY "Public can view platform settings" ON public.platform_settings
 DROP POLICY IF EXISTS "Super Admins can modify platform settings" ON public.platform_settings;
 CREATE POLICY "Super Admins can modify platform settings" ON public.platform_settings
     FOR ALL USING (
-        auth.jwt() ->> 'email' IN ('admin@shulesoft.com', 'shulesoft8@gmail.com')
+        auth.jwt() ->> 'email' IN ('admin@Termly.com', 'shulesoft8@gmail.com')
     );
 
 -- 4. Seed Global Configuration
@@ -8351,7 +8351,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 -- ============================================================
--- SHULESOFT SECURITY HARDENING
+-- Termly SECURITY HARDENING
 -- Resolves Supabase Database Linter Warnings & Errors
 -- ============================================================
 
@@ -8529,7 +8529,7 @@ INSERT INTO platform_settings (key, value, description) VALUES
 }', 'Platform support contact details')
 ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value;
 -- ============================================================================
--- SHULESOFT PLATFORM RESTORATION & HARDENING SCRIPT
+-- Termly PLATFORM RESTORATION & HARDENING SCRIPT
 -- ============================================================================
 -- Purpose:
 -- 1. Restores default pricing, billing details, and module features.
@@ -8568,7 +8568,7 @@ VALUES (
       "features": ["Evaluation Mode", "Core Modules Only"]
     },
 -- ============================================================
--- SHULESOFT PRODUCTION MASTER SETUP (FINAL)
+-- Termly PRODUCTION MASTER SETUP (FINAL)
 -- Focus: Multi-tenancy, RBAC, M-Pesa, SMS, and Audit Compliance
 -- ============================================================
 
@@ -8762,7 +8762,7 @@ CREATE POLICY "Schools can insert own payments" ON payments
         SELECT id FROM schools WHERE owner_id = auth.uid()
     ));
 -- ============================================================
--- ShuleSoft - Super Admin Activation & Deactivation Logic
+-- Termly - Super Admin Activation & Deactivation Logic
 -- Handles unified expiration for schools and their enabled modules
 -- ============================================================
 
@@ -8885,7 +8885,7 @@ CREATE TABLE IF NOT EXISTS public.platform_settings (
 CREATE OR REPLACE FUNCTION public.is_platform_admin()
 RETURNS BOOLEAN AS $$
 BEGIN
-  RETURN (auth.jwt() ->> 'email') IN ('admin@shulesoft.com', 'shulesoft8@gmail.com');
+  RETURN (auth.jwt() ->> 'email') IN ('admin@Termly.com', 'shulesoft8@gmail.com');
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
@@ -8968,7 +8968,7 @@ CREATE OR REPLACE FUNCTION public.is_platform_admin()
 RETURNS BOOLEAN AS $$
 BEGIN
   RETURN (
-    auth.jwt() ->> 'email' = 'admin@shulesoft.com' OR 
+    auth.jwt() ->> 'email' = 'admin@Termly.com' OR 
     auth.jwt() ->> 'email' = 'shulesoft8@gmail.com'
   );
 END;
@@ -9176,10 +9176,10 @@ ALTER TABLE academic_trends ENABLE ROW LEVEL SECURITY;
 ALTER TABLE incidental_charges ENABLE ROW LEVEL SECURITY;
 ALTER TABLE invoice_logs ENABLE ROW LEVEL SECURITY;
 ALTER TABLE notifications_log ENABLE ROW LEVEL SECURITY;
--- REFRESH SHULESOFT FEATURES REGISTRY
+-- REFRESH Termly FEATURES REGISTRY
 -- This ensures the Super Admin sees only the modules actually implemented in the codebase
 
--- 1. Insert/Update Registry with strictly verified ShuleSoft modules
+-- 1. Insert/Update Registry with strictly verified Termly modules
 INSERT INTO public.features_registry (feature_key, feature_name, description, category)
 VALUES 
     -- General & Dashboard
@@ -9408,7 +9408,7 @@ ON CONFLICT (school_id, feature_key) DO UPDATE SET is_enabled = EXCLUDED.is_enab
 
 -- 1. Add Unique Constraint
 -- Note: This will fail if there are existing duplicates. 
--- In ShuleSoft, redundant IDs are not allowed in production.
+-- In Termly, redundant IDs are not allowed in production.
 ALTER TABLE students ADD CONSTRAINT students_adm_no_school_unique UNIQUE(school_id, adm_no);
 
 -- 2. Add Index for high-speed lookups

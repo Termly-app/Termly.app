@@ -26,9 +26,9 @@ ON CONFLICT (email) DO NOTHING;
 UPDATE public.schools SET is_platform_account = true
 WHERE email = 'shulesoft8@gmail.com';
 
--- Un-flag any old shulesoft/Termly accounts that are not the real admin.
+-- Un-flag any old Termly/Termly accounts that are not the real admin.
 UPDATE public.schools SET is_platform_account = false
-WHERE email IN ('admin@shulesoft.com', 'admin@Termly.com')
+WHERE email IN ('admin@Termly.com', 'admin@Termly.com')
   AND email != 'shulesoft8@gmail.com';
 
 -- 2. The one, final definition of is_platform_admin().

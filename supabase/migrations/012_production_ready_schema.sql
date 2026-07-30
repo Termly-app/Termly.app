@@ -1,6 +1,6 @@
 -- ============================================================
 -- 012_PRODUCTION_READY_SCHEMA.SQL
--- Consolidated Master Schema Repair for ShuleSoft.
+-- Consolidated Master Schema Repair for Termly.
 -- Ensures all tables, columns, and constraints are production-ready.
 -- ============================================================
 

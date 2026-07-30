@@ -455,7 +455,7 @@ function App() {
   const [profile,            setProfile]            = useState(null);
   const location = useLocation();
   const isOnline = useNetworkStatus();
-  const [isLocked, setIsLocked] = useState(() => sessionStorage.getItem('shulesoft_locked') === 'true');
+  const [isLocked, setIsLocked] = useState(() => sessionStorage.getItem('Termly_locked') === 'true');
   const [unreadCount, setUnreadCount] = useState(0);
   const [showNotifPanel, setShowNotifPanel] = useState(false);
   const [notifications, setNotifications] = useState([]);
@@ -465,9 +465,9 @@ function App() {
   // Sync lock state to session storage to persist across reloads
   useEffect(() => {
     if (isLocked) {
-      sessionStorage.setItem('shulesoft_locked', 'true');
+      sessionStorage.setItem('Termly_locked', 'true');
     } else {
-      sessionStorage.removeItem('shulesoft_locked');
+      sessionStorage.removeItem('Termly_locked');
     }
   }, [isLocked]);
 
