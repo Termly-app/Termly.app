@@ -57,7 +57,11 @@ export default function Security({ currentUser }) {
     "Champe": { price: 50000, limit: 5000, seats: 20 }
   };
 
-  const customStaffLimit = profile?.staffLimit || profile?.staff_limit || profile?.custom_subjects?.__limits?.staff || profile?.customSubjects?.__limits?.staff;
+  let cSubs = profile?.custom_subjects || profile?.customSubjects || {};
+  if (typeof cSubs === 'string') {
+    try { cSubs = JSON.parse(cSubs); } catch(e) { cSubs = {}; }
+  }
+  const customStaffLimit = cSubs.__limits?.staff || profile?.staffLimit || profile?.staff_limit;
   
   let seatLimit;
   if (customStaffLimit) {

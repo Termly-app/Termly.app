@@ -76,11 +76,11 @@ export async function getAllSchoolStaff(schoolId) {
       .eq('school_id', schoolId)
       .maybeSingle();
 
-    if (schoolProfile && (schoolProfile.contact_email || schoolProfile.email)) {
+    if (schoolProfile) {
       results.unshift({
         id: `admin-${schoolId}`,
         name: schoolProfile.contact_name || 'School Administrator',
-        email: schoolProfile.contact_email || schoolProfile.email,
+        email: schoolProfile.contact_email || schoolProfile.email || 'admin@' + (schoolId.substring(0,8)) + '.com',
         phone: schoolProfile.phone || '—',
         role: 'Admin',
         status: 'Active'

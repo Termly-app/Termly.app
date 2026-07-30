@@ -280,7 +280,14 @@ export default function SuperAdmin({ currentUser, isPlatformAdmin, sidebarOpen, 
   }, [activeTab, schools]);
 
   const handleUpdateSetting = async (key, value) => {
-    try   { await updatePlatformSetting(key, { ...(settings[key] || {}), ...value }); setMessage({ type:'success', text:'Settings saved.' }); loadData(); }
+    try { 
+      const newValue = (typeof value === 'object' && value !== null && !Array.isArray(value)) 
+        ? { ...(settings[key] || {}), ...value } 
+        : value;
+      await updatePlatformSetting(key, newValue); 
+      setMessage({ type:'success', text:'Settings saved.' }); 
+      loadData(); 
+    }
     catch (err) { setMessage({ type:'error', text: err.message }); }
   };
 

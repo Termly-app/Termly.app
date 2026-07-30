@@ -12,8 +12,12 @@ export default function LimitsModal({ school, onClose, onUpdated, setMessage }) 
     if (!school) return;
     const pList = Array.isArray(school.school_profiles) ? school.school_profiles : [];
     const p = pList[0] || {};
-    const curStudents = p.custom_subjects?.__limits?.students || p.student_limit || 10000;
-    const curStaff = p.custom_subjects?.__limits?.staff || p.staff_limit || 1000;
+    let cSubs = p.custom_subjects || {};
+    if (typeof cSubs === 'string') {
+      try { cSubs = JSON.parse(cSubs); } catch(e) { cSubs = {}; }
+    }
+    const curStudents = cSubs.__limits?.students || p.student_limit || 10000;
+    const curStaff = cSubs.__limits?.staff || p.staff_limit || 1000;
     setStudentLimit(curStudents);
     setStaffLimit(curStaff);
     setError('');

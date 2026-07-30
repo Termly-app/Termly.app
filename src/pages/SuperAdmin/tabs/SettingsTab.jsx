@@ -30,11 +30,6 @@ export default function SettingsTab({
         await handleUpdateSetting('sms', smsConfig);
         await handleUpdateSetting('global_expiry', subEndDate);
       }
-      if (typeof updatePlatformSetting === 'function') {
-        await updatePlatformSetting('global_expiry', subEndDate);
-        await updatePlatformSetting('billing', { expiry_date: subEndDate });
-        await updatePlatformSetting('platform', { status_message: statusMsg, global_expiry: subEndDate });
-      }
       if (typeof loadData === 'function') {
         await loadData();
       }

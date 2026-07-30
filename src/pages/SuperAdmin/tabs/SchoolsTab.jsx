@@ -1,4 +1,5 @@
 import { fmtDate, sPill, getStatusRefined } from '../superAdminUtils';
+import Select from '../../../components/Common/Select';
 import { SchoolIcon } from '../../../components/CommonIcons';
 
 export default function SchoolsTab({
@@ -89,8 +90,12 @@ export default function SchoolsTab({
                     return prof.subscription_status === 'Active' || isExp;
                   }) || pList[0] || {};
 
-                  const studentLimit = p.custom_subjects?.__limits?.students || 10000;
-                  const staffLimit = p.custom_subjects?.__limits?.staff || 1000;
+                  let cSubs = p.custom_subjects || {};
+                  if (typeof cSubs === 'string') {
+                    try { cSubs = JSON.parse(cSubs); } catch(e) { cSubs = {}; }
+                  }
+                  const studentLimit = cSubs.__limits?.students || p.student_limit || 10000;
+                  const staffLimit = cSubs.__limits?.staff || p.staff_limit || 1000;
                   const rawPlan = s.plan || (s.name?.toLowerCase().includes('demo') ? 'Demo' : 'Production');
                   const currentPlan = ['Production', 'Demo', 'Sandbox'].includes(rawPlan) 
                     ? rawPlan 
@@ -107,16 +112,18 @@ export default function SchoolsTab({
                           >
                             {s.name}
                           </div>
-                          <select
-                            value={currentPlan}
-                            onChange={(e) => onUpdatePlan?.(s.id, e.target.value)}
-                            title="Change School Plan / Account Type"
-                            className={`plan-select-badge plan-${currentPlan.toLowerCase()}`}
-                          >
-                            <option value="Production">Production</option>
-                            <option value="Demo">Demo</option>
-                            <option value="Sandbox">Sandbox</option>
-                          </select>
+                          <div style={{ width: 110 }}>
+                            <Select
+                              value={currentPlan}
+                              onChange={(val) => onUpdatePlan?.(s.id, val.target ? val.target.value : val)}
+                              options={[
+                                { value: 'Production', label: 'Production' },
+                                { value: 'Demo', label: 'Demo' },
+                                { value: 'Sandbox', label: 'Sandbox' }
+                              ]}
+                              className={`plan-select-badge plan-${currentPlan.toLowerCase()}`}
+                            />
+                          </div>
                         </div>
                         {s.phone && <div className="td-sub" style={{ marginTop: 2 }}>{s.phone}</div>}
                       </td>
