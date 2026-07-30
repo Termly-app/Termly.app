@@ -513,7 +513,7 @@ export default function SuperAdmin({ currentUser, isPlatformAdmin, sidebarOpen, 
 
             <ActivateModal activateModal={activateModal} setActivateModal={setActivateModal} activationNote={activationNote} setActivationNote={setActivationNote} activating={activating} activateSuccess={activateSuccess} handleConfirmActivate={handleConfirmActivate} />
             <RegisterSchoolModal open={showRegisterSchool} onClose={() => setShowRegisterSchool(false)} onRegistered={loadData} />
-            <FeaturesModal school={featuresModal} onClose={() => setFeaturesModal(null)} setMessage={setMessage} />
+            <FeaturesModal school={featuresModal} onClose={() => { setFeaturesModal(null); loadData(); }} setMessage={setMessage} />
             <DeleteModal deleteModal={deleteModal} setDeleteModal={setDeleteModal} deleting={deleting} handleDeleteSchool={handleRowDeleteSchool} />
             <StaffModal 
               staffModal={staffModal} 
