@@ -8,7 +8,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useSearchParams } from 'react-router-dom';
 
-import { getAllSchools, getPlatformActivities, getPlatformSettings, getPlatformStats, updatePlatformSetting, restoreSchool, subscribeToPlatformChanges, deleteSchool, deactivateSchool, wipeAllNonAdminSchools, setCurrentSchoolContext, setCurrentPeriodId, getPlatformUsageStats, getGlobalAuditLogs } from '../../data/coreStore';
+import { getAllSchools, getPlatformActivities, getPlatformSettings, getPlatformStats, updatePlatformSetting, restoreSchool, subscribeToPlatformChanges, deleteSchool, deactivateSchool, wipeAllNonAdminSchools, setCurrentSchoolContext, setCurrentPeriodId, getPlatformUsageStats, getGlobalAuditLogs, updateSchoolPlan } from '../../data/coreStore';
 import { getTeachersBySchool, deleteTeacher } from '../../data/staffStore';
 
 // Components
@@ -372,6 +372,17 @@ export default function SuperAdmin({ currentUser, isPlatformAdmin, sidebarOpen, 
     }
   };
 
+  const handleUpdatePlan = async (schoolId, newPlan) => {
+    try {
+      await updateSchoolPlan(schoolId, newPlan);
+      setMessage({ type: 'success', text: `School account plan updated to ${newPlan}.` });
+      loadData();
+    } catch (e) {
+      console.error('Failed to update plan:', e);
+      setMessage({ type: 'error', text: 'Failed to update school plan' });
+    }
+  };
+
   const handleWipeSchools = async () => {
     const verify = await prompt({ title: 'NUCLEAR OPTION: WIPE ALL SCHOOLS', message: 'This will DELETE ALL DATA for ALL schools. Only Platform Admin accounts will remain. Type "TERMINATE ALL NON-ADMIN WORKSPACES" to proceed.', inputPlaceholder: 'Type verification string...', inputLabel: 'Security Verification', confirmText: 'EXECUTE WIPE', cancelText: 'ABORT' });
     if (verify !== 'TERMINATE ALL NON-ADMIN WORKSPACES') {
@@ -486,6 +497,7 @@ export default function SuperAdmin({ currentUser, isPlatformAdmin, sidebarOpen, 
                       handleBulkDeactivate={handleBulkDeactivate} 
                       handleOpenStaffModal={handleOpenStaffModal}
                       onSelectSchool={setSelectedSchool}
+                      onUpdatePlan={handleUpdatePlan}
                       onOpenRegisterSchool={() => setShowRegisterSchool(true)}
                     />
                   )

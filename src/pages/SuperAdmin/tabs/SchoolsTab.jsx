@@ -19,6 +19,7 @@ export default function SchoolsTab({
   onNEMISExport,          // ← new: opens NEMIS export modal for a school
   handleLoginAs,          // Added handleLoginAs
   onSelectSchool,         // New: drill down into school details
+  onUpdatePlan,           // New: change school plan (Production, Demo, Sandbox)
   onOpenRegisterSchool,   // New: opens the Register School modal
 }) {
   return (
@@ -91,8 +92,7 @@ export default function SchoolsTab({
                   const studentLimit = p.custom_subjects?.__limits?.students || 10000;
                   const staffLimit = p.custom_subjects?.__limits?.staff || 1000;
 
-
-
+                  const currentPlan = s.plan || (s.name?.toLowerCase().includes('demo') ? 'Demo' : 'Production');
 
                   return (
                     <tr key={s.id}>
@@ -105,9 +105,26 @@ export default function SchoolsTab({
                           >
                             {s.name}
                           </div>
-                          <span className={`tag ${(s.plan === 'Sandbox' || s.plan === 'Demo' || s.name?.toLowerCase().includes('demo')) ? 'ty' : 'tv'}`} style={{ fontSize: '0.65rem', padding: '2px 6px', borderRadius: 4 }}>
-                            {s.plan || (s.name?.toLowerCase().includes('demo') ? 'Demo' : 'Production')}
-                          </span>
+                          <select
+                            value={currentPlan}
+                            onChange={(e) => onUpdatePlan?.(s.id, e.target.value)}
+                            title="Change School Plan / Account Type"
+                            style={{
+                              background: (currentPlan === 'Sandbox' || currentPlan === 'Demo') ? 'rgba(234, 179, 8, 0.2)' : 'rgba(34, 197, 94, 0.2)',
+                              color: (currentPlan === 'Sandbox' || currentPlan === 'Demo') ? '#fef08a' : '#86efac',
+                              border: (currentPlan === 'Sandbox' || currentPlan === 'Demo') ? '1px solid rgba(234, 179, 8, 0.4)' : '1px solid rgba(34, 197, 94, 0.4)',
+                              borderRadius: 4,
+                              fontSize: '0.65rem',
+                              padding: '2px 6px',
+                              fontWeight: 600,
+                              cursor: 'pointer',
+                              outline: 'none',
+                            }}
+                          >
+                            <option value="Production" style={{ background: '#121212', color: '#fff' }}>Production</option>
+                            <option value="Demo" style={{ background: '#121212', color: '#fff' }}>Demo</option>
+                            <option value="Sandbox" style={{ background: '#121212', color: '#fff' }}>Sandbox</option>
+                          </select>
                         </div>
                         {s.phone && <div className="td-sub">{s.phone}</div>}
                       </td>

@@ -615,6 +615,15 @@ export async function getAllSchools() {
   }));
 }
 
+export async function updateSchoolPlan(schoolId, planName) {
+  const { error } = await supabase
+    .from('schools')
+    .update({ plan: planName })
+    .eq('id', schoolId);
+  if (error) throw error;
+  await logPlatformActivity('PLAN_CHANGE', `School ${schoolId} plan updated to ${planName}`, schoolId);
+}
+
 export async function deactivateSchool(schoolId, reason = null) {
   const pastDate = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
   const { error: e1 } = await supabase.from('school_profiles')
