@@ -75,6 +75,8 @@ export default function Communications({ currentUser }) {
   const [isSending, setIsSending] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
   const [channel, setChannel] = useState('sms');
+  const [inAppTitle, setInAppTitle] = useState('');
+  const [inAppAudience, setInAppAudience] = useState('all'); // all, parents, teachers
   
   const { enabled: hasAccess, loading: featureLoading } = useFeature('communications');
 
@@ -165,9 +167,6 @@ export default function Communications({ currentUser }) {
       setIsSending(false);
     }
   };
-
-  const [inAppTitle, setInAppTitle] = useState('');
-  const [inAppAudience, setInAppAudience] = useState('all'); // all, parents, teachers
 
   const handleSendInApp = async (e) => {
     e.preventDefault();

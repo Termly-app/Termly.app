@@ -80,6 +80,8 @@ export default function MobileGrading({ user, onLogout }) {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
+  const { isOnline, pendingCount, isSyncing, syncNow } = useOfflineSync();
+
   const loadInitialData = async () => {
     try {
       setLoading(true);
@@ -308,8 +310,6 @@ export default function MobileGrading({ user, onLogout }) {
     setPickerType(type);
     setPickerOpen(true);
   };
-
-  const { isOnline, pendingCount, isSyncing, syncNow } = useOfflineSync();
 
   const selectOption = (val) => {
     if (pickerType === 'exam') {
