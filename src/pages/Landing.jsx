@@ -125,7 +125,7 @@ export default function Landing() {
         if (val) animateCount(el, parseFloat(val), false, false, 1400);
         if (valPct) animateCount(el, parseFloat(valPct), true, false, 1200);
         if (valDec) animateCount(el, parseFloat(valDec), false, true, 1200);
-        counterObs.unobserve(el);
+        counterObs.unobserve(e);
       });
     }, { threshold: 0.5 });
     document.querySelectorAll('[data-count],[data-count-pct],[data-count-dec]').forEach(el => counterObs.observe(el));
@@ -191,7 +191,7 @@ export default function Landing() {
     <>
       <Helmet>
         <title>Termly — High Performance CBC School Management System</title>
-        <meta name="description" content="Kenya's #1 CBC-compliant school management system. Manage finances, learner portfolios, and generate KNEC-standard reports instantly." />
+        <meta name="description" content="Kenya's CBC-compliant school management system. Manage finances, learner portfolios, and generate KNEC-standard reports instantly." />
         <meta name="keywords" content="Termly, School Management System Kenya, CBC Grading, School ERP, Student Information System" />
       </Helmet>
       <div className="nav-wrap">
@@ -208,7 +208,7 @@ export default function Landing() {
             Termly
           </Link>
           <a href="#features" className="nlink">Features</a>
-          <Link to="/contact" className="nlink">Contact</Link>
+          <Link to="/support" className="nlink">Contact</Link>
           <div className="nsep"></div>
           
           <div className="nav-dropdown-w" style={{ position: 'relative' }}>
@@ -608,7 +608,7 @@ export default function Landing() {
             <h4 className="ft-h">Termly HQ</h4>
             <ul className="ft-links">
               <li><Link to="/about">About Us</Link></li>
-              <li><Link to="/contact">Contact</Link></li>
+              <li><Link to="/support">Contact</Link></li>
               <li><Link to="/legal/privacy">Privacy Policy</Link></li>
               <li><Link to="/legal/terms">Terms of Service</Link></li>
             </ul>

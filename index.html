@@ -6,7 +6,7 @@
     <link rel="shortcut icon" href="/favicon.ico" />
     <meta name="google-site-verification" content="DXFemlO7a0EJsinyX7_9_p8W_l7zS2r9Z9-p8_mB_k" />
     <title>Termly — High Performance CBC School Management System</title>
-    <meta name="description" content="Kenya's #1 CBC-compliant school management system. Manage finances, learner portfolios, and generate KNEC-standard reports instantly." />
+    <meta name="description" content="Kenya's CBC-compliant school management system. Manage finances, learner portfolios, and generate KNEC-standard reports instantly." />
     <meta name="keywords" content="Termly, School Management System Kenya, CBC Grading, School ERP, Student Information System" />
     <link rel="canonical" href="https://termly-app.vercel.app/" />
 
@@ -14,20 +14,41 @@
     <meta property="og:type" content="website" />
     <meta property="og:url" content="https://termly-app.vercel.app/" />
     <meta property="og:title" content="Termly — High Performance School Management" />
-    <meta property="og:description" content="Streamline your school's academics, finance, and communication with the #1 CBC-compliant platform." />
+    <meta property="og:description" content="Streamline your school's academics, finance, and communication with a CBC-compliant platform." />
     <meta property="og:image" content="https://termly-app.vercel.app/og-image.png" />
 
     <!-- Twitter -->
     <meta property="twitter:card" content="summary_large_image" />
     <meta property="twitter:url" content="https://termly-app.vercel.app/" />
     <meta property="twitter:title" content="Termly — High Performance School Management" />
-    <meta property="twitter:description" content="Streamline your school's academics, finance, and communication with the #1 CBC-compliant platform." />
+    <meta property="twitter:description" content="Streamline your school's academics, finance, and communication with a CBC-compliant platform." />
 
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
     <meta name="theme-color" content="#4f46e5" />
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <link rel="apple-touch-icon" href="/assets/apple-touch-icon.png" />
+
+    <!--
+      Structured data — helps search engines understand what this is,
+      can enable rich snippets. No price included: your pricing page
+      still has illustrative numbers, not real ones (see the pricing
+      section built earlier) — add "offers" once those are real, since
+      shipping a schema price that doesn't match the visible page price
+      is the kind of mismatch Search Console flags.
+    -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "SoftwareApplication",
+      "name": "Termly",
+      "applicationCategory": "BusinessApplication",
+      "operatingSystem": "Web",
+      "description": "Kenya's CBC-compliant school management system for finances, learner portfolios, and KNEC-standard reporting.",
+      "url": "https://termly-app.vercel.app/",
+      "areaServed": "KE"
+    }
+    </script>
     <link rel="manifest" href="/manifest.json" />
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>

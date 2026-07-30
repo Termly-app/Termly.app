@@ -44,6 +44,6 @@
     }
   ],
   "rewrites": [
-    { "source": "/(.*)", "destination": "/index.html" }
+    { "source": "/((?!robots\\.txt|sitemap\\.xml|og-image\\.png|google[a-z0-9]+\\.html).*)", "destination": "/index.html" }
   ]
 }
