@@ -676,6 +676,7 @@ export async function updateSchoolLimits(schoolId, { students, staff }) {
   }
 
   try {
+    _profileCache = null;
     invalidateCache(`profile_${schoolId}`);
     invalidateCache(`school_profile_${schoolId}`);
     window.dispatchEvent(new Event('schoolProfileChanged'));

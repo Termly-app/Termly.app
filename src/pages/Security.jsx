@@ -59,15 +59,15 @@ export default function Security({ currentUser }) {
 
   const customStaffLimit = profile?.staffLimit || profile?.staff_limit || profile?.custom_subjects?.__limits?.staff || profile?.customSubjects?.__limits?.staff;
   
-  let seatLimit = customStaffLimit;
-  if (!seatLimit || seatLimit === 1000) {
-    if (activePlanKey && pricing[activePlanKey]) {
-      seatLimit = pricing[activePlanKey].seats || pricing[activePlanKey].admins || pricing[activePlanKey].seat_limit || 10;
-    } else if (fallbackPlans[planName]) {
-      seatLimit = fallbackPlans[planName].seats || 10;
-    } else {
-      seatLimit = 10;
-    }
+  let seatLimit;
+  if (customStaffLimit) {
+    seatLimit = customStaffLimit;
+  } else if (activePlanKey && pricing[activePlanKey]) {
+    seatLimit = pricing[activePlanKey].seats || pricing[activePlanKey].admins || pricing[activePlanKey].seat_limit || 10;
+  } else if (fallbackPlans[planName]) {
+    seatLimit = fallbackPlans[planName].seats || 10;
+  } else {
+    seatLimit = 10;
   }
 
   const actualStaffCount = users.length;
