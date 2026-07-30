@@ -91,7 +91,10 @@ export default function SchoolsTab({
 
                   const studentLimit = p.custom_subjects?.__limits?.students || 10000;
                   const staffLimit = p.custom_subjects?.__limits?.staff || 1000;
-                  const currentPlan = s.plan || (s.name?.toLowerCase().includes('demo') ? 'Demo' : 'Production');
+                  const rawPlan = s.plan || (s.name?.toLowerCase().includes('demo') ? 'Demo' : 'Production');
+                  const currentPlan = ['Production', 'Demo', 'Sandbox'].includes(rawPlan) 
+                    ? rawPlan 
+                    : (rawPlan.toLowerCase().includes('demo') ? 'Demo' : (rawPlan.toLowerCase().includes('sandbox') ? 'Sandbox' : 'Production'));
 
                   return (
                     <tr key={s.id}>

@@ -529,45 +529,55 @@
 .sa .tbl-w::-webkit-scrollbar-thumb { background: var(--edge2); border-radius: 10px; }
 
 /* ─── Plan Select Dropdown Badges ───────────────────────────────────── */
-.plan-select-badge {
-  appearance: none;
-  -webkit-appearance: none;
-  border-radius: 6px;
-  font-size: 0.68rem;
-  font-weight: 700;
-  padding: 3px 8px;
-  cursor: pointer;
-  outline: none;
-  transition: all 0.2s;
-  color-scheme: dark;
-  background-image: url("data:image/svg+xml,%3Csvg width='8' height='5' viewBox='0 0 10 6' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%23a1a1aa' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
-  background-repeat: no-repeat;
-  background-position: right 6px center;
-  padding-right: 18px;
+select.plan-select-badge {
+  appearance: none !important;
+  -webkit-appearance: none !important;
+  -moz-appearance: none !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  border-radius: 6px !important;
+  font-size: 0.65rem !important;
+  font-weight: 700 !important;
+  padding: 2px 18px 2px 8px !important;
+  height: 22px !important;
+  line-height: 18px !important;
+  cursor: pointer !important;
+  outline: none !important;
+  transition: all 0.2s ease !important;
+  color-scheme: dark !important;
+  background-image: url("data:image/svg+xml,%3Csvg width='8' height='5' viewBox='0 0 10 6' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%23a1a1aa' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") !important;
+  background-repeat: no-repeat !important;
+  background-position: right 6px center !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.04em !important;
+  margin: 0 !important;
+  box-shadow: none !important;
 }
 
-.plan-select-badge option {
+select.plan-select-badge option {
   background: #121212 !important;
   color: #ffffff !important;
-  font-weight: 600;
+  font-size: 0.75rem !important;
+  padding: 6px 10px !important;
+  font-weight: 600 !important;
 }
 
-.plan-select-badge.plan-production {
-  background-color: rgba(16, 185, 129, 0.15);
-  color: #34d399;
-  border: 1px solid rgba(16, 185, 129, 0.35);
+select.plan-select-badge.plan-production {
+  background-color: rgba(16, 185, 129, 0.15) !important;
+  color: #34d399 !important;
+  border: 1px solid rgba(16, 185, 129, 0.35) !important;
 }
 
-.plan-select-badge.plan-demo {
-  background-color: rgba(245, 158, 11, 0.15);
-  color: #fbbf24;
-  border: 1px solid rgba(245, 158, 11, 0.35);
+select.plan-select-badge.plan-demo {
+  background-color: rgba(245, 158, 11, 0.15) !important;
+  color: #fbbf24 !important;
+  border: 1px solid rgba(245, 158, 11, 0.35) !important;
 }
 
-.plan-select-badge.plan-sandbox {
-  background-color: rgba(139, 92, 246, 0.15);
-  color: #c084fc;
-  border: 1px solid rgba(139, 92, 246, 0.35);
+select.plan-select-badge.plan-sandbox {
+  background-color: rgba(139, 92, 246, 0.15) !important;
+  color: #c084fc !important;
+  border: 1px solid rgba(139, 92, 246, 0.35) !important;
 }
 
 /* ─── Data Table Column Alignment & Sizing ───────────────────────────── */
