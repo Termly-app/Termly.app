@@ -402,14 +402,14 @@ export async function getSchoolProfileBySchoolId(schoolId) {
 export function checkIsSubscriptionActive(profile) {
   if (!profile) return false;
   
-  // Platform Admin (Super Admin) is always active
-  if (profile.subscriptionPlan === 'Platform Admin') return true;
+  // Sandbox and Platform Admin (Super Admin) NEVER expire
+  if (profile.subscriptionPlan === 'Sandbox' || profile.subscriptionPlan === 'Platform Admin') return true;
 
   if (profile.subscriptionStatus === 'Deactivated' || profile.subscriptionStatus === 'Suspended') {
     return false;
   }
 
-  // Enforce explicit subscription expiry date if set (applies to Sandbox, Demo, Production)
+  // Enforce explicit subscription expiry date for Demo & Production accounts
   if (profile.subscriptionExpiry) {
     const expDate = new Date(profile.subscriptionExpiry);
     expDate.setHours(23, 59, 59, 999);

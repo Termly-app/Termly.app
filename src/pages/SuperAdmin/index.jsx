@@ -176,7 +176,9 @@ export default function SuperAdmin({ currentUser, isPlatformAdmin, sidebarOpen, 
   const isSchoolActive = (s) => {
     const nameLower = (s.name || '').toLowerCase();
     const planLower = (s.plan || '').toLowerCase();
-    if (nameLower.includes('termly hq') || planLower === 'platform admin') return true;
+
+    // Termly HQ, Platform Admin, and Sandbox NEVER expire
+    if (nameLower.includes('termly hq') || planLower === 'platform admin' || planLower === 'sandbox') return true;
 
     const profiles = Array.isArray(s.school_profiles) ? s.school_profiles : [];
     if (profiles.length === 0) {
@@ -186,15 +188,16 @@ export default function SuperAdmin({ currentUser, isPlatformAdmin, sidebarOpen, 
     return profiles.some(p => {
       const statusLower = (p.subscription_status || '').toLowerCase();
       if (statusLower === 'deactivated' || statusLower === 'suspended') return false;
+      if (statusLower === 'sandbox' || (p.subscription_plan || '').toLowerCase() === 'sandbox') return true;
 
-      // Enforce subscription expiry date if set (applies to ALL accounts: Sandbox, Demo, Production)
+      // Enforce subscription expiry date if set (applies to Demo & Production)
       if (p.subscription_expiry) {
         const pExp = new Date(p.subscription_expiry);
         pExp.setHours(23, 59, 59, 999);
         if (pExp < now) return false;
       }
 
-      if (statusLower === 'active' || statusLower === 'demo' || statusLower === 'trial' || statusLower === 'sandbox' || planLower === 'sandbox' || planLower === 'demo') {
+      if (statusLower === 'active' || statusLower === 'demo' || statusLower === 'trial' || planLower === 'demo') {
         return true;
       }
 
