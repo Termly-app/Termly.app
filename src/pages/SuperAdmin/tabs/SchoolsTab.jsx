@@ -20,6 +20,7 @@ export default function SchoolsTab({
   handleLoginAs,          // Added handleLoginAs
   onSelectSchool,         // New: drill down into school details
   onUpdatePlan,           // New: change school plan (Production, Demo, Sandbox)
+  onOpenLimitsModal,      // New: set student & staff capacity limits
   onOpenRegisterSchool,   // New: opens the Register School modal
 }) {
   return (
@@ -134,17 +135,21 @@ export default function SchoolsTab({
                       </td>
 
                       <td data-label="Students" className="col-usage">
-                        <div className="td-m" style={{ color: (s._studentCount >= studentLimit) ? '#ef4444' : 'var(--txt)' }}>
-                          {s._studentCount || 0} / {studentLimit}
+                        <div style={{ display:'flex', alignItems:'center', gap:6 }}>
+                          <div className="td-m" style={{ color: (s._studentCount >= studentLimit) ? '#ef4444' : 'var(--txt)' }}>
+                            {s._studentCount || 0} / {studentLimit}
+                          </div>
+                          <button className="mini-btn" onClick={() => onOpenLimitsModal?.(s)} title="Set capacity limit">Limits</button>
                         </div>
                       </td>
 
                       <td data-label="Staff Usage" className="col-usage">
-                        <div style={{ display:'flex', alignItems:'center', gap:6 }}>
+                        <div style={{ display:'flex', alignItems:'center', gap:6, flexWrap:'wrap' }}>
                           <div className="td-m" style={{ color: (s._staffCount >= staffLimit) ? '#ef4444' : 'var(--txt)' }}>
                             {s._staffCount || 0} / {staffLimit}
                           </div>
                           <button className="mini-btn" onClick={() => handleOpenStaffModal(s.id, s.name)}>Details</button>
+                          <button className="mini-btn" onClick={() => onOpenLimitsModal?.(s)} title="Set capacity limit">Limits</button>
                         </div>
                       </td>
 

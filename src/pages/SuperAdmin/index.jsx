@@ -32,6 +32,7 @@ import DeleteModal      from './modals/DeleteModal';
 import StaffModal       from './modals/StaffModal';
 import NEMISExportModal from './modals/NEMISExportModal';
 import FeaturesModal    from './modals/FeaturesModal';
+import LimitsModal      from './modals/LimitsModal';
 
 // Shared dialog hook
 import { useDialog } from '../../contexts/DialogContext';
@@ -89,6 +90,7 @@ export default function SuperAdmin({ currentUser, isPlatformAdmin, sidebarOpen, 
   const [staffModal,      setStaffModal]      = useState(null);
   const [loadingStaff,    setLoadingStaff]    = useState(false);
   const [featuresModal,   setFeaturesModal]   = useState(null);
+  const [limitsModal,     setLimitsModal]     = useState(null);
   const [selectedSchool,  setSelectedSchool]  = useState(null);
 
   // ── Settings form state ──────────────────────────────────────────────────
@@ -498,6 +500,7 @@ export default function SuperAdmin({ currentUser, isPlatformAdmin, sidebarOpen, 
                       handleOpenStaffModal={handleOpenStaffModal}
                       onSelectSchool={setSelectedSchool}
                       onUpdatePlan={handleUpdatePlan}
+                      onOpenLimitsModal={(school) => setLimitsModal(school)}
                       onOpenRegisterSchool={() => setShowRegisterSchool(true)}
                     />
                   )
@@ -514,6 +517,7 @@ export default function SuperAdmin({ currentUser, isPlatformAdmin, sidebarOpen, 
             <ActivateModal activateModal={activateModal} setActivateModal={setActivateModal} activationNote={activationNote} setActivationNote={setActivationNote} activating={activating} activateSuccess={activateSuccess} handleConfirmActivate={handleConfirmActivate} />
             <RegisterSchoolModal open={showRegisterSchool} onClose={() => setShowRegisterSchool(false)} onRegistered={loadData} />
             <FeaturesModal school={featuresModal} onClose={() => { setFeaturesModal(null); loadData(); }} setMessage={setMessage} />
+            <LimitsModal school={limitsModal} onClose={() => setLimitsModal(null)} onUpdated={loadData} setMessage={setMessage} />
             <DeleteModal deleteModal={deleteModal} setDeleteModal={setDeleteModal} deleting={deleting} handleDeleteSchool={handleRowDeleteSchool} />
             <StaffModal 
               staffModal={staffModal} 

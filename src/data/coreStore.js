@@ -624,6 +624,39 @@ export async function updateSchoolPlan(schoolId, planName) {
   await logPlatformActivity('PLAN_CHANGE', `School ${schoolId} plan updated to ${planName}`, schoolId);
 }
 
+export async function updateSchoolLimits(schoolId, { students, staff }) {
+  const { data: profile } = await supabase
+    .from('school_profiles')
+    .select('id, custom_subjects')
+    .eq('school_id', schoolId)
+    .single();
+
+  const custom_subjects = profile?.custom_subjects || {};
+  custom_subjects.__limits = {
+    students: Number(students) || 10000,
+    staff: Number(staff) || 1000,
+  };
+
+  const { error } = await supabase
+    .from('school_profiles')
+    .update({ 
+      custom_subjects,
+      staff_limit: Number(staff) || 1000,
+      student_limit: Number(students) || 10000
+    })
+    .eq('school_id', schoolId);
+
+  if (error) {
+    const { error: e2 } = await supabase
+      .from('school_profiles')
+      .update({ custom_subjects })
+      .eq('school_id', schoolId);
+    if (e2) throw e2;
+  }
+
+  await logPlatformActivity('LIMITS_UPDATE', `School ${schoolId} limits updated to ${students} students, ${staff} staff seats.`, schoolId);
+}
+
 export async function deactivateSchool(schoolId, reason = null) {
   const pastDate = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
   const { error: e1 } = await supabase.from('school_profiles')
