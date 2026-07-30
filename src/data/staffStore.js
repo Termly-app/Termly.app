@@ -53,38 +53,21 @@ export async function getTeachers() {
 }
 
 export async function getAllSchoolStaff(schoolId) {
+  // Staff Seats = system login accounts only (from users table: Admin, Bursar, Librarian, Teacher, Accountant)
   const { data: usersData } = await supabase
     .from('users')
     .select('id, name, email, phone, role, status, created_at')
     .eq('school_id', schoolId)
+    .neq('role', 'Super Admin')
     .order('role', { ascending: true })
     .order('name', { ascending: true });
 
   let results = [...(usersData || [])];
 
-  const { data: teachersData } = await supabase
-    .from('teachers')
-    .select('id, name, email, phone, status, staff_code, tsc_number')
-    .eq('school_id', schoolId);
-
-  if (teachersData && teachersData.length > 0) {
-    const existingEmails = new Set(results.map(u => u.email?.toLowerCase()).filter(Boolean));
-    teachersData.forEach(t => {
-      if (!t.email || !existingEmails.has(t.email.toLowerCase())) {
-        results.push({
-          id: t.id,
-          name: t.name,
-          email: t.email || '—',
-          phone: t.phone || '—',
-          role: 'Teacher',
-          status: t.status || 'Active'
-        });
-      }
-    });
-  }
-
+  // Filter out platform admin email
   results = results.filter(u => u.email?.toLowerCase() !== 'shulesoft8@gmail.com');
 
+  // If no Admin account found in users table, add one from school_profiles as fallback
   const hasAdmin = results.some(u => (u.role || '').toLowerCase().includes('admin'));
   if (!hasAdmin) {
     const { data: schoolProfile } = await supabase
@@ -97,7 +80,7 @@ export async function getAllSchoolStaff(schoolId) {
       results.unshift({
         id: `admin-${schoolId}`,
         name: schoolProfile.contact_name || 'School Administrator',
-        email: schoolProfile.contact_email || schoolProfile.email || 'admin@school.com',
+        email: schoolProfile.contact_email || schoolProfile.email,
         phone: schoolProfile.phone || '—',
         role: 'Admin',
         status: 'Active'
