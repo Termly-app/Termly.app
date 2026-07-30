@@ -173,6 +173,7 @@ export default function SuperAdmin({ currentUser, isPlatformAdmin, sidebarOpen, 
 
   const isSchoolActive = (s) => {
     if (s.name?.toLowerCase().includes('Termly hq')) return true;
+    if (s.plan === 'Sandbox' || s.plan === 'Platform Admin') return true;
     const profiles = Array.isArray(s.school_profiles) ? s.school_profiles : [];
     if (profiles.length === 0) return false;
     return profiles.some(p => {
