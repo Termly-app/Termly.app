@@ -589,7 +589,7 @@ export async function getAllSchools() {
 
   const [studentsRes, staffRes, featuresRes] = await Promise.all([
     supabase.from('students').select('school_id').eq('status', 'Active'),
-    supabase.from('users').select('school_id').neq('role', 'Super Admin'),
+    supabase.from('users').select('school_id').neq('role', 'Super Admin').neq('role', 'Teacher'),
     supabase.from('school_features').select('school_id').eq('is_enabled', true)
   ]);
 
