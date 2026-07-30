@@ -401,12 +401,26 @@ export async function getSchoolProfileBySchoolId(schoolId) {
 
 export function checkIsSubscriptionActive(profile) {
   if (!profile) return false;
-  if (profile.subscriptionPlan === 'Sandbox' || profile.subscriptionPlan === 'Platform Admin') return true;
-  if (profile.subscriptionStatus === 'Active') {
-    if (!profile.subscriptionExpiry) return true;
-    return new Date(profile.subscriptionExpiry) > new Date();
+  
+  // Platform Admin (Super Admin) is always active
+  if (profile.subscriptionPlan === 'Platform Admin') return true;
+
+  if (profile.subscriptionStatus === 'Deactivated' || profile.subscriptionStatus === 'Suspended') {
+    return false;
   }
-  return false;
+
+  // Enforce explicit subscription expiry date if set (applies to Sandbox, Demo, Production)
+  if (profile.subscriptionExpiry) {
+    const expDate = new Date(profile.subscriptionExpiry);
+    expDate.setHours(23, 59, 59, 999);
+    if (expDate < new Date()) {
+      return false;
+    }
+  }
+
+  if (profile.subscriptionStatus === 'Expired') return false;
+
+  return true;
 }
 
 export async function checkFeatureAccess(featureKey, profile) {
