@@ -172,13 +172,18 @@ export default function SuperAdmin({ currentUser, isPlatformAdmin, sidebarOpen, 
   const sixtyDaysAgo   = new Date(now.getTime() - 60 * 24 * 60 * 60 * 1000);
 
   const isSchoolActive = (s) => {
-    if (s.name?.toLowerCase().includes('Termly hq')) return true;
-    if (s.plan === 'Sandbox' || s.plan === 'Platform Admin') return true;
+    const nameLower = (s.name || '').toLowerCase();
+    const planLower = (s.plan || '').toLowerCase();
+    if (nameLower.includes('termly hq') || nameLower.includes('demo')) return true;
+    if (planLower === 'sandbox' || planLower === 'platform admin' || planLower === 'demo' || planLower === 'trial') return true;
     const profiles = Array.isArray(s.school_profiles) ? s.school_profiles : [];
-    if (profiles.length === 0) return false;
+    if (profiles.length === 0) {
+      return s.status !== 'Deactivated' && s.status !== 'Suspended';
+    }
     return profiles.some(p => {
-      if (p.subscription_status === 'Deactivated' || p.subscription_status === 'Suspended') return false;
-      if (p.subscription_status === 'Active') return true;
+      const statusLower = (p.subscription_status || '').toLowerCase();
+      if (statusLower === 'deactivated' || statusLower === 'suspended') return false;
+      if (statusLower === 'active' || statusLower === 'demo' || statusLower === 'trial' || statusLower === 'sandbox') return true;
       if (p.subscription_expiry) {
         const pExp = new Date(p.subscription_expiry);
         pExp.setHours(23, 59, 59, 999);

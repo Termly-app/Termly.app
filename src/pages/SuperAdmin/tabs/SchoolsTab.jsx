@@ -97,12 +97,17 @@ export default function SchoolsTab({
                   return (
                     <tr key={s.id}>
                       <td data-label="School" className="col-school">
-                        <div 
-                          className="td-b" 
-                          style={{ cursor: 'pointer', color: '#6366f1', textDecoration: 'underline' }}
-                          onClick={() => onSelectSchool(s)}
-                        >
-                          {s.name}
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+                          <div 
+                            className="td-b" 
+                            style={{ cursor: 'pointer', color: '#6366f1', textDecoration: 'underline', fontWeight: 600 }}
+                            onClick={() => onSelectSchool(s)}
+                          >
+                            {s.name}
+                          </div>
+                          <span className={`tag ${(s.plan === 'Sandbox' || s.plan === 'Demo' || s.name?.toLowerCase().includes('demo')) ? 'ty' : 'tv'}`} style={{ fontSize: '0.65rem', padding: '2px 6px', borderRadius: 4 }}>
+                            {s.plan || (s.name?.toLowerCase().includes('demo') ? 'Demo' : 'Production')}
+                          </span>
                         </div>
                         {s.phone && <div className="td-sub">{s.phone}</div>}
                       </td>
@@ -131,9 +136,16 @@ export default function SchoolsTab({
                       <td data-label="Joined" className="col-joined">{fmtDate(p.created_at || s.created_at)}</td>
 
                       <td data-label="Status" className="col-status">
-                        <span className={sPill(getStatusRefined(p, isActive))}>
-                          {getStatusRefined(p, isActive)}
-                        </span>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                          <span className={sPill(getStatusRefined(p, isActive))}>
+                            {getStatusRefined(p, isActive)}
+                          </span>
+                          {p.subscription_expiry && (
+                            <span style={{ fontSize: '0.7rem', color: 'var(--muted)' }}>
+                              Exp: {fmtDate(p.subscription_expiry)}
+                            </span>
+                          )}
+                        </div>
                       </td>
 
                       <td data-label="Features" className="col-sub">
