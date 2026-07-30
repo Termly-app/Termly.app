@@ -52,16 +52,16 @@ export default function SettingsTab({
               </div>
             </div>
 
-            <div style={{ marginBottom:14 }}>
-              <label style={S.label}>Platform Expiry Lock</label>
-              <input type="date" style={{ ...S.input, colorScheme:'dark' }}
+            <div style={{ marginBottom:16 }}>
+              <label style={S.label}>Platform Expiry Lock Date</label>
+              <input type="date" style={{ ...S.input, colorScheme:'dark', fontSize: '0.85rem', padding: '10px 12px' }}
                 value={subEndDate}
                 onChange={e => setSubEndDate(e.target.value)} />
               {subEndDate && expiryInfo && (
-                <div style={{ marginTop:10, padding:'10px 13px', borderRadius:7, background:'rgba(212,80,106,.07)', border:'1px solid rgba(212,80,106,.18)' }}>
-                  <div style={{ fontSize:'.55rem', color:'var(--sub)', textTransform:'uppercase', marginBottom:3 }}>System-wide Expiry</div>
-                  <div style={{ fontFamily:'var(--fh)', fontSize:'.88rem', fontWeight:700, color:'var(--ro)' }}>{expiryInfo.label}</div>
-                  <div style={{ fontSize:'.62rem', color:expiryInfo.color, marginTop:3 }}>{expiryInfo.note}</div>
+                <div style={{ marginTop:12, padding:'12px 14px', borderRadius:10, background:'rgba(99, 102, 241, 0.1)', border:'1px solid rgba(99, 102, 241, 0.25)' }}>
+                  <div style={{ fontSize:'.6rem', color:'var(--sub)', textTransform:'uppercase', fontWeight: 700, letterSpacing: '0.05em', marginBottom:4 }}>Target Expiry Date</div>
+                  <div style={{ fontFamily:'var(--fh)', fontSize:'.92rem', fontWeight:800, color:'#fff' }}>{expiryInfo.label}</div>
+                  <div style={{ fontSize:'.7rem', color: expiryInfo.color, marginTop:4, fontWeight: 600 }}>{expiryInfo.note}</div>
                 </div>
               )}
             </div>
@@ -108,10 +108,16 @@ export default function SettingsTab({
              </div>
           </div>
 
-          <div style={{ padding: 20, textAlign: 'center', color: 'var(--sub)' }}>
-            <div style={{ fontSize: '2rem', marginBottom: 12 }}>🛡️</div>
-            <div style={{ fontSize: '0.75rem', fontWeight: 600, color: '#fff' }}>Secure Infrastructure</div>
-            <p style={{ fontSize: '0.65rem', marginTop: 4 }}>Platform security and integrity are managed via HQ protocols.</p>
+          <div style={{ padding: '24px 20px', textAlign: 'center', color: 'var(--sub)', borderRadius: 12, background: 'rgba(255,255,255,0.02)', border: '1px solid var(--edge)' }}>
+            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 10 }}>
+              <div style={{ width: 44, height: 44, borderRadius: 12, background: 'rgba(99, 102, 241, 0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#6366f1' }}>
+                <ShieldIcon size={24} />
+              </div>
+            </div>
+            <div style={{ fontSize: '0.8rem', fontWeight: 700, color: '#fff' }}>Secure Infrastructure</div>
+            <p style={{ fontSize: '0.68rem', marginTop: 4, color: 'var(--sub)', lineHeight: 1.5 }}>
+              Platform security and integrity are managed via HQ protocols.
+            </p>
           </div>
         </div>
 

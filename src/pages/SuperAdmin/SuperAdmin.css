@@ -528,6 +528,69 @@
 .sa .tbl-w::-webkit-scrollbar { height: 4px; }
 .sa .tbl-w::-webkit-scrollbar-thumb { background: var(--edge2); border-radius: 10px; }
 
+/* ─── Plan Select Dropdown Badges ───────────────────────────────────── */
+.plan-select-badge {
+  appearance: none;
+  -webkit-appearance: none;
+  border-radius: 6px;
+  font-size: 0.68rem;
+  font-weight: 700;
+  padding: 3px 8px;
+  cursor: pointer;
+  outline: none;
+  transition: all 0.2s;
+  color-scheme: dark;
+  background-image: url("data:image/svg+xml,%3Csvg width='8' height='5' viewBox='0 0 10 6' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%23a1a1aa' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 6px center;
+  padding-right: 18px;
+}
+
+.plan-select-badge option {
+  background: #121212 !important;
+  color: #ffffff !important;
+  font-weight: 600;
+}
+
+.plan-select-badge.plan-production {
+  background-color: rgba(16, 185, 129, 0.15);
+  color: #34d399;
+  border: 1px solid rgba(16, 185, 129, 0.35);
+}
+
+.plan-select-badge.plan-demo {
+  background-color: rgba(245, 158, 11, 0.15);
+  color: #fbbf24;
+  border: 1px solid rgba(245, 158, 11, 0.35);
+}
+
+.plan-select-badge.plan-sandbox {
+  background-color: rgba(139, 92, 246, 0.15);
+  color: #c084fc;
+  border: 1px solid rgba(139, 92, 246, 0.35);
+}
+
+/* ─── Data Table Column Alignment & Sizing ───────────────────────────── */
+.sa .data-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.sa .data-table th, .sa .data-table td {
+  padding: 12px 14px;
+  vertical-align: middle;
+}
+
+.sa .data-table th.col-school, .sa .data-table td.col-school { text-align: left; }
+.sa .data-table th.col-modules, .sa .data-table td.col-modules { text-align: center; }
+.sa .data-table th.col-students, .sa .data-table td.col-students { text-align: center; }
+.sa .data-table th.col-staff, .sa .data-table td.col-staff { text-align: center; }
+.sa .data-table th.col-loc, .sa .data-table td.col-loc { text-align: left; }
+.sa .data-table th.col-joined, .sa .data-table td.col-joined { text-align: left; }
+.sa .data-table th.col-status, .sa .data-table td.col-status { text-align: center; }
+.sa .data-table th.col-sub, .sa .data-table td.col-sub { text-align: center; }
+.sa .data-table th.col-act, .sa .data-table td.col-act { text-align: right; }
+
 /* ─── Modals (The "Nuclear" Centering System) ─────────────────────────── */
 .sa-root .mo {
   position:fixed; inset:0; background:rgba(0,0,0,0.85); backdrop-filter:blur(4px);

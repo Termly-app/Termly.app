@@ -73,3 +73,52 @@ export const getFeatureCount = (school) => {
   const modules = settings.modules || [];
   return Array.isArray(modules) ? modules.length : 0;
 };
+
+// ── Audit Log Human-Readable Formatter ────────────────────────────────────
+export const formatAuditDescription = (log) => {
+  if (!log) return 'System activity recorded';
+  const desc = log.description || log.action || '';
+  const schoolName = log.schools?.name || 'School';
+  const actor = log.actor_email || 'Super Admin';
+
+  if (desc.includes('PLAN_CHANGE') || log.action === 'PLAN_CHANGE') {
+    return `${actor} changed ${schoolName}'s plan tier.`;
+  }
+  if (desc.includes('LIMITS_UPDATE') || log.action === 'LIMITS_UPDATE') {
+    return `${actor} updated student & staff seat capacity limits for ${schoolName}.`;
+  }
+  if (desc.includes('DEACTIVATION') || log.action === 'DEACTIVATION') {
+    return `${actor} deactivated ${schoolName}'s account access.`;
+  }
+  if (desc.includes('ACTIVATION') || log.action === 'ACTIVATION') {
+    return `${actor} activated ${schoolName}'s account access.`;
+  }
+  if (desc.includes('REGISTER') || log.action === 'REGISTER') {
+    return `New school "${schoolName}" was registered on the platform.`;
+  }
+  if (desc.includes('FEATURE') || log.action === 'FEATURE') {
+    return `${actor} updated feature module permissions for ${schoolName}.`;
+  }
+
+  // If description has raw text, strip any technical IDs or UUIDs
+  let cleanDesc = desc
+    .replace(/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/gi, '')
+    .replace(/School\s+[0-9a-f-]+/gi, schoolName)
+    .replace(/Platform activity/gi, 'System activity')
+    .trim();
+
+  return cleanDesc || `Activity recorded for ${schoolName}`;
+};
+
+export const getRelativeTime = (dateStr) => {
+  if (!dateStr) return '';
+  const date = new Date(dateStr);
+  const now = new Date();
+  const diffSec = Math.floor((now - date) / 1000);
+
+  if (diffSec < 60) return 'Just now';
+  if (diffSec < 3600) return `${Math.floor(diffSec / 60)}m ago`;
+  if (diffSec < 86400) return `${Math.floor(diffSec / 3600)}h ago`;
+  if (diffSec < 604800) return `${Math.floor(diffSec / 86400)}d ago`;
+  return fmtDate(dateStr);
+};

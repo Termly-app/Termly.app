@@ -68,20 +68,19 @@ export default function SchoolsTab({
               <thead>
                 <tr>
                    <th className="col-school">School</th>
-                   <th className="col-plan">Modules</th>
-                   <th className="col-usage">Students</th>
-                   <th className="col-usage">Staff Seats</th>
+                   <th className="col-modules">Modules</th>
+                   <th className="col-students">Students</th>
+                   <th className="col-staff">Staff Seats</th>
                    <th className="col-loc">Location</th>
-                  <th className="col-joined">Joined</th>
-                  <th className="col-status">Status</th>
-                  <th className="col-sub">Features</th>
-                  <th className="col-act">Action</th>
+                   <th className="col-joined">Joined</th>
+                   <th className="col-status">Status</th>
+                   <th className="col-sub">Features</th>
+                   <th className="col-act" style={{ textAlign: 'right' }}>Action</th>
                 </tr>
               </thead>
               <tbody>
                 {filteredSchools.map(s => {
                   const isActive = isSchoolActive(s);
-                  // Pick the best profile to show in the table (prefer active one)
                   const pList = Array.isArray(s.school_profiles) ? s.school_profiles : [];
                   const p = pList.find(prof => {
                     const now = new Date();
@@ -92,13 +91,12 @@ export default function SchoolsTab({
 
                   const studentLimit = p.custom_subjects?.__limits?.students || 10000;
                   const staffLimit = p.custom_subjects?.__limits?.staff || 1000;
-
                   const currentPlan = s.plan || (s.name?.toLowerCase().includes('demo') ? 'Demo' : 'Production');
 
                   return (
                     <tr key={s.id}>
                       <td data-label="School" className="col-school">
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
                           <div 
                             className="td-b" 
                             style={{ cursor: 'pointer', color: '#6366f1', textDecoration: 'underline', fontWeight: 600 }}
@@ -110,32 +108,22 @@ export default function SchoolsTab({
                             value={currentPlan}
                             onChange={(e) => onUpdatePlan?.(s.id, e.target.value)}
                             title="Change School Plan / Account Type"
-                            style={{
-                              background: (currentPlan === 'Sandbox' || currentPlan === 'Demo') ? 'rgba(234, 179, 8, 0.2)' : 'rgba(34, 197, 94, 0.2)',
-                              color: (currentPlan === 'Sandbox' || currentPlan === 'Demo') ? '#fef08a' : '#86efac',
-                              border: (currentPlan === 'Sandbox' || currentPlan === 'Demo') ? '1px solid rgba(234, 179, 8, 0.4)' : '1px solid rgba(34, 197, 94, 0.4)',
-                              borderRadius: 4,
-                              fontSize: '0.65rem',
-                              padding: '2px 6px',
-                              fontWeight: 600,
-                              cursor: 'pointer',
-                              outline: 'none',
-                            }}
+                            className={`plan-select-badge plan-${currentPlan.toLowerCase()}`}
                           >
-                            <option value="Production" style={{ background: '#121212', color: '#fff' }}>Production</option>
-                            <option value="Demo" style={{ background: '#121212', color: '#fff' }}>Demo</option>
-                            <option value="Sandbox" style={{ background: '#121212', color: '#fff' }}>Sandbox</option>
+                            <option value="Production">Production</option>
+                            <option value="Demo">Demo</option>
+                            <option value="Sandbox">Sandbox</option>
                           </select>
                         </div>
-                        {s.phone && <div className="td-sub">{s.phone}</div>}
+                        {s.phone && <div className="td-sub" style={{ marginTop: 2 }}>{s.phone}</div>}
                       </td>
 
-                      <td data-label="Modules" className="col-features">
+                      <td data-label="Modules" className="col-modules">
                         <span className="p-pill">{s.features_count || 0} / {s.features_total || 14}</span>
                       </td>
 
-                      <td data-label="Students" className="col-usage">
-                        <div style={{ display:'flex', alignItems:'center', gap:6 }}>
+                      <td data-label="Students" className="col-students">
+                        <div style={{ display:'flex', alignItems:'center', gap:6, justifyContent: 'center' }}>
                           <div className="td-m" style={{ color: (s._studentCount >= studentLimit) ? '#ef4444' : 'var(--txt)' }}>
                             {s._studentCount || 0} / {studentLimit}
                           </div>
@@ -143,8 +131,8 @@ export default function SchoolsTab({
                         </div>
                       </td>
 
-                      <td data-label="Staff Usage" className="col-usage">
-                        <div style={{ display:'flex', alignItems:'center', gap:6, flexWrap:'wrap' }}>
+                      <td data-label="Staff Seats" className="col-staff">
+                        <div style={{ display:'flex', alignItems:'center', gap:6, justifyContent: 'center', flexWrap:'wrap' }}>
                           <div className="td-m" style={{ color: (s._staffCount >= staffLimit) ? '#ef4444' : 'var(--txt)' }}>
                             {s._staffCount || 0} / {staffLimit}
                           </div>
@@ -158,12 +146,12 @@ export default function SchoolsTab({
                       <td data-label="Joined" className="col-joined">{fmtDate(p.created_at || s.created_at)}</td>
 
                       <td data-label="Status" className="col-status">
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: 4, alignItems: 'center' }}>
                           <span className={sPill(getStatusRefined(p, isActive))}>
                             {getStatusRefined(p, isActive)}
                           </span>
                           {p.subscription_expiry && (
-                            <span style={{ fontSize: '0.7rem', color: 'var(--muted)' }}>
+                            <span style={{ fontSize: '0.68rem', color: 'var(--muted)', fontWeight: 500 }}>
                               Exp: {fmtDate(p.subscription_expiry)}
                             </span>
                           )}
@@ -176,8 +164,8 @@ export default function SchoolsTab({
                         </button>
                       </td>
 
-                      <td data-label="Action" className="col-act">
-                        <div className="act-group">
+                      <td data-label="Action" className="col-act" style={{ textAlign: 'right' }}>
+                        <div className="act-group" style={{ justifyContent: 'flex-end' }}>
                           {isActive ? (
                             <button className="act-btn" onClick={() => handleDeactivate(s.id, s.name)}>Deactivate</button>
                           ) : (

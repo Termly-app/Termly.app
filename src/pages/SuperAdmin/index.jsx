@@ -468,6 +468,23 @@ export default function SuperAdmin({ currentUser, isPlatformAdmin, sidebarOpen, 
             <input type="text" placeholder="Search schools, activity..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} />
             {searchQuery && <span className="sa-search-clear" onClick={() => setSearchQuery('')}><CrossIcon size={14} /></span>}
           </div>
+          <div className="sa-topbar-user" style={{ display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0, paddingLeft: 12, borderLeft: '1px solid var(--edge)' }}>
+            <div style={{
+              width: 32, height: 32, borderRadius: 8, background: 'rgba(99, 102, 241, 0.15)',
+              border: '1px solid rgba(99, 102, 241, 0.3)', color: '#c7d2fe',
+              display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: '0.8rem'
+            }}>
+              {currentUser?.email?.[0]?.toUpperCase() || 'A'}
+            </div>
+            <div className="sa-user-info-text" style={{ display: 'flex', flexDirection: 'column' }}>
+              <span style={{ fontSize: '0.78rem', fontWeight: 700, color: '#fff', lineHeight: 1.2 }}>
+                {currentUser?.name || 'Super Admin'}
+              </span>
+              <span style={{ fontSize: '0.62rem', color: 'var(--sub)', lineHeight: 1.2 }}>
+                {currentUser?.email || 'shulesoft8@gmail.com'}
+              </span>
+            </div>
+          </div>
         </div>
 
         <div className="sa-content" style={{ background: '#050505' }}>
