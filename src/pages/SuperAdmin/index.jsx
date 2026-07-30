@@ -8,7 +8,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useSearchParams } from 'react-router-dom';
 
-import { getAllSchools, getPlatformActivities, getPlatformSettings, getPlatformStats, updatePlatformSetting, suspendSchool, restoreSchool, subscribeToPlatformChanges, deleteSchool, deactivateSchool, wipeAllNonAdminSchools, setCurrentSchoolContext, setCurrentPeriodId, getPlatformUsageStats, getPlatformSchoolProfiles, getGlobalAuditLogs } from '../../data/coreStore';
+import { getAllSchools, getPlatformActivities, getPlatformSettings, getPlatformStats, updatePlatformSetting, suspendSchool, restoreSchool, subscribeToPlatformChanges, deleteSchool, deactivateSchool, wipeAllNonAdminSchools, setCurrentSchoolContext, setCurrentPeriodId, getPlatformUsageStats, getGlobalAuditLogs } from '../../data/coreStore';
 import { getTeachersBySchool, deleteTeacher } from '../../data/staffStore';
 
 // Components
@@ -139,20 +139,6 @@ export default function SuperAdmin({ currentUser, isPlatformAdmin, sidebarOpen, 
           const filtered = rawSchools.filter(s => !s.name?.toLowerCase().includes('Termly hq'));
           setSchools(filtered);
 
-          try {
-            const profiles = await getPlatformSchoolProfiles();
-            if (profiles?.length > 0) {
-              setSchools(prev => prev.map(s => {
-                const existing = Array.isArray(s.school_profiles) ? s.school_profiles : [];
-                const extra    = profiles.filter(p => p.school_id === s.id);
-                const merged = [...existing, ...extra].reduce((acc, curr) => {
-                  if (!acc.find(p => p.id === curr.id)) acc.push(curr);
-                  return acc;
-                }, []);
-                return { ...s, school_profiles: merged };
-              }));
-            }
-          } catch (e) { console.warn('SuperAdmin: Could not fetch profiles', e); }
         })(),
         fetch(getPlatformActivities, setActivity,      []),
         fetch(getGlobalAuditLogs,    setAuditLogs,     []),
