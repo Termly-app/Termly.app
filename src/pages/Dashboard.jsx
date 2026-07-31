@@ -17,8 +17,7 @@ import SyncIndicator from '../components/Common/SyncIndicator';
 import { Helmet } from 'react-helmet-async';
 import Select from '../components/Common/Select';
 import { useFeatures } from '../contexts/FeaturesContext';
-import EarlyWarningWidget from '../components/widgets/EarlyWarningWidget';
-import TPDTrackerWidget from '../components/widgets/TPDTrackerWidget';
+
 
 export default function Dashboard({ currentUser, onLogout, currentPeriodId }) {
   const navigate = useNavigate();
@@ -211,18 +210,7 @@ export default function Dashboard({ currentUser, onLogout, currentPeriodId }) {
         ))}
       </div>
 
-      {/* Phase 1 Widgets Grid */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: 18, marginBottom: 24 }}>
-        <EarlyWarningWidget 
-          students={data.studentsList}
-          attendance={data.attendanceRaw}
-          marks={data.marksRaw}
-          profile={data.profile}
-        />
-        <TPDTrackerWidget 
-          teachers={data.teachersList}
-        />
-      </div>
+
 
       {/* Main Grid - Recent Activity + Portal Activity */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: 18, marginBottom: 24 }}>
