@@ -84,22 +84,6 @@ export default function Communications({ currentUser }) {
     if (hasAccess) loadData();
   }, [hasAccess]);
 
-  if (featureLoading) return <div className="p-4"><div className="spinner"></div></div>;
-  if (!hasAccess) return <FeatureGate featureName="Communications & SMS" />;
-
-  const loadData = async () => {
-    try {
-      const comms = await getAnnouncements();
-      setHistory(comms);
-      const studs = await getStudents();
-      setStudents(studs);
-      const prof = await getSchoolProfile();
-      setProfile(prof);
-    } catch (err) {
-      console.error("Error loading communications:", err);
-    }
-  };
-
   const filteredRecipients = useMemo(() => {
     if (activeTab === 'individual') return selectedStudent ? [selectedStudent] : [];
     
@@ -120,6 +104,39 @@ export default function Communications({ currentUser }) {
       s.admNo?.toLowerCase().includes(searchQuery.toLowerCase())
     ).slice(0, 8);
   }, [students, searchQuery]);
+
+  const allGradesOrder = useMemo(() => {
+    if (!CBC_STRUCTURE) return [];
+    return Object.values(CBC_STRUCTURE).flatMap(l => l.grades);
+  }, []);
+
+  const sortedActiveClasses = useMemo(() => {
+    const classes = profile?.activeClasses || [];
+    if (allGradesOrder.length === 0) return classes;
+    return [...classes].sort((a, b) => {
+      const idxA = allGradesOrder.indexOf(a);
+      const idxB = allGradesOrder.indexOf(b);
+      const scoreA = idxA === -1 ? 999 : idxA;
+      const scoreB = idxB === -1 ? 999 : idxB;
+      return scoreA - scoreB;
+    });
+  }, [profile?.activeClasses, allGradesOrder]);
+
+  if (featureLoading) return <div className="p-4"><div className="spinner"></div></div>;
+  if (!hasAccess) return <FeatureGate featureName="Communications & SMS" />;
+
+  const loadData = async () => {
+    try {
+      const comms = await getAnnouncements();
+      setHistory(comms);
+      const studs = await getStudents();
+      setStudents(studs);
+      const prof = await getSchoolProfile();
+      setProfile(prof);
+    } catch (err) {
+      console.error("Error loading communications:", err);
+    }
+  };
 
   const handleSend = async (e) => {
     if (e) e.preventDefault();
@@ -174,7 +191,6 @@ export default function Communications({ currentUser }) {
 
     setIsSending(true);
     try {
-      // We will create the announcement
       const { createAnnouncement } = await import('../data/academicsStore');
       await createAnnouncement({
         title: inAppTitle.trim(),
@@ -194,23 +210,6 @@ export default function Communications({ currentUser }) {
       setIsSending(false);
     }
   };
-
-  const allGradesOrder = useMemo(() => {
-    if (!CBC_STRUCTURE) return [];
-    return Object.values(CBC_STRUCTURE).flatMap(l => l.grades);
-  }, []);
-
-  const sortedActiveClasses = useMemo(() => {
-    const classes = profile?.activeClasses || [];
-    if (allGradesOrder.length === 0) return classes;
-    return [...classes].sort((a, b) => {
-      const idxA = allGradesOrder.indexOf(a);
-      const idxB = allGradesOrder.indexOf(b);
-      const scoreA = idxA === -1 ? 999 : idxA;
-      const scoreB = idxB === -1 ? 999 : idxB;
-      return scoreA - scoreB;
-    });
-  }, [profile?.activeClasses, allGradesOrder]);
 
   const streamsForClass = targetAudience !== 'all' && targetAudience !== 'defaulters' 
     ? (profile?.streamsPerClass?.[targetAudience] || [])
