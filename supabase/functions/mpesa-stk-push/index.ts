@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2"
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -57,7 +58,7 @@ serve(async (req) => {
     const password = btoa(`${SHORTCODE}${PASSKEY}${timestamp}`);
 
     if (action === 'push') {
-      const { phoneNumber, amount, accountRef, description } = payload;
+      const { phoneNumber, amount, accountRef, description, schoolId } = payload;
       
       const url = ENVIRONMENT === 'sandbox'
         ? 'https://sandbox.safaricom.co.ke/mpesa/stkpush/v1/processrequest'
@@ -87,6 +88,35 @@ serve(async (req) => {
       const result = await response.json();
       if (result.ResponseCode !== '0') {
         throw new Error(result.ResponseDescription || 'STK Push Failed');
+      }
+
+      // Without this row, an incoming callback has no way to know which
+      // school (or which student's fee account) it belongs to — Safaricom's
+      // callback payload only carries MerchantRequestID/CheckoutRequestID,
+      // nothing app-specific. This is what mpesa-callback matches against.
+      if (schoolId) {
+        const supabaseAdmin = createClient(
+          Deno.env.get('SUPABASE_URL') ?? '',
+          Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+        );
+        const { error: insertError } = await supabaseAdmin.from('mpesa_callbacks').insert({
+          school_id: schoolId,
+          merchant_request_id: result.MerchantRequestID,
+          checkout_request_id: result.CheckoutRequestID,
+          result_code: -1, // sentinel: no real result yet — column is NOT NULL, actual code arrives via mpesa-callback
+          bill_ref_number: accountRef || null,
+          phone_number: phoneNumber,
+          amount: Math.round(amount),
+          status: 'awaiting_callback',
+        });
+        if (insertError) {
+          // The push already went to the customer's phone — don't fail the
+          // request over this, but log it loudly, since a payment that
+          // completes now has nothing to reconcile against.
+          console.error('Could not create pending mpesa_callbacks row:', insertError.message);
+        }
+      } else {
+        console.error('mpesa-stk-push called without schoolId — callback for this payment cannot be matched to a school.');
       }
 
       return new Response(
