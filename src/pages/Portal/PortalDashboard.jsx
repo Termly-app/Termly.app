@@ -13,6 +13,7 @@ import { generateReportCard, downloadReportCardPDF } from '../../utils/reportCar
 import { getStudentBooks } from '../../data/libraryStore';
 import { getFees } from '../../data/financeStore';
 import { getSchoolProfile, initPortalStore } from '../../data/coreStore';;
+import { supabase } from '../../lib/supabase';
 import Loader from '../../components/Common/Loader';
 import NotificationCenter from '../../components/Common/NotificationCenter';
 import { CardSkeleton, TableSkeleton } from '../../components/Common/Skeletons';
@@ -240,13 +241,41 @@ export default function PortalDashboard({ user, onLogout }) {
     };
   }, [user, localUser?.id]);
 
-  const handleMpesaPay = () => {
+  const [mpesaError, setMpesaError] = useState('');
+
+  const handleMpesaPay = async () => {
+    setMpesaError('');
+    const amount = parseFloat(mpesaAmount);
+    if (!amount || amount <= 0) {
+      setMpesaError('Enter a valid amount.');
+      return;
+    }
+    if (!mpesaPhone || !/^2547\d{8}$/.test(mpesaPhone.replace(/\s/g, ''))) {
+      setMpesaError('Enter a valid phone number in the format 2547XXXXXXXX.');
+      return;
+    }
     setIsSTKPushing(true);
-    setTimeout(() => {
-      setIsSTKPushing(false);
+    try {
+      const { data, error } = await supabase.functions.invoke('mpesa-stk-push', {
+        body: {
+          action: 'push',
+          payload: {
+            phoneNumber: mpesaPhone.replace(/\s/g, ''),
+            amount,
+            accountRef: localUser?.adm_no || localUser?.id,
+            description: `Fees - ${localUser?.name || 'Student'}`,
+          },
+        },
+      });
+      if (error) throw error;
+      if (!data?.success) throw new Error(data?.error || 'STK push was not accepted.');
       setShowMpesaModal(false);
-      alert('Payment initiated. Please check your phone to enter your M-Pesa PIN.');
-    }, 2000);
+      alert('Payment prompt sent — check your phone to enter your M-Pesa PIN.');
+    } catch (err) {
+      setMpesaError(err.message || 'Could not start the payment. Please try again.');
+    } finally {
+      setIsSTKPushing(false);
+    }
   };
 
   const formatDateTime = (dateStr) => {
@@ -936,6 +965,7 @@ export default function PortalDashboard({ user, onLogout }) {
                   style={{ width: '100%', padding: '16px', borderRadius: '16px', border: '2px solid #e2e8f0', boxSizing: 'border-box', fontSize: '1.1rem', outline: 'none' }}
                 />
               </div>
+              {mpesaError && <div style={{ color: '#ef4444', fontSize: '0.85rem', marginTop: 4 }}>{mpesaError}</div>}
               <div style={{ display: 'flex', gap: 12, marginTop: 8 }}>
                 <button 
                   onClick={() => setShowMpesaModal(false)}
