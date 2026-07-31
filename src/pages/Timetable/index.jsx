@@ -332,7 +332,7 @@ export default function Timetable({ currentUser, currentPeriodId, periods = [] }
           subject: editSubject
         });
 
-        if (clash) {
+        if (clash && clash.hasConflict) {
           setConflictWarning(clash.msg);
         } else {
           setConflictWarning(null);
@@ -398,7 +398,7 @@ export default function Timetable({ currentUser, currentPeriodId, periods = [] }
         currentSlotIndex: editCell.slotIndex,
         subject: editSubject
       });
-      if (clash) { 
+      if (clash && clash.hasConflict) { 
         setConflictWarning(clash.msg); 
         return; 
       }

@@ -1284,8 +1284,8 @@ export default function Settings() {
                   {navigator.onLine ? 'Cloud Sync Engine Active' : 'Offline Mode: Local Storage active'}
                 </span>
               </div>
-              <p style={{color:'var(--text-light)',fontSize:'0.875rem',marginBottom:22,lineHeight:1.6,maxWidth:280,margin:'0 auto 20px'}}>
-                Your data is automatically synced to the cloud via IndexedDB. Export your school's data for safekeeping, or restore from a previous backup file.
+              <p style={{color:'var(--text-light)',fontSize:'0.875rem',marginBottom:22,lineHeight:1.6,maxWidth:320,margin:'0 auto 20px'}}>
+                Download a complete, self-service JSON export of your school's data — including students, staff, financial records, exam results, and timetables.
               </p>
               <div style={{display:'flex',gap:10,justifyContent:'center',flexWrap:'wrap'}}>
                 <button className="btn btn-primary" onClick={()=>exportData()} style={{display:'flex',alignItems:'center',gap:6}}><DownloadIcon size={14} /> Export Data</button>

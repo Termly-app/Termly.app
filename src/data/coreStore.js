@@ -773,14 +773,52 @@ export async function resetAllData() {
 
 export async function exportData() {
   const profile = await getSchoolProfile();
-  const backup = { schoolProfile: profile, exportDate: new Date().toISOString() };
-  const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(backup, null, 2));
+  const schoolId = profile?.school_id || profile?.id || _currentSchoolId;
+
+  // Fetch all core datasets for this school
+  const [
+    studentsRes,
+    teachersRes,
+    feesRes,
+    paymentsRes,
+    marksRes,
+    timetableRes,
+    noticesRes
+  ] = await Promise.all([
+    supabase.from('students').select('*').eq('school_id', schoolId).catch(() => ({ data: [] })),
+    supabase.from('teachers').select('*').eq('school_id', schoolId).catch(() => ({ data: [] })),
+    supabase.from('fees').select('*').eq('school_id', schoolId).catch(() => ({ data: [] })),
+    supabase.from('fee_payments').select('*').eq('school_id', schoolId).catch(() => ({ data: [] })),
+    supabase.from('exam_marks').select('*').eq('school_id', schoolId).catch(() => ({ data: [] })),
+    supabase.from('timetable_slots').select('*').eq('school_id', schoolId).catch(() => ({ data: [] })),
+    supabase.from('announcements').select('*').eq('school_id', schoolId).catch(() => ({ data: [] }))
+  ]);
+
+  const fullBackup = {
+    exportVersion: '2.0',
+    exportDate: new Date().toISOString(),
+    schoolProfile: profile,
+    students: studentsRes?.data || [],
+    teachers: teachersRes?.data || [],
+    fees: feesRes?.data || [],
+    feePayments: paymentsRes?.data || [],
+    examMarks: marksRes?.data || [],
+    timetableSlots: timetableRes?.data || [],
+    announcements: noticesRes?.data || []
+  };
+
+  const jsonStr = JSON.stringify(fullBackup, null, 2);
+  const blob = new Blob([jsonStr], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  
   const link = document.createElement('a');
-  link.setAttribute("href", dataStr);
-  link.setAttribute("download", `Termly_backup_${new Date().toISOString().split('T')[0]}.json`);
+  link.href = url;
+  const safeName = (profile?.schoolName || 'School').replace(/[^a-zA-Z0-9]/g, '_');
+  link.download = `Termly_Full_Backup_${safeName}_${new Date().toISOString().split('T')[0]}.json`;
   document.body.appendChild(link);
   link.click();
   link.remove();
+  URL.revokeObjectURL(url);
 }
 
 export async function importData(jsonDataStr) {

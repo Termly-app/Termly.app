@@ -1666,8 +1666,51 @@ export async function getTeacherWorkloadSummary(schoolId, periodId, teacherId) {
 }
 
 export async function checkTimetableConflicts(schoolId, periodId, { day, startTime, endTime, teacherId, classGrade, stream, currentSlotIndex, subject }) {
-  // Simple conflict check placeholder
-  return { hasConflict: false };
+  if (!schoolId || !periodId || !day || currentSlotIndex === undefined) {
+    return null;
+  }
+
+  try {
+    const targetStream = stream || '';
+
+    // Fetch all timetable slots for this school, period, and day
+    const { data: daySlots, error } = await supabase
+      .from('timetable_slots')
+      .select('*, teachers(id, name)')
+      .eq('school_id', schoolId)
+      .eq('period_id', periodId)
+      .eq('day_of_week', day);
+
+    if (error || !daySlots) return null;
+
+    // Check teacher clashes
+    if (teacherId) {
+      for (const slot of daySlots) {
+        // Skip current slot being edited for the same class and stream
+        if (slot.class_grade === classGrade && (slot.stream || '') === targetStream && slot.slot_index === currentSlotIndex) {
+          continue;
+        }
+
+        // Check direct index match or double-lesson overlap
+        const isDirectMatch = slot.slot_index === currentSlotIndex;
+        const isDoubleOverlap = (slot.is_double_first && slot.slot_index + 1 === currentSlotIndex) ||
+                                (slot.is_double_second && slot.slot_index - 1 === currentSlotIndex);
+
+        if (slot.teacher_id === teacherId && (isDirectMatch || isDoubleOverlap)) {
+          const teacherName = slot.teachers?.name || 'Teacher';
+          const otherClass = `${slot.class_grade}${slot.stream ? ' (' + slot.stream + ')' : ''}`;
+          return {
+            hasConflict: true,
+            msg: `⚠️ ${teacherName} is already teaching ${slot.subject || 'a lesson'} in ${otherClass} at this time.`
+          };
+        }
+      }
+    }
+  } catch (err) {
+    console.warn('Timetable conflict check failed:', err);
+  }
+
+  return null;
 }
 
 export async function fetchLmsContent(url) {
