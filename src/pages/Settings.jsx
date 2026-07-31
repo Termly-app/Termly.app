@@ -58,6 +58,16 @@ export default function Settings() {
   const [promotionLoading, setPromotionLoading] = useState(false);
   const [promotionConfirmText, setPromotionConfirmText] = useState('');
   const [showPromotionModal, setShowPromotionModal] = useState(false);
+  const [showExportModal, setShowExportModal] = useState(false);
+  const [exportSelection, setExportSelection] = useState({
+    students: true,
+    teachers: true,
+    fees: true,
+    payments: true,
+    marks: true,
+    timetable: true,
+    announcements: true
+  });
   const [portalSettings, setPortalSettings] = useState(null);
   const [portalSaving, setPortalSaving] = useState(false);
   const [showMpesaKey, setShowMpesaKey] = useState(false);
@@ -1288,7 +1298,7 @@ export default function Settings() {
                 Download a complete, self-service JSON export of your school's data — including students, staff, financial records, exam results, and timetables.
               </p>
               <div style={{display:'flex',gap:10,justifyContent:'center',flexWrap:'wrap'}}>
-                <button className="btn btn-primary" onClick={()=>exportData()} style={{display:'flex',alignItems:'center',gap:6}}><DownloadIcon size={14} /> Export Data</button>
+                <button className="btn btn-primary" onClick={()=>setShowExportModal(true)} style={{display:'flex',alignItems:'center',gap:6}}><DownloadIcon size={14} /> Export Data</button>
                 <button className="btn btn-ghost" onClick={()=>backupRef.current.click()} style={{display:'flex',alignItems:'center',gap:6}}><UploadIcon size={14} /> Restore Backup</button>
               </div>
               <input ref={backupRef} type="file" hidden accept=".json" onChange={e=>{
@@ -1381,6 +1391,82 @@ export default function Settings() {
               >
                 {promotionLoading ? 'Promoting...' : 'Confirm Promotion'}
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Export Selection Modal */}
+      {showExportModal && (
+        <div style={{
+          position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+          background: 'rgba(0,0,0,0.5)', zIndex: 1100,
+          display: 'flex', alignItems: 'center', justifyContent: 'center'
+        }}>
+          <div className="card" style={{ maxWidth: 520, width: '90%', padding: 0, borderRadius: 20, overflow: 'hidden' }}>
+            <div style={{ padding: '20px 24px', background: 'var(--primary-light)', borderBottom: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div>
+                <h3 style={{ margin: 0, fontSize: '1.1rem', fontWeight: 800, color: 'var(--primary)' }}>Export School Data</h3>
+                <p style={{ margin: '2px 0 0', fontSize: '0.78rem', color: 'var(--text-light)' }}>Select which datasets to include in your JSON export package</p>
+              </div>
+              <button className="btn-icon" onClick={() => setShowExportModal(false)}><CrossIcon size={18} /></button>
+            </div>
+            
+            <div style={{ padding: '20px 24px' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 10, marginBottom: 20 }}>
+                {[
+                  { key: 'students', label: 'Students & Enrollment' },
+                  { key: 'teachers', label: 'Teachers & Staff' },
+                  { key: 'fees', label: 'Fee Structures' },
+                  { key: 'payments', label: 'Payment Transactions' },
+                  { key: 'marks', label: 'Exam Results & Marks' },
+                  { key: 'timetable', label: 'Timetable Schedules' },
+                  { key: 'announcements', label: 'Announcements' }
+                ].map(mod => (
+                  <label key={mod.key} style={{
+                    display: 'flex', alignItems: 'center', gap: 10, padding: '12px 14px',
+                    background: exportSelection[mod.key] ? 'var(--primary-light)' : 'var(--bg)',
+                    border: `1.5px solid ${exportSelection[mod.key] ? 'var(--primary)' : 'var(--border)'}`,
+                    borderRadius: 12, cursor: 'pointer', fontSize: '0.82rem', fontWeight: 700,
+                    transition: 'all 0.15s ease'
+                  }}>
+                    <input
+                      type="checkbox"
+                      checked={!!exportSelection[mod.key]}
+                      onChange={e => setExportSelection({ ...exportSelection, [mod.key]: e.target.checked })}
+                      style={{ width: 16, height: 16, accentColor: 'var(--primary)' }}
+                    />
+                    <span>{mod.label}</span>
+                  </label>
+                ))}
+              </div>
+
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: 14, borderTop: '1px solid var(--border)' }}>
+                <button
+                  className="btn btn-ghost btn-sm"
+                  onClick={() => {
+                    const allSelected = Object.values(exportSelection).every(v => v);
+                    const next = {};
+                    Object.keys(exportSelection).forEach(k => { next[k] = !allSelected; });
+                    setExportSelection(next);
+                  }}
+                >
+                  {Object.values(exportSelection).every(v => v) ? 'Deselect All' : 'Select All'}
+                </button>
+                <div style={{ display: 'flex', gap: 10 }}>
+                  <button className="btn btn-ghost" onClick={() => setShowExportModal(false)}>Cancel</button>
+                  <button
+                    className="btn btn-primary"
+                    onClick={async () => {
+                      await exportData(exportSelection);
+                      setShowExportModal(false);
+                    }}
+                    style={{ display: 'flex', alignItems: 'center', gap: 6 }}
+                  >
+                    <DownloadIcon size={14} /> Download Selected Data
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
         </div>

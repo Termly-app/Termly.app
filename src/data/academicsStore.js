@@ -1701,7 +1701,7 @@ export async function checkTimetableConflicts(schoolId, periodId, { day, startTi
           const otherClass = `${slot.class_grade}${slot.stream ? ' (' + slot.stream + ')' : ''}`;
           return {
             hasConflict: true,
-            msg: `⚠️ ${teacherName} is already teaching ${slot.subject || 'a lesson'} in ${otherClass} at this time.`
+            msg: `Conflict: ${teacherName} is already teaching ${slot.subject || 'a lesson'} in ${otherClass} at this time.`
           };
         }
       }

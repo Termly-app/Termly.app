@@ -771,11 +771,20 @@ export async function resetAllData() {
   }
 }
 
-export async function exportData() {
+export async function exportData(selectedModules = null) {
   const profile = await getSchoolProfile();
   const schoolId = profile?.school_id || profile?.id || _currentSchoolId;
 
-  // Fetch all core datasets for this school
+  const isAll = !selectedModules || Object.values(selectedModules).every(v => v);
+
+  const fetchIf = (key, queryPromise) => {
+    if (isAll || selectedModules?.[key]) {
+      return queryPromise.catch(() => ({ data: [] }));
+    }
+    return Promise.resolve({ data: null });
+  };
+
+  // Fetch selected datasets for this school
   const [
     studentsRes,
     teachersRes,
@@ -785,26 +794,26 @@ export async function exportData() {
     timetableRes,
     noticesRes
   ] = await Promise.all([
-    supabase.from('students').select('*').eq('school_id', schoolId).catch(() => ({ data: [] })),
-    supabase.from('teachers').select('*').eq('school_id', schoolId).catch(() => ({ data: [] })),
-    supabase.from('fees').select('*').eq('school_id', schoolId).catch(() => ({ data: [] })),
-    supabase.from('fee_payments').select('*').eq('school_id', schoolId).catch(() => ({ data: [] })),
-    supabase.from('exam_marks').select('*').eq('school_id', schoolId).catch(() => ({ data: [] })),
-    supabase.from('timetable_slots').select('*').eq('school_id', schoolId).catch(() => ({ data: [] })),
-    supabase.from('announcements').select('*').eq('school_id', schoolId).catch(() => ({ data: [] }))
+    fetchIf('students', supabase.from('students').select('*').eq('school_id', schoolId)),
+    fetchIf('teachers', supabase.from('teachers').select('*').eq('school_id', schoolId)),
+    fetchIf('fees', supabase.from('fees').select('*').eq('school_id', schoolId)),
+    fetchIf('payments', supabase.from('fee_payments').select('*').eq('school_id', schoolId)),
+    fetchIf('marks', supabase.from('exam_marks').select('*').eq('school_id', schoolId)),
+    fetchIf('timetable', supabase.from('timetable_slots').select('*').eq('school_id', schoolId)),
+    fetchIf('announcements', supabase.from('announcements').select('*').eq('school_id', schoolId))
   ]);
 
   const fullBackup = {
     exportVersion: '2.0',
     exportDate: new Date().toISOString(),
     schoolProfile: profile,
-    students: studentsRes?.data || [],
-    teachers: teachersRes?.data || [],
-    fees: feesRes?.data || [],
-    feePayments: paymentsRes?.data || [],
-    examMarks: marksRes?.data || [],
-    timetableSlots: timetableRes?.data || [],
-    announcements: noticesRes?.data || []
+    ...(studentsRes?.data !== null && { students: studentsRes.data || [] }),
+    ...(teachersRes?.data !== null && { teachers: teachersRes.data || [] }),
+    ...(feesRes?.data !== null && { fees: feesRes.data || [] }),
+    ...(paymentsRes?.data !== null && { feePayments: paymentsRes.data || [] }),
+    ...(marksRes?.data !== null && { examMarks: marksRes.data || [] }),
+    ...(timetableRes?.data !== null && { timetableSlots: timetableRes.data || [] }),
+    ...(noticesRes?.data !== null && { announcements: noticesRes.data || [] })
   };
 
   const jsonStr = JSON.stringify(fullBackup, null, 2);
@@ -814,7 +823,7 @@ export async function exportData() {
   const link = document.createElement('a');
   link.href = url;
   const safeName = (profile?.schoolName || 'School').replace(/[^a-zA-Z0-9]/g, '_');
-  link.download = `Termly_Full_Backup_${safeName}_${new Date().toISOString().split('T')[0]}.json`;
+  link.download = `Termly_Export_${safeName}_${new Date().toISOString().split('T')[0]}.json`;
   document.body.appendChild(link);
   link.click();
   link.remove();
