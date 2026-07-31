@@ -9,6 +9,7 @@ import {
 import { Helmet } from 'react-helmet-async';
 import { getAssignments, getStudentSubmissions } from '../../data/offlineStore';
 import { getStudentExamResults, getGradeForScore, getStudentProfile, getAnnouncements, getSubjectDetails } from '../../data/academicsStore';
+import { generateReportCard, downloadReportCardPDF } from '../../utils/reportCard';
 import { getStudentBooks } from '../../data/libraryStore';
 import { getFees } from '../../data/financeStore';
 import { getSchoolProfile, initPortalStore } from '../../data/coreStore';;
@@ -124,7 +125,8 @@ export default function PortalDashboard({ user, onLogout }) {
   // Helper to reload fee data
   const refreshFees = async () => {
     try {
-      const myFee = await getFees(user.id);
+      const activeId = localUser?.id || user.id;
+      const myFee = await getFees(activeId);
       if (myFee) {
         setFeeBalance(myFee.balance || 0);
         setFeeSummary({ billed: myFee.billed || 0, paid: myFee.paid || 0 });
@@ -141,11 +143,13 @@ export default function PortalDashboard({ user, onLogout }) {
   // Helper to reload exam results
   const refreshResults = async () => {
     try {
-      const examRes = await getStudentExamResults(user.id);
+      const activeId = localUser?.id || user.id;
+      const activeClass = localUser?.class || user.class;
+      const examRes = await getStudentExamResults(activeId);
       setExamResults(examRes);
       if (examRes.length > 0) {
         const avg = examRes.reduce((acc, curr) => acc + (curr.total_marks / (curr.total_subjects || 1)), 0) / examRes.length;
-        const { grade, color } = getGradeForScore(avg, user.class, schoolProfile);
+        const { grade, color } = getGradeForScore(avg, activeClass, schoolProfile);
         setAcademic({ average: avg.toFixed(1), grade, color, rank: examRes[0].class_position });
       }
       setLastSync(new Date());
@@ -630,7 +634,8 @@ export default function PortalDashboard({ user, onLogout }) {
                   <h3 style={{ fontSize: '1.1rem', fontWeight: 800, marginBottom: 16 }}>Detailed Exam Performance</h3>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
                     {examResults.map(res => (
-                      <Card key={res.id} style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 24, padding: 24 }}>
+                      <Card key={res.id} style={{ display: 'flex', flexDirection: 'column', gap: 16, padding: 24 }}>
+                        <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 24 }}>
                         <div style={{ flex: 1, minWidth: 200 }}>
                           <div style={{ fontWeight: 800, fontSize: '1.2rem', color: '#0f172a', marginBottom: 4 }}>{res.exams?.name}</div>
                           <div style={{ display: 'flex', gap: 8 }}>
@@ -647,6 +652,50 @@ export default function PortalDashboard({ user, onLogout }) {
                             <div style={{ fontSize: '0.7rem', color: '#94a3b8', fontWeight: 700, textTransform: 'uppercase', marginBottom: 4 }}>Rank</div>
                             <div style={{ fontSize: '1.6rem', fontWeight: 900, color: '#0f172a' }}>#{res.class_position}</div>
                           </div>
+                        </div>
+                        </div>
+                        {/* Report Card Actions */}
+                        <div style={{ display: 'flex', gap: 10, borderTop: '1px solid #f1f5f9', paddingTop: 14 }}>
+                          <button
+                            onClick={() => {
+                              const marks = {};
+                              (res.subjects || []).forEach(s => { marks[s.subject_name || s.name] = s.score || s.marks || 0; });
+                              generateReportCard(
+                                localUser,
+                                marks,
+                                { teacherComments: res.teacher_remarks || '', headComments: res.head_remarks || '' },
+                                { schoolName: schoolProfile?.schoolName, term: res.exams?.term, year: res.exams?.year || '2026' }
+                              );
+                            }}
+                            style={{
+                              padding: '8px 16px', borderRadius: 10, border: '1px solid #e2e8f0',
+                              background: '#f8fafc', color: '#334155', fontSize: '0.78rem', fontWeight: 700,
+                              cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6,
+                              transition: 'all 0.15s ease'
+                            }}
+                          >
+                            <BookIcon size={14} /> Print Report Card
+                          </button>
+                          <button
+                            onClick={() => {
+                              const marks = {};
+                              (res.subjects || []).forEach(s => { marks[s.subject_name || s.name] = s.score || s.marks || 0; });
+                              downloadReportCardPDF(
+                                localUser,
+                                marks,
+                                { teacherComments: res.teacher_remarks || '', headComments: res.head_remarks || '' },
+                                { schoolName: schoolProfile?.schoolName, term: res.exams?.term, year: res.exams?.year || '2026' }
+                              );
+                            }}
+                            style={{
+                              padding: '8px 16px', borderRadius: 10, border: 'none',
+                              background: '#4f46e5', color: '#ffffff', fontSize: '0.78rem', fontWeight: 700,
+                              cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6,
+                              transition: 'all 0.15s ease'
+                            }}
+                          >
+                            <CardIcon size={14} color="#fff" /> Download PDF
+                          </button>
                         </div>
                       </Card>
                     ))}

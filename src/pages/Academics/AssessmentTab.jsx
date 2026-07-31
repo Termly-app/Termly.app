@@ -12,6 +12,7 @@ import {
 import Select from '../../components/Common/Select';
 import { useDialog } from '../../contexts/DialogContext';
 import { getProfessionalRemark } from '../../utils/remarkUtils';
+import { downloadReportCardPDF } from '../../utils/reportCard';
 import { useFeature } from '../../contexts/FeaturesContext';
 
 export default function AssessmentTab({ currentUser, currentPeriodId }) {
@@ -1192,7 +1193,27 @@ function ReportCardModal({ student, cbcData, coreCompData, onClose, getGrade, cb
             </div>
           </div>
         </div>
-        <div className="modal-footer"><button className="btn btn-ghost" onClick={onClose}>Close</button><button className="btn btn-primary" onClick={handlePrint}><PrintIcon size={16} /> Print Report Card</button></div>
+        <div className="modal-footer">
+          <button className="btn btn-ghost" onClick={onClose}>Close</button>
+          <div style={{ display: 'flex', gap: 10 }}>
+            <button className="btn btn-primary" onClick={handlePrint}><PrintIcon size={16} /> Print</button>
+            <button 
+              className="btn btn-primary" 
+              onClick={() => {
+                downloadReportCardPDF(
+                  student,
+                  student.marks || {},
+                  { teacherComments: '', headComments: '' },
+                  { schoolName: profile?.schoolName || 'Termly Academy', term: examType, year: '2026' },
+                  { isDraft: false }
+                );
+              }}
+              style={{ background: '#4f46e5', borderColor: '#4f46e5' }}
+            >
+              <BookIcon size={16} /> Download PDF
+            </button>
+          </div>
+        </div>
       </div>
     </div>
   );
