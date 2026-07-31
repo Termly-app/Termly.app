@@ -125,7 +125,7 @@ export default function Landing() {
         if (val) animateCount(el, parseFloat(val), false, false, 1400);
         if (valPct) animateCount(el, parseFloat(valPct), true, false, 1200);
         if (valDec) animateCount(el, parseFloat(valDec), false, true, 1200);
-        counterObs.unobserve(e);
+        counterObs.unobserve(e.target);
       });
     }, { threshold: 0.5 });
     document.querySelectorAll('[data-count],[data-count-pct],[data-count-dec]').forEach(el => counterObs.observe(el));
