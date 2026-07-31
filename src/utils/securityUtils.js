@@ -104,7 +104,7 @@ export function applySecurityHeaders() {
     `connect-src 'self' ${supabaseUrl} wss://*.supabase.co https://*.supabase.co https://*.africastalking.com https://*.safaricom.co.ke https://cdn.jsdelivr.net https://fonts.googleapis.com https://fonts.gstatic.com`,
     "img-src 'self' data: https://*.supabase.co https://*.googleusercontent.com",
     "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
-    "font-src 'self' https://fonts.gstatic.com",
+    "font-src 'self' data: https://fonts.gstatic.com",
     "frame-src 'none'",
     "object-src 'none'"
   ].join('; ');
