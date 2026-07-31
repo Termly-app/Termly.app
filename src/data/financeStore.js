@@ -104,6 +104,7 @@ export async function recordPayment(studentId, amount, method, reference) {
   if (!feeRecord) {
     const student = (await getStudents()).find(s => s.id === studentId);
     const profile = await getSchoolProfile();
+    const { getCalculatedTotalFee } = await import('./academicsStore.js');
     const finalFee = getCalculatedTotalFee(student, profile);
 
     if (finalFee === null) {

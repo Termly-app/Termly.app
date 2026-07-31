@@ -22,7 +22,12 @@ serve(async (req) => {
 
     // Ensure the user is authenticated to send emails
     const { data: { user }, error: authError } = await supabaseClient.auth.getUser();
-    if (authError || !user) throw new Response("Unauthorized", { status: 401 });
+    if (authError || !user) {
+      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+        status: 401,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
 
     const payload = await req.json();
     const { to, subject, html } = payload;

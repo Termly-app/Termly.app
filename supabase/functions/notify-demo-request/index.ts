@@ -5,13 +5,25 @@ const TELEGRAM_CHAT_ID = Deno.env.get('TELEGRAM_CHAT_ID');
 const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY');
 const SUPERADMIN_EMAIL = Deno.env.get('SUPERADMIN_EMAIL');
 
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+};
+
 serve(async (req) => {
+  if (req.method === 'OPTIONS') {
+    return new Response('ok', { headers: corsHeaders });
+  }
+
   try {
     const payload = await req.json();
 
     // Check if this is an INSERT into demo_requests
     if (payload.type !== 'INSERT' || payload.table !== 'demo_requests') {
-      return new Response(JSON.stringify({ error: 'Ignored, not a new demo request' }), { status: 400 });
+      return new Response(JSON.stringify({ error: 'Ignored, not a new demo request' }), {
+        status: 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
     }
 
     const { school_name, contact_name, phone, email, student_count, message } = payload.record;
@@ -98,10 +110,16 @@ serve(async (req) => {
       }).catch(err => console.error("Resend error:", err));
     }
 
-    return new Response(JSON.stringify({ success: true }), { status: 200, headers: { 'Content-Type': 'application/json' } });
+    return new Response(JSON.stringify({ success: true }), {
+      status: 200,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
 
   } catch (error) {
     console.error('Webhook processing error:', error);
-    return new Response(JSON.stringify({ error: error.message }), { status: 500, headers: { 'Content-Type': 'application/json' } });
+    return new Response(JSON.stringify({ error: error.message }), {
+      status: 500,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
   }
 });
