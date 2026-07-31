@@ -469,8 +469,7 @@ export default function Communications({ currentUser }) {
                 </div>
               )}
 
-              {/* Phase 1: Broadcast Templates (Only for SMS/WhatsApp) */}
-              {activeTab !== 'in_app' && (
+              {/* Phase 1: Broadcast Templates (Now available for In-App too) */}
               <div className="form-group" style={{ marginTop: 16 }}>
                 <label style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
                   <span>Quick Templates</span>
@@ -512,7 +511,6 @@ export default function Communications({ currentUser }) {
                   ))}
                 </div>
               </div>
-              )}
 
               <div className="form-group" style={{ marginTop: 12 }}>
                 <label>Message Content</label>
