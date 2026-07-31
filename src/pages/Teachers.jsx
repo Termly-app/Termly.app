@@ -511,7 +511,7 @@ function AssignmentsTab({ assignments, teachers, onAssign, profile, streams, con
                   Initialize Now
                 </button>
                 <span style={{fontSize: '0.7rem', opacity: 0.8}}>or</span>
-                <a href="/settings" style={{fontSize: '0.7rem', fontWeight: 'bold', color: 'inherit', textDecoration: 'underline'}}>Promote from 2025</a>
+                <a href="/settings" style={{fontSize: '0.7rem', fontWeight: 'bold', color: 'inherit', textDecoration: 'underline'}}>Promote from 2026</a>
               </div>
             )}
           </div>

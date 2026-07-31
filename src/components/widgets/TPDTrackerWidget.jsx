@@ -33,8 +33,8 @@ function ensureTPD(teacher) {
     cycle_end: cycleEnd.toISOString().split('T')[0],
     license_expiry: licenseExpiry.toISOString().split('T')[0],
     activities: [
-      { name: 'CBC Training Module 3', date: '2025-06-15', points: 15, certificate: null },
-      { name: 'ICT Integration Workshop', date: '2025-03-22', points: 10, certificate: null },
+      { name: 'CBC Training Module 3', date: '2026-06-15', points: 15, certificate: null },
+      { name: 'ICT Integration Workshop', date: '2026-03-22', points: 10, certificate: null },
       { name: 'Child Protection Seminar', date: '2024-11-08', points: 8, certificate: null },
     ].slice(0, 1 + (hash % 3)),
   };

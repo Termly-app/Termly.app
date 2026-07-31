@@ -107,7 +107,7 @@ export default function PremiumLayout({ children }) {
 
         </div>
         <div className="ft-btm">
-          <span className="ft-copy">© 2025 Termly HQ · Made in Nairobi, Kenya</span>
+          <span className="ft-copy">© 2026 Termly HQ · Made in Nairobi, Kenya</span>
           <div className="ft-b-links">
              <span>All rights reserved.</span>
           </div>

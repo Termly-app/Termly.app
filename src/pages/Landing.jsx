@@ -310,7 +310,7 @@ export default function Landing() {
               </div>
               <div className="hs-main">
                 <div className="hs-t">Greenfield Academy</div>
-                <div className="hs-s">Term 2, 2025 — Week 8 of 14</div>
+                <div className="hs-s">Term 2, 2026 — Week 8 of 14</div>
                 <div className="kpis">
                   <div className="kpi"><div className="kl">Students</div><div className="kv" data-count="842">0</div><div className="kc ku">↑ +12</div></div>
                   <div className="kpi"><div className="kl">Attendance</div><div className="kv" data-count-pct="94.2">0</div><div className="kc ku">↑ on target</div></div>
@@ -319,7 +319,7 @@ export default function Landing() {
                 </div>
                 <div className="dg">
                   <div className="dp">
-                    <div className="dpt">Enrolment 2025</div>
+                    <div className="dpt">Enrolment 2026</div>
                     <div className="bars" ref={barsRef}>
                       <div className="bar" data-h="52" style={{ background: '#E8E8E5', height: '0%' }}></div>
                       <div className="bar" data-h="64" style={{ background: '#E0DDF8', height: '0%' }}></div>
@@ -616,7 +616,7 @@ export default function Landing() {
 
         </div>
         <div className="ft-bottom">
-          <span className="ft-copy">© 2025 Termly</span>
+          <span className="ft-copy">© 2026 Termly</span>
           <div className="ft-b-links">
             <span>All rights reserved.</span>
           </div>

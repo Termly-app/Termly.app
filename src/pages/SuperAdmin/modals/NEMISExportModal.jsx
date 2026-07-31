@@ -105,7 +105,7 @@ export default function NEMISExportModal({ school, onClose, getStudentsBySchool 
             {/* Term label */}
             <div style={{ marginBottom:16 }}>
               <div style={S.label}>Term Label (appears in filename)</div>
-              <input style={S.input} placeholder="e.g. Term 1 2025" value={term} onChange={e => setTerm(e.target.value)} />
+              <input style={S.input} placeholder="e.g. Term 1 2026" value={term} onChange={e => setTerm(e.target.value)} />
             </div>
 
             {/* Grade filter */}
