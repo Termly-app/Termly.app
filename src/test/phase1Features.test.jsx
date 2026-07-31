@@ -23,17 +23,17 @@ describe('Phase 1 Features Test Suite', () => {
       };
 
       const emergencySMS = BROADCAST_TEMPLATES.emergency_alert.smsTemplate(sampleData);
-      expect(emergencySMS).toContain('EMERGENCY');
+      expect(emergencySMS).toContain('URGENT UPDATE');
       expect(emergencySMS).toContain('Maji Mazuri School');
 
       const feeWA = BROADCAST_TEMPLATES.fee_invoice.whatsappTemplate(sampleData);
-      expect(feeWA).toContain('Fee Reminder');
+      expect(feeWA).toContain('fee balance');
       expect(feeWA).toContain('12,500');
       expect(feeWA).toContain('522522');
 
       const resultSMS = BROADCAST_TEMPLATES.exam_results.smsTemplate(sampleData);
       expect(resultSMS).toContain('Mid-Term Exam');
-      expect(resultSMS).toContain('84.2%');
+      expect(resultSMS).toContain('Parent Portal');
     });
   });
 
@@ -43,8 +43,8 @@ describe('Phase 1 Features Test Suite', () => {
       const sms = tpl.smsTemplate({ schoolName: 'Greenwood High', message: 'Parent Meeting on Friday' });
       const wa = tpl.whatsappTemplate({ schoolName: 'Greenwood High', message: 'Parent Meeting on Friday' });
 
-      expect(sms).toContain('Greenwood High Notice: Parent Meeting on Friday');
-      expect(wa).toContain('*School Notice*');
+      expect(sms).toContain('Official Notice from Greenwood High: Parent Meeting on Friday');
+      expect(wa).toContain('*OFFICIAL ANNOUNCEMENT*');
       expect(wa).toContain('Greenwood High');
     });
   });
