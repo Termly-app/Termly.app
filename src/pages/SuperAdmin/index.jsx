@@ -176,28 +176,35 @@ export default function SuperAdmin({ currentUser, isPlatformAdmin, sidebarOpen, 
   const isSchoolActive = (s) => {
     const nameLower = (s.name || '').toLowerCase();
     const planLower = (s.plan || '').toLowerCase();
-
-    // Termly HQ, Platform Admin, and Sandbox NEVER expire
-    if (nameLower.includes('termly hq') || planLower === 'platform admin' || planLower === 'sandbox') return true;
+    const statusLower = (s.status || '').toLowerCase();
 
     const profiles = Array.isArray(s.school_profiles) ? s.school_profiles : [];
+    const p = profiles[0];
+
+    // Explicit deactivation ALWAYS overrides default plan/HQ rules
+    if (statusLower === 'deactivated' || statusLower === 'suspended') return false;
+    if (p && (p.subscription_status === 'Deactivated' || p.subscription_status === 'Suspended')) return false;
+
+    // Termly HQ, Platform Admin, and Sandbox NEVER expire automatically
+    if (nameLower.includes('termly hq') || planLower === 'platform admin' || planLower === 'sandbox') return true;
+
     if (profiles.length === 0) {
-      return s.status !== 'Deactivated' && s.status !== 'Suspended';
+      return statusLower === 'active';
     }
 
-    return profiles.some(p => {
-      const statusLower = (p.subscription_status || '').toLowerCase();
-      if (statusLower === 'deactivated' || statusLower === 'suspended') return false;
-      if (statusLower === 'sandbox' || (p.subscription_plan || '').toLowerCase() === 'sandbox') return true;
+    return profiles.some(prof => {
+      const pStatus = (prof.subscription_status || '').toLowerCase();
+      if (pStatus === 'deactivated' || pStatus === 'suspended') return false;
+      if (pStatus === 'sandbox' || (prof.subscription_plan || '').toLowerCase() === 'sandbox') return true;
 
       // Enforce subscription expiry date if set (applies to Demo & Production)
-      if (p.subscription_expiry) {
-        const pExp = new Date(p.subscription_expiry);
+      if (prof.subscription_expiry) {
+        const pExp = new Date(prof.subscription_expiry);
         pExp.setHours(23, 59, 59, 999);
         if (pExp < now) return false;
       }
 
-      if (statusLower === 'active' || statusLower === 'demo' || statusLower === 'trial' || planLower === 'demo') {
+      if (pStatus === 'active' || pStatus === 'demo' || pStatus === 'trial' || planLower === 'demo') {
         return true;
       }
 
@@ -207,8 +214,10 @@ export default function SuperAdmin({ currentUser, isPlatformAdmin, sidebarOpen, 
 
   const activeSchools        = schools.filter(isSchoolActive);
   const deactSchools         = schools.filter(s => {
-    const p = s.school_profiles?.[0];
-    return p && (p.subscription_status === 'Deactivated' || p.subscription_status === 'Suspended');
+    const statusLower = (s.status || '').toLowerCase();
+    if (statusLower === 'deactivated' || statusLower === 'suspended') return true;
+    const profiles = Array.isArray(s.school_profiles) ? s.school_profiles : [];
+    return profiles.some(p => p.subscription_status === 'Deactivated' || p.subscription_status === 'Suspended');
   });
   const expiredSchools       = schools.filter(s => !isSchoolActive(s) && !deactSchools.some(d => d.id === s.id));
   const newThisMonth         = schools.filter(s => {

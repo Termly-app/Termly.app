@@ -60,7 +60,8 @@ export const sPill = (s) => {
 };
 
 export const getStatusRefined = (p, isActive) => {
-  const s = p.subscription_status || 'Inactive';
+  const s = p?.subscription_status || 'Inactive';
+  if (s === 'Deactivated' || s === 'Suspended') return s;
   if (isActive) return 'Active';
   if (s === 'Active') return 'Expired';
   return s;
