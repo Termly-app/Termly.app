@@ -4,7 +4,7 @@ import { updateSchoolLimits } from '../../../data/coreStore';
 
 export default function LimitsModal({ school, onClose, onUpdated, setMessage }) {
   const [studentLimit, setStudentLimit] = useState(10000);
-  const [staffLimit, setStaffLimit] = useState(1000);
+  const [staffLimit, setStaffLimit] = useState(5);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
 
@@ -17,7 +17,7 @@ export default function LimitsModal({ school, onClose, onUpdated, setMessage }) 
       try { cSubs = JSON.parse(cSubs); } catch(e) { cSubs = {}; }
     }
     const curStudents = cSubs.__limits?.students || p.student_limit || 10000;
-    const curStaff = cSubs.__limits?.staff || p.staff_limit || 1000;
+    const curStaff = cSubs.__limits?.staff || p.staff_limit || 5;
     setStudentLimit(curStudents);
     setStaffLimit(curStaff);
     setError('');

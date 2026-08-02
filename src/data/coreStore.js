@@ -390,8 +390,8 @@ export async function getSchoolProfileBySchoolId(schoolId) {
     customSubjects: customSubjects,
     studentLimit: data.student_limit || customSubjects?.__limits?.students || 10000,
     student_limit: data.student_limit || customSubjects?.__limits?.students || 10000,
-    staffLimit: data.staff_limit || customSubjects?.__limits?.staff || 1000,
-    staff_limit: data.staff_limit || customSubjects?.__limits?.staff || 1000,
+    staffLimit: data.staff_limit || customSubjects?.__limits?.staff || 5,
+    staff_limit: data.staff_limit || customSubjects?.__limits?.staff || 5,
     portal_access: data.portal_access,
     mpesa_config: data.mpesa_config,
     sms_config: data.sms_config,
@@ -644,7 +644,7 @@ export async function updateSchoolPlan(schoolId, planName) {
 
 export async function updateSchoolLimits(schoolId, { students, staff }) {
   const numStudents = Number(students) || 10000;
-  const numStaff = Number(staff) || 1000;
+  const numStaff = Number(staff) || 5;
 
   const { data: profile } = await supabase
     .from('school_profiles')
@@ -658,14 +658,19 @@ export async function updateSchoolLimits(schoolId, { students, staff }) {
     staff: numStaff,
   };
 
+  // .update() only touches rows that already exist — if this school has no
+  // school_profiles row yet (the same gap behind the "schools showing
+  // inactive" issue from before), .update() silently affects zero rows and
+  // the new limit is never actually saved, which is exactly why this looked
+  // "stuck." .upsert() creates the row if it's missing instead of no-op'ing.
   const { error } = await supabase
     .from('school_profiles')
-    .update({ 
+    .upsert({
+      school_id: schoolId,
       custom_subjects,
       staff_limit: numStaff,
       student_limit: numStudents
-    })
-    .eq('school_id', schoolId);
+    }, { onConflict: 'school_id' });
 
   if (error) {
     const { error: e2 } = await supabase
@@ -966,7 +971,7 @@ export async function getSchoolByCode(code) {
 
 export async function getPortalActivity(limit = 10) {
   const { data, error } = await supabase.from('portal_activity_log')
-    .select('*').eq('school_id', _currentSchoolId)
+    .select('*').eq('_currentSchoolId', _currentSchoolId)
     .order('created_at', { ascending: false }).limit(limit);
   if (error) throw error;
   return (data || []).map(item => ({

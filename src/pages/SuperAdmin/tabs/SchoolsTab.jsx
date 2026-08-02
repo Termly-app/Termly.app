@@ -95,7 +95,7 @@ export default function SchoolsTab({
                     try { cSubs = JSON.parse(cSubs); } catch(e) { cSubs = {}; }
                   }
                   const studentLimit = cSubs.__limits?.students || p.student_limit || 10000;
-                  const staffLimit = cSubs.__limits?.staff || p.staff_limit || 1000;
+                  const staffLimit = cSubs.__limits?.staff || p.staff_limit || 5;
                   const rawPlan = s.plan || (s.name?.toLowerCase().includes('demo') ? 'Demo' : 'Production');
                   const currentPlan = ['Production', 'Demo', 'Sandbox'].includes(rawPlan) 
                     ? rawPlan 
