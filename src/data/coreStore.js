@@ -598,7 +598,7 @@ export async function getPlatformStats() {
 export async function getAllSchools() {
   const { data: schools, error: sErr } = await supabase
     .from('schools')
-    .select('id, name, email, plan, owner_id, phone, location, created_at, school_profiles(*)');
+    .select('id, name, status, email, plan, owner_id, phone, location, created_at, school_profiles(*)');
 
   if (sErr) {
     console.error('Error fetching all schools:', sErr);
@@ -693,18 +693,21 @@ export async function updateSchoolLimits(schoolId, { students, staff }) {
 export async function deactivateSchool(schoolId, reason = null) {
   const pastDate = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
   
-  const { error: e1 } = await supabase.from('school_profiles')
-    .upsert({ 
-      school_id: schoolId, 
-      subscription_status: 'Deactivated', 
-      subscription_expiry: pastDate, 
-      status_notes: reason 
-    }, { onConflict: 'school_id' });
+  const { data: existing } = await supabase
+    .from('school_profiles')
+    .select('id')
+    .eq('school_id', schoolId)
+    .maybeSingle();
 
-  if (e1) {
-    await supabase.from('school_profiles')
+  if (existing?.id) {
+    await supabase
+      .from('school_profiles')
       .update({ subscription_status: 'Deactivated', subscription_expiry: pastDate, status_notes: reason })
-      .eq('school_id', schoolId);
+      .eq('id', existing.id);
+  } else {
+    await supabase
+      .from('school_profiles')
+      .insert({ school_id: schoolId, subscription_status: 'Deactivated', subscription_expiry: pastDate, status_notes: reason });
   }
 
   await supabase.from('schools').update({ status: 'Deactivated' }).eq('id', schoolId);
@@ -721,7 +724,7 @@ export async function deactivateSchool(schoolId, reason = null) {
 
 export async function restoreSchool(schoolId, monthsToAdd = 4, notes = null) {
   const { data: profileData } = await supabase.from('school_profiles')
-    .select('subscription_expiry').eq('school_id', schoolId).maybeSingle();
+    .select('id, subscription_expiry').eq('school_id', schoolId).maybeSingle();
 
   let expiry = new Date();
   if (profileData?.subscription_expiry) {
@@ -730,18 +733,15 @@ export async function restoreSchool(schoolId, monthsToAdd = 4, notes = null) {
   }
   expiry.setMonth(expiry.getMonth() + monthsToAdd);
 
-  const { error } = await supabase.from('school_profiles')
-    .upsert({ 
-      school_id: schoolId, 
-      subscription_status: 'Active', 
-      subscription_expiry: expiry.toISOString(), 
-      status_notes: notes 
-    }, { onConflict: 'school_id' });
-
-  if (error) {
-    await supabase.from('school_profiles')
+  if (profileData?.id) {
+    await supabase
+      .from('school_profiles')
       .update({ subscription_status: 'Active', subscription_expiry: expiry.toISOString(), status_notes: notes })
-      .eq('school_id', schoolId);
+      .eq('id', profileData.id);
+  } else {
+    await supabase
+      .from('school_profiles')
+      .insert({ school_id: schoolId, subscription_status: 'Active', subscription_expiry: expiry.toISOString(), status_notes: notes });
   }
 
   await supabase.from('schools').update({ status: 'Active' }).eq('id', schoolId);
