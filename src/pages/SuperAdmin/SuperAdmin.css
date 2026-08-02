@@ -529,7 +529,8 @@
 .sa .tbl-w::-webkit-scrollbar-thumb { background: var(--edge2); border-radius: 10px; }
 
 /* ─── Plan Select Dropdown Badges ───────────────────────────────────── */
-select.plan-select-badge {
+select.plan-select-badge,
+.plan-select-badge .custom-select-trigger {
   appearance: none !important;
   -webkit-appearance: none !important;
   -moz-appearance: none !important;
@@ -538,16 +539,13 @@ select.plan-select-badge {
   border-radius: 6px !important;
   font-size: 0.65rem !important;
   font-weight: 700 !important;
-  padding: 2px 18px 2px 8px !important;
-  height: 22px !important;
-  line-height: 18px !important;
+  padding: 2px 14px 2px 8px !important;
+  height: 24px !important;
+  line-height: 20px !important;
   cursor: pointer !important;
   outline: none !important;
   transition: all 0.2s ease !important;
   color-scheme: dark !important;
-  background-image: url("data:image/svg+xml,%3Csvg width='8' height='5' viewBox='0 0 10 6' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%23a1a1aa' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") !important;
-  background-repeat: no-repeat !important;
-  background-position: right 6px center !important;
   text-transform: uppercase !important;
   letter-spacing: 0.04em !important;
   margin: 0 !important;
@@ -562,19 +560,22 @@ select.plan-select-badge option {
   font-weight: 600 !important;
 }
 
-select.plan-select-badge.plan-production {
+select.plan-select-badge.plan-production,
+.plan-production .custom-select-trigger {
   background-color: rgba(16, 185, 129, 0.15) !important;
   color: #34d399 !important;
   border: 1px solid rgba(16, 185, 129, 0.35) !important;
 }
 
-select.plan-select-badge.plan-demo {
+select.plan-select-badge.plan-demo,
+.plan-demo .custom-select-trigger {
   background-color: rgba(245, 158, 11, 0.15) !important;
   color: #fbbf24 !important;
   border: 1px solid rgba(245, 158, 11, 0.35) !important;
 }
 
-select.plan-select-badge.plan-sandbox {
+select.plan-select-badge.plan-sandbox,
+.plan-sandbox .custom-select-trigger {
   background-color: rgba(139, 92, 246, 0.15) !important;
   color: #c084fc !important;
   border: 1px solid rgba(139, 92, 246, 0.35) !important;
