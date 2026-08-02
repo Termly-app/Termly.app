@@ -64,8 +64,9 @@ export async function getAllSchoolStaff(schoolId) {
 
   let results = [...(usersData || [])];
 
-  // Filter out platform admin email
-  results = results.filter(u => u.email?.toLowerCase() !== 'termly8@gmail.com');
+  // Filter out platform admin emails
+  const adminEmails = ['shulesoft8@gmail.com', 'termly8@gmail.com'];
+  results = results.filter(u => !adminEmails.includes(u.email?.toLowerCase()));
 
   // If no Admin account found in users table, add one from school_profiles as fallback
   const hasAdmin = results.some(u => (u.role || '').toLowerCase().includes('admin'));
