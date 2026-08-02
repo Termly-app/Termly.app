@@ -96,7 +96,7 @@ export default function SchoolsTab({
                   }
                   const studentLimit = cSubs.__limits?.students || p.student_limit || 10000;
                   const staffLimit = cSubs.__limits?.staff || p.staff_limit || 5;
-                  const rawPlan = s.plan || (s.name?.toLowerCase().includes('demo') ? 'Demo' : 'Production');
+                  const rawPlan = p.subscription_plan || s.plan || (s.name?.toLowerCase().includes('demo') ? 'Demo' : 'Production');
                   const currentPlan = ['Production', 'Demo', 'Sandbox'].includes(rawPlan) 
                     ? rawPlan 
                     : (rawPlan.toLowerCase().includes('demo') ? 'Demo' : (rawPlan.toLowerCase().includes('sandbox') ? 'Sandbox' : 'Production'));

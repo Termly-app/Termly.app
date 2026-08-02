@@ -634,11 +634,33 @@ export async function getAllSchools() {
 }
 
 export async function updateSchoolPlan(schoolId, planName) {
-  const { error } = await supabase
+  const { error: e1 } = await supabase
     .from('schools')
     .update({ plan: planName })
     .eq('id', schoolId);
-  if (error) throw error;
+  if (e1) throw e1;
+
+  const { data: existing } = await supabase
+    .from('school_profiles')
+    .select('id')
+    .eq('school_id', schoolId)
+    .maybeSingle();
+
+  if (existing?.id) {
+    await supabase
+      .from('school_profiles')
+      .update({ subscription_plan: planName, subscription_status: 'Active' })
+      .eq('id', existing.id);
+  } else {
+    await supabase
+      .from('school_profiles')
+      .insert({ school_id: schoolId, subscription_plan: planName, subscription_status: 'Active' });
+  }
+
+  _profileCache = null;
+  invalidateCache(`profile_${schoolId}`);
+  invalidateFeatureCache(schoolId);
+
   await logPlatformActivity('PLAN_CHANGE', `School ${schoolId} plan updated to ${planName}`, schoolId);
 }
 
