@@ -259,69 +259,108 @@ export const ChevronLeftIcon = ({ size = 18, color = 'currentColor', className =
 export const LogoMark = ({ size = 28, className = '' }) => (
   <svg width={size} height={size} viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" className={className} aria-label="Termly 3D Logo">
     <defs>
-      <filter id="logo3dShadow" x="-20%" y="-20%" width="140%" height="140%">
-        <feDropShadow dx="0" dy="6" stdDeviation="6" floodColor="#312E81" floodOpacity="0.45" />
-        <feDropShadow dx="0" dy="2" stdDeviation="2" floodColor="#000000" floodOpacity="0.3" />
-      </filter>
-      <linearGradient id="topFaceGrad" x1="20" y1="20" x2="80" y2="50" gradientUnits="userSpaceOnUse">
-        <stop offset="0%" stopColor="#A5B4FC" />
-        <stop offset="50%" stopColor="#818CF8" />
-        <stop offset="100%" stopColor="#6366F1" />
-      </linearGradient>
-      <linearGradient id="rightFaceGrad" x1="50" y1="35" x2="85" y2="85" gradientUnits="userSpaceOnUse">
-        <stop offset="0%" stopColor="#4F46E5" />
-        <stop offset="100%" stopColor="#3730A3" />
-      </linearGradient>
-      <linearGradient id="leftFaceGrad" x1="15" y1="35" x2="50" y2="85" gradientUnits="userSpaceOnUse">
-        <stop offset="0%" stopColor="#6366F1" />
-        <stop offset="100%" stopColor="#4338CA" />
-      </linearGradient>
-      <linearGradient id="glowAccent" x1="0" y1="0" x2="100" y2="100" gradientUnits="userSpaceOnUse">
-        <stop offset="0%" stopColor="#C084FC" />
-        <stop offset="100%" stopColor="#818CF8" />
-      </linearGradient>
-      <linearGradient id="bgGrad" x1="0" y1="0" x2="100" y2="100" gradientUnits="userSpaceOnUse">
+      {/* Background gradient */}
+      <linearGradient id="lmBg" x1="0" y1="0" x2="100" y2="100" gradientUnits="userSpaceOnUse">
         <stop offset="0%" stopColor="#1E1B4B" />
         <stop offset="100%" stopColor="#0F172A" />
       </linearGradient>
+
+      {/* Tile gradients — each tile gets its own 3D-style gradient */}
+      <linearGradient id="tile1" x1="22" y1="22" x2="46" y2="46" gradientUnits="userSpaceOnUse">
+        <stop offset="0%" stopColor="#A5B4FC" />
+        <stop offset="100%" stopColor="#6366F1" />
+      </linearGradient>
+      <linearGradient id="tile2" x1="54" y1="22" x2="78" y2="46" gradientUnits="userSpaceOnUse">
+        <stop offset="0%" stopColor="#818CF8" />
+        <stop offset="100%" stopColor="#4F46E5" />
+      </linearGradient>
+      <linearGradient id="tile3" x1="22" y1="54" x2="46" y2="78" gradientUnits="userSpaceOnUse">
+        <stop offset="0%" stopColor="#818CF8" />
+        <stop offset="100%" stopColor="#4F46E5" />
+      </linearGradient>
+      <linearGradient id="tile4" x1="54" y1="54" x2="78" y2="78" gradientUnits="userSpaceOnUse">
+        <stop offset="0%" stopColor="#6366F1" />
+        <stop offset="100%" stopColor="#3730A3" />
+      </linearGradient>
+
+      {/* Drop shadow for tiles */}
+      <filter id="tileShadow" x="-15%" y="-10%" width="130%" height="140%">
+        <feDropShadow dx="0" dy="2" stdDeviation="2.5" floodColor="#1E1B4B" floodOpacity="0.7" />
+      </filter>
+
+      {/* Inner glow / specular highlight for glass effect */}
+      <filter id="tileGlow" x="-10%" y="-10%" width="120%" height="120%">
+        <feGaussianBlur in="SourceAlpha" stdDeviation="1.5" result="blur" />
+        <feOffset dx="0" dy="-1" result="offsetBlur" />
+        <feFlood floodColor="#ffffff" floodOpacity="0.15" />
+        <feComposite in2="offsetBlur" operator="in" />
+        <feMerge>
+          <feMergeNode />
+          <feMergeNode in="SourceGraphic" />
+        </feMerge>
+      </filter>
+
+      {/* Outer glow behind entire grid */}
+      <filter id="gridGlow" x="-30%" y="-30%" width="160%" height="160%">
+        <feGaussianBlur stdDeviation="6" result="blur" />
+        <feFlood floodColor="#6366F1" floodOpacity="0.25" />
+        <feComposite in2="blur" operator="in" />
+        <feMerge>
+          <feMergeNode />
+          <feMergeNode in="SourceGraphic" />
+        </feMerge>
+      </filter>
     </defs>
 
-    {/* Squircle App Base */}
-    <rect width="100" height="100" rx="24" fill="url(#bgGrad)" />
-    <rect width="100" height="100" rx="24" fill="none" stroke="rgba(255,255,255,0.15)" strokeWidth="2" />
+    {/* App squircle background */}
+    <rect width="100" height="100" rx="22" fill="url(#lmBg)" />
+    {/* Subtle border */}
+    <rect width="100" height="100" rx="22" fill="none" stroke="rgba(255,255,255,0.08)" strokeWidth="1.5" />
 
-    {/* 3D Isometric Geometry */}
-    <g filter="url(#logo3dShadow)">
-      {/* Base Shadow Slab */}
-      <path d="M 50 78 L 82 60 L 50 42 L 18 60 Z" fill="#312E81" opacity="0.6" />
+    {/* 2×2 Grid with 3D depth */}
+    <g filter="url(#gridGlow)">
+      {/* Tile 1 — Top Left (brightest) */}
+      <g filter="url(#tileShadow)">
+        <rect x="22" y="22" width="24" height="24" rx="6" fill="url(#tile1)" />
+        <rect x="22" y="22" width="24" height="12" rx="6" fill="rgba(255,255,255,0.18)" />
+        <rect x="22" y="22" width="24" height="24" rx="6" fill="none" stroke="rgba(255,255,255,0.25)" strokeWidth="0.8" />
+      </g>
 
-      {/* Left 3D Wall */}
-      <path d="M 18 36 L 50 54 L 50 74 L 18 56 Z" fill="url(#leftFaceGrad)" />
+      {/* Tile 2 — Top Right */}
+      <g filter="url(#tileShadow)">
+        <rect x="54" y="22" width="24" height="24" rx="6" fill="url(#tile2)" opacity="0.75" />
+        <rect x="54" y="22" width="24" height="12" rx="6" fill="rgba(255,255,255,0.12)" />
+        <rect x="54" y="22" width="24" height="24" rx="6" fill="none" stroke="rgba(255,255,255,0.15)" strokeWidth="0.8" />
+      </g>
 
-      {/* Right 3D Wall */}
-      <path d="M 50 54 L 82 36 L 82 56 L 50 74 Z" fill="url(#rightFaceGrad)" />
+      {/* Tile 3 — Bottom Left */}
+      <g filter="url(#tileShadow)">
+        <rect x="22" y="54" width="24" height="24" rx="6" fill="url(#tile3)" opacity="0.75" />
+        <rect x="22" y="54" width="24" height="12" rx="6" fill="rgba(255,255,255,0.12)" />
+        <rect x="22" y="54" width="24" height="24" rx="6" fill="none" stroke="rgba(255,255,255,0.15)" strokeWidth="0.8" />
+      </g>
 
-      {/* Top 3D Face */}
-      <path d="M 50 18 L 82 36 L 50 54 L 18 36 Z" fill="url(#topFaceGrad)" />
-
-      {/* Top Embossed 3D Motif */}
-      <path d="M 32 30 L 68 30 L 68 36 L 54 36 L 54 46 L 46 46 L 46 36 L 32 36 Z" fill="url(#glowAccent)" opacity="0.9" />
-
-      {/* Specular Edge Highlights */}
-      <path d="M 18 36 L 50 54 L 82 36" stroke="rgba(255, 255, 255, 0.6)" strokeWidth="1.2" strokeLinecap="round" fill="none" />
-      <path d="M 50 54 L 50 74" stroke="rgba(255, 255, 255, 0.3)" strokeWidth="1.2" strokeLinecap="round" fill="none" />
+      {/* Tile 4 — Bottom Right (dimmest) */}
+      <g filter="url(#tileShadow)">
+        <rect x="54" y="54" width="24" height="24" rx="6" fill="url(#tile4)" opacity="0.4" />
+        <rect x="54" y="54" width="24" height="12" rx="6" fill="rgba(255,255,255,0.08)" />
+        <rect x="54" y="54" width="24" height="24" rx="6" fill="none" stroke="rgba(255,255,255,0.1)" strokeWidth="0.8" />
+      </g>
     </g>
+
+    {/* Top-left ambient specular reflection across entire icon */}
+    <rect width="100" height="50" rx="22" fill="url(#lmSpecular)" opacity="0.06" />
   </svg>
 );
 
 export const LogoMarkBW = ({ size = 28, color = "#000", className = '' }) => (
-  <svg width={size} height={size} viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" className={className} aria-label="Termly 3D Logo (Mono)">
-    <rect width="100" height="100" rx="24" fill={color} />
-    <g opacity="0.95">
-      <path d="M 18 36 L 50 54 L 50 74 L 18 56 Z" fill="rgba(255,255,255,0.7)" />
-      <path d="M 50 54 L 82 36 L 82 56 L 50 74 Z" fill="rgba(255,255,255,0.4)" />
-      <path d="M 50 18 L 82 36 L 50 54 L 18 36 Z" fill="rgba(255,255,255,0.95)" />
-      <path d="M 32 30 L 68 30 L 68 36 L 54 36 L 54 46 L 46 46 L 46 36 L 32 36 Z" fill={color} />
+  <svg width={size} height={size} viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" className={className} aria-label="Termly Logo (Mono)">
+    <rect width="100" height="100" rx="22" fill={color} />
+    <g>
+      <rect x="22" y="22" width="24" height="24" rx="6" fill="rgba(255,255,255,0.95)" />
+      <rect x="54" y="22" width="24" height="24" rx="6" fill="rgba(255,255,255,0.55)" />
+      <rect x="22" y="54" width="24" height="24" rx="6" fill="rgba(255,255,255,0.55)" />
+      <rect x="54" y="54" width="24" height="24" rx="6" fill="rgba(255,255,255,0.25)" />
     </g>
   </svg>
 );
