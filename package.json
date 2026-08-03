@@ -37,6 +37,7 @@
     "@capacitor/android": "^8.5.0",
     "@capacitor/cli": "^8.5.0",
     "@capacitor/core": "^8.5.0",
+    "@capacitor/ios": "^8.5.0",
     "@sentry/react": "^10.67.0",
     "@supabase/supabase-js": "^2.99.1",
     "core-js": "^3.49.0",
