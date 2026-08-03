@@ -256,30 +256,73 @@ export const ChevronLeftIcon = ({ size = 18, color = 'currentColor', className =
   </svg>
 );
 
-export const LogoMark = ({ size = 28 }) => (
-  <svg width={size} height={size} viewBox="0 0 28 28" fill="none" aria-label="Termly">
-    <rect width="28" height="28" rx="7" fill="url(#logoGrad)"/>
-    <rect x="7" y="7"   width="6" height="6" rx="1.5" fill="rgba(255,255,255,0.95)"/>
-    <rect x="15" y="7"  width="6" height="6" rx="1.5" fill="rgba(255,255,255,0.55)"/>
-    <rect x="7" y="15"  width="6" height="6" rx="1.5" fill="rgba(255,255,255,0.55)"/>
-    <rect x="15" y="15" width="6" height="6" rx="1.5" fill="rgba(255,255,255,0.25)"/>
-
+export const LogoMark = ({ size = 28, className = '' }) => (
+  <svg width={size} height={size} viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" className={className} aria-label="Termly 3D Logo">
     <defs>
-      <linearGradient id="logoGrad" x1="0" y1="0" x2="28" y2="28" gradientUnits="userSpaceOnUse">
-        <stop stopColor="#6366F1"/>
-        <stop offset="1" stopColor="#4F46E5"/>
+      <filter id="logo3dShadow" x="-20%" y="-20%" width="140%" height="140%">
+        <feDropShadow dx="0" dy="6" stdDeviation="6" floodColor="#312E81" floodOpacity="0.45" />
+        <feDropShadow dx="0" dy="2" stdDeviation="2" floodColor="#000000" floodOpacity="0.3" />
+      </filter>
+      <linearGradient id="topFaceGrad" x1="20" y1="20" x2="80" y2="50" gradientUnits="userSpaceOnUse">
+        <stop offset="0%" stopColor="#A5B4FC" />
+        <stop offset="50%" stopColor="#818CF8" />
+        <stop offset="100%" stopColor="#6366F1" />
+      </linearGradient>
+      <linearGradient id="rightFaceGrad" x1="50" y1="35" x2="85" y2="85" gradientUnits="userSpaceOnUse">
+        <stop offset="0%" stopColor="#4F46E5" />
+        <stop offset="100%" stopColor="#3730A3" />
+      </linearGradient>
+      <linearGradient id="leftFaceGrad" x1="15" y1="35" x2="50" y2="85" gradientUnits="userSpaceOnUse">
+        <stop offset="0%" stopColor="#6366F1" />
+        <stop offset="100%" stopColor="#4338CA" />
+      </linearGradient>
+      <linearGradient id="glowAccent" x1="0" y1="0" x2="100" y2="100" gradientUnits="userSpaceOnUse">
+        <stop offset="0%" stopColor="#C084FC" />
+        <stop offset="100%" stopColor="#818CF8" />
+      </linearGradient>
+      <linearGradient id="bgGrad" x1="0" y1="0" x2="100" y2="100" gradientUnits="userSpaceOnUse">
+        <stop offset="0%" stopColor="#1E1B4B" />
+        <stop offset="100%" stopColor="#0F172A" />
       </linearGradient>
     </defs>
+
+    {/* Squircle App Base */}
+    <rect width="100" height="100" rx="24" fill="url(#bgGrad)" />
+    <rect width="100" height="100" rx="24" fill="none" stroke="rgba(255,255,255,0.15)" strokeWidth="2" />
+
+    {/* 3D Isometric Geometry */}
+    <g filter="url(#logo3dShadow)">
+      {/* Base Shadow Slab */}
+      <path d="M 50 78 L 82 60 L 50 42 L 18 60 Z" fill="#312E81" opacity="0.6" />
+
+      {/* Left 3D Wall */}
+      <path d="M 18 36 L 50 54 L 50 74 L 18 56 Z" fill="url(#leftFaceGrad)" />
+
+      {/* Right 3D Wall */}
+      <path d="M 50 54 L 82 36 L 82 56 L 50 74 Z" fill="url(#rightFaceGrad)" />
+
+      {/* Top 3D Face */}
+      <path d="M 50 18 L 82 36 L 50 54 L 18 36 Z" fill="url(#topFaceGrad)" />
+
+      {/* Top Embossed 3D Motif */}
+      <path d="M 32 30 L 68 30 L 68 36 L 54 36 L 54 46 L 46 46 L 46 36 L 32 36 Z" fill="url(#glowAccent)" opacity="0.9" />
+
+      {/* Specular Edge Highlights */}
+      <path d="M 18 36 L 50 54 L 82 36" stroke="rgba(255, 255, 255, 0.6)" strokeWidth="1.2" strokeLinecap="round" fill="none" />
+      <path d="M 50 54 L 50 74" stroke="rgba(255, 255, 255, 0.3)" strokeWidth="1.2" strokeLinecap="round" fill="none" />
+    </g>
   </svg>
 );
 
-export const LogoMarkBW = ({ size = 28, color = "#000" }) => (
-  <svg width={size} height={size} viewBox="0 0 28 28" fill="none" aria-label="Termly (BW)">
-    <rect width="28" height="28" rx="7" fill={color}/>
-    <rect x="7" y="7"   width="6" height="6" rx="1.5" fill="rgba(255,255,255,0.95)"/>
-    <rect x="15" y="7"  width="6" height="6" rx="1.5" fill="rgba(255,255,255,0.55)"/>
-    <rect x="7" y="15"  width="6" height="6" rx="1.5" fill="rgba(255,255,255,0.55)"/>
-    <rect x="15" y="15" width="6" height="6" rx="1.5" fill="rgba(255,255,255,0.25)"/>
+export const LogoMarkBW = ({ size = 28, color = "#000", className = '' }) => (
+  <svg width={size} height={size} viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" className={className} aria-label="Termly 3D Logo (Mono)">
+    <rect width="100" height="100" rx="24" fill={color} />
+    <g opacity="0.95">
+      <path d="M 18 36 L 50 54 L 50 74 L 18 56 Z" fill="rgba(255,255,255,0.7)" />
+      <path d="M 50 54 L 82 36 L 82 56 L 50 74 Z" fill="rgba(255,255,255,0.4)" />
+      <path d="M 50 18 L 82 36 L 50 54 L 18 36 Z" fill="rgba(255,255,255,0.95)" />
+      <path d="M 32 30 L 68 30 L 68 36 L 54 36 L 54 46 L 46 46 L 46 36 L 32 36 Z" fill={color} />
+    </g>
   </svg>
 );
 
