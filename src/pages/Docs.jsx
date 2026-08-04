@@ -96,13 +96,25 @@ export default function Docs() {
                 <h1 style={{ fontSize: '2rem', marginBottom: '24px' }}>Getting Started</h1>
                 <p style={{ color: 'var(--text-muted)', lineHeight: 1.7, marginBottom: '20px' }}>
                   Termly is a cloud-based school management system designed specifically for the Kenyan context. 
-                  To get started, register your school on the platform and choose a subscription plan that fits your student population.
+                  To get started, register your school on the platform and select the specific features you need. Unlike other systems, Termly charges per feature—you only pay for what you use.
                 </p>
                 <h3 style={{ marginTop: '32px' }}>1. Registration</h3>
                 <p style={{ color: 'var(--text-muted)', lineHeight: 1.7 }}>
                   Use your official school email to sign up. This email will serve as your primary <strong>School Admin</strong> account. 
                   After registration, you will receive an activation link to verify your institution.
                 </p>
+                <h3 style={{ marginTop: '32px' }}>2. Feature Selection</h3>
+                <p style={{ color: 'var(--text-muted)', lineHeight: 1.7 }}>
+                  We offer a flexible, pay-per-feature model. You can activate or deactivate modules at any time depending on your school's needs. Available features include:
+                </p>
+                <ul style={{ color: 'var(--text-muted)', lineHeight: 1.7, marginTop: '12px', paddingLeft: '24px' }}>
+                  <li style={{ marginBottom: '8px' }}><strong>Portals Gateway:</strong> Dedicated logins for Admin, Staff, and Parents.</li>
+                  <li style={{ marginBottom: '8px' }}><strong>Student Management:</strong> Enrollment, attendance tracking, and behavioral logs.</li>
+                  <li style={{ marginBottom: '8px' }}><strong>Academic Records:</strong> CBC compliant grading, KNEC reporting, and report cards.</li>
+                  <li style={{ marginBottom: '8px' }}><strong>E-Learning & Library:</strong> Digital resources, assignments, and book circulation.</li>
+                  <li style={{ marginBottom: '8px' }}><strong>Fees & Finance:</strong> M-PESA integration, automated invoicing, and receipting.</li>
+                  <li><strong>NEMIS Compliance:</strong> One-click Ministry of Education data syncing.</li>
+                </ul>
               </article>
             )}
 
