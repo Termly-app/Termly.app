@@ -54,29 +54,29 @@ export default function Docs() {
             border: '1px solid var(--border)'
           }}>
             {sections.map(s => (
-              <button 
-                key={s.id} 
-                className={`docs-nav-item ${activeSec === s.id ? 'active' : ''}`}
-                onClick={() => {
+                <button
+                  key={s.id}
+                  className={`docs-nav-item ${activeSec === s.id ? 'active' : ''}`}
+                  onClick={() => {
                    setActiveSec(s.id);
                    window.scrollTo({ top: 200, behavior: 'smooth' });
-                }}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '12px',
-                  width: '100%',
-                  padding: '12px 16px',
-                  border: 'none',
-                  background: activeSec === s.id ? 'var(--primary-light)' : 'transparent',
-                  color: activeSec === s.id ? 'var(--primary)' : 'var(--text-muted)',
-                  borderRadius: '10px',
-                  cursor: 'pointer',
-                  fontSize: '0.9rem',
-                  fontWeight: activeSec === s.id ? 700 : 500,
-                  transition: 'all .2s'
-                }}
-              >
+                  }}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '12px',
+                    padding: '12px 16px',
+                    width: '100%',
+                    border: 'none',
+                    background: activeSec === s.id ? '#111827' : 'transparent',
+                    color: activeSec === s.id ? '#fff' : 'var(--text-muted)',
+                    borderRadius: '8px',
+                    cursor: 'pointer',
+                    textAlign: 'left',
+                    fontWeight: activeSec === s.id ? 600 : 500,
+                    transition: 'all 0.2s',
+                  }}
+                >
                 <span>{s.icon}</span>
                 {s.title}
               </button>
