@@ -109,11 +109,14 @@ export default function Docs() {
                 </p>
                 <ul style={{ color: 'var(--text-muted)', lineHeight: 1.7, marginTop: '12px', paddingLeft: '24px' }}>
                   <li style={{ marginBottom: '8px' }}><strong>Portals Gateway:</strong> Dedicated logins for Admin, Staff, and Parents.</li>
-                  <li style={{ marginBottom: '8px' }}><strong>Student Management:</strong> Enrollment, attendance tracking, and behavioral logs.</li>
+                  <li style={{ marginBottom: '8px' }}><strong>Student Management:</strong> Student enrollment, demographics, and behavioral logs.</li>
+                  <li style={{ marginBottom: '8px' }}><strong>Staff Management:</strong> Teacher profiles, payroll tracking, and duty rosters.</li>
+                  <li style={{ marginBottom: '8px' }}><strong>Attendance Tracking:</strong> Real-time attendance logging for students and staff.</li>
                   <li style={{ marginBottom: '8px' }}><strong>Academic Records:</strong> CBC compliant grading, KNEC reporting, and report cards.</li>
                   <li style={{ marginBottom: '8px' }}><strong>E-Learning & Library:</strong> Digital resources, assignments, and book circulation.</li>
                   <li style={{ marginBottom: '8px' }}><strong>Fees & Finance:</strong> M-PESA integration, automated invoicing, and receipting.</li>
-                  <li><strong>NEMIS Compliance:</strong> One-click Ministry of Education data syncing.</li>
+                  <li style={{ marginBottom: '8px' }}><strong>NEMIS Compliance:</strong> One-click Ministry of Education data syncing.</li>
+                  <li><strong>Security & RLS:</strong> Role-based access control and strict data isolation.</li>
                 </ul>
               </article>
             )}
