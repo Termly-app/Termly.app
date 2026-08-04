@@ -174,8 +174,6 @@ export async function setStudentAllMarks(studentId, subjectMarks, examType = _cu
 
   if (rows.length === 0) return;
   
-  console.log(`[STORE] Saving ${rows.length} marks for student ${studentId} (Exam: ${examType}, CreatedBy: ${creatorId})`);
-  
   const { error } = await supabase
     .from('marks')
     .upsert(rows, { onConflict: 'school_id,student_id,subject,period_id,exam_type' });
@@ -234,7 +232,7 @@ export async function getClassList(className, classId = null, subjectName = null
   if (isPortalMode) {
     // Portal mode: use RPC to bypass RLS
     // We do NOT apply stream/subject filters — teacher already selected a specific paper
-    console.log('[PORTAL] getClassList for class:', className, 'classId:', classId);
+
     
     // Strategy 1: Use simple text-based RPC (most reliable)
     try {
@@ -243,7 +241,7 @@ export async function getClassList(className, classId = null, subjectName = null
         p_class_name: className
       });
       if (!error && data && data.length > 0) {
-        console.log('[PORTAL] Text-based RPC returned', data.length, 'students');
+
         return data.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
       }
       if (error) console.warn('[PORTAL] portal_get_students_by_class_name error:', error.message);
@@ -259,7 +257,7 @@ export async function getClassList(className, classId = null, subjectName = null
           p_class_id: classId
         });
         if (!error && data && data.length > 0) {
-          console.log('[PORTAL] UUID-based RPC returned', data.length, 'students');
+
           return data.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
         }
         if (error) console.warn('[PORTAL] portal_get_class_students error:', error.message);
@@ -276,7 +274,7 @@ export async function getClassList(className, classId = null, subjectName = null
         .eq('school_id', _currentSchoolId)
         .eq('class', className);
       if (!fbErr && fallback && fallback.length > 0) {
-        console.log('[PORTAL] Direct query returned', fallback.length, 'students');
+
         return fallback.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
       }
     } catch (e) {
@@ -397,7 +395,7 @@ export async function getExams() {
  */
 async function migrateLegacyExams(examsList) {
   if (!examsList || examsList.length === 0 || !_currentSchoolId) return;
-  console.log('[UNIFICATION] Migrating legacy exams:', examsList);
+
   
   const periodId = _currentPeriodId || 'Current';
   
@@ -412,7 +410,7 @@ async function migrateLegacyExams(examsList) {
         .maybeSingle();
 
       if (!existing) {
-        console.log(`[UNIFICATION] Creating robust record for: ${name}`);
+
         await createExam(name, 'endterm', periodId);
       }
     } catch (e) {
@@ -435,7 +433,7 @@ export async function createExam(name, type = 'endterm', term = 'Current', statu
   const userRecord = await getUserByAuthId(_currentAuthUser?.id);
   const creatorId = userRecord?.id || _currentUserId;
   
-  console.log(`[STORE] Creating exam: ${name} (Type: ${type}, CreatedBy: ${creatorId})`);
+
   
   const { data, error } = await supabase
     .from('exams')
@@ -541,7 +539,7 @@ export async function getExamPapers(examId) {
     // Portal mode: Fetch papers via RPC (usually for teachers entering marks)
     // Use teacher_record_id if available (from staff login), otherwise fall back to userId
     const teacherId = _currentUserId;
-    console.log('[PORTAL] Fetching papers for teacher:', teacherId, 'exam:', examId);
+
     const { data, error } = await supabase.rpc('portal_get_teacher_papers', { 
       p_teacher_id: teacherId, 
       p_exam_id: examId 

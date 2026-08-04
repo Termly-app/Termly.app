@@ -11,7 +11,7 @@ export let _currentExamType = '';
 
 
 export function initPortalStore(schoolId, userId = null, periodId = null) {
-  console.log(`[PORTAL STORE] Initializing for School: ${schoolId}, User: ${userId}`);
+
   _currentSchoolId = schoolId;
   _currentUserId = userId;
   _currentPeriodId = periodId;
@@ -285,7 +285,7 @@ export function subscribeToSchoolChanges(onSettingsChange, onProfileChange) {
       event: '*', schema: 'public', table: 'school_features',
       filter: `school_id=eq.${_currentSchoolId}`
     }, (payload) => {
-      console.log("[REALTIME] Feature changed:", payload.new);
+
       invalidateFeatureCache(_currentSchoolId);
       onSettingsChange();
     })

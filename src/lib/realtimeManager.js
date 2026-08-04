@@ -23,7 +23,7 @@ class RealtimeManager {
       return this.subscriptions.get(key);
     }
 
-    console.log(`[REALTIME] Creating subscription for ${key}`);
+
     const subscription = supabase
       .channel(`${table}_changes`)
       .on(
@@ -35,7 +35,7 @@ class RealtimeManager {
           filter: `school_id=eq.${schoolId}`
         },
         (payload) => {
-          console.log(`[REALTIME] Change detected in ${table}:`, payload);
+
           callback(payload);
         }
       )
@@ -54,7 +54,7 @@ class RealtimeManager {
     const key = `${table}:${schoolId}`;
     const subscription = this.subscriptions.get(key);
     if (subscription) {
-      console.log(`[REALTIME] Unsubscribing from ${key}`);
+
       supabase.removeChannel(subscription);
       this.subscriptions.delete(key);
     }
@@ -64,7 +64,7 @@ class RealtimeManager {
    * Unsubscribe from all active channels
    */
   clearAll() {
-    console.log(`[REALTIME] Clearing all subscriptions`);
+
     this.subscriptions.forEach((sub) => supabase.removeChannel(sub));
     this.subscriptions.clear();
   }

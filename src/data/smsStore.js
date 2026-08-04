@@ -135,7 +135,7 @@ export async function logCommunication(comm) {
 
 export async function sendSMSMessage(recipients, message) {
   const count = Array.isArray(recipients) ? recipients.length : 1;
-  console.log(`[SMS GATEWAY] Sending to ${count} recipients: "${message}"`);
+
   return { success: true, count };
 }
 
@@ -147,7 +147,7 @@ export async function sendWhatsAppMessage(recipients, message) {
     const url = `https://wa.me/${cleanPhone.startsWith('0') ? '254' + cleanPhone.slice(1) : cleanPhone}?text=${encodeURIComponent(message)}`;
     window.open(url, '_blank');
   }
-  console.log(`[WHATSAPP GATEWAY] Broadcasting to ${count} recipients: "${message}"`);
+
   return { success: true, count };
 }
 
