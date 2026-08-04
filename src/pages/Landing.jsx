@@ -614,8 +614,8 @@ export default function Landing() {
           <div className="ft-col">
             <h4 className="ft-h">Product</h4>
             <ul className="ft-links">
-              <li><a href="#features">Features</a></li>
-              <li><a href="#modules">Modules</a></li>
+              <li><a href="/#features">Features</a></li>
+              <li><a href="/#modules">Modules</a></li>
               <li><Link to="/book-demo">Book a Demo</Link></li>
               <li><a href="https://github.com/shulesoft8/Termly.app/releases/download/v1.0.0/Termly.Setup.1.0.0.exe" target="_blank" rel="noopener noreferrer">Download App</a></li>
             </ul>
@@ -629,21 +629,18 @@ export default function Landing() {
             </ul>
           </div>
           <div className="ft-col">
-            <h4 className="ft-h">Resources</h4>
-            <ul className="ft-links">
-              <li><Link to="/faq">Help Center</Link></li>
-              <li><Link to="/support">Contact Support</Link></li>
-              <li><a href="mailto:shulesoft8@gmail.com">Email Us</a></li>
-              <li><Link to="/legal/service-level">Service Level (SLA)</Link></li>
-            </ul>
-          </div>
-          <div className="ft-col">
             <h4 className="ft-h">Company</h4>
             <ul className="ft-links">
               <li><Link to="/about">About Us</Link></li>
-              <li><Link to="/contact">Contact</Link></li>
-              <li><a href={`tel:${settings?.support?.phone || '+254712260057'}`}>Call Us</a></li>
-              <li><a href="https://github.com/shulesoft8/Termly.app" target="_blank" rel="noopener noreferrer">Source Code</a></li>
+              <li><Link to="/support">Contact Support</Link></li>
+              <li><a href="mailto:shulesoft8@gmail.com">Email Us</a></li>
+            </ul>
+          </div>
+          <div className="ft-col">
+            <h4 className="ft-h">Resources</h4>
+            <ul className="ft-links">
+              <li><Link to="/docs">Documentation</Link></li>
+              <li><Link to="/faq">Help Center</Link></li>
             </ul>
           </div>
           <div className="ft-col">
@@ -651,8 +648,10 @@ export default function Landing() {
             <ul className="ft-links">
               <li><Link to="/legal/terms">Terms of Service</Link></li>
               <li><Link to="/legal/privacy">Privacy Policy</Link></li>
+              <li><Link to="/legal/cookies">Cookie Policy</Link></li>
               <li><Link to="/legal/acceptable-use">Acceptable Use</Link></li>
               <li><Link to="/legal/refunds">Refund Policy</Link></li>
+              <li><Link to="/legal/service-level">Service Level (SLA)</Link></li>
             </ul>
           </div>
         </div>
@@ -685,14 +684,6 @@ export default function Landing() {
             <Link to="/legal/terms">License</Link>
             <span className="ft-pipe">|</span>
             <Link to="/legal/acceptable-use">Brand guidelines</Link>
-            <span className="ft-pipe">|</span>
-            <a href="#">Manage cookies</a>
-          </div>
-          <div className="ft-subscribe">
-            <span>Get news and tips by email</span>
-            <div className="ft-sub-form">
-              <button>Subscribe</button>
-            </div>
           </div>
         </div>
       </footer>

@@ -83,8 +83,8 @@ export default function PrivacyPolicy() {
       <section>
         <h3>8. Contact & DPO</h3>
         <p>For any privacy-related inquiries, please contact our Data Protection Officer:</p>
-        <p><strong>Email:</strong> dpo@Termly.app</p>
-        <p><strong>Address:</strong> Termly HQ, Nairobi, Kenya</p>
+        <p><strong>Email:</strong> <a href="mailto:shulesoft8@gmail.com" style={{ color: 'var(--primary)' }}>shulesoft8@gmail.com</a></p>
+        <p><strong>Address:</strong> Termly, Nairobi, Kenya</p>
         <p>You also have the right to lodge a complaint with the <strong>Office of the Data Protection Commissioner (ODPC)</strong> at <a href="https://www.odpc.go.ke" target="_blank" rel="noreferrer" style={{ color: 'var(--primary)' }}>www.odpc.go.ke</a>.</p>
       </section>
     </LegalLayout>

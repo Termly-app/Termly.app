@@ -2,7 +2,8 @@ import { useState, useEffect } from 'react';
 import PremiumLayout from '../components/PremiumLayout';
 import { getPlatformSettings } from '../data/coreStore';;
 import { 
-  RocketIcon, GraduationIcon, EditIcon, CardIcon, ShieldIcon, SettingsIcon 
+  RocketIcon, GraduationIcon, EditIcon, CardIcon, ShieldIcon, SettingsIcon,
+  DashboardIcon, FlagIcon, BookIcon, UserIcon
 } from '../components/CommonIcons';
 import { Helmet } from 'react-helmet-async';
 
@@ -11,9 +12,12 @@ export default function Docs() {
 
   const sections = [
     { id: 'getting-started', title: 'Getting Started', icon: <RocketIcon size={18} /> },
+    { id: 'portals', title: 'Portals Gateway', icon: <DashboardIcon size={18} /> },
     { id: 'students', title: 'Student Management', icon: <GraduationIcon size={18} /> },
     { id: 'academics', title: 'Academic Records', icon: <EditIcon size={18} /> },
+    { id: 'lms', title: 'E-Learning & Library', icon: <BookIcon size={18} /> },
     { id: 'fees', title: 'Fees & Finance', icon: <CardIcon size={18} /> },
+    { id: 'nemis', title: 'NEMIS Compliance', icon: <FlagIcon size={18} /> },
     { id: 'security', title: 'Security & RLS', icon: <ShieldIcon size={18} /> }
   ];
 
@@ -107,6 +111,27 @@ export default function Docs() {
               </article>
             )}
 
+            {activeSec === 'portals' && (
+              <article>
+                <h1 style={{ fontSize: '2rem', marginBottom: '24px' }}>Portals Gateway</h1>
+                <p style={{ color: 'var(--text-muted)', lineHeight: 1.7, marginBottom: '20px' }}>
+                  Termly provides dedicated portals tailored to the different stakeholders in your school ecosystem.
+                </p>
+                <h3 style={{ marginTop: '32px' }}>Admin Portal</h3>
+                <p style={{ color: 'var(--text-muted)', lineHeight: 1.7 }}>
+                  Designed for Principals, Bursars, and System Administrators. This portal offers complete institution oversight, finance management, and platform configuration.
+                </p>
+                <h3 style={{ marginTop: '32px' }}>Staff Portal</h3>
+                <p style={{ color: 'var(--text-muted)', lineHeight: 1.7 }}>
+                  Optimized for mobile use. Teachers can seamlessly record marks, take daily attendance, and manage class lessons on the go without needing administrative access.
+                </p>
+                <h3 style={{ marginTop: '32px' }}>Parent Portal</h3>
+                <p style={{ color: 'var(--text-muted)', lineHeight: 1.7 }}>
+                  Provides parents with real-time access to their child's learner results, outstanding fee balances, and important school announcements.
+                </p>
+              </article>
+            )}
+
             {activeSec === 'students' && (
               <article>
                 <h1 style={{ fontSize: '2rem', marginBottom: '24px' }}>Student Management</h1>
@@ -159,6 +184,40 @@ export default function Docs() {
                 <p style={{ color: 'var(--text-muted)', lineHeight: 1.7 }}>
                   Track expected revenue vs. actual collection in real-time. Identify outstanding balances 
                   and generate payment reminders easily.
+                </p>
+              </article>
+            )}
+
+            {activeSec === 'lms' && (
+              <article>
+                <h1 style={{ fontSize: '2rem', marginBottom: '24px' }}>E-Learning & Library</h1>
+                <p style={{ color: 'var(--text-muted)', lineHeight: 1.7, marginBottom: '20px' }}>
+                  Equip your school with digital learning tools and smart library management.
+                </p>
+                <h3 style={{ marginTop: '32px' }}>Smart Library</h3>
+                <p style={{ color: 'var(--text-muted)', lineHeight: 1.7 }}>
+                  Track your school's physical book inventory. Check books in and out, monitor overdue items, and automatically flag students with unreturned books.
+                </p>
+                <h3 style={{ marginTop: '32px' }}>E-Learning LMS</h3>
+                <p style={{ color: 'var(--text-muted)', lineHeight: 1.7 }}>
+                  Distribute digital resources, past papers, and assignments to students. Maintain an organized repository of educational materials accessible to both teachers and learners.
+                </p>
+              </article>
+            )}
+
+            {activeSec === 'nemis' && (
+              <article>
+                <h1 style={{ fontSize: '2rem', marginBottom: '24px' }}>NEMIS Compliance</h1>
+                <p style={{ color: 'var(--text-muted)', lineHeight: 1.7, marginBottom: '20px' }}>
+                  Termly significantly simplifies compliance with the Ministry of Education's NEMIS requirements.
+                </p>
+                <h3 style={{ marginTop: '32px' }}>Automated Export</h3>
+                <p style={{ color: 'var(--text-muted)', lineHeight: 1.7 }}>
+                  Export your school's enrollment, staff records, and attendance data directly into NEMIS-compliant formats, saving hours of manual data entry.
+                </p>
+                <h3 style={{ marginTop: '32px' }}>Data Validation</h3>
+                <p style={{ color: 'var(--text-muted)', lineHeight: 1.7 }}>
+                  Built-in checks ensure that student UPIs, birth certificate numbers, and other required fields are accurately recorded before export.
                 </p>
               </article>
             )}

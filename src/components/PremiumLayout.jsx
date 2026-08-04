@@ -62,54 +62,78 @@ export default function PremiumLayout({ children }) {
         <div className="ft-ghost">Termly</div>
         <div className="ft-grid-w">
           <div className="ft-col">
-            <Link to="/" className="ft-logo">
-              <div className="ft-sq">
-                <svg viewBox="0 0 13 13" fill="none">
-                  <rect x="1" y="1" width="4.5" height="4.5" rx="1" fill="#0D0D0D"/>
-                  <rect x="7.5" y="1" width="4.5" height="4.5" rx="1" fill="rgba(13,13,13,.4)"/>
-                  <rect x="1" y="7.5" width="4.5" height="4.5" rx="1" fill="rgba(13,13,13,.4)"/>
-                  <rect x="7.5" y="7.5" width="4.5" height="4.5" rx="1" fill="rgba(13,13,13,.2)"/>
-                </svg>
-              </div>
-              Termly
-            </Link>
-            <p className="ft-tag">The School Management System for modern Kenya. Built for the future of Kenyan Edu</p>
+            <h4 className="ft-h">Product</h4>
+            <ul className="ft-links">
+              <li><Link to="/#features">Features</Link></li>
+              <li><Link to="/#modules">Modules</Link></li>
+              <li><Link to="/book-demo">Book a Demo</Link></li>
+              <li><a href="https://github.com/shulesoft8/Termly.app/releases/download/v1.0.0/Termly.Setup.1.0.0.exe" target="_blank" rel="noopener noreferrer">Download App</a></li>
+            </ul>
           </div>
           <div className="ft-col">
-            <h4 className="ft-h">System</h4>
+            <h4 className="ft-h">Portals</h4>
+            <ul className="ft-links">
+              <li><Link to="/login">Admin Portal</Link></li>
+              <li><Link to="/staff/login">Staff Portal</Link></li>
+              <li><Link to="/portal/login">Parent Portal</Link></li>
+            </ul>
+          </div>
+          <div className="ft-col">
+            <h4 className="ft-h">Company</h4>
+            <ul className="ft-links">
+              <li><Link to="/about">About Us</Link></li>
+              <li><Link to="/support">Contact Support</Link></li>
+              <li><a href="mailto:shulesoft8@gmail.com">Email Us</a></li>
+            </ul>
+          </div>
+          <div className="ft-col">
+            <h4 className="ft-h">Resources</h4>
             <ul className="ft-links">
               <li><Link to="/docs">Documentation</Link></li>
+              <li><Link to="/faq">Help Center</Link></li>
+            </ul>
+          </div>
+          <div className="ft-col">
+            <h4 className="ft-h">Legal</h4>
+            <ul className="ft-links">
               <li><Link to="/legal/terms">Terms of Service</Link></li>
               <li><Link to="/legal/privacy">Privacy Policy</Link></li>
+              <li><Link to="/legal/cookies">Cookie Policy</Link></li>
               <li><Link to="/legal/acceptable-use">Acceptable Use</Link></li>
               <li><Link to="/legal/refunds">Refund Policy</Link></li>
-            </ul>
-          </div>
-          <div className="ft-col">
-            <h4 className="ft-h">Support</h4>
-            <ul className="ft-links">
-              <li><Link to="/support">Contact Support</Link></li>
-              <li><a href={`tel:${settings?.support?.phone || '+254712260057'}`}>Call: {settings?.support?.phone || '+254712260057'}</a></li>
-              <li><Link to="/faq">FAQ</Link></li>
               <li><Link to="/legal/service-level">Service Level (SLA)</Link></li>
-              <li><a href="#">System Status</a></li>
             </ul>
           </div>
-          <div className="ft-col">
-            <h4 className="ft-h">Termly HQ</h4>
-            <ul className="ft-links">
-              <li><Link to="/about">About</Link></li>
-              <li><Link to="/contact">Contact</Link></li>
-              <li><Link to="/legal/privacy">Privacy</Link></li>
-              <li><Link to="/legal/terms">Terms</Link></li>
-            </ul>
-          </div>
-
         </div>
-        <div className="ft-btm">
-          <span className="ft-copy">© 2026 Termly HQ · Made in Nairobi, Kenya</span>
+
+        <div className="ft-ecosystem">
+          <Link to="/" className="ft-logo">
+            <div className="ft-sq">
+              <svg viewBox="0 0 13 13" fill="none">
+                <rect x="1" y="1" width="4.5" height="4.5" rx="1" fill="#fff" />
+                <rect x="7.5" y="1" width="4.5" height="4.5" rx="1" fill="rgba(255,255,255,.4)" />
+                <rect x="1" y="7.5" width="4.5" height="4.5" rx="1" fill="rgba(255,255,255,.4)" />
+                <rect x="7.5" y="7.5" width="4.5" height="4.5" rx="1" fill="rgba(255,255,255,.2)" />
+              </svg>
+            </div>
+            <span style={{ color: '#fff' }}>Termly</span>
+          </Link>
+          <div className="ft-eco-links">
+            <span className="ft-eco-lbl">Termly ecosystem</span>
+            <Link to="/login">Admin</Link>
+            <Link to="/staff/login">Staff</Link>
+            <Link to="/portal/login">Parents</Link>
+            <a href="https://github.com/shulesoft8/Termly.app/releases/download/v1.0.0/Termly.Setup.1.0.0.exe" target="_blank" rel="noopener noreferrer">Desktop App</a>
+          </div>
+        </div>
+
+        <div className="ft-bottom">
           <div className="ft-b-links">
-             <span>All rights reserved.</span>
+            <Link to="/legal/privacy">Privacy</Link>
+            <span className="ft-pipe">|</span>
+            <Link to="/legal/terms">License</Link>
+            <span className="ft-pipe">|</span>
+            <Link to="/legal/acceptable-use">Brand guidelines</Link>
           </div>
         </div>
       </footer>

@@ -32,6 +32,7 @@ const LMS          = lazy(() => import('./pages/LMS'));
 const NEMISDashboard = lazy(() => import('./pages/NEMIS/index'));
 const TermsOfService  = lazy(() => import('./pages/legal/TermsOfService'));
 const PrivacyPolicy   = lazy(() => import('./pages/legal/PrivacyPolicy'));
+const CookiePolicy    = lazy(() => import('./pages/legal/CookiePolicy'));
 const AcceptableUse   = lazy(() => import('./pages/legal/AcceptableUse'));
 const RefundPolicy    = lazy(() => import('./pages/legal/RefundPolicy'));
 const ServiceLevel    = lazy(() => import('./pages/legal/ServiceLevel'));
@@ -644,6 +645,7 @@ function App() {
           <Route path="/book-demo"          element={<BookDemo />} />
           <Route path="/legal/terms"        element={<TermsOfService />} />
           <Route path="/legal/privacy"      element={<PrivacyPolicy />} />
+          <Route path="/legal/cookies"      element={<CookiePolicy />} />
           <Route path="/legal/acceptable-use" element={<AcceptableUse />} />
           <Route path="/legal/refunds"      element={<RefundPolicy />} />
           <Route path="/legal/service-level" element={<ServiceLevel />} />
