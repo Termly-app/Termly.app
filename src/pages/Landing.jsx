@@ -6,7 +6,7 @@ import './Landing.css';
 import {
   BookIcon, UserIcon, CheckIcon, CardIcon, SchoolIcon,
   PhoneIcon, DashboardIcon, CalendarIcon, FlagIcon, RocketIcon,
-  GraduationIcon, ChevronDownIcon
+  GraduationIcon, ChevronDownIcon, AppleIcon, WindowsIcon, AndroidIcon, DownloadIcon
 } from '../components/CommonIcons';
 import { Helmet } from 'react-helmet-async';
 
@@ -15,6 +15,7 @@ export default function Landing() {
   const barsRef = useRef(null);
   const [settings, setSettings] = useState(null);
   const [showLoginDropdown, setShowLoginDropdown] = useState(false);
+  const [showDlDropdown, setShowDlDropdown] = useState(false);
 
   useEffect(() => {
     async function loadSettings() {
@@ -76,6 +77,9 @@ export default function Landing() {
     const handleClickOutside = (e) => {
       if (showLoginDropdown && !e.target.closest('.nav-dropdown-w')) {
         setShowLoginDropdown(false);
+      }
+      if (showDlDropdown && !e.target.closest('.dl-dropdown-w')) {
+        setShowDlDropdown(false);
       }
     };
     document.addEventListener('mousedown', handleClickOutside);
@@ -288,20 +292,43 @@ export default function Landing() {
               Book a demo
               <svg width="15" height="15" viewBox="0 0 15 15" fill="none"><path d="M2.5 7.5h10M9 3.5l4 4-4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" /></svg>
             </Link>
-            <a 
-              href="https://github.com/shulesoft8/Termly.app/releases/download/v1.0.0/Termly.Setup.1.0.0.exe" 
-              target="_blank" 
-              rel="noopener noreferrer" 
-              className="btn-s"
-              style={{ display: 'inline-flex', alignItems: 'center', gap: 8, textDecoration: 'none' }}
-            >
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-                <polyline points="7 10 12 15 17 10"/>
-                <line x1="12" y1="15" x2="12" y2="3"/>
-              </svg>
-              Download Windows (.exe)
-            </a>
+            <div className="dl-dropdown-w" style={{ position: 'relative' }}>
+              <button 
+                className="btn-s"
+                onClick={() => setShowDlDropdown(!showDlDropdown)}
+                style={{ cursor: 'pointer' }}
+              >
+                <DownloadIcon size={16} />
+                Download App
+                <ChevronDownIcon size={14} style={{ transform: showDlDropdown ? 'rotate(180deg)' : 'none', transition: 'transform 0.3s', marginLeft: -4 }} />
+              </button>
+              
+              {showDlDropdown && (
+                <div className="portal-dropdown animate-pop" style={{ left: 0, right: 'auto', width: 260, top: 'calc(100% + 8px)' }}>
+                  <a href="https://github.com/shulesoft8/Termly.app/releases/download/v1.0.0/Termly.Setup.1.0.0.exe" className="pd-item" style={{ gap: 14 }}>
+                    <div className="pd-i" style={{ background: '#F3F4F6', color: '#111827' }}><WindowsIcon size={16} /></div>
+                    <div className="pd-t">
+                      <strong>Windows Desktop</strong>
+                      <span>v1.0.0 (.exe)</span>
+                    </div>
+                  </a>
+                  <a href="#" className="pd-item" style={{ gap: 14 }}>
+                    <div className="pd-i" style={{ background: '#F3F4F6', color: '#111827' }}><AppleIcon size={16} /></div>
+                    <div className="pd-t">
+                      <strong>Mac OS</strong>
+                      <span>Coming soon</span>
+                    </div>
+                  </a>
+                  <a href="#" className="pd-item" style={{ gap: 14 }}>
+                    <div className="pd-i" style={{ background: '#F3F4F6', color: '#111827' }}><AndroidIcon size={16} /></div>
+                    <div className="pd-t">
+                      <strong>Android App</strong>
+                      <span>Coming soon (APK)</span>
+                    </div>
+                  </a>
+                </div>
+              )}
+            </div>
           </div>
         </div>
 

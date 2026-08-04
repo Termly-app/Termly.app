@@ -614,3 +614,23 @@ export const ZapIcon = ({ size = 18, color = 'currentColor', className = '' }) =
   </svg>
 );
 
+export const AppleIcon = ({ size = 18, color = 'currentColor', className = '' }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill={color} style={iconStyle} className={className}>
+    <path d="M12 2.04c-1.34 0-2.58 1.12-2.58 2.62 0 1.5 1.25 2.62 2.58 2.62s2.58-1.12 2.58-2.62C14.58 3.16 13.34 2.04 12 2.04zm3 5c-1.5 0-2.5.5-3 .5s-1.5-.5-3-.5c-3 0-5 2.5-5 5.5 0 4 3.5 8.5 7 8.5 1.5 0 2.5-.5 3-.5s1.5.5 3 .5c3.5 0 7-4.5 7-8.5 0-3-2-5.5-5-5.5z"/>
+  </svg>
+);
+
+export const WindowsIcon = ({ size = 18, color = 'currentColor', className = '' }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill={color} style={iconStyle} className={className}>
+    <path d="M3 5l7-1v7H3V5zm8-1.2l9-1.3V11h-9V3.8zm-8 8.2h7v7l-7-1v-6zm8 0h9v7.5l-9-1.3v-6.2z"/>
+  </svg>
+);
+
+export const AndroidIcon = ({ size = 18, color = 'currentColor', className = '' }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill={color} style={iconStyle} className={className}>
+    <path d="M17.5 15.3l1.8-3.1a.25.25 0 0 0-.4-.3l-1.9 3.2a10.8 10.8 0 0 0-10 0l-1.9-3.2a.25.25 0 0 0-.4.3l1.8 3.1A11 11 0 0 0 2 21h20a11 11 0 0 0-4.5-5.7z"/>
+    <circle cx="8" cy="18" r="1" fill="#fff"/>
+    <circle cx="16" cy="18" r="1" fill="#fff"/>
+  </svg>
+);
+
