@@ -32,8 +32,8 @@ export default function SetPassword({ currentUser, onPasswordChanged }) {
       return;
     }
 
-    if (getPasswordStrength() < 3) {
-      setError('Password is too weak. Please use at least 8 characters, a number, and an uppercase letter.');
+    if (getPasswordStrength() < 4) {
+      setError('Password is too weak. Please use at least 8 characters, a number, an uppercase letter, and a special character.');
       return;
     }
 
@@ -121,7 +121,7 @@ export default function SetPassword({ currentUser, onPasswordChanged }) {
                   ></div>
                 </div>
                 <span className="sp-strength-text">
-                  {getPasswordStrength() < 2 ? 'Weak' : getPasswordStrength() < 3 ? 'Fair' : 'Strong'}
+                  {getPasswordStrength() < 2 ? 'Weak' : getPasswordStrength() < 4 ? 'Fair' : 'Strong'}
                 </span>
               </div>
             )}

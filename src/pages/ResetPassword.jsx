@@ -14,6 +14,16 @@ const ResetPassword = () => {
     const [error, setError] = useState(null);
     const navigate = useNavigate();
 
+    const getPasswordStrength = () => {
+        const v = password;
+        let s = 0;
+        if (v.length >= 8) s++;
+        if (/[A-Z]/.test(v)) s++;
+        if (/[0-9]/.test(v)) s++;
+        if (/[^A-Za-z0-9]/.test(v)) s++;
+        return s;
+    };
+
     const handleSubmit = async (e) => {
         e.preventDefault();
         
@@ -22,8 +32,8 @@ const ResetPassword = () => {
             return;
         }
 
-        if (password.length < 8) {
-            setError("Password must be at least 8 characters");
+        if (getPasswordStrength() < 4) {
+            setError('Password is too weak. Please use at least 8 characters, a number, an uppercase letter, and a special character.');
             return;
         }
 
@@ -138,8 +148,24 @@ const ResetPassword = () => {
                                             {showPassword ? <EyeOffIcon size={18} /> : <EyeIcon size={18} />}
                                         </button>
                                         <div className="res-uline"></div>
-                                        <div className="res-fhint text-muted">Must be at least 8 characters long.</div>
+                                        <div className="res-fhint text-muted">Must be at least 8 chars, include a number, uppercase, and special character.</div>
                                     </div>
+                                    
+                                    {password && (
+                                        <div className="res-pw-strength" style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24, marginTop: -12 }}>
+                                            <div style={{ flex: 1, height: 4, background: '#E8E8F0', borderRadius: 2, overflow: 'hidden' }}>
+                                                <div style={{
+                                                    height: '100%',
+                                                    width: `${(getPasswordStrength() / 4) * 100}%`,
+                                                    background: getPasswordStrength() < 2 ? '#EF4444' : getPasswordStrength() < 3 ? '#F59E0B' : '#10B981',
+                                                    transition: 'all 0.3s ease'
+                                                }}></div>
+                                            </div>
+                                            <span style={{ fontSize: '0.7rem', fontWeight: 700, color: '#6B7280', width: 40, textAlign: 'right' }}>
+                                                {getPasswordStrength() < 2 ? 'Weak' : getPasswordStrength() < 4 ? 'Fair' : 'Strong'}
+                                            </span>
+                                        </div>
+                                    )}
 
                                     <div className="res-field" style={{ marginBottom: 32 }}>
                                         <div className="res-fico">

@@ -109,6 +109,11 @@ export default function Register() {
       return;
     }
 
+    if (getPasswordStrength() < 4) {
+      setError('Password is too weak. Please use at least 8 characters, a number, an uppercase letter, and a special character.');
+      return;
+    }
+
     setLoading(true);
     setError(null);
 
@@ -410,6 +415,22 @@ export default function Register() {
                 </button>
                 <div className="res-uline"></div>
               </div>
+
+              {formData.password && (
+                <div className="res-pw-strength" style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 12 }}>
+                  <div style={{ flex: 1, height: 4, background: '#E8E8F0', borderRadius: 2, overflow: 'hidden' }}>
+                    <div style={{
+                      height: '100%',
+                      width: `${(getPasswordStrength() / 4) * 100}%`,
+                      background: getPasswordStrength() < 2 ? '#EF4444' : getPasswordStrength() < 3 ? '#F59E0B' : '#10B981',
+                      transition: 'all 0.3s ease'
+                    }}></div>
+                  </div>
+                  <span style={{ fontSize: '0.7rem', fontWeight: 700, color: '#6B7280', width: 40, textAlign: 'right' }}>
+                    {getPasswordStrength() < 2 ? 'Weak' : getPasswordStrength() < 4 ? 'Fair' : 'Strong'}
+                  </span>
+                </div>
+              )}
 
 
               <div className="res-check-row" style={{ marginTop: 20 }}>
