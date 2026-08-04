@@ -100,13 +100,8 @@ export default function Docs() {
                 </p>
                 <h3 style={{ marginTop: '32px' }}>1. Registration</h3>
                 <p style={{ color: 'var(--text-muted)', lineHeight: 1.7 }}>
-                  Use your official school email to sign up. This email will serve as your primary **School Admin** account. 
+                  Use your official school email to sign up. This email will serve as your primary <strong>School Admin</strong> account. 
                   After registration, you will receive an activation link to verify your institution.
-                </p>
-                <h3 style={{ marginTop: '32px' }}>2. Selection of Plans</h3>
-                <p style={{ color: 'var(--text-muted)', lineHeight: 1.7 }}>
-                  We offer three tiers: **Starter** (Up to 100 students), **Pro** (Up to 500 students), and **Elite** (Unlimited). 
-                  Each plan includes CBC grading and M-PESA integration.
                 </p>
               </article>
             )}
