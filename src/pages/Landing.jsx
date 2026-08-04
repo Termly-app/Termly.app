@@ -312,18 +312,18 @@ export default function Landing() {
                       <span>v1.0.0 (.exe)</span>
                     </div>
                   </a>
-                  <a href="#" className="pd-item" style={{ gap: 14 }}>
+                  <a href="https://github.com/shulesoft8/Termly.app/releases/download/v1.0.0/Termly.dmg" className="pd-item" style={{ gap: 14 }}>
                     <div className="pd-i" style={{ background: '#F3F4F6', color: '#111827' }}><AppleIcon size={16} /></div>
                     <div className="pd-t">
                       <strong>Mac OS</strong>
-                      <span>Coming soon</span>
+                      <span>v1.0.0 (.dmg)</span>
                     </div>
                   </a>
-                  <a href="#" className="pd-item" style={{ gap: 14 }}>
+                  <a href="https://github.com/shulesoft8/Termly.app/releases/download/v1.0.0/Termly.apk" className="pd-item" style={{ gap: 14 }}>
                     <div className="pd-i" style={{ background: '#F3F4F6', color: '#111827' }}><AndroidIcon size={16} /></div>
                     <div className="pd-t">
                       <strong>Android App</strong>
-                      <span>Coming soon (APK)</span>
+                      <span>v1.0.0 (.apk)</span>
                     </div>
                   </a>
                 </div>
