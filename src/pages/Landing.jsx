@@ -289,7 +289,7 @@ export default function Landing() {
               <svg width="15" height="15" viewBox="0 0 15 15" fill="none"><path d="M2.5 7.5h10M9 3.5l4 4-4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" /></svg>
             </Link>
             <a 
-              href="https://github.com/shulesoft8/Termly.app/releases" 
+              href="https://github.com/shulesoft8/Termly.app/releases/download/v1.0.0/Termly.Setup.1.0.0.exe" 
               target="_blank" 
               rel="noopener noreferrer" 
               className="btn-s"
