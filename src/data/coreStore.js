@@ -11,7 +11,7 @@ export let _currentExamType = '';
 
 
 export function initPortalStore(schoolId, userId = null, periodId = null) {
-
+  console.log(`[PORTAL STORE] Initializing for School: ${schoolId}, User: ${userId}`);
   _currentSchoolId = schoolId;
   _currentUserId = userId;
   _currentPeriodId = periodId;
@@ -285,7 +285,7 @@ export function subscribeToSchoolChanges(onSettingsChange, onProfileChange) {
       event: '*', schema: 'public', table: 'school_features',
       filter: `school_id=eq.${_currentSchoolId}`
     }, (payload) => {
-
+      console.log("[REALTIME] Feature changed:", payload.new);
       invalidateFeatureCache(_currentSchoolId);
       onSettingsChange();
     })
@@ -598,7 +598,7 @@ export async function getPlatformStats() {
 export async function getAllSchools() {
   const { data: schools, error: sErr } = await supabase
     .from('schools')
-    .select('id, name, status, email, plan, owner_id, phone, location, created_at, school_profiles(*)');
+    .select('id, name, email, plan, owner_id, phone, location, created_at, school_profiles(*)');
 
   if (sErr) {
     console.error('Error fetching all schools:', sErr);
@@ -634,33 +634,11 @@ export async function getAllSchools() {
 }
 
 export async function updateSchoolPlan(schoolId, planName) {
-  const { error: e1 } = await supabase
+  const { error } = await supabase
     .from('schools')
     .update({ plan: planName })
     .eq('id', schoolId);
-  if (e1) throw e1;
-
-  const { data: existing } = await supabase
-    .from('school_profiles')
-    .select('id')
-    .eq('school_id', schoolId)
-    .maybeSingle();
-
-  if (existing?.id) {
-    await supabase
-      .from('school_profiles')
-      .update({ subscription_plan: planName, subscription_status: 'Active' })
-      .eq('id', existing.id);
-  } else {
-    await supabase
-      .from('school_profiles')
-      .insert({ school_id: schoolId, subscription_plan: planName, subscription_status: 'Active' });
-  }
-
-  _profileCache = null;
-  invalidateCache(`profile_${schoolId}`);
-  invalidateFeatureCache(schoolId);
-
+  if (error) throw error;
   await logPlatformActivity('PLAN_CHANGE', `School ${schoolId} plan updated to ${planName}`, schoolId);
 }
 
@@ -694,13 +672,7 @@ export async function updateSchoolLimits(schoolId, { students, staff }) {
       student_limit: numStudents
     }, { onConflict: 'school_id' });
 
-  if (error) {
-    const { error: e2 } = await supabase
-      .from('school_profiles')
-      .update({ custom_subjects })
-      .eq('school_id', schoolId);
-    if (e2) throw e2;
-  }
+  if (error) throw error;
 
   try {
     _profileCache = null;
@@ -714,39 +686,21 @@ export async function updateSchoolLimits(schoolId, { students, staff }) {
 
 export async function deactivateSchool(schoolId, reason = null) {
   const pastDate = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
-  
-  const { data: existing } = await supabase
-    .from('school_profiles')
-    .select('id')
-    .eq('school_id', schoolId)
-    .maybeSingle();
-
-  if (existing?.id) {
-    await supabase
-      .from('school_profiles')
-      .update({ subscription_status: 'Deactivated', subscription_expiry: pastDate, status_notes: reason })
-      .eq('id', existing.id);
-  } else {
-    await supabase
-      .from('school_profiles')
-      .insert({ school_id: schoolId, subscription_status: 'Deactivated', subscription_expiry: pastDate, status_notes: reason });
-  }
-
-  await supabase.from('schools').update({ status: 'Deactivated' }).eq('id', schoolId);
+  const { error: e1 } = await supabase.from('school_profiles')
+    .upsert({ school_id: schoolId, subscription_status: 'Deactivated', subscription_expiry: pastDate, status_notes: reason }, { onConflict: 'school_id' });
+  if (e1) throw e1;
 
   const { error: e2 } = await supabase.from('school_features')
     .update({ expires_at: pastDate }).eq('school_id', schoolId);
   if (e2) console.warn('DeactivateSchool: Failed to expire features', e2);
 
   invalidateFeatureCache(schoolId);
-  _profileCache = null;
-  invalidateCache(`profile_${schoolId}`);
   await logPlatformActivity('DEACTIVATION', `School ${schoolId} deactivated. Reason: ${reason || 'Not specified'}`, schoolId);
 }
 
 export async function restoreSchool(schoolId, monthsToAdd = 4, notes = null) {
   const { data: profileData } = await supabase.from('school_profiles')
-    .select('id, subscription_expiry').eq('school_id', schoolId).maybeSingle();
+    .select('subscription_expiry').eq('school_id', schoolId).maybeSingle();
 
   let expiry = new Date();
   if (profileData?.subscription_expiry) {
@@ -755,22 +709,11 @@ export async function restoreSchool(schoolId, monthsToAdd = 4, notes = null) {
   }
   expiry.setMonth(expiry.getMonth() + monthsToAdd);
 
-  if (profileData?.id) {
-    await supabase
-      .from('school_profiles')
-      .update({ subscription_status: 'Active', subscription_expiry: expiry.toISOString(), status_notes: notes })
-      .eq('id', profileData.id);
-  } else {
-    await supabase
-      .from('school_profiles')
-      .insert({ school_id: schoolId, subscription_status: 'Active', subscription_expiry: expiry.toISOString(), status_notes: notes });
-  }
-
-  await supabase.from('schools').update({ status: 'Active' }).eq('id', schoolId);
+  const { error } = await supabase.from('school_profiles')
+    .upsert({ school_id: schoolId, subscription_status: 'Active', subscription_expiry: expiry.toISOString(), status_notes: notes }, { onConflict: 'school_id' });
+  if (error) throw error;
 
   invalidateFeatureCache(schoolId);
-  _profileCache = null;
-  invalidateCache(`profile_${schoolId}`);
   await logPlatformActivity('RESTORATION', `School ${schoolId} restored for ${monthsToAdd} months`, schoolId);
 }
 
@@ -802,8 +745,7 @@ export async function adminUpdateSchoolProfile(schoolId, updates) {
   mutationGuard('adminUpdateSchoolProfile');
   const { error } = await supabase
     .from('school_profiles')
-    .update(updates)
-    .eq('school_id', schoolId);
+    .upsert({ school_id: schoolId, ...updates }, { onConflict: 'school_id' });
   if (error) throw error;
   await logPlatformActivity('ADMIN_UPDATE_PROFILE', `Updated profile for school ${schoolId}`, schoolId);
 }
@@ -1020,7 +962,7 @@ export async function getSchoolByCode(code) {
 
 export async function getPortalActivity(limit = 10) {
   const { data, error } = await supabase.from('portal_activity_log')
-    .select('*').eq('_currentSchoolId', _currentSchoolId)
+    .select('*').eq('school_id', _currentSchoolId)
     .order('created_at', { ascending: false }).limit(limit);
   if (error) throw error;
   return (data || []).map(item => ({

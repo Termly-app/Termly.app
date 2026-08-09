@@ -121,8 +121,8 @@ export async function addTeacher(teacher) {
     
   if (error) throw error;
   
-  const { data: pData } = await supabase.from('school_profiles').select('staff_count').eq('school_id', _currentSchoolId).single();
-  await supabase.from('school_profiles').update({ staff_count: (pData?.staff_count || 0) + 1 }).eq('school_id', _currentSchoolId);
+  const { data: pData } = await supabase.from('school_profiles').select('staff_count').eq('school_id', _currentSchoolId).maybeSingle();
+  await supabase.from('school_profiles').upsert({ school_id: _currentSchoolId, staff_count: (pData?.staff_count || 0) + 1 }, { onConflict: 'school_id' });
 
   try { await db.teachers.put(data); } catch(e) {}
   return data;
@@ -174,9 +174,9 @@ export async function deleteTeacher(id) {
   try { await db.teachers.delete(id); } catch(e) {}
 
   if (schoolId) {
-    const { data: pData } = await supabase.from('school_profiles').select('staff_count').eq('school_id', schoolId).single();
+    const { data: pData } = await supabase.from('school_profiles').select('staff_count').eq('school_id', schoolId).maybeSingle();
     if (pData && pData.staff_count > 0) {
-      await supabase.from('school_profiles').update({ staff_count: pData.staff_count - 1 }).eq('school_id', schoolId);
+      await supabase.from('school_profiles').upsert({ school_id: schoolId, staff_count: pData.staff_count - 1 }, { onConflict: 'school_id' });
     }
   }
 }

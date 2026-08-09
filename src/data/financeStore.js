@@ -104,7 +104,6 @@ export async function recordPayment(studentId, amount, method, reference) {
   if (!feeRecord) {
     const student = (await getStudents()).find(s => s.id === studentId);
     const profile = await getSchoolProfile();
-    const { getCalculatedTotalFee } = await import('./academicsStore.js');
     const finalFee = getCalculatedTotalFee(student, profile);
 
     if (finalFee === null) {
@@ -540,8 +539,7 @@ export async function submitPayment(amount, transactionCode, notes = '') {
   // Update last payment status in school profile
   await supabase
     .from('school_profiles')
-    .update({ last_payment_status: 'pending' })
-    .eq('school_id', _currentSchoolId);
+    .upsert({ school_id: _currentSchoolId, last_payment_status: 'pending' }, { onConflict: 'school_id' });
 
   await logPlatformActivity('PAYMENT_SUBMIT', `New payment of KSh ${amount.toLocaleString()} submitted via code: ${transactionCode}`, _currentSchoolId);
 }
@@ -593,12 +591,12 @@ export async function approvePayment(paymentId, schoolId, monthsToAdd = 4) {
   // 2. Update school profile
   const { error: sError } = await supabase
     .from('school_profiles')
-    .update({ 
+    .upsert({ 
+      school_id: schoolId,
       subscription_status: 'Active',
       subscription_expiry: expiry.toISOString(),
       last_payment_status: 'approved'
-    })
-    .eq('school_id', schoolId);
+    }, { onConflict: 'school_id' });
   if (sError) throw sError;
 
   // 3. Sync status to schools table
@@ -619,8 +617,7 @@ export async function rejectPayment(paymentId, schoolId, reason = 'Verification 
 
   await supabase
     .from('school_profiles')
-    .update({ last_payment_status: 'rejected' })
-    .eq('school_id', schoolId);
+    .upsert({ school_id: schoolId, last_payment_status: 'rejected' }, { onConflict: 'school_id' });
 
   await logPlatformActivity('PAYMENT_REJECT', `Rejected payment for ${schoolId}: ${reason}`, schoolId);
 }
@@ -629,8 +626,7 @@ export async function cancelSubscription() {
   if (!_currentSchoolId) return;
   const { error } = await supabase
     .from('school_profiles')
-    .update({ subscription_status: 'Deactivated' })
-    .eq('school_id', _currentSchoolId);
+    .upsert({ school_id: _currentSchoolId, subscription_status: 'Deactivated' }, { onConflict: 'school_id' });
   if (error) throw error;
   await logPlatformActivity('SUBSCRIPTION_CANCEL', `School canceled subscription: ${_currentSchoolId}`, _currentSchoolId);
 }
@@ -639,8 +635,7 @@ export async function updateSchoolPlan(schoolId, plan) {
   // 1. Update Profile (Detailed data - used by School Portal)
   const { error: pError } = await supabase
     .from('school_profiles')
-    .update({ subscription_plan: plan })
-    .eq('school_id', schoolId);
+    .upsert({ school_id: schoolId, subscription_plan: plan }, { onConflict: 'school_id' });
   if (pError) throw pError;
 
   // 2. Update Schools Master (Summarized data - used by Super Admin list)
@@ -674,12 +669,12 @@ export async function manualExtendSubscription(schoolId, daysToAdd) {
 
   const { error } = await supabase
     .from('school_profiles')
-    .update({ 
+    .upsert({ 
+      school_id: schoolId,
       subscription_status: 'Active',
       subscription_expiry: newExpiry.toISOString(),
       last_payment_status: 'manual_extension'
-    })
-    .eq('school_id', schoolId);
+    }, { onConflict: 'school_id' });
   
   if (error) throw error;
   

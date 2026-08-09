@@ -80,7 +80,8 @@ export async function saveKemisConfig(config) {
   try {
     const { error } = await supabase
       .from('school_profiles')
-      .update({
+      .upsert({
+        school_id: _currentSchoolId,
         kemis_code: config.institution_code,
         nemis_center_no: config.nemis_center_no,
         county: config.county,
@@ -91,8 +92,7 @@ export async function saveKemisConfig(config) {
           last_sync: config.last_sync || new Date().toISOString(),
           auto_sync_weekly: config.auto_sync_weekly,
         },
-      })
-      .eq('school_id', _currentSchoolId);
+      }, { onConflict: 'school_id' });
 
     if (error) throw error;
     return { success: true };
