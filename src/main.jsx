@@ -4,7 +4,11 @@ import App from './App'
 import './pages/App.css'
 import './index.css'
 import { initStore } from './data/coreStore';
-import { BrowserRouter } from 'react-router-dom';
+import { BrowserRouter, HashRouter } from 'react-router-dom';
+
+const isElectron = navigator.userAgent.toLowerCase().includes('electron');
+const Router = isElectron ? HashRouter : BrowserRouter;
+
 import { HelmetProvider } from 'react-helmet-async';
 import ScrollToTop from './components/ScrollToTop';
 import { DialogProvider } from './contexts/DialogContext';
@@ -80,14 +84,14 @@ if (rootElement) {
     <React.StrictMode>
       <ErrorBoundary>
         <HelmetProvider>
-          <BrowserRouter>
+          <Router>
             <DialogProvider>
               <ScrollToTop />
               <OfflineDetector>
                 <App />
               </OfflineDetector>
             </DialogProvider>
-          </BrowserRouter>
+          </Router>
         </HelmetProvider>
       </ErrorBoundary>
     </React.StrictMode>
