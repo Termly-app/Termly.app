@@ -159,8 +159,8 @@ h1,h2,h3,h4,h5,h6 { line-height: 1.25; }
   position: relative;
   user-select: none;
 }
-.nav-item:hover { background: rgba(255, 255, 255, 0.08); color: #fff; }
-.nav-item.active { background: var(--primary); color: #fff; font-weight: 600; }
+.nav-item.active { background: var(--primary); color: var(--primary-contrast, #fff); font-weight: 600; }
+.nav-item.active .nav-icon { color: var(--primary-contrast, #fff); }
 
 .nav-item.nav-locked {
   cursor: not-allowed;
@@ -601,7 +601,7 @@ h1,h2,h3,h4,h5,h6 { line-height: 1.25; }
   font-size: 0.65rem; font-weight: 700;
   padding: 1px 6px; border-radius: 10px;
 }
-.tab-btn.active .tab-count { background: var(--primary); color: #fff; }
+.tab-btn.active .tab-count { background: var(--primary); color: var(--primary-contrast, #fff); }
 
 /* ── Filter Bar ────────────────────────────────────────────────   */
 .filter-bar {
@@ -1337,7 +1337,7 @@ select:focus, .form-select:focus {
 .mx-auto    { margin-left: auto; margin-right: auto; }
 .text-primary { color: var(--primary); }
 .text-danger  { color: var(--danger); }
-.bg-primary   { background: var(--primary); }
+.bg-primary   { background: var(--primary); color: var(--primary-contrast, #fff); }
 .bg-white     { background: #fff; }
 .shadow-sm    { box-shadow: var(--shadow-sm); }
 .shadow-lg    { box-shadow: var(--shadow-lg); }
