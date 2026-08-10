@@ -536,7 +536,15 @@ function App() {
 
   useEffect(() => {
     const handlePeriodChange = () => setPeriodId(getCurrentPeriodId());
+    const handleProfileChange = async () => {
+      try {
+        const p = await getSchoolProfile();
+        setProfile(p);
+      } catch (err) { console.error('Failed to reload profile in App:', err); }
+    };
+
     window.addEventListener('periodChanged', handlePeriodChange);
+    window.addEventListener('schoolProfileChanged', handleProfileChange);
 
     const checkSession = async () => {
       try {
@@ -612,9 +620,10 @@ function App() {
 
     return () => {
       subscription?.unsubscribe();
-      window.removeEventListener('periodChanged',    handleGlobalPeriodRefresh);
-      window.removeEventListener('schoolChanged',    handleGlobalPeriodRefresh);
-      window.removeEventListener('periodChanged',    handlePeriodChange);
+      window.removeEventListener('periodChanged', handleGlobalPeriodRefresh);
+      window.removeEventListener('schoolChanged', handleGlobalPeriodRefresh);
+      window.removeEventListener('schoolProfileChanged', handleProfileChange);
+      window.removeEventListener('periodChanged', handlePeriodChange);
     };
   }, []);
 
@@ -770,6 +779,16 @@ function SuspendedView({ profile, onLogout }) {
 
   return (
     <>
+      {profile?.primaryColor && (
+        <style>
+          {`:root {
+            --primary: ${profile.primaryColor};
+            --primary-light: ${profile.primaryColor}E6;
+            --primary-dark: ${profile.primaryColor}CC;
+            --primary-50: ${profile.primaryColor}1A;
+          }`}
+        </style>
+      )}
       {isLocked && <LockScreen user={currentUser} onUnlock={() => setIsLocked(false)} />}
       <FeaturesProvider user={currentUser}>
       <div className="app-layout app-shell">

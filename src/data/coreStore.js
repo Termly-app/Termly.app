@@ -369,6 +369,7 @@ export async function getSchoolProfileBySchoolId(schoolId) {
     subscriptionExpiry: data.subscription_expiry,
     logoUrl: data.logo_url || data.logo || '',
     logo: data.logo || data.logo_url || '',
+    primaryColor: data.primary_color || (typeof localStorage !== 'undefined' ? localStorage.getItem(`Termly_primary_color_${schoolId}`) : null) || null,
     motto: data.motto || '',
     phone: data.phone || '',
     address: data.address || '',
@@ -489,6 +490,16 @@ export async function saveSchoolProfile(profile) {
   if (profile.schoolType !== undefined) row.school_type = profile.schoolType;
   if (profile.logoUrl !== undefined) row.logo_url = profile.logoUrl;
   if (profile.logo !== undefined) row.logo = profile.logo;
+  if (profile.primaryColor !== undefined) {
+    row.primary_color = profile.primaryColor;
+    if (_currentSchoolId && typeof localStorage !== 'undefined') {
+      if (profile.primaryColor) {
+        localStorage.setItem(`Termly_primary_color_${_currentSchoolId}`, profile.primaryColor);
+      } else {
+        localStorage.removeItem(`Termly_primary_color_${_currentSchoolId}`);
+      }
+    }
+  }
 
   const encryptIfNew = async (val, oldEncrypted) => {
     if (!val) return null;

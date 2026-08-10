@@ -12,6 +12,8 @@ import Select from '../components/Common/Select';
 import { Helmet } from 'react-helmet-async';
 import { useDialog } from '../contexts/DialogContext';
 import { useFeature } from '../contexts/FeaturesContext';
+import Cropper from 'react-easy-crop';
+import getCroppedImg from '../utils/cropImage';
 import {
   ClockIcon, CheckIcon, SaveIcon, SchoolIcon, ImageIcon, FolderIcon,
   BookIcon, CardIcon, DiamondIcon, PhoneIcon, RefreshIcon, CrossIcon, PlusIcon,
@@ -41,6 +43,14 @@ export default function Settings() {
   const [saved,setSaved]       = useState(false);
   const [loading,setLoading]   = useState(false);
   const [logoPreview,setLogoPreview] = useState('');
+  
+  // Crop state
+  const [cropImageSrc, setCropImageSrc] = useState(null);
+  const [crop, setCrop] = useState({ x: 0, y: 0 });
+  const [zoom, setZoom] = useState(1);
+  const [croppedAreaPixels, setCroppedAreaPixels] = useState(null);
+  const [isCropping, setIsCropping] = useState(false);
+
   const [activeLevel,setActiveLevel] = useState('Upper Primary');
   const [newSubject,setNewSubject]   = useState('');
   const [newStream,setNewStream]     = useState({});
@@ -141,8 +151,36 @@ export default function Settings() {
     const f=e.target.files[0];if(!f)return;
     if(f.size>2097152){alert({ title: 'Upload Limit', message: 'Logo file is too large. Max size is 2MB.', variant: 'warning' });return;}
     const r=new FileReader();
-    r.onload=ev=>{setLogoPreview(ev.target.result);setProfile(p=>({...p,logo:ev.target.result}));setSaved(false);};
+    r.onload=ev=>{
+      setCropImageSrc(ev.target.result);
+      setIsCropping(true);
+      // Reset input so the same file can be selected again if cancelled
+      if (fileRef.current) fileRef.current.value = '';
+    };
     r.readAsDataURL(f);
+  };
+  
+  const handleCropComplete = (croppedArea, croppedAreaPixels) => {
+    setCroppedAreaPixels(croppedAreaPixels);
+  };
+
+  const handleCropSave = async () => {
+    try {
+      const croppedImage = await getCroppedImg(cropImageSrc, croppedAreaPixels);
+      setLogoPreview(croppedImage);
+      setProfile(p=>({...p,logo:croppedImage}));
+      setSaved(false);
+      setIsCropping(false);
+      setCropImageSrc(null);
+    } catch (e) {
+      console.error(e);
+      alert({ title: 'Crop Error', message: 'Failed to crop image.', variant: 'danger' });
+    }
+  };
+
+  const handleCropCancel = () => {
+    setIsCropping(false);
+    setCropImageSrc(null);
   };
   const handleRemoveLogo = () => {
     setLogoPreview('');
@@ -584,6 +622,35 @@ export default function Settings() {
                     Remove
                   </button>
                 )}
+              </div>
+
+              <div style={{ marginTop: 24, paddingTop: 24, borderTop: '1px solid var(--border)' }}>
+                <div style={{ fontSize: '0.85rem', fontWeight: 600, marginBottom: 12 }}>Brand Color</div>
+                <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                  {['#4f46e5', '#3b82f6', '#0ea5e9', '#10b981', '#f59e0b', '#ef4444', '#ec4899', '#8b5cf6', '#14b8a6', '#0f172a'].map(color => (
+                    <button
+                      key={color}
+                      onClick={() => { setProfile({...profile, primaryColor: color}); setSaved(false); }}
+                      style={{
+                        width: 32, height: 32, borderRadius: '50%', background: color, border: 'none', cursor: 'pointer',
+                        boxShadow: profile.primaryColor === color || (!profile.primaryColor && color === '#4f46e5') ? `0 0 0 3px var(--bg), 0 0 0 5px ${color}` : 'none',
+                        transition: 'transform 0.1s'
+                      }}
+                      onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.1)'}
+                      onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}
+                      title={color}
+                    />
+                  ))}
+                  <div style={{ position: 'relative', width: 32, height: 32, borderRadius: '50%', overflow: 'hidden', border: '1px solid var(--border)' }}>
+                    <input 
+                      type="color" 
+                      value={profile.primaryColor || '#4f46e5'} 
+                      onChange={e => { setProfile({...profile, primaryColor: e.target.value}); setSaved(false); }}
+                      style={{ position: 'absolute', top: -10, left: -10, width: 60, height: 60, cursor: 'pointer', padding: 0, border: 'none' }}
+                      title="Custom Color"
+                    />
+                  </div>
+                </div>
               </div>
 
               {profile.schoolName && (
@@ -1501,6 +1568,49 @@ export default function Settings() {
                   </button>
                 </div>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Cropper Modal */}
+      {isCropping && cropImageSrc && (
+        <div style={{
+          position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+          background: 'rgba(0,0,0,0.85)', zIndex: 99999,
+          display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+          padding: 20
+        }}>
+          <div style={{ position: 'relative', width: '100%', maxWidth: 480, height: 320, background: '#1e293b', borderRadius: 16, overflow: 'hidden', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.5)' }}>
+            <Cropper
+              image={cropImageSrc}
+              crop={crop}
+              zoom={zoom}
+              aspect={1}
+              onCropChange={setCrop}
+              onZoomChange={setZoom}
+              onCropComplete={handleCropComplete}
+            />
+          </div>
+          <div style={{ width: '100%', maxWidth: 480, background: 'var(--bg-card)', padding: 20, borderRadius: 16, marginTop: 16, display: 'flex', flexDirection: 'column', gap: 16, boxShadow: '0 20px 25px -5px rgba(0,0,0,0.3)' }}>
+            <div>
+              <label style={{ fontSize: '0.8rem', fontWeight: 600, display: 'block', marginBottom: 8 }}>Zoom / Crop Adjustment</label>
+              <input
+                type="range"
+                value={zoom}
+                min={1}
+                max={3}
+                step={0.1}
+                aria-labelledby="Zoom"
+                onChange={(e) => setZoom(Number(e.target.value))}
+                style={{ width: '100%', accentColor: 'var(--primary)' }}
+              />
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12 }}>
+              <button className="btn btn-secondary" style={{ flex: 1 }} onClick={handleCropCancel}>Cancel</button>
+              <button className="btn btn-primary" style={{ flex: 1 }} onClick={handleCropSave}>
+                <SaveIcon size={16} /> Apply Crop
+              </button>
             </div>
           </div>
         </div>
