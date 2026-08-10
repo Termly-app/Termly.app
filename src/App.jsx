@@ -167,6 +167,21 @@ function SbSection({ label }) {
   return <div className="sidebar-section">{label}</div>;
 }
 
+// Helper to calculate high contrast text color (black vs white) based on primary hex background
+function getContrastColor(hexColor) {
+  if (!hexColor) return '#ffffff';
+  let hex = hexColor.replace('#', '');
+  if (hex.length === 3) {
+    hex = hex.split('').map(c => c + c).join('');
+  }
+  if (hex.length !== 6) return '#ffffff';
+  const r = parseInt(hex.substring(0, 2), 16);
+  const g = parseInt(hex.substring(2, 4), 16);
+  const b = parseInt(hex.substring(4, 6), 16);
+  const yiq = (r * 299 + g * 587 + b * 114) / 1000;
+  return yiq >= 150 ? '#0f172a' : '#ffffff';
+}
+
 // === SIDEBAR ================================================================
 function Sidebar({ isOpen, onClose, onLogout, onLock, currentUser, subscriptionActive }) {
   const [schoolName,     setSchoolName]     = useState('Termly');
@@ -786,6 +801,7 @@ function SuspendedView({ profile, onLogout }) {
             --primary-light: ${profile.primaryColor}E6;
             --primary-dark: ${profile.primaryColor}CC;
             --primary-50: ${profile.primaryColor}1A;
+            --primary-contrast: ${getContrastColor(profile.primaryColor)};
           }`}
         </style>
       )}

@@ -386,7 +386,7 @@ body {
 
 /* UI Elements */
 .btn { padding: 10px 20px; border-radius: 8px; font-weight: 600; cursor: pointer; border: none; display: inline-flex; align-items: center; gap: 8px; transition: var(--transition); }
-.btn-primary { background: var(--primary); color: white; }
+.btn-primary { background: var(--primary); color: var(--primary-contrast, white); }
 .btn-ghost { background: transparent; color: var(--text-secondary); border: 1px solid var(--border); }
 .pill-y { background: #fef9c3; color: #854d0e; }
 .pill-v { background: #dcfce7; color: #15803d; }

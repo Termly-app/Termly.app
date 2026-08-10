@@ -477,7 +477,7 @@ h1,h2,h3,h4,h5,h6 { line-height: 1.25; }
 .btn:disabled { opacity: 0.5; cursor: not-allowed; pointer-events: none; }
 
 .btn-primary {
-  background: var(--primary); color: #fff;
+  background: var(--primary); color: var(--primary-contrast, #fff);
   box-shadow: 0 2px 8px rgba(14,165,233,0.3);
 }
 .btn-primary:hover:not(:disabled) {
@@ -1408,7 +1408,7 @@ select:focus, .form-select:focus {
 .shadow-xl    { box-shadow: 0 20px 40px rgba(0,0,0,0.14); }
 .btn-ghost    { background: transparent; border: 1.5px solid var(--border); color: var(--text-light); padding: 9px 18px; border-radius: var(--radius-sm); font-family: inherit; font-size: 0.875rem; font-weight: 600; cursor: pointer; transition: all 0.18s; }
 .btn-ghost:hover { background: var(--bg); color: var(--text-main); }
-.btn-primary  { background: var(--primary); color: #fff; border: none; padding: 9px 18px; border-radius: var(--radius-sm); font-family: inherit; font-size: 0.875rem; font-weight: 600; cursor: pointer; transition: all 0.18s; box-shadow: 0 2px 8px rgba(14,165,233,0.3); }
+.btn-primary  { background: var(--primary); color: var(--primary-contrast, #fff); border: none; padding: 9px 18px; border-radius: var(--radius-sm); font-family: inherit; font-size: 0.875rem; font-weight: 600; cursor: pointer; transition: all 0.18s; box-shadow: 0 2px 8px rgba(14,165,233,0.3); }
 .btn-primary:hover { background: var(--primary-dark); }
 .btn-sm { padding: 6px 12px !important; font-size: 0.8rem !important; }
 .premium-billing-card {
