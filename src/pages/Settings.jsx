@@ -139,10 +139,15 @@ export default function Settings() {
   const handleChange=(e)=>{const{name,value}=e.target;setProfile(p=>({...p,[name]:value}));setSaved(false);};
   const handleLogoUpload=(e)=>{
     const f=e.target.files[0];if(!f)return;
-    if(f.size>512000){alert({ title: 'Upload Limit', message: 'Logo file is too large. Max size is 500KB.', variant: 'warning' });return;}
+    if(f.size>2097152){alert({ title: 'Upload Limit', message: 'Logo file is too large. Max size is 2MB.', variant: 'warning' });return;}
     const r=new FileReader();
-    r.onload=ev=>{setLogoPreview(ev.target.result);setProfile(p=>({...p,logo:ev.target.result}));};
+    r.onload=ev=>{setLogoPreview(ev.target.result);setProfile(p=>({...p,logo:ev.target.result}));setSaved(false);};
     r.readAsDataURL(f);
+  };
+  const handleRemoveLogo = () => {
+    setLogoPreview('');
+    setProfile(p => ({...p, logo: null, logoUrl: null}));
+    setSaved(false);
   };
   const toggleGrade=(g)=>{
     let nc=[...(profile.activeClasses||[])];
@@ -537,29 +542,58 @@ export default function Settings() {
           {/* Logo */}
           <div className="card">
             <div className="card-header"><h3><ImageIcon size={20} /> Visual Identity</h3></div>
-            <div className="card-body" style={{textAlign:'center'}}>
+            <div className="card-body">
               <div
                 onClick={()=>fileRef.current.click()}
-                style={{width:110,height:110,borderRadius:16,margin:'0 auto 14px',background:'var(--bg)',border:'2px dashed var(--border)',display:'flex',alignItems:'center',justifyContent:'center',cursor:'pointer',overflow:'hidden',transition:'border-color 0.15s'}}
+                style={{
+                  width: '100%',
+                  minHeight: 140,
+                  borderRadius: 16,
+                  marginBottom: 16,
+                  background: 'var(--bg)',
+                  border: '2px dashed var(--border)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  cursor: 'pointer',
+                  overflow: 'hidden',
+                  transition: 'border-color 0.15s',
+                  padding: 16
+                }}
                 onMouseEnter={e=>e.currentTarget.style.borderColor='var(--primary)'}
                 onMouseLeave={e=>e.currentTarget.style.borderColor='var(--border)'}>
-                {logoPreview?<img src={logoPreview} alt="Logo" style={{width:'100%',height:'100%',objectFit:'contain'}}/>:
+                {logoPreview ? (
+                  <img src={logoPreview} alt="Logo" style={{ maxWidth: '100%', maxHeight: 110, objectFit: 'contain' }} />
+                ) : (
                   <div style={{color:'var(--text-muted)',textAlign:'center'}}>
-                    <div style={{fontSize:'1.8rem',marginBottom:4}}><ImageIcon size={32} /></div>
-                    <div style={{fontSize:'0.68rem',fontWeight:700,textTransform:'uppercase',letterSpacing:'0.06em'}}>Upload Logo</div>
-                  </div>}
+                    <div style={{fontSize:'2.2rem',marginBottom:8}}><ImageIcon size={32} /></div>
+                    <div style={{fontSize:'0.75rem',fontWeight:600,color:'var(--text)'}}>Click to upload school logo</div>
+                    <div style={{fontSize:'0.65rem',marginTop:4}}>PNG or JPG · Max 2MB</div>
+                  </div>
+                )}
               </div>
+              
               <input ref={fileRef} type="file" hidden onChange={handleLogoUpload} accept="image/*"/>
-              <button className="btn btn-ghost btn-sm" style={{width:'100%',marginBottom:6}} onClick={()=>fileRef.current.click()}><FolderIcon size={14} /> Choose File</button>
-              <p style={{fontSize:'0.72rem',color:'var(--text-muted)',margin:0}}>PNG or JPG · Max 500KB</p>
-              {profile.schoolName&&(
-                <div style={{marginTop:16,padding:'12px 14px',background:'var(--bg)',borderRadius:10,border:'1px solid var(--border)',display:'flex',alignItems:'center',gap:12,textAlign:'left'}}>
-                  <div style={{width:38,height:38,borderRadius:9,background:'var(--primary-light)',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0,overflow:'hidden'}}>
-                    {logoPreview?<img src={logoPreview} style={{width:'100%',height:'100%',objectFit:'cover'}}/>:<SchoolIcon size={20} />}
+              
+              <div style={{ display: 'flex', gap: 12 }}>
+                <button className="btn btn-secondary" style={{ flex: 1 }} onClick={()=>fileRef.current.click()}>
+                  <FolderIcon size={16} /> {logoPreview ? 'Change Logo' : 'Upload Logo'}
+                </button>
+                {logoPreview && (
+                  <button className="btn btn-outline" style={{ color: 'var(--danger)', borderColor: 'var(--danger-light)' }} onClick={handleRemoveLogo}>
+                    Remove
+                  </button>
+                )}
+              </div>
+
+              {profile.schoolName && (
+                <div style={{marginTop:24,padding:'16px',background:'var(--bg)',borderRadius:12,border:'1px solid var(--border)',display:'flex',alignItems:'center',gap:16}}>
+                  <div style={{width:48,height:48,borderRadius:12,background:'var(--white)',border:'1px solid var(--border-light)',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0,overflow:'hidden'}}>
+                    {logoPreview ? <img src={logoPreview} style={{width:'100%',height:'100%',objectFit:'contain',padding:4}}/> : <SchoolIcon size={24} color="var(--primary)" />}
                   </div>
                   <div>
-                    <div style={{fontWeight:700,fontSize:'0.875rem'}}>{profile.schoolName}</div>
-                    <div style={{fontSize:'0.72rem',color:'var(--text-light)',fontStyle:'italic'}}>{profile.motto||'Excellence in Education'}</div>
+                    <div style={{fontWeight:700,fontSize:'0.95rem'}}>{profile.schoolName}</div>
+                    <div style={{fontSize:'0.75rem',color:'var(--text-light)',fontStyle:'italic',marginTop:2}}>{profile.motto||'Excellence in Education'}</div>
                   </div>
                 </div>
               )}

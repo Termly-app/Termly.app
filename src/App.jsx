@@ -256,9 +256,13 @@ function Sidebar({ isOpen, onClose, onLogout, onLock, currentUser, subscriptionA
       <aside className={`sidebar sidebar--admin ${isOpen ? 'open' : ''}`}>
         {/* Brand */}
         <div className="sb-brand">
-          <LogoMarkBW size={32} />
+          {profile?.logo ? (
+            <img src={profile.logo} alt="Logo" style={{ height: 32, width: 32, objectFit: 'contain', borderRadius: 8, background: '#fff', padding: 2 }} />
+          ) : (
+            <LogoMarkBW size={32} />
+          )}
           <div className="sb-brand-txt">
-            <div className="sb-name">Termly</div>
+            <div className="sb-name">{profile?.schoolName || 'Termly'}</div>
             <div className="sb-tag">Platform Admin</div>
           </div>
         </div>
@@ -322,9 +326,13 @@ function Sidebar({ isOpen, onClose, onLogout, onLock, currentUser, subscriptionA
     <aside className={`sidebar ${isOpen ? 'open' : ''}`}>
       {/* Brand */}
       <div className="sidebar-logo">
-        <LogoMarkBW size={34} />
+        {profile?.logo ? (
+          <img src={profile.logo} alt="Logo" style={{ height: 34, width: 34, objectFit: 'contain', borderRadius: 8, background: '#fff', padding: 2 }} />
+        ) : (
+          <LogoMarkBW size={34} />
+        )}
         <div className="sidebar-logo-txt">
-          <div className="sidebar-logo-name">Termly</div>
+          <div className="sidebar-logo-name">{profile?.schoolName || 'Termly'}</div>
           <div className="sidebar-logo-sub">School Portal</div>
         </div>
       </div>
@@ -836,10 +844,14 @@ function SuspendedView({ profile, onLogout }) {
           <div className="topbar">
             <div className="topbar-left">
               <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                <LogoMark size={22} />
+                {profile?.logo ? (
+                  <img src={profile.logo} alt="Logo" style={{ height: 26, width: 26, objectFit: 'contain', borderRadius: 6, background: '#fff', padding: 2 }} />
+                ) : (
+                  <LogoMark size={22} />
+                )}
                 <div>
-                  <div className="topbar-title desktop-only">Administration</div>
-                  <div className="topbar-title mobile-only">Termly</div>
+                  <div className="topbar-title desktop-only">{profile?.schoolName || 'Termly'}</div>
+                  <div className="topbar-title mobile-only">{profile?.schoolName ? (profile.schoolName.length > 15 ? profile.schoolName.substring(0,15) + '...' : profile.schoolName) : 'Termly'}</div>
                 </div>
               </div>
             </div>
@@ -949,11 +961,28 @@ function SuspendedView({ profile, onLogout }) {
           </div>
 
           {/* Global Print Overlay Header (In Flow to push content down) */}
-          {profile?.logo && (
-            <div className="global-print-flow-header" style={{ margin: '15mm 15mm 0', paddingBottom: '10px', alignItems: 'center', gap: '15px' }}>
-              <img src={profile.logo} alt="School Logo" style={{ height: 60, objectFit: 'contain' }} />
+          <div className="global-print-flow-header" style={{ margin: '8mm 15mm 0', paddingBottom: '6px', borderBottom: '2px solid #111827', alignItems: 'center', justifyContent: 'center', gap: '12px', display: 'none' }}>
+            {profile?.logo && (
+              <img src={profile.logo} alt="School Logo" style={{ height: 48, maxWidth: 90, objectFit: 'contain' }} />
+            )}
+            <div style={{ textAlign: profile?.logo ? 'left' : 'center', color: '#111827' }}>
+              <div style={{ fontSize: '1.1rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.02em', margin: 0, lineHeight: 1.1 }}>
+                {profile?.schoolName || 'Termly High School'}
+              </div>
+              {profile?.motto && (
+                <div style={{ fontSize: '0.75rem', fontStyle: 'italic', color: '#4B5563', marginTop: '1px' }}>
+                  "{profile.motto}"
+                </div>
+              )}
+              <div style={{ fontSize: '0.7rem', marginTop: '3px', color: '#374151', lineHeight: 1.2 }}>
+                {profile?.address && <span>{profile.address}</span>}
+                {profile?.address && (profile?.phone || profile?.email) && <span style={{ margin: '0 6px' }}>•</span>}
+                {profile?.phone && <span>{profile.phone}</span>}
+                {profile?.phone && profile?.email && <span style={{ margin: '0 6px' }}>•</span>}
+                {profile?.email && <span>{profile.email}</span>}
+              </div>
             </div>
-          )}
+          </div>
 
           {/* Page content */}
           <div className="page-content">
