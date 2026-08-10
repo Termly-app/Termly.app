@@ -95,6 +95,14 @@ export async function decryptData(encryptedStr, schoolId) {
  * This function generates the <meta> tag equivalent for client-side enforcement.
  */
 export function applySecurityHeaders() {
+  // CSP 'self' under Electron's file:// protocol blocks all outbound
+  // network requests (Supabase, fonts, etc.), so skip it entirely.
+  const isElectron = navigator.userAgent.toLowerCase().includes('electron');
+  if (isElectron) {
+    console.log('[SECURITY] Skipping CSP in Electron (file:// protocol).');
+    return;
+  }
+
   const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || '';
   const supabaseDomain = supabaseUrl ? new URL(supabaseUrl).hostname : '';
   

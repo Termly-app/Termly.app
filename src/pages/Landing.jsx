@@ -90,7 +90,7 @@ export default function Landing() {
       window.removeEventListener('scroll', onScroll);
       document.removeEventListener('mousedown', handleClickOutside);
     };
-  }, [showLoginDropdown]);
+  }, [showLoginDropdown, showDlDropdown]);
 
   useEffect(() => {
     // ── SCROLL REVEAL ──
@@ -678,6 +678,7 @@ export default function Landing() {
         </div>
 
         <div className="ft-bottom">
+          <div className="ft-copyright">© {new Date().getFullYear()} Termly. All rights reserved.</div>
           <div className="ft-b-links">
             <Link to="/legal/privacy">Privacy</Link>
             <span className="ft-pipe">|</span>

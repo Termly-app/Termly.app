@@ -521,6 +521,7 @@ footer.landing-footer{
 .ft-eco-links a:hover{color:var(--white)}
 
 .ft-bottom{display:flex;justify-content:space-between;align-items:center;padding-top:32px;position:relative;z-index:2}
+.ft-copyright{font-size:.85rem;color:var(--muted);font-weight:500}
 .ft-b-links{display:flex;align-items:center;gap:16px;font-size:.85rem}
 .ft-b-links a{color:var(--muted);text-decoration:none;transition:color 0.2s}
 .ft-b-links a:hover{color:var(--white)}
