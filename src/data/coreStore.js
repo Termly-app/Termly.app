@@ -410,9 +410,15 @@ export function checkIsSubscriptionActive(profile) {
   if (profile.subscriptionPlan === 'Platform Admin') return true;
 
   const status = String(profile.subscriptionStatus || profile.subscription_status || '').toLowerCase().trim();
+  const plan = String(profile.subscriptionPlan || profile.subscription_plan || '').toLowerCase().trim();
   
-  // Explicitly block inactive, deactivated, suspended, or expired accounts
-  if (['inactive', 'deactivated', 'suspended', 'expired'].includes(status)) {
+  // Explicitly block inactive, deactivated, suspended, expired, or missing status
+  if (!status || ['inactive', 'deactivated', 'suspended', 'expired'].includes(status)) {
+    return false;
+  }
+
+  // Must be explicitly 'active' or 'sandbox'
+  if (status !== 'active' && plan !== 'sandbox') {
     return false;
   }
 
@@ -699,8 +705,12 @@ export async function updateSchoolLimits(schoolId, { students, staff }) {
 
 export async function deactivateSchool(schoolId, reason = null) {
   const pastDate = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+  await supabase.from('schools')
+    .update({ status: 'Inactive', subscription_expiry: pastDate })
+    .eq('id', schoolId);
+
   const { error: e1 } = await supabase.from('school_profiles')
-    .upsert({ school_id: schoolId, subscription_status: 'Deactivated', subscription_expiry: pastDate, status_notes: reason }, { onConflict: 'school_id' });
+    .upsert({ school_id: schoolId, subscription_status: 'Inactive', subscription_expiry: pastDate, status_notes: reason }, { onConflict: 'school_id' });
   if (e1) throw e1;
 
   const { error: e2 } = await supabase.from('school_features')
@@ -708,6 +718,8 @@ export async function deactivateSchool(schoolId, reason = null) {
   if (e2) console.warn('DeactivateSchool: Failed to expire features', e2);
 
   invalidateFeatureCache(schoolId);
+  invalidateCache(`profile_${schoolId}`);
+  window.dispatchEvent(new Event('schoolProfileChanged'));
   await logPlatformActivity('DEACTIVATION', `School ${schoolId} deactivated. Reason: ${reason || 'Not specified'}`, schoolId);
 }
 
@@ -722,11 +734,17 @@ export async function restoreSchool(schoolId, monthsToAdd = 4, notes = null) {
   }
   expiry.setMonth(expiry.getMonth() + monthsToAdd);
 
+  await supabase.from('schools')
+    .update({ status: 'Active', subscription_expiry: expiry.toISOString() })
+    .eq('id', schoolId);
+
   const { error } = await supabase.from('school_profiles')
     .upsert({ school_id: schoolId, subscription_status: 'Active', subscription_expiry: expiry.toISOString(), status_notes: notes }, { onConflict: 'school_id' });
   if (error) throw error;
 
   invalidateFeatureCache(schoolId);
+  invalidateCache(`profile_${schoolId}`);
+  window.dispatchEvent(new Event('schoolProfileChanged'));
   await logPlatformActivity('RESTORATION', `School ${schoolId} restored for ${monthsToAdd} months`, schoolId);
 }
 
