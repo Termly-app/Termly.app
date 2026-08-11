@@ -12,7 +12,10 @@
     "preview": "vite preview",
     "test": "vitest",
     "electron:start": "vite build && electron .",
-    "electron:build": "vite build && electron-builder"
+    "electron:build": "vite build && electron-builder",
+    "cap:sync": "vite build && npx cap sync",
+    "cap:open": "npx cap open android",
+    "android:build": "vite build && npx cap sync android && cd android && gradlew.bat assembleDebug"
   },
   "build": {
     "appId": "com.termly.school",

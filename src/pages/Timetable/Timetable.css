@@ -125,28 +125,28 @@
   font-size:.58rem; letter-spacing:.09em; text-transform:uppercase;
   color:var(--text-muted,#556558); font-weight:500;
   border-bottom:1px solid var(--border,rgba(255,255,255,.06));
-  border-right:1px solid rgba(255,255,255,.03); text-align:center;
+  border-right:1px solid rgba(255,255,255,.10); text-align:center;
 }
 .tt-grid thead th:first-child { width:90px; text-align:left; padding-left:12px; }
 .tt-day-today { color:#6F52E8 !important; background:rgba(111,82,232,.05) !important; }
 .tt-time-cell {
   background:var(--bg-card,#161A17); padding:8px 10px;
   border-right:1px solid var(--border,rgba(255,255,255,.06));
-  border-bottom:1px solid rgba(255,255,255,.03);
+  border-bottom:1px solid rgba(255,255,255,.10);
   vertical-align:middle; width:90px;
 }
 .tt-time-label { font-family:'Inter',sans-serif; font-size:.68rem; font-weight:700; color:var(--text,#D0DAD2); }
 .tt-time-range { font-size:.57rem; color:var(--text-muted,#556558); margin-top:2px; }
 .tt-break-row td {
   background:rgba(255,255,255,.015); text-align:center; padding:7px;
-  border-bottom:1px solid rgba(255,255,255,.03);
+  border-bottom:1px solid rgba(255,255,255,.10);
 }
 .tt-break-label { font-size:.67rem; color:var(--text-muted,#556558); letter-spacing:.05em; font-weight: 600; }
 
 /* ─── Teaching cells ─────────────────────────────────────────────────────── */
 .tt-cell {
-  padding: 6px; border-right: 1px solid rgba(255,255,255,.03);
-  border-bottom: 1px solid rgba(255,255,255,.03);
+  padding: 6px; border-right: 1px solid rgba(255,255,255,.10);
+  border-bottom: 1px solid rgba(255,255,255,.10);
   vertical-align: top; cursor: pointer; transition: all .2s cubic-bezier(0.4, 0, 0.2, 1);
   min-height: 72px; position: relative;
   height: 1px;

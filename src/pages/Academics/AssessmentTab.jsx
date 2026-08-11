@@ -139,6 +139,66 @@ export default function AssessmentTab({ currentUser, currentPeriodId }) {
     setEditMarks(prev => ({ ...prev, [sid]: { ...prev[sid], [sub]: clamped } }));
   };
 
+  // Spreadsheet-style navigation. Each mark input gets an id of
+  // `mark-r{row}-c{col}` (row = student index, col = subject index) so
+  // arrow keys / Enter can jump straight to the DOM node instead of
+  // relying on default browser tab order, which only ever moves forward.
+  const focusMarkCell = (row, col) => {
+    const el = document.getElementById(`mark-r${row}-c${col}`);
+    if (el) { el.focus(); el.select(); }
+  };
+
+  const handleMarkKeyDown = (e, row, col) => {
+    switch (e.key) {
+      case 'ArrowUp':
+        e.preventDefault(); focusMarkCell(row - 1, col); break;
+      case 'ArrowDown':
+      case 'Enter':
+        e.preventDefault(); focusMarkCell(row + 1, col); break;
+      case 'ArrowLeft':
+        if (e.target.selectionStart === 0) { e.preventDefault(); focusMarkCell(row, col - 1); }
+        break;
+      case 'ArrowRight':
+        if (e.target.selectionStart === e.target.value.length) { e.preventDefault(); focusMarkCell(row, col + 1); }
+        break;
+      case 'Tab':
+        // Let Tab do its native thing, but Shift+Tab at the row start and
+        // Tab at the row end should still feel like a grid, not a jump
+        // out of the table — plain browser tab order already handles the
+        // common case, so no extra handling needed here.
+        break;
+      default:
+        break;
+    }
+  };
+
+  // Paste a block copied from Excel/Sheets: tab-separated columns,
+  // newline-separated rows, starting from whichever cell has focus. This
+  // is the single biggest "feels like a spreadsheet" win — a teacher who
+  // already has marks in a spreadsheet can paste one column or a whole
+  // grid in one action instead of retyping every cell.
+  const handleMarkPaste = (e, row, col) => {
+    const text = e.clipboardData?.getData('text');
+    if (!text || !text.includes('\t') && !text.includes('\n')) return; // let a single value paste normally
+    e.preventDefault();
+    const rows = text.replace(/\r/g, '').split('\n').filter(r => r.length > 0);
+    rows.forEach((rowText, rOffset) => {
+      const cells = rowText.split('\t');
+      cells.forEach((cellText, cOffset) => {
+        const targetRow = results[row + rOffset];
+        const targetSub = subjects[col + cOffset];
+        if (!targetRow || !targetSub) return;
+        const val = cellText.trim();
+        if (val !== '' && !isNaN(Number(val))) {
+          handleMarkChange(targetRow.id, targetSub, val);
+        }
+      });
+    });
+    // Land the cursor at the end of the pasted block rather than leaving
+    // it on the first cell, matching how Sheets/Excel behave.
+    setTimeout(() => focusMarkCell(row + rows.length - 1, col + Math.max(...rows.map(r => r.split('\t').length)) - 1), 0);
+  };
+
   const saveAllMarks = async () => {
     setLoading(true);
     setSyncingExam(true);
@@ -457,7 +517,7 @@ export default function AssessmentTab({ currentUser, currentPeriodId }) {
     table{width:100%;border-collapse:collapse;margin-bottom:18px}th,td{border:1px solid #e2e8f0;padding:7px 10px;text-align:left;font-size:11px}
     th{background:#1e3a5f;color:white}
     .ee{color:#10b981;font-weight:700}.me{color:#3b82f6;font-weight:700}.ae{color:#f59e0b;font-weight:700}.be{color:#ef4444;font-weight:700}
-    .sigs{display:flex;justify-content:space-between;margin-top:40px;font-size:11px}.sigs div{text-align:center}.sigs .ln{width:130px;border-top:1px solid #1e293b;margin:0 auto 5px}
+    .sigs{display:flex;justify-content:space-between;margin-top:40px;font-size:11px}.sigs div{text-align:center}.sigs .ln{width:130px;border-top:1px solid #1e3a5f;margin:0 auto 5px}
     .strengths{margin:14px 0;font-size:12px}.strengths strong{color:#1e3a5f}
     .section-title{margin:20px 0 8px;font-size:13px;font-weight:700;color:#1e3a5f;border-bottom:2px solid #e2e8f0;padding-bottom:4px}
       @media print{.report-page{padding:15px}}
@@ -724,7 +784,7 @@ export default function AssessmentTab({ currentUser, currentPeriodId }) {
                 <tbody>
                   {results.length === 0 ? (
                     <tr><td colSpan={subjects.length + 5} className="text-center text-muted" style={{ padding: 40 }}>{selectedClass === 'All' ? 'Please select a specific class to view and manage grades.' : 'No students in this class'}</td></tr>
-                  ) : results.map(s => {
+                  ) : results.map((s, rowIdx) => {
                     const marks = editMode ? editMarks[s.id] || {} : s.marks;
                     const total = editMode ? Object.values(marks).reduce((a, b) => a + b, 0) : s.total;
                     const avg = editMode ? (Object.keys(marks).length > 0 ? total / Object.keys(marks).length : 0) : s.average;
@@ -748,7 +808,7 @@ export default function AssessmentTab({ currentUser, currentPeriodId }) {
                             )}
                           </div>
                         </td>
-                        {subjects.map(sub => {
+                        {subjects.map((sub, colIdx) => {
                           // Check if this teacher is assigned to this subject in THIS stream
                           const teacherAssigned = (assignments[selectedClass]?.[s.stream || 'General']?.[sub] === currentUser?.id) || 
                                                  (assignments[selectedClass]?.['General']?.[sub] === currentUser?.id);
@@ -762,8 +822,10 @@ export default function AssessmentTab({ currentUser, currentPeriodId }) {
                           return (
                             <td key={sub}>
                               {editMode && canEdit ? (
-                                <input type="number" min="0" max="100" value={marks[sub] !== undefined ? marks[sub] : ''} 
+                                <input id={`mark-r${rowIdx}-c${colIdx}`} type="number" min="0" max="100" value={marks[sub] !== undefined ? marks[sub] : ''} 
                                   onChange={e => handleMarkChange(s.id, sub, e.target.value)}
+                                  onKeyDown={e => handleMarkKeyDown(e, rowIdx, colIdx)}
+                                  onPaste={e => handleMarkPaste(e, rowIdx, colIdx)}
                                   style={{ width: 50, padding: '3px 5px', border: '2px solid var(--primary)', borderRadius: 4, textAlign: 'center', fontFamily: 'var(--font)', fontSize: '0.82rem', background: 'rgba(59,130,246,0.05)' }} />
                               ) : (
                                 <span style={{ color: (marks[sub] || 0) < 50 && marks[sub] !== undefined ? '#ef4444' : 'inherit', opacity: editMode && !canEdit ? 0.5 : 1 }}>
@@ -1060,7 +1122,7 @@ function ReportCardModal({ student, cbcData, coreCompData, onClose, getGrade, cb
       table{width:100%;border-collapse:collapse;margin-bottom:18px}th,td{border:1px solid #e2e8f0;padding:7px 10px;text-align:left;font-size:11px}
       th{background:#1e3a5f;color:white}
       .ee{color:#10b981;font-weight:700}.me{color:#3b82f6;font-weight:700}.ae{color:#f59e0b;font-weight:700}.be{color:#ef4444;font-weight:700}
-      .sigs{display:flex;justify-content:space-between;margin-top:40px;font-size:11px}.sigs div{text-align:center}.sigs .ln{width:130px;border-top:1px solid #1e293b;margin:0 auto 5px}
+      .sigs{display:flex;justify-content:space-between;margin-top:40px;font-size:11px}.sigs div{text-align:center}.sigs .ln{width:130px;border-top:1px solid #1e3a5f;margin:0 auto 5px}
       .strengths{margin:14px 0;font-size:12px}.strengths strong{color:#1e3a5f}
       .section-title{margin:20px 0 8px;font-size:13px;font-weight:700;color:#1e3a5f;border-bottom:2px solid #e2e8f0;padding-bottom:4px}
       </style></head><body>
