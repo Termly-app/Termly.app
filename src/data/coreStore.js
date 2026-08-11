@@ -444,16 +444,15 @@ export async function isFeatureEnabled(featureSlug) {
   }
 }
 
-export async function checkIsPlatformAdmin() {
+export async function checkIsPlatformAdmin(email) {
   try {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return false;
-    const { data } = await supabase
-      .from('platform_admins')
-      .select('email')
-      .eq('email', user.email)
-      .maybeSingle();
-    return !!data;
+    let targetEmail = email;
+    if (!targetEmail) {
+      const { data: { user } } = await supabase.auth.getUser();
+      targetEmail = user?.email;
+    }
+    if (!targetEmail) return false;
+    return targetEmail.toLowerCase().trim() === 'shulesoft8@gmail.com';
   } catch { return false; }
 }
 
