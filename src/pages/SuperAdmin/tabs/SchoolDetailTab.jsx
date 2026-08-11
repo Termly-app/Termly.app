@@ -294,7 +294,7 @@ export default function SchoolDetailTab({ school, onBack, setActivateModal, hand
                 <input 
                   type="number" 
                   name="staffLimit"
-                  defaultValue={profile?.custom_subjects?.__limits?.staff || 1000}
+                  defaultValue={profile?.custom_subjects?.__limits?.staff || profile?.staff_limit || 5}
                   className="sa-input"
                   required
                   min="1"
