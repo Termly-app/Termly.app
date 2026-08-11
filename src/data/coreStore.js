@@ -345,40 +345,43 @@ export function subscribeToChanges(onStudentChange, onFeeChange) {
 
 export async function getSchoolProfileBySchoolId(schoolId) {
   if (!schoolId) return null;
-  const { data, error } = await supabase
-    .from('school_profiles')
-    .select('*')
-    .eq('school_id', schoolId)
-    .maybeSingle();
-  if (error || !data) return null;
+  const [{ data, error }, { data: schoolData }] = await Promise.all([
+    supabase.from('school_profiles').select('*').eq('school_id', schoolId).maybeSingle(),
+    supabase.from('schools').select('*').eq('id', schoolId).maybeSingle()
+  ]);
 
-  const activeClasses = data.active_classes || data.activeClasses || [];
-  const streamsPerClass = data.streams_per_class || data.streamsPerClass || {};
-  const customSubjects = data.custom_subjects || data.customSubjects || {};
-  const gradeFees = data.grade_fees || data.gradeFees || {};
-  const gradingSystems = data.grading_systems || data.gradingSystems || null;
+  if (error || (!data && !schoolData)) return null;
+
+  const prof = data || {};
+  const sch = schoolData || {};
+
+  const activeClasses = prof.active_classes || prof.activeClasses || [];
+  const streamsPerClass = prof.streams_per_class || prof.streamsPerClass || {};
+  const customSubjects = prof.custom_subjects || prof.customSubjects || {};
+  const gradeFees = prof.grade_fees || prof.gradeFees || {};
+  const gradingSystems = prof.grading_systems || prof.gradingSystems || null;
 
   return {
-    id: data.id,
-    schoolId: data.school_id,
-    school_id: data.school_id,
-    schoolName: data.school_name || data.schoolName || '',
-    school_name: data.school_name || data.schoolName || '',
-    subscriptionPlan: data.subscription_plan || 'Free',
-    subscriptionStatus: data.subscription_status || 'Active',
-    subscriptionExpiry: data.subscription_expiry,
-    logoUrl: data.logo_url || data.logo || '',
-    logo: data.logo || data.logo_url || '',
-    primaryColor: data.primary_color || (typeof localStorage !== 'undefined' ? localStorage.getItem(`Termly_primary_color_${schoolId}`) : null) || null,
-    motto: data.motto || '',
-    phone: data.phone || '',
-    address: data.address || '',
-    email: data.email || '',
-    schoolType: data.school_type || data.schoolType || 'Day',
-    school_type: data.school_type || data.schoolType || 'Day',
-    curriculum: data.curriculum || 'CBC Only',
-    enabledModules: data.enabled_modules || {},
-    enabled_modules: data.enabled_modules || {},
+    id: prof.id || sch.id,
+    schoolId: schoolId,
+    school_id: schoolId,
+    schoolName: prof.school_name || prof.schoolName || sch.name || '',
+    school_name: prof.school_name || prof.schoolName || sch.name || '',
+    subscriptionPlan: sch.plan || prof.subscription_plan || 'Free',
+    subscriptionStatus: sch.status || prof.subscription_status || 'Active',
+    subscriptionExpiry: sch.subscription_expiry || prof.subscription_expiry || null,
+    logoUrl: prof.logo_url || prof.logo || '',
+    logo: prof.logo || prof.logo_url || '',
+    primaryColor: prof.primary_color || (typeof localStorage !== 'undefined' ? localStorage.getItem(`Termly_primary_color_${schoolId}`) : null) || null,
+    motto: prof.motto || '',
+    phone: prof.phone || '',
+    address: prof.address || '',
+    email: prof.email || sch.email || '',
+    schoolType: prof.school_type || prof.schoolType || 'Day',
+    school_type: prof.school_type || prof.schoolType || 'Day',
+    curriculum: prof.curriculum || 'CBC Only',
+    enabledModules: prof.enabled_modules || {},
+    enabled_modules: prof.enabled_modules || {},
     grading_systems: gradingSystems,
     gradingSystems: gradingSystems,
     grade_fees: gradeFees,
@@ -389,14 +392,14 @@ export async function getSchoolProfileBySchoolId(schoolId) {
     streamsPerClass: streamsPerClass,
     custom_subjects: customSubjects,
     customSubjects: customSubjects,
-    studentLimit: data.student_limit || customSubjects?.__limits?.students || 10000,
-    student_limit: data.student_limit || customSubjects?.__limits?.students || 10000,
-    staffLimit: data.staff_limit || customSubjects?.__limits?.staff || 5,
-    staff_limit: data.staff_limit || customSubjects?.__limits?.staff || 5,
-    portal_access: data.portal_access,
-    mpesa_config: data.mpesa_config,
-    sms_config: data.sms_config,
-    setup_completed: data.setup_completed
+    studentLimit: sch.student_limit || prof.student_limit || customSubjects?.__limits?.students || 10000,
+    student_limit: sch.student_limit || prof.student_limit || customSubjects?.__limits?.students || 10000,
+    staffLimit: sch.staff_limit || prof.staff_limit || customSubjects?.__limits?.staff || 5,
+    staff_limit: sch.staff_limit || prof.staff_limit || customSubjects?.__limits?.staff || 5,
+    portal_access: prof.portal_access,
+    mpesa_config: prof.mpesa_config,
+    sms_config: prof.sms_config,
+    setup_completed: prof.setup_completed
   };
 }
 
