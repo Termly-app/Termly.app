@@ -403,23 +403,25 @@ export async function getSchoolProfileBySchoolId(schoolId) {
 export function checkIsSubscriptionActive(profile) {
   if (!profile) return false;
   
-  // Sandbox and Platform Admin (Super Admin) NEVER expire
-  if (profile.subscriptionPlan === 'Sandbox' || profile.subscriptionPlan === 'Platform Admin') return true;
+  // Platform Admin (Super Admin) NEVER gets blocked
+  if (profile.subscriptionPlan === 'Platform Admin') return true;
 
-  if (profile.subscriptionStatus === 'Deactivated' || profile.subscriptionStatus === 'Suspended') {
+  const status = String(profile.subscriptionStatus || profile.subscription_status || '').toLowerCase().trim();
+  
+  // Explicitly block inactive, deactivated, suspended, or expired accounts
+  if (['inactive', 'deactivated', 'suspended', 'expired'].includes(status)) {
     return false;
   }
 
-  // Enforce explicit subscription expiry date for Demo & Production accounts
-  if (profile.subscriptionExpiry) {
-    const expDate = new Date(profile.subscriptionExpiry);
+  // Enforce explicit subscription expiry date
+  const expiry = profile.subscriptionExpiry || profile.subscription_expiry;
+  if (expiry) {
+    const expDate = new Date(expiry);
     expDate.setHours(23, 59, 59, 999);
     if (expDate < new Date()) {
       return false;
     }
   }
-
-  if (profile.subscriptionStatus === 'Expired') return false;
 
   return true;
 }

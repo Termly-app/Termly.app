@@ -743,8 +743,18 @@ function App() {
 
   // --- Suspended School View ------------------------------------------------
 function SuspendedView({ profile, onLogout }) {
-  const isSuspended = profile?.subscriptionStatus === 'Suspended';
-  const status = isSuspended ? 'Suspended' : 'Deactivated';
+  const rawStatus = (profile?.subscriptionStatus || profile?.subscription_status || 'Inactive');
+  const isSuspended = rawStatus.toLowerCase() === 'suspended';
+  const isExpired = rawStatus.toLowerCase() === 'expired';
+  const isInactive = rawStatus.toLowerCase() === 'inactive';
+  
+  const statusTitle = isExpired ? 'Subscription Expired' : isInactive ? 'Subscription Inactive' : `Account ${rawStatus}`;
+  const statusMessage = isExpired 
+    ? 'Your school subscription has expired. Please renew to continue using Termly.'
+    : isInactive 
+    ? 'This school workspace is currently inactive in the system.'
+    : 'This workspace account is currently restricted.';
+
   const supportNum = "+254 712 260 057";
   
   return (
@@ -761,10 +771,10 @@ function SuspendedView({ profile, onLogout }) {
         </div>
         
         <h1 style={{ fontSize: '1.5rem', fontWeight: 800, marginBottom: 8, color: 'var(--text-main)' }}>
-          Account {status}
+          {statusTitle}
         </h1>
         <p style={{ color: 'var(--text-light)', marginBottom: 32, fontSize: '0.9rem' }}>
-          This workspace is currently restricted.
+          {statusMessage}
         </p>
 
         <div style={{ marginBottom: 32 }}>
