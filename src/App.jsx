@@ -594,7 +594,8 @@ function App() {
             setProfile(profileData);
 
             const isSubActive = await checkIsSubscriptionActive(profileData);
-            setSubscriptionActive(realIsPlatAdmin || isSubActive);
+            const allowAccess = (realIsPlatAdmin && isActingAs) || isSubActive;
+            setSubscriptionActive(allowAccess);
 
             setCurrentUser({
               id         : userRecord.id,
@@ -798,7 +799,7 @@ function SuspendedView({ profile, onLogout }) {
 }
 
 // --- School portal ---
-  if (!subscriptionActive && !isPlatformAdmin) {
+  if (!subscriptionActive && !(isPlatformAdmin && isShadowMode())) {
     return <SuspendedView profile={profile} onLogout={handleLogout} />;
   }
 
