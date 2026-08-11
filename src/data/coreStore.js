@@ -679,8 +679,6 @@ export async function updateSchoolLimits(schoolId, { students, staff }) {
     .upsert({
       school_id: schoolId,
       custom_subjects,
-      staff_limit: numStaff,
-      student_limit: numStudents
     }, { onConflict: 'school_id' });
 
   if (error) throw error;
