@@ -32,7 +32,11 @@ export default function TeacherPortalAdmin() {
     }
   };
 
-  const portalUrl = `${window.location.origin}/staff/login`;
+  const webOrigin = (window.location.origin && !window.location.origin.startsWith('file:') && !window.location.origin.includes('localhost'))
+    ? window.location.origin 
+    : (import.meta.env.VITE_APP_URL || 'https://termly-app.vercel.app');
+
+  const portalUrl = `${webOrigin}/staff/login`;
 
   const handleCopyLink = () => {
     navigator.clipboard.writeText(portalUrl);

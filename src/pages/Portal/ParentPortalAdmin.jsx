@@ -31,8 +31,12 @@ export default function ParentPortalAdmin() {
     }
   };
 
-  const portalUrl = `${window.location.origin}/portal/login`;
-  const magicLinkUrl = `${window.location.origin}/portal/login?school=${encodeURIComponent(profile?.schoolName || '')}`;
+  const webOrigin = (window.location.origin && !window.location.origin.startsWith('file:') && !window.location.origin.includes('localhost'))
+    ? window.location.origin 
+    : (import.meta.env.VITE_APP_URL || 'https://termly-app.vercel.app');
+
+  const portalUrl = `${webOrigin}/portal/login`;
+  const magicLinkUrl = `${webOrigin}/portal/login?school=${encodeURIComponent(profile?.schoolName || '')}`;
 
   const handleCopyLink = (url, id) => {
     navigator.clipboard.writeText(url);
