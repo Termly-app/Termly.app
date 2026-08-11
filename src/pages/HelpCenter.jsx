@@ -110,7 +110,7 @@ export default function HelpCenter() {
       </Helmet>
       {/* Header Section */}
       <div style={{ 
-        background: 'linear-gradient(135deg, #4A32E0 0%, #6155FF 100%)',
+        background: 'linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%)',
         padding: '60px 40px',
         borderRadius: '0 0 40px 40px',
         textAlign: 'center',

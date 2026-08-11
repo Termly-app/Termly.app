@@ -1270,7 +1270,7 @@ function ReportCardModal({ student, cbcData, coreCompData, onClose, getGrade, cb
                   { isDraft: false }
                 );
               }}
-              style={{ background: '#4f46e5', borderColor: '#4f46e5' }}
+              style={{ background: 'var(--primary)', borderColor: 'var(--primary)', color: 'var(--primary-contrast, #fff)' }}
             >
               <BookIcon size={16} /> Download PDF
             </button>

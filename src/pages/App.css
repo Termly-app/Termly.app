@@ -498,10 +498,10 @@ h1,h2,h3,h4,h5,h6 { line-height: 1.25; }
 .btn-danger:hover:not(:disabled) { background: #DC2626; }
 
 .btn-accent {
-  background: var(--purple); color: #fff;
-  box-shadow: 0 2px 8px rgba(139,92,246,0.25);
+  background: var(--primary); color: var(--primary-contrast, #fff);
+  box-shadow: 0 2px 8px var(--primary-50);
 }
-.btn-accent:hover:not(:disabled) { background: #7C3AED; }
+.btn-accent:hover:not(:disabled) { background: var(--primary-dark); }
 
 .btn-ghost {
   background: transparent; color: var(--text-light);
