@@ -8,7 +8,7 @@
 :root {
   /* Default Theme (Light/Termly Classic) */
   --primary: #4f46e5;
-  --primary-light: #6366f1;
+  --primary-light: rgba(79, 70, 229, 0.12);
   --primary-dark: #4338ca;
   --primary-50: rgba(79, 70, 229, 0.05);
 

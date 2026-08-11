@@ -798,9 +798,10 @@ function SuspendedView({ profile, onLogout }) {
         <style>
           {`:root {
             --primary: ${profile.primaryColor};
-            --primary-light: ${profile.primaryColor}E6;
-            --primary-dark: ${profile.primaryColor}CC;
-            --primary-50: ${profile.primaryColor}1A;
+            --primary-light: ${profile.primaryColor}26;
+            --primary-dark: ${profile.primaryColor};
+            --primary-50: ${profile.primaryColor}10;
+            --primary-border: ${profile.primaryColor}33;
             --primary-contrast: ${getContrastColor(profile.primaryColor)};
           }`}
         </style>
