@@ -43,8 +43,22 @@ function createWindow() {
   });
 }
 
+const { autoUpdater } = require('electron-updater');
+
 app.whenReady().then(() => {
   createWindow();
+
+  // Initialize auto updater
+  autoUpdater.checkForUpdatesAndNotify();
+
+  autoUpdater.on('update-available', () => {
+    console.log('Update available.');
+  });
+  
+  autoUpdater.on('update-downloaded', () => {
+    console.log('Update downloaded. Quitting and installing...');
+    autoUpdater.quitAndInstall();
+  });
 
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) createWindow();

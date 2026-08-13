@@ -305,7 +305,7 @@ export default function Landing() {
               
               {showDlDropdown && (
                 <div className="portal-dropdown animate-pop" style={{ left: 0, right: 'auto', width: 260, top: 'calc(100% + 8px)' }}>
-                  <a href="https://github.com/shulesoft8/Termly.app/releases/download/v1.0.0/Termly.Setup.1.0.0.exe" className="pd-item" style={{ gap: 14 }}>
+                  <a href="https://github.com/Termly-app/Termly.app/releases/download/v1.0.0/Termly.Setup.1.0.0.exe" className="pd-item" style={{ gap: 14 }}>
                     <div className="pd-i" style={{ background: '#F3F4F6', color: '#111827' }}><WindowsIcon size={16} /></div>
                     <div className="pd-t">
                       <strong>Windows Desktop</strong>
@@ -617,7 +617,7 @@ export default function Landing() {
               <li><a href="/#features">Features</a></li>
               <li><a href="/#modules">Modules</a></li>
               <li><Link to="/book-demo">Book a Demo</Link></li>
-              <li><a href="https://github.com/shulesoft8/Termly.app/releases/download/v1.0.0/Termly.Setup.1.0.0.exe" target="_blank" rel="noopener noreferrer">Download App</a></li>
+              <li><a href="https://github.com/Termly-app/Termly.app/releases/download/v1.0.0/Termly.Setup.1.0.0.exe" target="_blank" rel="noopener noreferrer">Download App</a></li>
             </ul>
           </div>
           <div className="ft-col">
@@ -673,7 +673,7 @@ export default function Landing() {
             <Link to="/login">Admin</Link>
             <Link to="/staff/login">Staff</Link>
             <Link to="/portal/login">Parents</Link>
-            <a href="https://github.com/shulesoft8/Termly.app/releases/download/v1.0.0/Termly.Setup.1.0.0.exe" target="_blank" rel="noopener noreferrer">Desktop App</a>
+            <a href="https://github.com/Termly-app/Termly.app/releases/download/v1.0.0/Termly.Setup.1.0.0.exe" target="_blank" rel="noopener noreferrer">Desktop App</a>
           </div>
         </div>
 
