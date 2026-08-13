@@ -279,7 +279,18 @@ export function subscribeToSchoolChanges(onSettingsChange, onProfileChange) {
       event: '*', schema: 'public', table: 'school_profiles',
       filter: `school_id=eq.${_currentSchoolId}`
     }, () => {
+      _profileCache = null;
       onProfileChange();
+      window.dispatchEvent(new Event('schoolProfileChanged'));
+    })
+    .on('postgres_changes', {
+      event: 'UPDATE', schema: 'public', table: 'schools',
+      filter: `id=eq.${_currentSchoolId}`
+    }, () => {
+      console.log('[REALTIME] Schools table changed — re-evaluating subscription status');
+      _profileCache = null;
+      onProfileChange();
+      window.dispatchEvent(new Event('schoolProfileChanged'));
     })
     .on('postgres_changes', {
       event: '*', schema: 'public', table: 'school_features',
@@ -986,7 +997,7 @@ export async function searchPublicSchools(query) {
 export async function getSchoolByCode(code) {
   const { data, error } = await supabase.from('schools')
     .select('id, name, school_code, location, school_type, publicly_listed')
-    .eq('school_code', code).eq('status', 'active').maybeSingle();
+    .eq('school_code', code).ilike('status', 'active').maybeSingle();
   if (error) throw error;
   return data;
 }

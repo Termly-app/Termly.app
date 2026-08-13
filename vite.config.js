@@ -58,7 +58,7 @@ export default defineConfig({
               cacheName: 'supabase-api',
               expiration: {
                 maxEntries: 100,
-                maxAgeSeconds: 60 * 60 * 24 // 24 hours
+                maxAgeSeconds: 60 * 5 // 5 minutes — subscription status must not be stale
               },
               cacheableResponse: {
                 statuses: [0, 200]

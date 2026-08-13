@@ -555,6 +555,16 @@ function App() {
       try {
         const p = await getSchoolProfile();
         setProfile(p);
+
+        // Re-evaluate subscription access
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session?.user) {
+          const realIsPlatAdmin = await checkIsPlatformAdmin(session.user.email);
+          const isActingAs = sessionStorage.getItem('Termly_acting_as_admin') === 'true';
+          const isSubActive = await checkIsSubscriptionActive(p);
+          const allowAccess = (realIsPlatAdmin && isActingAs) || isSubActive;
+          setSubscriptionActive(allowAccess);
+        }
       } catch (err) { console.error('Failed to reload profile in App:', err); }
     };
 
