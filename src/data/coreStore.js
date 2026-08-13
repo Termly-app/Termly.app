@@ -716,9 +716,10 @@ export async function updateSchoolLimits(schoolId, { students, staff }) {
 
 export async function deactivateSchool(schoolId, reason = null) {
   const pastDate = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
-  await supabase.from('schools')
-    .update({ status: 'Inactive', subscription_expiry: pastDate })
+  const { error: e0 } = await supabase.from('schools')
+    .update({ status: 'Inactive' })
     .eq('id', schoolId);
+  if (e0) throw e0;
 
   const { error: e1 } = await supabase.from('school_profiles')
     .upsert({ school_id: schoolId, subscription_status: 'Inactive', subscription_expiry: pastDate, status_notes: reason }, { onConflict: 'school_id' });
@@ -745,9 +746,10 @@ export async function restoreSchool(schoolId, monthsToAdd = 4, notes = null) {
   }
   expiry.setMonth(expiry.getMonth() + monthsToAdd);
 
-  await supabase.from('schools')
-    .update({ status: 'Active', subscription_expiry: expiry.toISOString() })
+  const { error: e0 } = await supabase.from('schools')
+    .update({ status: 'Active' })
     .eq('id', schoolId);
+  if (e0) throw e0;
 
   const { error } = await supabase.from('school_profiles')
     .upsert({ school_id: schoolId, subscription_status: 'Active', subscription_expiry: expiry.toISOString(), status_notes: notes }, { onConflict: 'school_id' });
