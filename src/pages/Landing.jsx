@@ -529,7 +529,7 @@ export default function Landing() {
           <h2 className="landing-h2">Everything your school needs.</h2>
           <p className="sec-p">Everything your school needs to operate efficiently, from grading to finance.</p>
         </div>
-        <div className="reveal" style={{ maxWidth: 1100, margin: '0 auto', display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 32, padding: '0 24px' }}>
+        <div className="reveal modules-grid">
           
           <div className="fc" style={{ background: '#fff', display: 'flex', flexDirection: 'column' }}>
             <div className="fc-role" style={{ color: '#4F46E5', background: '#E0E7FF' }}>Academic</div>
