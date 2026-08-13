@@ -1,7 +1,7 @@
 {
   "name": "termly",
   "private": true,
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "School Management System for modern Kenya",
   "author": "Termly Team",
   "type": "module",
@@ -25,7 +25,8 @@
       {
         "provider": "github",
         "owner": "Termly-app",
-        "repo": "Termly.app"
+        "repo": "Termly.app",
+        "releaseType": "draft"
       }
     ],
     "directories": {
