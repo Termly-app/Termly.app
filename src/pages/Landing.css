@@ -577,6 +577,7 @@ footer.landing-footer{
   .dg{grid-template-columns:1fr}
   .ft-grid-w{grid-template-columns:1fr}
   .ft-subscribe{flex-direction:column;align-items:flex-start;gap:12px}
+  .hide-sm{display:none}
 }
 
 /* ══ PORTAL DROPDOWN ══ */
