@@ -6,6 +6,7 @@ import { getClassList, getCBC, getCoreCompetencies } from '../data/academicsStor
 import { getPrintHeader, getSchoolProfile } from '../data/coreStore';
 import { TERM_FEE } from '../data/seedData';
 import { sanitizeName, sanitizeString } from '../utils/sanitize';
+import { exportNEMIS, downloadCSV, nemisFilename } from '../utils/nemisExport';
 import Loader from '../components/Common/Loader';
 import { CBC_STRUCTURE, CBC_CORE_COMPETENCIES, getLevelForGrade } from '../data/seedData';
 import {
@@ -195,6 +196,10 @@ export default function Students({ currentUser, currentPeriodId }) {
           <div style={{display:'flex',gap:8,flexWrap:'wrap'}}>
             <button className="btn btn-ghost btn-sm" onClick={printClassList}><PrintIcon size={14} /> Print List</button>
             {isAdmin && <button className="btn btn-ghost btn-sm" onClick={()=>setShowTransitionModal(true)}><RefreshIcon size={14} /> Transitions</button>}
+            {isAdmin && <button className="btn btn-ghost btn-sm" onClick={() => {
+              const csv = exportNEMIS(filtered, { includeIncomplete: true });
+              downloadCSV(csv, nemisFilename(profile?.schoolName || 'School', 'Students'));
+            }}><UploadIcon size={14} /> Export NEMIS</button>}
             {isAdmin && <button className="btn btn-ghost btn-sm" onClick={() => setShowImportModal(true)}><UploadIcon size={14} /> Import CSV</button>}
             {isAdmin && <button className="btn btn-primary btn-sm" onClick={()=>{setEditingStudent(null);setShowModal(true);}}><PlusIcon size={14} /> Add Student</button>}
           </div>

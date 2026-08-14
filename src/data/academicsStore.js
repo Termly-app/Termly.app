@@ -2230,3 +2230,23 @@ export async function getClassStreams(level = null, year = new Date().getFullYea
     return [];
   }
 }
+export async function getStudentCBCProgress(studentId) {
+  if (!studentId) return [];
+  try {
+    const { data, error } = await supabase
+      .from('cbc_assessments')
+      .select('*')
+      .eq('student_id', studentId)
+      .eq('period_id', _currentPeriodId)
+      .order('subject');
+
+    if (error) {
+      console.warn('getStudentCBCProgress error:', error);
+      return [];
+    }
+    return data || [];
+  } catch (e) {
+    return [];
+  }
+}
+

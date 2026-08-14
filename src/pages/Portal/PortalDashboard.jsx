@@ -8,8 +8,9 @@ import {
 } from '../../components/CommonIcons';
 import { Helmet } from 'react-helmet-async';
 import { getAssignments, getStudentSubmissions } from '../../data/offlineStore';
-import { getStudentExamResults, getGradeForScore, getStudentProfile, getAnnouncements, getSubjectDetails } from '../../data/academicsStore';
+import { getStudentExamResults, getGradeForScore, getStudentProfile, getAnnouncements, getSubjectDetails, getStudentCBCProgress } from '../../data/academicsStore';
 import { generateReportCard, downloadReportCardPDF } from '../../utils/reportCard';
+import { printReceipt, printFeeStatement } from '../../utils/receiptPrint';
 import { getStudentBooks } from '../../data/libraryStore';
 import { getFees } from '../../data/financeStore';
 import { getSchoolProfile, initPortalStore } from '../../data/coreStore';;
@@ -97,6 +98,7 @@ export default function PortalDashboard({ user, onLogout }) {
   const [assignments, setAssignments] = useState([]);
   const [mySubmissions, setMySubmissions] = useState({});
   const [examResults, setExamResults] = useState([]);
+  const [cbcProgress, setCbcProgress] = useState([]);
   const [myBooks, setMyBooks] = useState([]);
   const [academic, setAcademic] = useState({ average: 0, grade: 'N/A', rank: '-', color: '#667781' });
   const [feeBalance, setFeeBalance] = useState(0);
@@ -167,12 +169,13 @@ export default function PortalDashboard({ user, onLogout }) {
       try {
         initPortalStore(activeSchoolId, activeId);
 
-        const [profile, freshStudent, examRes, schoolNotices, teachers] = await Promise.all([
+        const [profile, freshStudent, examRes, schoolNotices, teachers, cbcData] = await Promise.all([
           getSchoolProfile().catch(() => null),
           getStudentProfile(activeId).catch(() => localUser),
           getStudentExamResults(activeId).catch(() => []),
           getAnnouncements(activeSchoolId).catch(() => []),
-          getSubjectDetails(activeId).catch(() => [])
+          getSubjectDetails(activeId).catch(() => []),
+          getStudentCBCProgress(activeId).catch(() => [])
         ]);
         
         setSchoolProfile(profile);
@@ -182,6 +185,7 @@ export default function PortalDashboard({ user, onLogout }) {
         const asts = await getAssignments({}).catch(() => []);
         setAssignments(asts);
         setExamResults(examRes);
+        setCbcProgress(cbcData);
         setNotices(schoolNotices);
         
         const subs = await getStudentSubmissions(activeId).catch(() => []);
@@ -683,6 +687,12 @@ export default function PortalDashboard({ user, onLogout }) {
                           </div>
                         </div>
                         </div>
+                        {res.teacher_remarks && (
+                          <div style={{ marginTop: '4px', padding: '16px', background: '#f8fafc', borderRadius: '12px', borderLeft: '4px solid #3b82f6' }}>
+                            <div style={{ fontSize: '0.75rem', fontWeight: 800, color: '#3b82f6', textTransform: 'uppercase', marginBottom: 4 }}>Teacher's Remarks</div>
+                            <div style={{ fontSize: '0.95rem', color: '#334155', fontStyle: 'italic' }}>"{res.teacher_remarks}"</div>
+                          </div>
+                        )}
                         {/* Report Card Actions */}
                         <div style={{ display: 'flex', gap: 10, borderTop: '1px solid #f1f5f9', paddingTop: 14 }}>
                           <button
@@ -730,6 +740,40 @@ export default function PortalDashboard({ user, onLogout }) {
                     ))}
                   </div>
                 </section>
+
+                <section style={{ marginTop: 24 }}>
+                  <h3 style={{ fontSize: '1.1rem', fontWeight: 800, marginBottom: 12 }}>My Competency Progress</h3>
+                  {cbcProgress.length === 0 ? (
+                    <Card style={{ padding: '32px', textAlign: 'center', color: '#94a3b8', marginBottom: 24 }}>
+                      <div style={{ fontSize: '0.9rem' }}>No CBC competency data recorded yet.</div>
+                    </Card>
+                  ) : (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 24 }}>
+                      {cbcProgress.map((comp, idx) => {
+                        const band = comp.level;
+                        const isEE = band.startsWith('EE');
+                        const isME = band.startsWith('ME');
+                        const isAE = band.startsWith('AE');
+                        const bg = isEE ? '#dcfce7' : isME ? '#dbeafe' : isAE ? '#fef9c3' : '#fee2e2';
+                        const color = isEE ? '#15803d' : isME ? '#1d4ed8' : isAE ? '#a16207' : '#b91c1c';
+                        const width = isEE ? '100%' : isME ? '75%' : isAE ? '50%' : '25%';
+                        return (
+                          <div key={idx} style={{ padding: '16px 20px', background: '#ffffff', borderRadius: 16, border: '1px solid #e2e8f0' }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+                              <span style={{ fontWeight: 800, color: '#0f172a' }}>{comp.subject}</span>
+                              <span style={{ fontWeight: 900, fontSize: '0.85rem', padding: '4px 12px', borderRadius: 20, background: bg, color: color }}>
+                                {band}
+                              </span>
+                            </div>
+                            <div style={{ width: '100%', height: 8, background: '#f1f5f9', borderRadius: 4, overflow: 'hidden' }}>
+                              <div style={{ height: '100%', width, background: color, borderRadius: 4, transition: 'width 1s ease-out' }} />
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </section>
                 <section style={{ marginTop: 24 }}>
                   <h3 style={{ fontSize: '1.1rem', fontWeight: 800, marginBottom: 12 }}>CBC Competency Band Guide (CBAF)</h3>
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: 12 }}>
@@ -776,7 +820,15 @@ export default function PortalDashboard({ user, onLogout }) {
                               <div style={{ fontSize: '0.75rem', color: '#94a3b8' }}>{new Date(p.date).toLocaleDateString()} • {p.reference || 'Ref: N/A'}</div>
                             </div>
                           </div>
-                          <div style={{ fontWeight: 800, color: '#10b981', fontSize: '1.2rem' }}>+KES {p.amount.toLocaleString()}</div>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+                            <div style={{ fontWeight: 800, color: '#10b981', fontSize: '1.2rem' }}>+KES {p.amount.toLocaleString()}</div>
+                            <button
+                              onClick={() => printReceipt({ school: schoolProfile, student: localUser, payment: { ...p, created_at: p.date, totalFee: feeSummary.billed } })}
+                              style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '8px', padding: '6px 12px', fontSize: '0.75rem', fontWeight: 700, color: '#475569', cursor: 'pointer' }}
+                            >
+                              Receipt
+                            </button>
+                          </div>
                         </div>
                       ))}
                       {payments.length === 0 && <div style={{ padding: 40, textAlign: 'center', background: '#fff', borderRadius: 20, color: '#94a3b8' }}>No payment records found</div>}
@@ -813,6 +865,17 @@ export default function PortalDashboard({ user, onLogout }) {
                         <span style={{ fontWeight: 900, color: feeBalance > 0 ? '#ef4444' : '#10b981' }}>KES {feeBalance.toLocaleString()}</span>
                       </div>
                     </div>
+                    <button
+                      onClick={() => printFeeStatement({ 
+                        school: schoolProfile, 
+                        student: localUser, 
+                        payments: payments.map(p => ({ ...p, status: 'Approved', created_at: p.date })), 
+                        feeStructure: [{ name: 'Term Fees', amount: feeSummary.billed }] 
+                      })}
+                      style={{ width: '100%', marginTop: '16px', padding: '12px', borderRadius: '12px', border: '1px solid #cbd5e1', background: '#f8fafc', color: '#334155', fontWeight: 700, fontSize: '0.9rem', cursor: 'pointer' }}
+                    >
+                      Print Full Statement
+                    </button>
                   </Card>
                 </div>
               </div>
